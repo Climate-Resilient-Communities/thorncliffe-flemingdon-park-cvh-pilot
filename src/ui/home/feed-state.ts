@@ -1,5 +1,5 @@
 import type { FeedV1 } from "@/contracts/feed";
-import { isOutdated } from "./feed-poll";
+import { isOutdated, isStale, type FeedAnswer } from "./feed-poll";
 
 // What home knows about the feed, as a pure state machine (S02.11): `useFeed` turns the network into these events and
 // draws `feedView`. Kept free of React and of the clock so the rules below are unit-tested (feed-state.test.ts).
@@ -28,6 +28,8 @@ export interface FeedState {
   staleMs: number | null;
   /** An ask is running now. */
   checking: boolean;
+  /** The phone's clock (ms since 1970) the view was made at: with `at` and the feed's `server_now` it gives the server's time as best the phone knows it (S05.07). */
+  now: number;
 }
 
 export type FeedEvent =
@@ -53,11 +55,13 @@ export function feedReducer(state: FeedModel, event: FeedEvent): FeedModel {
     case "failed":
       return { ...model, failed: true, checking: false };
     case "answered":
+      // Whatever asked, the state never goes back to an older feed: a lower feed_version than the one on screen changes nothing but that the ask is over (S05.07).
+      if (model.feed !== null && isStale(model.feed.feed_version, event.feed.feed_version)) return { ...model, checking: false };
       return { ...model, feed: event.feed, at: event.at, failed: false, checking: false };
     case "discarded":
       return { ...model, checking: false };
     case "kept":
-      if (model.at !== null && model.at >= event.at) return { ...model, failed: true, checking: false };
+      if ((model.at !== null && model.at >= event.at) || (model.feed !== null && isStale(model.feed.feed_version, event.feed.feed_version))) return { ...model, failed: true, checking: false };
       return { ...model, feed: event.feed, at: event.at, failed: true, checking: false };
   }
 }
@@ -69,7 +73,7 @@ export function feedReducer(state: FeedModel, event: FeedEvent): FeedModel {
 export function feedView(model: FeedModel, lang: string, now: number): FeedState {
   const raw = model.lang === lang ? model : initialModel(lang);
   const failed = raw.failed || (isOutdated(raw.at, now) && !raw.checking);
-  return { feed: raw.feed, failed, at: raw.at, staleMs: failed && raw.at !== null ? now - raw.at : null, checking: raw.checking };
+  return { feed: raw.feed, failed, at: raw.at, staleMs: failed && raw.at !== null ? now - raw.at : null, checking: raw.checking, now };
 }
 
 /** After an answer is discarded for being older than one seen, ask again after this long (the next edge copy may be newer). */
@@ -79,3 +83,19 @@ export const FEED_MAX_RETRIES = 3;
 
 /** Whether to ask again soon after `discards` answers in a row were discarded. */
 export const shouldRetry = (discards: number): boolean => discards >= 1 && discards <= FEED_MAX_RETRIES;
+
+/**
+ * What an answer to an ask is, given the highest `feed_version` this phone has seen (S05.07): the one rule for the client, so it is tested with versions out of order.
+ * A failure is `failed`. A copy the service worker kept (no signal) is `kept`, but a lower version than one seen is `failed`: an older copy never stands in for a newer
+ * state. The server's answer with a lower version is `discarded` (and asked for again soon); otherwise it is `answered`, and `highest` is raised to its version.
+ * The service worker applies the same rule to what it keeps (rules.shouldKeepFeed).
+ */
+export type Verdict = { kind: "answered" | "kept" | "failed" | "discarded"; highest: number };
+
+export function judgeAnswer(highest: number, answer: FeedAnswer | null): Verdict {
+  if (answer === null) return { kind: "failed", highest };
+  const version = answer.feed.feed_version;
+  if (answer.keptAt !== null) return { kind: isStale(highest, version) ? "failed" : "kept", highest };
+  if (isStale(highest, version)) return { kind: "discarded", highest };
+  return { kind: "answered", highest: version };
+}

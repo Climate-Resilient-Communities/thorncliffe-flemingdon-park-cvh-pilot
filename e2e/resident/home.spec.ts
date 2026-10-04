@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
-import { feedOf, stubFeed } from "./home-fixture";
+import { FEED_URL, feedOf, stubFeed } from "./home-fixture";
 import { catalogText, expectBaseline, isFallback, openResident } from "./helpers";
 
 // S02.11: home (R-03) shows the resident's buildings first, each with its status in words, icon and colour and a link
@@ -193,9 +193,9 @@ const setVisibility = (page: Page, state: "hidden" | "visible") =>
 
 /** From now on /api/feed is held: each request is kept, unanswered, until the test answers it. */
 async function holdFeed(page: Page) {
-  await page.unroute("**/api/feed**");
+  await page.unroute(FEED_URL);
   const held: Route[] = [];
-  await page.route("**/api/feed**", (route) => {
+  await page.route(FEED_URL, (route) => {
     held.push(route);
   });
   return held;

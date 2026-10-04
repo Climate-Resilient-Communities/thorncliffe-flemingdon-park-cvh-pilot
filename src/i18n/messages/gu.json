@@ -719,7 +719,8 @@
     "validLine": "માન્ય: {until}",
     "timeLine": "{posted} પોસ્ટ થયું · {updated} અપડેટ થયું",
     "timeLineOne": "{posted} પોસ્ટ થયું",
-    "basicMore": "અગાઉનાં અપડેટ: {n}"
+    "basicMore": "અગાઉનાં અપડેટ: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "પૂરી થયેલી ચેતવણીઓ",
@@ -729,7 +730,10 @@
     "emptyBody": "ચેતવણી પૂરી થાય ત્યારે તે અહીં આવે છે અને વાંચી શકાય છે.",
     "lead": "દરેક ચેતવણી પૂરી થયા પછી અહીં વાંચી શકાય છે.",
     "endedOn": "{posted} પોસ્ટ થયું",
-    "backHome": "\"હમણાં\" પર પાછા જાઓ"
+    "backHome": "\"હમણાં\" પર પાછા જાઓ",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "મદદ શોધો",

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { newServer, stubDirectory } from "./directory-fixture";
-import { feedOf } from "./home-fixture";
+import { FEED_URL, feedOf } from "./home-fixture";
 import { stubMap, TILE_URL } from "./map-fixture";
 
 // S02.12: the resident installs the CVH and reads it without signal. These tests run with the service worker, against the
@@ -46,7 +46,7 @@ async function signal(page: Page) {
 }
 
 async function stubFeed(page: Page, version = 3) {
-  await page.context().route("**/api/feed**", (route) => route.fulfill({ json: feedOf(version), headers: { "Cache-Control": "no-store" } }));
+  await page.context().route(FEED_URL, (route) => route.fulfill({ json: feedOf(version), headers: { "Cache-Control": "no-store" } }));
 }
 
 test("the CVH is installable: each language links a valid manifest with the Hub's icons, opening on its home", async ({ page, request }) => {
@@ -141,7 +141,7 @@ test("a page never loaded opens the offline page, with the numbers and what can 
 
 test("signal back: the feed is asked at once and the note goes", async ({ page }) => {
   let asked = 0;
-  await page.context().route("**/api/feed**", (route) => {
+  await page.context().route(FEED_URL, (route) => {
     asked += 1;
     return route.fulfill({ json: feedOf(3 + asked), headers: { "Cache-Control": "no-store" } });
   });
@@ -187,4 +187,81 @@ test("nothing from the staff surface or its API is ever stored", async ({ page }
   const stored = await everything(page);
   expect(stored.length).toBeGreaterThan(0);
   expect(stored.filter((entry) => /\/staff(\/|$|\?)|\/api\/staff\//.test(entry.split(": ")[1]))).toEqual([]);
+});
+
+// S05.07: an alert read from a copy kept without signal is not shown as current once its valid-until has passed by the phone's clock adjusted by the last known
+// server_now offset. These tests use the alerts server (fixtures/feed.json: server_now is 2026-10-01 15:00 UTC, kbcdfghj is valid until 22:00 and mnpqrstv until
+// the next day) and move the phone's own clock forward eight hours, which by the offset is 23:00 on the server's clock: kbcdfghj has passed, mnpqrstv has not.
+test.describe("an alert read without signal after its time (S05.07)", () => {
+  const ALERTS = `http://localhost:${process.env.E2E_ALERTS_PORT ?? String(Number(process.env.E2E_PORT ?? "3000") + 500)}`;
+  test.use({ baseURL: ALERTS, storageState: { cookies: [], origins: [{ origin: ALERTS, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] } });
+  const NOTE = "This alert may have ended. Check again when you have signal";
+  const EIGHT_HOURS = 8 * 3_600_000;
+
+  test("the alert page says it may have ended instead of its valid-until, only from a copy kept without signal", async ({ page }) => {
+    const phone = await signal(page);
+    await page.goto("/en/alerts/kbcdfghj");
+    await workerReady(page);
+    await page.reload();
+    await expect(page.getByTestId("alert-valid")).toBeVisible();
+    await expect(page.getByTestId("alert-may-have-ended")).toHaveCount(0);
+    await expect.poll(() => isKept(page, "/en/alerts/kbcdfghj")).toBe(true);
+
+    await phone.off();
+    await page.clock.install({ time: new Date(Date.now() + EIGHT_HOURS) });
+    await page.reload();
+
+    await expect(page.getByTestId("offline-note")).toBeVisible();
+    await expect(page.getByTestId("alert-may-have-ended")).toHaveText(NOTE);
+    await expect(page.getByTestId("alert-valid")).toHaveCount(0);
+    await expect(page.getByTestId("alert-text")).toBeVisible();
+
+    // With signal the server's own page is shown, whatever the phone's clock says: no note.
+    await phone.on();
+    await page.reload();
+    await expect(page.getByTestId("alert-may-have-ended")).toHaveCount(0);
+    await expect(page.getByTestId("alert-valid")).toBeVisible();
+  });
+
+  test("signal back after opening from a kept home copy: an alert opened by a move inside the app is the server's page, never 'may have ended'", async ({ page }) => {
+    const phone = await signal(page);
+    await page.goto("/en");
+    await workerReady(page);
+    await page.reload();
+    await expect(page.getByTestId("alert-card-kbcdfghj")).toBeVisible();
+
+    await phone.off();
+    await page.clock.install({ time: new Date(Date.now() + EIGHT_HOURS) });
+    await page.reload();
+    await expect(page.getByTestId("feed-failed")).toBeVisible();
+
+    // Signal is back: the head still carries the kept copy's marker, but the page we move to comes from the server.
+    await phone.on();
+    await page.getByTestId("alert-card-kbcdfghj").click();
+    await expect(page.getByTestId("alert-valid")).toBeVisible();
+    await expect(page.getByTestId("alert-may-have-ended")).toHaveCount(0);
+  });
+
+  test("a card on home says it may have ended when the kept feed is read after its time, and the others stay as they were", async ({ page }) => {
+    const phone = await signal(page);
+    await page.goto("/en");
+    await workerReady(page);
+    await page.reload();
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+    await expect(page.getByTestId("alert-card-kbcdfghj")).toBeVisible();
+    await expect(page.locator('[data-testid^="alert-card-ended-"]')).toHaveCount(0);
+
+    await phone.off();
+    await page.clock.install({ time: new Date(Date.now() + EIGHT_HOURS) });
+    await page.reload();
+
+    await expect(page.getByTestId("feed-failed")).toBeVisible();
+    const ended = page.getByTestId("alert-card-ended-kbcdfghj");
+    await expect(ended).toHaveText(NOTE);
+    await expect(page.getByTestId("alert-card-kbcdfghj")).toHaveAttribute("class", /alert-card--ended/);
+    await expect(page.getByTestId("alert-card-ended-mnpqrstv")).toHaveCount(0);
+    await expect(page.getByTestId("alert-card-mnpqrstv")).toContainText("Posted");
+    // It is still a link to the alert, which opens from the kept copy.
+    await expect(page.getByTestId("alert-card-kbcdfghj")).toHaveAttribute("href", "/en/alerts/kbcdfghj");
+  });
 });

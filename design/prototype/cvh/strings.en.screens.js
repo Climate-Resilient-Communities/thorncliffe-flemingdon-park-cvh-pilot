@@ -1904,4 +1904,8 @@
       aal2Required: 'An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.',
       failed: 'The roster was not changed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read the drill roster. Reload the page. If this stays, tell IT.' } } } });
+  /* Alerts that have ended (S05.07). R-08 is a prototype screen; these four words are not in it: the withdrawn end line (the prototype has resolved and expired only), the control for the next page of the archive and its failure, and the note on an alert read from a kept copy whose time has passed. */
+  m(en, {
+    R08: { withdrawn: 'Withdrawn {t}', more: 'Show older alerts', moreFailed: 'We could not load older alerts. Check that you have signal and try again.' },
+    R07: { mayHaveEnded: 'This alert may have ended. Check again when you have signal' } });
 })();

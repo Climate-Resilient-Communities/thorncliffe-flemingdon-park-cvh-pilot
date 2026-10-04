@@ -719,7 +719,8 @@
     "validLine": "Valid {until}",
     "timeLine": "Posted {posted} · Updated {updated}",
     "timeLineOne": "Posted {posted}",
-    "basicMore": "Earlier updates: {n}"
+    "basicMore": "Earlier updates: {n}",
+    "mayHaveEnded": "This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "Alerts that have ended",
@@ -729,7 +730,10 @@
     "emptyBody": "When an alert ends, it moves here and stays readable.",
     "lead": "Each alert stays readable here after it ends.",
     "endedOn": "Posted {posted}",
-    "backHome": "Back to Now"
+    "backHome": "Back to Now",
+    "withdrawn": "Withdrawn {t}",
+    "more": "Show older alerts",
+    "moreFailed": "We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "Find help",

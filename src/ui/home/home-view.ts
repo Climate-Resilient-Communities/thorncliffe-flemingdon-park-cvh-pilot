@@ -1,6 +1,6 @@
 import type { BuildingList } from "@/contracts/buildingList";
 import { audienceCoversBuilding, audienceCoversNeighbourhood } from "@/contracts/audience";
-import type { FeedThread, FeedV1, PlaceStatus } from "@/contracts/feed";
+import { RESOLVED_WINDOW_MS, type ArchiveThread, type FeedThread, type FeedV1, type PlaceStatus } from "@/contracts/feed";
 
 // What home shows for each place, worked out from the phone's choices, the building list and the feed. Pure: the
 // component only draws it. The server's feed lists every place and knows nobody's choices (AD-3); the phone picks its
@@ -61,6 +61,29 @@ function coveringPhase(thread: FeedThread): string | null {
 
 export type BehindPlace = { kind: "building"; rsn: string; neighbourhoodId: string | null } | { kind: "neighbourhood"; id: string };
 
+/** The threads that closed, as the archive's first page names them, with the clock they were read by: what a `resolved` status is traced to (S05.07). */
+export interface ClosedThreads {
+  threads: readonly ArchiveThread[];
+  serverNow: Date;
+}
+
+/**
+ * The threads behind a `resolved` status (S05.07): the feed does not name them (its list holds open threads only, and FeedV1 cannot grow a field the phones in the field
+ * would refuse), so they are found in the archive's newest threads, by the server's own rule (AD-19): closed `resolved` less than 12 hours before the archive's `server_now`,
+ * and covering the place by the thread's audience (an archive thread's `audience` is its covering entry's, as the status reads it).
+ */
+export function resolvedBehind(place: BehindPlace, closed: ClosedThreads | null): ThreadBehind[] {
+  if (!closed) return [];
+  return closed.threads
+    .filter(
+      (thread) =>
+        thread.close_reason === "resolved" &&
+        closed.serverNow.getTime() - Date.parse(thread.closed_at) < RESOLVED_WINDOW_MS &&
+        (place.kind === "building" ? audienceCoversBuilding(thread.audience, place) : audienceCoversNeighbourhood(thread.audience, place.id)),
+    )
+    .map((thread) => ({ slug: thread.slug, types: thread.types }));
+}
+
 /**
  * The threads behind a place's status, from the feed's open threads: those whose audience covers the place and whose covering entry's phase gives the status
  * (`problem` for active, `in_progress` for in progress). `resolved` has none here: a thread closed `resolved` is not in the feed's list (the status is derived from
@@ -74,16 +97,17 @@ export function threadsBehind(place: BehindPlace, status: PlaceStatus, threads: 
     .map((thread) => ({ slug: thread.slug, types: thread.types }));
 }
 
-export function behindOf(shown: Shown, feed: FeedV1 | null, place: BehindPlace): ThreadBehind[] {
-  return feed && shown.kind === "status" ? threadsBehind(place, shown.status, feed.threads) : [];
+export function behindOf(shown: Shown, feed: FeedV1 | null, place: BehindPlace, closed: ClosedThreads | null = null): ThreadBehind[] {
+  if (!feed || shown.kind !== "status") return [];
+  return shown.status === "resolved" ? resolvedBehind(place, closed) : threadsBehind(place, shown.status, feed.threads);
 }
 
 /**
  * The rows of home. Each chosen building comes first, in the order the resident chose them; then the neighbourhoods:
  * those of the chosen buildings, or every neighbourhood when nothing is chosen (or the list is not there to say which).
  */
-export function homeRows(input: { chosen: readonly string[]; list: BuildingList | null; view: FeedView }): HomeRows {
-  const { chosen, list, view } = input;
+export function homeRows(input: { chosen: readonly string[]; list: BuildingList | null; view: FeedView; closed?: ClosedThreads | null }): HomeRows {
+  const { chosen, list, view, closed = null } = input;
   const buildings = chosen.map((rsn): BuildingRow => {
     const listed = list?.buildings.find((building) => building.rsn === rsn);
     const shown = shownOf(view.feed?.places.buildings.find((place) => place.rsn === rsn), view);
@@ -92,7 +116,7 @@ export function homeRows(input: { chosen: readonly string[]; list: BuildingList 
       address: listed?.address,
       neighbourhoodId: listed?.neighbourhoodId,
       shown,
-      behind: behindOf(shown, view.feed, { kind: "building", rsn, neighbourhoodId: listed?.neighbourhoodId ?? null }),
+      behind: behindOf(shown, view.feed, { kind: "building", rsn, neighbourhoodId: listed?.neighbourhoodId ?? null }, closed),
     };
   });
 
@@ -103,7 +127,7 @@ export function homeRows(input: { chosen: readonly string[]; list: BuildingList 
     buildings,
     neighbourhoods: ids.map((id) => {
       const shown = shownOf(view.feed?.places.neighbourhoods.find((place) => place.id === id), view);
-      return { id, shown, behind: behindOf(shown, view.feed, { kind: "neighbourhood", id }) };
+      return { id, shown, behind: behindOf(shown, view.feed, { kind: "neighbourhood", id }, closed) };
     }),
   };
 }
