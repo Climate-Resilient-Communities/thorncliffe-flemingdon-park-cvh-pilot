@@ -893,7 +893,8 @@
    "todayAt": "今天{time}",
    "dayAt": "{day} {time}",
    "linkLine": "最新更新和任何更正：{url}",
-   "sendLine": "您的手机会问您用哪个应用发送。"
+   "sendLine": "您的手机会问您用哪个应用发送。",
+   "placeMore": "以及另外 {n} 处"
   },
   "R30": {
    "deviceLabel": "WhatsApp 群里的警报",

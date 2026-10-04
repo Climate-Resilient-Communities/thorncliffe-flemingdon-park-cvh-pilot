@@ -403,9 +403,10 @@ test.describe("a corrected and a withdrawn entry (S05.02)", () => {
     await expect(page.getByTestId(`alert-card-text-${T4}`)).toHaveText(CORRECTION);
 
     const html = await (await request.get(`/en/alerts/${T4}`)).text();
-    const description = (html.match(/<meta name="description" content="([^"]*)"/) ?? [])[1];
-    const og = (html.match(/<meta property="og:description" content="([^"]*)"/) ?? [])[1];
-    expect(description).toBe(`Correction: ${CORRECTION}`);
+    const description = metaOf(html, "description")?.replace(/[\u202f\u00a0]/g, " ");
+    const og = metaOf(html, "og:description")?.replace(/[\u202f\u00a0]/g, " ");
+    // S05.08: the facts first (verification, place, time), then the correction's words.
+    expect(description).toBe(`Verified by the Hub \u00b7 4 Milepost Pl \u00b7 Updated today at 8:00 AM \u2014 Correction: ${CORRECTION}`);
     expect(og).toBe(description);
     expect(description).not.toContain("floors 1 to 6 at");
   });
@@ -468,7 +469,8 @@ test.describe("a thread that closed (S05.03)", () => {
 
   test("describes the page with the final message, and sets no cookie, in any language", async ({ request }) => {
     const html = await (await request.get(`/en/alerts/${RESOLVED}`)).text();
-    expect((html.match(/<meta name="description" content="([^"]*)"/) ?? [])[1]).toBe(FINAL);
+    expect(metaOf(html, "description")).toBe(`Verified by the Hub \u00b7 4 Milepost Pl \u2014 ${FINAL}`);
+    expect(metaOf(html, "og:title")?.replace(/[\u202f\u00a0]/g, " ")).toBe("Power: Resolved today at 9:00 AM");
     for (const { code } of LAUNCH_LANGUAGES) expect(noCookie(await request.get(`/${code}/alerts/${RESOLVED}`, { maxRedirects: 0 })), code).toEqual([]);
   });
 
@@ -525,4 +527,361 @@ test.describe("what verified means (R-28)", () => {
       await expectBaseline(page, `alert-verified-${lang}-${name}-390.png`);
     });
   }
+});
+
+// S05.08: share an alert in one step (R-29) and the link that is shared, /a/{slug}?l={lang} (the share landing, A11), against the same fixture. The server is the
+// alerts server: the same production build, its own port, the feed read from fixtures/feed.json; the clock of that file is fixed, so every time reads the same.
+const SHARE_PATH = (slug: string, lang = "en") => `/${lang}/alerts/${slug}/share`;
+const decode = (text: string) => text.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+/** The content of one <meta> of a page (`name="description"` or `property="og:title"`), undone from its HTML escaping, or undefined. */
+const metaOf = (html: string, key: string) => {
+  const found = new RegExp(`<meta (?:name|property)="${key}" content="([^"]*)"`).exec(html);
+  return found ? decode(found[1]) : undefined;
+};
+/** Every request the page makes to the app's own server from now on: the proof that an action sends nothing. */
+function watchRequests(page: Page) {
+  const seen: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.origin === new URL(ALERTS_URL).origin) seen.push(`${request.method()} ${url.pathname}${url.search}`);
+  });
+  return seen;
+}
+/** The message as the page previews it, a line each. */
+const previewedLines = (page: Page) => page.getByTestId("share-message").locator("p").allInnerTexts();
+
+test.describe("share an alert (R-29, S05.08)", () => {
+  test("R-07 offers Share, which opens R-29 for the same alert, and R-29's back goes to the alert", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T1}`, 390);
+
+    await expect(page.getByTestId("alert-share")).toHaveText("Share");
+    await expect(page.getByTestId("alert-share")).toHaveAttribute("href", SHARE_PATH(T1));
+    await page.getByTestId("alert-share").click();
+    await expect(page).toHaveURL(new RegExp(`${SHARE_PATH(T1)}$`));
+    await expect(page.getByTestId("share-title")).toHaveText("Share this alert");
+    await page.getByTestId("share-back").click();
+    await expect(page).toHaveURL(new RegExp(`/en/alerts/${T1}$`));
+  });
+
+  test("previews the standard message in the fixed order: what, who and whether the Hub checked it, where, when, the 911 line and the link", async ({ page }) => {
+    await openResident(page, SHARE_PATH(T1), 390);
+
+    const lines = (await previewedLines(page)).map((line) => line.replace(/[  ]/g, " "));
+    expect(lines).toEqual([
+      `Elevator: ${UPDATE}`,
+      "Community alert from the Hub",
+      "Verified by the Hub",
+      "4 Milepost Pl",
+      "Posted today at 10:00 AM",
+      "Updated today at 10:40 AM",
+      "Not an emergency service. In danger? Call 911.",
+      `Newest updates and any corrections: ${ALERTS_URL}/a/${T1}?l=en`,
+    ]);
+    await expect(page.getByTestId("share-everyone")).toHaveText("Everyone gets this version. Nothing tailored to you is shared.");
+    await expect(page.getByTestId("share-not-recorded")).toHaveText("The CVH does not record who shares alerts or who you send them to.");
+  });
+
+  test("shares an alert that is not yet verified as 'Not yet verified', in English and with its own link", async ({ page }) => {
+    await openResident(page, SHARE_PATH(T2), 390);
+
+    const lines = await previewedLines(page);
+    expect(lines).toContain("Not yet verified");
+    expect(lines.join("\n")).not.toContain("Verified by");
+    expect(lines.at(-1)).toBe(`Newest updates and any corrections: ${ALERTS_URL}/a/${T2}?l=en`);
+  });
+
+  test("is in the page's language, with a link that opens in it", async ({ page }) => {
+    await openResident(page, SHARE_PATH(T1, "ur"), 390);
+
+    const lines = await previewedLines(page);
+    expect(lines[0]).toContain("لفٹ");
+    expect(lines.at(-1)).toContain(`${ALERTS_URL}/a/${T1}?l=ur`);
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  });
+
+  test("says that a corrected alert is its correction, and a thread that closed how it closed, with the time as a clock time", async ({ page }) => {
+    await openResident(page, SHARE_PATH(T4), 390);
+    const corrected = (await previewedLines(page)).join("\n");
+    expect(corrected).toContain(`Power: Correction: ${CORRECTION}`);
+    expect(corrected).not.toContain("floors 1 to 6 at");
+    expect(corrected).not.toMatch(/\bago\b/);
+
+    await openResident(page, SHARE_PATH(RESOLVED), 390);
+    const closed = (await previewedLines(page)).join("\n").replace(/[  ]/g, " ");
+    expect(closed).toContain(`Power: ${FINAL}`);
+    expect(closed).toMatch(/This alert has ended\. It was resolved today at \d{1,2}:\d{2} [AP]M\./);
+  });
+
+  test("is the same standard message whoever shares it: a phone with chosen buildings and groups previews and shares exactly what any other does", async ({ browser }) => {
+    const message = async (choices: object) => {
+      const context = await browser.newContext({ baseURL: ALERTS_URL, storageState: { cookies: [], origins: [{ origin: ALERTS_URL, localStorage: [{ name: "cvh.choices", value: JSON.stringify(choices) }] }] } });
+      try {
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+          (window as unknown as { __shared: unknown[] }).__shared = [];
+          navigator.share = async (data) => void (window as unknown as { __shared: unknown[] }).__shared.push(data);
+        });
+        await openResident(page, SHARE_PATH(T1), 390);
+        await page.getByTestId("share-send").click();
+        const shared = await page.evaluate(() => (window as unknown as { __shared: { text: string }[] }).__shared);
+        return { previewed: await previewedLines(page), shared };
+      } finally {
+        await context.close();
+      }
+    };
+
+    const plainPhone = await message({ v: 1, welcomed: true });
+    const tailoredPhone = await message({ v: 1, welcomed: true, lang: "en", groups: ["seniors", "families"], buildings: ["4154146"], floors: [] });
+
+    expect(tailoredPhone).toEqual(plainPhone);
+    expect(plainPhone.shared).toHaveLength(1);
+    expect(plainPhone.shared[0].text).toBe(plainPhone.previewed.join("\n"));
+  });
+
+  test("Share opens the phone's share sheet with the previewed text and nothing else, and asks the server for nothing", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { __shared: unknown[] }).__shared = [];
+      navigator.share = async (data) => void (window as unknown as { __shared: unknown[] }).__shared.push(data);
+    });
+    await openResident(page, SHARE_PATH(T1), 390);
+    await expect(page.getByTestId("share-actions")).toHaveAttribute("data-sheet", "available");
+    const requests = watchRequests(page);
+
+    await page.getByTestId("share-send").click();
+    await page.waitForTimeout(500);
+
+    const shared = await page.evaluate(() => (window as unknown as { __shared: { text: string }[] }).__shared);
+    expect(shared).toEqual([{ text: (await previewedLines(page)).join("\n") }]);
+    expect(shared[0].text).toContain(`${ALERTS_URL}/a/${T1}?l=en`);
+    // Nothing about the sharing was sent: no request of any kind, no usage event.
+    expect(requests).toEqual([]);
+    await expect(page.getByTestId("share-copy")).toHaveCount(0);
+  });
+
+  test("a resident who closes the share sheet without choosing is not told anything and keeps the same button", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = async () => {
+        throw new DOMException("closed", "AbortError");
+      };
+    });
+    await openResident(page, SHARE_PATH(T1), 390);
+
+    await page.getByTestId("share-send").click();
+
+    await expect(page.getByTestId("share-send")).toBeVisible();
+    await expect(page.getByTestId("share-copy")).toHaveCount(0);
+    await expect(page.getByTestId("share-status")).toHaveText("");
+  });
+
+  test("where the phone has no share sheet, or cannot open it, Copy and WhatsApp are offered: Copy puts the message on the clipboard, WhatsApp is the wa.me link with the message", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "share", { value: undefined, configurable: true });
+      (window as unknown as { __copied: string[] }).__copied = [];
+      Object.defineProperty(navigator, "clipboard", { value: { writeText: async (text: string) => void (window as unknown as { __copied: string[] }).__copied.push(text) }, configurable: true });
+    });
+    await openResident(page, SHARE_PATH(T1), 390);
+
+    await expect(page.getByTestId("share-actions")).toHaveAttribute("data-sheet", "unavailable");
+    await expect(page.getByTestId("share-send")).toHaveCount(0);
+    await expect(page.getByTestId("share-no-sheet")).toHaveText("Your phone does not offer share options here. Copy the message, or send it on WhatsApp.");
+    const text = (await previewedLines(page)).join("\n");
+    const whatsapp = page.getByTestId("share-whatsapp");
+    await expect(whatsapp).toHaveText("Send on WhatsApp");
+    await expect(whatsapp).toHaveAttribute("href", `https://wa.me/?text=${encodeURIComponent(text)}`);
+    await expect(whatsapp).toHaveAttribute("rel", "noopener noreferrer");
+    const requests = watchRequests(page);
+
+    await page.getByTestId("share-copy").click();
+
+    await expect(page.getByTestId("share-status")).toHaveText("Copied. You can paste it into any app.");
+    expect(await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied)).toEqual([text]);
+    expect(requests).toEqual([]);
+  });
+
+  test("a share sheet that fails to open falls back to Copy and WhatsApp, and a phone that will not copy says so", async ({ page }) => {
+    await page.addInitScript(() => {
+      navigator.share = async () => {
+        throw new DOMException("not allowed here", "NotAllowedError");
+      };
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: async () => {
+            throw new Error("blocked");
+          },
+        },
+        configurable: true,
+      });
+    });
+    await openResident(page, SHARE_PATH(T1), 390);
+
+    await page.getByTestId("share-send").click();
+
+    await expect(page.getByTestId("share-copy")).toBeVisible();
+    await expect(page.getByTestId("share-whatsapp")).toBeVisible();
+    await page.getByTestId("share-copy").click();
+    await expect(page.getByTestId("share-status")).toHaveText("Your phone would not copy it. Press and hold the message above to copy it.");
+  });
+
+  test("is a 404 inside the shell with nothing of any alert for an address nobody has an alert at", async ({ request }) => {
+    const response = await request.get(SHARE_PATH("nosuchslug"), { maxRedirects: 0 });
+
+    expect(response.status()).toBe(404);
+    expect(noCookie(response)).toEqual([]);
+    expect(await response.text()).not.toContain(ACK_EN);
+  });
+
+  for (const [lang, slug, name] of [
+    ["en", T1, "verified"],
+    ["en", T2, "unverified"],
+    ["ur", T1, "verified"],
+  ] as const) {
+    for (const width of lang === "en" ? ([390, 1280] as const) : ([390] as const)) {
+      test(`${lang} ${name} share screen at ${width}px has no horizontal scrolling, every control is a tap target and it matches its baseline screenshot`, async ({ page }) => {
+        await page.addInitScript(() => {
+          navigator.share = async () => undefined;
+        });
+        await openResident(page, SHARE_PATH(slug, lang), width, 900);
+        await showWholePage(page, width);
+
+        expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+        expect(await tapViolations(page)).toEqual([]);
+        await expectBaseline(page, `share-${lang}-${name}-${width}.png`);
+      });
+    }
+  }
+
+  test("the fallback (no share sheet) at 390px has no horizontal scrolling, tap targets and matches its baseline screenshot", async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, "share", { value: undefined, configurable: true }));
+    await openResident(page, SHARE_PATH(T1), 390, 900);
+    await expect(page.getByTestId("share-copy")).toBeVisible();
+    await showWholePage(page, 390);
+
+    expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+    expect(await tapViolations(page)).toEqual([]);
+    await expectBaseline(page, "share-en-fallback-390.png");
+  });
+});
+
+test.describe("the shared link /a/{slug}?l={lang} (A11, S05.08)", () => {
+  const landing = (slug: string, lang?: string) => `/a/${slug}${lang === undefined ? "" : `?l=${lang}`}`;
+
+  test("shows the alert in its current state in the language of `l` at the address that was shared, with Open Graph metadata in that language", async ({ page, request }) => {
+    await page.goto(landing(T1, "en"));
+
+    await expect(page).toHaveURL(new RegExp(`${landing(T1, "en").replace("?", "\\?")}$`));
+    await expect(page.getByTestId("alert-detail")).toBeVisible();
+    await expect(page.getByTestId("alert-text")).toHaveText(UPDATE);
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+
+    const html = await (await request.get(landing(T1, "en"))).text();
+    const description = metaOf(html, "og:description")?.replace(/[  ]/g, " ");
+    expect(metaOf(html, "og:title")).toBe("Elevator");
+    expect(description).toBe(`Verified by the Hub · 4 Milepost Pl · Updated today at 10:40 AM — ${UPDATE}`);
+    expect(metaOf(html, "description")?.replace(/[  ]/g, " ")).toBe(description);
+    expect(html).toContain("<title>Elevator</title>");
+  });
+
+  test("is in Urdu for l=ur, left to right text kept as it is, and its metadata is in Urdu", async ({ page, request }) => {
+    await page.goto(landing(T1, "ur"));
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "ur");
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    const html = await (await request.get(landing(T1, "ur"))).text();
+    expect(metaOf(html, "og:title")).toBe(catalogText("ur", "x13.elevator"));
+    expect(metaOf(html, "og:description")).toContain(catalogText("ur", "x02.verifiedBy").replace("{org}", catalogText("ur", "x02.hub")));
+  });
+
+  test("is English when `l` is missing or is not one of our languages, and never redirects", async ({ request }) => {
+    for (const path of [landing(T1), landing(T1, ""), landing(T1, "xx"), landing(T1, "../staff")]) {
+      const response = await request.get(path, { maxRedirects: 0 });
+
+      expect(response.status(), path).toBe(200);
+      expect(await response.text(), path).toContain('<html lang="en"');
+    }
+  });
+
+  test("shows the corrected alert with its correction above the original, and a thread that closed with how it closed", async ({ page, request }) => {
+    await page.goto(landing(T4, "en"));
+    await expect(page.getByTestId("alert-text")).toHaveText(CORRECTION);
+    await expect(page.locator('[data-mark="corrected"]')).toHaveCount(1);
+    const corrected = await (await request.get(landing(T4, "en"))).text();
+    expect(metaOf(corrected, "og:description")).toContain(`Correction: ${CORRECTION}`);
+
+    await page.goto(landing(RESOLVED, "en"));
+    await expect(page.getByTestId("alert-closed")).toHaveAttribute("data-reason", "resolved");
+    const resolved = await (await request.get(landing(RESOLVED, "en"))).text();
+    expect(metaOf(resolved, "og:title")).toMatch(/^Power: Resolved today at \d{1,2}:\d{2}/);
+    expect(metaOf(resolved, "og:description")).toContain(FINAL);
+
+    const withdrawn = await (await request.get(landing(WITHDRAWN, "en"))).text();
+    expect(metaOf(withdrawn, "og:title")).toBe("Power: Withdrawn");
+    expect(metaOf(withdrawn, "og:description")).toContain(WITHDRAWAL_REASON);
+    expect(metaOf(withdrawn, "og:description")).not.toContain(WITHDRAWN_ACK);
+  });
+
+  test("is a 404 with no detail for an unknown address, in every language, and for an address that is not a slug", async ({ request }) => {
+    for (const { code } of LAUNCH_LANGUAGES) {
+      for (const path of [landing("nosuchslug", code), landing("short", code), landing("UPPERCASE1", code)]) {
+        const response = await request.get(path, { maxRedirects: 0 });
+
+        expect(response.status(), path).toBe(404);
+        expect(noCookie(response), path).toEqual([]);
+        const body = await response.text();
+        expect(body, path).not.toContain(ACK_EN);
+        expect(body, path).not.toContain('property="og:description"');
+      }
+    }
+    for (const path of ["/a", `/a/${T1}/more`]) expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
+  });
+
+  test("sets no cookie, in any language, for the alert, a thread that closed, an unknown address or the share screen", async ({ request }) => {
+    for (const { code } of LAUNCH_LANGUAGES) {
+      for (const path of [landing(T1, code), landing(RESOLVED, code), landing("nosuchslug", code), SHARE_PATH(T1, code)]) {
+        expect(noCookie(await request.get(path, { maxRedirects: 0 })), path).toEqual([]);
+      }
+    }
+    expect(noCookie(await request.get(landing(T1), { maxRedirects: 0 }))).toEqual([]);
+  });
+
+  test("asks the server for nothing but the page: the recipient's one request is the shared address, and the browser keeps no cookie", async ({ page, context }) => {
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (url.origin === new URL(ALERTS_URL).origin && request.resourceType() === "document") requests.push(`${request.method()} ${url.pathname}${url.search}`);
+    });
+    await page.goto(landing(T1, "en"));
+    await page.waitForLoadState("networkidle");
+
+    expect(requests).toEqual([`GET ${landing(T1, "en")}`]);
+    expect(await context.cookies()).toEqual([]);
+  });
+
+  test.describe("a phone that has a saved language", () => {
+    test.use({ storageState: { cookies: [], origins: [{ origin: ALERTS_URL, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true, lang: "ur" }) }] }] } });
+
+    test("moves from the language of the link to its own once the page has loaded, to the same alert", async ({ page }) => {
+      await page.goto(landing(T1, "en"));
+
+      await expect(page).toHaveURL(new RegExp(`/ur/alerts/${T1}$`));
+      await expect(page.locator("html")).toHaveAttribute("lang", "ur");
+      await expect(page.getByTestId("alert-detail")).toBeVisible();
+    });
+
+    test("stays where it is when the link is already in its language", async ({ page }) => {
+      await page.goto(landing(T1, "ur"));
+      await expect(page.getByTestId("alert-detail")).toBeVisible();
+      await page.waitForTimeout(800);
+
+      await expect(page).toHaveURL(new RegExp(`${landing(T1, "ur").replace("?", "\\?")}$`));
+    });
+  });
+
+  test("a phone with no saved language stays in the language of the link", async ({ page }) => {
+    await page.goto(landing(T1, "ur"));
+    await expect(page.getByTestId("alert-detail")).toBeVisible();
+    await page.waitForTimeout(800);
+
+    await expect(page).toHaveURL(new RegExp(`${landing(T1, "ur").replace("?", "\\?")}$`));
+    await expect(page.locator("html")).toHaveAttribute("lang", "ur");
+  });
 });

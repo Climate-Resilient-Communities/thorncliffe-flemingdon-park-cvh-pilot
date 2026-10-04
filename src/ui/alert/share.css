@@ -1,0 +1,91 @@
+/*
+ * Share an alert (R-29, S05.08): the message as neighbours will get it (the prototype's .cvh-sharebox), the two notes under it, and the actions. Spacing from the
+ * semantic tokens, direction from logical properties only, every control the tap size. The message is real text a resident can select, so the box never clips it.
+ */
+@layer components {
+  .share-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    margin: 0;
+    padding: var(--inset-card);
+    border: 2px dashed var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .share-box__line {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .share-box__head {
+    font-size: var(--type-alert-size);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .share-box__small {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .share-fact {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-icon);
+    margin: 0;
+  }
+
+  .share-fact__text {
+    flex: 1;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .share-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+  }
+
+  .share-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-label);
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-stack);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .share-btn--primary {
+    border-color: var(--surface-deep);
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  .share-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .share-status {
+    margin: 0;
+    color: var(--text);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+}

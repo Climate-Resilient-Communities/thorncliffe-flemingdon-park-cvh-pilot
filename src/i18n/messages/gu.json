@@ -1236,7 +1236,13 @@
     "todayAt": "આજે {time} વાગ્યે",
     "dayAt": "{day} {time} વાગ્યે",
     "linkLine": "સૌથી નવાં અપડેટ અને કોઈ પણ સુધારા: {url}",
-    "sendLine": "તમારો ફોન પૂછશે કે કઈ એપથી મોકલવું."
+    "sendLine": "તમારો ફોન પૂછશે કે કઈ એપથી મોકલવું.",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "અને {n} વધુ"
   },
   "R30": {
     "deviceLabel": "WhatsApp ગ્રુપમાં ચેતવણી",

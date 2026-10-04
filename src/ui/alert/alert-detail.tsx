@@ -7,6 +7,7 @@ import { ResidentText } from "../text/resident-text";
 import type { AlertView, Translate } from "./alert-view";
 import { DisruptionTypes, EntryText, OriginMark, ThreadEntryText } from "./alert-parts";
 import "../shell/icons.css";
+import "./alert-icons.css";
 
 /**
  * Alert detail (R-07, S04.08). In the order the prototype fixes (brief 3.1.1): what kind of disruption (X-13), the words of the alert, where
@@ -75,6 +76,17 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
             ))}
           </section>
         )}
+
+        {/* Share (R-29, S05.08): the one step to the message a neighbour gets, for an open alert and for one that closed. */}
+        <div className="alert-actions" data-testid="alert-share-actions">
+          <Link className="alert-dest tap" href={`/${lang}/alerts/${view.slug}/share`} prefetch={false} data-testid="alert-share">
+            <span className="alert-ico alert-ico--share shell-ico--mirror" aria-hidden="true" />
+            <span className="alert-dest__label">
+              <ResidentText>{t("R07.share")}</ResidentText>
+            </span>
+            <span className="shell-ico shell-ico--chevron shell-ico--mirror" aria-hidden="true" />
+          </Link>
+        </div>
 
         {view.entries.length > 1 && (
           <section className="alert-section" aria-labelledby="alert-thread-title" data-testid="alert-thread">

@@ -1236,7 +1236,13 @@
     "todayAt": "今天{time}",
     "dayAt": "{day} {time}",
     "linkLine": "最新更新和任何更正：{url}",
-    "sendLine": "您的手机会问您用哪个应用发送。"
+    "sendLine": "您的手机会问您用哪个应用发送。",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "以及另外 {n} 处"
   },
   "R30": {
     "deviceLabel": "WhatsApp 群里的警报",

@@ -882,7 +882,8 @@
    "todayAt": "ngayong araw nang {time}",
    "dayAt": "{day} nang {time}",
    "linkLine": "Pinakabagong update at anumang pagtatama: {url}",
-   "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala."
+   "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala.",
+   "placeMore": "at {n} pa"
   },
   "R30": {
    "deviceLabel": "Ang alerto sa isang WhatsApp group",

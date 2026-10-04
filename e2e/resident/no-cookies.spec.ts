@@ -20,6 +20,29 @@ test("no response to a /{lang}/** page request sets a cookie", async ({ request 
   expect(checked).toHaveLength(LANGUAGES.length * PATHS.length);
 });
 
+// S05.08, AD-3: the share link /a/{slug}?l={lang} sets no cookie, in any language, whatever it answers (this server has no alert, so it is the 404 of an address nobody
+// has an alert at; alerts.spec.ts checks the alert and the closed thread on the server that has them). It is answered where it is, never redirected.
+test("no response to the share link /a/** sets a cookie, with or without a language", async ({ request }) => {
+  const checked: string[] = [];
+  for (const { code } of LANGUAGES) {
+    for (const path of [`/a/kbcdfghj?l=${code}`, `/a/nosuchslug?l=${code}`]) {
+      const response = await request.get(path, { maxRedirects: 0 });
+
+      expect(response.status(), path).toBe(404);
+      expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), path).toEqual([]);
+      checked.push(path);
+    }
+  }
+  for (const path of ["/a/kbcdfghj", "/a/kbcdfghj?l=", "/a/kbcdfghj?l=xx", "/a", "/a/kbcdfghj/more"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+
+    expect(response.status(), path).toBe(404);
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), path).toEqual([]);
+    checked.push(path);
+  }
+  expect(checked).toHaveLength(LANGUAGES.length * 2 + 5);
+});
+
 test("no redirect to /en/ sets a cookie either, and the browser ends up with none", async ({ page, request, context }) => {
   for (const path of ["/xx", "/xx/map", "/fra/buildings/1?floor=2", "/zh-Hant"]) {
     const response = await request.get(path, { maxRedirects: 0 });
