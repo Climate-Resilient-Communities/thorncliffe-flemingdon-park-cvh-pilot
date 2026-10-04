@@ -247,9 +247,16 @@ test("every Hub screen says 'Sending is failing' while the health job has found 
   await page.goto("/staff");
   await expect(failingBanner(page)).toContainText("No sender has run for more than 3 minutes while texts are waiting.");
 
-  // The other conditions do not mean the sender is failing: an Ambassador is not shown them.
+  // Twilio refusing the sign-in is the sender failing too (S09.01 follow-up): everyone is shown it.
   await sql`update health_condition set active = false, since = null where condition in ('queue_stuck', 'sender_stalled')`;
-  await sql`update health_condition set active = true, since = now() where condition not in ('queue_stuck', 'sender_stalled')`;
+  await sql`update health_condition set active = true, since = now() where condition = 'provider_auth'`;
+  await page.goto("/staff");
+  await expect(failingBanner(page)).toContainText("Sending is failing");
+  await expect(failingBanner(page)).toContainText("Twilio refused the CVH sign-in, so texts are not being sent.");
+
+  // The other conditions do not mean the sender is failing: an Ambassador is not shown them.
+  await sql`update health_condition set active = false, since = null where condition = 'provider_auth'`;
+  await sql`update health_condition set active = true, since = now() where condition not in ('queue_stuck', 'sender_stalled', 'provider_auth')`;
   await page.goto("/staff");
   await expect(failingBanner(page)).toHaveCount(0);
 });
