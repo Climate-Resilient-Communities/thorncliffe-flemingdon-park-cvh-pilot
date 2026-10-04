@@ -4970,6 +4970,7 @@
       "done": "Release {number} is now current. Providers: {providers}. Languages: {languages}.",
       "resumed": "Files already stored when this publish continued: {files}.",
       "searchData": "Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
+      "searchNoBinary": "Search data was published without its compact copy, so search loads more slowly when it starts; check the storage bucket allows application/octet-stream. Reason: {reason}.",
       "searchNone": "This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "Texts with no reviewed translation yet, shown in English: {count}.",
       "machine": "Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
