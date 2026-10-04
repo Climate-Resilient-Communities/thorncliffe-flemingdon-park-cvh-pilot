@@ -132,8 +132,26 @@ describe("the Ambassador's home as drawn", () => {
   it("links to posting (S08.02): a new building update, and an update about each alert of the types an Ambassador posts; no link to a round yet", () => {
     expect(html).toContain('<a class="tap hub-link" href="/staff/ambassador/post" data-testid="amb-post-link">Post a building update</a>');
     expect(html).toContain(`href="/staff/ambassador/post?alert=${ALERT}" data-testid="amb-alert-post">Post an update about this</a>`);
-    expect(html.match(/<a /g)).toHaveLength(3);
+    // The new-update link, the alert's two (what residents read, an update about it) and, since S08.04, each of the two posts' "Where it stands".
+    expect(html.match(/<a /g)).toHaveLength(5);
     expect(html).not.toContain("<button");
+  });
+
+  it("links each of their own posts to where it stands (A-03, S08.04), and offers Mark resolved only on an alert about exactly one building they are assigned to", () => {
+    const view = ambassadorHomeView(data({ alerts: [alert({ canResolve: true }), alert({ alertId: "01900000-0000-7000-8000-00000000a1e8", slug: "wxyz2345", canResolve: false })], posts: [post()] }));
+    expect(view.posts.items[0].link).toEqual({ href: `/staff/ambassador/status?entry=${ENTRY}`, label: "Where it stands" });
+    expect(view.active.items[0].resolveLink).toEqual({ href: `/staff/ambassador/resolve?alert=${ALERT}`, label: "Mark resolved" });
+    expect(view.active.items[1].resolveLink).toBeNull();
+    const drawn = renderToStaticMarkup(<AmbassadorHomeBody view={view} />);
+    expect(drawn).toContain(`href="/staff/ambassador/status?entry=${ENTRY}" data-testid="amb-post-link-status">Where it stands</a>`);
+    expect(drawn.match(/data-testid="amb-alert-resolve"/g)).toHaveLength(1);
+    // An alert the home does not mark (a reader that left it out) offers none.
+    expect(ambassadorHomeView(data({ alerts: [alert()] })).active.items[0].resolveLink).toBeNull();
+  });
+
+  it("words an ambassador's own withdrawal and correction as such, not as the Hub's", () => {
+    const states = ambassadorHomeView(data({ posts: [post({ state: "withdrawn" }), post({ entryId: "01900000-0000-7000-8000-00000000e17b", state: "corrected" })] })).posts.items.map((item) => item.state);
+    expect(states).toEqual(["Withdrawn", "Corrected"]);
   });
 
   it("offers no update link on a neighbourhood-wide alert (heat), whose updates are the Hub's, and none to a person assigned to no building", () => {

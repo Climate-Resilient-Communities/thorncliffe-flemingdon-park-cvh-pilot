@@ -59,6 +59,11 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
                         {item.postLink.label}
                       </a>
                     )}
+                    {item.resolveLink && (
+                      <a className="tap hub-link" href={item.resolveLink.href} data-testid="amb-alert-resolve">
+                        {item.resolveLink.label}
+                      </a>
+                    )}
                   </Stack>
                 </li>
               ))}
@@ -91,6 +96,9 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
                         {item.note}
                       </p>
                     )}
+                    <a className="tap hub-link" href={item.link.href} data-testid="amb-post-link-status">
+                      {item.link.label}
+                    </a>
                   </Stack>
                 </li>
               ))}

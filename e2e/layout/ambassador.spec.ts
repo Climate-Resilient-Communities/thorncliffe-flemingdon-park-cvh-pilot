@@ -126,7 +126,7 @@ test.describe("what the home says, with the app's own English words at 390 px", 
 
   test("lists their own posts, each with its state in words, and the Hub's note on a post it sent back", async ({ page }) => {
     await expect(page.getByTestId("amb-post")).toHaveCount(4);
-    await expect(page.getByTestId("amb-post-state")).toHaveText(["Corrected by the Hub", "Waiting for the Hub", "Sent back to you by the Hub", "Live. Not yet verified"]);
+    await expect(page.getByTestId("amb-post-state")).toHaveText(["Corrected", "Waiting for the Hub", "Sent back to you by the Hub", "Live. Not yet verified"]);
     await expect(page.getByTestId("amb-post-note")).toHaveText("Note from the Hub: Which floors is it on?");
   });
 
@@ -141,7 +141,9 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(page.getByTestId("amb-post-link")).toHaveText("Post a building update");
     await expect(page.getByTestId("amb-alert-post")).toHaveCount(2);
     await expect(page.getByTestId("amb-alert-post").nth(1)).toHaveAttribute("href", `/staff/ambassador/post?alert=${ALERT}`);
-    // The home's links: posting, and for each alert what residents read and an update about it.
-    await expect(hubPage(page).locator("a[href]")).toHaveCount(5);
+    // The home's links: posting, for each alert what residents read and an update about it, and (S08.04) for each of their four posts where it stands.
+    await expect(hubPage(page).locator("a[href]")).toHaveCount(9);
+    await expect(page.getByTestId("amb-post-link-status")).toHaveCount(4);
+    await expect(page.getByTestId("amb-post-link-status").first()).toHaveText("Where it stands");
   });
 });

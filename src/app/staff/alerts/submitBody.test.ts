@@ -13,7 +13,7 @@ const HASH = "c".repeat(64);
 function stateOf(overrides: { attempt?: Partial<NonNullable<EntryState["attempt"]>> | null; entry?: Partial<EntryState["entry"]>; translations?: EntryState["translations"] } = {}): EntryState {
   return {
     thread: { id: ALERT, slug: "abcd2345", isDrill: false, reportedAt: new Date("2026-10-04T13:00:00.000Z"), status: "open" },
-    entry: { id: ENTRY, alertId: ALERT, kind: "ack", status: "pending_approval", version: 2, contentHash: HASH, possibleDuplicateOf: OTHER, ...overrides.entry } as EntryState["entry"],
+    entry: { id: ENTRY, alertId: ALERT, kind: "ack", status: "pending_approval", version: 2, contentHash: HASH, possibleDuplicateOf: OTHER, webPublishedAt: null, ...overrides.entry } as EntryState["entry"],
     attempt:
       overrides.attempt === null
         ? null
@@ -44,7 +44,7 @@ describe("entryStateBody", () => {
     expect(body).toEqual({
       v: 1,
       server_now: "2026-10-04T14:00:00.000Z",
-      entry: { id: ENTRY, alert_id: ALERT, kind: "ack", status: "pending_approval", version: 2, content_hash: HASH, possible_duplicate_of: OTHER },
+      entry: { id: ENTRY, alert_id: ALERT, kind: "ack", status: "pending_approval", version: 2, content_hash: HASH, possible_duplicate_of: OTHER, web_published: false },
       attempt: {
         key: KEY,
         kind: "submit",
@@ -59,6 +59,16 @@ describe("entryStateBody", () => {
       translations: [{ lang: "fr", status: "translated", machine: true }],
     });
     expect(EntryStateSchema.safeParse(body).success).toBe(true);
+  });
+
+  it("says residents already read an entry that went on the web at its submit (a D-1 post, S08.04), and still passes its own schema", () => {
+    const body = entryStateBody(stateOf({ entry: { webPublishedAt: new Date("2026-10-04T13:59:40.000Z") } }), NOW);
+    expect(body?.entry.web_published).toBe(true);
+    expect(EntryStateSchema.safeParse(body).success).toBe(true);
+    // A body built before the field existed is still read.
+    const older = { ...body!.entry } as Record<string, unknown>;
+    delete older.web_published;
+    expect(EntryStateSchema.safeParse({ ...body, entry: older }).success).toBe(true);
   });
 
   it("has no attempt for an entry nobody has submitted, and a running attempt's unfinished time as null", () => {
