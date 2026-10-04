@@ -5,7 +5,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { DirectoryStorage } from "../application/ports";
+import { StorageWriteError, type DirectoryStorage } from "../application/ports";
 
 /** The private bucket. Created private if it is missing; its files are read only through the app. */
 export const DIRECTORY_BUCKET = "directory-releases";
@@ -94,6 +94,26 @@ export interface SupabaseDirectoryStorageConfig {
 /** The longest one call to Storage may take before it is abandoned and reported as a failure. */
 export const DEFAULT_STORAGE_TIMEOUT_MS = 8000;
 
+/** The HTTP status a Storage error carries, as three digits, or null. */
+function statusOf(error: unknown): string | null {
+  const e = error as { status?: unknown; statusCode?: unknown };
+  const status = String(e.status ?? e.statusCode ?? "");
+  return /^[0-9]{3}$/.test(status) ? status : null;
+}
+
+/**
+ * Why an upload failed, as a safe token (never the vendor's message): a refused type, a too-large file or another status. When the
+ * bucket could not be widened to accept the binary type, that is named first, since it is the reason the upload was refused.
+ */
+function uploadClass(error: unknown, bucketUpdate: string | null, binary: boolean): string {
+  const status = statusOf(error);
+  const message = String((error as { message?: unknown }).message ?? "");
+  if (binary && bucketUpdate !== null) return `bucket_update_${bucketUpdate}`;
+  if (status === "415" || /mime|content.?type/i.test(message)) return "mime_not_allowed";
+  if (status === "413" || /too large|exceeded|size/i.test(message)) return "too_large";
+  return status ? `http_${status}` : "upload_failed";
+}
+
 /** Supabase Storage with the secret key, in a private bucket made on first use. Server only. */
 export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig): DirectoryStorage {
   const bucket = config.bucket ?? DIRECTORY_BUCKET;
@@ -114,6 +134,8 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
       }),
     ));
   let ready: Promise<void> | undefined;
+  // Why the bucket could not be widened to the binary type (`http_400` or `failed`): the upload that follows names it when it is refused.
+  let bucketUpdateIssue: string | null = null;
 
   const ensureBucket = async () => {
     const client = await getClient();
@@ -131,7 +153,10 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
           ...(limit ? { fileSizeLimit: limit } : {}),
         });
         // Safe line only: no vendor message. It tells the owner why vectors.bin is missing from a release.
-        if (updated.error) console.error(JSON.stringify({ event: "directory_bucket_update_failed", detail: "binary_type_not_allowed" }));
+        if (updated.error) {
+          bucketUpdateIssue = statusOf(updated.error) ? `http_${statusOf(updated.error)}` : "failed";
+          console.error(JSON.stringify({ event: "directory_bucket_update_failed", detail: "binary_type_not_allowed" }));
+        }
       }
       return;
     }
@@ -156,7 +181,7 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
         contentType: "application/json",
         cacheControl: "31536000",
       });
-      if (error) throw new Error("the directory file could not be stored");
+      if (error) throw new StorageWriteError(uploadClass(error, null, false));
     },
     async putBytes(file, body) {
       const key = checked(file);
@@ -166,7 +191,7 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
         contentType: BINARY_TYPE,
         cacheControl: "31536000",
       });
-      if (error) throw new Error("the directory file could not be stored");
+      if (error) throw new StorageWriteError(uploadClass(error, bucketUpdateIssue, true));
     },
     async getBytes(file) {
       const data = await download(file);

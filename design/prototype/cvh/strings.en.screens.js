@@ -1512,6 +1512,7 @@
     done: 'Release {number} is now current. Providers: {providers}. Languages: {languages}.',
     resumed: 'Files already stored when this publish continued: {files}.',
     searchData: 'Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.',
+    searchNoBinary: 'Search data was published without its compact copy, so search loads more slowly when it starts; check the storage bucket allows application/octet-stream. Reason: {reason}.',
     searchNone: 'This release has no search data, so search is not available to residents until a release has it.',
     fallbacks: 'Texts with no reviewed translation yet, shown in English: {count}.',
     machine: 'Descriptions sent out as machine translations no person has reviewed, labelled "Machine-translated; not reviewed by a person" for residents: {count}.',
@@ -1637,10 +1638,22 @@
       aal2Required: 'An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.',
       failed: 'The list was not changed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT.' } },
+  /* The health banner (S06.07, S09.01): one plain line per open condition, in the order the health job lists them. Admins and Coordinators see
+     every condition; everyone else at the Hub sees the two that mean the sender itself is failing. */
   health: {
     banner: 'Sending is failing',
+    bannerOther: 'Something is not working',
     queue_stuck: 'Texts have waited more than 5 minutes to be sent. Texts to the on-call Admins may be late too.',
     sender_stalled: 'No sender has run for more than 3 minutes while texts are waiting. Texts to the on-call Admins may be late too.',
+    delivery_unknown: 'Some texts may or may not have arrived: the provider did not say what happened to them.',
+    smart_encoding_on: 'Smart Encoding is on in the Twilio Messaging Service, so texts may arrive with characters changed.',
+    signature_failures: 'Many messages from Twilio failed the signature check in the last 10 minutes.',
+    job_failed: 'A scheduled job failed in the last 10 minutes, for example sending, closing expired alerts or this check.',
+    translation_fallback: 'An alert was submitted in the last 24 hours with a whole language in English, because its translation failed.',
+    publish_failed: 'The last directory publish failed. Residents still see the previous directory.',
+    transactional_ceiling: 'More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.',
+    cap_overrun: 'An approval this month went over the monthly text message spending cap. Texts keep sending.',
+    stale: 'The health check has not run for more than 3 minutes, so a new problem may not be shown here.',
     since: 'Since {when}',
     tell: 'Tell IT now.' } },
   ops: { oncall: { text: {
@@ -1648,7 +1661,12 @@
     delivery_unknown: 'CVH: texts with an unknown outcome: {count}. Check the Hub.',
     sender_stalled: 'CVH: no sender has run for over 3 minutes. Texts waiting: {count}. Check sending.',
     smart_encoding_on: 'CVH: Smart Encoding is on in the Twilio Messaging Service. Turn it off.',
-    signature_failures: 'CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.' } } } });
+    signature_failures: 'CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.',
+    job_failed: 'CVH: scheduled jobs failed in the last 10 minutes: {count}. Check the Hub.',
+    translation_fallback: 'CVH: alerts with a whole language in English because translation failed, last 24 hours: {count}. Check the Hub.',
+    publish_failed: 'CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.',
+    transactional_ceiling: 'CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.',
+    cap_overrun: 'CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.' } } } });
   /* Adding an update to a running alert (S05.01, O-14 "Add an update", O-13 "Promote to full alert"), the pilot's staff version. In the prototype an update
      is published at once from a template; here the author writes it on the same composer as every entry (the text, where things stand, the valid-until),
      submits it, and a second person approves it. The alert's audience, types and languages are carried over from the entry that covers it. The prototype's
@@ -1828,6 +1846,33 @@
     errSignedOut: 'You were signed out, so this was not sent. Sign in again, then post it again.',
     errFailed: 'This was not sent. Try again. If it keeps happening, call the Hub.' },
   A03: { states: { ended: 'Not sent: the alert ended before the Hub checked it' } } });
+  /* S07.02: the web sign-up for text alerts (R-05, R-06 as built) and the confirmation text. The keywords residents text (YES, STOP,
+     START) and "CVH" stay in English in every language. */
+  m(en, { signup: {
+    termsAgree: 'I have read the terms and privacy page, and I agree.',
+    termsLink: 'Read the terms and privacy page',
+    termsVersion: 'Terms version {version}',
+    age: 'I am 16 or older, or a parent or guardian is helping me.',
+    missingTerms: 'your agreement to the terms',
+    missingAge: 'the age statement',
+    sending: 'Sending...',
+    onItsWay: 'If this number can get texts, a message is on its way.',
+    expect: 'Reply YES to that message within 48 hours to start getting alerts. Until you reply YES, you get no alerts by text.',
+    howChange: 'To change your building, floor or language later, reply 1 or 2 to any text from the Hub.',
+    startHelp: 'No text within 5 minutes? Text START to {number}, then sign up again.',
+    startHelpNoNumber: 'No text within 5 minutes? Text START to the number our texts come from, then sign up again.',
+    error: {
+      invalid_request: 'Something in the form could not be read. Reload the page and try again.',
+      phone_not_canadian: 'Use a Canadian phone number with 10 digits, like 416 555 0123.',
+      neighbourhood_missing: 'Choose your neighbourhood.',
+      terms_not_agreed: 'To sign up, agree to the terms.',
+      age_not_confirmed: 'To sign up, confirm the age statement.',
+      terms_changed: 'The terms changed while this page was open. Read them again, then agree.',
+      place_unknown: 'One of your buildings or floors is no longer on the list. Check your buildings and try again.',
+      rate_limited: 'Too many sign-ups came from this connection. Try again in an hour.',
+      signup_unavailable: 'Text sign-up is not available just now. Try again later.',
+      network: 'We could not reach the CVH. Check your connection and try again.' } } });
+  m(en, { smsTexts: { confirmation: 'Reply YES to get CVH alerts. Reply STOP to stop.' } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

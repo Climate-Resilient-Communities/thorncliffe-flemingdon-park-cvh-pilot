@@ -51,8 +51,8 @@ import {
   type VectorsFile,
 } from "../domain/searchData";
 import { VectorsBinaryError, decodeVectorsBinary, encodeVectorsBinary } from "../domain/vectorsBinary";
-import type { EmbeddedTexts, PublishDeps, SearchBuild } from "./ports";
-import { LeaseLostError, PublishStepError, type ReleaseClaim } from "./publishSteps";
+import { StorageWriteError, type EmbeddedTexts, type PublishDeps, type SearchBuild } from "./ports";
+import { LeaseLostError, PublishStepError, type BuiltSearch, type ReleaseClaim } from "./publishSteps";
 
 export const DEFAULT_CHUNK_SIZE = 32;
 export const DEFAULT_CALL_TIMEOUT_MS = 15 * 1000;
@@ -77,6 +77,13 @@ export interface StepClock {
 }
 
 class TimedOut extends Error {}
+
+/** A safe class for a failed write of the compact copy: the store's own classification, or only that it timed out or failed. */
+function binaryFailureClass(error: unknown): string {
+  if (error instanceof TimedOut) return "timeout";
+  if (error instanceof StorageWriteError && /^[a-z0-9_]{1,40}$/.test(error.classification)) return error.classification;
+  return "error";
+}
 
 /** The result of `work`, or a TimedOut rejection when it has not settled after `ms`. */
 async function within<T>(work: Promise<T>, ms: number): Promise<T> {
@@ -201,7 +208,7 @@ const sameSet = (a: readonly string[], b: readonly string[]) => a.length === b.l
  * release planned without search data, and for one whose file is already stored. Throws a PublishStepError (retryable when
  * another pass can fix it) or LeaseLostError.
  */
-export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseClaim, step: StepClock): Promise<{ vectors: number; reused: number; embedded: number } | null> {
+export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseClaim, step: StepClock): Promise<BuiltSearch | null> {
   const [row] = await db
     .select({
       status: directoryRelease.status,
@@ -231,7 +238,11 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
   if (!sameSet(build.emergencyCategories, plan.emergency_categories)) throw new PublishStepError("search_config_invalid", false, ["emergency_categories_changed"]);
 
   const stored = ReleaseSearchRecordSchema.safeParse(row.search);
-  if (stored.success) return { vectors: stored.data.vector_count, reused: stored.data.reused, embedded: stored.data.embedded };
+  if (stored.success) {
+    // A pass that resumes a build whose record has no compact copy, in a store that could have kept one, says so too.
+    const missing = !stored.data.binary && deps.storage.putBytes ? { binary_issue: "binary_put_failed:missing_on_resume" } : {};
+    return { vectors: stored.data.vector_count, reused: stored.data.reused, embedded: stored.data.embedded, ...missing };
+  }
 
   const previous = await previousVectors(db, deps, build, plan.embed_config_key);
   const reusable = new Map<string, VectorEntry>();
@@ -345,14 +356,19 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
   // The compact copy, for a fast cold start of the search. It is an addition, never a requirement: a store that keeps only text, or a
   // write that fails, leaves the release with its JSON vectors alone (which every reader falls back to).
   let binary: ReleaseSearchRecord["binary"];
+  let binaryIssue: string | undefined;
   if (deps.storage.putBytes) {
     try {
       const bytes = encodeVectorsBinary({ releaseV: claim.release, catalogueHash: row.catalogueHash, embedModel: plan.embed_model, entries: sortedVectorEntries(entries) }, sha256HexBytes);
       const binaryPath = vectorsBinaryPathOf(claim.release);
       await within(deps.storage.putBytes(binaryPath, bytes), build.vectorsPutTimeoutMs ?? DEFAULT_VECTORS_PUT_TIMEOUT_MS);
       binary = { path: binaryPath, sha256: sha256HexBytes(bytes), bytes: bytes.length };
-    } catch {
+    } catch (error) {
       binary = undefined;
+      // Not silent: the Hub's publish screen says the release went out without its compact copy, and the log has the same safe reason
+      // (a classification only, never the vendor's message), so a bucket that refuses application/octet-stream is found at once.
+      binaryIssue = `binary_put_failed:${binaryFailureClass(error)}`;
+      console.error(JSON.stringify({ event: "directory_binary_put_failed", release: claim.release, detail: binaryIssue }));
     }
   }
   const record: ReleaseSearchRecord = {
@@ -380,7 +396,7 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
     .returning({ number: directoryRelease.number });
   if (marked.length === 0) throw new LeaseLostError();
   await deps.hook?.("vectors_stored", { release: claim.release });
-  return { vectors: record.vector_count, reused: record.reused, embedded: record.embedded };
+  return { vectors: record.vector_count, reused: record.reused, embedded: record.embedded, ...(binaryIssue ? { binary_issue: binaryIssue } : {}) };
 }
 
 // ---------------------------------------------------------------- the check before the release goes live

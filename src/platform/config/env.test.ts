@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, DEFAULT_SMS_USD_TO_CAD_RATE, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
+import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING,
+  DEFAULT_SMS_USD_TO_CAD_RATE, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -898,5 +899,25 @@ describe("SMS_USD_TO_CAD_RATE (S06.08)", () => {
 
   it.each(["0", "0.4999", "5.0001", "6", "-1.4", "1.23456", "1e0", "cad", "1,4", "$1.4", "NaN", "Infinity", ".5", "1.", "100"])("refuses %j and names the variable", (value) => {
     expect(problemsOf({ ...production, SMS_USD_TO_CAD_RATE: value })).toEqual([expect.stringMatching(/^SMS_USD_TO_CAD_RATE: must be a positive number with at most four decimals, between 0\.5 and 5/)]);
+  });
+});
+
+describe("SMS_TRANSACTIONAL_DAILY_CEILING (S09.01)", () => {
+  it("defaults to 300 non-alert texts a day in every environment, and docs/config.md documents it", () => {
+    for (const base of [production, preview, local]) expect(parseEnv(base).smsTransactionalDailyCeiling).toBe(DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING);
+    expect(DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING).toBe(300);
+    expect(readFileSync("docs/config.md", "utf8")).toMatch(/`SMS_TRANSACTIONAL_DAILY_CEILING`[^\n]*default `300`/);
+  });
+
+  it.each([
+    ["1", 1],
+    [" 450 ", 450],
+    ["20000", 20000],
+  ])("reads %j as %s, in any environment (it is no credential)", (value, ceiling) => {
+    for (const base of [production, preview, local]) expect(parseEnv({ ...base, SMS_TRANSACTIONAL_DAILY_CEILING: value }).smsTransactionalDailyCeiling).toBe(ceiling);
+  });
+
+  it.each(["0", "-5", "1.5", "lots", "1e3"])("refuses %j and names the variable", (value) => {
+    expect(problemsOf({ ...production, SMS_TRANSACTIONAL_DAILY_CEILING: value })).toEqual(["SMS_TRANSACTIONAL_DAILY_CEILING: must be a whole number of at least 1"]);
   });
 });

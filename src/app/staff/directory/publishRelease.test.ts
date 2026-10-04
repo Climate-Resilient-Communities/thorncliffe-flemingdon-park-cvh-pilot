@@ -72,6 +72,26 @@ describe("Publish directory (server action work)", () => {
     });
   });
 
+  it("says the search data went out without its compact copy, with the safe reason, and only then", async () => {
+    directory.publishDirectory.mockResolvedValue(ok({ counts: { ...counts, fallbacks: 0, stale: 0 }, search: { vectors: 99, reused: 0, embedded: 99, binary_issue: "binary_put_failed:mime_not_allowed" } }));
+
+    const state = await publishFromForm(deps, session);
+
+    expect(state).toMatchObject({ status: "done" });
+    expect((state as { notes: string[] }).notes).toEqual([
+      "Search data: 99 providers, 0 copied from the previous release, 99 made new.",
+      "Search data was published without its compact copy, so search loads more slowly when it starts; check the storage bucket allows application/octet-stream. Reason: binary_put_failed:mime_not_allowed.",
+    ]);
+  });
+
+  it("has no compact-copy note when the binary was written", async () => {
+    directory.publishDirectory.mockResolvedValue(ok({ counts: { ...counts, fallbacks: 0, stale: 0 }, search: { vectors: 99, reused: 0, embedded: 99 } }));
+
+    const state = await publishFromForm(deps, session);
+
+    expect(JSON.stringify(state)).not.toContain("compact copy");
+  });
+
   it("says how many search vectors the release holds and how many were copied from the previous release", async () => {
     directory.publishDirectory.mockResolvedValue(ok({ counts: { ...counts, fallbacks: 0, stale: 0 }, search: { vectors: 99, reused: 97, embedded: 2 } }));
 

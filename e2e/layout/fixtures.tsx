@@ -8,8 +8,8 @@ import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directo
 import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
 import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import { PauseBanner } from "@/app/staff/PauseBanner";
-import { SenderBanner } from "@/app/staff/SenderBanner";
-import type { SenderBannerView } from "@/app/staff/senderBanner";
+import { HealthBanner } from "@/app/staff/HealthBanner";
+import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
@@ -857,8 +857,8 @@ export function TextsFixture({
 
 /**
  * The Hub shell around the On-call numbers screen (S06.07), as an Admin sees it: the real body (OncallView) and the real, behaviour-free list and
- * forms (OncallFormsView) with the state a press would leave, and, while the sender is failing, the banner the Hub layout puts above every Hub
- * screen (SenderBanner), here above this one. Every number is a fictional one masked to its last four digits.
+ * forms (OncallFormsView) with the state a press would leave, and, while a health condition holds, the banner the Hub layout puts above every Hub
+ * screen (HealthBanner, S06.07 and S09.01), here above this one. Every number is a fictional one masked to its last four digits.
  */
 export function OncallFixture({
   texts,
@@ -873,7 +873,7 @@ export function OncallFixture({
   count: number;
   unreadable?: boolean;
   form: ComponentProps<typeof OncallFormsView>;
-  banner?: SenderBannerView;
+  banner?: HealthBannerView;
 }) {
   return (
     <HubShell
@@ -897,7 +897,7 @@ export function OncallFixture({
       }
       brand={brand}
     >
-      {banner ? <SenderBanner view={banner} /> : null}
+      {banner ? <HealthBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <OncallView count={count} unreadable={unreadable} forms={<OncallFormsView {...form} />} />
       </Screen>

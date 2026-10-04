@@ -93,7 +93,7 @@ export const alertEntry = pgTable(
     withdrawalReason: text("withdrawal_reason"),
     /**
      * S08.02: why the entry was discarded (`by_author`, `declined`, `by_close`), set in the same change that discards it; null for every entry that is not
-     * discarded, and for those discarded before the column existed (db/migrations/20261004200000_ambassador_post.sql).
+     * discarded, and for those discarded before the column existed (db/migrations/20261004230000_ambassador_post.sql).
      */
     discardReason: text("discard_reason"),
     /** S08.02: the building (rsn) an ambassador's post is attributed to, frozen at submit with its texts and cleared by a return; null for the Hub's own entries. */

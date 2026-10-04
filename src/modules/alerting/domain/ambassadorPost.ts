@@ -1,7 +1,7 @@
 // What an ambassador's post adds to the entry rules (S08.02, AD-5): why an entry was discarded, and who an entry is attributed to. Pure: no I/O, no clock.
 //
 // Why: an ambassador's post reads "Not sent by the Hub" only when the Hub really declined it (the decision S08.01 handed over), never when its author took
-// it back or its alert closed first. Every use case that discards says which (`alert_entry.discard_reason`, db/migrations/20261004200000_ambassador_post.sql).
+// it back or its alert closed first. Every use case that discards says which (`alert_entry.discard_reason`, db/migrations/20261004230000_ambassador_post.sql).
 //
 // Who: residents and the approver read who an entry is from as it was frozen at submit with its texts (`alert_entry.attributed_rsn`), never from the author's
 // role at the time they read: "Building ambassador, {building}" for an ambassador's post, the Hub for everything else (spine, AD-5 "Seam for E08").
