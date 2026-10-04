@@ -1062,7 +1062,7 @@ So that every resident gets the same, complete set of listings in their language
 
 ### Story S02.06 — Resident browses and filters the directory
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 12 min (started 2026-10-02 20:08 UTC, merged 23:20 UTC)
 - **Traces:** FR-D2, UX-DR10 (filters), UX-DR11, NFR-N7 · **Depends on:** S02.05, S02.03 · **Branch:** `e02-s06-directory-browse`
 
 As a resident,
@@ -1099,7 +1099,7 @@ So that I can find help near me in my language.
 
 ### Story S02.07 — Resident finds providers and buildings on a map
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** — (started 2026-10-02 23:23 UTC, merge pending)
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 5 min (started 2026-10-02 23:23 UTC, merged 2026-10-03 01:28 UTC)
 - **Traces:** FR-D3, UX-DR12, AR-3 (tile cache) · **Depends on:** S02.06, S01.13 · **Branch:** `e02-s07-map`
 
 As a resident,
@@ -1271,7 +1271,7 @@ So that I can see at a glance whether anything affects me.
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** (owned by the other developer; taken over and merged by the staff engineer on 2026-10-04)
+- **Size:** M · **Estimate:** 7 h · **Actual:** 15 h 18 min elapsed (story claimed 2026-10-03 12:53 UTC, merged 2026-10-04 04:11 UTC; includes waiting for review and the takeover)
 - **Traces:** NFR-N3, AR-3, FR-M1 (installs) · **Depends on:** S02.06, S02.07, S02.10, S02.11 · **Branch:** `e02-s12-offline`
 
 As a resident on an older phone with poor signal,
