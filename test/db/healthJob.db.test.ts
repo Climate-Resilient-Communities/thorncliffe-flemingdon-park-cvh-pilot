@@ -169,7 +169,7 @@ describe("when everything is fine", () => {
     const report = await job().run();
 
     expect(report.conditions.map((row) => [row.condition, row.status, row.holds, row.action])).toEqual(HEALTH_CONDITIONS.map((condition) => [condition, "ok", false, "quiet"]));
-    expect(report.conditions).toHaveLength(10);
+    expect(report.conditions).toHaveLength(11);
     expect(report.heartbeat).toBe(true);
     expect(await oncallTexts()).toEqual([]);
     expect(await healthEvents()).toEqual([]);
@@ -618,7 +618,7 @@ describe("two runs at once, and a condition that fails", () => {
     expect(report.conditions.map((row) => [row.condition, row.status])).toEqual(HEALTH_CONDITIONS.map((condition) => [condition, condition === "sender_stalled" ? "failed" : "ok"]));
     // A run that could not judge every condition records no heartbeat: from outside it is a health job that is failing.
     expect(report.heartbeat).toBe(false);
-    expect(await readHeartbeat(app)).toEqual({ completedAt: null, fresh: false });
+    expect(await readHeartbeat(app)).toEqual({ completedAt: null, fresh: false, cause: "health_job_stale" });
     expect(errors).toEqual([{ evt: "health.condition_failed", fields: { condition: "sender_stalled", error: "TypeError" } }]);
     expect(JSON.stringify(errors)).not.toContain("555");
     expect(await stateOf("sender_stalled")).toEqual({ active: false, has_since: false, alerted: false });
@@ -808,18 +808,109 @@ describe("a spending cap overrun this month", () => {
   });
 });
 
+describe("Twilio refusing the CVH's sign-in (S09.01 follow-up)", () => {
+  const REFUSED = { kind: "rejected", httpStatus: 401, errorCode: 20003, message: "Authenticate" } as const;
+  const refusals = async () => (await owner`select count(*)::int as n from ops_event where kind = 'dispatch.provider_auth_failed'`)[0].n as number;
+  const cause = async () => (await readHeartbeat(app)).cause;
+  /** The condition has held for `minutes` minutes (the health job set `since` when it began). */
+  const heldFor = (minutes: number) => owner.unsafe(`update health_condition set since = now() - interval '${minutes} minutes' where condition = 'provider_auth'`);
+
+  it("one refusal that passes: the condition opens, its on-call text is the next try, Twilio accepts it and the next run clears it; the heartbeat stays 200", async () => {
+    await addOncall(1);
+    await world.seedTransactional(1);
+    world.provider.answer(REFUSED);
+    await world.dispatcher().run();
+    expect(await refusals()).toBe(1);
+
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("provider_auth", 1)]);
+    expect((await healthEvents()).at(-1)).toMatchObject({ kind: "health.condition_alerted", detail: { condition: "provider_auth", count: 1, notified: 1, first: true } });
+    expect(await cause()).toBeNull();
+
+    // The blip has passed: the on-call text (claimed first) is accepted.
+    world.provider.answer(undefined);
+    await world.dispatcher().run();
+    expect((await oncallTexts())[0]).toMatchObject({ state: "submitted" });
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: false, action: "recovered" });
+    expect((await healthEvents()).at(-1)).toMatchObject({ kind: "health.condition_recovered", detail: { condition: "provider_auth" } });
+    expect(await cause()).toBeNull();
+    await expectNoNumberStored();
+  });
+
+  it("refusals that keep coming: the condition holds, and after 10 minutes the heartbeat names `provider_auth`; it clears when Twilio accepts a text", async () => {
+    await addOncall(1);
+    await world.seedTransactional(2);
+    world.provider.answer(REFUSED);
+    await world.dispatcher().run();
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+
+    // The on-call text is refused too: a second refusal, nothing accepted.
+    await world.dispatcher().run();
+    expect(await refusals()).toBe(2);
+    expect((await oncallTexts())[0]).toMatchObject({ state: "failed" });
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: true, action: "held" });
+    expect(await stateOf("provider_auth")).toMatchObject({ active: true, has_since: true });
+
+    // Debounced: not before it has held for 10 minutes.
+    await heldFor(9);
+    expect(await cause()).toBeNull();
+    await heldFor(11);
+    expect(await cause()).toBe("provider_auth");
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: true, action: "held" });
+    expect(await cause()).toBe("provider_auth");
+    // The banner names it to everyone at the Hub, as sending that is failing.
+    const banner = await loadHealthBanner({ facts: async () => ({ active: await activeHealthConditions(app), heartbeat: await readHeartbeat(app) }), everything: false, logError: () => {} });
+    expect(banner?.heading).toBe("Sending is failing");
+    expect(banner?.lines[0]).toContain("Twilio refused the CVH sign-in");
+
+    // The credentials are fixed: the next text is accepted and the next run clears it.
+    world.provider.answer(undefined);
+    await world.dispatcher().run();
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: false, action: "recovered" });
+    expect(await cause()).toBeNull();
+  });
+
+  it("is cleared by the daily Messaging Service check that read the setting after the refusal, and not by one before it", async () => {
+    await addOncall(1);
+    await event("messaging.smart_encoding_off", {}, 60);
+    await event("dispatch.provider_auth_failed", { http_status: 401 }, 30);
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: true, action: "alerted" });
+    await event("messaging.smart_encoding_off", {});
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: false, action: "recovered" });
+  });
+
+  it("is not cleared by a text accepted before the refusal, and counts the refusals of the last 24 hours", async () => {
+    await addOncall(1);
+    await world.seedTransactional(1);
+    await world.dispatcher().run();
+    expect(await owner`select count(*)::int as n from delivery where submitted_at is not null`).toEqual([{ n: 1 }]);
+    await event("dispatch.provider_auth_failed", { http_status: 401 }, 25 * 60);
+    await event("dispatch.provider_auth_failed", { http_status: 403 }, 0);
+    await event("dispatch.provider_auth_failed", { http_status: 401 }, 0);
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: true, action: "alerted" });
+    expect((await healthEvents()).at(-1)).toMatchObject({ detail: { condition: "provider_auth", count: 2 } });
+  });
+
+  it("is quiet when Twilio has never refused the sign-in", async () => {
+    await world.seedTransactional(1);
+    await world.dispatcher().run();
+    expect(await reportOf("provider_auth")).toMatchObject({ holds: false, action: "quiet" });
+  });
+});
+
 describe("the heartbeat the outside check reads", () => {
   it("is never fresh before the first run, fresh after a run that judged every condition, and not fresh 3 minutes later", async () => {
-    expect(await readHeartbeat(app)).toEqual({ completedAt: null, fresh: false });
+    expect(await readHeartbeat(app)).toEqual({ completedAt: null, fresh: false, cause: "health_job_stale" });
     expect((await job().run()).heartbeat).toBe(true);
     const beat = await readHeartbeat(app);
     expect(beat.fresh).toBe(true);
     expect(beat.completedAt).toBeInstanceOf(Date);
+    expect(beat.cause).toBeNull();
 
     await owner`update health_heartbeat set completed_at = now() - interval '2 minutes 50 seconds'`;
     expect((await readHeartbeat(app)).fresh).toBe(true);
     await owner`update health_heartbeat set completed_at = now() - interval '3 minutes 1 second'`;
-    expect((await readHeartbeat(app)).fresh).toBe(false);
+    expect(await readHeartbeat(app)).toMatchObject({ fresh: false, cause: "health_job_stale" });
   });
 
   it("is one row the app can read and stamp, and cannot add to or delete", async () => {

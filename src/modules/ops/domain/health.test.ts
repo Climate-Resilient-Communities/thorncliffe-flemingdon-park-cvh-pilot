@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { ALERT_INTERVAL_MS, HEARTBEAT_STALE_AFTER_MS, SENDER_CONDITIONS, decide, heartbeatFresh, intervalPassed, type ConditionState } from "./health";
+import {
+  ALERT_INTERVAL_MS,
+  HEARTBEAT_STALE_AFTER_MS,
+  PROVIDER_AUTH_RED_AFTER_MS,
+  SENDER_CONDITIONS,
+  decide,
+  heartbeatCause,
+  heartbeatFresh,
+  intervalPassed,
+  type ConditionState,
+} from "./health";
 
 const NOW = new Date("2026-10-04T12:00:00Z");
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
@@ -70,8 +80,8 @@ describe("an event condition (an unknown delivery, Smart Encoding found on)", ()
 });
 
 describe("the conditions that mean the sender itself is failing (the Hub's banner)", () => {
-  it("are the stuck queue and the stalled sender", () => {
-    expect([...SENDER_CONDITIONS]).toEqual(["queue_stuck", "sender_stalled"]);
+  it("are the stuck queue, the stalled sender and Twilio refusing the sign-in", () => {
+    expect([...SENDER_CONDITIONS]).toEqual(["queue_stuck", "sender_stalled", "provider_auth"]);
   });
 });
 
@@ -83,5 +93,27 @@ describe("the heartbeat (S09.01)", () => {
     expect(heartbeatFresh(ago(3 * MINUTE), NOW)).toBe(false);
     expect(heartbeatFresh(ago(60 * MINUTE), NOW)).toBe(false);
     expect(heartbeatFresh(null, NOW)).toBe(false);
+  });
+});
+
+describe("what the heartbeat names (S09.01 follow-up)", () => {
+  const beating = ago(MINUTE);
+
+  it("names nothing while the job is fresh and Twilio sign-in is not failing", () => {
+    expect(heartbeatCause({ completedAt: beating, providerAuthSince: null }, NOW)).toBeNull();
+  });
+
+  it("names a stale job, or one that never ran, before anything it last remembered", () => {
+    expect(heartbeatCause({ completedAt: null, providerAuthSince: null }, NOW)).toBe("health_job_stale");
+    expect(heartbeatCause({ completedAt: ago(3 * MINUTE), providerAuthSince: null }, NOW)).toBe("health_job_stale");
+    expect(heartbeatCause({ completedAt: ago(3 * MINUTE), providerAuthSince: ago(60 * MINUTE) }, NOW)).toBe("health_job_stale");
+  });
+
+  it("does not name a refusal that has held for less than 10 minutes (one that passes clears before), and names one that has held for 10", () => {
+    expect(PROVIDER_AUTH_RED_AFTER_MS).toBe(10 * MINUTE);
+    expect(heartbeatCause({ completedAt: beating, providerAuthSince: ago(0) }, NOW)).toBeNull();
+    expect(heartbeatCause({ completedAt: beating, providerAuthSince: ago(10 * MINUTE - 1) }, NOW)).toBeNull();
+    expect(heartbeatCause({ completedAt: beating, providerAuthSince: ago(10 * MINUTE) }, NOW)).toBe("provider_auth");
+    expect(heartbeatCause({ completedAt: beating, providerAuthSince: ago(6 * 60 * MINUTE) }, NOW)).toBe("provider_auth");
   });
 });

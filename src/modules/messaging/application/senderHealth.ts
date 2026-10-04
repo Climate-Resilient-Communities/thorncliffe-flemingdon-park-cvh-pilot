@@ -38,4 +38,10 @@ export interface SenderHealth {
 
 export interface SenderHealthReader {
   read(executor: DbExecutor): Promise<SenderHealth>;
+  /**
+   * Whether the provider accepted a text after this instant (a delivery's `submitted_at`, set by the database when the provider accepted it):
+   * the health job's sign that Twilio took the CVH's credentials again after it refused them (S09.01 follow-up). Asked only while a refusal is
+   * being judged; yes or no, no row.
+   */
+  acceptedAfter(executor: DbExecutor, at: Date): Promise<boolean>;
 }

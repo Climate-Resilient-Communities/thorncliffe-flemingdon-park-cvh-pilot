@@ -31,4 +31,10 @@ describe("the text to the on-call Admins (S06.07, S09.01)", () => {
     expect(oncallText("transactional_ceiling", 301)).toBe("CVH: sign-up and reply texts today passed the daily limit: 301. They keep sending. Check the Hub.");
     expect(oncallText("cap_overrun", 1)).toBe("CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.");
   });
+
+  it("names Twilio refusing the sign-in, how often in 24 hours, and that a text that arrives means it works again (S09.01 follow-up)", () => {
+    expect(oncallText("provider_auth", 4)).toBe(
+      "CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: 4. If this text reached you, it works again. Check the Hub.",
+    );
+  });
 });

@@ -214,7 +214,7 @@ describe("the health job's events (S06.07)", () => {
     expect(() => toOpsEventRecord({ kind: "spend.cap_overrun", detail: { approver: "Ann" } as never })).toThrow(OpsEventError);
   });
 
-  it("names every condition of AD-23 (S06.07's five and S09.01's five)", () => {
+  it("names every condition of AD-23 (S06.07's five, S09.01's five and Twilio sign-in, the S09.01 follow-up)", () => {
     expect([...HEALTH_CONDITIONS]).toEqual([
       "queue_stuck",
       "delivery_unknown",
@@ -226,6 +226,7 @@ describe("the health job's events (S06.07)", () => {
       "publish_failed",
       "transactional_ceiling",
       "cap_overrun",
+      "provider_auth",
     ]);
   });
 });

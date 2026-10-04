@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { HEALTH_CONDITIONS } from "@/modules/ops";
+import { HEALTH_CONDITIONS, SENDER_CONDITIONS, type HealthCondition } from "@/modules/ops";
 import { healthBannerView, loadHealthBanner, seesEveryCondition, type HealthBannerFacts } from "./healthBannerModel";
 
 const SINCE = new Date("2026-10-05T18:15:00Z");
@@ -42,8 +42,19 @@ describe("the banner while the sender is failing (S06.07), as everyone at the Hu
     ]);
   });
 
+  it("shows everyone Twilio refusing the sign-in, as sending that is failing (S09.01 follow-up)", () => {
+    expect(healthBannerView(facts([{ condition: "provider_auth", since: SINCE }]), SENDER_ONLY)).toEqual({
+      heading: "Sending is failing",
+      lines: [
+        "Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.",
+        "Since Oct 5, 2026, 2:15 p.m.",
+        "Tell IT now.",
+      ],
+    });
+  });
+
   it("does not show an Ambassador or a Director the conditions that are not the sender failing, nor a stopped health check", () => {
-    const others = HEALTH_CONDITIONS.filter((condition) => condition !== "queue_stuck" && condition !== "sender_stalled").map((condition) => ({ condition, since: SINCE }));
+    const others = HEALTH_CONDITIONS.filter((condition) => !(SENDER_CONDITIONS as readonly HealthCondition[]).includes(condition)).map((condition) => ({ condition, since: SINCE }));
     expect(healthBannerView(facts(others, { completedAt: SINCE, fresh: false }), SENDER_ONLY)).toBeNull();
     expect(seesEveryCondition("ambassador")).toBe(false);
     expect(seesEveryCondition("director")).toBe(false);

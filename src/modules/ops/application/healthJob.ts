@@ -21,6 +21,11 @@
 //    on-call texts not counted). Texted about once that day (S07.09: "on-call is alerted once that day"; texts keep sending); it clears at midnight.
 //  - cap_overrun: a spending cap overrun (`spend.cap_overrun`, S07.08) was recorded this month in Toronto. An event condition: each new one is
 //    texted about once; it clears when the month ends.
+//  From the S09.01 follow-up:
+//  - provider_auth: Twilio refused the CVH's credentials (`dispatch.provider_auth_failed`: the sender stops its run at a 401, or the third 403 in a
+//    row) and has accepted nothing since: no text was accepted after the newest refusal, and no daily Messaging Service check read the setting
+//    after it. A level condition, so its on-call text (rank 1, claimed before every text but a fire alert) is also the next try of the credentials:
+//    if Twilio accepts it, the next run clears the condition. The heartbeat answers 503 `provider_auth` once it has held for 10 minutes.
 //  "Messaging Service settings wrong" is smart_encoding_on (S06.02's daily check; S07.09 adds its other settings to that check).
 //
 // Each run that judged every condition records the heartbeat (`health_heartbeat`), which `/api/health/heartbeat` reads for the outside check: a
@@ -38,10 +43,13 @@ import { oncallStore } from "../adapters/oncallStore";
 import {
   FALLBACK_WINDOW_MS,
   JOB_FAILURE_WINDOW_MS,
+  PROVIDER_AUTH_COUNT_WINDOW_MS,
   SIGNATURE_FAILURE_LIMIT,
   SIGNATURE_WINDOW_MS,
   decide,
+  heartbeatCause,
   heartbeatFresh,
+  type HeartbeatCause,
   type Observation,
 } from "../domain/health";
 import { HEALTH_CONDITIONS, type HealthCondition, type OpsEvent } from "../domain/events";
@@ -147,6 +155,16 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
         return eventsObserved(tx, "directory.publish_failed", { at: await deps.lastPublishedAt(tx) }, lastEventId);
       case "cap_overrun":
         return eventsObserved(tx, "spend.cap_overrun", { torontoMonth: true }, lastEventId);
+      case "provider_auth": {
+        const refused = await healthStore.latestOfKinds(tx, ["dispatch.provider_auth_failed"]);
+        if (refused === null) return { holds: false, count: 0, eventId: null };
+        // Anything Twilio accepted after the newest refusal ends it: the daily check that read the Messaging Service, or a text it accepted.
+        const checked = await healthStore.latestOfKinds(tx, ["messaging.smart_encoding_on", "messaging.smart_encoding_off"]);
+        if (checked !== null && checked.id > refused.id) return { holds: false, count: 0, eventId: null };
+        if (await sender.acceptedAfter(tx, refused.at)) return { holds: false, count: 0, eventId: null };
+        const refusals = await healthStore.countRecent(tx, "dispatch.provider_auth_failed", PROVIDER_AUTH_COUNT_WINDOW_MS);
+        return { holds: true, count: Math.max(refusals, 1), eventId: null };
+      }
       case "transactional_ceiling": {
         const facts = await sender.read(tx);
         const dayStart = await healthStore.torontoDayStart(tx);
@@ -253,11 +271,17 @@ export async function activeHealthConditions(executor: DbExecutor): Promise<Acti
   });
 }
 
-/**
- * The heartbeat (S09.01): when the health job last judged every condition (null: it never has) and whether that is less than 3 minutes ago by
- * the database's clock. `/api/health/heartbeat` answers by `fresh`; the Hub's banner says the check has stopped when it ran once and is not fresh.
- */
-export async function readHeartbeat(executor: DbExecutor): Promise<{ completedAt: Date | null; fresh: boolean }> {
-  const { completedAt, now } = await healthStore.heartbeat(executor);
-  return { completedAt, fresh: heartbeatFresh(completedAt, now) };
+/** What the heartbeat reads (S09.01): one cheap read, by the database's clock. */
+export interface HeartbeatReading {
+  /** When the health job last judged every condition (null: it never has). */
+  completedAt: Date | null;
+  /** Whether that is less than 3 minutes ago: the Hub's banner says the check has stopped when it ran once and is not fresh. */
+  fresh: boolean;
+  /** Why `/api/health/heartbeat` answers 503 (null: it answers 200): a stale job, or Twilio sign-in refused for 10 minutes (domain/health.ts). */
+  cause: HeartbeatCause | null;
+}
+
+export async function readHeartbeat(executor: DbExecutor): Promise<HeartbeatReading> {
+  const { completedAt, providerAuthSince, now } = await healthStore.heartbeat(executor);
+  return { completedAt, fresh: heartbeatFresh(completedAt, now), cause: heartbeatCause({ completedAt, providerAuthSince }, now) };
 }
