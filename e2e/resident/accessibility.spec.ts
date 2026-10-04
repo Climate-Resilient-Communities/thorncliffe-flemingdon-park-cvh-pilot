@@ -291,3 +291,37 @@ test.describe("touch targets at 320 px", () => {
   }
 });
 
+test.describe("axe-core on states that open after a tap", () => {
+  for (const lang of LANGS) {
+    for (const basic of [false, true]) {
+      test(`${lang}, ${basic ? "basic" : "normal"} mode: the language sheet open, and the alert thread after "Earlier updates"`, async ({ browser, baseURL }) => {
+        test.setTimeout(120_000);
+        const found: Record<string, Found[]> = {};
+        const sheet = await freshPage(browser, baseURL, 390);
+        try {
+          await open(sheet.page, PAGES[0], lang, basic, 390);
+          await sheet.page.getByTestId("shell-lang-button").click();
+          await expect(sheet.page.getByTestId("shell-lang-sheet")).toBeVisible();
+          const violations = await axeRun(sheet.page, { tags: WCAG }, ["serious", "critical"]);
+          if (violations.length > 0) found["language sheet"] = violations;
+        } finally {
+          await sheet.close();
+        }
+        if (basic) {
+          const thread = await freshPage(browser, baseURL, 390);
+          try {
+            await open(thread.page, PAGES.find((p) => p.name === "alert")!, lang, true, 390);
+            const more = thread.page.getByTestId("alert-earlier-more");
+            if (await more.isVisible()) await more.click();
+            const violations = await axeRun(thread.page, { tags: WCAG }, ["serious", "critical"]);
+            if (violations.length > 0) found["alert thread, all entries"] = violations;
+          } finally {
+            await thread.close();
+          }
+        }
+        expect(found).toEqual({});
+      });
+    }
+  }
+});
+

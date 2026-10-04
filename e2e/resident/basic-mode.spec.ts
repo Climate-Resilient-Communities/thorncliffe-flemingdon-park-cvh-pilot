@@ -4,7 +4,7 @@ import { BUILDINGS, stubBuildingList } from "./choices-fixture";
 import { newServer, stubDirectory } from "./directory-fixture";
 import { catalogText, expectBaseline, openResident, waitForFonts } from "./helpers";
 import { feedOf, stubFeed } from "./home-fixture";
-import { stubMap, TILE_URL } from "./map-fixture";
+import { mapListing, stubMap, TILE_URL } from "./map-fixture";
 
 // S02.14: basic mode (X-07). The switch in the header and the control in R-34 turn it on and off; the choice is saved in device
 // choices and nothing reaches the server; the page is in basic mode before its first paint; the screens drop what the prototype
@@ -30,6 +30,8 @@ test.describe("the switch (X-07)", () => {
     const toggle = header.getByRole("switch", { name: /Bigger text, fewer things/ });
     await expect(toggle).toHaveAttribute("aria-checked", "false");
     await expect(toggle).toContainText("Off");
+    // The state is the switch's own state, not part of its name, so a screen reader does not say it twice.
+    await expect(toggle).toHaveAccessibleName("Bigger text, fewer things");
     expect(await htmlBasic(page)).toBeNull();
     const normalSize = await page.locator("main p").first().evaluate((p) => parseFloat(getComputedStyle(p).fontSize));
 
@@ -79,26 +81,21 @@ test.describe("the switch (X-07)", () => {
 
   test("a page that loads with basic mode saved is in basic mode before its first paint, on every page", async ({ page }) => {
     await phoneHolds(page, { basic: true });
-    // The time the attribute appeared, and the time of the first paint, in the page's own clock.
+    // Whether the body existed when the attribute first appeared: if it did not, nothing had been parsed, let alone painted.
     await page.addInitScript(() => {
-      const w = window as unknown as { __basicSetAt: number | null };
-      w.__basicSetAt = null;
+      const w = window as unknown as { __basicSet: { bodyExisted: boolean } | null };
+      w.__basicSet = null;
       // Observed from the document: <html> does not exist yet when an init script runs.
       new MutationObserver(() => {
-        if (w.__basicSetAt === null && document.documentElement?.hasAttribute("data-basic")) w.__basicSetAt = performance.now();
+        if (w.__basicSet === null && document.documentElement?.hasAttribute("data-basic")) w.__basicSet = { bodyExisted: document.body !== null };
       }).observe(document, { attributes: true, subtree: true, attributeFilter: ["data-basic"] });
     });
     for (const path of ["/en", "/ur/ready", "/ta/terms"]) {
       await page.goto(path);
       await page.waitForLoadState("load");
-      await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-      const times = await page.evaluate(() => ({
-        set: (window as unknown as { __basicSetAt: number | null }).__basicSetAt,
-        paint: performance.getEntriesByName("first-paint")[0]?.startTime ?? performance.getEntriesByName("first-contentful-paint")[0]?.startTime,
-      }));
-      expect(times.set, path).not.toBeNull();
-      expect(times.paint, path).toBeGreaterThan(0);
-      expect(times.set!, `${path}: the attribute is set before the first paint`).toBeLessThan(times.paint!);
+      const set = await page.evaluate(() => (window as unknown as { __basicSet: { bodyExisted: boolean } | null }).__basicSet);
+      expect(set, path).not.toBeNull();
+      expect(set!.bodyExisted, `${path}: the attribute is set in <head>, before the body is parsed`).toBe(false);
       expect(await htmlBasic(page)).toBe("true");
     }
   });
@@ -252,6 +249,36 @@ test.describe("the map (R-14)", () => {
     expect(await page.locator(".leaflet-container").count()).toBe(0);
     await waitForFonts(page);
     await expectBaseline(page, "basic-map-list-en-390.png");
+  });
+
+  test("lists five places at a time in basic mode, with \"Show n more\" that moves focus to the first new place, and no dead \"whole area\" button", async ({ page }) => {
+    await stubMap(page);
+    // A sixth place inside the area (the sample directory has five there), so the first page of five is full.
+    await page.context().route(/\/api\/directory\/\d+\/en\.json$/, (route) => {
+      const listing = mapListing("en");
+      const extra = { ...listing.providers[3], id: "M107", name: "Zed Street Pantry" };
+      return route.fulfill({ json: { ...listing, providers: [...listing.providers, extra] }, headers: { "Cache-Control": "no-store" } });
+    });
+    await phoneHolds(page, { basic: true });
+    await openResident(page, "/en/map", 390);
+    const items = page.locator("[data-testid=map-list-providers] > li");
+    await expect(items).toHaveCount(5);
+    await expect(page.getByTestId("map-list-count")).toHaveText("6 places");
+    const more = page.getByTestId("map-list-more");
+    await expect(more).toHaveText("Show 1 more");
+    await more.click();
+    await expect(items).toHaveCount(6);
+    await expect(more).toHaveCount(0);
+    expect(await page.evaluate(() => document.activeElement?.closest("li")?.getAttribute("data-testid"))).toBe(await items.nth(5).getAttribute("data-testid"));
+    await expect(page.getByTestId("map-whole-area")).toHaveCount(0);
+  });
+
+  test("in normal mode the list has no paging", async ({ page }) => {
+    await stubMap(page);
+    await openResident(page, "/en/map", 390);
+    await page.getByTestId("map-view-list").click();
+    await expect(page.getByTestId("map-list")).toBeVisible();
+    await expect(page.getByTestId("map-list-more")).toHaveCount(0);
   });
 
   test("turning basic mode on from the header takes the map away and shows the list; turning it off gives the map back", async ({ page }) => {

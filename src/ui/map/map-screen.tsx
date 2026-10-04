@@ -28,6 +28,9 @@ import "./map.css";
 /** The tile provider's settings as the page passes them (from MAP_TILE_*, src/platform/config/mapTiles.ts). */
 export type MapTiles = TileSettings & { attribution: string; attributionUrl: string | null };
 
+/** R-15 in basic mode lists this many places at a time. */
+const BASIC_PAGE = 5;
+
 const plain = (text: string) => (isEnglishFallback(text) ? text.slice(FALLBACK_MARKER.length) : text);
 
 function phoneStorage(): Storage | null {
@@ -109,6 +112,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const card = useRef<HTMLElement>(null);
   /** Set when "Show the whole area" was used in the list: the map shows it once it is on screen again. */
   const wholeArea = useRef(false);
+  // R-15 in basic mode (the prototype's `page = b.basic ? 5 : 20`): five places at a time, "Show n more" for the next five.
+  const [pages, setPages] = useState(1);
+  const firstNew = useRef<HTMLUListElement>(null);
+  const grew = useRef(false);
 
   const listing = directory.status === "ready" ? directory.listing : null;
 
@@ -120,6 +127,15 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     [listing, filters, buildings],
   );
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
+  const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
+  const providersLeft = inView.providers.length - providersShown.length;
+  useEffect(() => {
+    // The button goes when it was the last page, so focus moves to the first place it brought, and a screen reader reads on from there.
+    if (!grew.current) return;
+    grew.current = false;
+    const first = firstNew.current?.children[(pages - 1) * BASIC_PAGE]?.querySelector<HTMLElement>("a");
+    first?.focus();
+  }, [pages]);
   const chosen = pins.find((pin) => pin.key === selected) ?? null;
 
   const kindOf = (pin: MapPin): string =>
@@ -337,7 +353,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                 </ResidentText>
                 <button
                   type="button"
-                  className="map-btn map-btn--secondary tap"
+                  className="map-btn map-btn--secondary tap hide-basic"
                   onClick={() => {
                     setView("map");
                     wholeArea.current = true;
@@ -355,8 +371,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                     <ResidentText as="p" className="map-hint" testId="map-list-count">
                       {inView.providers.length === 1 ? t("R15.countOne") : t("R15.count", { n: inView.providers.length })}
                     </ResidentText>
-                    <ul className="map-entries" data-testid="map-list-providers">
-                      {inView.providers.map((pin) => (
+                    <ul className="map-entries" data-testid="map-list-providers" ref={firstNew}>
+                      {providersShown.map((pin) => (
                         <li key={pin.id} className="map-entry" data-testid={`map-entry-${pin.id}`}>
                           <PinMark pin={pin} />
                           <span className="map-entry__text">
@@ -368,6 +384,19 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                         </li>
                       ))}
                     </ul>
+                    {providersLeft > 0 && (
+                      <button
+                        type="button"
+                        className="map-btn map-btn--secondary tap"
+                        onClick={() => {
+                          grew.current = true;
+                          setPages((n) => n + 1);
+                        }}
+                        data-testid="map-list-more"
+                      >
+                        <ResidentText>{t("R15.more", { n: Math.min(BASIC_PAGE, providersLeft) })}</ResidentText>
+                      </button>
+                    )}
                   </Stack>
                 )}
                 {inView.buildings.length > 0 && (

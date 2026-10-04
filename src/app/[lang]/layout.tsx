@@ -80,6 +80,8 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
       lang={language.bcp47}
       dir={language.dir}
       data-script={language.font}
+      // The boot script below sets data-basic before React hydrates, so the attribute is expected to differ from the server's.
+      suppressHydrationWarning
       style={{ "--font-script": fontStack(language.font) } as CSSProperties}
     >
       <head>
