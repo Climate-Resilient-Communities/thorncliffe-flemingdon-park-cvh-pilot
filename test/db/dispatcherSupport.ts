@@ -277,7 +277,7 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
   async function untilSomeoneWaitsForALock(timeoutMs = 10_000) {
     const started = Date.now();
     for (;;) {
-      const [waiting] = await owner`select count(*)::int as n from pg_locks where not granted`;
+      const [waiting] = await owner`select count(*)::int as n from pg_locks l join pg_stat_activity a on a.pid = l.pid where not l.granted and a.datname = current_database()`;
       if (waiting.n > 0) return;
       if (Date.now() - started > timeoutMs) throw new Error("nobody waited for a lock");
       await new Promise((resolve) => setTimeout(resolve, 10));
