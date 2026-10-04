@@ -400,7 +400,7 @@ describe("the entry trigger and lifecycle.ts", () => {
     await expect(
       asApp(authorA.id, async (tx) => {
         await tx`select set_config('cvh.closing', 'on', true)`;
-        return tx`update alert_entry set status = 'discarded' where id = ${pending.entryId}`;
+        return tx`update alert_entry set status = 'discarded', discard_reason = 'by_close' where id = ${pending.entryId}`;
       }),
     ).resolves.toBeDefined();
     expect((await entryRow(pending.entryId)).status).toBe("discarded");

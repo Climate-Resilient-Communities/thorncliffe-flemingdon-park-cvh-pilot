@@ -202,6 +202,48 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
 
   // ---- route handlers ----
   { id: "GET /api/staff/me", kind: "route", file: "src/app/api/staff/me/route.ts", export: "GET", route: "/api/staff/me", action: "session.read_own", writes: "none", gate: "hub", expected: EVERYONE },
+  // S08.02: an ambassador's post (A-02): the page and the route that makes and submits the post, policy action `alert.author`, judged on the building (the route:
+  // the one the request names; the page: the buildings the person is assigned to). An Ambassador is let through for their own building only, a Director never; a
+  // Coordinator or an Admin passes the guard, and the page tells them it is the ambassadors' and the use case refuses them (the Hub writes on its own screens).
+  // The test's Ambassador has no assignment in the database, so the use case refuses their call too, changing nothing.
+  {
+    id: "page /staff/ambassador/post",
+    kind: "page",
+    file: "src/app/staff/ambassador/post/page.tsx",
+    export: "default",
+    route: "/staff/ambassador/post",
+    action: "alert.author",
+    writes: "none",
+    gate: "hub",
+    policyContext: { targets: ["7001"], assignments: [{ rsn: "7001", floorIds: null }] },
+    expected: { ambassador: "allowed", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "allowed" },
+  },
+  {
+    id: "POST /api/staff/ambassador/posts",
+    kind: "route",
+    file: "src/app/api/staff/ambassador/posts/route.ts",
+    export: "POST",
+    route: "/api/staff/ambassador/posts",
+    action: "alert.author",
+    writes: "business",
+    gate: "hub",
+    body: {
+      v: 1,
+      into: null,
+      alert_id: NO_SUCH_ALERT,
+      entry_id: NO_SUCH_ALERT,
+      key: SUBMIT_KEY,
+      rsn: "7001",
+      floors: { mode: "all" },
+      types: ["elevator"],
+      phase: "problem",
+      valid: { mode: "resolved" },
+      text: "The elevator is out.",
+    },
+    policyContext: { targets: ["7001"], assignments: [{ rsn: "7001", floorIds: null }] },
+    auditedReason: { ambassador_out_of_scope: "out_of_scope" },
+    expected: { ambassador: "allowed", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" },
+  },
   // S04.05: Submit, "Try translation again" and the entry's state (policy action `alert.author_wide`). The entry does not exist, so a
   // Coordinator's or an Admin's call passes the guard and is refused by the use case (or, for the state, by its lookup), changing nothing.
   {

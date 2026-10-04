@@ -97,9 +97,17 @@ describe("the state of an own post", () => {
     expect(postState(facts({ status: "approved", approvedAt: T(5), webPublishedAt: T(5), replacedBy: "withdrawal" }))).toBe("withdrawn");
   });
 
-  it("is returned for a draft the Hub sent back, declined for a submitted entry the Hub discarded", () => {
+  it("is returned for a draft the Hub sent back, declined only for a submitted entry the Hub discarded (S08.02)", () => {
     expect(postState(facts({ status: "draft", submittedAt: null, returnedFor: "return" }))).toBe("returned");
-    expect(postState(facts({ status: "discarded" }))).toBe("declined");
+    expect(postState(facts({ status: "discarded", discardReason: "declined" }))).toBe("declined");
+  });
+
+  it("is ended, never declined, when its alert closed before the Hub sent it, and no post at all when its author took it back (S08.02)", () => {
+    expect(postState(facts({ status: "discarded", discardReason: "by_close" }))).toBe("ended");
+    expect(postState(facts({ status: "discarded", discardReason: "by_author" }))).toBeNull();
+    // Discarded before the reason was kept: nothing says the Hub declined it, so it is not shown as declined.
+    expect(postState(facts({ status: "discarded", discardReason: null }))).toBeNull();
+    expect(postState(facts({ status: "discarded" }))).toBeNull();
   });
 
   it("is no post at all for a draft nobody submitted, one sent back for an edit or a retranslation, or one its author discarded before submitting", () => {
@@ -120,7 +128,8 @@ describe("the state of an own post", () => {
         facts({ status: "superseded", replacedBy: "correction" }),
         facts({ status: "superseded", replacedBy: "withdrawal" }),
         facts({ status: "draft", returnedFor: "return" }),
-        facts({ status: "discarded" }),
+        facts({ status: "discarded", discardReason: "declined" }),
+        facts({ status: "discarded", discardReason: "by_close" }),
       ].map(postState),
     );
     expect([...answers].sort()).toEqual([...AMBASSADOR_POST_STATES].sort());

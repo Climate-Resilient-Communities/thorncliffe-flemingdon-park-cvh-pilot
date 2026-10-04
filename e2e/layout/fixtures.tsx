@@ -38,6 +38,8 @@ import type { AudienceScreen } from "@/app/staff/alerts/audience/view";
 import { IncidentsList } from "@/app/staff/alerts/incidents/IncidentsList";
 import type { IncidentsView } from "@/app/staff/alerts/incidents/view";
 import { AmbassadorHomeBody } from "@/app/staff/ambassador/AmbassadorHomeBody";
+import { PostForm, type PostInitial } from "@/app/staff/ambassador/post/PostForm";
+import type { PostScreen } from "@/app/staff/ambassador/post/view";
 import type { AmbassadorHomeView } from "@/app/staff/ambassador/view";
 import { ApprovalBody, type ApprovalActions, type ApprovalInitial } from "@/app/staff/alerts/approval/ApprovalBody";
 import type { ApprovalScreen } from "@/app/staff/alerts/approval/view";
@@ -678,6 +680,18 @@ export function AmbassadorHomeFixture({ texts, brand, view }: { texts: HubShellT
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
       <Screen surface="staff" testId="screen">
         <AmbassadorHomeBody view={view} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/** An ambassador's post (A-02, S08.02) inside the Hub shell, on the view the app's own function built, in the state `initial` gives; nothing is ever sent. */
+export function AmbassadorPostFixture({ texts, brand, screen, initial }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; screen: PostScreen; initial?: PostInitial }) {
+  const quiet = () => ({ press: () => undefined, state: () => ({ kind: "idle" as const }), stop: () => undefined });
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <PostForm screen={screen} sender={quiet} initial={initial} />
       </Screen>
     </AroundTheScreen>
   );

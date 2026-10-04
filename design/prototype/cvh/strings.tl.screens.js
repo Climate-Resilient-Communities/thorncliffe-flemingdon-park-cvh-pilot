@@ -1373,4 +1373,51 @@
     "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter na pinili mo sa direktoryo."
    }
   });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "Aling gusali?",
+    "allFloorsLine": "Lahat ng {n} palapag",
+    "listLabel": "Ilang palapag",
+    "listLine": "Lagyan ng tsek ang bawat palapag",
+    "rangeLabel": "Sunud-sunod na mga palapag",
+    "rangeLine": "Mula sa isang palapag hanggang sa isa pa",
+    "fromFloor": "Mula sa palapag",
+    "toFloor": "Hanggang sa palapag",
+    "chooseFloor": "Pumili",
+    "phaseTitle": "Ano ang lagay",
+    "phaseProblem": "May problema",
+    "phaseProgress": "Inaayos na",
+    "validTitle": "Hanggang kailan?",
+    "validResolved": "Hanggang maayos ito (24 oras mula ngayon)",
+    "validAt": "Hanggang sa isang petsa at oras",
+    "dateLabel": "Petsa",
+    "timeLabel": "Oras (oras sa Toronto)",
+    "validHint": "Hanggang 7 araw mula ngayon lamang.",
+    "textLabel": "Ano ang nangyayari, sa Ingles",
+    "textHint": "Hanggang {max} titik. Binabasa ito ng mga residente sa kanilang wika; sinusuri muna ito ng Hub.",
+    "inAlert": "Mapupunta ang update na ito sa alerto: {headline}",
+    "typesFixed": "Ano ang nangyayari: {types}",
+    "unsent": "Hindi pa naipapadala. Panatilihing bukas ang pahinang ito; ipapadala ito kapag may signal ka na.",
+    "unsentClose": "Kapag isinara mo ang pahinang ito, mawawala ang update na ito.",
+    "sending": "Ipinapadala sa Hub...",
+    "errPhase": "Piliin kung ano ang lagay.",
+    "errText": "Sabihin kung ano ang nangyayari, sa Ingles.",
+    "errTextLong": "Masyadong mahaba ito. Gumamit ng hanggang {max} titik lamang.",
+    "errValid": "Maglagay ng petsa at oras.",
+    "errValidPast": "Lumipas na ang oras na iyon. Pumili ng mas huling oras.",
+    "errValidFar": "Pumili ng oras na hanggang 7 araw mula ngayon lamang.",
+    "errValidSkipped": "Nagbabago ang orasan sa gabing iyon, kaya hindi malinaw ang oras na iyon. Pumili ng ibang oras.",
+    "errRange": "Mas mataas ang unang palapag kaysa sa huli. Unahin ang mas mababang palapag.",
+    "errNotAssigned": "Hindi ka naka-assign sa gusaling ito ngayon, kaya hindi ka makakapag-post para dito.",
+    "errClosed": "Natapos na ang alertong ito. Mag-post na lang ng bagong update.",
+    "errSignedOut": "Na-sign out ka, kaya hindi ito naipadala. Mag-sign in ulit, saka i-post ito ulit.",
+    "errFailed": "Hindi ito naipadala. Subukan ulit. Kung patuloy itong mangyari, tawagan ang Hub."
+   },
+   "A03": {
+    "states": {
+     "ended": "Hindi naipadala: natapos ang alerto bago ito nasuri ng Hub"
+    }
+   }
+  });
 })();

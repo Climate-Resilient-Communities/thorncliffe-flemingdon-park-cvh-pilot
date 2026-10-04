@@ -2,7 +2,7 @@
 // lifecycle they follow. Other modules and the app use only what is exported here.
 import type { Db, DbTransaction } from "../../platform/db";
 import { readStaffStanding } from "../identity";
-import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
+import { addressesOfBuildings, createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
 import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
@@ -122,7 +122,7 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     audit: wiring.audit ?? { record: (tx, event) => audit.record(tx, event), recordRefusal: (db, event) => audit.recordRefusal(db, event) },
     staff: wiring.staff ?? { standing: readStaffStanding },
     // The buildings, floors and neighbourhoods an audience may name, read through the use case's own transaction.
-    places: wiring.places ?? { floorsOf: floorsOfBuilding, neighbourhoodIds, neighbourhoodsOf: neighbourhoodsOfBuildings },
+    places: wiring.places ?? { floorsOf: floorsOfBuilding, neighbourhoodIds, neighbourhoodsOf: neighbourhoodsOfBuildings, addressesOf: addressesOfBuildings },
     now: wiring.now,
     newId: wiring.newId,
     newSlug: wiring.newSlug,
@@ -148,6 +148,7 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
 
 export type {
   AddUpdateInput,
+  AmbassadorPostInput,
   AlertLifecycle,
   ApprovalBinding,
   ApprovalOutcome,
@@ -307,5 +308,15 @@ export type { AlertRefusal } from "./domain/refusals";
 
 // S08.01: an Ambassador's home (A-01): the open alerts about their assigned buildings, as residents read them, and their own posts with each one's state.
 // The scope (current assignments, the neighbourhood of each building) is the caller's; nothing is read for a person with none.
-export { createAmbassadorHome, type AmbassadorAlert, type AmbassadorHome, type AmbassadorHomeView, type AmbassadorPost, type AmbassadorScope } from "./application/ambassadorHome";
+export { createAmbassadorHome, type AmbassadorAlert, type AmbassadorDrill, type AmbassadorHome, type AmbassadorHomeView, type AmbassadorPost, type AmbassadorScope } from "./application/ambassadorHome";
+// S08.02: an ambassador's post (A-02): why an entry was discarded, and who an entry is attributed to as frozen at submit.
+export {
+  DISCARD_REASONS,
+  attributionFor,
+  attributionOfRsn,
+  discardReasonOf,
+  isDiscardReason,
+  type DiscardReason,
+  type EntryAttribution,
+} from "./domain/ambassadorPost";
 export { AMBASSADOR_POST_STATES, audienceCoversAssigned, coveringFeedEntry, postIsInScope, postState, type AmbassadorPostState, type PostFacts } from "./domain/ambassadorHome";

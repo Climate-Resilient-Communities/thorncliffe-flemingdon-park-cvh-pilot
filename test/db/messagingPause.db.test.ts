@@ -579,7 +579,7 @@ describe("resuming texts", () => {
     await owner.begin(async (tx) => {
       await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
       await tx`update alert_entry set status = 'superseded' where id = ${superseded.entry.entryId}`;
-      await tx`update alert_entry set status = 'discarded', approved_by = null, approved_at = null, approved_version = null, approved_hash = null where id = ${discarded.entry.entryId}`;
+      await tx`update alert_entry set status = 'discarded', discard_reason = 'declined', approved_by = null, approved_at = null, approved_version = null, approved_hash = null where id = ${discarded.entry.entryId}`;
       await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
       await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${inClosedThread.entry.alertId}`;
     });

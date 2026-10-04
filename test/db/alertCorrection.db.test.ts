@@ -424,7 +424,7 @@ describe("who may correct or withdraw, and what", () => {
       const created = await alerting.createAlert(actorOf(ambassador), { kind: "ack", isDrill: false, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
       if (!created.ok) throw new Error(`createAlert refused: ${created.error}`);
       const mine = { alertId: created.value.thread.id, entryId: created.value.entry.id };
-      // Their own draft, then their own submitted entry (frozen the way a submit would, which beginSubmit refuses an Ambassador until E08).
+      // Their own draft, then their own submitted entry (frozen the way a submit would).
       expect(await alerting.correctEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, correctInput())).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
       expect(await seams.freeze(actorOf(ambassador), mine, frozen("a1"))).toMatchObject({ ok: true });
       expect(await alerting.correctEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, correctInput())).toEqual({ ok: false, error: "OUT_OF_SCOPE" });

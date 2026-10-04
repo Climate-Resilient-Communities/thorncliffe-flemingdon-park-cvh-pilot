@@ -929,7 +929,7 @@ describe("a possible duplicate", () => {
     expect(await entryRow(mine.entryId)).toMatchObject({ status: "pending_approval", possible_duplicate_of: other.alertId });
     await owner.begin(async (tx) => {
       await tx`select set_config('cvh.actor_id', ${author.id}, true)`;
-      await tx`update alert_entry set status = 'discarded' where id = ${mine.entryId}`;
+      await tx`update alert_entry set status = 'discarded', discard_reason = 'by_author' where id = ${mine.entryId}`;
     });
     expect(await entryRow(mine.entryId)).toMatchObject({ status: "discarded", possible_duplicate_of: other.alertId });
   });

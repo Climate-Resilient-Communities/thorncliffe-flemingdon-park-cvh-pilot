@@ -38,6 +38,8 @@ export interface ReviewOptions {
   entry?: Partial<EntryView>;
   thread?: Partial<ThreadView>;
   authorRole?: StaffRole | null;
+  /** Who the frozen texts say the entry is from (S08.02); left out, it follows `authorRole` for a frozen entry and is null for a draft. */
+  attribution?: EntryReview["attribution"];
   /** The languages whose text fell back to English. */
   fallback?: readonly string[];
   /** Words used for every translated text and text message body (the layout tests give the longest labels). */
@@ -104,6 +106,15 @@ export function reviewOf(options: ReviewOptions = {}): EntryReview {
     thread: { id: ALERT, slug: "abcd2345", isDrill: false, reportedAt: new Date("2026-10-04T13:30:00.000Z"), status: "open", ...options.thread },
     entry,
     authorRole: options.authorRole === undefined ? "coordinator" : options.authorRole,
+    // Who the frozen texts say it is from (S08.02): an ambassador's post is its building's; a draft has no texts yet.
+    attribution:
+      options.attribution !== undefined
+        ? options.attribution
+        : entry.status === "draft"
+          ? null
+          : options.authorRole === "ambassador"
+            ? { role: "ambassador", rsn: "4154146" }
+            : { role: "hub" },
     texts: entry.status === "draft" || entry.status === "discarded" ? [] : texts,
     sms: entry.status === "draft" || entry.status === "discarded" ? {} : sms,
     recipients: options.recipients ?? { open: false, total: 0, byLanguage: {} },

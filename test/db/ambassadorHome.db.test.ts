@@ -62,6 +62,8 @@ interface SeedEntry {
   returnedFor?: "return" | "edit" | null;
   note?: string;
   supersedes?: number;
+  /** Why a discarded entry was discarded (S08.02); a discarded entry defaults to `declined`. */
+  discardReason?: "by_author" | "declined" | "by_close";
 }
 
 /** An alert thread with entries inserted directly (as a migration owner would: the lifecycle's triggers off), the way residentAlerts.db.test.ts does. */
@@ -85,13 +87,14 @@ async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolea
       const published = entry.publishedAt === undefined ? approvedAt : entry.publishedAt;
       const hash = randomBytes(32).toString("hex");
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version, content_hash, sms_bodies,
-                                         submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, returned_for, returned_note, supersedes_id, withdrawal_reason)
+                                         submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, returned_for, returned_note, supersedes_id, withdrawal_reason, discard_reason)
                values (${id}, ${alertId}, ${entry.kind ?? "ack"}, ${status}, ${entry.author}, ${[entry.author]}, ${entry.text ?? "Power is out."}, ${entry.types ?? ["power"]},
                        ${tx.json((entry.audience ?? buildingsAudience(RSN_A)) as never)}, 'problem', ${VALID_UNTIL}, ${frozen ? 1 : 0}, ${frozen ? hash : null},
                        ${frozen ? tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } }) : null}, ${submitted ? new Date(NOW.getTime() - 3_600_000 + index * 1000) : null},
                        ${approved ? approver : null}, ${approvedAt}, ${approved ? 1 : null}, ${approved ? hash : null}, ${published},
                        ${entry.returnedFor ?? null}, ${entry.returnedFor === "return" ? (entry.note ?? "Which floors?") : null},
-                       ${entry.supersedes === undefined ? null : entryIds[entry.supersedes]}, ${entry.kind === "withdrawal" ? "wrong_place" : null})`;
+                       ${entry.supersedes === undefined ? null : entryIds[entry.supersedes]}, ${entry.kind === "withdrawal" ? "wrong_place" : null},
+                       ${status === "discarded" ? (entry.discardReason ?? "declined") : null})`;
     }
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
   });
@@ -277,18 +280,22 @@ describe("an Ambassador's own posts", () => {
     const waiting = await seedThread({ slug: "waitbldg01", entries: [{ author: ambassador, status: "pending_approval", publishedAt: null, text: "Waiting post." }] });
     const approved = await seedThread({ slug: "apprbldg01", entries: [{ author: ambassador, text: "Approved post." }] });
     const returned = await seedThread({ slug: "retnbldg01", entries: [{ author: ambassador, status: "draft", submitted: false, returnedFor: "return", note: "Which floors?", text: "Returned post." }] });
-    const declined = await seedThread({ slug: "declbldg01", entries: [{ author: ambassador, status: "discarded", text: "Declined post." }] });
+    const declined = await seedThread({ slug: "declbldg01", entries: [{ author: ambassador, status: "discarded", discardReason: "declined", text: "Declined post." }] });
+    // S08.02: a post the alert's close discarded reads as ended, and one its author took back is not shown: neither is "Not sent by the Hub".
+    const ended = await seedThread({ slug: "endbldg001", entries: [{ author: ambassador, status: "discarded", discardReason: "by_close", text: "Ended post." }] });
+    await seedThread({ slug: "ownbldg001", entries: [{ author: ambassador, status: "discarded", discardReason: "by_author", text: "Taken back post." }] });
     await seedThread({ slug: "othrbldg01", entries: [{ author: other, text: "Someone else's post." }] });
     await seedThread({ slug: "coorbldg01", entries: [{ author: coordinator, text: "A Coordinator's alert." }] });
 
     const { posts } = await home();
 
     const byText = Object.fromEntries(posts.map((post) => [post.text, post]));
-    expect(Object.keys(byText).sort()).toEqual(["Approved post.", "Declined post.", "Returned post.", "Waiting post."]);
+    expect(Object.keys(byText).sort()).toEqual(["Approved post.", "Declined post.", "Ended post.", "Returned post.", "Waiting post."]);
     expect(byText["Waiting post."]).toMatchObject({ entryId: waiting.entryIds[0], state: "waiting", note: null, buildings: [RSN_A] });
     expect(byText["Approved post."]).toMatchObject({ entryId: approved.entryIds[0], state: "approved" });
     expect(byText["Returned post."]).toMatchObject({ entryId: returned.entryIds[0], state: "returned", note: "Which floors?" });
     expect(byText["Declined post."]).toMatchObject({ entryId: declined.entryIds[0], state: "declined" });
+    expect(byText["Ended post."]).toMatchObject({ entryId: ended.entryIds[0], state: "ended" });
   });
 
   it("keeps a heavy author's real posts in view: more than 200 newer unsubmitted drafts do not crowd them out", async () => {
