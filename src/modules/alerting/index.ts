@@ -171,6 +171,8 @@ export type {
   ThreadView,
 } from "./application/lifecycle";
 export type { ClosedThread, RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
+// S06.05: the drill threads the Hub reviews (staff only; a resident reads the nondrill views).
+export { createDrillThreads, type DrillEntrySummary, type DrillThreadSummary, type DrillThreads } from "./application/drillThreads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
 // S05.02: the one close path (`closeAlert`, AR-8) and the rules of corrections and withdrawals (the valid target, the reason catalog, when a withdrawal closes the thread).
 // S05.04: the expire job and when a thread expires (the covering entry's valid-until, compared as instants).

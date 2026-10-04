@@ -231,10 +231,12 @@ async function submitted(ref: EntryRef, by: Account = authorA): Promise<EntryRef
 /** An approved acknowledgement of the building, texted to `texts` people: the thread that is resolved. */
 async function approvedThread(over: Partial<EntryContent> = {}, texts = 0, isDrill = false): Promise<{ ref: EntryRef; slug: string }> {
   recipientIds = Array.from({ length: texts }, () => randomUUID());
-  const created = await alerting.createAlert(actorOf(authorA), { kind: "ack", isDrill, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content(over) });
+  // An Admin starts a drill: only an Admin at aal2 may (S06.05).
+  const author = isDrill ? adminC : authorA;
+  const created = await alerting.createAlert(actorOf(author), { kind: "ack", isDrill, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content(over) });
   if (!created.ok) throw new Error(`createAlert refused: ${created.error}`);
   const ref = { alertId: created.value.thread.id, entryId: created.value.entry.id };
-  const done = await seams.freeze(actorOf(authorA), ref, frozen(`first ${ref.entryId}`));
+  const done = await seams.freeze(actorOf(author), ref, frozen(`first ${ref.entryId}`));
   if (!done.ok) throw new Error(`freeze refused: ${done.error}`);
   const approved = await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha(`first ${ref.entryId}`), recipients: reviewed() });
   if (!approved.ok) throw new Error(`approve refused: ${approved.error}`);

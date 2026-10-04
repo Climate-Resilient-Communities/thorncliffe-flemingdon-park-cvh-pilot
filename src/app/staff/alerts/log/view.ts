@@ -5,6 +5,7 @@ import type { BuildingFloorPlan } from "@/modules/places";
 import { placeFieldsOf, type PlaceFieldsView } from "../audience/view";
 import { fieldsOfInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
+import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
 import { BUILDING_TYPES, NEIGHBOURHOOD_ONLY_TYPES as NEIGHBOURHOOD_TYPES } from "@/contracts/alertContent";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -32,12 +33,16 @@ export interface LogScreen {
     neighbourhood: { label: string; hint: string; items: TypeChoiceView[] };
   };
   place: { title: string; hint: string; fields: PlaceFieldsView };
+  /** "Start a drill" (S06.05): the exercise marker, shown above the form; null for a real disruption. */
+  exercise: ExerciseWords | null;
   when: { title: string; hint: string; dateLabel: string; timeLabel: string; fields: TimeFields; foldLegend: string };
   submit: string;
 }
 
 export interface LogOptions {
   kind: "ack" | "update";
+  /** "Start a drill" (S06.05): the words are the drill's, and the screen carries the exercise marker. */
+  drill?: boolean;
   text?: Text;
   /** Fields typed before a refusal, so the screen keeps them. */
   typed?: { types?: readonly string[]; when?: TimeFields };
@@ -48,11 +53,13 @@ export function logScreen(plans: readonly BuildingFloorPlan[], now: Date, option
   const t = options.text ?? catalogText;
   const ticked = new Set(options.typed?.types ?? []);
   const items = (ids: readonly string[]): TypeChoiceView[] => ids.map((id) => ({ id, label: typeName(id), checked: ticked.has(id) }));
+  const drill = options.drill === true;
   return {
     kind: options.kind,
-    title: options.kind === "ack" ? t("title") : t("alertTitle"),
-    lead: options.kind === "ack" ? t("lead") : t("alertLead"),
-    benchmark: t("benchmark"),
+    title: drill ? t("drillTitle") : options.kind === "ack" ? t("title") : t("alertTitle"),
+    lead: drill ? t("drillLead") : options.kind === "ack" ? t("lead") : t("alertLead"),
+    benchmark: drill ? t("drillBenchmark") : t("benchmark"),
+    exercise: drill ? exerciseWords() : null,
     types: {
       title: t("typesTitle"),
       hint: t("typesHint"),
@@ -61,7 +68,7 @@ export function logScreen(plans: readonly BuildingFloorPlan[], now: Date, option
     },
     place: { title: t("placeTitle"), hint: t("placeHint"), fields: placeFieldsOf(plans, null) },
     when: { title: t("whenTitle"), hint: t("whenHint"), dateLabel: timeText("dateLabel"), timeLabel: timeText("timeLabel"), fields: options.typed?.when ?? fieldsOfInstant(now), foldLegend: timeText("foldLegend") },
-    submit: options.kind === "ack" ? t("submit") : t("submitAlert"),
+    submit: drill ? t("drillSubmit") : options.kind === "ack" ? t("submit") : t("submitAlert"),
   };
 }
 

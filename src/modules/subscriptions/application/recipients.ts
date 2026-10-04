@@ -11,19 +11,25 @@
 //    reviewed one (S04.07's wiring of S06.01). If the two counts differ the approval is refused and the whole transaction, the deliveries
 //    included, rolls back.
 //
-// UNTIL E07 (the epic that opens text sign-up) there are no subscribers and nothing to send: the port answers that texting is not open,
+// A DRILL (S06.05, AD-6) goes only to the drill roster: `countRecipients` counts the roster's members per language of the text each gets, and
+// `captureRecipients` locks them `FOR SHARE` (a member removed or changed meanwhile waits for the approval to commit) and returns them as `kind: "roster"`,
+// with no number read. A drill never reaches a subscriber, and the database refuses it if it tried (the delivery insert guard).
+//
+// FOR A REAL ENTRY, UNTIL E07 (the epic that opens text sign-up) there are no subscribers and nothing to send: the port answers that texting is not open,
 // with nobody in any language, and `captureRecipients` returns no recipients, so no delivery is written and an approval does what it did
 // before the outbox existed. That is the behaviour the story states: the approval view says "Text sign-up is not open yet", shows a count
 // of 0, and lists the web as the only channel.
 //
-// WHERE E07 AND S06.05 HOOK IN. E07's S07.07 replaces the two function bodies below (same file, same signatures): `countRecipients` counts
+// WHERE E07 HOOKS IN. E07's S07.07 replaces the real-entry branch of the two function bodies below (same file, same signatures): `countRecipients` counts
 // the matching, receiving subscribers per language of the text each gets, and `captureRecipients` locks them `FOR SHARE` in lock order and
-// returns them (a drill entry: its drill roster members, `kind: "roster"`, S06.05). Nothing in `alerting` or `messaging` changes for it.
+// returns them. Nothing in `alerting` or `messaging` changes for it, and a real entry never returns a roster member.
 // See "The approval transaction" in docs/architecture/ARCHITECTURE-SPINE.md.
 import { NO_RECIPIENTS, type RecipientCounts } from "../../../contracts/alertApproval";
 import type { Audience } from "../../../contracts/audience";
 import type { LangCode } from "../../../contracts/lang";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
+import { drillRosterStore } from "../adapters/drillRosterStore";
+import { bodyLangOf } from "../domain/drillRoster";
 
 /** One language's frozen text message, as submit froze it (alerting's `FrozenSmsBody`, which this module may not import). */
 export interface RecipientSmsBody {
@@ -79,22 +85,32 @@ export interface RecipientsPort {
 }
 
 /**
- * The count the approval view shows: before E07, texting is not open and nobody will get a text. Reads nothing, so it costs no query.
+ * The count the approval view shows. A drill: the roster's members, counted under the language of the text each gets (open: the drill roster is texted
+ * whether or not sign-up is open). A real entry, before E07: texting is not open and nobody will get a text, which reads nothing, so it costs no query.
  * (E07: the count of matching, receiving subscribers per language of the text each gets, read through `executor`.)
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- the port's signature: E07 reads the entry and runs its query through the executor
-export async function countRecipients(_entry: RecipientEntry, _executor: DbExecutor): Promise<RecipientCount> {
-  return { open: false, ...NO_RECIPIENTS };
+export async function countRecipients(entry: RecipientEntry, executor: DbExecutor): Promise<RecipientCount> {
+  if (!entry.isDrill) return { open: false, ...NO_RECIPIENTS };
+  const frozenLangs = Object.keys(entry.smsBodies);
+  const byLanguage: Partial<Record<LangCode, number>> = {};
+  const members = await drillRosterStore.members(executor);
+  for (const member of members) {
+    const lang = bodyLangOf(member.lang, frozenLangs);
+    byLanguage[lang] = (byLanguage[lang] ?? 0) + 1;
+  }
+  return { open: true, total: members.length, byLanguage };
 }
 
 /**
  * The people the approval texts, read inside the approval's transaction `tx` (the same one that marks the entry approved, raises
- * feed_version and audits it: all of it commits, or none). Before E07 there is no one, so it reads nothing and returns no recipients.
- * (E07: lock the matching subscribers `FOR SHARE` and return them with their languages; a drill entry returns its drill roster.)
+ * feed_version and audits it: all of it commits, or none). A drill: every member of the drill roster, locked `FOR SHARE`, with their own language
+ * (the approval gives the English text where the entry has none in it) and no number. A real entry, before E07: no one, so it reads nothing.
+ * (E07: lock the matching subscribers `FOR SHARE` and return them with their languages.)
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- the port's signature: E07 reads the entry and its subscribers through the transaction
-export async function captureRecipients(_entry: RecipientEntry, _tx: DbTransaction): Promise<readonly AlertRecipient[]> {
-  return [];
+export async function captureRecipients(entry: RecipientEntry, tx: DbTransaction): Promise<readonly AlertRecipient[]> {
+  if (!entry.isDrill) return [];
+  const members = await drillRosterStore.membersForShare(tx);
+  return members.map((member): AlertRecipient => ({ kind: "roster", id: member.id, lang: member.lang }));
 }
 
 /** The port as the module offers it today. */

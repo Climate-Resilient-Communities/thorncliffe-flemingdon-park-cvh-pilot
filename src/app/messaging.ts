@@ -5,7 +5,7 @@
 //
 // `ownerSources()` is where each module's source is added by the story that creates its table (S06.05 the drill roster, S06.07
 // the on-call roster, S07.02 pending sign-ups, S07.04 subscribers and `inbound_reply`); until then a kind with no source
-// fails loudly (`ContactSourceNotWired`) instead of skipping its texts.
+// fails loudly (`ContactSourceNotWired`) instead of skipping its texts. The drill roster's source answers only for an alert text (a drill).
 import "server-only";
 import {
   RECIPIENT_KINDS,
@@ -19,6 +19,7 @@ import {
   type RecipientNumberSources,
 } from "@/modules/messaging";
 import { oncallNumberSource } from "@/modules/ops";
+import { drillNumberSource } from "@/modules/subscriptions";
 
 /** The recipient kinds whose numbers `subscriptions` holds. */
 export type SubscriptionsRecipientKind = { [K in RecipientKind]: (typeof RECIPIENT_OWNER)[K] extends "subscriptions" ? K : never }[RecipientKind];
@@ -48,9 +49,12 @@ export function wireContactResolver(owners: OwnerNumberSources, log: MessagingLo
   return createContactResolver({ sources: wireContactSources(owners), log });
 }
 
-/** The sources the owner modules provide today: ops' on-call roster (S06.07); the others come with their stories (see the header). */
+/**
+ * The sources the owner modules provide today: ops' on-call roster (S06.07) and subscriptions' drill roster (S06.05); the others come with their
+ * stories (see the header).
+ */
 function ownerSources(): OwnerNumberSources {
-  return { ops: oncallNumberSource };
+  return { ops: oncallNumberSource, subscriptions: { roster: drillNumberSource } };
 }
 
 let resolver: ContactResolver | undefined;

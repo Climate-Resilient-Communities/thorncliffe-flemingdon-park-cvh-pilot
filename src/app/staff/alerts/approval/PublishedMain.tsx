@@ -1,6 +1,7 @@
 // The main column of the published confirmation (O-06, S04.10): what an approved entry did and where it went. Pure; ApprovalBody draws it for an entry that is
 // approved, beside the aside that holds every language's web text and text message.
 import { Stack } from "@/ui";
+import { ExerciseMarker } from "../../ExerciseMarker";
 import type { ApprovalScreen, PublishedLanguageView, PublishedRowView } from "./view";
 
 function Languages({ label, items, id }: { label: string; items: PublishedLanguageView[]; id: string }) {
@@ -37,6 +38,7 @@ export function PublishedMain({ screen }: { screen: ApprovalScreen & { published
   return (
     <Stack gap="section-hub-review">
       <Stack gap="related">
+        {screen.header.exercise ? <ExerciseMarker words={screen.header.exercise} /> : null}
         <h1 className="hub-wrap" data-testid="published-title">{published.title}</h1>
         <p data-testid="entry-header">
           <strong>{screen.header.types}</strong>

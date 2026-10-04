@@ -137,8 +137,9 @@ async function clear() {
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
     await tx.unsafe("truncate approval_probe, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
-    // The on-call roster names the Admin who added a number (S06.07), whom afterAll deletes.
+    // The on-call roster and the drill roster name the Admin who added a number (S06.07, S06.05), whom afterAll deletes.
     await tx`delete from oncall_roster`;
+    await tx`delete from drill_roster`;
   });
   await owner`update staff_account set role = ${authorA.role}::staff_role, status = 'active' where id = ${authorA.id}`;
 }
@@ -351,7 +352,7 @@ describe("the approval transaction", () => {
   });
 
   it("raises no feed version for a drill (nothing the web shows changes) but still captures the drill's recipients, and the outcome says so", async () => {
-    const ref = await newPending(authorA, "v1", true);
+    const ref = await newPending(adminC, "v1", true);
     const before = await feedVersion();
     const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1"));
     expect(result).toMatchObject({ ok: true, value: { feedVersion: null } });
@@ -391,6 +392,14 @@ describe("the approval transaction", () => {
 
 describe("the alert texts an approval queues (S06.01)", () => {
   const person = (lang: AlertRecipient["lang"], kind: AlertRecipient["kind"] = "subscriber"): AlertRecipient => ({ kind, id: randomUUID(), lang });
+  /** A member of the drill roster (S06.05): a drill's texts are written only for a row of it. The number is fictitious (555). */
+  let rosterSerial = 0;
+  const rosterPerson = async (lang: AlertRecipient["lang"]): Promise<AlertRecipient> => {
+    const id = randomUUID();
+    rosterSerial += 1;
+    await owner`insert into drill_roster (id, label, phone, lang, added_by) values (${id}, ${`Member ${rosterSerial}`}, ${`+1416555${String(2000 + rosterSerial)}`}, ${lang}, ${adminC.id})`;
+    return { kind: "roster", id, lang };
+  };
 
   it("sets the outbox's marker before the port is asked for anyone, and writes one alert delivery per person through the outbox, in the entry's frozen text message for that person's language", async () => {
     const ref = await newPending();
@@ -423,8 +432,8 @@ describe("the alert texts an approval queues (S06.01)", () => {
   });
 
   it("writes a drill's texts for its roster members only through the same outbox, and counts them", async () => {
-    const ref = await newPending(authorA, "v1", true);
-    people = [person("en", "roster"), person("ur", "roster")];
+    const ref = await newPending(adminC, "v1", true);
+    people = [await rosterPerson("en"), await rosterPerson("ur")];
     const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1", 1, { total: 2, byLanguage: { en: 1, ur: 1 } }));
     expect(result).toMatchObject({ ok: true, value: { feedVersion: null, recipients: { total: 2, byLanguage: { en: 1, ur: 1 } } } });
     expect((await deliveryRows(ref.entryId)).map((row) => row.recipient_kind)).toEqual(["roster", "roster"]);
@@ -907,7 +916,7 @@ describe("a form that did not carry what was shown", () => {
   });
 
   it("keeps a drill apart in the record, and never throws for ids that are not ones", async () => {
-    const drill = await newPending(authorA, "d1", true);
+    const drill = await newPending(adminC, "d1", true);
     await alerting.refuseInvalidForm(actorOf(coordB), "approve", drill);
     await alerting.refuseInvalidForm(actorOf(coordB), "approve", { alertId: "nonsense", entryId: "nonsense" });
     const written = (await auditRows()).filter((row) => row.action === "entry.approved");
@@ -992,15 +1001,16 @@ describe("the incidents list", () => {
   });
 
   it("lists the author's drafts and pending entries, drills flagged, and leaves out what is closed, discarded or approved", async () => {
-    const draft = await newDraft(authorA);
-    const drill = await newPending(authorA, "x1", true);
-    const approved = await newPending(authorA, "x2");
+    // An Admin's, because only an Admin starts a drill (S06.05).
+    const draft = await newDraft(adminC);
+    const drill = await newPending(adminC, "x1", true);
+    const approved = await newPending(adminC, "x2");
     await alerting.approveEntry(actorOf(coordB), approved, shownOf("x2"));
-    const discarded = await newPending(authorA, "x3");
-    await alerting.discardEntry(actorOf(authorA), discarded);
-    const closed = await newPending(authorA, "x4");
+    const discarded = await newPending(adminC, "x3");
+    await alerting.discardEntry(actorOf(adminC), discarded);
+    const closed = await newPending(adminC, "x4");
     await owner`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${closed.alertId}`;
-    const mine = (await alerting.incidents({ staffId: authorA.id })).mine;
+    const mine = (await alerting.incidents({ staffId: adminC.id })).mine;
     expect(mine.map((row) => [row.entryId, row.status, row.isDrill]).sort()).toEqual(
       [
         [draft.entryId, "draft", false],
@@ -1153,7 +1163,7 @@ describe("the on-call rule (S06.07)", () => {
   });
 
   it("does not apply to a drill, which may be approved with nobody on call", async () => {
-    const ref = await newPending(authorA, "v1", true);
+    const ref = await newPending(adminC, "v1", true);
     expect(await withRule(true).approveEntry(actorOf(coordB), ref, shownOf("v1"))).toMatchObject({ ok: true });
   });
 
