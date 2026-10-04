@@ -96,6 +96,13 @@ describe("a submit that works", () => {
     expect(t.lifecycle.failSubmit).not.toHaveBeenCalled();
   });
 
+  it("says so when the freezing commit put the entry on the web (a D-1 post, S08.03), so the caller expires the feed, and says nothing otherwise", async () => {
+    const live = setup({ complete: { ok: true, value: { version: 1, webPublishedAt: new Date("2026-10-03T12:00:05Z") } } });
+    expect(await live.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null, webPublished: true });
+    const waiting = setup({ complete: { ok: true, value: { version: 1, webPublishedAt: null } } });
+    expect(await waiting.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null });
+  });
+
   it("records an ops event when a language fell back, and none when every language was translated", async () => {
     const withFallback = setup();
     await withFallback.submitter.submit(ACTOR, REF, KEY);

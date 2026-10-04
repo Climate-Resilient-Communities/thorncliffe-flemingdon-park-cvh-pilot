@@ -106,6 +106,8 @@ export const alertEntry = pgTable(
     check("alert_entry_supersedes_not_self", sql`${t.supersedesId} is null or ${t.supersedesId} <> ${t.id}`),
     check("alert_entry_withdrawal_reason_valid", sql`${t.withdrawalReason} is null or ${t.withdrawalReason} in ('wrong_place', 'wrong_information', 'duplicate', 'other')`),
     check("alert_entry_withdrawal_reason_kind", sql`(${t.kind} = 'withdrawal') = (${t.withdrawalReason} is not null)`),
+    // S08.03: a draft is never web-published (db/migrations/20261005210000_d1_web_first.sql).
+    check("alert_entry_draft_unpublished", sql`${t.status} <> 'draft' or ${t.webPublishedAt} is null`),
     check("alert_entry_discard_reason_valid", sql`${t.discardReason} is null or ${t.discardReason} in ('by_author', 'declined', 'by_close')`),
     index("alert_entry_supersedes_id_idx").on(t.supersedesId),
     check("alert_entry_duplicate_not_self", sql`${t.possibleDuplicateOf} is null or ${t.possibleDuplicateOf} <> ${t.alertId}`),

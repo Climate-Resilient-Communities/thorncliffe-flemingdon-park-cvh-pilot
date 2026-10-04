@@ -5,6 +5,7 @@ import type { AmbassadorPostRequest } from "@/contracts/ambassadorPost";
 import { SubmitResultSchema, type SubmitResult } from "@/contracts/alertSubmit";
 import { UNTIL_RESOLVED_MS, draftFingerprint, type AlertLifecycle, type AlertSubmitter, type BuildingChoice } from "@/modules/alerting";
 import type { StaffSession } from "../../session";
+import { afterSubmit } from "../../alerts/afterWebChange";
 import { normaliseText } from "../../alerts/composer/contentFromForm";
 import { submitResultBody } from "../../alerts/submitBody";
 import { parseTimeFields } from "../../alerts/timeField";
@@ -13,6 +14,8 @@ export interface PostDeps {
   alerting: () => Pick<AlertLifecycle, "postFromAmbassador">;
   submitter: () => Pick<AlertSubmitter, "submit" | "state">;
   now: () => Date;
+  /** What follows a submit that committed (S08.03): the feed is expired when the post went on the web at once. Defaults to `afterSubmit`. */
+  afterSubmit?: (report: Awaited<ReturnType<AlertSubmitter["submit"]>>) => void;
 }
 
 /** The floors the page chose, as the place picker's choice for the one building. */
@@ -61,5 +64,6 @@ export async function postAndSubmit(deps: PostDeps, session: Pick<StaffSession, 
   const draft = made.value.entry.status === "draft" ? draftFingerprint(made.value.entry.content) : undefined;
   const submitter = deps.submitter();
   const report = await submitter.submit(actor, ref, body.key, draft);
+  (deps.afterSubmit ?? afterSubmit)(report);
   return submitResultBody(report, await submitter.state(ref), deps.now());
 }
