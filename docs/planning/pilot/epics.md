@@ -3002,7 +3002,7 @@ So that I can decide whether to sign up.
 
 ### Story S07.02 — Resident signs up for texts on the web
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** in progress (started 2026-10-04 01:36 UTC)
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 47 min (started 2026-10-04 01:36 UTC, built 03:23 UTC)
 - **Traces:** FR-A2, FR-A9 (SMS), FR-A12, AR-13, AR-20, UX-DR9 (R-05, R-06) · **Depends on:** S07.01, S06.07 · **Branch:** `e07-s02-web-signup`
 
 As a resident,
