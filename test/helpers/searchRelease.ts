@@ -38,10 +38,10 @@ export function releaseFiles(): Map<string, string> {
 }
 
 /** The compact binary form of the same two vectors (what a release published after the compact file has beside its JSON). */
-export function releaseBinary(): Uint8Array {
+export function releaseBinary(releaseV = RELEASE_V): Uint8Array {
   return encodeVectorsBinary(
     {
-      releaseV: RELEASE_V,
+      releaseV,
       catalogueHash: CATALOGUE_HASH,
       embedModel: EMBED_MODEL,
       entries: [

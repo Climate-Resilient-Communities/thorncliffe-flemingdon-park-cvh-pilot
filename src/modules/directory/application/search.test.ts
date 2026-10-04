@@ -1541,6 +1541,28 @@ describe("the request's deadline over the snapshot read and the writes", () => {
       expect(store.gets).not.toContain(VECTORS_PATH);
     });
 
+    it("tells vectors_release for a binary whose hash matches the record but that names another release", async () => {
+      const other = releaseBinary(RELEASE_V + 1);
+      const store = releaseStore({ bytes: new Map([[BINARY_PATH, other]]) });
+      const search = start(service({ db: releaseDb({ row: releaseRow(releaseFiles(), other) }), store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "vectors_release" }]);
+    });
+
+    it("tells vectors_schema:binary_magic for a file that is not a vectors binary even when its hash matches the record", async () => {
+      const bad = new Uint8Array(64).fill(7);
+      const store = releaseStore({ bytes: new Map([[BINARY_PATH, bad]]) });
+      const search = start(service({ db: releaseDb({ row: releaseRow(releaseFiles(), bad) }), store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "vectors_schema:binary_magic" }]);
+    });
+
     it("tells vectors_missing when neither the binary nor the JSON file is there", async () => {
       const files = releaseFiles();
       files.delete(VECTORS_PATH);

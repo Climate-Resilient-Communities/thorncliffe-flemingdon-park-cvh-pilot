@@ -389,7 +389,14 @@ recorded hash fails the search as `vectors_hash`, like the JSON file would.
 cold instance still downloads and parses the JSON file. The release is built from the same texts, so the publish copies
 the vectors from the current release and calls the embedding model for none of them. The first publish also lets the
 `directory-releases` bucket accept `application/octet-stream` (an existing bucket only allowed JSON); if that update is
-refused, the publish still succeeds with JSON vectors only.
+refused, the publish still succeeds with JSON vectors only (the server then logs `directory_bucket_update_failed`).
+
+Rollback: a build from before this change rejects the record's `search.binary` field, which turns search off. After the
+re-publish, rolling the app back to such a build needs a publish from that build (or search stays unavailable).
+
+The expected cold snapshot is download-dominated: about 0.2 to 0.5 s instead of 0.5 to 0.9 s (about 0.7 MB over Storage
+instead of 2 to 3 MB; sha256, parse and validation fall from roughly 50 ms to a few ms, more on a slow cold vCPU). Confirm it
+with the `Server-Timing` snapshot phase after the re-publish.
 ## Translation of alerts (S04.02)
 
 Alerts are translated at submit by the routes in the `translation_route` table (spine AD-10). The routes are not an environment

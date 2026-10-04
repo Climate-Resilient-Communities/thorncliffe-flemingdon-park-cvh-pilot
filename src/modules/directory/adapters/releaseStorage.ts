@@ -124,7 +124,14 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
       // binary upload is refused later, and the release is then published with its JSON vectors alone.
       const allowed = found.data.allowed_mime_types;
       if (Array.isArray(allowed) && allowed.length > 0 && !allowed.includes(BINARY_TYPE)) {
-        await client.storage.updateBucket(bucket, { public: false, allowedMimeTypes: [...allowed, BINARY_TYPE], fileSizeLimit: found.data.file_size_limit ?? BUCKET_FILE_LIMIT });
+        const limit = found.data.file_size_limit;
+        const updated = await client.storage.updateBucket(bucket, {
+          public: false,
+          allowedMimeTypes: [...allowed, BINARY_TYPE],
+          ...(limit ? { fileSizeLimit: limit } : {}),
+        });
+        // Safe line only: no vendor message. It tells the owner why vectors.bin is missing from a release.
+        if (updated.error) console.error(JSON.stringify({ event: "directory_bucket_update_failed", detail: "binary_type_not_allowed" }));
       }
       return;
     }
