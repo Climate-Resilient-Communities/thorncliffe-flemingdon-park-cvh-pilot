@@ -8,6 +8,9 @@ import { getEnv } from "@/platform/config/env";
 import { alerting } from "../../alerts";
 import { buildings } from "../../places";
 import { pauseNoticeForApprover } from "../../pauseNotice";
+import { progressReader, textsArePaused } from "../../sendingProgress";
+import { sendingBlock } from "../sending/load";
+import type { SendingBlock } from "../sending/view";
 import { approvalScreen, missingApproval, type ApprovalScreen, type MissingApproval } from "./view";
 
 export interface ApprovalQuery {
@@ -29,6 +32,8 @@ export interface ApprovalLoadDeps {
   residentAlertsEnabled: () => boolean;
   /** `pauseNoticeForApprover()` (S06.06): the sentence while texts are paused, null otherwise. */
   pauseNotice: () => Promise<string | null>;
+  /** What became of the entry's texts (S06.09), for the confirmation of an approved entry. */
+  sending: (review: EntryReview) => Promise<SendingBlock | null>;
   /** Where a notice that could not be read is logged (the error's name only). */
   logError: (event: string, fields: Record<string, string>) => void;
 }
@@ -39,6 +44,7 @@ const live: ApprovalLoadDeps = {
   pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents,
   residentAlertsEnabled: () => residentAlertsEnabled(),
   pauseNotice: () => pauseNoticeForApprover(),
+  sending: (review) => sendingBlock(review, { progress: progressReader(), paused: textsArePaused, logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })) }),
   logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })),
 };
 
@@ -55,5 +61,7 @@ export async function loadApproval(query: ApprovalQuery, viewerId: string, deps:
   } catch (error) {
     deps.logError("approval.pause_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
   }
-  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice, residentAlertsEnabled: deps.residentAlertsEnabled() });
+  // What became of an approved entry's texts; it never throws (a failure is a note in its place), so it can never keep the confirmation from being shown.
+  const sending = review.entry.status === "approved" ? await deps.sending(review) : null;
+  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice, residentAlertsEnabled: deps.residentAlertsEnabled(), sending });
 }

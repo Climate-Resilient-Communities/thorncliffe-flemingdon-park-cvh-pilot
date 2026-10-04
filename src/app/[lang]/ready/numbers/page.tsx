@@ -6,6 +6,7 @@ import { numbersView, type NumberView } from "@/modules/directory";
 import { displayPhone } from "@/modules/places";
 import { ContentText, ResidentText, Screen, Stack } from "@/ui";
 import { Not911 } from "@/ui/emergency";
+import { UsageView } from "@/ui/usage";
 import { isEnglishFallback } from "@/ui/text/resident-text";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
@@ -82,6 +83,7 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
 
   return (
     <Screen surface="resident" testId="numbers-page">
+      <UsageView evt="numbers_view" lang={lang} />
       <Stack gap="section-resident">
         <Stack gap="related">
           <Link href={`/${lang}/ready`} prefetch={false} className="ready-back tap" data-testid="numbers-back">

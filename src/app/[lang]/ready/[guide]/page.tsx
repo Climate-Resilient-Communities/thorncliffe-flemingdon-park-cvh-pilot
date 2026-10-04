@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { guideView } from "@/modules/directory";
 import { ContentText, ResidentText, Screen, Stack } from "@/ui";
 import { Not911 } from "@/ui/emergency";
+import { UsageView } from "@/ui/usage";
 import { isEnglishFallback } from "@/ui/text/resident-text";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
@@ -98,6 +99,7 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
 
   return (
     <Screen surface="resident" testId="guide-page">
+      <UsageView evt="guide_view" lang={lang} />
       <Stack gap="section-resident">
         <Stack gap="related">
           <Link href={`/${lang}/ready`} prefetch={false} className="ready-back tap" data-testid="guide-back">

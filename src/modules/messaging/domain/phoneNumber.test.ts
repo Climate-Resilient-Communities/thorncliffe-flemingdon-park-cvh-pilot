@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isE164, looksLikePhoneNumber, maskForLog, maskPhoneNumbers } from "./phoneNumber";
+import { isE164, looksLikePhoneNumber, maskForLog, maskNumber, maskPhoneNumbers } from "./phoneNumber";
 
 // Obviously fake numbers (the 555-01xx range).
 const A = "+14165550101";
@@ -48,5 +48,13 @@ describe("masking a number for a log line", () => {
       // "20261003" has eight digits and reads as a number: a key part like it is refused (a date is not an id here).
       expect(looksLikePhoneNumber(other), other).toBe(other === "20261003");
     }
+  });
+});
+
+describe("a number named on a Hub screen", () => {
+  it("shows its last four digits only", () => {
+    expect(maskNumber(A)).toBe("+1 ••• ••• 0101");
+    expect(maskNumber(A)).not.toContain("416");
+    expect(maskNumber("+442071838750")).toBe("+44 ••• ••• 8750");
   });
 });

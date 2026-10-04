@@ -16,6 +16,8 @@ import { isFallbackText, ListingBlock } from "../directory/listing-text";
 import { useDirectory } from "../directory/use-directory";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { singleNeighbourhood } from "../usage/nbhd";
+import { UsageView } from "../usage/usage";
 import { FALLBACK_MARKER, isEnglishFallback, isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { keepBuildings, readKeptBuildings, type KeptBuilding } from "./kept-buildings";
 import { createMap, type MapHandle, type PinWords, type TileSettings } from "./leaflet-map";
@@ -100,6 +102,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
   // The filters applied in the directory this visit (kept in the tab, never sent).
   const [applied, setApplied] = useState<FilterState>(() => readFilters(tabStorage()));
+  // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the map opened, if it names one place.
+  const [viewed] = useState(() => singleNeighbourhood(applied.neighbourhoods));
   const element = useRef<HTMLDivElement>(null);
   const handle = useRef<MapHandle | null>(null);
   const card = useRef<HTMLElement>(null);
@@ -200,6 +204,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   return (
     <Screen surface="resident" testId="map-page">
+      <UsageView evt="map_view" lang={lang} nbhd={viewed} />
       <Stack gap="related">
         <ResidentText as="h1">{t("R14.title")}</ResidentText>
         <ResidentText as="p" className="map-hint hide-basic">

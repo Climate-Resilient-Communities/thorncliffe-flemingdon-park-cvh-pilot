@@ -343,19 +343,21 @@ describe("the published confirmation of an approved entry (O-06)", () => {
     const ack = approved()!;
     expect(ack.next.links).toEqual([
       { id: "home", href: "/staff", label: "Back to incidents" },
+      { id: "sending", href: `/staff/alerts/sending?alert=${ALERT}&entry=${ENTRY}`, label: "See sending progress" },
       { id: "promote", href: `/staff/alerts/promote?alert=${ALERT}`, label: "Promote to a full alert" },
     ]);
     const update = approved({ entry: { kind: "update" } })!;
     expect(update.title).toBe("The alert is out");
     expect(update.next.links.map((link) => [link.id, link.href])).toEqual([
       ["home", "/staff"],
+      ["sending", `/staff/alerts/sending?alert=${ALERT}&entry=${ENTRY}`],
       ["update", `/staff/alerts/update?alert=${ALERT}`],
     ]);
   });
 
-  it("offers only the way back once the thread is closed", () => {
+  it("offers only the way back and the sending progress once the thread is closed", () => {
     const closed = approved({ thread: { status: "closed" } })!;
-    expect(closed.next.links.map((link) => link.id)).toEqual(["home"]);
+    expect(closed.next.links.map((link) => link.id)).toEqual(["home", "sending"]);
     expect(closed.next.lines).toEqual([]);
   });
 
