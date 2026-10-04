@@ -109,6 +109,9 @@ export const alertEntry = pgTable(
     // S08.03: a draft is never web-published (db/migrations/20261006000000_d1_web_first.sql).
     check("alert_entry_draft_unpublished", sql`${t.status} <> 'draft' or ${t.webPublishedAt} is null`),
     check("alert_entry_discard_reason_valid", sql`${t.discardReason} is null or ${t.discardReason} in ('by_author', 'declined', 'by_close')`),
+    // 20261005230000_alert_entry_discard_checks.sql (applied once S08.02 is live).
+    check("alert_entry_discard_reason_status", sql`(${t.status} = 'discarded') = (${t.discardReason} is not null)`),
+    check("alert_entry_attributed_rsn_frozen", sql`${t.attributedRsn} is null or ${t.status} <> 'draft'`),
     index("alert_entry_supersedes_id_idx").on(t.supersedesId),
     check("alert_entry_duplicate_not_self", sql`${t.possibleDuplicateOf} is null or ${t.possibleDuplicateOf} <> ${t.alertId}`),
     check("alert_entry_draft_no_duplicate", sql`${t.status} <> 'draft' or ${t.possibleDuplicateOf} is null`),
