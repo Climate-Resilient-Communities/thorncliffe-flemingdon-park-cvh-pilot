@@ -1012,25 +1012,6 @@
       locked: 'Too many wrong codes or passwords. Wait 15 minutes, then try again.',
       notRequired: 'Your authenticator setup has changed. Reload the page.',
       unavailable: 'The authenticator is not working right now. Try again in a few minutes.' } } } });
-  /* The first-text spike (S01.15): an Admin sends one test text from production. Not a prototype screen; E06 removes it. */
-  m(en, { hub: { nav: { smsTest: 'Test text' } },
-  staff: { smsTest: { title: 'Test text', lead: 'Send one test text from production to an approved phone, to learn whether the Twilio account and the toll-free number work. Nothing is retried automatically.',
-    previewOnly: 'Texts are only sent from production',
-    notConfigured: 'Texts can go out from here, but the Twilio account, the toll-free number or the approved phones are not set, or one is not valid. Ask IT to check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.',
-    number: 'Send to', numberHint: 'Only the approved phones are listed. The text is "CVH test from production".', submit: 'Send test text',
-    sent: { heading: 'Twilio accepted the test text', response: 'Twilio\u2019s response: HTTP {http}, status {status}', messageId: 'Message id: {id}',
-      line: 'Delivery is not tracked in this check: look at the phone.' },
-    failed: { heading: 'Twilio did not send the test text', withCode: 'Twilio error {code}: {message}', withoutCode: 'Twilio answered HTTP {http}: {message}',
-      bare: 'Twilio answered HTTP {http} without an error message.', line: 'Nothing was retried. Fix the cause, then press the button again.' },
-    noAnswer: { heading: 'Twilio did not answer', line: 'The text may or may not have been sent. Nothing was retried, and no second text can go to this phone for 5 minutes.' },
-    unknown: { heading: 'Outcome unknown', lead: 'These attempts were started, but Twilio\u2019s answer was never recorded, so the text may or may not have been sent. Look at the phone. No second text can go to the same phone for 5 minutes after an attempt.',
-      item: 'Attempt {id}, started {time} UTC: outcome unknown' },
-    errors: { forbidden: 'Only an Admin can send a test text.', invalid: 'That request was not understood. Reload the page and try again.',
-      notAvailable: 'Texts cannot be sent from here. Nothing was sent.', notAllowlisted: 'That phone is not on the approved list. Nothing was sent.',
-      paused: 'Texts are paused, and this page stops with them. Nothing was sent. Resume texts first, then try again.',
-      duplicateNumber: 'A test text went to that phone in the last 5 minutes. Nothing was sent. Wait, then try again.',
-      duplicateRequest: 'This request was already sent. Nothing more was sent. Press the button again to send a new one.',
-      unavailable: 'The test text could not be sent right now. Nothing was sent.' } } } });
 
   /* Buildings and floors (S01.13): the Admin's list of the pilot buildings and the floor editor. Not a prototype screen. */
   m(en, { hub: { nav: { buildings: 'Buildings' } } });
@@ -1554,6 +1535,66 @@
     errors: {
       forbidden: 'Only an Admin can publish the directory.',
       aal2Required: 'An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.' } } } });
+  /* The sending progress of an alert entry (S06.09, O-06): what became of its texts, per language, and why the ones that did not arrive did not. Not a prototype screen. */
+  m(en, { staff: { sending: {
+    title: 'Sending progress',
+    lead: 'What became of the texts of this alert, by language. No phone numbers are shown.',
+    english: 'English',
+    allLanguages: 'All languages',
+    summary: '{n} texts in all',
+    summaryOne: '1 text in all',
+    none: 'No texts have been made for this alert, so there is nothing to send.',
+    refresh: 'This page updates every 15 seconds while texts are going out.',
+    refreshDone: 'Nothing is waiting or in flight, so this page no longer updates by itself. Reload it to check again.',
+    back: 'Back to the alert',
+    progressLink: 'See sending progress',
+    count: '{label}: {n}',
+    counts: { waiting: 'Waiting', inFlight: 'In flight', delivered: 'Delivered', undelivered: 'Undelivered', failed: 'Failed', unknown: 'Unknown', cancelled: 'Cancelled', skipped: 'Skipped' },
+    legend: {
+      title: 'What the counts mean',
+      waiting: 'Waiting: not handed to the provider yet.',
+      inFlight: 'In flight: handed to the provider, and the carrier has not given a final answer.',
+      delivered: 'Delivered: the carrier confirmed it reached the phone.',
+      undelivered: 'Undelivered: the carrier could not deliver it.',
+      failed: 'Failed: the provider refused it, or it could not be handed over.',
+      unknown: 'Unknown: the outcome is unclear. It is never sent again by itself.',
+      cancelled: 'Cancelled: stopped before it went, by a correction, a withdrawal, a discard or a close.',
+      skipped: 'Skipped: it was not sent because the person left, it was too late, or texts are off in this environment.' },
+    problems: {
+      title: 'Texts that did not arrive',
+      lead: 'Open a list to see, for each text, what happened to it.',
+      failed: 'See the failed texts ({n})',
+      undelivered: 'See the undelivered texts ({n})',
+      unknown: 'See the texts with an unknown outcome ({n})' },
+    drill: 'This is a practice alert. What became of its texts is on the Drills page, apart from real alerts.',
+    drillLink: 'Open the Drills page',
+    notApproved: 'This entry has not been approved, so no texts have been made for it.',
+    unavailable: 'The sending progress could not be read just now. Reload the page. If this stays, tell IT.',
+    list: {
+      title: { failed: 'Failed texts', undelivered: 'Undelivered texts', unknown: 'Texts with an unknown outcome' },
+      lead: 'Each text shows why it did not arrive. No phone numbers are shown.',
+      item: 'Text {ref} · {language} · {when}',
+      none: 'No text is in this state.',
+      more: 'Only the {n} most recent texts are shown.',
+      back: 'Back to sending progress' },
+    meaning: {
+      not_in_service: 'Number not in service',
+      invalid_number: 'Not a valid phone number',
+      landline: 'A landline, or a number that cannot receive texts',
+      phone_off: 'The phone was off or out of reach',
+      opted_out: 'The person replied STOP, so no more texts can go to them',
+      blocked: 'Blocked by the carrier or the phone',
+      sender_not_ready: 'The CVH sending number is not allowed to send this text. Tell IT.',
+      provider_busy: 'The provider was too busy and dropped the text',
+      carrier_error: 'The carrier reported an error without details',
+      other_code: 'The provider reported error {code}',
+      retries_exhausted: 'It still failed after 3 retries',
+      no_reason: 'It failed and the provider gave no reason',
+      undelivered_no_reason: 'The carrier did not deliver it and gave no reason',
+      unclear: 'Outcome unclear; not re-sent' },
+    errors: {
+      forbidden: 'Only an Admin or a Coordinator can see sending progress.',
+      missing: 'That alert entry was not found.' } } } });
   /* Pausing and resuming texts (S06.06): the Pause texts page, the banner on every Hub screen and the approver's notice. Not a prototype screen. */
   m(en, { hub: { nav: { texts: 'Pause texts' } },
   staff: { texts: {
@@ -1740,7 +1781,7 @@
     nextTitle: 'What happens next',
     nextUpdate: 'Residents keep reading the same alert. Add what you learn to it as an update.',
     nextPromote: 'When you know more, promote this to a full alert. Residents keep the same alert; nothing is re-entered.',
-    toHome: 'Back to incidents', toUpdate: 'Post an update', toPromote: 'Promote to a full alert' } } } });
+    toHome: 'Back to incidents', toSending: 'See sending progress', toUpdate: 'Post an update', toPromote: 'Promote to a full alert' } } } });
   /* Correcting or withdrawing what residents read (S05.02, O-15 "Correct" and "Withdraw"), the pilot's staff version. In the prototype a correction is published at
      once and the earlier wording stays below it (O15); here the author writes it on the same composer as every entry and a second person approves it before anyone
      sees it. A withdrawal gives a reason from a short list (wrong place, wrong information, duplicate, other with the Hub's own words), which residents read in the

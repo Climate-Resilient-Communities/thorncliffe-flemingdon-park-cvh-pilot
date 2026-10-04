@@ -5,14 +5,13 @@ import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type S
 import { HubShell } from "@/ui/hub/hub-shell";
 import type { HubNavSection } from "@/ui/hub/hub-nav";
 import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directory/DirectoryRelease";
-import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
-import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import { PauseBanner } from "@/app/staff/PauseBanner";
 import { HealthBanner } from "@/app/staff/HealthBanner";
 import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
+import { ProblemListBody, SendingBody } from "@/app/staff/alerts/sending/SendingBody";
 import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
 import { RosterFormsView } from "@/app/staff/drills/roster/RosterFormsView";
 import { RosterView } from "@/app/staff/drills/roster/RosterView";
@@ -759,53 +758,6 @@ export function ProvidersFixture({
 }
 
 /**
- * The Hub shell around the Test text screen (S01.15), as an Admin sees it: the page's real body (SmsTestView) and the
- * real, behaviour-free form (SendTestTextFormView) with the state a press would leave. The numbers are masked labels
- * with opaque values, as the page gives them; nothing here is a phone number.
- */
-export function SmsTestFixture({
-  texts,
-  brand,
-  availability,
-  form,
-  unknownAttempts,
-}: {
-  texts: HubShellTexts;
-  brand: { logoSrc: string; symbolSrc: string };
-  availability: "preview" | "not_configured" | "ready";
-  form: ComponentProps<typeof SendTestTextFormView>;
-  unknownAttempts?: string[];
-}) {
-  return (
-    <HubShell
-      user={{ displayName: texts.personName, role: "admin" }}
-      navigation={texts.navigation}
-      currentPath="/staff/sms-test"
-      labels={{
-        appName: texts.appName,
-        menu: texts.menu,
-        closeMenu: texts.closeMenu,
-        signedInAs: texts.signedInAs,
-        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
-        logoAlt: texts.logoAlt,
-      }}
-      signOut={
-        <form method="post" action="/api/staff/sign-out">
-          <button type="submit" className="hub-button hub-button--secondary">
-            {texts.signOut}
-          </button>
-        </form>
-      }
-      brand={brand}
-    >
-      <Screen surface="staff" testId="screen">
-        <SmsTestView availability={availability} unknownAttempts={unknownAttempts} form={availability === "ready" ? <SendTestTextFormView {...form} /> : null} />
-      </Screen>
-    </HubShell>
-  );
-}
-
-/**
  * The Hub shell around the Pause texts screen (S06.06), as an Admin sees it: the real body (TextsView) and the real, behaviour-free
  * controls (PauseTextsFormView) with the state a press would leave, and, while texts are paused, the banner the Hub layout puts above
  * every Hub screen (PauseBanner), here above this one. Nothing here is a phone number.
@@ -850,6 +802,51 @@ export function TextsFixture({
       {banner ? <PauseBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <TextsView paused={paused} unreadable={unreadable} form={<PauseTextsFormView {...form} />} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the sending progress of an alert (S06.09), as a Coordinator sees it: the real body of the alert's staff view (SendingBody, drawn without
+ * the 15 second reload) or of the list of the texts that did not arrive (ProblemListBody). Counts, languages and meanings only: nothing here is a phone number.
+ */
+export function SendingFixture({
+  texts,
+  brand,
+  screen,
+  list,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen?: ComponentProps<typeof SendingBody>["screen"];
+  list?: ComponentProps<typeof ProblemListBody>["screen"];
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "coordinator" }}
+      navigation={texts.navigation}
+      currentPath="/staff"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" width="review" testId="screen">
+        {screen ? <SendingBody screen={screen} live={false} /> : null}
+        {list ? <ProblemListBody screen={list} /> : null}
       </Screen>
     </HubShell>
   );

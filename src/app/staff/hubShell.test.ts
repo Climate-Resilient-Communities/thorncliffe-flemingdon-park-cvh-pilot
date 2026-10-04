@@ -40,7 +40,7 @@ describe("hubNavigation", () => {
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -71,7 +71,7 @@ describe("hubNavigation", () => {
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
   });
 
-  it("adds Administration with People, Providers, Directory, Buildings and Test text for Admins only", () => {
+  it("adds Administration with People, Providers, Directory, Buildings, Pause texts, On-call numbers and Drills for Admins only", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/people"), role).toBe(role === "admin");
       expect(items(role).some((item) => item.href === "/staff/providers"), role).toBe(role === "admin");
@@ -87,7 +87,6 @@ describe("hubNavigation", () => {
       { id: "texts", label: "Pause texts", href: "/staff/texts", icon: "pause" },
       { id: "oncall", label: "On-call numbers", href: "/staff/oncall", icon: "phone" },
       { id: "drills", label: "Drills", href: "/staff/drills", icon: "phone" },
-      { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
   });
 
@@ -118,16 +117,8 @@ describe("hubNavigation", () => {
     }
   });
 
-  it("adds the first-text spike's Test text for Admins only", () => {
-    for (const role of STAFF_ROLES) {
-      expect(items(role).some((item) => item.href === "/staff/sms-test"), role).toBe(role === "admin");
-    }
-  });
-
-  it("gives Test text a phone icon of its own: not the inbox another item uses, and one the shell's stylesheet draws", () => {
-    const smsTest = items("admin").find((item) => item.href === "/staff/sms-test");
-    expect(smsTest?.icon).toBe("phone");
-    expect(smsTest?.icon).not.toBe("inbox");
+  it("draws every navigation icon in the shell stylesheet, and no longer offers the removed spike page", () => {
+    for (const role of STAFF_ROLES) expect(items(role).some((item) => item.href === "/staff/sms-test"), role).toBe(false);
     expect(HUB_NAV_ICONS).toContain("phone");
     const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
     for (const icon of HUB_NAV_ICONS) expect(stylesheet, icon).toContain(`.hub-ico--${icon} {`);
