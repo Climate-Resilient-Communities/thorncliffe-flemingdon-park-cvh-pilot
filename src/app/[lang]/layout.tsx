@@ -4,6 +4,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 import { preload } from "react-dom";
 import type { CSSProperties } from "react";
+import { BASIC_BOOT_SCRIPT, BasicSync } from "@/ui/basic";
 import { ResidentShell, type NavItem } from "@/ui/shell";
 import { OfflineSupport } from "@/ui/offline";
 import { isLaunchCode, LAUNCH_CODES, LAUNCH_LANGUAGES, languageOf } from "@/i18n/languages";
@@ -53,6 +54,7 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const language = languageOf(lang);
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
   const r02 = await getTranslations({ locale: lang, namespace: "R02" });
+  const x07 = await getTranslations({ locale: lang, namespace: "x07" });
   // The parts of the catalog the layout's client components read: the 911 block of error.tsx, which must be able to draw
   // itself in the page's language when a render fails, and the offline note below. Nothing else is sent to the browser.
   const { x01, shell: shellMessages, time } = (await getMessages({ locale: lang })) as {
@@ -79,10 +81,16 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
       data-script={language.font}
       style={{ "--font-script": fontStack(language.font) } as CSSProperties}
     >
+      <head>
+        {/* Basic mode (X-07, S02.14): before the first paint, from cvh.choices, so the page never shows in normal size first. */}
+        <script dangerouslySetInnerHTML={{ __html: BASIC_BOOT_SCRIPT }} />
+      </head>
       <body>
+        <BasicSync />
         <ResidentShell
           header={{
             logoAlt: shell("hubLogoAlt"),
+            basic: { label: x07("label"), on: x07("on"), off: x07("off") },
             current: lang,
             languages: LAUNCH_LANGUAGES,
             labels: {

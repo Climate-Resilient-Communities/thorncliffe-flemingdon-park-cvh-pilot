@@ -21,6 +21,8 @@ export const DeviceChoicesSchema = z.looseObject({
   buildings: z.array(RsnSchema).optional(),
   /** Floors by floor id, each in one of the chosen buildings. A unit number is never asked or stored. */
   floors: z.array(FloorIdSchema).optional(),
+  /** Basic mode (X-07, S02.14): bigger text, fewer things. Only an explicit `true` counts; turning it off removes the field. */
+  basic: z.boolean().optional(),
   /** What the phone dropped because it is no longer in the building list, until the resident has read R-34's note. */
   removed: z.object({ buildings: z.number().int().min(0), floors: z.number().int().min(0) }).optional(),
   /** When (ms since 1970, the phone's clock) the choices were last written. A building list generated before it is never used to prune. */

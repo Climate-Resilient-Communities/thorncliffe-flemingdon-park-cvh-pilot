@@ -107,8 +107,10 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
           <p className="ready-eyebrow">
             {guideIconClass(view.id) && <span className={`shell-ico shell-ico--sm ${guideIconClass(view.id)}`} aria-hidden="true" />}
             <ResidentText>{t("R25.guideWord")}</ResidentText>
-            {" · "}
-            <ResidentText>{t("R25.readTime", { n: view.readMins })}</ResidentText>
+            <span className="hide-basic">
+              {" · "}
+              <ResidentText>{t("R25.readTime", { n: view.readMins })}</ResidentText>
+            </span>
           </p>
           <ContentText as="h1" unavailable={view.title.unavailable} testId="guide-title">
             {view.title.text}
