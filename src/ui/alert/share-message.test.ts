@@ -112,6 +112,18 @@ describe("the shared message of a thread that closed", () => {
     expect(m.text).not.toMatch(/resolved/i);
   });
 
+  it("dates the last update by the newest entry that still stands when a later update was withdrawn on an open thread", () => {
+    const update = englishEntry({ n: 2, kind: "update", published_at: T("14:20"), ...words("Crews are on site.") });
+    const bad = englishEntry({ n: 3, kind: "update", published_at: T("14:40"), ...words("Wrong update.") });
+    const notice = englishEntry({ n: 4, kind: "withdrawal", supersedes_id: bad.id, published_at: T("14:45"), ...words("That update was wrong.") });
+    delete notice.phase;
+    const t = thread({ entries: [ack, update, bad, notice] });
+    const view = alertView(t, { lang: "en", serverNow: SERVER_NOW, t: translatorFor("en"), place: null });
+
+    expect(view.stamps.updated).toBe(T("14:20"));
+    expect(view.preview.description).toContain("10:20");
+  });
+
   it("says it was withdrawn with the reason, and never the wording that was withdrawn", () => {
     const withdrawal = englishEntry({ n: 2, kind: "withdrawal", supersedes_id: ack.id, published_at: T("14:30"), ...words("This alert had wrong information. It has been withdrawn.") });
     delete withdrawal.phase;

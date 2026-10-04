@@ -45,6 +45,16 @@ describe("proxy", () => {
       }
     });
 
+    it("never lets an encoded dot segment or an odd slug leave the alert path: it answers as an alert that does not exist", () => {
+      for (const path of ["/a/AB?l=en", "/a/kbcdfghj%20x?l=en", "/a/KBCDFGHJ?l=en"]) {
+        expect(rewrite(path), path).toBe("http://localhost:3000/en/a/invalid");
+      }
+      // The URL parser already folds an encoded dot segment into the path it names, so the share rewrite is never reached with one.
+      for (const path of ["/a/%2e%2e?l=en", "/a/.%2e?l=en", "/a/%2e?l=en"]) {
+        expect(rewrite(path), path).toBeNull();
+      }
+    });
+
     it("is English when `l` is missing, empty or not one of our languages, and never redirects to guess one", () => {
       for (const path of ["/a/kbcdfghj", "/a/kbcdfghj?l=", "/a/kbcdfghj?l=xx", "/a/kbcdfghj?l=EN", "/a/kbcdfghj?l=../staff", "/a/kbcdfghj?x=ur"]) {
         expect(rewrite(path), path).toBe("http://localhost:3000/en/a/kbcdfghj");

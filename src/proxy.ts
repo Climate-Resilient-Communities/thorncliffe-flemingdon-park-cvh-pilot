@@ -8,6 +8,7 @@ const withLocale = createMiddleware(routing);
 
 // The share link (AD-17, S05.08): `/a/{slug}`, one segment after `a`, with the sharer's language in `?l=`.
 const SHARED_ALERT = /^\/a\/([^/]+)\/?$/;
+const SLUG = /^[a-z0-9]{6,16}$/;
 const TRADITIONAL_CHINESE = /^zh-hant(?:-[a-z0-9]{2,8})*$/i;
 
 /**
@@ -18,7 +19,8 @@ const TRADITIONAL_CHINESE = /^zh-hant(?:-[a-z0-9]{2,8})*$/i;
 function sharedAlertRewrite(request: NextRequest, slug: string) {
   const asked = request.nextUrl.searchParams.get("l");
   const lang = asked !== null && isLaunchCode(asked) ? asked : asked !== null && TRADITIONAL_CHINESE.test(asked) ? "zh" : DEFAULT_LANGUAGE;
-  return NextResponse.rewrite(new URL(`/${lang}/a/${slug}`, request.url));
+  // An encoded dot segment (`%2e%2e`) would be a real one in a URL: only a slug of the alert pattern is passed on, anything else is an alert that does not exist.
+  return NextResponse.rewrite(new URL(`/${lang}/a/${SLUG.test(slug) ? slug : "invalid"}`, request.url));
 }
 
 /**

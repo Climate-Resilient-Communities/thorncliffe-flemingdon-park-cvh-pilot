@@ -79,10 +79,12 @@ export async function waitForFeedToList(request: APIRequestContext, lang: string
  * cache (`revalidateTag(..., { expire: 0 })`), so a change shows at once, which is stricter than the 15 seconds the story allows.
  */
 export async function sharedPreview(request: APIRequestContext, slug: string, lang = "en") {
-  const response = await request.get(`/a/${slug}?l=${lang}`, { maxRedirects: 0 });
+  // As a messaging app's crawler asks (WhatsApp is on Next's list of bots that get the tags in <head>, not streamed into the body); only <head> is read for the tags.
+  const response = await request.get(`/a/${slug}?l=${lang}`, { maxRedirects: 0, headers: { "user-agent": "WhatsApp/2.23.20.0 A" } });
   const html = await response.text();
+  const head = /<head[\s>][\s\S]*?<\/head>/.exec(html)?.[0] ?? "";
   const meta = (key: string) => {
-    const found = new RegExp(`<meta (?:name|property)="${key}" content="([^"]*)"`).exec(html);
+    const found = new RegExp(`<meta (?:name|property)="${key}" content="([^"]*)"`).exec(head);
     return found?.[1].replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/[  ]/g, " ");
   };
   return {

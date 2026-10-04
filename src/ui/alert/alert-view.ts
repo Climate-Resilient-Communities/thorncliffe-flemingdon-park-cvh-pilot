@@ -227,6 +227,9 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   const newestFirst = visible.length > 0 ? visible : entriesNewestFirst(thread.entries);
   const standing = newestFirst.find((entry) => !replacers.has(entry.id)) ?? newestFirst[0];
   const latest = newestFirst[0];
+  // The time a preview or a shared message gives for the last update is the newest entry whose words still stand: an update that was withdrawn is on the page, marked,
+  // but is not what a neighbour is told changed last.
+  const lastStanding = newestFirst.find((entry) => replacers.get(entry.id)?.kind !== "withdrawal") ?? latest;
   const first = newestFirst[newestFirst.length - 1];
   const ago = (iso: string) => agoText(serverNow.getTime() - new Date(iso).getTime(), timeT);
   const times =
@@ -257,8 +260,8 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     guides: guidesFor(thread.types).map((id) => ({ id, label: t("R07.guide", { hazard: lowerHazard(id) }), href: guideDuringHref(lang, id) })),
     entries: newestFirst.map((entry) => entryOf(entry, serverNow, t, replacers.get(entry.id))),
     place,
-    stamps: { posted: first.published_at, updated: newestFirst.length > 1 ? latest.published_at : null, closed: closed ? entriesNewestFirst(thread.entries)[0].published_at : null },
-    preview: previewOf({ thread, shown: withdrawnBy ?? standing, standing, closed, first, latest, place, serverNow, locale: language.bcp47, t }),
+    stamps: { posted: first.published_at, updated: lastStanding.id !== first.id ? lastStanding.published_at : null, closed: closed ? entriesNewestFirst(thread.entries)[0].published_at : null },
+    preview: previewOf({ thread, shown: withdrawnBy ?? standing, standing, closed, first, latest: lastStanding, place, serverNow, locale: language.bcp47, t }),
   };
 }
 
