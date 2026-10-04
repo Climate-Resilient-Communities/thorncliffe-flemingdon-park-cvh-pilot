@@ -57,6 +57,8 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
 
   return (
     <Screen surface="resident" testId="terms">
+      {/* The page is text only and scrolls in the shell's main: a keyboard needs something in it to focus to scroll (WCAG 2.1.1), so the text is one region that takes focus. */}
+      <div className="terms-body" role="region" aria-labelledby="terms-title" tabIndex={0} data-testid="terms-body">
       <Stack gap="stack">
         {view.status === "draft" && (
           <div className="terms-draft" role="note" data-testid="terms-draft">
@@ -79,7 +81,9 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
         )}
 
         <Stack gap="related">
-          <TermsBlock as="h1" text={document.title} marked />
+          <div id="terms-title">
+            <TermsBlock as="h1" text={document.title} marked />
+          </div>
           <dl className="terms-facts" data-testid="terms-facts">
             <div className="terms-facts__item">
               <ResidentText as="dt">{t("version")}</ResidentText>
@@ -132,6 +136,7 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
           </Stack>
         ))}
       </Stack>
+      </div>
     </Screen>
   );
 }

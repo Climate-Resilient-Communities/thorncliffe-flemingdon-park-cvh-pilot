@@ -172,6 +172,21 @@ describe("Discard", () => {
     expect(d.afterApproval).not.toHaveBeenCalled();
   });
 
+  it("expires the feed after the discard of an entry residents already read (a system withdrawal replaced it, S08.03), and after nothing else", async () => {
+    const afterDiscard = vi.fn();
+    const live = deps({ discard: { ok: true, value: { id: ENTRY, status: "superseded" } } });
+    expect(await discardFromForm({ ...live.wired, afterDiscard }, session, form(refs))).toMatchObject({ status: "done" });
+    expect(afterDiscard).toHaveBeenCalledTimes(1);
+    expect(afterDiscard).toHaveBeenCalledWith({ id: ENTRY, status: "superseded" });
+
+    const unread = deps({ discard: { ok: true, value: { id: ENTRY, status: "discarded" } } });
+    const none = vi.fn();
+    await discardFromForm({ ...unread.wired, afterDiscard: none }, session, form(refs));
+    const refused = deps({ discard: { ok: false, error: "ENTRY_CHANGED" } });
+    await discardFromForm({ ...refused.wired, afterDiscard: none }, session, form(refs));
+    expect(none).not.toHaveBeenCalled();
+  });
+
   it("says why it was refused, and refuses a form without what was shown", async () => {
     const d = deps({ discard: { ok: false, error: "ENTRY_CHANGED" } });
     expect(await discardFromForm(d.wired, session, form(refs))).toEqual({ status: "refused", message: "This alert changed. Review it again." });

@@ -6,6 +6,7 @@ import { getEnv } from "@/platform/config/env";
 import { alerting } from "../../alerts";
 import { staffAction, type ActionRefusal } from "../../guard";
 import { draftRefOf } from "../audience/editAudience";
+import { expireFeed } from "../afterWebChange";
 import { afterApproval } from "./afterApproval";
 import { approvalRefusalMessage, approveFromForm, discardFromForm, returnFromForm, type ApprovalDeps, type ApprovalState } from "./approveFromForm";
 import { approvalFacts } from "./entryFacts";
@@ -29,6 +30,7 @@ const refused = (error: ActionRefusal): ApprovalState => ({
 const deps: ApprovalDeps = {
   alerting,
   afterApproval,
+  afterDiscard: () => expireFeed(),
   pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents,
 };
 

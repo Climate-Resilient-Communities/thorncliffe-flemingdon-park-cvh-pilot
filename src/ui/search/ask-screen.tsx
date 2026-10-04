@@ -204,7 +204,7 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
       <Stack gap="section-resident">
         <Stack gap="related">
           <ResidentText as="h1">{t("R09.title")}</ResidentText>
-          {searchAvailable && <ResidentText as="p">{t("R09.lead")}</ResidentText>}
+          {searchAvailable && <ResidentText as="p" className="hide-basic">{t("R09.lead")}</ResidentText>}
         </Stack>
 
         {searchAvailable && (

@@ -132,6 +132,18 @@ describe("the review of an ambassador's post (O-07)", () => {
     expect(bar).toContain(">Discard<");
     expect(bar.match(/<button/g)).toHaveLength(3);
     expect(out.toLowerCase()).not.toMatch(/edit and approve|decline/);
+    expect(out).not.toContain('data-testid="live-note"');
+  });
+
+  it("for a post residents already read (D-1, S08.03) says so and offers Approve and Discard only: a web-published entry never returns to draft", () => {
+    const live = html(screenOf({ authorRole: "ambassador", entry: { webPublishedAt: new Date("2026-10-04T14:00:00.000Z") } }));
+    expect(live).toMatch(/<p[^>]*data-testid="live-note"[^>]*>Residents already read this post on the web, marked &quot;Not yet verified&quot;\./);
+    const bar = region(live);
+    expect(bar).toContain(">Approve<");
+    expect(bar).toContain(">Discard<");
+    expect(bar).not.toContain("Return to author");
+    expect(bar).not.toContain('data-testid="return-button"');
+    expect(bar.match(/<button/g)).toHaveLength(2);
   });
 });
 

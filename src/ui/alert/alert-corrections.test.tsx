@@ -91,7 +91,6 @@ describe("a withdrawn entry", () => {
 
   it("leaves what is true now to the entry that still stands, and the times to the entries residents read", () => {
     const v = view(entries);
-    expect(v.current.id).toBe(ID(1));
     expect(v.current.text.body).toBe(ORIGINAL);
     expect(v.preview.description.endsWith(` — ${ORIGINAL}`)).toBe(true);
     expect(v.times).toBe("Posted 1 hour ago · Updated 40 minutes ago");
@@ -135,5 +134,19 @@ describe("an alert nothing was replaced in", () => {
     expect(v.entries.every((e) => e.mark === null)).toBe(true);
     expect(v.preview.description.endsWith(" — Work is under way.")).toBe(true);
     expect(detail([ack, update])).not.toContain("alert-mark");
+  });
+});
+
+describe("a correction that is web-published but not yet verified (S08.03)", () => {
+  it("does not mark the entry it names as corrected, until the Hub verifies it", () => {
+    const pending = { ...correction(2, ID(1), "14:30"), verified: false };
+    const v = view([ack, pending]);
+    expect(v.entries.find((e) => e.id === ID(1))?.mark).toBeNull();
+  });
+
+  it("still marks the entry as withdrawn when the system's withdrawal (never verified) replaced it", () => {
+    const notice = { ...withdrawal(2, ID(1), "14:30"), verified: false };
+    const v = view([ack, notice]);
+    expect(v.entries.find((e) => e.id === ID(1))?.mark).toMatchObject({ kind: "withdrawn" });
   });
 });

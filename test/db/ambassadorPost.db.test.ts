@@ -304,10 +304,12 @@ describe("the submit of a post (E04 exactly, attributed to its building)", () =>
     const contexts: PrepareContext[] = [];
     const key = randomUUID();
     const report = await submitterFor(contexts).submit(actorOf(ambassador), ref, key);
-    expect(report).toEqual({ state: "committed", key, outcome: null });
+    // Elevator and water are direct types: this post is D-1, on the web from its submit (S08.03); its texts still wait for the approval.
+    expect(report).toEqual({ state: "committed", key, outcome: null, webPublished: true });
     expect(contexts[0].attribution).toEqual({ role: "ambassador", building: ADDRESS });
     const row = await entryRow(ref.entryId);
-    expect(row).toMatchObject({ status: "pending_approval", version: 1, attributed_rsn: RSN, web_published_at: null });
+    expect(row).toMatchObject({ status: "pending_approval", version: 1, attributed_rsn: RSN });
+    expect(row.web_published_at).not.toBeNull();
     expect(row.sms_bodies.en.body).toContain(`Building ambassador, ${ADDRESS}`);
     expect(row.sms_bodies.en.body).toContain("Verified by the Hub");
     expect(row.sms_bodies.en.body).not.toMatch(/From the Hub/);
@@ -385,7 +387,8 @@ describe("an approved post, as the approver and residents read it", () => {
 
   it("clears the building with the other frozen fields when it is returned to its author, and a draft can never hold one", async () => {
     await assign(ambassador, RSN);
-    const ref = await submitted();
+    // A post that residents have not read (fire waits for the Hub): a D-1 post is on the web and never returns to draft (S08.03).
+    const ref = await submitted(ambassador, { types: ["fire"] });
     const row = await entryRow(ref.entryId);
     expect(await alerting.returnEntry(actorOf(coordinator), ref, "return", { shown: { version: row.version, contentHash: row.content_hash }, note: "Which floors exactly?" })).toMatchObject({ ok: true });
     expect(await entryRow(ref.entryId)).toMatchObject({ status: "draft", attributed_rsn: null, content_hash: null });
@@ -531,7 +534,8 @@ describe("every discard says why", () => {
 
   it("is by_author when the author takes back their own post, which then is not shown as declined", async () => {
     await assign(ambassador, RSN);
-    const ref = await submitted();
+    // A post residents have not read: a D-1 post is withdrawn by a system entry instead (S08.03, test/db/d1WebFirst.db.test.ts).
+    const ref = await submitted(ambassador, { types: ["fire"] });
     expect(await alerting.discardEntry(actorOf(ambassador), ref)).toMatchObject({ ok: true, value: { status: "discarded", discardReason: "by_author" } });
     expect((await entryRow(ref.entryId)).discard_reason).toBe("by_author");
     expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.discarded", meta: { discard_reason: "by_author", from: "pending_approval" } });
@@ -540,7 +544,7 @@ describe("every discard says why", () => {
 
   it("is declined when the Hub discards it, and only then is the post 'Not sent by the Hub'", async () => {
     await assign(ambassador, RSN);
-    const ref = await submitted();
+    const ref = await submitted(ambassador, { types: ["fire"] });
     const row = await entryRow(ref.entryId);
     expect(await alerting.discardEntry(actorOf(coordinator), ref, { shown: { version: row.version, contentHash: row.content_hash } })).toMatchObject({ ok: true });
     expect((await entryRow(ref.entryId)).discard_reason).toBe("declined");
@@ -550,7 +554,8 @@ describe("every discard says why", () => {
 
   it("is by_close when the alert closes with the post unread (a final's approval), which reads as ended, never declined", async () => {
     await assign(ambassador, RSN);
-    const thread = await hubThread();
+    // The thread is about fire, so the post in it is not D-1: residents have not read it when the thread closes.
+    const thread = await hubThread(false, ["fire"]);
     clock = new Date(NOW.getTime() + 60_000);
     const waiting = await submitted(ambassador, { into: thread.alertId });
     clock = new Date(NOW.getTime() + 120_000);

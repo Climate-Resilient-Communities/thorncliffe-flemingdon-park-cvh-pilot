@@ -106,6 +106,8 @@ export const alertEntry = pgTable(
     check("alert_entry_supersedes_not_self", sql`${t.supersedesId} is null or ${t.supersedesId} <> ${t.id}`),
     check("alert_entry_withdrawal_reason_valid", sql`${t.withdrawalReason} is null or ${t.withdrawalReason} in ('wrong_place', 'wrong_information', 'duplicate', 'other')`),
     check("alert_entry_withdrawal_reason_kind", sql`(${t.kind} = 'withdrawal') = (${t.withdrawalReason} is not null)`),
+    // S08.03: a draft is never web-published (db/migrations/20261006000000_d1_web_first.sql).
+    check("alert_entry_draft_unpublished", sql`${t.status} <> 'draft' or ${t.webPublishedAt} is null`),
     check("alert_entry_discard_reason_valid", sql`${t.discardReason} is null or ${t.discardReason} in ('by_author', 'declined', 'by_close')`),
     // 20261005230000_alert_entry_discard_checks.sql (applied once S08.02 is live).
     check("alert_entry_discard_reason_status", sql`(${t.status} = 'discarded') = (${t.discardReason} is not null)`),
@@ -151,6 +153,8 @@ export const alertEntry = pgTable(
     index("alert_entry_alert_id_idx").on(t.alertId),
     // S05.03: at most one final of a thread is ever approved or published, so two finals cannot both close it.
     uniqueIndex("alert_entry_one_final").on(t.alertId).where(sql`${t.kind} = 'final' and ${t.status} in ('approved', 'published_system')`),
+    // S08.03: a published entry is withdrawn by the system at most once.
+    uniqueIndex("alert_entry_one_system_withdrawal").on(t.supersedesId).where(sql`${t.kind} = 'withdrawal' and ${t.status} = 'published_system'`),
     index("alert_entry_author_id_idx").on(t.authorId),
     index("alert_entry_approved_by_idx").on(t.approvedBy),
     pgPolicy("alert_entry_app_select", { for: "select", to: cvhApp, using: sql`true` }),
