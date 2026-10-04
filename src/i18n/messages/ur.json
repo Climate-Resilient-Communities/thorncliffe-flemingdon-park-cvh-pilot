@@ -719,7 +719,8 @@
     "validLine": "{until} تک لاگو",
     "timeLine": "{posted} پوسٹ ہوا · {updated} اپ ڈیٹ ہوا",
     "timeLineOne": "{posted} پوسٹ ہوا",
-    "basicMore": "پچھلی اپ ڈیٹس: {n}"
+    "basicMore": "پچھلی اپ ڈیٹس: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "وہ الرٹ جو ختم ہو گئے",
@@ -729,7 +730,10 @@
     "emptyBody": "جب کوئی الرٹ ختم ہوتا ہے تو وہ یہاں آ جاتا ہے اور پڑھا جا سکتا ہے۔",
     "lead": "ہر الرٹ ختم ہونے کے بعد یہاں پڑھا جا سکتا ہے۔",
     "endedOn": "{posted} پوسٹ ہوا",
-    "backHome": "\"ابھی\" پر واپس"
+    "backHome": "\"ابھی\" پر واپس",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "مدد تلاش کریں",

@@ -1,0 +1,19 @@
+/*
+ * The archive (R-08, S05.07): the alerts that have ended, each an alert card (alert.css) with how and when it ended. Spacing from the semantic tokens and direction from
+ * logical properties only, so the screen mirrors in Urdu, Pashto and Dari. An end is always its words and its shape together (a check, a clock or an information mark),
+ * never colour alone.
+ */
+@layer components {
+  .archive-end {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-label);
+    margin: 0;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .archive-more {
+    align-self: start;
+  }
+}

@@ -6,6 +6,7 @@ import { Stack } from "../layout/stack";
 import { ResidentText } from "../text/resident-text";
 import type { AlertView, Translate } from "./alert-view";
 import { DisruptionTypes, EntryText, OriginMark, ThreadEntryText } from "./alert-parts";
+import { ValidLine } from "./valid-line";
 import "../shell/icons.css";
 import "./alert-icons.css";
 
@@ -52,11 +53,7 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
             <ResidentText as="p" className="alert-caption" testId="alert-times">
               {view.times}
             </ResidentText>
-            {view.valid !== null && (
-              <ResidentText as="p" className="alert-caption" testId="alert-valid">
-                {view.valid}
-              </ResidentText>
-            )}
+            {view.closed === null && <ValidLine valid={view.valid} validUntil={view.validUntil} serverNow={view.serverNow} note={view.mayHaveEnded} />}
           </Stack>
         </article>
 

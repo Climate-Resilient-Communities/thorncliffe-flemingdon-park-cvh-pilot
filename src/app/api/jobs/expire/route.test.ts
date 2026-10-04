@@ -13,6 +13,9 @@ vi.mock("@/app/expire", () => ({
 }));
 vi.mock("@/platform/config/env", () => ({ getEnv: () => ({ jobSecrets: state.jobSecrets }) }));
 
+const revalidated = vi.hoisted(() => [] as unknown[][]);
+vi.mock("next/cache", () => ({ revalidateTag: (...args: unknown[]) => revalidated.push(args) }));
+
 const { POST, GET, maxDuration, dynamic } = await import("./route");
 
 const post = (authorization?: string) => POST(new Request("https://cvh.example/api/jobs/expire", { method: "POST", headers: authorization === undefined ? {} : { authorization } }));
@@ -20,6 +23,7 @@ const post = (authorization?: string) => POST(new Request("https://cvh.example/a
 beforeEach(() => {
   state.run = undefined;
   state.runs = 0;
+  revalidated.length = 0;
   state.jobSecrets = [SECRET];
   vi.restoreAllMocks();
 });
@@ -47,6 +51,15 @@ describe("POST /api/jobs/expire", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({ due: 3, closed: 2, skipped: 1, failed: 0 });
+  });
+
+  it("expires the feed's cache tag when it closed a thread, and not when it closed none", async () => {
+    state.run = async () => ({ due: 0, closed: 0, skipped: 0, failed: 0 });
+    await post(`Bearer ${SECRET}`);
+    expect(revalidated).toEqual([]);
+    state.run = async () => ({ due: 1, closed: 1, skipped: 0, failed: 0 });
+    await post(`Bearer ${SECRET}`);
+    expect(revalidated).toEqual([["feed", { expire: 0 }]]);
   });
 
   it("answers 200 when some threads failed: they were recorded as ops events and are the next run's", async () => {

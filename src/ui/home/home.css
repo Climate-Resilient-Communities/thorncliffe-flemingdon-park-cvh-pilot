@@ -85,6 +85,24 @@
     outline-offset: 2px;
   }
 
+  /* The link to the archive (R-08, S05.07): the prototype's .cvh-link, at least a finger tall. */
+  .home-archive {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--gap-label);
+    min-block-size: var(--tap-current);
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .home-archive:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
   .home-ico {
     display: inline-block;
     flex: none;

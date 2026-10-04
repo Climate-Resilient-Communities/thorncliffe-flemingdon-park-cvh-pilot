@@ -719,7 +719,8 @@
     "validLine": "{until} मान्य",
     "timeLine": "{posted} पोस्ट किया गया · {updated} अपडेट किया गया",
     "timeLineOne": "{posted} पोस्ट किया गया",
-    "basicMore": "पहले के अपडेट: {n}"
+    "basicMore": "पहले के अपडेट: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "खत्म हो चुके अलर्ट",
@@ -729,7 +730,10 @@
     "emptyBody": "जब कोई अलर्ट खत्म होता है, तो वह यहाँ आ जाता है और पढ़ा जा सकता है।",
     "lead": "हर अलर्ट खत्म होने के बाद भी यहाँ पढ़ा जा सकता है।",
     "endedOn": "{posted} पोस्ट किया गया",
-    "backHome": "\"अभी\" स्क्रीन पर वापस जाएँ"
+    "backHome": "\"अभी\" स्क्रीन पर वापस जाएँ",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "मदद खोजें",

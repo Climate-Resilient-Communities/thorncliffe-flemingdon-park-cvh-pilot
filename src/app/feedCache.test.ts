@@ -7,15 +7,18 @@ const state = vi.hoisted(() => ({
   slugs: [] as string[],
   slugReads: 0,
   closedReads: [] as string[],
+  archiveReads: [] as string[],
   cached: new Map<string, unknown>(),
   tags: [] as string[][],
+  revalidate: [] as (number | false | undefined)[],
 }));
 
 vi.mock("next/cache", () => ({
   // The data cache stands in as a map keyed by the key parts: a repeated call with the same key is answered from it.
-  unstable_cache: (fn: () => Promise<unknown>, key: string[], options: { tags: string[] }) => async () => {
+  unstable_cache: (fn: () => Promise<unknown>, key: string[], options: { tags: string[]; revalidate?: number | false }) => async () => {
     const id = key.join("|");
     state.tags.push(options.tags);
+    state.revalidate.push(options.revalidate);
     if (!state.cached.has(id)) state.cached.set(id, await fn());
     return state.cached.get(id);
   },
@@ -23,6 +26,10 @@ vi.mock("next/cache", () => ({
 vi.mock("@/platform/config/env", () => ({ getEnv: () => ({ residentAlertsEnabled: true, publicBaseUrl: "http://test" }) }));
 vi.mock("./api/feed/source", () => ({
   readFeed: async () => ({}),
+  readArchive: async (lang: string, page: number) => {
+    state.archiveReads.push(`${lang}:${page}`);
+    return { v: 1, page, has_more: false, server_now: "2026-10-01T15:00:00.000Z", threads: [] };
+  },
   readClosedSlugs: async () => {
     state.slugReads += 1;
     return state.slugs;
@@ -33,7 +40,7 @@ vi.mock("./api/feed/source", () => ({
   },
 }));
 
-import { readCachedClosedAlert } from "./feedCache";
+import { readCachedArchive, readCachedClosedAlert } from "./feedCache";
 
 beforeEach(() => {
   state.slugs = ["abcd1234"];
@@ -41,6 +48,8 @@ beforeEach(() => {
   state.closedReads = [];
   state.cached.clear();
   state.tags = [];
+  state.revalidate = [];
+  state.archiveReads = [];
 });
 
 describe("readCachedClosedAlert", () => {
@@ -64,5 +73,18 @@ describe("readCachedClosedAlert", () => {
     await readCachedClosedAlert("en", "abcd1234");
     expect(state.tags.length).toBeGreaterThan(0);
     for (const tags of state.tags) expect(tags).toContain(FEED_TAG);
+  });
+});
+
+describe("readCachedArchive (S05.07)", () => {
+  it("reads a page once per language and page, and keeps it for 60 seconds under the feed's tag, so an approval's revalidateTag clears it with the feed", async () => {
+    await readCachedArchive("en", 1);
+    await readCachedArchive("en", 1);
+    await readCachedArchive("en", 2);
+    await readCachedArchive("ur", 1);
+
+    expect(state.archiveReads).toEqual(["en:1", "en:2", "ur:1"]);
+    expect(state.revalidate.every((seconds) => seconds === 60)).toBe(true);
+    for (const tags of state.tags) expect(tags).toEqual([FEED_TAG]);
   });
 });

@@ -719,7 +719,8 @@
     "validLine": "May bisa {until}",
     "timeLine": "Ipinost {posted} · Na-update {updated}",
     "timeLineOne": "Ipinost {posted}",
-    "basicMore": "Mga naunang update: {n}"
+    "basicMore": "Mga naunang update: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "Mga alertong natapos na",
@@ -729,7 +730,10 @@
     "emptyBody": "Kapag natapos ang isang alerto, lilipat ito rito at mababasa pa rin.",
     "lead": "Mababasa pa rin dito ang bawat alerto pagkatapos nito.",
     "endedOn": "Ipinost {posted}",
-    "backHome": "Bumalik sa Ngayon"
+    "backHome": "Bumalik sa Ngayon",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "Humanap ng tulong",

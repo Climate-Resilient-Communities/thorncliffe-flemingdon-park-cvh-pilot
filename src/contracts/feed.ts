@@ -109,3 +109,41 @@ export const FeedErrorV1 = z.strictObject({
   /** `LANG_INVALID`: no language, or not one of ours. `query_invalid`: the language is fine but the query has more than `lang`. */
   error: z.strictObject({ code: z.enum(["LANG_INVALID", "query_invalid", "FEED_UNAVAILABLE"]), message_key: z.string() }),
 });
+
+/** How long after closing a thread closed `resolved` still gives its places the status `resolved` (AD-19: 12 hours from closing time). The server derives the status with it and a phone finds the thread behind a resolved status with it. */
+export const RESOLVED_WINDOW_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * The archive (S05.07, R-08): `GET /api/feed/archive?lang=&page=` answers the non-drill threads that closed, newest closed first, `ARCHIVE_PAGE_SIZE` to a page, each
+ * exactly as the feed's thread is when live (`FeedThread`: every entry, correction and withdrawal) with how it closed (`close_reason`) and when (`closed_at`). It is the
+ * same for every visitor and sets no cookie. `page` is 1-based and defaults to 1; `has_more` says there is a next page.
+ */
+export const ARCHIVE_PAGE_SIZE = 20;
+
+/** How long the edge may keep one page of the archive (`s-maxage`), and the app's own data cache: 60 seconds (S05.07). */
+export const ARCHIVE_EDGE_MAX_AGE_SECONDS = 60;
+
+/** The last page a request may ask for: a page number nobody has a link to is refused, so the shared cache cannot be filled with guesses. */
+export const ARCHIVE_MAX_PAGE = 500;
+
+export const CLOSE_REASONS = ["resolved", "expired", "withdrawn"] as const;
+
+export const ArchiveThreadSchema = FeedThreadSchema.extend({
+  state: z.literal("closed"),
+  close_reason: z.enum(CLOSE_REASONS),
+  closed_at: z.iso.datetime(),
+});
+
+export const ArchiveV1 = z.strictObject({
+  v: z.literal(1),
+  page: z.int().min(1),
+  has_more: z.boolean(),
+  /** When the server built this answer (ISO 8601): every "ago" on the archive is measured against it, never the phone's clock. */
+  server_now: z.iso.datetime(),
+  threads: z.array(ArchiveThreadSchema).max(ARCHIVE_PAGE_SIZE),
+});
+export type ArchiveV1 = z.infer<typeof ArchiveV1>;
+export type ArchiveThread = z.infer<typeof ArchiveThreadSchema>;
+
+/** The URL of one page of the archive in a page language. */
+export const archivePath = (lang: string, page = 1): string => `/api/feed/archive?lang=${encodeURIComponent(lang)}&page=${page}`;

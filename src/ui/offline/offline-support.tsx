@@ -2,31 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { agoText } from "../home/feed-poll";
 import { ResidentText } from "../text/resident-text";
-import { KEPT_AT_META, SW_SCOPE, SW_URL, type PageMessage } from "./protocol";
+import { useKeptAt, useOnline } from "./kept-state";
+import { SW_SCOPE, SW_URL, type PageMessage } from "./protocol";
 import { askPersistOnce, askServed, keptAt } from "./support";
-
-const subscribeOnline = (change: () => void) => {
-  window.addEventListener("online", change);
-  window.addEventListener("offline", change);
-  return () => {
-    window.removeEventListener("online", change);
-    window.removeEventListener("offline", change);
-  };
-};
-
-/** Whether the browser says it has a connection (true on the server and in the first render). */
-const useOnline = (): boolean => useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
-
-const never = () => () => {};
-
-/** When the worker says the copy of this document was stored, from the <meta> it wrote into it (null when it did not). */
-function keptAtMeta(): number | null {
-  const at = Number(document.querySelector(`meta[name="${KEPT_AT_META}"]`)?.getAttribute("content"));
-  return Number.isFinite(at) && at > 0 ? at : null;
-}
 
 function phoneStorage(): Storage | null {
   try {
@@ -70,7 +51,7 @@ export function OfflineSupport() {
   // does not depend on a worker that the browser may have stopped meanwhile. Only the document the app was loaded with carries it.
   const [loadedAt] = useState(pathname);
   const [signalBack, setSignalBack] = useState(false);
-  const writtenAt = useSyncExternalStore(never, keptAtMeta, () => null);
+  const writtenAt = useKeptAt();
 
   useEffect(() => {
     registerWorker();

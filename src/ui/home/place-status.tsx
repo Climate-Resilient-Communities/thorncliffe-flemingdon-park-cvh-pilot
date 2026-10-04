@@ -6,6 +6,7 @@ import type { LaunchCode } from "@/i18n/languages";
 import { Stack } from "../layout/stack";
 import { ResidentText } from "../text/resident-text";
 import { behindOf, shownOf, type Shown, type ThreadBehind } from "./home-view";
+import { useClosedThreads } from "./use-closed";
 import { useFeed } from "./use-feed";
 import "./home.css";
 
@@ -57,8 +58,8 @@ function useTypeWords() {
 }
 
 /**
- * The threads behind a status (S05.06): one link each, to the alert (R-07), named by its types. Nothing when there are none (a place with no status, or one
- * whose status is `resolved`, whose closed thread the feed does not name).
+ * The threads behind a status (S05.06): one link each, to the alert (R-07), named by its types. For `resolved` the link is to the closed thread (S05.07), found in the
+ * archive. Nothing when there are none (a place with no status, or a resolved one whose thread the archive could not be read for).
  */
 export function ThreadLinks({ behind, lang, testId }: { behind: readonly ThreadBehind[]; lang: LaunchCode; testId: string }) {
   const words = useTypeWords();
@@ -85,9 +86,10 @@ export function ThreadLinks({ behind, lang, testId }: { behind: readonly ThreadB
  */
 export function BuildingStatus({ lang, rsn, neighbourhoodId }: { lang: LaunchCode; rsn: string; neighbourhoodId: string | null }) {
   const feed = useFeed(lang);
+  const closed = useClosedThreads(lang, feed.feed);
   const view = { feed: feed.feed, failed: feed.failed };
   const shown = shownOf(feed.feed?.places.buildings.find((place) => place.rsn === rsn), view);
-  const behind = behindOf(shown, feed.feed, { kind: "building", rsn, neighbourhoodId });
+  const behind = behindOf(shown, feed.feed, { kind: "building", rsn, neighbourhoodId }, closed);
   return (
     <section data-testid="building-status">
       <Stack gap="related">

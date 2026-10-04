@@ -12,6 +12,7 @@ import { useGateBuildingList } from "../choices/building-list-context";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { AlertCard, alertView, type Translate as AlertTranslate } from "../alert";
+import { clockOffsetMs, mayHaveEnded } from "../alert/may-have-ended";
 import { Not911 } from "../emergency";
 import { Isolated } from "../text/isolated";
 import { ResidentText, isEnglishFallback } from "../text/resident-text";
@@ -19,6 +20,7 @@ import { agoText } from "./feed-poll";
 import { homeRows, type BuildingRow, type NeighbourhoodRow } from "./home-view";
 import { StatusMark, ThreadLinks, Unverified } from "./place-status";
 import { adviceFor, deviceProfile, tailorThreads } from "./tailoring";
+import { useClosedThreads } from "./use-closed";
 import { useFeed } from "./use-feed";
 import "../choices/choices.css";
 import "./home.css";
@@ -82,12 +84,15 @@ function CurrentAlerts({
   lang,
   choices,
   list,
+  offline,
 }: {
   threads: readonly FeedThread[];
   serverNow: string;
   lang: LaunchCode;
   choices: DeviceChoices | null;
   list: BuildingList | null;
+  /** Set while these threads are not the server's answer (S05.07): the phone's clock, and when it got them. A thread whose valid-until has passed by the server's clock as known then says it may have ended. */
+  offline: { now: number; receivedAt: number } | null;
 }) {
   const t = useTranslations("R03");
   const x04 = useTranslations("x04");
@@ -120,6 +125,7 @@ function CurrentAlerts({
     highlighted,
     advice: matched ? adviceFor(thread.types, chosenGroups, adviceLines) : null,
   }));
+  const offsetMs = offline ? clockOffsetMs(serverNow, offline.receivedAt) : 0;
   const views = cards.map((card) => card.view);
   const anyEnglish = views.some((view) => view.current.text.fallback) || cards.some((card) => card.advice !== null && isEnglishFallback(card.advice));
   return (
@@ -136,7 +142,15 @@ function CurrentAlerts({
       )}
       <ul className="alert-card-list" data-testid="home-threads">
         {cards.map(({ view, highlighted, advice }) => (
-          <AlertCard key={view.slug} view={view} lang={lang} t={all} highlighted={highlighted} advice={advice} />
+          <AlertCard
+            key={view.slug}
+            view={view}
+            lang={lang}
+            t={all}
+            highlighted={highlighted}
+            advice={advice}
+            mayHaveEnded={offline !== null && mayHaveEnded(view.validUntil, { now: offline.now, offsetMs })}
+          />
         ))}
       </ul>
     </Stack>
@@ -203,6 +217,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
   const listState = gate ?? own.state;
   const list = listState.status === "ready" ? listState.list : null;
   const feed = useFeed(lang);
+  const closed = useClosedThreads(lang, feed.feed);
 
   const heading = <ResidentText as="h1">{t("alertsNow")}</ResidentText>;
   if (choices === undefined) {
@@ -221,7 +236,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
   }
 
   const chosen = choices?.buildings ?? [];
-  const rows = homeRows({ chosen, list, view: { feed: feed.feed, failed: feed.failed } });
+  const rows = homeRows({ chosen, list, view: { feed: feed.feed, failed: feed.failed }, closed });
   const name = neighbourhoodName(neighbourhoods);
   const feedState = feed.feed ? "ready" : feed.failed ? "failed" : "loading";
   const translateTime = ((key: string, values?: Record<string, string | number>) => time(key, values)) as Parameters<typeof agoText>[1];
@@ -291,10 +306,16 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             <section data-testid="home-alerts">
               <Stack gap="related">
                 <ResidentText as="h2">{t("currentAlerts")}</ResidentText>
-                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} choices={choices} list={list} />
+                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} choices={choices} list={list} offline={feed.failed && feed.at !== null ? { now: feed.now, receivedAt: feed.at } : null} />
               </Stack>
             </section>
           )}
+
+          {/* The prototype's archive link (R-03, S05.07): the alerts that have ended stay readable (R-08). It is there whatever the feed says. */}
+          <Link className="home-archive tap" href={`/${lang}/archive`} prefetch={false} data-testid="home-archive">
+            <span className="alert-ico alert-ico--clock alert-ico--sm" aria-hidden="true" />
+            <ResidentText>{t("archive")}</ResidentText>
+          </Link>
 
           <EveryDay lang={lang} />
 

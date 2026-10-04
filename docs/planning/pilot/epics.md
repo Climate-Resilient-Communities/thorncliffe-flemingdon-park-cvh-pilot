@@ -1267,7 +1267,7 @@ So that I can see at a glance whether anything affects me.
 **When** it is shown, with or without chosen buildings
 **Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is directly under the "Every day" destinations, above the link to what the resident has told the CVH, and nowhere else on the screen (owner decisions 36 and 37)
 
-**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`) is not built: no archive route exists yet (`/api/feed/archive` and the archive screen R-08 arrive with S05.07), so home has no link to it.
+**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`, "Alerts that have ended") is built with S05.07: home links to the archive screen R-08 at `/{lang}/archive`, and a `resolved` status links to its closed thread (R-07).
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
@@ -2414,7 +2414,7 @@ So that I know whether to act before reading every alert.
 
 ### Story S05.07 — Every phone shows the latest state of each alert, and an archive
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 12 min (started 2026-10-04 04:12 UTC, built 05:24 UTC)
 - **Traces:** AR-25, FR-A7 (archive), NFR-N3, UX-DR8 · **Depends on:** S05.03, S02.12 · **Branch:** `e05-s07-feed-currency-archive`
 
 As a resident,
