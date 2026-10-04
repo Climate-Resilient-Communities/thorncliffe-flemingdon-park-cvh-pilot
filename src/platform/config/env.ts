@@ -79,6 +79,13 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        1.4. PROVISIONAL: the owner confirms it. Each actual price keeps the rate it
  *                                                        was converted at and is shown labelled with it. Not a TWILIO_ variable: it is
  *                                                        not a credential and is allowed everywhere
+ * SMS_TRANSACTIONAL_DAILY_CEILING
+ *                      server   optional                 the daily ceiling on non-alert (`transactional`) texts, menus and prompts
+ *                                                        included and texts to on-call numbers not counted (AD-22, S09.01): more
+ *                                                        than this many created since midnight in Toronto raises the health job's
+ *                                                        `transactional_ceiling` condition (the on-call Admins are texted once
+ *                                                        that day; texts keep sending). A whole number of at least 1; default 300.
+ *                                                        PROVISIONAL: the owner confirms it against the expected sign-ups a day
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -227,6 +234,7 @@ const rawSchema = z.object({
   SMS_TEST_ALLOWLIST: optionalText,
   SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
   SMS_USD_TO_CAD_RATE: optionalText,
+  SMS_TRANSACTIONAL_DAILY_CEILING: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_FEED_FILE: optionalText,
@@ -326,6 +334,9 @@ const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** PROVISIONAL (S04.06): cents CAD per text message segment until IT records Twilio's price for Canadian toll-free numbers. */
 export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 
+/** PROVISIONAL (S09.01): the daily ceiling on non-alert texts until the owner confirms one (AD-22). */
+export const DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING = 300;
+
 /** PROVISIONAL (S06.08): Canadian dollars per US dollar, the rate Twilio's prices (billed in US dollars) are converted at until the owner sets one. */
 export const DEFAULT_SMS_USD_TO_CAD_RATE = 1.4;
 
@@ -356,6 +367,8 @@ export interface Env {
   smsPricePerSegmentCents: number;
   /** Canadian dollars per US dollar (at most four decimals): the rate a reconciliation converts Twilio's prices at (S06.08). */
   smsUsdToCadRate: number;
+  /** The daily ceiling on non-alert texts (S09.01, AD-22): the health job's `transactional_ceiling` condition. */
+  smsTransactionalDailyCeiling: number;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
@@ -861,6 +874,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   }
   const smsPricePerSegmentCents = parseSmsPrice(raw.SMS_PRICE_PER_SEGMENT_CENTS, problems);
   const smsUsdToCadRate = parseSmsRate(raw.SMS_USD_TO_CAD_RATE, problems);
+  const smsTransactionalDailyCeiling = positiveInteger("SMS_TRANSACTIONAL_DAILY_CEILING", raw.SMS_TRANSACTIONAL_DAILY_CEILING, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -951,6 +965,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     smsTestProblem,
     smsPricePerSegmentCents,
     smsUsdToCadRate,
+    smsTransactionalDailyCeiling,
     cohereApiKey: raw.COHERE_API_KEY?.trim(),
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,

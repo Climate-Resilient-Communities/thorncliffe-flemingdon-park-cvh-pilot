@@ -273,6 +273,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
 | `drill_roster` (subscriptions) | S06.05 | | |
 | `oncall_roster`, `health_condition` (ops) | S06.07 | | |
+| `health_heartbeat` (ops) | S09.01 | | |
 
 The feed endpoint in S02.11 returns `feed_version: 0` until S04.03 creates the table.
 

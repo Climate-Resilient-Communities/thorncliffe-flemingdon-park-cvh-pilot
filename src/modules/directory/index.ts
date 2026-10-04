@@ -78,6 +78,7 @@ export {
   MAX_ATTEMPTS,
   PUBLISH_BUDGET_MS,
   currentReleaseSummary,
+  lastPublishedAt,
   latestReleaseSummary,
   publishDirectory,
   type PublishResult,

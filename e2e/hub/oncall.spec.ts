@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { OncallState } from "../../src/app/staff/oncall/control";
 import type { OncallLabels, OncallRow } from "../../src/app/staff/oncall/OncallFormsView";
-import { senderBannerView } from "../../src/app/staff/senderBanner";
+import { healthBannerView } from "../../src/app/staff/healthBannerModel";
 import { englishText } from "../../src/i18n/text";
 import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
 import { mount } from "../helpers/layout-fixture";
@@ -9,7 +9,8 @@ import { expectBaseline } from "./helpers";
 
 // S06.07: the On-call numbers screen in the Hub shell, in en as an Admin sees it: the list with each number masked to its last four digits and a
 // Remove button that names it, the add form, an empty list and what it means, what a press leaves (the lines it says, a refusal), a roster that
-// could not be read, and the banner "Sending is failing" that every Hub screen carries while the sender is failing. The page's real body and
+// could not be read, the banner "Sending is failing" that every Hub screen carries while the sender is failing, and (S09.01) the banner an Admin or
+// a Coordinator sees naming every other open condition, with the health check itself stopped. The page's real body and
 // controls render with the stand-in states the server actions would return; every number is fictional. The behaviour is asserted in
 // src/app/staff/oncall; these pictures show what it looks like.
 const brand = hubBrand();
@@ -39,11 +40,25 @@ const ROWS: OncallRow[] = [
   { id: "01900000-0000-7000-8000-0000000000b2", label: "Priya Sharma, Hub Director weekends", masked: "+1 ••• ••• 0199", removeFor: "Remove Priya Sharma" },
 ];
 
-const props = (rows: OncallRow[], answer: OncallState = IDLE, extra: { unreadable?: boolean; banner?: boolean } = {}) => ({
+const BEATING = { completedAt: SINCE, fresh: true };
+const SENDER_FAILING = healthBannerView({ active: [{ condition: "queue_stuck", since: SINCE }, { condition: "sender_stalled", since: new Date(SINCE.getTime() + 600_000) }], heartbeat: BEATING }, { everything: false });
+const OTHERS_FAILING = healthBannerView(
+  {
+    active: [
+      { condition: "job_failed", since: SINCE },
+      { condition: "publish_failed", since: SINCE },
+      { condition: "transactional_ceiling", since: new Date(SINCE.getTime() + 600_000) },
+    ],
+    heartbeat: { completedAt: new Date(SINCE.getTime() + 300_000), fresh: false },
+  },
+  { everything: true },
+);
+
+const props = (rows: OncallRow[], answer: OncallState = IDLE, extra: { unreadable?: boolean; banner?: "sender" | "others" } = {}) => ({
   count: rows.length,
   unreadable: extra.unreadable,
   form: { rows, labels, answer },
-  banner: extra.banner ? (senderBannerView([{ condition: "queue_stuck", since: SINCE }, { condition: "sender_stalled", since: new Date(SINCE.getTime() + 600_000) }]) ?? undefined) : undefined,
+  banner: (extra.banner === "sender" ? SENDER_FAILING : extra.banner === "others" ? OTHERS_FAILING : null) ?? undefined,
 });
 
 const STATES = {
@@ -53,7 +68,8 @@ const STATES = {
   "removed-answer": () => props([ROWS[0]], { status: "done", at: 1, lines: ["Priya Sharma was removed. The list now has 1 number.", "2 waiting texts to that number were cancelled."] }),
   refused: () => props(ROWS, { status: "refused", at: 1, message: "That number is already on the list." }),
   unreadable: () => props([], IDLE, { unreadable: true }),
-  "sender-failing": () => props(ROWS, IDLE, { banner: true }),
+  "sender-failing": () => props(ROWS, IDLE, { banner: "sender" }),
+  "health-failing": () => props(ROWS, IDLE, { banner: "others" }),
 } as const;
 
 async function open(page: Page, state: keyof typeof STATES, width: number) {
@@ -92,11 +108,15 @@ for (const state of Object.keys(STATES) as (keyof typeof STATES)[]) {
       if (state === "refused") await expect(page.getByRole("alert")).toContainText("That number is already on the list.");
       if (state === "unreadable") await expect(page.getByTestId("oncall-unreadable")).toContainText("could not read the on-call numbers");
       if (state === "sender-failing") {
-        await expect(page.getByTestId("sender-failing-banner")).toBeVisible();
-        await expect(page.getByTestId("sender-failing-banner")).toContainText("Sending is failing");
-        await expect(page.getByTestId("sender-failing-banner")).toContainText("Tell IT now.");
+        await expect(page.getByTestId("health-banner")).toBeVisible();
+        await expect(page.getByTestId("health-banner")).toContainText("Sending is failing");
+        await expect(page.getByTestId("health-banner")).toContainText("Tell IT now.");
+      } else if (state === "health-failing") {
+        await expect(page.getByTestId("health-banner")).toContainText("Something is not working");
+        await expect(page.getByTestId("health-banner")).toContainText("The last directory publish failed.");
+        await expect(page.getByTestId("health-banner")).toContainText("The health check has not run for more than 3 minutes");
       } else {
-        await expect(page.getByTestId("sender-failing-banner")).toHaveCount(0);
+        await expect(page.getByTestId("health-banner")).toHaveCount(0);
       }
 
       await expectBaseline(page, `oncall-en-${state}-${width}.png`, { fullPage: true });

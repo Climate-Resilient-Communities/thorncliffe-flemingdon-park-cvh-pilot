@@ -1,4 +1,4 @@
-// The health job against a real database (S06.07): each of the five conditions (a text queued and due for more than 5 minutes outside a pause, a
+// The health job against a real database (S06.07, and from S09.01 every AD-23 condition, the heartbeat and the banner for every condition): each of the five conditions (a text queued and due for more than 5 minutes outside a pause, a
 // delivery that became `unknown` or a hand-off the sweep could not settle, no sender lease renewal for 3 minutes while texts are due, Smart
 // Encoding found on, signature failures past 5 in 10 minutes), the text to every on-call number at most once per condition per 30 minutes, the
 // `ops_event` of each alert and recovery without personal data, the claim order of the on-call texts, the Hub's banner when the sender itself
@@ -9,8 +9,21 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { record, recordRefusal } from "../../src/modules/audit";
 import { createContactResolver, createDeliveryQueue, createSenderHealth } from "../../src/modules/messaging";
-import { activeSenderConditions, createHealthJob, createOncallRoster, oncallNumberSource, oncallText, type HealthCondition, type HealthJob, type OncallRoster } from "../../src/modules/ops";
-import { loadSenderBanner } from "../../src/app/staff/senderBanner";
+import { lastPublishedAt } from "../../src/modules/directory";
+import {
+  HEALTH_CONDITIONS,
+  activeHealthConditions,
+  activeSenderConditions,
+  createHealthJob,
+  createOncallRoster,
+  oncallNumberSource,
+  oncallText,
+  readHeartbeat,
+  type HealthCondition,
+  type HealthJob,
+  type OncallRoster,
+} from "../../src/modules/ops";
+import { loadHealthBanner } from "../../src/app/staff/healthBannerModel";
 import { createDb, type Db } from "../../src/platform/db";
 import { dispatcherWorld, fakeProvider, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
@@ -50,6 +63,9 @@ async function resetAll() {
   await owner`delete from oncall_roster`;
   await owner`update health_condition set active = false, since = null, last_alerted_at = null, last_event_id = null, checked_at = null`;
   await owner`delete from ops_event`;
+  await owner`update health_heartbeat set completed_at = null`;
+  await owner`delete from cron.job_run_details`;
+  await owner`delete from net._http_response`;
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where id > ${auditBaseline}`;
@@ -76,13 +92,20 @@ beforeEach(async () => {
 
 const PRICE = 1.5;
 
-function job(over: { enqueue?: Parameters<typeof createHealthJob>[0]["enqueue"] } = {}): HealthJob {
+/** A ceiling far above what any test seeds, unless a test says otherwise. */
+const CEILING = 1000;
+
+function job(
+  over: { enqueue?: Parameters<typeof createHealthJob>[0]["enqueue"]; ceiling?: number; lastPublishedAt?: Parameters<typeof createHealthJob>[0]["lastPublishedAt"] } = {},
+): HealthJob {
   const queue = createDeliveryQueue();
   return createHealthJob({
     db: app,
     sender: createSenderHealth(),
     enqueue: over.enqueue ?? ((tx, input) => queue.enqueueTransactional(tx, input)),
     pricePerSegmentCents: () => PRICE,
+    transactionalDailyCeiling: () => over.ceiling ?? CEILING,
+    lastPublishedAt: over.lastPublishedAt ?? ((executor) => lastPublishedAt(executor)),
     logError: (evt, fields) => void errors.push({ evt, fields }),
   });
 }
@@ -141,18 +164,14 @@ async function expectNoNumberStored() {
 }
 
 describe("when everything is fine", () => {
-  it("judges all five conditions, texts nobody and records nothing", async () => {
+  it("judges every condition, texts nobody, records nothing but the heartbeat", async () => {
     await addOncall();
     await renewLease();
     const report = await job().run();
 
-    expect(report.conditions.map((row) => [row.condition, row.status, row.holds, row.action])).toEqual([
-      ["queue_stuck", "ok", false, "quiet"],
-      ["delivery_unknown", "ok", false, "quiet"],
-      ["sender_stalled", "ok", false, "quiet"],
-      ["smart_encoding_on", "ok", false, "quiet"],
-      ["signature_failures", "ok", false, "quiet"],
-    ]);
+    expect(report.conditions.map((row) => [row.condition, row.status, row.holds, row.action])).toEqual(HEALTH_CONDITIONS.map((condition) => [condition, "ok", false, "quiet"]));
+    expect(report.conditions).toHaveLength(10);
+    expect(report.heartbeat).toBe(true);
     expect(await oncallTexts()).toEqual([]);
     expect(await healthEvents()).toEqual([]);
     expect(await owner`select count(*)::int as n from health_condition where active`).toEqual([{ n: 0 }]);
@@ -492,7 +511,7 @@ describe("with nobody on call", () => {
     expect(report.conditions.find((row) => row.condition === "sender_stalled")).toMatchObject({ holds: true, action: "alerted", texts: 0 });
     expect(await oncallTexts()).toEqual([]);
     expect((await healthEvents()).map((row) => [(row.detail as { condition: string }).condition, (row.detail as { notified: number }).notified])).toEqual([["queue_stuck", 0], ["sender_stalled", 0]]);
-    const banner = await loadSenderBanner({ active: () => activeSenderConditions(app), logError: () => {} });
+    const banner = await loadHealthBanner({ facts: async () => ({ active: await activeHealthConditions(app), heartbeat: await readHeartbeat(app) }), everything: false, logError: () => {} });
     expect(banner?.heading).toBe("Sending is failing");
     expect(banner?.lines).toHaveLength(4);
   });
@@ -593,18 +612,239 @@ describe("two runs at once, and a condition that fails", () => {
 
     const report = await flaky.run();
 
-    expect(report.conditions.map((row) => [row.condition, row.status])).toEqual([
-      ["queue_stuck", "ok"],
-      ["delivery_unknown", "ok"],
-      ["sender_stalled", "failed"],
-      ["smart_encoding_on", "ok"],
-      ["signature_failures", "ok"],
-    ]);
+    expect(report.conditions.map((row) => [row.condition, row.status])).toEqual(HEALTH_CONDITIONS.map((condition) => [condition, condition === "sender_stalled" ? "failed" : "ok"]));
+    // A run that could not judge every condition records no heartbeat: from outside it is a health job that is failing.
+    expect(report.heartbeat).toBe(false);
+    expect(await readHeartbeat(app)).toEqual({ completedAt: null, fresh: false });
     expect(errors).toEqual([{ evt: "health.condition_failed", fields: { condition: "sender_stalled", error: "TypeError" } }]);
     expect(JSON.stringify(errors)).not.toContain("555");
     expect(await stateOf("sender_stalled")).toEqual({ active: false, has_since: false, alerted: false });
     expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("smart_encoding_on", 1)]);
 
     expect(await reportOf("sender_stalled", flaky)).toMatchObject({ status: "ok", action: "alerted", texts: 1 });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------
+// S09.01: the conditions E09 adds, each triggered here; the heartbeat; and the banner on every Admin and Coordinator screen.
+
+/** An `ops_event` of a kind, `minutesAgo` minutes ago (codes only, as the writers record them). */
+const event = (kind: string, detail: Record<string, unknown>, minutesAgo = 0) =>
+  owner`insert into ops_event (kind, severity, at, detail) values (${kind}, 'warning', now() - ${minutesAgo} * interval '1 minute', ${owner.json(detail as never)}) returning id`;
+
+describe("a scheduled job that failed (pg_cron, or a job's call that did not answer 2xx)", () => {
+  let runid = 900_000;
+  const cronRun = (status: "failed" | "succeeded", minutesAgo = 1) =>
+    owner`insert into cron.job_run_details (jobid, runid, job_pid, database, username, command, status, return_message, start_time, end_time)
+          values (1, ${(runid += 1)}, 1, 'postgres', 'postgres', 'select 1', ${status}, '', now() - ${minutesAgo} * interval '1 minute', now() - ${minutesAgo} * interval '1 minute')`;
+  const httpAnswer = (id: number, status: number | null, minutesAgo = 1, extra: { timedOut?: boolean; error?: string } = {}) =>
+    owner`insert into net._http_response (id, status_code, timed_out, error_msg, created) values (${id}, ${status}, ${extra.timedOut ?? false}, ${extra.error ?? null}, now() - ${minutesAgo} * interval '1 minute')`;
+
+  it("texts every on-call number when a pg_cron run failed in the last 10 minutes, and recovers 10 minutes after the last failure", async () => {
+    await addOncall(2);
+    await cronRun("succeeded");
+    expect(await reportOf("job_failed")).toMatchObject({ holds: false, action: "quiet" });
+
+    await cronRun("failed", 2);
+    expect(await reportOf("job_failed")).toMatchObject({ holds: true, action: "alerted", texts: 2 });
+    expect((await healthEvents()).at(-1)).toMatchObject({ kind: "health.condition_alerted", subject_id: null, detail: { condition: "job_failed", count: 1, notified: 2, first: true } });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("job_failed", 1), oncallText("job_failed", 1)]);
+    expect(await reportOf("job_failed")).toMatchObject({ holds: true, action: "held" });
+
+    await owner`update cron.job_run_details set start_time = now() - interval '11 minutes', end_time = now() - interval '11 minutes'`;
+    expect(await reportOf("job_failed")).toMatchObject({ holds: false, action: "recovered" });
+    expect((await healthEvents()).at(-1)).toMatchObject({ kind: "health.condition_recovered", detail: { condition: "job_failed" } });
+    await expectNoNumberStored();
+  });
+
+  it("counts a job's call that answered an error, timed out or could not connect, but not one that answered 2xx", async () => {
+    await addOncall(1);
+    await httpAnswer(1, 200);
+    await httpAnswer(2, 204);
+    expect(await reportOf("job_failed")).toMatchObject({ holds: false });
+
+    await httpAnswer(3, 500);
+    await httpAnswer(4, 401);
+    await httpAnswer(5, null, 1, { timedOut: true });
+    await httpAnswer(6, null, 1, { error: "Couldn't connect to server" });
+    await httpAnswer(7, 503, 30);
+    expect(await reportOf("job_failed")).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+    expect((await healthEvents()).at(-1)).toMatchObject({ detail: { condition: "job_failed", count: 4 } });
+  });
+
+  it("gives the app a count only: the app's role cannot read pg_cron's run history (its commands name the Vault secrets)", async () => {
+    await expect(appSql`select count(*) from cron.job_run_details`).rejects.toThrow(/permission denied/);
+    await expect(appSql`select count(*) from cron.job`).rejects.toThrow(/permission denied/);
+    await cronRun("failed");
+    expect(await appSql`select health_job_failures(600000) as n`).toEqual([{ n: 1 }]);
+    // The window is bounded (at most 24 hours), and a negative or missing one counts nothing.
+    await cronRun("failed", 60 * 30);
+    expect(await appSql`select health_job_failures(${10 * 24 * 3_600_000}::bigint) as n`).toEqual([{ n: 1 }]);
+    expect(await appSql`select health_job_failures(-5) as n`).toEqual([{ n: 0 }]);
+  });
+});
+
+describe("a whole language that fell back to English in an alert", () => {
+  const fallback = (minutesAgo = 0) => event("alert.translation_fallback", { languages: 2 }, minutesAgo);
+
+  it("texts the on-call Admins about each new one once, after the interval, and recovers 24 hours after the last", async () => {
+    await addOncall(1);
+    await fallback();
+    expect(await reportOf("translation_fallback")).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("translation_fallback", 1)]);
+
+    // The same one is never texted again.
+    await backdateAlert("translation_fallback", 120);
+    expect(await reportOf("translation_fallback")).toMatchObject({ holds: true, action: "held" });
+
+    // A new one is, once the interval has passed since the last text.
+    await fallback();
+    await backdateAlert("translation_fallback", 10);
+    expect(await reportOf("translation_fallback")).toMatchObject({ action: "held" });
+    await backdateAlert("translation_fallback", 31);
+    expect(await reportOf("translation_fallback")).toMatchObject({ action: "alerted", texts: 1 });
+    expect((await healthEvents()).at(-1)).toMatchObject({ detail: { condition: "translation_fallback", count: 2, first: false } });
+
+    await owner`update ops_event set at = now() - interval '25 hours' where kind = 'alert.translation_fallback'`;
+    expect(await reportOf("translation_fallback")).toMatchObject({ holds: false, action: "recovered" });
+  });
+
+  it("leaves one older than 24 hours to the weekly review", async () => {
+    await addOncall(1);
+    await fallback(25 * 60);
+    expect(await reportOf("translation_fallback")).toMatchObject({ holds: false, action: "quiet" });
+  });
+});
+
+describe("a directory publish that failed", () => {
+  const failed = (minutesAgo = 0) => event("directory.publish_failed", { reason: "storage_unavailable", attempts: 3 }, minutesAgo);
+
+  it("texts the on-call Admins, holds while no publish has succeeded since, and recovers when one does", async () => {
+    await addOncall(2);
+    let published: Date | null = null;
+    const run = job({ lastPublishedAt: async () => published });
+    await failed();
+    expect(await reportOf("publish_failed", run)).toMatchObject({ holds: true, action: "alerted", texts: 2 });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("publish_failed", 1), oncallText("publish_failed", 1)]);
+    await backdateAlert("publish_failed", 90);
+    expect(await reportOf("publish_failed", run)).toMatchObject({ holds: true, action: "held" });
+
+    // A publish that succeeded after the failure clears it.
+    published = new Date(Date.now() + 1000);
+    expect(await reportOf("publish_failed", run)).toMatchObject({ holds: false, action: "recovered" });
+    expect(await oncallTexts()).toHaveLength(2);
+  });
+
+  it("does not hold for a failure before the last publish that succeeded", async () => {
+    await addOncall(1);
+    await failed(60);
+    expect(await reportOf("publish_failed", job({ lastPublishedAt: async () => new Date(Date.now() - 30 * 60_000) }))).toMatchObject({ holds: false });
+    expect(await reportOf("publish_failed", job({ lastPublishedAt: async () => null }))).toMatchObject({ holds: true });
+  });
+
+  it("reads directory's last successful publish from the database (none here, or the newest complete release)", async () => {
+    const [newest] = await owner`select max(published_at) as at from directory_release where status = 'complete'`;
+    expect(await lastPublishedAt(app)).toEqual(newest.at === null ? null : new Date(newest.at));
+  });
+});
+
+describe("the daily ceiling on non-alert texts", () => {
+  it("texts the on-call Admins once that day when more are created since midnight in Toronto than the ceiling, while texts keep sending", async () => {
+    await addOncall(2);
+    await world.seedTransactional(3);
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 3 }))).toMatchObject({ holds: false });
+
+    await world.seedTransactional(1);
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 3 }))).toMatchObject({ holds: true, action: "alerted", texts: 2 });
+    expect((await healthEvents()).at(-1)).toMatchObject({ detail: { condition: "transactional_ceiling", count: 4, notified: 2, first: true } });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("transactional_ceiling", 4), oncallText("transactional_ceiling", 4)]);
+    // Texts keep sending: the job queues and holds nothing.
+    expect(await owner`select count(*)::int as n from delivery where purpose <> 'oncall_alert' and state = 'queued'`).toEqual([{ n: 4 }]);
+
+    // Not again that day, however long it holds; the on-call texts themselves are not counted.
+    await backdateAlert("transactional_ceiling", 120);
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 3 }))).toMatchObject({ holds: true, action: "held" });
+    expect(await oncallTexts()).toHaveLength(2);
+  });
+
+  it("clears when the day ends in Toronto, and texts again on a later day it is crossed", async () => {
+    await addOncall(1);
+    const ids = await world.seedTransactional(3);
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ action: "alerted" });
+
+    const yesterday = `created_at = (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute'`;
+    for (const id of ids) await age(id, yesterday);
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: false, action: "recovered" });
+
+    // The next day (the last text was before midnight in Toronto), crossed again.
+    await owner.unsafe(`update health_condition set last_alerted_at = (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute' where condition = 'transactional_ceiling'`);
+    await world.seedTransactional(3);
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+  });
+});
+
+describe("a spending cap overrun this month", () => {
+  const overrun = (at = "now()") => owner.unsafe(`insert into ops_event (kind, severity, at, detail) values ('spend.cap_overrun', 'warning', ${at}, '{"over_cents": 1250}') returning id`);
+
+  it("texts the on-call Admins about each new overrun once, and holds until the month ends in Toronto", async () => {
+    await addOncall(1);
+    await overrun();
+    expect(await reportOf("cap_overrun")).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("cap_overrun", 1)]);
+    await backdateAlert("cap_overrun", 600);
+    expect(await reportOf("cap_overrun")).toMatchObject({ holds: true, action: "held" });
+
+    await owner.unsafe(`update ops_event set at = (date_trunc('month', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute' where kind = 'spend.cap_overrun'`);
+    expect(await reportOf("cap_overrun")).toMatchObject({ holds: false, action: "recovered" });
+  });
+
+  it("is quiet for an overrun of an earlier month", async () => {
+    await addOncall(1);
+    await overrun(`(date_trunc('month', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 hour'`);
+    expect(await reportOf("cap_overrun")).toMatchObject({ holds: false, action: "quiet" });
+  });
+});
+
+describe("the heartbeat the outside check reads", () => {
+  it("is never fresh before the first run, fresh after a run that judged every condition, and not fresh 3 minutes later", async () => {
+    expect(await readHeartbeat(app)).toEqual({ completedAt: null, fresh: false });
+    expect((await job().run()).heartbeat).toBe(true);
+    const beat = await readHeartbeat(app);
+    expect(beat.fresh).toBe(true);
+    expect(beat.completedAt).toBeInstanceOf(Date);
+
+    await owner`update health_heartbeat set completed_at = now() - interval '2 minutes 50 seconds'`;
+    expect((await readHeartbeat(app)).fresh).toBe(true);
+    await owner`update health_heartbeat set completed_at = now() - interval '3 minutes 1 second'`;
+    expect((await readHeartbeat(app)).fresh).toBe(false);
+  });
+
+  it("is one row the app can read and stamp, and cannot add to or delete", async () => {
+    await expect(appSql`insert into health_heartbeat (id) values (2)`).rejects.toThrow(/permission denied/);
+    await expect(appSql`delete from health_heartbeat`).rejects.toThrow(/permission denied/);
+    await expect(appSql`update health_heartbeat set id = 3`).rejects.toThrow(/permission denied/);
+    await expect(appSql`insert into health_condition (condition) values ('job_failed')`).rejects.toThrow(/permission denied/);
+    expect(await owner`select id from health_heartbeat`).toEqual([{ id: 1 }]);
+    expect((await owner`select condition from health_condition order by condition`).map((row) => row.condition)).toEqual([...HEALTH_CONDITIONS].sort());
+  });
+});
+
+describe("the banner on every Admin and Coordinator screen", () => {
+  it("names every condition the health job found open, in plain words and in order, and only the sender's to everyone else", async () => {
+    await addOncall(1);
+    await renewLease(10);
+    await queuedFor(6);
+    await event("alert.translation_fallback", { languages: 1 });
+    await event("spend.cap_overrun", {});
+    await job().run();
+
+    expect((await activeHealthConditions(app)).map((row) => row.condition)).toEqual(["queue_stuck", "sender_stalled", "translation_fallback", "cap_overrun"]);
+    const facts = async () => ({ active: await activeHealthConditions(app), heartbeat: await readHeartbeat(app) });
+    const everything = await loadHealthBanner({ facts, everything: true, logError: () => {} });
+    expect(everything?.heading).toBe("Sending is failing");
+    expect(everything?.lines).toHaveLength(6);
+    expect(everything?.lines[2]).toContain("with a whole language in English");
+    expect(everything?.lines[3]).toContain("spending cap");
+    expect((await loadHealthBanner({ facts, everything: false, logError: () => {} }))?.lines).toHaveLength(4);
   });
 });

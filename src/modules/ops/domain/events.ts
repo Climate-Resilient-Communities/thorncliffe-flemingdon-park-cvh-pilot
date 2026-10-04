@@ -75,11 +75,25 @@ export const DELIVERY_UNKNOWN_CAUSES = [
 ] as const;
 
 /**
- * The conditions the health job watches (S06.07, AD-23) and raises the on-call alert for: texts queued and due for more than 5 minutes outside a
- * pause; a delivery that became `unknown` (or a hand-off the sweep could not settle); no sender running while texts are due; Smart Encoding found
- * on; and webhook signature failures past 5 in 10 minutes. The same codes as `health_condition.condition`.
+ * The conditions the health job watches (S06.07, S09.01, AD-23) and raises the on-call alert for: texts queued and due for more than 5 minutes
+ * outside a pause; a delivery that became `unknown` (or a hand-off the sweep could not settle); no sender running while texts are due; Smart
+ * Encoding found on; webhook signature failures past 5 in 10 minutes (S06.07); and, from S09.01, a scheduled job that failed (a failed pg_cron
+ * run, or a job's call that did not answer 2xx); a whole language falling back to English in an alert; a directory publish that failed and has
+ * not been followed by one that succeeded; the daily ceiling on non-alert texts crossed; and a spending cap overrun this month. The same codes
+ * as `health_condition.condition`, in the order the Hub's banner lists them.
  */
-export const HEALTH_CONDITIONS = ["queue_stuck", "delivery_unknown", "sender_stalled", "smart_encoding_on", "signature_failures"] as const;
+export const HEALTH_CONDITIONS = [
+  "queue_stuck",
+  "delivery_unknown",
+  "sender_stalled",
+  "smart_encoding_on",
+  "signature_failures",
+  "job_failed",
+  "translation_fallback",
+  "publish_failed",
+  "transactional_ceiling",
+  "cap_overrun",
+] as const;
 export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
 
 /** The webhook routes whose signature failures are counted (S06.04; S07.04 adds `twilio_inbound`). */
@@ -180,6 +194,15 @@ export const OPS_EVENT_KINDS = {
   "health.condition_recovered": {
     severity: "info",
     detail: z.strictObject({ condition: z.enum(HEALTH_CONDITIONS) }),
+  },
+  /**
+   * A text message spending cap overrun was recorded (S07.08: an approval whose estimate took month-to-date spend past the monthly cap; approval is
+   * never blocked). The health job (S09.01) texts the on-call Admins about each new one and shows it on the Hub until the month ends in Toronto.
+   * Subject: the entry approved, when there is one. `over_cents` is by how much the cap was passed. Counts only.
+   */
+  "spend.cap_overrun": {
+    severity: "warning",
+    detail: z.strictObject({ over_cents: count.optional() }),
   },
   /** A directory publish gave up: the previous release stays current. Subject: the release (`directory_release`, its number) when one exists. */
   "directory.publish_failed": {

@@ -278,6 +278,8 @@ The health job texts the Admin on-call roster and writes an operations record wh
 - the daily ceiling on non-alert texts was crossed (a sign of abuse of the sign-up form);
 - a spending cap overrun was recorded.
 
+Every Admin and Coordinator screen names each open condition until it clears. Because a failure of the CVH itself (the database, the app, the scheduler) cannot be texted by the CVH, the health job also records a heartbeat, and an uptime monitor outside Vercel, Supabase and Twilio checks it every minute and emails the on-call Admins when it fails twice in a row (S09.01).
+
 Each week the Hub reviews outages, failed sends and slow deliveries from a prepared report (N4). The pilot has no reliability targets.
 
 ### 7.5 Incident handling
@@ -341,6 +343,7 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Confirm the North Small Translate model id | IT | Before translation build |
 | Create the first Admin with the audited script; set up TOTP | IT | Before staff onboarding |
 | Name the Admin on-call roster and the on-duty Hub number | Hub | Before launch |
+| Choose the outside uptime monitor (1-minute checks of the heartbeat, email to the on-call Admins after 2 failures in a row) and rehearse it: stop the production health job, confirm the email arrives within 5 minutes, restart it (docs/config.md) | IT and an on-call Admin | Before launch |
 | Load the drill roster; rehearse a full drill in production | Hub and IT | Before launch |
 | Confirm each building's real floor labels (no 13th floor, lobby, mezzanine) | Hub | Before launch |
 | Name the privacy contact; have counsel glance at the consent and terms wording | Hub | Before launch |
