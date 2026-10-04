@@ -85,8 +85,7 @@ interface Spec {
 async function seedEntry(specs: readonly Spec[], options: { isDrill?: boolean } = {}): Promise<{ entry: SeededEntry; ids: string[] }> {
   const entry = await world.fx.entry("pending_approval", { isDrill: options.isDrill });
   const ids: string[] = [];
-  const recipients: string[] = [];
-  for (const _ of specs) recipients.push(randomUUID());
+  const recipients = specs.map(() => randomUUID());
   if (options.isDrill) for (const recipient of recipients) await world.fx.rosterMember({ id: recipient });
   await appSql.begin(async (tx: Tx) => {
     await tx`select set_config('cvh.approval_entry_id', ${entry.entryId}, true)`;

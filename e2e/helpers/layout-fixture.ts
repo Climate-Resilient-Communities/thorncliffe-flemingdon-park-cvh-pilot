@@ -24,6 +24,8 @@ const STUBS: { importer: RegExp; stub: string }[] = [
 const providerActionsStub: Plugin = {
   name: "server-actions-stub",
   setup(build) {
+    // The sending progress reloads itself through Next's router, which the harness has no runtime for (src/app/staff/alerts/sending/AutoRefresh.tsx).
+    build.onResolve({ filter: /^next\/navigation$/ }, () => ({ path: path.join(ROOT, "e2e", "helpers", "next-navigation-stub.ts") }));
     build.onResolve({ filter: /^\.\/actions$/ }, (args) => {
       const match = STUBS.find(({ importer }) => importer.test(args.importer));
       return match ? { path: path.join(ROOT, "e2e", "helpers", match.stub) } : undefined;

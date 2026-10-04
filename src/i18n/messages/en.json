@@ -5062,7 +5062,7 @@
         "unclear": "Outcome unclear; not re-sent"
       },
       "errors": {
-        "forbidden": "Only an Admin, a Coordinator or a Director can see sending progress.",
+        "forbidden": "Only an Admin or a Coordinator can see sending progress.",
         "missing": "That alert entry was not found."
       }
     },

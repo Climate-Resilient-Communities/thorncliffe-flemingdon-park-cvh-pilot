@@ -31,7 +31,7 @@ export const drizzleProgressStore: ProgressStore = {
       .groupBy(delivery.lang)
       .orderBy(asc(delivery.lang));
     return {
-      languages: rows.map(({ handedOff: _handedOff, ...counts }) => counts),
+      languages: rows.map((row) => ({ lang: row.lang, waiting: row.waiting, inFlight: row.inFlight, delivered: row.delivered, undelivered: row.undelivered, failed: row.failed, unknown: row.unknown, cancelled: row.cancelled, skipped: row.skipped })),
       handedOff: rows.reduce((sum, row) => sum + row.handedOff, 0),
     };
   },

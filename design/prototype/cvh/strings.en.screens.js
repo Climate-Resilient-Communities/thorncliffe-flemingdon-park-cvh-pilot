@@ -1584,7 +1584,7 @@
       undelivered_no_reason: 'The carrier did not deliver it and gave no reason',
       unclear: 'Outcome unclear; not re-sent' },
     errors: {
-      forbidden: 'Only an Admin, a Coordinator or a Director can see sending progress.',
+      forbidden: 'Only an Admin or a Coordinator can see sending progress.',
       missing: 'That alert entry was not found.' } } } });
   /* Pausing and resuming texts (S06.06): the Pause texts page, the banner on every Hub screen and the approver's notice. Not a prototype screen. */
   m(en, { hub: { nav: { texts: 'Pause texts' } },

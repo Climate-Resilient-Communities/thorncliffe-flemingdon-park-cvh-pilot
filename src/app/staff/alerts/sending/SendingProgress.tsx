@@ -28,7 +28,7 @@ function CountRow({ row }: { row: LanguageProgressView }) {
 /** The block as it is drawn, without the timer. */
 export function SendingProgressBody({ view }: { view: SendingProgressView }) {
   return (
-    <section aria-labelledby="sending-title" data-testid="sending" data-live={view.live ? "true" : "false"}>
+    <section aria-labelledby="sending-title" data-testid="sending" data-live={view.live ? "true" : "false"} data-refresh={view.live ? view.refresh.seconds : undefined}>
       <Stack gap="related">
         <h2 id="sending-title" className="hub-wrap">
           {view.title}

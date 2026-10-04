@@ -532,9 +532,7 @@ describe("the removed first-text spike's variables (S01.15, removed by S06.09)",
 
   it("no longer reads SMS_TEST_ALLOWLIST: it is ignored everywhere, neither approving a number nor failing start-up, and the environment has no field for it", () => {
     for (const base of [production, preview, local]) {
-      const source = { ...base, SMS_TEST_ALLOWLIST: ALLOWED };
-      expect(problemsOf(source).join("\n")).not.toContain("SMS_TEST_ALLOWLIST");
-      const env = parseEnv(source) as unknown as Record<string, unknown>;
+      const env = parseEnv({ ...base, SMS_TEST_ALLOWLIST: ALLOWED }) as unknown as Record<string, unknown>;
       expect(env).not.toHaveProperty("smsTestAllowlist");
       expect(env).not.toHaveProperty("smsTestProblem");
       expect(JSON.stringify(env)).not.toContain("5550101");

@@ -10,13 +10,13 @@ export const metadata: Metadata = { title: englishText("staff.sending.problems.t
 /**
  * The texts of an entry that failed, were undelivered or have an unknown outcome (S06.09), each with what it means in plain words ("Number not in service",
  * "Outcome unclear; not re-sent") and no phone number: `?alert=<id>&entry=<id>&state=failed|undelivered|unknown`. Its own view, apart from the counts. The policy
- * action is `coverage.view`, like the progress view; the page changes nothing. Responses are no-store. The shell (layout.tsx) owns the <main>.
+ * action is `alert.author_wide`, like the progress view; the page changes nothing. Responses are no-store. The shell (layout.tsx) owns the <main>.
  */
 export default staffPage(
   {
     route: "/staff/alerts/sending/texts",
     access: "hub",
-    action: "coverage.view",
+    action: "alert.author_wide",
     refused: () => (
       <Screen surface="staff" width="review">
         <p role="alert" className="hub-error">

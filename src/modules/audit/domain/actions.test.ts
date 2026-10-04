@@ -140,10 +140,9 @@ describe("toAuditRecord", () => {
   it.each([
     ["a token", "auth.signed_in", { aal: "aal2", token: "eyJhbGciOi" }],
     ["an authenticator secret", "factor.enrolled", { secret: "JBSWY3DPEHPK3PXP" }],
-    ["a phone number", "sms.test_sent", { http_status: 201, to: "+14165550123" }],
+    ["a phone number", "sending.paused", { waiting: 1, to: "+14165550123" }],
     ["an email address", "account.created", { role: "admin", email: "jane@example.com" }],
-    ["a message body", "sms.test_sent", { body: "CVH test from production" }],
-    ["any field on the attempt record", "sms.test_attempted", { http_status: 201 }],
+    ["a message body", "sending.resumed", { waiting: 1, body: "Hub: power is out" }],
     ["a username", "auth.failed", { username: "jdoe" }],
   ])("rejects %s", (_, action, meta) => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "refused")).toThrow(/fields outside the schema/);

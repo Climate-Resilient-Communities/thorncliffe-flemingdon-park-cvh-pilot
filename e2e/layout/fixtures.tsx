@@ -11,6 +11,7 @@ import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
+import { ProblemListBody, SendingBody } from "@/app/staff/alerts/sending/SendingBody";
 import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
 import { RosterFormsView } from "@/app/staff/drills/roster/RosterFormsView";
 import { RosterView } from "@/app/staff/drills/roster/RosterView";
@@ -787,6 +788,51 @@ export function TextsFixture({
       {banner ? <PauseBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <TextsView paused={paused} unreadable={unreadable} form={<PauseTextsFormView {...form} />} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the sending progress of an alert (S06.09), as a Coordinator sees it: the real body of the alert's staff view (SendingBody, drawn without
+ * the 15 second reload) or of the list of the texts that did not arrive (ProblemListBody). Counts, languages and meanings only: nothing here is a phone number.
+ */
+export function SendingFixture({
+  texts,
+  brand,
+  screen,
+  list,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen?: ComponentProps<typeof SendingBody>["screen"];
+  list?: ComponentProps<typeof ProblemListBody>["screen"];
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "coordinator" }}
+      navigation={texts.navigation}
+      currentPath="/staff"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" width="review" testId="screen">
+        {screen ? <SendingBody screen={screen} live={false} /> : null}
+        {list ? <ProblemListBody screen={list} /> : null}
       </Screen>
     </HubShell>
   );
