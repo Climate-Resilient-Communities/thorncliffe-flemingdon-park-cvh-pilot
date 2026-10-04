@@ -1,4 +1,5 @@
 import { FeedV1, feedPath } from "@/contracts/feed";
+import { CACHED_AT_HEADER, FALLBACK_HEADER } from "../offline/protocol";
 
 /** Home asks for the feed again this often while it is visible (AD-17). */
 export const FEED_POLL_MS = 60_000;
@@ -24,12 +25,18 @@ export function isStale(highestSeen: number, incoming: number): boolean {
 }
 
 /**
+ * An answer to an ask: the feed, and `keptAt` when it is not the server's answer but the copy the service worker kept
+ * (S02.12: no signal, or the network was too slow), with when that copy was stored. A kept copy is never current.
+ */
+export type FeedAnswer = { feed: FeedV1; keptAt: number | null };
+
+/**
  * Asks for the feed: `GET /api/feed?lang=` and nothing else, with no credentials, no body and no header of ours, so every
- * resident makes the same request (AD-3). Resolves to the feed, or null when the answer is a failure, not a FeedV1, or
+ * resident makes the same request (AD-3). Resolves to the answer, or null when the answer is a failure, not a FeedV1, or
  * has not finished within `timeoutMs` (the request is then cancelled). When `signal` aborts, the request is cancelled too
  * and the result is null; the caller tells that from a failure by checking its own signal.
  */
-export async function fetchFeed(lang: string, fetcher: typeof fetch = fetch, signal?: AbortSignal, timeoutMs = FEED_TIMEOUT_MS): Promise<FeedV1 | null> {
+export async function fetchFeedAnswer(lang: string, fetcher: typeof fetch = fetch, signal?: AbortSignal, timeoutMs = FEED_TIMEOUT_MS): Promise<FeedAnswer | null> {
   const own = new AbortController();
   const cancel = () => own.abort();
   if (signal?.aborted) return null;
@@ -41,13 +48,22 @@ export async function fetchFeed(lang: string, fetcher: typeof fetch = fetch, sig
     const text = await response.text();
     if (!response.ok) return null;
     const parsed = FeedV1.safeParse(JSON.parse(text));
-    return parsed.success ? parsed.data : null;
+    if (!parsed.success) return null;
+    if (response.headers.get(FALLBACK_HEADER) === null) return { feed: parsed.data, keptAt: null };
+    const keptAt = Number(response.headers.get(CACHED_AT_HEADER));
+    return Number.isFinite(keptAt) && keptAt > 0 ? { feed: parsed.data, keptAt } : null;
   } catch {
     return null;
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener("abort", cancel);
   }
+}
+
+/** The server's feed (fetchFeedAnswer), or null for a failure and for a copy the service worker kept. */
+export async function fetchFeed(lang: string, fetcher: typeof fetch = fetch, signal?: AbortSignal, timeoutMs = FEED_TIMEOUT_MS): Promise<FeedV1 | null> {
+  const answer = await fetchFeedAnswer(lang, fetcher, signal, timeoutMs);
+  return answer && answer.keptAt === null ? answer.feed : null;
 }
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;

@@ -1797,4 +1797,15 @@
     closedLine: '{reason} {time}',
     closedReason: { resolved: 'Resolved', expired: 'Expired', withdrawn: 'Withdrawn' },
     closedFinal: 'Final entry: {text}' } } });
+  /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
+  m(en, {
+    offline: {
+      title: 'This page is not saved on your phone',
+      body: 'It has not been opened on this phone with signal yet, so it needs signal. The numbers are always saved on your phone.',
+      available: 'You can read these without signal',
+      none: 'Nothing else is saved on this phone yet. Pages you open with signal are saved for later.' },
+    R34: {
+      offlineTitle: 'Reading without signal',
+      offlineHelp: 'Pages you open with signal are saved on this phone, so you can read them again without signal. The numbers are always saved. The first time, the CVH needs signal to open.',
+      offlineNote: 'This phone may not keep pages for offline use' } });
 })();

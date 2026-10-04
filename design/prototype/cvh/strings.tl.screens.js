@@ -1420,4 +1420,18 @@
     "suggestApply": "Ipakita lang ang {place}"
    }
   });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Hindi naka-save sa iyong telepono ang pahinang ito",
+    "body": "Hindi pa ito nabubuksan sa teleponong ito nang may signal, kaya kailangan nito ng signal. Laging naka-save sa iyong telepono ang mga numero.",
+    "available": "Mababasa mo ang mga ito nang walang signal",
+    "none": "Wala pang ibang naka-save sa teleponong ito. Ang mga pahinang binubuksan mo nang may signal ay sine-save para sa susunod."
+   },
+   "R34": {
+    "offlineTitle": "Pagbasa nang walang signal",
+    "offlineHelp": "Ang mga pahinang binubuksan mo nang may signal ay sine-save sa teleponong ito, kaya mababasa mo ulit ang mga ito nang walang signal. Laging naka-save ang mga numero. Sa unang pagkakataon, kailangan ng CVH ng signal para bumukas.",
+    "offlineNote": "Maaaring hindi mag-save ang teleponong ito ng mga pahina para magamit nang walang signal"
+   }
+  });
 })();

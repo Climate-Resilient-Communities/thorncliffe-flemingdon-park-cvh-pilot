@@ -1431,4 +1431,18 @@
     "suggestApply": "只显示{place}"
    }
   });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "此页面未保存在您的手机上",
+    "body": "此页面还没有在这部手机上有信号时打开过，所以需要信号。电话号码始终保存在您的手机上。",
+    "available": "以下内容没有信号时也能阅读",
+    "none": "这部手机上还没有保存其他内容。有信号时打开的页面会保存下来，供以后阅读。"
+   },
+   "R34": {
+    "offlineTitle": "没有信号时阅读",
+    "offlineHelp": "有信号时打开的页面会保存在这部手机上，以后没有信号也能再次阅读。电话号码始终会保存。第一次打开 CVH 需要信号。",
+    "offlineNote": "这部手机可能无法保存页面供离线使用"
+   }
+  });
 })();

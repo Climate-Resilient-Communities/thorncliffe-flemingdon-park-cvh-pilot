@@ -1408,7 +1408,10 @@
     "floorsOne": "1 piso elegido",
     "floorsMany": "{n} pisos elegidos",
     "buildingsNone": "Ninguno elegido",
-    "removeItem": "Quitar: {item}"
+    "removeItem": "Quitar: {item}",
+    "offlineTitle": "Leer sin señal",
+    "offlineHelp": "Las páginas que abre con señal se guardan en este teléfono, para que pueda volver a leerlas sin señal. Los números siempre están guardados. La primera vez, el CVH necesita señal para abrirse.",
+    "offlineNote": "Es posible que este teléfono no guarde páginas para usarlas sin conexión"
   },
   "R35": {
     "title": "Recibir alertas para su edificio",
@@ -5195,5 +5198,11 @@
         "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
       }
     }
+  },
+  "offline": {
+    "title": "Esta página no está guardada en su teléfono",
+    "body": "Todavía no se ha abierto en este teléfono con señal, así que necesita señal. Los números siempre están guardados en su teléfono.",
+    "available": "Puede leer esto sin señal",
+    "none": "Todavía no hay nada más guardado en este teléfono. Las páginas que abre con señal se guardan para después."
   }
 }
