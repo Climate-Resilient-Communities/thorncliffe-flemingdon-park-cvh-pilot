@@ -204,8 +204,11 @@ export const VectorsFileSchema = z
   });
 export type VectorsFile = z.infer<typeof VectorsFileSchema>;
 
+/** The entries in the order both vectors files keep them: by provider id. */
+export const sortedVectorEntries = (entries: readonly VectorEntry[]): VectorEntry[] => [...entries].sort((a, b) => a.id.localeCompare(b.id));
+
 export function vectorsFileBody(input: { releaseV: number; catalogueHash: string; embedModel: string; entries: readonly VectorEntry[] }): { body: string; dims: number } {
-  const entries = [...input.entries].sort((a, b) => a.id.localeCompare(b.id));
+  const entries = sortedVectorEntries(input.entries);
   const dims = entries[0]?.vector.length ?? 0;
   const file: VectorsFile = { v: 1, release_v: input.releaseV, catalogue_hash: input.catalogueHash, embed_model: input.embedModel, dims, providers: entries };
   return { body: JSON.stringify(VectorsFileSchema.parse(file)), dims };
@@ -237,6 +240,8 @@ export const ReleaseSearchRecordSchema = z.strictObject({
   emergency_categories: z.array(z.string().min(1)),
   sha256: Sha256,
   bytes: z.number().int().min(0),
+  /** The compact binary form of the same vectors, when the release has one (releases published before it do not). */
+  binary: z.strictObject({ path: z.string().min(1), sha256: Sha256, bytes: z.number().int().min(0) }).optional(),
   /** How many of the vectors were copied from an earlier release, and how many were embedded for this one. */
   reused: z.number().int().min(0),
   embedded: z.number().int().min(0),
