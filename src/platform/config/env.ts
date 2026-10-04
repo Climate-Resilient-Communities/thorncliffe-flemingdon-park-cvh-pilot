@@ -55,7 +55,7 @@ import { PRODUCTION_HOST } from "./hosts";
  * JOB_SECRET, JOB_SECRET_PREVIOUS
  *                      server   optional at start-up     secret; at least 32 random bytes as hex or base64, like the pepper
  *                                                        (`openssl rand -hex 32`). The bearer secret of the job routes that
- *                                                        pg_cron calls (/api/jobs/dispatch, /api/jobs/messaging-config, /api/jobs/reconcile-spend, /api/jobs/health; AD-15): a
+ *                                                        pg_cron calls (/api/jobs/dispatch, /api/jobs/messaging-config, /api/jobs/reconcile-spend, /api/jobs/health, /api/jobs/expire; AD-15): a
  *                                                        request without `Authorization: Bearer <secret>` is refused with 401. During
  *                                                        a rotation both are accepted (JOB_SECRET_PREVIOUS is the old one); a missing
  *                                                        or weak JOB_SECRET never stops the site, the job routes answer 503

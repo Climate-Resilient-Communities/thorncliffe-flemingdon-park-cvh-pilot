@@ -209,6 +209,22 @@ export const OPS_EVENT_KINDS = {
       languages: count,
     }),
   },
+  /**
+   * The expire job could not close an overdue thread (S05.04): its transaction rolled back, so the thread is as it was and the next run (every minute)
+   * tries it again. Subject: the thread (`alert`). A classification of the failure only, never a message.
+   */
+  "alert.expire_failed": {
+    severity: "error",
+    detail: z.strictObject({ error: safeError }),
+  },
+  /**
+   * The expire job closed a thread more than 5 minutes after its valid-until (S05.04): runs were missed (pg_cron or the app was down, or earlier runs failed),
+   * which nothing else would show. Subject: the thread. `minutes_late` is how long the thread stayed open past its valid-until.
+   */
+  "alert.expire_late": {
+    severity: "warning",
+    detail: z.strictObject({ minutes_late: count }),
+  },
   /** A search answered `search_unavailable` (S03.04): no leg completed. Subject: the release it ran on, when it had one. Counts and codes only. */
   "search.unavailable": {
     severity: "warning",
