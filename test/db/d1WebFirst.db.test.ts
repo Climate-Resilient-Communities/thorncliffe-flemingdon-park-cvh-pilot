@@ -607,6 +607,9 @@ describe("the discard of a web-published post", () => {
     await expect(insert(ref.entryId, ref.alertId, { author: coordinator.id })).rejects.toThrow(/author of the entry it replaces/);
     await expect(insert(unpublished.entryId, unpublished.alertId)).rejects.toThrow(/only a pending entry that is web-published/);
     await expect(insert(other.entryId, ref.alertId)).rejects.toThrow(/entry of the same alert/);
+    // Everything else right, but the entry it replaces is not superseded in the same transaction: the commit is refused and the post stays as it was.
+    await expect(insert(ref.entryId, ref.alertId)).rejects.toThrow(/supersedes the entry it replaces in the same transaction/);
+    expect(await entryRow(ref.entryId)).toMatchObject({ status: "pending_approval" });
     expect((await owner`select count(*)::int as n from alert_entry where kind = 'withdrawal'`)[0].n).toBe(0);
   });
 

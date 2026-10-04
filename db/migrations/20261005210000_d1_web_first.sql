@@ -472,3 +472,25 @@ begin
 end
 $$;
 revoke all on function alert_entry_guard() from public, anon, authenticated, service_role;
+
+-- A pending web-published entry has at most one system withdrawal, and the withdrawal never stands without the entry it replaces being superseded by the end of the
+-- transaction: a caller that only inserts the notice would leave the post pending and visible beside a "Withdrawn" note.
+create unique index alert_entry_one_system_withdrawal on alert_entry (supersedes_id) where kind = 'withdrawal' and status = 'published_system';
+
+create or replace function alert_system_withdrawal_check() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from public.alert_entry t where t.id = new.supersedes_id and t.status = 'superseded') then
+    raise exception 'TARGET_NOT_VALID: a system withdrawal supersedes the entry it replaces in the same transaction' using errcode = 'check_violation';
+  end if;
+  return null;
+end
+$$;
+revoke all on function alert_system_withdrawal_check() from public, anon, authenticated, service_role;
+
+create constraint trigger alert_entry_system_withdrawal_check after insert on alert_entry
+  deferrable initially deferred
+  for each row when (new.kind = 'withdrawal' and new.status = 'published_system')
+  execute function alert_system_withdrawal_check();

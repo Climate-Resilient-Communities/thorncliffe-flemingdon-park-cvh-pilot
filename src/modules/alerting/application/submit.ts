@@ -157,11 +157,10 @@ export function createSubmitter(deps: SubmitterDeps) {
         await recordOps({ kind: "alert.submit_failed", subjectType: "alert_entry", subjectId: ref.entryId, detail: { reason: "commit_failed", ms: elapsed() } });
         return { state: "failed", outcome: "PREPARATION_FAILED" };
       }
-      const stored = await lifecycle.entryState(ref).then(
-        (state) => (state?.attempt?.key === key ? state.attempt : null),
-        () => null,
-      );
-      if (stored?.state === "committed") return { state: "committed", webPublished: false };
+      const state = await lifecycle.entryState(ref).catch(() => null);
+      const stored = state?.attempt?.key === key ? state.attempt : null;
+      // A commit that went through may have web-published the post (S08.03): the feed's cache tag is expired for it as for any other commit.
+      if (stored?.state === "committed") return { state: "committed", webPublished: state?.entry.webPublishedAt instanceof Date };
       return { state: "failed", outcome: stored?.outcome ?? "PREPARATION_FAILED" };
     }
   }

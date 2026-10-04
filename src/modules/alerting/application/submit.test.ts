@@ -267,13 +267,23 @@ describe("a submit that cannot freeze anything", () => {
 
   it("reports a commit that went through as committed when the call that made it threw: no refusal audited, no failure raised, the fallback still noted", async () => {
     // The connection dropped after COMMIT was sent: completeSubmit throws, the attempt can no longer be ended (it is committed), and the stored attempt says so.
-    const t = setup({ failEnds: false, entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }) } });
+    const t = setup({ failEnds: false, entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }), entry: { webPublishedAt: null } } });
     t.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
 
     expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null });
     expect(t.lifecycle.failSubmit).toHaveBeenCalledTimes(1);
     expect(t.ops.filter((event) => event.kind === "alert.submit_failed")).toEqual([]);
     expect(t.ops).toMatchObject([{ kind: "alert.translation_fallback" }]);
+  });
+
+  it("reports a D-1 post that the lost commit web-published, so the feed's cache is expired for it", async () => {
+    const t = setup({
+      failEnds: false,
+      entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }), entry: { webPublishedAt: new Date("2026-10-05T12:00:00Z") } },
+    });
+    t.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
+
+    expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null, webPublished: true });
   });
 
   it("reports how the stored attempt ended when the freezing transaction threw and the attempt was no longer running for another reason", async () => {
@@ -285,7 +295,7 @@ describe("a submit that cannot freeze anything", () => {
   });
 
   it("does not take another key's attempt, or an unreadable state, for this one's commit: it is a failed preparation, and the browser fetches the state itself", async () => {
-    const other = setup({ failEnds: false, entryState: { attempt: attempt({ key: "0190a000-0000-7000-8000-0000000000ff", state: "committed" }) } });
+    const other = setup({ failEnds: false, entryState: { attempt: attempt({ key: "0190a000-0000-7000-8000-0000000000ff", state: "committed" }), entry: { webPublishedAt: null } } });
     other.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
     expect(await other.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "PREPARATION_FAILED" });
 
