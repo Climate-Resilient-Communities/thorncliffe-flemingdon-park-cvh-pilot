@@ -92,7 +92,7 @@ describe("POST /api/search: Server-Timing and the cold start", () => {
 
     for (const response of [answered, refused, unreadable, invalid]) {
       const header = response.headers.get("server-timing") ?? "";
-      expect(header).toMatch(/^(?:[a-z]+;dur=\d+(?:\.\d)?(?:;desc=cold)?(?:, )?)+$/);
+      expect(header).toMatch(/^(?:[a-z]+;dur=\d+(?:\.\d)?(?:;desc=(?:cold|cache))?(?:, )?)+$/);
       for (const secret of ["doctor", "Thorncliffe", "M001", "203.0.113.9", "boom", "releases/"]) expect(header).not.toContain(secret);
     }
     expect(phases(refused)).toEqual(["limiter", "total"]);
