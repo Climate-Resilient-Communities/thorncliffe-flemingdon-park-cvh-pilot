@@ -2414,7 +2414,7 @@ So that I know whether to act before reading every alert.
 
 ### Story S05.07 — Every phone shows the latest state of each alert, and an archive
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 12 min (started 2026-10-04 04:12 UTC, built 05:24 UTC)
 - **Traces:** AR-25, FR-A7 (archive), NFR-N3, UX-DR8 · **Depends on:** S05.03, S02.12 · **Branch:** `e05-s07-feed-currency-archive`
 
 As a resident,
