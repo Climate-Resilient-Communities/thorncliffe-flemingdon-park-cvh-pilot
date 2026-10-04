@@ -7,9 +7,15 @@ import type { Translate } from "./times";
 /** How many addresses are named before the rest are counted. */
 export const PLACE_ADDRESSES_SHOWN = 3;
 
+/**
+ * The neighbourhoods the catalog names (its `neighbourhoods` keys; place.test.ts keeps the two equal). An id outside it is left out without asking the catalog
+ * for it: a key the catalog does not have is an error to next-intl (a thrown MISSING_MESSAGE under test, a logged one in the app), not a way to find out.
+ */
+export const NAMED_NEIGHBOURHOODS: ReadonlySet<string> = new Set(["TP", "FP"]);
+
 export function placeLine(audience: Audience, addresses: ReadonlyMap<string, string>, locale: string, t: Translate): string | null {
   if (audience.scope === "neighbourhood") {
-    const names = audience.neighbourhood_ids.map((id) => t(`neighbourhoods.${id}`)).filter((name) => !name.startsWith("neighbourhoods."));
+    const names = audience.neighbourhood_ids.filter((id) => NAMED_NEIGHBOURHOODS.has(id)).map((id) => t(`neighbourhoods.${id}`));
     return names.length === 0 ? null : new Intl.ListFormat(locale, { type: "conjunction" }).format(names);
   }
   const known = audience.buildings.flatMap(({ rsn }) => {

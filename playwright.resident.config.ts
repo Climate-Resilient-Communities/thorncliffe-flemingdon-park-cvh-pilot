@@ -1,6 +1,7 @@
 import path from "node:path";
 import { defineConfig } from "@playwright/test";
 import { ALERTS_PORT, ALERTS_URL, FEED_FIXTURE } from "./e2e/resident/alerts-server";
+import { PUBLIC_ORIGINS } from "./e2e/resident/public-origin";
 import { FALLBACK_KEYS, FALLBACK_PORT, FALLBACK_URL } from "./e2e/resident/fallback-server";
 
 // Page tests of the resident surface (/[lang]/…) against the production build: run `npm run build` first.
@@ -13,9 +14,11 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
 // The server refuses to start without a safe environment (S01.02); a local run is development.
 // CVH_FAKE_BUILDINGS_FILE: the building page (S02.08) and the contacts on the numbers page (S02.10) read these sample
 // buildings instead of the database. CVH_FAKE_GUIDES_FILE: the guides and numbers pages (S02.10) read these sample rows.
-const serverEnv = (base: string) => ({
+// PUBLIC_BASE_URL is a fixed origin for each server (e2e/resident/public-origin.ts), not the address it listens on: the links the pages build (the share link)
+// must not depend on the port, and each server still has an origin of its own, which the feed's cache key needs (src/app/feedCache.ts).
+const serverEnv = (publicOrigin: string) => ({
   SMS_MODE: "log",
-  PUBLIC_BASE_URL: base,
+  PUBLIC_BASE_URL: publicOrigin,
   CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json"),
   CVH_FAKE_GUIDES_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "guides.json"),
 });
@@ -57,7 +60,7 @@ export default defineConfig({
     {
       command: `npm run start -- --port ${port}`,
       url: localUrl,
-      env: serverEnv(localUrl),
+      env: serverEnv(PUBLIC_ORIGINS.main),
       reuseExistingServer: !process.env.CI,
     },
     {
@@ -65,7 +68,7 @@ export default defineConfig({
       // alert pages (CVH_FAKE_FEED_FILE), so the pages that show alerts are tested with alerts and every other page with none.
       command: `npm run start -- --port ${ALERTS_PORT}`,
       url: ALERTS_URL,
-      env: { ...serverEnv(ALERTS_URL), CVH_FAKE_FEED_FILE: FEED_FIXTURE },
+      env: { ...serverEnv(PUBLIC_ORIGINS.alerts), CVH_FAKE_FEED_FILE: FEED_FIXTURE },
       reuseExistingServer: !process.env.CI,
     },
     // The same build again, with a few catalog keys shown as English fallback in every language but English
@@ -73,7 +76,7 @@ export default defineConfig({
     {
       command: `npm run start -- --port ${FALLBACK_PORT}`,
       url: FALLBACK_URL,
-      env: { ...serverEnv(FALLBACK_URL), CVH_FAKE_UNTRANSLATED_KEYS: FALLBACK_KEYS.join(",") },
+      env: { ...serverEnv(PUBLIC_ORIGINS.fallback), CVH_FAKE_UNTRANSLATED_KEYS: FALLBACK_KEYS.join(",") },
       reuseExistingServer: !process.env.CI,
     },
   ],

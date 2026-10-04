@@ -1,7 +1,8 @@
 // Where an alert is, in words (S05.08): neighbourhood names, building addresses (the first few, then a count), nothing when nothing can be named.
 import { describe, expect, it } from "vitest";
 import type { Audience } from "@/contracts/audience";
-import { PLACE_ADDRESSES_SHOWN, placeLine } from "./place";
+import en from "@/i18n/messages/en.json";
+import { NAMED_NEIGHBOURHOODS, PLACE_ADDRESSES_SHOWN, placeLine } from "./place";
 import { translatorFor } from "./alert-test-helpers";
 
 const t = translatorFor("en");
@@ -19,6 +20,10 @@ describe("the place of an alert", () => {
   it("is the neighbourhood's name, or the names of several in the language's way of listing", () => {
     expect(placeLine(neighbourhoods("TP"), new Map(), "en", t)).toBe("Thorncliffe Park");
     expect(placeLine(neighbourhoods("FP", "TP"), new Map(), "en", t)).toBe("Flemingdon Park and Thorncliffe Park");
+  });
+
+  it("names exactly the neighbourhoods the catalog has", () => {
+    expect([...NAMED_NEIGHBOURHOODS].sort()).toEqual(Object.keys(en.neighbourhoods).sort());
   });
 
   it("leaves out a neighbourhood the catalog does not name, and is null when none is named", () => {

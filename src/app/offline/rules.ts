@@ -7,6 +7,9 @@
 //   /api/directory/manifest       network first; the last copy kept, marked x-cvh-fallback when it stands in
 //   /api/directory/{v}/{lang}.json  cache first (a release file never changes); older releases removed once a newer is kept
 //   /_next/static/**, /brand/**, /icons/**  precached (scripts, styles) or cache first (fonts, images)
+//   /a/{slug}?l={lang}            (the share link's landing, S05.08) not answered and never kept: it is the network's, and
+//                                 its content follows `?l=`, which the kept pages' key leaves out. The alert page it
+//                                 moves to and the share screen /{lang}/alerts/{slug}/share are pages like any other
 //   everything else               not answered by the worker at all: the browser goes to the network as if there were no
 //                                 worker. That is every /staff/** and /api/staff/** request, every subscription page and API,
 //                                 search, the building list, Next's own data requests (RSC), any request that is not a GET,

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FeedV1 } from "../../src/contracts/feed";
 import { LAUNCH_LANGUAGES } from "../../src/i18n/languages";
 import { ALERTS_URL } from "./alerts-server";
+import { PUBLIC_ORIGIN } from "./public-origin";
 import { catalogText, expectBaseline, isFallback, openResident } from "./helpers";
 
 // S04.08: alert detail (R-07), what "verified" means (R-28) and the alert cards on home (R-03), against the production build with the feed's
@@ -575,7 +576,7 @@ test.describe("share an alert (R-29, S05.08)", () => {
       "Posted today at 10:00 AM",
       "Updated today at 10:40 AM",
       "Not an emergency service. In danger? Call 911.",
-      `Newest updates and any corrections: ${ALERTS_URL}/a/${T1}?l=en`,
+      `Newest updates and any corrections: ${PUBLIC_ORIGIN}/a/${T1}?l=en`,
     ]);
     await expect(page.getByTestId("share-everyone")).toHaveText("Everyone gets this version. Nothing tailored to you is shared.");
     await expect(page.getByTestId("share-not-recorded")).toHaveText("The CVH does not record who shares alerts or who you send them to.");
@@ -587,7 +588,7 @@ test.describe("share an alert (R-29, S05.08)", () => {
     const lines = await previewedLines(page);
     expect(lines).toContain("Not yet verified");
     expect(lines.join("\n")).not.toContain("Verified by");
-    expect(lines.at(-1)).toBe(`Newest updates and any corrections: ${ALERTS_URL}/a/${T2}?l=en`);
+    expect(lines.at(-1)).toBe(`Newest updates and any corrections: ${PUBLIC_ORIGIN}/a/${T2}?l=en`);
   });
 
   test("is in the page's language, with a link that opens in it", async ({ page }) => {
@@ -595,7 +596,7 @@ test.describe("share an alert (R-29, S05.08)", () => {
 
     const lines = await previewedLines(page);
     expect(lines[0]).toContain("لفٹ");
-    expect(lines.at(-1)).toContain(`${ALERTS_URL}/a/${T1}?l=ur`);
+    expect(lines.at(-1)).toContain(`${PUBLIC_ORIGIN}/a/${T1}?l=ur`);
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   });
 
@@ -652,7 +653,7 @@ test.describe("share an alert (R-29, S05.08)", () => {
 
     const shared = await page.evaluate(() => (window as unknown as { __shared: { text: string }[] }).__shared);
     expect(shared).toEqual([{ text: (await previewedLines(page)).join("\n") }]);
-    expect(shared[0].text).toContain(`${ALERTS_URL}/a/${T1}?l=en`);
+    expect(shared[0].text).toContain(`${PUBLIC_ORIGIN}/a/${T1}?l=en`);
     // Nothing about the sharing was sent: no request of any kind, no usage event.
     expect(requests).toEqual([]);
     await expect(page.getByTestId("share-copy")).toHaveCount(0);
