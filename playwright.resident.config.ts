@@ -42,6 +42,9 @@ export default defineConfig({
     },
   },
   forbidOnly: !!process.env.CI,
+  // Four workers, not the default of half the cores: the tests wait on the pages and the servers more than they compute, and the longest file
+  // (accessibility.spec.ts, parallel by test) now spreads over all of them. The three servers are read-only for every test, so any worker may share them.
+  workers: 4,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
