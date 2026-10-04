@@ -174,6 +174,16 @@ describe("health conditions", () => {
     expect(rows[1]).toMatchObject({ endedAt: null, durationSeconds: null });
   });
 
+  it("ends an episode at the next first alert of the same condition when no recovery came between", async () => {
+    await opsEvent("health.condition_alerted", await at(WEEK, 1, 9), { condition: "queue_stuck", count: 1, notified: 1, first: true });
+    await opsEvent("health.condition_alerted", await at(WEEK, 1, 10), { condition: "queue_stuck", count: 1, notified: 1, first: true });
+    await opsEvent("health.condition_recovered", await at(WEEK, 1, 11), { condition: "queue_stuck" });
+
+    const rows = of(await review(), "health_condition");
+
+    expect(rows.map((row) => row.durationSeconds)).toEqual([3600, 3600]);
+  });
+
   it("reads an episode from the week it began in", async () => {
     await opsEvent("health.condition_alerted", await at(WEEK, 8, 3), { condition: "queue_stuck", count: 1, notified: 0, first: true });
     const [{ week }] = await owner`select ((${WEEK}::date + 7))::text as week`;
@@ -353,7 +363,7 @@ describe("approval-to-first-hand-off and to-90%-delivered times per entry", () =
     for (let i = 0; i < 5; i += 1) await delivery({ state: "undelivered", lang: "ur", entryId: entry.entryId, handedOffAt: after(46), errorCode: 30003, completedAt: after(80) });
     // Pashto: 6 handed off and none delivered: not reached, and 0% is shown as 0.
     await many(6, { state: "submitted", lang: "ps", entryId: entry.entryId, handedOffAt: after(50) });
-    // Tamil: 3 handed off and all delivered: the times show, the count and the share do not.
+    // Tamil: 3 handed off and all delivered: the count shows as "fewer than 5", the hand-off time shows, and the 90% reading (a percentage of 3) does not.
     for (let i = 0; i < 3; i += 1) await delivery({ state: "delivered", lang: "ta", entryId: entry.entryId, handedOffAt: after(40), completedAt: after(90 + i) });
     // Spanish: 8 handed off, 2 delivered: 25% is a numerator of 2, so the share is not shown.
     for (let i = 0; i < 2; i += 1) await delivery({ state: "delivered", lang: "es", entryId: entry.entryId, handedOffAt: after(41), completedAt: after(95) });
@@ -371,8 +381,19 @@ describe("approval-to-first-hand-off and to-90%-delivered times per entry", () =
     expect(by.en.ninetyPercentSeconds).toBe(180);
     expect(by.ur).toMatchObject({ nShown: "10", firstHandOffSeconds: 45, ninetyPercentStatus: "not reached", ninetyPercentSeconds: null, deliveredSharePercent: 50 });
     expect(by.ps).toMatchObject({ nShown: "6", firstHandOffSeconds: 50, ninetyPercentStatus: "not reached", deliveredSharePercent: 0 });
-    expect(by.ta).toMatchObject({ n: null, nShown: "fewer than 5", firstHandOffSeconds: 40, ninetyPercentSeconds: 92, ninetyPercentStatus: "reached" });
+    expect(by.ta).toMatchObject({ n: null, nShown: "fewer than 5", firstHandOffSeconds: 40, ninetyPercentSeconds: null, ninetyPercentStatus: null, deliveredSharePercent: null });
     expect(by.es).toMatchObject({ nShown: "8", ninetyPercentStatus: "not reached", deliveredSharePercent: null });
+  });
+
+  it("shows neither the 90% status nor its time when 1 to 4 texts were handed off, whatever was delivered", async () => {
+    const approved = await at(WEEK, 2, 9);
+    const entry = await approvedEntry(approved);
+    await delivery({ state: "delivered", lang: "ta", entryId: entry.entryId, handedOffAt: new Date(approved.getTime() + 30_000), completedAt: new Date(approved.getTime() + 60_000) });
+    await many(2, { state: "submitted", lang: "ta", entryId: entry.entryId, handedOffAt: new Date(approved.getTime() + 31_000) });
+
+    const [row] = of(await review(), "entry_timing");
+
+    expect(row).toMatchObject({ n: null, nShown: "fewer than 5", firstHandOffSeconds: 30, ninetyPercentStatus: null, ninetyPercentSeconds: null, deliveredSharePercent: null });
   });
 
   it("reports a drill's entry apart", async () => {

@@ -4,7 +4,8 @@
 -- by an Admin or Director with the app's own role. The pilot has no screen for it (deferred to the MVP): `scripts/export-weekly` writes it as a CSV.
 --
 -- One row is one line of the review, tagged by `section` and `week_start` (the Monday of the week in America/Toronto; a week is Monday 00:00 to Sunday
--- 23:59 Toronto time). Sections:
+-- 23:59 Toronto time). Ongoing episodes are listed only in the week they began, and events outside the sections above (callback_ignored, search.unavailable and
+-- the like) are in no section: a deliberate gap, open for the owner. Sections:
 --   health_condition        one row per episode of a health condition (`reason` is the condition's code): `started_at`, `ended_at` (null while it still
 --                           holds) and `duration_seconds`. An episode begins at `health.condition_alerted` with `first` and ends at the next
 --                           `health.condition_recovered` of the same condition. The week is the week it began.
@@ -29,10 +30,12 @@
 -- well (a group with two hidden cells reveals neither). Zero is shown as 0. Times and durations are not counts and are always shown.
 --
 -- No personal data: the view reads no phone number, no subscriber or recipient id and no message body. Its rows hold codes, counts, times and the ids of alert
--- entries. Supabase's default privileges grant every new relation to anon, authenticated and service_role, so they are taken back (the view is not
--- `security_invoker`, so a client role must never reach it).
+-- entries. Supabase's default privileges grant every new relation to anon, authenticated and service_role, so they are taken back. The view is
+-- `security_invoker`, as the other views are: the reader's own rights and RLS apply (cvh_app has select and policies on every table it reads).
+-- Rules shared with messaging's entryTimings (S06.08, src/modules/messaging/domain/deliveryMeasures.ts): the hand-off denominator and ceil(0.9 * n).
+-- The view reads all history on every read (window functions keep the week filter from being pushed in); accepted at pilot scale.
 
-create view weekly_review as
+create view weekly_review with (security_invoker = true) as
 with
   health_episode as (
     select (date_trunc('week', e.at at time zone 'America/Toronto'))::date as week_start,
@@ -45,7 +48,8 @@ with
     left join lateral (
       select min(x.at) as ended_at
       from ops_event x
-      where x.kind = 'health.condition_recovered' and x.detail ->> 'condition' = e.detail ->> 'condition' and x.id > e.id
+      where x.kind in ('health.condition_recovered', 'health.condition_alerted') and x.detail ->> 'condition' = e.detail ->> 'condition' and x.id > e.id
+        and (x.kind = 'health.condition_recovered' or x.detail ->> 'first' = 'true')
     ) r on true
     where e.kind = 'health.condition_alerted' and e.detail ->> 'first' = 'true'
   ),
@@ -90,7 +94,7 @@ with
     left join lateral (
       select min(x.at) as at
       from audit_event x
-      where x.action = 'access_request.closed' and x.outcome = 'ok' and x.subject_id = r.subject_id
+      where x.action = 'access_request.closed' and x.outcome = 'ok' and x.subject_type = 'access_request' and x.subject_id = r.subject_id and x.at >= r.at
     ) c on true
     where r.action = 'access_request.received' and r.outcome = 'ok'
       and coalesce(c.at, now()) > r.at + interval '25 days'
@@ -117,7 +121,7 @@ with
            d.lang,
            d.state || ':' || case
              when d.state = 'unknown' then coalesce(
-               (select x.detail ->> 'cause' from ops_event x where x.kind = 'delivery.unknown' and x.subject_id = d.id::text order by x.id desc limit 1), 'unknown')
+               (select x.detail ->> 'cause' from ops_event x where x.kind = 'delivery.unknown' and x.subject_type = 'delivery' and x.subject_id = d.id::text order by x.id desc limit 1), 'unknown')
              else coalesce(d.provider_error_code::text, 'no_code')
            end as reason,
            count(*)::integer as n
@@ -250,8 +254,10 @@ select week_start, section, is_drill, null, reason, null,
 from access_overdue
 union all
 select week_start, section, is_drill, lang, null, entry_id, null, null, null,
-       first_hand_off_seconds, ninety_percent_seconds,
-       case when reached then 'reached' else 'not reached' end,
+       first_hand_off_seconds,
+       -- The 90% reading is a percentage of 1 to 4 texts when fewer than 5 were handed off, so it is not shown.
+       case when handed_off between 1 and 4 then null else ninety_percent_seconds end,
+       case when handed_off between 1 and 4 then null when reached then 'reached' else 'not reached' end,
        -- The delivered share only when not reached (reached means at least 90%), and never from a numerator or denominator of 1 to 4.
        case when reached or handed_off between 1 and 4 or delivered between 1 and 4 then null else floor(100.0 * delivered / handed_off)::integer end,
        null,
