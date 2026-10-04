@@ -140,8 +140,26 @@ describe("the release files of a cold instance through the shared cache", () => 
     const result = await ask(service({ store: s, cache: shared.cache }));
     expect(result.answer.status).toBe("ok");
     expect(result.header).toContain("desc=cold");
-    // The store is read for the cache's miss and again for the bypass.
-    expect(new Set(s.gets)).toEqual(new Set([BINARY_PATH, LISTING_PATH]));
+    // The store is read once per file, for the cache's miss; the bypass reuses those bytes.
+    expect(s.gets.sort()).toEqual([BINARY_PATH, LISTING_PATH].sort());
+  });
+
+  it("gives up on a cache read that never answers and reads the store, within the timeout", async () => {
+    const hanging: ReleaseFileCache = { read: () => new Promise<Uint8Array>(() => undefined) };
+    const s = store();
+    const search = createSearch({
+      db: () => releaseDb({ row: row() }).db,
+      storage: () => s.storage,
+      fileCache: hanging,
+      fileCacheTimeoutMs: 1_000,
+      embedder: cohereQueryEmbedder({ apiKey: "test-key", client }),
+      writer: { log: async () => undefined, spend: async () => undefined },
+      clock: () => Date.now(),
+    });
+    const result = await ask(search);
+    expect(result.answer.status).toBe("ok");
+    expect(result.header).toContain("desc=cold");
+    expect(s.gets.sort()).toEqual([BINARY_PATH, LISTING_PATH].sort());
   });
 
   it("still fails with the load's own code when the store's bytes are wrong, and never caches them", async () => {

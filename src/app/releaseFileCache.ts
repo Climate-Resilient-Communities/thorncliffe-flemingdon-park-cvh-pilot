@@ -10,7 +10,7 @@
 //  - the entry is only stored when the load from Storage hashed correctly (the search's load callback refuses otherwise);
 //  - a publish expires DIRECTORY_RELEASE_TAG (src/app/staff/directory/actions.ts), so even a reused number would read afresh.
 //
-// Size: Vercel Data Cache keeps an item of at most 2 MB. Bytes are stored as base64 text (4/3 of their size), so a file is cached
+// Size: Vercel Data Cache is ASSUMED to keep an item of at most 2 MB (not yet checked against a real deployment). Bytes are stored as base64 text (4/3 of their size), so a file is cached
 // when its base64 fits MAX_CACHED_BASE64_CHARS; a larger one is read from Storage as before (never an error). At the pilot's 99
 // providers x 1536 dims of Float32, vectors.bin is about 0.6 MB (0.8 MB as base64): it fits.
 import "server-only";
@@ -19,7 +19,7 @@ import type { ReleaseFileCache } from "@/modules/directory";
 
 /** Expired by the publish; every entry carries it, and `${tag}-<release>` too. */
 export const DIRECTORY_RELEASE_TAG = "directory-release";
-/** Vercel Data Cache's item limit (2 MB), less a margin for the entry's own framing, in characters of base64. */
+/** The assumed Vercel Data Cache item limit (2 MB, unverified), less a margin for the entry's own framing, in characters of base64. */
 export const MAX_CACHED_BASE64_CHARS = 2 * 1024 * 1024 - 8 * 1024;
 /** How long an entry lives before the cache rebuilds it; a release's files are immutable, so this only bounds what a retired release keeps. */
 const REVALIDATE_SECONDS = 7 * 24 * 60 * 60;

@@ -256,6 +256,8 @@ export interface SearchDeps {
    * can slow nothing down and serve nothing stale or wrong. Absent: the store is read directly.
    */
   fileCache?: ReleaseFileCache;
+  /** Test seam: how long one cache read (a miss includes its store download) may take before the store is read directly. */
+  fileCacheTimeoutMs?: number;
   /** Takes the request snapshot instead of the database and the store (a unit test of the legs and their timing). */
   snapshot?: () => Promise<SearchSnapshot>;
   /** Keeps the rows instead of writing them to the database. */
@@ -409,13 +411,16 @@ interface LoadReads {
   cache: number;
 }
 
+/** A cache read slower than this is given up on and the store is read directly. */
+const FILE_CACHE_TIMEOUT_MS = 2_000;
+
 /**
  * The store as one release's load reads it, through the shared cache for the files the release record names (each with the sha256
  * it must have). The cache only ever supplies bytes that hash to that sha256: a miss loads from the store and refuses to keep
  * anything else, a hit is checked again here, and a cache that fails or answers wrongly is bypassed with a direct read, so the
  * checks of the load (and their error codes) see the store's own bytes in every fault.
  */
-function throughCache(storage: DirectoryStorage, cache: ReleaseFileCache, release: CurrentRelease, record: ReleaseSearchRecord, reads: LoadReads): DirectoryStorage {
+function throughCache(storage: DirectoryStorage, cache: ReleaseFileCache, release: CurrentRelease, record: ReleaseSearchRecord, reads: LoadReads, cacheReadTimeoutMs: number): DirectoryStorage {
   const hashes = new Map<string, string>();
   for (const entry of Object.values(release.files)) hashes.set(entry.path, entry.sha256);
   hashes.set(record.vectors_path, record.sha256);
@@ -429,22 +434,34 @@ function throughCache(storage: DirectoryStorage, cache: ReleaseFileCache, releas
       return direct();
     }
     let loaded = false;
+    let fetched: { body: Uint8Array | null } | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const bytes = await cache.read({ release: release.number, path: file, sha256 }, async () => {
+      const read = cache.read({ release: release.number, path: file, sha256 }, async () => {
         loaded = true;
         const body = await direct();
+        fetched = { body };
         if (body === null || sha256HexBytes(body) !== sha256) throw new SafeDetailError("not_cacheable");
         return body;
       });
+      read.catch(() => undefined);
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("cache_timeout")), cacheReadTimeoutMs);
+      });
+      const bytes = await Promise.race([read, timeout]);
       if (sha256HexBytes(bytes) === sha256) {
         if (loaded) reads.store += 1;
         else reads.cache += 1;
         return bytes;
       }
     } catch {
-      // The cache failed, or the store had nothing good: read the store itself, below.
+      // The cache failed, was too slow, or the store had nothing good: use the store's bytes, below.
+    } finally {
+      clearTimeout(timer);
     }
     reads.store += 1;
+    // The store was already read for the cache's miss: use those bytes (the load checks them and gives its own error code) rather than download again.
+    if (fetched) return (fetched as { body: Uint8Array | null }).body;
     return direct();
   }
 
@@ -598,7 +615,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (until !== undefined && clock() < until) return Promise.reject(new RecentSnapshotFailure());
       failedUntil.delete(release.number);
       const reads: LoadReads = { store: 0, cache: 0 };
-      const source = deps.fileCache ? throughCache(deps.storage(), deps.fileCache, release, record, reads) : deps.storage();
+      const source = deps.fileCache ? throughCache(deps.storage(), deps.fileCache, release, record, reads, deps.fileCacheTimeoutMs ?? FILE_CACHE_TIMEOUT_MS) : deps.storage();
       if (!deps.fileCache) reads.store = 1;
       loaded = capped(loadReleaseData(source, release, record), loadTimeoutMs);
       cache.set(release.number, loaded);
