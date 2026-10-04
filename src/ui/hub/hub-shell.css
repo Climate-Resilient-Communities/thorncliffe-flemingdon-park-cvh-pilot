@@ -30,18 +30,27 @@
      accessibility tree and has no tab stops; the menu drawer holds the same links. */
   .hub-side {
     display: none;
-    flex-direction: column;
-    gap: var(--gap-label);
-    padding-block: var(--gutter-resident);
-    padding-inline: var(--gap-stack);
     background-color: var(--surface-raised);
     border-inline-end: var(--offset-align-hairline) solid var(--border);
 
     @variant hub {
-      display: flex;
+      display: block;
+    }
+  }
+
+  /* The column fills the page's full height (the grid stretches it, so its background and border run to the end of
+     a long page); the links stay in view in a sticky box one viewport tall inside it. */
+  .hub-side__sticky {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    padding-block: var(--gutter-resident);
+    padding-inline: var(--gap-stack);
+
+    @variant hub {
       position: sticky;
       inset-block-start: 0;
-      block-size: 100dvh;
+      max-block-size: 100dvh;
       overflow-y: auto;
     }
   }

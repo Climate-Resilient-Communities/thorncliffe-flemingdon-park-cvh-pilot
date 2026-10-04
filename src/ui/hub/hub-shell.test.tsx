@@ -127,7 +127,8 @@ describe("hub-shell.css", () => {
     const at = (selector: string) => css.filter((d) => d.selector.startsWith(selector) && d.at.includes("@variant hub")).map((d) => `${d.prop}: ${d.value}`);
 
     expect(at(".hub-shell")).toEqual(["grid-template-columns: var(--size-side-nav) minmax(0, 1fr)"]);
-    expect(at(".hub-side")).toContain("display: flex");
+    expect(at(".hub-side")).toContain("display: block");
+    expect(at(".hub-side__sticky")).toContain("position: sticky");
     expect(css.find((d) => d.selector === ".hub-side" && !d.at.length && d.prop === "display")?.value).toBe("none");
     expect(at(".hub-menu-button")).toEqual(["display: none"]);
     expect(at(".hub-drawer")).toContain("display: none");

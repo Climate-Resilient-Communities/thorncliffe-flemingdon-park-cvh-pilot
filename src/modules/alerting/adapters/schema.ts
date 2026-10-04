@@ -107,6 +107,9 @@ export const alertEntry = pgTable(
     check("alert_entry_withdrawal_reason_valid", sql`${t.withdrawalReason} is null or ${t.withdrawalReason} in ('wrong_place', 'wrong_information', 'duplicate', 'other')`),
     check("alert_entry_withdrawal_reason_kind", sql`(${t.kind} = 'withdrawal') = (${t.withdrawalReason} is not null)`),
     check("alert_entry_discard_reason_valid", sql`${t.discardReason} is null or ${t.discardReason} in ('by_author', 'declined', 'by_close')`),
+    // 20261005230000_alert_entry_discard_checks.sql (applied once S08.02 is live).
+    check("alert_entry_discard_reason_status", sql`(${t.status} = 'discarded') = (${t.discardReason} is not null)`),
+    check("alert_entry_attributed_rsn_frozen", sql`${t.attributedRsn} is null or ${t.status} <> 'draft'`),
     index("alert_entry_supersedes_id_idx").on(t.supersedesId),
     check("alert_entry_duplicate_not_self", sql`${t.possibleDuplicateOf} is null or ${t.possibleDuplicateOf} <> ${t.alertId}`),
     check("alert_entry_draft_no_duplicate", sql`${t.status} <> 'draft' or ${t.possibleDuplicateOf} is null`),
