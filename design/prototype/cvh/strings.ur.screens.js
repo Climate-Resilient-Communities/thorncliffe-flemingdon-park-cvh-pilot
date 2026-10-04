@@ -1391,6 +1391,8 @@
    }
   });
   m(t, {"smsTexts": {"confirmation": "CVH الرٹ حاصل کرنے کے لیے YES جواب دیں۔ روکنے کے لیے STOP جواب دیں۔"}});
+  /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
+  m(t, {"smsTexts": {"welcome": "آپ CVH الرٹ کے لیے سائن اپ ہو گئے ہیں۔ ہب کا عملہ ہر پیغام جانچتا ہے، اس لیے الرٹ رات کو شاید نہ بھیجے جائیں۔ عمارت یا منزل بدلنے کے لیے 1، زبان بدلنے کے لیے 2، خیریت معلوم کرنے کی درخواست واپس لینے کے لیے 3، اور روکنے اور اپنی رکنیت ختم کرنے کے لیے 0 جواب دیں۔ روکنے کے لیے STOP جواب دیں۔", "alreadySignedUp": "آپ پہلے ہی CVH الرٹ کے لیے سائن اپ ہیں۔", "deletePrompt": "رکنیت ختم کرنے کو 10 منٹ میں پھر 0 بھیجیں۔ پھر کوئی پیغام نہیں آئے گا۔", "signupInfo": "ٹیکسٹ پر CVH الرٹ حاصل کرنے کے لیے یہاں سائن اپ کریں: {link} روکنے کے لیے STOP جواب دیں۔"}, "smsKeywords": {"yes": "ہاں, جی, ہاں جی"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {

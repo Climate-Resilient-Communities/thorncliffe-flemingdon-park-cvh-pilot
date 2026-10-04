@@ -1415,6 +1415,8 @@
    }
   });
   m(t, {"smsTexts": {"confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas."}});
+  /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
+  m(t, {"smsTexts": {"welcome": "Ya está suscrito a las alertas del CVH. El personal del Hub revisa cada mensaje, así que es posible que las alertas no se envíen de noche. Responda 1 para cambiar su edificio o piso, 2 para cambiar su idioma, 3 para retirar su pedido de chequeo de bienestar y 0 para dejar de recibir mensajes y borrar su suscripción. Responda STOP para dejar de recibirlas.", "alreadySignedUp": "Ya está suscrito a las alertas del CVH.", "deletePrompt": "Envíe 0 otra vez en 10 minutos para borrarse. No recibirá más textos.", "signupInfo": "Para recibir alertas del CVH por mensaje de texto, suscríbase aquí: {link} Responda STOP para dejar de recibirlas."}, "smsKeywords": {"yes": "sí, si"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {

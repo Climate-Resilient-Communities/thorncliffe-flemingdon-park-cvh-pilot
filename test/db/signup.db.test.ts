@@ -22,6 +22,7 @@ import {
   createSignup,
   forgetOptedOutSignup,
   pendingSignupNumberSource,
+  subscriberLookup,
   type Signup,
   type SubscriberLookup,
 } from "../../src/modules/subscriptions";
@@ -67,6 +68,7 @@ beforeAll(async () => {
 
 async function resetAll() {
   await owner`delete from pending_signup`;
+  await owner`delete from subscriber`;
   await owner`delete from rate_limit where scope = ${SIGNUP_RATE_LIMIT.scope}`;
   await world.reset();
   subscribedNumbers.clear();
@@ -87,12 +89,12 @@ afterAll(async () => {
 beforeEach(resetAll);
 
 /** The sign-up use case on the real tables, as the app composes it (src/app/signup.ts), with the subscriber lookup this file controls. */
-function signupOn(db: Db): Signup {
+function signupOn(db: Db, lookup: SubscriberLookup = subscribers): Signup {
   const queue = createDeliveryQueue();
   return createSignup({
     db,
     places: { neighbourhoodIds: (executor) => neighbourhoodIds(executor), floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
-    subscribers,
+    subscribers: lookup,
     enqueue: (tx, input) => queue.enqueueTransactional(tx, input),
     consentVersion: () => VERSION,
     limiter: () => createRateLimiter({ db, key: "a-test-key-for-the-rate-limiter" }),
@@ -234,6 +236,44 @@ describe("a sign-up", () => {
     expect(rows.length).toBe(before.pending + 1);
     expect(rows.map((r) => r.phone).sort()).toEqual([NUMBER, PENDING]);
     expect(rows.find((r) => r.phone === PENDING)!.lang).toBe("fr");
+    expect((await confirmations()).length).toBe(before.texts + 1);
+  });
+
+  it("with the real subscriber lookup (S07.04): a number with a subscriber row gets the same bytes after the same statements, and no text", async () => {
+    const service = signupOn(logged, subscriberLookup());
+    const PENDING = "+14165550124";
+    const SUBSCRIBED = "+14165550125";
+    await service.request(request({ phone: PENDING, lang: "fr" }), "198.51.100.9");
+    // A subscriber, as S07.04's YES makes one (written here as the table's owner).
+    await owner`insert into subscriber (id, phone, lang, neighbourhood_id, groups, consent_version, started_by) values (${crypto.randomUUID()}, ${SUBSCRIBED}, 'en', 'TP', '{}', ${VERSION}, 'web')`;
+    const before = { pending: (await pendingRows()).length, texts: (await confirmations()).length };
+
+    const answer = async (phone: string, client: string) => {
+      statements.length = 0;
+      const body = { v: 1, phone, lang: "ur", neighbourhood: "TP", places: [], groups: [], consent_version: VERSION, terms_agreed: true, age_confirmed: true };
+      const response = await signupResponse({ signup: () => service, client: () => client }, new Request(`${BASE_URL}/api/signup`, { method: "POST", body: JSON.stringify(body) }));
+      return { status: response.status, headers: [...response.headers.entries()].sort(), bytes: Buffer.from(await response.arrayBuffer()).toString("hex"), statements: [...statements] };
+    };
+    const fresh = await answer(NUMBER, "203.0.113.1");
+    const pending = await answer(PENDING, "203.0.113.2");
+    const subscribed = await answer(SUBSCRIBED, "203.0.113.3");
+
+    expect(fresh.status).toBe(202);
+    for (const other of [pending, subscribed]) {
+      expect(other.status).toBe(fresh.status);
+      expect(other.headers).toEqual(fresh.headers);
+      expect(other.bytes).toBe(fresh.bytes);
+    }
+    const shape = (list: string[]) => list.map((q) => q.replace(/^(release|rollback to) savepoint/i, "end savepoint"));
+    // The lookup is one select on the subscriber table, whatever the number.
+    expect(fresh.statements.filter((q) => /from "subscriber"/.test(q))).toHaveLength(1);
+    expect(shape(pending.statements)).toEqual(shape(fresh.statements));
+    expect(shape(subscribed.statements)).toEqual(shape(fresh.statements));
+
+    // The subscribed number got no pending sign-up and no text; only the new number did.
+    const rows = await pendingRows();
+    expect(rows.map((r) => r.phone).sort()).toEqual([NUMBER, PENDING]);
+    expect(rows.length).toBe(before.pending + 1);
     expect((await confirmations()).length).toBe(before.texts + 1);
   });
 

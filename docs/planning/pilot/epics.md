@@ -259,7 +259,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `audit_event` (audit) | S01.04 | `subscriber`, `subscriber_place`, `subscriber_topic_optout` (subscriptions) | S07.04 |
 | `staff_account` (identity) | S01.05 | `pending_signup` (subscriptions) | S07.02 |
 | `neighbourhood`, `building`, `building_floor` (places) | S01.13 | `inbound_seen`, `inbound_reply`, `inbound_keyword_count` (subscriptions) | S07.04 |
-| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.05 |
+| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.04 (the reply-0 confirmation needs it; S07.05 adds its menu kinds) |
 | `provider`, `provider_location`, `category`, `provider_category` (directory) | S02.04 | `subscription_edit_token` (subscriptions) | S07.06 |
 | `directory_release` (directory), `ops_event` (ops) | S02.05 | `spend_cap` (spend) | S07.08 |
 | `guide`, `essential_number` (directory) | S02.09 | `checkin`, `checkin_tally` (checkins) | S08.05 |
