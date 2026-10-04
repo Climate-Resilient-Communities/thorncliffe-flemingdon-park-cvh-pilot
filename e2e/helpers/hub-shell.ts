@@ -89,9 +89,10 @@ export async function expectShellDoesNotOverflow(page: Page) {
       top: scrolls(document.querySelector("[data-testid=hub-top]")),
       main: scrolls(document.querySelector("[data-testid=hub-main]")),
       side: scrolls(document.querySelector("[data-testid=hub-side]")),
+      sideLinks: scrolls(document.querySelector("[data-testid=hub-side] .hub-side__sticky")),
     };
   });
-  expect(overflow, "nothing scrolls horizontally").toEqual({ document: false, body: false, pageContainer: false, top: false, main: false, side: false });
+  expect(overflow, "nothing scrolls horizontally").toEqual({ document: false, body: false, pageContainer: false, top: false, main: false, side: false, sideLinks: false });
 }
 
 /** Every box of the locators is inside the viewport horizontally: reachable without scrolling sideways. */
