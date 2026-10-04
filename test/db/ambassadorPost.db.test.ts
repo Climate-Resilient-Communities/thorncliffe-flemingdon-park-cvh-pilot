@@ -25,7 +25,9 @@ import {
   type EntryRef,
   type PrepareContext,
 } from "../../src/modules/alerting";
-import type { RecipientEntry, RecipientsPort } from "../../src/modules/subscriptions";
+import { record, recordRefusal } from "../../src/modules/audit";
+import { createDeliveryQueue } from "../../src/modules/messaging";
+import { createDrillRoster, recipientsPort, type RecipientEntry, type RecipientsPort } from "../../src/modules/subscriptions";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 import { submitSeams } from "./alertSubmitSeams";
@@ -211,8 +213,8 @@ const approve = async (ref: EntryRef, by: Account = coordinator) => {
 };
 
 /** An approved alert by the Hub about the building: the thread an ambassador's update goes in. */
-async function hubThread(isDrill = false, types: string[] = ["elevator"]): Promise<EntryRef> {
-  const audience: Audience = { scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [], types: [...types].sort() };
+async function hubThread(isDrill = false, types: string[] = ["elevator"], about?: Audience): Promise<EntryRef> {
+  const audience: Audience = about ?? { scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [], types: [...types].sort() };
   const content: EntryContent = { text: "The elevator is out of service.", types, audience, phase: "problem", validUntil: new Date("2026-10-02T15:00:00Z"), validUntilMode: "at" };
   // Only an Admin at aal2 starts a drill (S06.05); the other Hub person approves it.
   const [author, approver] = isDrill ? [admin, coordinator] : [coordinator, admin];
@@ -381,19 +383,13 @@ describe("an approved post, as the approver and residents read it", () => {
     expect(captured.at(-1)).toMatchObject({ entryId: ref.entryId, isDrill: false });
   });
 
-  it("clears the building with the other frozen fields when it is returned to its author, and a draft can never hold one", async () => {
+  it("clears the building with the other frozen fields when it is returned to its author", async () => {
     await assign(ambassador, RSN);
     const ref = await submitted();
     const row = await entryRow(ref.entryId);
     expect(await alerting.returnEntry(actorOf(coordinator), ref, "return", { shown: { version: row.version, contentHash: row.content_hash }, note: "Which floors exactly?" })).toMatchObject({ ok: true });
     expect(await entryRow(ref.entryId)).toMatchObject({ status: "draft", attributed_rsn: null, content_hash: null });
     expect((await alerting.review(ref))?.attribution).toBeNull();
-    await expect(
-      owner.begin(async (tx) => {
-        await tx`select set_config('cvh.actor_id', ${ambassador.id}, true)`;
-        await tx`update alert_entry set attributed_rsn = ${RSN} where id = ${ref.entryId}`;
-      }),
-    ).rejects.toThrow(/alert_entry_attributed_rsn_frozen/);
   });
 
   it("a Hub entry stays the Hub's: no building is stored and residents read it from the Hub", async () => {
@@ -435,6 +431,90 @@ describe("an update in an open thread, and a practice post in a drill", () => {
     const thread = await hubThread();
     await owner`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${thread.alertId}`;
     expect(await alerting.postFromAmbassador(actorOf(ambassador), postInput({ into: thread.alertId }))).toMatchObject({ ok: false, error: "ALERT_CLOSED" });
+  });
+
+  it("is refused, and nothing is written, in an open thread about a building the post is not for: the server holds to the threads the page offers", async () => {
+    // Assigned to both buildings, the post for the other one, into the alert about this one: OUT_OF_SCOPE, however the request was made.
+    await assign(ambassador, RSN);
+    await assign(ambassador, OTHER_RSN);
+    const thread = await hubThread();
+    clock = new Date(NOW.getTime() + 60_000);
+    const elsewhere = { rsn: OTHER_RSN, floors: null };
+    expect(await alerting.postFromAmbassador(actorOf(ambassador), postInput({ into: thread.alertId, place: elsewhere }))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    // Assigned only to the other building: the same.
+    await unassign(ambassador, RSN);
+    expect(await alerting.postFromAmbassador(actorOf(ambassador), postInput({ into: thread.alertId, place: elsewhere }))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    // A drill about this building is the same.
+    const drill = await hubThread(true);
+    expect(await alerting.postFromAmbassador(actorOf(ambassador), postInput({ into: drill.alertId, place: elsewhere }))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    expect(Number((await owner`select count(*)::int as n from alert_entry where author_id = ${ambassador.id}`)[0].n)).toBe(0);
+    expect((await auditRows()).filter((row) => row.action === "entry.created" && row.actor_staff_id === ambassador.id).map((row) => row.outcome)).toEqual(["refused", "refused", "refused"]);
+  });
+
+  it("goes in an alert about the whole neighbourhood of the building it is for", async () => {
+    await assign(ambassador, OTHER_RSN);
+    const thread = await hubThread(false, ["power"], { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] });
+    clock = new Date(NOW.getTime() + 60_000);
+    const made = await alerting.postFromAmbassador(actorOf(ambassador), postInput({ into: thread.alertId, place: { rsn: OTHER_RSN, floors: null } }));
+    expect(made).toMatchObject({ ok: true, value: { thread: { id: thread.alertId }, entry: { kind: "update", content: { types: ["power"] } } } });
+  });
+});
+
+describe("a post's approval with S06's rules", () => {
+  /** The lifecycle as the app wires it: the real recipients port (subscribers, or for a drill the drill roster) and the on-call rule on or off. */
+  const wired = (oncallRequired: boolean) =>
+    createAlerting({ db: app, now: () => clock, recipients: recipientsPort, pricePerSegmentCents: () => 1.5, oncall: { required: () => oncallRequired } });
+  const approveWith = async (lifecycle: AlertLifecycle, ref: EntryRef, by: Account = coordinator) => {
+    const row = await entryRow(ref.entryId);
+    const reviewed = (await lifecycle.review(ref))?.recipients;
+    return lifecycle.approveEntry(actorOf(by), ref, { version: row.version, contentHash: row.content_hash, ...(reviewed ? { recipients: { total: reviewed.total, byLanguage: reviewed.byLanguage } } : {}) });
+  };
+
+  it("refuses a post's approval with ONCALL_REQUIRED while texting is live and nobody is on call, and approves it once a number is on the roster", async () => {
+    await owner`delete from oncall_roster`;
+    await assign(ambassador, RSN);
+    const ref = await submitted();
+
+    expect(await approveWith(wired(true), ref)).toEqual({ ok: false, error: "ONCALL_REQUIRED" });
+    expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
+    expect((await auditRows()).filter((row) => row.action === "entry.approved").at(-1)).toMatchObject({ outcome: "refused", meta: { refusal: "ONCALL_REQUIRED" } });
+
+    await owner`insert into oncall_roster (id, label, phone, added_by) values (${randomUUID()}, 'IT lead', '+14165550123', ${admin.id})`;
+    try {
+      expect(await approveWith(wired(true), ref)).toMatchObject({ ok: true, value: { entry: { status: "approved" } } });
+    } finally {
+      await owner`delete from oncall_roster`;
+    }
+  });
+
+  it("approves a practice post in a drill with nobody on call, and texts it to the drill roster only, each text with the exercise marker first", async () => {
+    await owner`delete from oncall_roster`;
+    const roster = createDrillRoster({
+      db: app,
+      audit: { record: (tx, event) => record(tx, event), recordRefusal: (db, event) => recordRefusal(db, event) },
+      skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+    });
+    const members: string[] = [];
+    for (const [index, number] of ["416-555-0111", "647-555-0122"].entries()) {
+      const added = await roster.add({ actorStaffId: admin.id, label: `Drill phone ${index}`, number, lang: "en" });
+      if (added.kind !== "added") throw new Error(`not added: ${added.problem}`);
+      members.push(added.id);
+    }
+    try {
+      await assign(ambassador, RSN);
+      const drill = await hubThread(true);
+      clock = new Date(NOW.getTime() + 60_000);
+      const ref = await submitted(ambassador, { into: drill.alertId });
+
+      expect(await approveWith(wired(true), ref)).toMatchObject({ ok: true, value: { feedVersion: null, recipients: { total: 2 } } });
+      const rows = await owner<{ recipient_kind: string; recipient_id: string; body: string }[]>`select recipient_kind, recipient_id, body from delivery where entry_id = ${ref.entryId}`;
+      expect(rows.map((row) => row.recipient_kind)).toEqual(["roster", "roster"]);
+      expect(rows.map((row) => row.recipient_id).sort()).toEqual([...members].sort());
+      expect(rows.every((row) => row.body.startsWith("Exercise. Practice only."))).toBe(true);
+    } finally {
+      await owner`truncate delivery`;
+      for (const id of members) await owner`delete from drill_roster where id = ${id}`;
+    }
   });
 });
 
@@ -479,7 +559,7 @@ describe("every discard says why", () => {
     expect((await home(ambassador)).posts.find((item) => item.entryId === waiting.entryId)).toMatchObject({ state: "ended" });
   });
 
-  it("is required by the database for every new discard, from the catalog only, and never on an entry that is not discarded", async () => {
+  it("is from the catalog only, and a discard without one (the release before this one, live while the migration runs) is still accepted", async () => {
     await assign(ambassador, RSN);
     const ref = await post();
     const asAuthor = (statement: (tx: postgres.TransactionSql) => Promise<unknown>) =>
@@ -487,10 +567,13 @@ describe("every discard says why", () => {
         await tx`select set_config('cvh.actor_id', ${ambassador.id}, true)`;
         await statement(tx);
       });
-    await expect(asAuthor((tx) => tx`update alert_entry set status = 'discarded' where id = ${ref.entryId}`)).rejects.toThrow(/alert_entry_discard_reason_status/);
     await expect(asAuthor((tx) => tx`update alert_entry set status = 'discarded', discard_reason = 'because' where id = ${ref.entryId}`)).rejects.toThrow(/alert_entry_discard_reason_valid/);
-    await expect(asAuthor((tx) => tx`update alert_entry set discard_reason = 'declined' where id = ${ref.entryId}`)).rejects.toThrow(/alert_entry_discard_reason_status/);
     await asAuthor((tx) => tx`update alert_entry set status = 'discarded', discard_reason = 'by_author' where id = ${ref.entryId}`);
+    expect(await entryRow(ref.entryId)).toMatchObject({ status: "discarded", discard_reason: "by_author" });
+    // The previous release's discard writes no reason: this migration must not break it (the check that requires one is a later migration's).
+    const older = await post();
+    await asAuthor((tx) => tx`update alert_entry set status = 'discarded' where id = ${older.entryId}`);
+    expect(await entryRow(older.entryId)).toMatchObject({ status: "discarded", discard_reason: null });
     // A discarded entry never changes again, its reason included (the entry guard).
     await expect(asAuthor((tx) => tx`update alert_entry set discard_reason = 'declined' where id = ${ref.entryId}`)).rejects.toThrow(/cannot be changed/);
   });

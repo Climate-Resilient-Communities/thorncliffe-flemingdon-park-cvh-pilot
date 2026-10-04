@@ -49,9 +49,11 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
                     <p className="hub-wrap">{item.meta}</p>
                     <p className="hub-wrap">{item.about}</p>
                     <p className="hub-wrap">{item.until}</p>
-                    <a className="tap hub-link" href={item.link.href}>
-                      {item.link.label}
-                    </a>
+                    {item.link && (
+                      <a className="tap hub-link" href={item.link.href}>
+                        {item.link.label}
+                      </a>
+                    )}
                     {item.postLink && (
                       <a className="tap hub-link" href={item.postLink.href} data-testid="amb-alert-post">
                         {item.postLink.label}
@@ -114,9 +116,11 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
                     </p>
                     <p className="hub-wrap hub-preline">{item.headline}</p>
                     <p className="hub-wrap">{item.about}</p>
-                    <a className="tap hub-link" href={item.link.href}>
-                      {item.link.label}
-                    </a>
+                    {item.link && (
+                      <a className="tap hub-link" href={item.link.href}>
+                        {item.link.label}
+                      </a>
+                    )}
                   </Stack>
                 </li>
               ))}

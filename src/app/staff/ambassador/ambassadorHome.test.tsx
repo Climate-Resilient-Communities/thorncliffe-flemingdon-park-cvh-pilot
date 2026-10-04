@@ -153,4 +153,14 @@ describe("the Ambassador's home as drawn", () => {
     expect(renderToStaticMarkup(<AmbassadorHomeBody view={view} />)).toContain('data-testid="amb-drills"');
     expect(ambassadorHomeView(data()).drills).toBeNull();
   });
+
+  it("lists a drill of a type an Ambassador may not post (heat, smoke, winter) without a practice post link", () => {
+    for (const types of [["heat"], ["smoke"], ["winter"], ["elevator", "heat"]]) {
+      const view = ambassadorHomeView(data({ drills: [{ alertId: ALERT, types, headline: "Drill.", buildings: ["7001"] }] }));
+      expect(view.drills?.items[0].link).toBeNull();
+      const html = renderToStaticMarkup(<AmbassadorHomeBody view={view} />);
+      expect(html).toContain('data-testid="amb-drill"');
+      expect(html).not.toContain("Post a practice update");
+    }
+  });
 });

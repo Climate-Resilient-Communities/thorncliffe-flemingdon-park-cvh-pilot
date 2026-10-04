@@ -19,7 +19,7 @@ import { addTorontoDays } from "../../../platform/clock";
 import { uuidv7 } from "../../../platform/ids";
 import { alert, alertEntry, alertEntryTranslation, alertSubmitAttempt, feedVersion } from "../adapters/schema";
 import { NO_RECIPIENTS, RETURN_NOTE_MAX, sameRecipientCounts, type RecipientCounts } from "../../../contracts/alertApproval";
-import { audienceRsns, type Audience } from "../../../contracts/audience";
+import { audienceCoversBuilding, audienceRsns, type Audience } from "../../../contracts/audience";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase, type ValidUntilMode } from "../domain/content";
 import { possibleDuplicateOf } from "../domain/duplicates";
@@ -1197,6 +1197,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       const covering = coveringEntry(publishedSummaries(await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id))));
       if (covering === null) throw new Refused("NO_PUBLISHED_ENTRY");
       const content = await contentFor(standing, covering.types);
+      // The thread must be about the building the post is for (one they are assigned to: `contentFor` checked it), so a request naming another thread's id
+      // cannot put a post in an alert about somewhere else; the page only offers the threads about their buildings, the server holds to it.
+      const neighbourhoodId = (await places.neighbourhoodsOf(tx, [input.place.rsn])).get(input.place.rsn) ?? null;
+      if (!audienceCoversBuilding(covering.audience as Audience, { rsn: input.place.rsn, neighbourhoodId })) throw new Refused("OUT_OF_SCOPE");
       const row = await insertEntry(tx, actor, { alertId: thread.id, entryId: input.entryId, createdAt: at }, "update", content);
       await audit.record(tx, {
         action: "entry.created",

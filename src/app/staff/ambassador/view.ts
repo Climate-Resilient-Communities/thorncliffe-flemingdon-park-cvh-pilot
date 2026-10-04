@@ -56,7 +56,8 @@ export interface DrillItemView {
   title: string;
   headline: string;
   about: string;
-  link: { href: string; label: string };
+  /** Null for a drill of a type an Ambassador may not post (heat, smoke, winter: the Hub's, for the whole neighbourhood). */
+  link: { href: string; label: string } | null;
 }
 
 export interface PostItemView {
@@ -156,7 +157,7 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
               title: drill.types.map(typeName).join(", "),
               headline: drill.headline,
               about: about(drill.buildings),
-              link: { href: ambassadorPostHref(drill.alertId), label: t("practicePost") },
+              link: postable(drill.types) ? { href: ambassadorPostHref(drill.alertId), label: t("practicePost") } : null,
             })),
           },
   };

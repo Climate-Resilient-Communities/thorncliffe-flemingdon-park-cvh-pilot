@@ -62,16 +62,16 @@ interface SeedEntry {
   returnedFor?: "return" | "edit" | null;
   note?: string;
   supersedes?: number;
-  /** Why a discarded entry was discarded (S08.02); a discarded entry defaults to `declined`. */
-  discardReason?: "by_author" | "declined" | "by_close";
+  /** Why a discarded entry was discarded (S08.02); a discarded entry defaults to `declined`. Null is an entry discarded before the reason was recorded. */
+  discardReason?: "by_author" | "declined" | "by_close" | null;
 }
 
 /** An alert thread with entries inserted directly (as a migration owner would: the lifecycle's triggers off), the way residentAlerts.db.test.ts does. */
-async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolean; entries: SeedEntry[] }): Promise<{ alertId: string; entryIds: string[] }> {
+async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolean; reportedAt?: Date; entries: SeedEntry[] }): Promise<{ alertId: string; entryIds: string[] }> {
   const alertId = randomUUID();
   await owner.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${coordinator}, true)`;
-    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${opts.drill ?? false}, ${new Date(NOW.getTime() - 3_600_000)}, ${coordinator}, ${opts.slug})`;
+    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${opts.drill ?? false}, ${opts.reportedAt ?? new Date(NOW.getTime() - 3_600_000)}, ${coordinator}, ${opts.slug})`;
   });
   const entryIds: string[] = [];
   await owner.begin(async (tx) => {
@@ -94,7 +94,7 @@ async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolea
                        ${approved ? approver : null}, ${approvedAt}, ${approved ? 1 : null}, ${approved ? hash : null}, ${published},
                        ${entry.returnedFor ?? null}, ${entry.returnedFor === "return" ? (entry.note ?? "Which floors?") : null},
                        ${entry.supersedes === undefined ? null : entryIds[entry.supersedes]}, ${entry.kind === "withdrawal" ? "wrong_place" : null},
-                       ${status === "discarded" ? (entry.discardReason ?? "declined") : null})`;
+                       ${status === "discarded" ? (entry.discardReason === undefined ? "declined" : entry.discardReason) : null})`;
     }
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
   });
@@ -223,6 +223,15 @@ describe("the open alerts about an Ambassador's buildings", () => {
     expect(data.drills).toEqual([expect.objectContaining({ headline: "EXERCISE: power is out", types: ["power"], buildings: [RSN_A] })]);
   });
 
+  it("lists the open drills newest reported first, whatever order they were made in", async () => {
+    await assign(ambassador, RSN_A);
+    const middle = await seedThread({ slug: "drillmid01", drill: true, reportedAt: new Date(NOW.getTime() - 2 * 3_600_000), entries: [{ author: coordinator, text: "EXERCISE: middle" }] });
+    const oldest = await seedThread({ slug: "drillold01", drill: true, reportedAt: new Date(NOW.getTime() - 3 * 3_600_000), entries: [{ author: coordinator, text: "EXERCISE: oldest" }] });
+    const newest = await seedThread({ slug: "drillnew01", drill: true, reportedAt: new Date(NOW.getTime() - 3_600_000), entries: [{ author: coordinator, text: "EXERCISE: newest" }] });
+
+    expect(((await home()).drills ?? []).map((drill) => drill.alertId)).toEqual([newest.alertId, middle.alertId, oldest.alertId]);
+  });
+
   it("lists a pending entry that was web-published at submit (a D-1 post) as not yet verified, then as verified once the Hub approves it", async () => {
     await assign(ambassador, RSN_A);
     const { entryIds } = await seedThread({ slug: "dpostbld01", entries: [{ author: ambassador, status: "pending_approval", publishedAt: new Date(NOW.getTime() - 120_000), audience: buildingsAudience(RSN_A) }] });
@@ -299,6 +308,14 @@ describe("an Ambassador's own posts", () => {
     expect(byText["Returned post."]).toMatchObject({ entryId: returned.entryIds[0], state: "returned", note: "Which floors?" });
     expect(byText["Declined post."]).toMatchObject({ entryId: declined.entryIds[0], state: "declined" });
     expect(byText["Ended post."]).toMatchObject({ entryId: ended.entryIds[0], state: "ended" });
+  });
+
+  it("does not list a post discarded before S08.02 recorded why (no reason): it cannot say whether the Hub declined it, so it says nothing", async () => {
+    await assign(ambassador, RSN_A);
+    await seedThread({ slug: "oldscard01", entries: [{ author: ambassador, status: "discarded", discardReason: null, text: "Discarded before the reason." }] });
+    const kept = await seedThread({ slug: "keptpost01", entries: [{ author: ambassador, text: "Approved post." }] });
+
+    expect((await home()).posts.map((post) => post.entryId)).toEqual([kept.entryIds[0]]);
   });
 
   it("keeps a heavy author's real posts in view: more than 200 newer unsubmitted drafts do not crowd them out", async () => {

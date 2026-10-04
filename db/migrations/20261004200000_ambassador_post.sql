@@ -5,12 +5,13 @@
 --       `by_author`  the author took back their own draft or submitted entry (alerting.discardEntry, the actor is the author);
 --       `declined`   the Hub did not send it: an approver, or anyone but the author, discarded it (alerting.discardEntry);
 --       `by_close`   the thread closed with it unread (alerting.closeAlert: a final's or a withdrawal's approval, or the expire job).
---     So an ambassador's post reads "Not sent by the Hub" (A-01, A-03) only when the Hub really declined it (the decision S08.01 handed over). A discarded
---     entry has a reason and no other entry has one. The check is NOT VALID: entries discarded before this migration carry none, and a discarded entry never
---     changes again (the entry guard refuses any change to it), so they stay as they are; every new discard must say why.
+--     So an ambassador's post reads "Not sent by the Hub" (A-01, A-03) only when the Hub really declined it (the decision S08.01 handed over). Only the value
+--     set is checked here (`alert_entry_discard_reason_valid`; null passes). That a discarded entry has a reason and no other entry has one is a check of its
+--     own, added by a later migration once this release is live: the release before this one discards without a reason, and it keeps running while this
+--     migration is applied (the deploy window). Entries discarded before this migration carry none and keep none (a discarded entry never changes again).
 --  2. `alert_entry.attributed_rsn`: the building a post is attributed to, frozen at submit with the texts that say "Building ambassador, {building}" (AD-5,
---     "Seam for E08"); null for the Hub's own entries. A draft holds none: a return to draft clears it with the other frozen fields (the use case does, and
---     the check makes it so). The approval view (O-07) and residents read it, never the author's role at the time they read.
+--     "Seam for E08"); null for the Hub's own entries. A draft holds none: a return to draft clears it with the other frozen fields (the use case does; the
+--     check that makes it so comes with the later migration above). The approval view (O-07) and residents read it, never the author's role at the time they read.
 --  3. A new resident view `nondrill_alert_entry_v3` carries `attributed_rsn` beside the columns of `nondrill_alert_entry_v2`, which is left exactly as it is
 --     (the previous release reads it during the deploy window; a later release drops it).
 
@@ -20,10 +21,6 @@ alter table alert_entry add column attributed_rsn text;
 grant update (discard_reason, attributed_rsn) on table alert_entry to cvh_app;
 alter table alert_entry add constraint alert_entry_discard_reason_valid
   check (discard_reason is null or discard_reason in ('by_author', 'declined', 'by_close')) not valid;
-alter table alert_entry add constraint alert_entry_discard_reason_status
-  check ((status = 'discarded') = (discard_reason is not null)) not valid;
-alter table alert_entry add constraint alert_entry_attributed_rsn_frozen
-  check (attributed_rsn is null or status <> 'draft') not valid;
 
 create view nondrill_alert_entry_v3 with (security_invoker = true) as
   select

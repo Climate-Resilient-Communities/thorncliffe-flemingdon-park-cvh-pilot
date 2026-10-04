@@ -168,8 +168,14 @@ export function createAmbassadorHome(db: Db) {
         });
         if (posts.length === POSTS_SHOWN) break;
       }
-      // The open drills about their buildings (S08.02): read from the staff tables, apart from what residents read, never among the alerts above.
-      const drillThreads = await db.select({ id: alert.id }).from(alert).where(and(eq(alert.isDrill, true), eq(alert.status, "open"))).limit(50);
+      // The open drills about their buildings (S08.02): read from the staff tables, apart from what residents read, never among the alerts above. Newest first, by
+      // when each drill was reported (ties by id), so the list keeps one order from one request to the next.
+      const drillThreads = await db
+        .select({ id: alert.id })
+        .from(alert)
+        .where(and(eq(alert.isDrill, true), eq(alert.status, "open")))
+        .orderBy(desc(alert.reportedAt), desc(alert.id))
+        .limit(50);
       const drillRows = drillThreads.length === 0 ? [] : await db.select().from(alertEntry).where(inArray(alertEntry.alertId, drillThreads.map((thread) => thread.id)));
       const drills: AmbassadorDrill[] = [];
       for (const thread of drillThreads) {

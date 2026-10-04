@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { UNSENT_RETRY_MS, WORKING_RETRY_MS, createPostSender, type PostBody, type SendState, type SenderEnv } from "./postSender";
+import { REQUEST_TIMEOUT_MS, UNSENT_RETRY_MS, WORKING_RETRY_MS, createPostSender, type PostBody, type SendState, type SenderEnv } from "./postSender";
 
 const BODY: PostBody = {
   v: 1,
@@ -26,10 +26,12 @@ function harness() {
   let clock = 0;
   const answers: (() => Promise<{ status: number; json(): Promise<unknown> }>)[] = [];
   const sent: { url: string; body: unknown }[] = [];
+  const signals: AbortSignal[] = [];
   let keys = 0;
   const env: SenderEnv = {
-    fetch: vi.fn(async (url: string, init: { body: string }) => {
+    fetch: vi.fn(async (url: string, init: { body: string; signal: AbortSignal }) => {
       sent.push({ url, body: JSON.parse(init.body) });
+      signals.push(init.signal);
       const next = answers.shift();
       if (!next) throw new TypeError("Failed to fetch");
       return next();
@@ -59,6 +61,9 @@ function harness() {
     env,
     answer: (status: number, body: unknown) => answers.push(async () => ({ status, json: async () => body })),
     dropConnection: () => answers.push(async () => Promise.reject(new TypeError("Failed to fetch"))),
+    /** Weak signal: the request goes out and no answer ever comes. */
+    hang: () => answers.push(() => new Promise<never>(() => {})),
+    signals,
     setOnline: async (value: boolean) => {
       online = value;
       if (value) for (const listener of [...listeners]) listener();
@@ -114,6 +119,24 @@ describe("an ambassador's post, sent from the open page (S08.02)", () => {
     await h.advance(UNSENT_RETRY_MS);
     expect(h.sent.map((request) => (request.body as { key: string }).key)).toEqual(["press-key-00000001", "press-key-00000001"]);
     expect(h.sender.state()).toEqual({ kind: "done" });
+  });
+
+  it("gives up a request with no answer after 20 s, holds the post as unsent, and sends it again with the same key", async () => {
+    const h = harness();
+    h.hang();
+    h.sender.press(BODY);
+    await h.flush();
+    expect(h.sender.state()).toEqual({ kind: "sending" });
+    await h.advance(REQUEST_TIMEOUT_MS - 1);
+    expect(h.sender.state()).toEqual({ kind: "sending" });
+    await h.advance(1);
+    expect(h.sender.state()).toEqual({ kind: "unsent" });
+    expect(h.signals[0].aborted).toBe(true);
+    h.answer(200, result("committed"));
+    await h.advance(UNSENT_RETRY_MS);
+    expect(h.sent.map((request) => (request.body as { key: string }).key)).toEqual(["press-key-00000001", "press-key-00000001"]);
+    expect(h.sender.state()).toEqual({ kind: "done" });
+    expect(h.signals[1].aborted).toBe(false);
   });
 
   it("asks again with the same key while the server is still translating, until the press has an outcome", async () => {

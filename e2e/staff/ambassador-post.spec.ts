@@ -175,25 +175,55 @@ test("a building the ambassador is not assigned to is refused by a direct reques
   expect(await entriesBy(person.id)).toEqual([]);
 });
 
-test("in a drill the post is practice: marked as an exercise on the screen, kept apart on the home, and never read by residents", async ({ page }) => {
-  test.setTimeout(120_000);
-  const person = await newAmbassador();
-  // A drill about the building, running, with an approved acknowledgement (inserted directly, the lifecycle's trigger off, as the database tests do).
+/** A running thread about one building with an approved acknowledgement, inserted directly (the lifecycle's trigger off, as the database tests do). */
+async function runningThread(opts: { isDrill: boolean; rsn: string; text: string }): Promise<{ alertId: string; slug: string }> {
   const coordinator = await newCoordinator(sql);
   const alertId = randomUUID();
   const hash = randomBytes(32).toString("hex");
-  const slug = `drl${randomBytes(4).toString("hex")}`.slice(0, 10);
+  const slug = `${opts.isDrill ? "drl" : "run"}${randomBytes(4).toString("hex")}`.slice(0, 10);
   await sql.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${coordinator.id}, true)`;
-    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, true, now() - interval '1 hour', ${coordinator.id}, ${slug})`;
+    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${opts.isDrill}, now() - interval '1 hour', ${coordinator.id}, ${slug})`;
     await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
     await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version, content_hash, sms_bodies, submitted_at,
                                        approved_by, approved_at, approved_version, approved_hash, web_published_at)
-             values (${randomUUID()}, ${alertId}, 'ack', 'approved', ${coordinator.id}, ${[coordinator.id]}, 'Drill: the elevator is out.', ${["elevator"]},
-                     ${tx.json({ scope: "buildings", buildings: [{ rsn: mine, floors: null }], groups: [], types: ["elevator"] })}, 'problem', now() + interval '1 day', 1, ${hash},
+             values (${randomUUID()}, ${alertId}, 'ack', 'approved', ${coordinator.id}, ${[coordinator.id]}, ${opts.text}, ${["elevator"]},
+                     ${tx.json({ scope: "buildings", buildings: [{ rsn: opts.rsn, floors: null }], groups: [], types: ["elevator"] })}, 'problem', now() + interval '1 day', 1, ${hash},
                      ${tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } })}, now() - interval '30 minutes', ${coordinator.id}, now() - interval '20 minutes', 1, ${hash}, now() - interval '20 minutes')`;
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
   });
+  return { alertId, slug };
+}
+
+test("an update into a running alert about another building is refused by a direct request for their own building, and nothing is made", async ({ page }) => {
+  const person = await newAmbassador();
+  const elsewhere = await runningThread({ isDrill: false, rsn: other, text: "The elevator is out at the other building." });
+  await signInAs(page, person);
+  // The home never offers it: the alert is about a building they are not assigned to.
+  await expect(page.getByTestId("amb-active")).not.toContainText("The elevator is out at the other building.");
+  const body = {
+    v: 1,
+    into: elsewhere.alertId,
+    alert_id: randomUUID(),
+    entry_id: randomUUID(),
+    key: randomUUID(),
+    rsn: mine,
+    floors: { mode: "all" },
+    types: ["elevator"],
+    phase: "problem",
+    valid: { mode: "resolved" },
+    text: "The elevator is out.",
+  };
+  const refused = await page.request.post("/api/staff/ambassador/posts", { data: body, headers: { "content-type": "application/json" } });
+  expect(await refused.json()).toMatchObject({ state: "refused", outcome: "OUT_OF_SCOPE" });
+  expect(await entriesBy(person.id)).toEqual([]);
+});
+
+test("in a drill the post is practice: marked as an exercise on the screen, kept apart on the home, and never read by residents", async ({ page }) => {
+  test.setTimeout(120_000);
+  const person = await newAmbassador();
+  // A drill about the building, running, with an approved acknowledgement.
+  const { alertId, slug } = await runningThread({ isDrill: true, rsn: mine, text: "Drill: the elevator is out." });
 
   await signInAs(page, person);
   await expect(page.getByTestId("amb-drills")).toContainText("Drill: the elevator is out.");
