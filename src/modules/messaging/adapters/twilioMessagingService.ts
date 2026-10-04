@@ -9,7 +9,7 @@
 // Every request sets `SmartEncoded=false` (AD-21: the frozen body is sent byte for byte, with no character replaced), whatever the
 // caller does, and carries the status callback URL the caller gives. The credentials are used only in the Authorization header:
 // they are never put in a URL, a log line or an error, and an error's message is masked before it goes anywhere.
-import type { MessageSubmission, MessageSubmitter, MessagingServiceReader } from "../application/dispatcherPorts";
+import type { AbuseSettingsReading, MessageSubmission, MessageSubmitter, MessagingServiceReader } from "../application/dispatcherPorts";
 import { PROVIDER_TIMEOUT_MS, type NoAnswerReason, type NotSentReason, type SubmitAnswer } from "../domain/dispatchRules";
 import { maskPhoneNumbers } from "../domain/phoneNumber";
 
@@ -155,25 +155,50 @@ export function twilioMessagingServiceReader(config: TwilioServiceConfig): Messa
   const base = (config.messagingBaseUrl ?? "https://messaging.twilio.com").replace(/\/+$/, "");
   const doFetch = config.fetch ?? globalThis.fetch;
   const timeoutMs = config.timeoutMs ?? 15_000;
+
+  /** One GET of the service resource: its fields, or why they could not be read (a code). */
+  async function readService(messagingServiceSid: string): Promise<{ kind: "fields"; fields: Record<string, unknown> } | { kind: "unreadable"; reason: string }> {
+    if (!SERVICE_SID.test(messagingServiceSid)) return { kind: "unreadable", reason: "service_sid_invalid" };
+    let response: Response;
+    try {
+      response = await doFetch(`${base}/v1/Services/${messagingServiceSid}`, {
+        method: "GET",
+        headers: { Authorization: basicAuth(config), Accept: "application/json" },
+        redirect: "error",
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch {
+      return { kind: "unreadable", reason: "unreachable" };
+    }
+    if (!response.ok) return { kind: "unreadable", reason: `http_${Math.min(Math.max(response.status, 100), 599)}` };
+    const read = await jsonOf(response);
+    return { kind: "fields", fields: read.kind === "body" && isRecord(read.body) ? read.body : {} };
+  }
+
   return {
     async readSmartEncoding(messagingServiceSid) {
-      if (!SERVICE_SID.test(messagingServiceSid)) return { kind: "unreadable", reason: "service_sid_invalid" };
-      let response: Response;
-      try {
-        response = await doFetch(`${base}/v1/Services/${messagingServiceSid}`, {
-          method: "GET",
-          headers: { Authorization: basicAuth(config), Accept: "application/json" },
-          redirect: "error",
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-      } catch {
-        return { kind: "unreadable", reason: "unreachable" };
-      }
-      if (!response.ok) return { kind: "unreadable", reason: `http_${Math.min(Math.max(response.status, 100), 599)}` };
-      const read = await jsonOf(response);
-      const flag = read.kind === "body" && isRecord(read.body) ? read.body.smart_encoding : undefined;
+      const service = await readService(messagingServiceSid);
+      if (service.kind === "unreadable") return service;
+      const flag = service.fields.smart_encoding;
       // A setting that is not plainly true or false is not read as "off": the check reports that it could not tell.
       return typeof flag === "boolean" ? { kind: "read", smartEncoding: flag } : { kind: "unreadable", reason: "setting_missing" };
+    },
+
+    /**
+     * The two protections against abuse (S07.09). ASSUMED field names, to be confirmed against the production Twilio account at the launch
+     * rehearsal (IT; docs/config.md): `sms_pumping_protection` (boolean) and `geo_permissions` (the ISO codes of the countries the service
+     * may text). Anything that is not plainly one of those shapes is "could not tell", never "right": a wrong guess shows up as a warning
+     * every day, not as a silent pass.
+     */
+    async readAbuseSettings(messagingServiceSid): Promise<AbuseSettingsReading> {
+      const service = await readService(messagingServiceSid);
+      if (service.kind === "unreadable") return service;
+      const pumping = service.fields.sms_pumping_protection;
+      const countries = service.fields.geo_permissions;
+      if (typeof pumping !== "boolean") return { kind: "unreadable", reason: "pumping_setting_missing" };
+      if (!Array.isArray(countries) || countries.some((code) => typeof code !== "string")) return { kind: "unreadable", reason: "geo_setting_missing" };
+      const codes = new Set((countries as string[]).map((code) => code.trim().toUpperCase()));
+      return { kind: "read", geoCanadaOnly: codes.size === 1 && codes.has("CA"), pumpingProtection: pumping };
     },
   };
 }

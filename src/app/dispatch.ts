@@ -61,6 +61,8 @@ export const opsRecorder: OpsRecorder = {
       case "messaging.smart_encoding_off":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
       case "messaging.service_check_failed":
+      case "messaging.service_settings_wrong":
+      case "messaging.service_settings_ok":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
       case "delivery.unknown_resolved":
       case "delivery.provider_id_mismatch":

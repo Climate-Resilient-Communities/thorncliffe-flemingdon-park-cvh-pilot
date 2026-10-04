@@ -76,6 +76,7 @@ describe("the banner on every Admin and Coordinator screen (S09.01)", () => {
     ["publish_failed", "The last directory publish failed. Residents still see the previous directory."],
     ["transactional_ceiling", "More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form."],
     ["cap_overrun", "An approval this month went over the monthly text message spending cap. Texts keep sending."],
+    ["messaging_settings", "The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs."],
   ] as const)("names %s as %j under 'Something is not working' when the sender is fine", (condition, line) => {
     expect(healthBannerView(facts([{ condition, since: SINCE }]), EVERYTHING)).toEqual({
       heading: "Something is not working",

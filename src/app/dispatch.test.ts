@@ -185,6 +185,8 @@ describe("messaging's operational events in ops_event", () => {
     { kind: "messaging.smart_encoding_on", detail: {} },
     { kind: "messaging.smart_encoding_off", detail: {} },
     { kind: "messaging.service_check_failed", detail: { reason: "http_404" } },
+    { kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: false } },
+    { kind: "messaging.service_settings_ok", detail: {} },
     // The status callbacks (S06.04).
     { kind: "delivery.unknown_resolved", deliveryId: DELIVERY, detail: { status: "delivered" } },
     { kind: "delivery.callback_ignored", detail: { reason: "no_ref" } },
@@ -205,6 +207,8 @@ describe("messaging's operational events in ops_event", () => {
       { kind: "messaging.smart_encoding_on", severity: "error", subjectType: null, subjectId: null, detail: {} },
       { kind: "messaging.smart_encoding_off", severity: "info", subjectType: null, subjectId: null, detail: {} },
       { kind: "messaging.service_check_failed", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "http_404" } },
+      { kind: "messaging.service_settings_wrong", severity: "error", subjectType: null, subjectId: null, detail: { geo_not_canada_only: true, pumping_protection_off: false } },
+      { kind: "messaging.service_settings_ok", severity: "info", subjectType: null, subjectId: null, detail: {} },
       { kind: "delivery.unknown_resolved", severity: "info", subjectType: "delivery", subjectId: DELIVERY, detail: { status: "delivered" } },
       { kind: "delivery.callback_ignored", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "no_ref" } },
       { kind: "delivery.callback_ignored", severity: "warning", subjectType: "delivery", subjectId: DELIVERY, detail: { reason: "not_in_flight" } },
@@ -268,9 +272,10 @@ describe("the daily Messaging Service check", () => {
   const log: MessagingLog = { info: () => undefined, error: () => undefined };
   const live = { smsMode: "live" as const, twilio: { accountSid: ACCOUNT, authToken: "fake-token", messagingServiceSid: SERVICE } };
 
-  /** The Messaging API, faked: the service's Smart Encoding setting as given. */
-  function stubService(smartEncoding: boolean) {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ sid: SERVICE, smart_encoding: smartEncoding }), { status: 200 }));
+  /** The Messaging API, faked: the service's Smart Encoding setting as given, and (S07.09) Canada-only geo permissions and pumping protection on unless said. */
+  function stubService(smartEncoding: boolean, protections: { sms_pumping_protection?: boolean; geo_permissions?: string[] } = {}) {
+    const body = { sid: SERVICE, smart_encoding: smartEncoding, sms_pumping_protection: true, geo_permissions: ["CA"], ...protections };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(body), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     return fetchMock;
   }
@@ -287,14 +292,33 @@ describe("the daily Messaging Service check", () => {
     const recorded: MessagingOpsEvent[] = [];
     const ops = { record: async (_executor: DbExecutor, event: MessagingOpsEvent) => void recorded.push(event) };
     const off = stubService(false);
-    await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_off" });
-    expect(off).toHaveBeenCalledTimes(1);
-    expect(recorded).toEqual([{ kind: "messaging.smart_encoding_off", detail: {} }]);
+    await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_off", settings: "right" });
+    expect(off).toHaveBeenCalledTimes(2);
+    expect(recorded).toEqual([
+      { kind: "messaging.smart_encoding_off", detail: {} },
+      { kind: "messaging.service_settings_ok", detail: {} },
+    ]);
 
     recorded.length = 0;
     stubService(true);
-    await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_on" });
-    expect(recorded).toEqual([{ kind: "messaging.smart_encoding_on", detail: {} }]);
+    await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_on", settings: "right" });
+    expect(recorded).toEqual([
+      { kind: "messaging.smart_encoding_on", detail: {} },
+      { kind: "messaging.service_settings_ok", detail: {} },
+    ]);
+  });
+
+  it("records messaging.service_settings_wrong, with which protection failed, when geo permissions allow more than Canada or pumping protection is off (S07.09)", async () => {
+    const recorded: MessagingOpsEvent[] = [];
+    const ops = { record: async (_executor: DbExecutor, event: MessagingOpsEvent) => void recorded.push(event) };
+    stubService(false, { geo_permissions: ["CA", "US"] });
+    await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_off", settings: "wrong", geoNotCanadaOnly: true, pumpingProtectionOff: false });
+    expect(recorded.at(-1)).toEqual({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: false } });
+
+    recorded.length = 0;
+    stubService(false, { sms_pumping_protection: false });
+    await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_off", settings: "wrong", geoNotCanadaOnly: false, pumpingProtectionOff: true });
+    expect(recorded.at(-1)).toEqual({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: false, pumping_protection_off: true } });
   });
 
   it("refuses to check where the Messaging Service is not set up", async () => {

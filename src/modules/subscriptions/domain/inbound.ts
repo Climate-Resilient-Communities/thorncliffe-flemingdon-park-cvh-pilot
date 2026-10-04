@@ -124,6 +124,18 @@ export function decide(keyword: InboundKeyword, state: NumberState): Decision {
   }
 }
 
+/**
+ * The inbound limit (S07.09, AD-22, E07 "Inbound order" step 4): one number may send this many messages in an hour. The next one (the 21st) and
+ * every later one that day (Toronto) gets no reply, nothing is done for it, and only the day's count is kept. Deletion requests and Twilio's
+ * opt-out events are decided before this limit and are never counted or limited: a number that sent too many can always STOP.
+ */
+export const INBOUND_LIMIT = { perHour: 20, windowMs: 60 * 60_000 } as const;
+
+/** Whether the message is decided before the inbound limit: a deletion (STOP, the second 0) or an opt-out event (STOP, START, HELP). */
+export function exemptFromInboundLimit(keyword: InboundKeyword, action: InboundAction): boolean {
+  return action.kind === "delete" || keyword === "stop" || keyword === "start" || keyword === "help";
+}
+
 /** How long the deletion's confirmation stays open: "Reply 0 again within 10 minutes". */
 export const DELETE_CONFIRM_MS = 10 * 60_000;
 

@@ -255,10 +255,11 @@ export type {
   MessagingServiceReader,
   OpsRecorder,
   SmartEncodingReading,
+  AbuseSettingsReading,
   StoppedState,
   SweepResult,
 } from "./application/dispatcherPorts";
-export type { MessagingServiceCheck, ServiceCheckResult } from "./application/serviceCheck";
+export type { MessagingServiceCheck, ServiceCheckFinding, ServiceCheckResult, SettingsCheckResult } from "./application/serviceCheck";
 
 // The status callbacks (S06.04).
 export { drizzleCallbackStore } from "./adapters/callbackStore";

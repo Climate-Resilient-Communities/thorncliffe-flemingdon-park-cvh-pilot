@@ -21,7 +21,8 @@
 //    on-call texts not counted). Texted about once that day (S07.09: "on-call is alerted once that day"; texts keep sending); it clears at midnight.
 //  - cap_overrun: a spending cap overrun (`spend.cap_overrun`, S07.08) was recorded this month in Toronto. An event condition: each new one is
 //    texted about once; it clears when the month ends.
-//  "Messaging Service settings wrong" is smart_encoding_on (S06.02's daily check; S07.09 adds its other settings to that check).
+//  - messaging_settings (S07.09): the daily check (S06.02) found the Messaging Service's geo permissions allowing more than Canada, or SMS pumping
+//    protection off; it clears when a later check finds both right. An event condition, like smart_encoding_on.
 //
 // Each run that judged every condition records the heartbeat (`health_heartbeat`), which `/api/health/heartbeat` reads for the outside check: a
 // run in which a condition could not be judged does not, so a job that keeps failing is seen from outside like a job that does not run.
@@ -131,6 +132,11 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
       case "smart_encoding_on": {
         const latest = await healthStore.latestOfKinds(tx, ["messaging.smart_encoding_on", "messaging.smart_encoding_off"]);
         if (latest === null || latest.kind !== "messaging.smart_encoding_on") return { holds: false, count: 0, eventId: null };
+        return { holds: true, count: 1, fresh: latest.id > (lastEventId ?? 0), eventId: latest.id };
+      }
+      case "messaging_settings": {
+        const latest = await healthStore.latestOfKinds(tx, ["messaging.service_settings_wrong", "messaging.service_settings_ok"]);
+        if (latest === null || latest.kind !== "messaging.service_settings_wrong") return { holds: false, count: 0, eventId: null };
         return { holds: true, count: 1, fresh: latest.id > (lastEventId ?? 0), eventId: latest.id };
       }
       case "signature_failures": {
