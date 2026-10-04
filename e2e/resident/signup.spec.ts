@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
-import { BUILDINGS, FLOOR, savedChoices, seedChoices, stubBuildingList } from "./choices-fixture";
+import { BUILDINGS, FLOOR, buildingList, savedChoices, seedChoices, stubBuildingList } from "./choices-fixture";
+import terms from "../../data/catalogue/terms.json";
 import { LANGUAGES, WIDTHS, catalogText, expectBaseline, openResident } from "./helpers";
 
 // S07.02: "Get text alerts" (R-05) and what to expect once it is sent (R-06), at /{lang}/text-alerts. The server behind these tests has no
@@ -10,7 +11,8 @@ import { LANGUAGES, WIDTHS, catalogText, expectBaseline, openResident } from "./
 const MILEPOST = BUILDINGS[0].rsn; // Thorncliffe Park
 const DRIVE = BUILDINGS[1].rsn; // Thorncliffe Park
 const OVERLEA = BUILDINGS[3].rsn; // Flemingdon Park
-const VERSION = "2026-10-02.1";
+/** The terms version the page shows (the committed terms, published or draft), which the form sends. */
+const VERSION = terms.consentVersion;
 
 /** Answers /api/signup as told, and keeps every request it got (its body and its headers). */
 async function stubSignup(page: Page, answer: { status: number; json: unknown } = { status: 202, json: { v: 1, status: "accepted" } }) {
@@ -141,6 +143,33 @@ test.describe("the form", () => {
     // Back to the form, with what was typed.
     await page.getByTestId("signup-fix").click();
     await expect(page.getByTestId("signup-phone")).toHaveValue("(416) 555-0123");
+  });
+
+  test("sent before the building list has loaded, waits for it and keeps the saved floors; a number in Urdu digits is accepted", async ({ page }) => {
+    let release: () => void = () => {};
+    const listHeld = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/api/buildings", async (route: Route) => {
+      await listHeld;
+      await route.fulfill({ json: buildingList(), headers: { "Cache-Control": "no-store" } });
+    });
+    await seedChoices(page, choices({ lang: "en", buildings: [MILEPOST], floors: [FLOOR.milepost1] }));
+    const requests = await stubSignup(page);
+    await openResident(page, "/en/text-alerts", 390);
+
+    await page.getByTestId("signup-phone").fill("۴۱۶ ۵۵۵ ۰۱۲۳");
+    await page.getByTestId("signup-terms-agree").click();
+    await page.getByTestId("signup-age").click();
+    await page.getByTestId("signup-nbhd-TP").click();
+    await page.getByTestId("signup-send").click();
+
+    // Nothing is sent while the list is loading: the saved floor cannot be placed yet.
+    await expect(page.getByTestId("signup-send")).toBeDisabled();
+    expect(requests).toEqual([]);
+    release();
+
+    await expect(page.getByTestId("signup-sent")).toBeVisible();
+    expect(requests.map((r) => r.body.places)).toEqual([[{ rsn: MILEPOST, floors: [FLOOR.milepost1] }]]);
+    expect(requests.map((r) => r.body.phone)).toEqual(["۴۱۶ ۵۵۵ ۰۱۲۳"]);
   });
 
   test("shows the server's reason in the page's language: a refused number, the limit, the terms changed, no connection", async ({ page }) => {

@@ -10,7 +10,7 @@
 // only (versionToRecord in domain/terms.ts).
 import type { LangCode } from "@/contracts/lang";
 import type { Hasher } from "@/contracts/contentReview";
-import { planTerms, type TermsDocument, type TermsInput, type TermsPlan } from "../domain/terms";
+import { CONSENT_VERSION_FORMAT, planTerms, type TermsDocument, type TermsInput, type TermsPlan } from "../domain/terms";
 
 export interface TermsServiceDeps {
   /** The committed files (data/catalogue/terms.json and the translations), already read. */
@@ -62,9 +62,13 @@ export function termsPageMode(view: Pick<TermsView, "status">, environment: "pro
 /**
  * The terms version a sign-up may record (S07.02), by the same rule as the page (termsPageMode): published terms everywhere; in a preview or
  * in development, the draft's version too, so staff can try the sign-up against the text the page shows under its draft banner (those
- * environments send no text: SMS_MODE is `log`). Null in production while the terms are not published, so no sign-up is taken there.
+ * environments send no text: SMS_MODE is `log`). Null in production while the terms are not published, so no sign-up is taken there, and
+ * null for a version not written YYYY-MM-DD.n (only a draft can have one), so the sign-up page is a 404 there rather than a form that fails.
  */
 export function signupConsentVersion(view: Pick<TermsView, "status" | "consentVersion">, environment: "production" | "preview" | "development"): string | null {
+  // A draft whose version is not written YYYY-MM-DD.n could not be stored (pending_signup_consent_version_format): the page is a 404 rather
+  // than a form whose every sign-up would fail with signup_unavailable.
+  if (view.consentVersion === null || !CONSENT_VERSION_FORMAT.test(view.consentVersion)) return null;
   if (view.status === "published") return view.consentVersion;
   return environment === "production" ? null : view.consentVersion;
 }

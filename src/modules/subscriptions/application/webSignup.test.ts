@@ -183,7 +183,9 @@ describe("the web sign-up", () => {
     const subscribed = await run(async () => undefined, ["+14165550123"]);
 
     expect([fresh.outcome, pending.outcome, subscribed.outcome]).toEqual([{ kind: "accepted" }, { kind: "accepted" }, { kind: "accepted" }]);
-    const steps = ["read neighbourhoods", "read floors 100", "lock number", "is subscribed", "delete expired", "savepoint", "insert pending", "queue confirmation"];
+    // The places are read before the client is counted and again in the transaction.
+    const places = ["read neighbourhoods", "read floors 100"];
+    const steps = [...places, ...places, "lock number", "is subscribed", "delete expired", "savepoint", "insert pending", "queue confirmation"];
     expect(fresh.log).toEqual([...steps, "release"]);
     expect(pending.log).toEqual([...steps, "rollback to savepoint"]);
     expect(subscribed.log).toEqual([...steps, "rollback to savepoint"]);
@@ -214,12 +216,27 @@ describe("the web sign-up", () => {
     expect(fake.world.deliveries).toEqual([]);
   });
 
+  it("refuses a wrong building, floor or neighbourhood before counting the client: a mistake uses up none of its 5 sign-ups an hour", async () => {
+    const fake = fakeWorld();
+    const signup = createSignup(fake.deps);
+
+    for (let i = 0; i < 10; i += 1) {
+      expect(await signup.request(request({ places: [{ rsn: "999", floors: [] }] }), "203.0.113.9")).toEqual({ kind: "refused", code: "place_unknown" });
+    }
+    expect(await signup.request(request({ places: [{ rsn: "200", floors: [FLOOR] }] }), "203.0.113.9")).toEqual({ kind: "refused", code: "place_unknown" });
+    expect(await signup.request(request({ neighbourhood: "NE" }), "203.0.113.9")).toEqual({ kind: "refused", code: "invalid_request" });
+    expect(fake.counted).toEqual([]);
+    expect(await signup.request(request(), "203.0.113.9")).toEqual({ kind: "accepted" });
+    expect(fake.counted).toEqual(["signup:203.0.113.9"]);
+  });
+
   it("refuses when the client is over its limit (more than 5 an hour), storing nothing", async () => {
     const fake = fakeWorld({ allowed: false });
 
     expect(await createSignup(fake.deps).request(request(), "203.0.113.7")).toEqual({ kind: "rate_limited", retryAfterSeconds: 1200 });
     expect(fake.world.rows.size).toBe(0);
-    expect(fake.world.log).toEqual([]);
+    // Only the place checks, which come before the count; nothing is locked, read about the number or written.
+    expect(fake.world.log.every((line) => line.startsWith("read "))).toBe(true);
     expect(SIGNUP_RATE_LIMIT).toEqual({ scope: "signup", limit: 5, windowMs: 3_600_000 });
   });
 

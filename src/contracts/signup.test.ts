@@ -50,6 +50,25 @@ describe("canadianNumber", () => {
     }
   });
 
+  it("reads a number typed with an Urdu, Arabic, Bengali, Devanagari, Gujarati, Gurmukhi, Tamil or full-width keyboard's digits", () => {
+    for (const typed of [
+      "۴۱۶ ۵۵۵ ۰۱۲۳", // Urdu, Pashto, Dari
+      "\u200f۴۱۶-۵۵۵-۰۱۲۳\u200f", // with the right-to-left marks a keyboard can add
+      "٤١٦ ٥٥٥ ٠١٢٣",
+      "৪১৬ ৫৫৫ ০১২৩",
+      "४१६ ५५५ ०१२३",
+      "૪૧૬ ૫૫૫ ૦૧૨૩",
+      "੪੧੬ ੫੫੫ ੦੧੨੩",
+      "௪௧௬ ௫௫௫ ௦௧௨௩",
+      "４１６ ５５５ ０１２３",
+      "＋１（４１６）５５５－０１２３", // full-width signs too
+      "416 ۵۵۵ ０１２３", // mixed
+    ]) {
+      expect(canadianNumber(typed), typed).toBe("+14165550123");
+    }
+    expect(canadianNumber("۲۱۲ ۵۵۵ ۰۱۲۳")).toBeNull(); // New York, in Urdu digits
+  });
+
   it("refuses a number that is not Canadian, not ten digits, or has letters or other signs", () => {
     for (const typed of [
       "212 555 0123", // New York

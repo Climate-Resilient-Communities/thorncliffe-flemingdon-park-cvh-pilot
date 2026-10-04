@@ -3,6 +3,7 @@
 // S07.06); it sets no cookie and is never cached. Pure and browser-safe: the form checks a number with the same rule as the server.
 import { z } from "zod";
 import { isCanadianAreaCode } from "./canadianAreaCodes";
+import { toAsciiDigits } from "./digits";
 import { NEIGHBOURHOOD_ID } from "./audience";
 import { GroupSchema } from "./groups";
 import { LangCodeSchema } from "./lang";
@@ -22,14 +23,18 @@ export const SIGNUP_PHONE_MAX_CHARS = 40;
 /** A request body longer than this is not a sign-up. */
 export const SIGNUP_MAX_BODY_CHARS = 32_768;
 
+/** The invisible direction marks a right-to-left keyboard can put around digits (LRM, RLM, ALM and the embedding and isolate controls). */
+const DIRECTION_MARKS = /[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g;
+
 /**
  * A number as typed, read as a Canadian number: E.164 `+1` and ten digits whose area code is on the Canadian list (canadianAreaCodes.ts)
  * and whose area code and exchange both start with 2 to 9 (the numbering plan's rule). Spaces, dots, dashes and brackets are allowed, and a
- * leading `+1` or `1`; letters or other characters are not. Null for anything else.
+ * leading `+1` or `1`; letters or other characters are not. Digits in any script (Urdu's ۴۱۶, Bengali's, full-width ４１６...) are read as
+ * 0-9 (toAsciiDigits), full-width punctuation as its ASCII form (NFKC), and direction marks are ignored. Null for anything else.
  */
 export function canadianNumber(input: unknown): string | null {
   if (typeof input !== "string" || input.length > SIGNUP_PHONE_MAX_CHARS) return null;
-  const text = input.trim();
+  const text = toAsciiDigits(input.normalize("NFKC")).replace(DIRECTION_MARKS, "").trim();
   if (!/^\+?[0-9\s().-]+$/.test(text)) return null;
   let digits = text.replace(/\D/g, "");
   if (text.startsWith("+") && !digits.startsWith("1")) return null;

@@ -2,8 +2,9 @@
 //
 // A sign-up that passes the contract's checks (src/contracts/signup.ts) is checked here against what only the server knows: the terms
 // version the form showed must be the one published now (S07.01: a sign-up records the version it showed), and the neighbourhood, the
-// buildings and the floors must exist. Then the client's sign-ups are counted (more than 5 in an hour from one salted IP hash is refused,
-// and nothing is stored), and in one transaction:
+// buildings and the floors must exist. A refusal for any of these takes no slot of the client's limit. Then the client's sign-ups are
+// counted (more than 5 in an hour from one salted IP hash, that is one IP address, is refused, and nothing is stored), and in one
+// transaction, where the places are checked again (a building removed in between):
 //
 //   1. the number is locked (an advisory lock on a hash of it), so two sign-ups for one number run one after the other;
 //   2. whether it is already subscribed is asked (`SubscriberLookup`: S07.04 creates the subscriber table and wires the real lookup);
@@ -103,7 +104,7 @@ export function createSignup(deps: SignupDeps): Signup {
   const newId = deps.newId ?? (() => uuidv7());
 
   /** Whether the neighbourhood, the buildings and the floors are on the lists the server keeps. */
-  async function checkPlaces(tx: DbTransaction, input: SignupRequest): Promise<"ok" | "invalid_request" | "place_unknown"> {
+  async function checkPlaces(tx: DbExecutor, input: SignupRequest): Promise<"ok" | "invalid_request" | "place_unknown"> {
     const neighbourhoods = await deps.places.neighbourhoodIds(tx);
     if (!neighbourhoods.includes(input.neighbourhood)) return "invalid_request";
     for (const place of input.places) {
@@ -118,6 +119,9 @@ export function createSignup(deps: SignupDeps): Signup {
       const version = deps.consentVersion();
       if (version === null) return { kind: "refused", code: "signup_unavailable" };
       if (input.consentVersion !== version) return { kind: "refused", code: "terms_changed" };
+      // A wrong building or floor is refused before the client is counted, so a mistake does not use up one of its sign-ups.
+      const known = await checkPlaces(deps.db, input);
+      if (known !== "ok") return { kind: "refused", code: known };
 
       const counted = await deps.limiter().check(SIGNUP_RATE_LIMIT, clientAddress);
       if (!counted.allowed) return { kind: "rate_limited", retryAfterSeconds: counted.retryAfterSeconds ?? SIGNUP_RATE_LIMIT.windowMs / 1000 };

@@ -18,7 +18,7 @@ import type { LaunchCode } from "@/i18n/languages";
 import { sortBuildings } from "../choices/building-list";
 import { ChoiceButton, ChoiceOption } from "../choices/parts";
 import type { StepLanguage } from "../choices/language-step";
-import { useBuildingList, useChoices } from "../choices/use-choices";
+import { useBuildingList, useChoices, type BuildingListState } from "../choices/use-choices";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { withIsolated } from "../text/isolated";
@@ -61,10 +61,13 @@ const textMatches = (text: string, query: string) => text.toLowerCase().includes
 
 const isErrorCode = (value: unknown): value is SignupErrorCode => typeof value === "string" && (SIGNUP_ERROR_CODES as readonly string[]).includes(value);
 
-/** The places the form sends: each chosen building with its chosen floors (floors of a building the list does not know are kept as saved). */
-function placesOf(draft: Draft, list: BuildingList | null): SignupRequestBody["places"] {
+/**
+ * The places the form sends: each chosen building with its chosen floors, read from the building list (a floor id does not say which building
+ * it is in, so saved floors wait for the list: see `send`). A building the list does not have goes without floors; the server refuses it.
+ */
+function placesOf(draft: Draft, list: BuildingList): SignupRequestBody["places"] {
   return draft.buildings.map((rsn) => {
-    const listed = list?.buildings.find((b) => b.rsn === rsn);
+    const listed = list.buildings.find((b) => b.rsn === rsn);
     const floors = listed ? listed.floors.map((f) => f.id).filter((id) => draft.floors.includes(id)) : [];
     return { rsn, floors };
   });
@@ -97,6 +100,16 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
   const [serverError, setServerError] = useState<SignupErrorCode | "network" | null>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const sentRef = useRef<HTMLHeadingElement>(null);
+  const listFailedRef = useRef<HTMLParagraphElement>(null);
+  // Sign-ups sent while the building list was loading, each waiting to hear how the load ended (see `send`).
+  const listWaiters = useRef<((state: BuildingListState) => void)[]>([]);
+
+  useEffect(() => {
+    if (state.status === "loading") return;
+    const waiters = listWaiters.current;
+    listWaiters.current = [];
+    for (const resolve of waiters) resolve(state);
+  }, [state]);
 
   const draft = useMemo((): Draft | null => {
     if (choices === undefined) return null;
@@ -164,20 +177,32 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
       requestAnimationFrame(() => errorRef.current?.focus());
       return;
     }
-    const body: SignupRequestBody = {
+    const body: Omit<SignupRequestBody, "places"> = {
       v: SIGNUP_CONTRACT_VERSION,
       phone: draft.phone,
       lang: draft.lang,
       neighbourhood: draft.nbhd,
-      places: placesOf(draft, list),
       groups: SIGNUP_GROUPS.filter((g) => draft.groups.includes(g)),
       consent_version: consentVersion,
       terms_agreed: termsAgreed,
       age_confirmed: ageConfirmed,
     };
     setStatus("sending");
+    // Saved floors are never dropped: until the list says which building each floor is in, the sign-up waits for it (shown as sending). If
+    // the list cannot load, nothing is sent and the form is back with the list's retry.
+    let loaded: BuildingListState = state;
+    if (loaded.status !== "ready" && draft.buildings.length > 0 && draft.floors.length > 0) {
+      if (loaded.status === "loading") loaded = await new Promise<BuildingListState>((resolve) => listWaiters.current.push(resolve));
+      if (loaded.status !== "ready") {
+        setStatus("form");
+        requestAnimationFrame(() => listFailedRef.current?.focus());
+        return;
+      }
+    }
+    const places = loaded.status === "ready" ? placesOf(draft, loaded.list) : draft.buildings.map((rsn) => ({ rsn, floors: [] }));
+    const request: SignupRequestBody = { ...body, places };
     try {
-      const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "omit", cache: "no-store" });
+      const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(request), credentials: "omit", cache: "no-store" });
       if (response.status === 202) {
         setStatus("sent");
         return;
@@ -349,7 +374,7 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
               )}
               {state.status === "failed" && (
                 <Stack gap="target">
-                  <p role="alert" className="choice-note" data-testid="signup-list-failed">
+                  <p role="alert" className="choice-note" data-testid="signup-list-failed" tabIndex={-1} ref={listFailedRef}>
                     <ResidentText>{r34("listFailed")}</ResidentText>
                   </p>
                   <ChoiceButton variant="secondary" onClick={retry} testId="signup-list-retry">

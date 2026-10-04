@@ -91,4 +91,12 @@ describe("the terms version a sign-up records (S07.02)", () => {
     expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "development")).toBe("2026-10-02.1");
     expect(signupConsentVersion({ status: "draft", consentVersion: null }, "preview")).toBeNull();
   });
+
+  it("is null for a draft whose version is not written YYYY-MM-DD.n, so a preview's sign-up page is a 404, not a form that answers 503", () => {
+    for (const environment of ["preview", "development"] as const) {
+      for (const version of ["v1", "2026-10-02", "2026-10-02.0", "", " 2026-10-02.1"]) {
+        expect(signupConsentVersion({ status: "draft", consentVersion: version }, environment), version).toBeNull();
+      }
+    }
+  });
 });

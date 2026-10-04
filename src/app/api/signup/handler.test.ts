@@ -49,6 +49,15 @@ describe("POST /api/signup", () => {
     expect(fake.afterAccepted).toHaveBeenCalledTimes(1);
   });
 
+  it("reads a number typed in Urdu or full-width digits as the same E.164 number", async () => {
+    for (const phone of ["۴۱۶ ۵۵۵ ۰۱۲۳", "４１６ ５５５ ０１２３"]) {
+      const fake = deps({ kind: "accepted" });
+      const response = await signupResponse(fake.deps, post({ ...BODY, phone }));
+      expect(response.status, phone).toBe(202);
+      expect(fake.calls, phone).toEqual([{ phone: "+14165550123", client: "203.0.113.7" }]);
+    }
+  });
+
   it("refuses with the reason, in the failure body, without calling the use case, for what the form can get wrong", async () => {
     const cases: [unknown, string][] = [
       [{ ...BODY, phone: "212 555 0123" }, "phone_not_canadian"],

@@ -237,6 +237,38 @@ describe("a sign-up", () => {
     expect((await confirmations()).length).toBe(before.texts + 1);
   });
 
+  it("stores a number typed in Urdu or full-width digits as the same E.164 number", async () => {
+    const service = signupOn(app);
+    const post = (phone: string, client: string) =>
+      signupResponse(
+        { signup: () => service, client: () => client },
+        new Request(`${BASE_URL}/api/signup`, {
+          method: "POST",
+          body: JSON.stringify({ v: 1, phone, lang: "ur", neighbourhood: "TP", places: [], groups: [], consent_version: VERSION, terms_agreed: true, age_confirmed: true }),
+        }),
+      );
+    expect((await post("۴۱۶ ۵۵۵ ۰۱۲۳", "203.0.113.60")).status).toBe(202);
+    expect((await post("４１６ ５５５ ０１２６", "203.0.113.61")).status).toBe(202);
+    expect((await pendingRows()).map((r) => r.phone).sort()).toEqual([NUMBER, "+14165550126"]);
+  });
+
+  it("does not count a refused building against the client's 5 sign-ups an hour", async () => {
+    const service = signupOn(app);
+    const send = (n: number, rsn: string) =>
+      signupResponse(
+        { signup: () => service, client: () => "203.0.113.70" },
+        new Request(`${BASE_URL}/api/signup`, {
+          method: "POST",
+          body: JSON.stringify({ v: 1, phone: `+1416555${String(300 + n).padStart(4, "0")}`, lang: "en", neighbourhood: "TP", places: [{ rsn, floors: [] }], groups: [], consent_version: VERSION, terms_agreed: true, age_confirmed: true }),
+        }),
+      );
+    for (let n = 1; n <= 6; n += 1) expect((await send(n, "9199999")).status).toBe(400);
+    expect(await owner`select 1 from rate_limit where scope = 'signup'`).toHaveLength(0);
+    for (let n = 1; n <= 5; n += 1) expect((await send(n, RSN_TP)).status).toBe(202);
+    expect((await send(6, RSN_TP)).status).toBe(429);
+    expect((await pendingRows()).length).toBe(5);
+  });
+
   it("refuses the sixth sign-up in an hour from one client with 429, storing nothing", async () => {
     const service = signupOn(app);
     const send = (n: number) =>
@@ -368,6 +400,27 @@ describe("the confirmation at the sender", () => {
     expect(result).toMatchObject({ kind: "applied", to: "undelivered" });
     expect(await world.rowOf(text!.id as string)).toMatchObject({ state: "undelivered", provider_error_code: 21_610, recipient_id: null });
     expect(await pendingRows()).toEqual([]);
+  });
+
+  it("refused later, with a failure hook that throws: the callback's outcome is still recorded and only the hook's writes are undone", async () => {
+    await signupOn(app).request(request(), "203.0.113.1");
+    const [text] = await confirmations();
+    await world.dispatcher({ resolver: resolver(), afterFailure: forget }).run();
+
+    const ref = (await world.rowOf(text!.id as string)).callback_ref as string;
+    const url = statusCallbackUrl(BASE_URL, ref).split("#")[0]!;
+    const fields = { MessageSid: sidOf(1), MessagingServiceSid: SERVICE_SID, MessageStatus: "undelivered", ErrorCode: "21610" };
+    const callback: CallbackRequest = { signature: getExpectedTwilioSignature(TOKEN, url, fields), search: new URL(url).search, body: new URLSearchParams(fields).toString() };
+    const failing = async (...args: Parameters<typeof forget>) => {
+      await forget(...args);
+      throw new Error("the hook broke after its writes");
+    };
+    const result = await createStatusCallbacks({ db: app, ops: opsRecorder, log: world.log, authToken: TOKEN, publicBaseUrl: BASE_URL, store: drizzleCallbackStore, afterFailure: failing }).handle(callback);
+
+    expect(result).toMatchObject({ kind: "applied", to: "undelivered" });
+    expect(await world.rowOf(text!.id as string)).toMatchObject({ state: "undelivered", provider_error_code: 21_610 });
+    expect((await pendingRows()).length).toBe(1);
+    expect(world.lines.some((line) => line.evt === "callback.failure_hook_failed")).toBe(true);
   });
 
   it("past its 48 hours: skipped at the hand-off, no number for the resolver, and the row deleted by the purge job", async () => {
