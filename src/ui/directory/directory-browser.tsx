@@ -9,7 +9,7 @@ import { useBuildingList, useChoices } from "../choices/use-choices";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { Isolated, withIsolated } from "../text/isolated";
-import { isEnglishFallback, ResidentText } from "../text/resident-text";
+import { isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { CallHub } from "./call-hub";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "./filter-store";
 import { activeKeys, filterKeyId, filterProviders, isActive, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "./filters";
@@ -153,7 +153,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
           {directory.status !== "unavailable" && <ResidentText as="p">{t("directory.lead")}</ResidentText>}
           {directory.status === "ready" && !directory.current && (
             <ResidentText as="p" className="dir-updated" testId="directory-last-updated">
-              {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallback(t("directory.lastUpdated")) ? "en-CA" : locale) })}
+              {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallbackMessage(t, "directory.lastUpdated") ? "en-CA" : locale) })}
             </ResidentText>
           )}
           {listing && lang !== "en" && hasFallbackText(listing) && <UnavailableNote lang={lang} />}

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { FALLBACK_MARKER, ResidentText, isEnglishFallback } from "./resident-text";
+import { FALLBACK_MARKER, ResidentText, isEnglishFallback, isEnglishFallbackMessage } from "./resident-text";
 
 const MESSAGES = path.join(__dirname, "..", "..", "i18n", "messages");
 
@@ -41,6 +41,14 @@ describe("ResidentText", () => {
     expect(isEnglishFallback("Map [EN] ")).toBe(false);
     expect(isEnglishFallback("[EN]Map")).toBe(false);
     expect(isEnglishFallback("")).toBe(false);
+  });
+
+  it("tells a fallback message from a translated one by the message as written, placeholders and all", () => {
+    const catalog: Record<string, unknown> = { fellBack: "[EN] Last confirmed by the Hub {date}", translated: "آخری تصدیق {date}", group: { a: "[EN] x" } };
+    const t = { raw: (key: string) => catalog[key] };
+    expect(isEnglishFallbackMessage(t, "fellBack")).toBe(true);
+    expect(isEnglishFallbackMessage(t, "translated")).toBe(false);
+    expect(isEnglishFallbackMessage(t, "group")).toBe(false);
   });
 
   it("uses the marker that gen-strings puts in every catalog", () => {
