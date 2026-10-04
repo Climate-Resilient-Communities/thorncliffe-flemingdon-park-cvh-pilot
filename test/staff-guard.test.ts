@@ -44,10 +44,6 @@ vi.mock("../src/app/staff/identity", () => ({
   requestAuthSessions: unreachable,
 }));
 
-// The first test of each block below imports its page, handler or action file cold, and the whole staff surface is imported in one
-// worker: under load that took more than vitest's 5 s. The assertions are unchanged; only the time they get is.
-const COLD_IMPORT_MS = 60_000;
-
 const ROOT = path.join(__dirname, "..");
 const APP = path.join(ROOT, "src", "app");
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
@@ -127,7 +123,9 @@ describe.each([...pages, ...surface.layouts].map((file) => [relative(file), file
     const exportsOf: Record<string, unknown> = await import(file);
     const functions = Object.entries(exportsOf).filter(([name, value]) => name !== "default" && typeof value === "function");
     expect(functions.map(([name]) => name)).toEqual([]);
-  }, COLD_IMPORT_MS);
+    // The first page imported loads the whole shared module graph cold, which on a busy machine takes longer than vitest's 5 s;
+    // the assertion is unchanged.
+  }, 60_000);
 });
 
 /** A throwaway src/ tree: `files` maps paths under it to their text. */
@@ -253,7 +251,7 @@ describe.each(pages.map((file) => [relative(file), file]))("page %s", (_name, fi
     expect(spec?.route).toBe(routePath(file));
     expect(spec?.access === "public").toBe(PUBLIC.has(routePath(file)));
     if (spec?.access !== "public") expect(POLICY_ACTIONS, "a guarded page names its policy action (S01.12)").toContain(spec?.action);
-  }, COLD_IMPORT_MS);
+  });
 
   it("sends a visitor without a session to sign-in, and a session at another gate to that gate's page", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
@@ -283,7 +281,7 @@ describe.each(handlers.map((file) => [routePath(file), file]))("route handler %s
       expect(spec?.access === "public").toBe(PUBLIC.has(route));
       if (spec?.access !== "public") expect(POLICY_ACTIONS, `${method} names its policy action (S01.12)`).toContain(spec?.action);
     }
-  }, COLD_IMPORT_MS);
+  });
 
   it("answers 401 without a session and 403 setup_incomplete at another gate, before its own code, and audits both", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
@@ -338,6 +336,8 @@ const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/alerts/correct/actions.ts": "Correcting or withdrawing needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",
   "src/app/staff/texts/actions.ts": "An Admin must sign in with their authenticator code to pause or resume texts. Sign in again and enter the code.",
   "src/app/staff/oncall/actions.ts": "An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.",
+  "src/app/staff/drills/roster/actions.ts": "An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
+  "src/app/staff/drills/start/actions.ts": "An Admin must sign in with their authenticator code to start a drill. Sign in again and enter the code.",
 };
 /** What a role the policy refuses is told, where it is not "Only an Admin can ...": a Coordinator can approve too, but not what they wrote or changed (S04.07). */
 const FORBIDDEN_MESSAGE: Record<string, RegExp> = {
@@ -357,7 +357,7 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
       expect(spec?.access).not.toBe("public");
       expect(POLICY_ACTIONS, `${name} names its policy action (S01.12)`).toContain(spec?.action);
     }
-  }, COLD_IMPORT_MS);
+  });
 
   it("send a person without a session to sign-in, and refuse at another gate, before their own code", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
