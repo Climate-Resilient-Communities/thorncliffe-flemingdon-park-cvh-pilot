@@ -1384,4 +1384,51 @@
     "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
    }
   });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "Nič aktívne"
+   },
+   "R03": {
+    "currentAlerts": "Aktuálne upozornenia",
+    "noCurrentAlerts": "Žiadne aktuálne upozornenia",
+    "myBuildings": "Vaše budovy",
+    "checking": "Kontrolujú sa upozornenia",
+    "feedFailed": "Upozornenia sa práve nepodarilo skontrolovať. Miesto s nápisom „Neznáme“ môže mať aj tak upozornenie. Skúsime to znova.",
+    "feedFailedOld": "Nové upozornenia sa nepodarilo skontrolovať. Zobrazuje sa to, čo sa naposledy načítalo {t}."
+   },
+   "R09": {
+    "searching": "Hľadá sa",
+    "needsSignal": "Vyhľadávanie potrebuje signál",
+    "needsSignalBody": "Stále môžete vybrať tému nižšie alebo zavolať do Hubu.",
+    "busy": "Vyhľadávanie je preťažené, skúste to znova o pár minút",
+    "busyBody": "Môžete vybrať tému nižšie alebo zavolať do Hubu.",
+    "updating": "Výsledky vyhľadávania sa aktualizujú, skúste to znova",
+    "updatingBody": "Kým sa aktualizujú, môžete vybrať tému nižšie alebo zavolať do Hubu.",
+    "browseAll": "Zobraziť všetky služby a organizácie",
+    "loading": "Témy sa načítavajú"
+   },
+   "R10": {
+    "shownIn": "Zobrazené v jazyku {lang}"
+   },
+   "directory": {
+    "title": "Služby a organizácie",
+    "lead": "To, čo Hub overil v Thorncliffe Parku a Flemingdon Parku. Zoznam zúžite výberom témy alebo štvrte.",
+    "count": "Počet služieb: {n}",
+    "countOne": "1 služba",
+    "topic": "Téma",
+    "emergency": "Pomáha v tiesňovej situácii",
+    "emergencyRole": "Úloha v tiesňovej situácii",
+    "lastConfirmed": "Naposledy overil Hub {date}",
+    "lastUpdated": "Naposledy aktualizované {time}",
+    "loading": "Adresár sa načítava",
+    "couldNotLoad": "Adresár sa nepodarilo načítať",
+    "couldNotLoadBody": "Hub vám môže pomôcť nájsť službu cez telefón.",
+    "couldNotLoadNumbers": "Na stránke s číslami sú ďalšie čísla, ktoré môžete potrebovať.",
+    "numbersLink": "Zobraziť dôležité čísla",
+    "backToList": "Všetky služby a organizácie",
+    "suggestApply": "Zobraziť len {place}"
+   }
+  });
 })();
