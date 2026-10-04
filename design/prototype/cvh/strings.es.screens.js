@@ -893,7 +893,8 @@
    "todayAt": "hoy a las {time}",
    "dayAt": "{day} a las {time}",
    "linkLine": "Novedades más recientes y correcciones: {url}",
-   "sendLine": "Su teléfono le preguntará con qué aplicación enviarlo."
+   "sendLine": "Su teléfono le preguntará con qué aplicación enviarlo.",
+   "placeMore": "y {n} más"
   },
   "R30": {
    "deviceLabel": "La alerta en un grupo de WhatsApp",

@@ -1236,7 +1236,13 @@
     "todayAt": "امروز ساعت {time}",
     "dayAt": "{day} ساعت {time}",
     "linkLine": "تازه‌ترین خبرها و هر اصلاحی: {url}",
-    "sendLine": "تلفون شما می‌پرسد که با کدام اپلیکیشن آن را بفرستید."
+    "sendLine": "تلفون شما می‌پرسد که با کدام اپلیکیشن آن را بفرستید.",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "و {n} دیگر"
   },
   "R30": {
     "deviceLabel": "هشدار در یک گروپ WhatsApp",

@@ -1236,7 +1236,13 @@
     "todayAt": "آج {time} بجے",
     "dayAt": "{day} {time} بجے",
     "linkLine": "تازہ ترین اپ ڈیٹس اور کوئی بھی تصحیح: {url}",
-    "sendLine": "آپ کا فون پوچھے گا کہ اسے کس ایپ سے بھیجنا ہے۔"
+    "sendLine": "آپ کا فون پوچھے گا کہ اسے کس ایپ سے بھیجنا ہے۔",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "اور {n} مزید"
   },
   "R30": {
     "deviceLabel": "WhatsApp گروپ میں الرٹ",

@@ -9,7 +9,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
 import { FeedV1 } from "../../src/contracts/feed";
-import { approve, newBuilding, newCoordinator, personOnAPhone, signIn, submitAnAcknowledgement, type EntryRef } from "./alert-flow";
+import { approve, newBuilding, newCoordinator, personOnAPhone, sharedPreview, signIn, submitAnAcknowledgement, type EntryRef } from "./alert-flow";
 import { identityFake, openDatabase, pepperedPassword } from "./helpers";
 
 let sql: postgres.Sql;
@@ -47,6 +47,11 @@ test("a Coordinator marks an alert resolved and a second Coordinator approves th
     const phone = second.page;
     await approve(phone, ack);
     const slug = (await threadRow(ack.alertId)).slug as string;
+    // The shared link (S05.08) while the alert runs: the live alert, with its place and time in the preview.
+    const running = await sharedPreview(request, slug);
+    expect(running.status).toBe(200);
+    expect(running.title).toBe("Elevator");
+    expect(running.description).toContain("Verified by the Hub \u00b7 97 Resolve Test Dr \u00b7 Posted today at");
     // An update that waits for approval when the alert is resolved: it goes with the close, never read by residents.
     await page.goto(`/staff/alerts/update?alert=${ack.alertId}`);
     await page.getByRole("radio", { name: "Work is under way" }).check();
@@ -145,6 +150,12 @@ test("a Coordinator marks an alert resolved and a second Coordinator approves th
     await expect(page.getByTestId("alert-text")).toHaveText(FINAL);
     await expect(page.getByTestId("alert-thread").locator("li")).toHaveCount(2);
     await expect(page.getByTestId("alert-valid")).toHaveCount(0);
+
+    // The shared link, straight after the close: it says resolved with the time, and the final message is its words.
+    const resolved = await sharedPreview(request, slug);
+    expect(resolved.status).toBe(200);
+    expect(resolved.title).toMatch(/^Elevator: Resolved today at /);
+    expect(resolved.description).toBe(`Verified by the Hub \u00b7 97 Resolve Test Dr \u2014 ${FINAL}`);
   } finally {
     await second.context.close();
   }

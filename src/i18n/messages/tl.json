@@ -1236,7 +1236,13 @@
     "todayAt": "ngayong araw nang {time}",
     "dayAt": "{day} nang {time}",
     "linkLine": "Pinakabagong update at anumang pagtatama: {url}",
-    "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala."
+    "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala.",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "at {n} pa"
   },
   "R30": {
     "deviceLabel": "Ang alerto sa isang WhatsApp group",

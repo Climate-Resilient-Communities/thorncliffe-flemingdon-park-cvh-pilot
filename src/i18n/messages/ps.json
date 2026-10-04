@@ -1236,7 +1236,13 @@
     "todayAt": "نن په {time}",
     "dayAt": "{day} په {time}",
     "linkLine": "تر ټولو نوي خبرونه او هر سمون: {url}",
-    "sendLine": "ستاسو تلیفون به وپوښتي چې په کوم اپلیکېشن یې ولېږئ."
+    "sendLine": "ستاسو تلیفون به وپوښتي چې په کوم اپلیکېشن یې ولېږئ.",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "او {n} نور"
   },
   "R30": {
     "deviceLabel": "خبرتیا په یوه WhatsApp ډله کې",

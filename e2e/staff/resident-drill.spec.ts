@@ -132,6 +132,27 @@ test("the alert page opens at the real alert and is a 404 with no detail at the 
   }
 });
 
+test("the shared link /a/{slug}?l={lang} opens the real alert and is a 404 with no detail at the drill's address, in every language, with no cookie (S05.08)", async ({ request }) => {
+  for (const lang of ["en", "ur", "prs", "zh"]) await waitForFeedToList(request, lang, REAL.slug);
+  for (const lang of ["en", "ur", "prs", "zh"]) {
+    const real = await request.get(`/a/${REAL.slug}?l=${lang}`, { maxRedirects: 0 });
+    expect(real.status(), `${lang} real`).toBe(200);
+    expect(real.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+    const realBody = await real.text();
+    noDrill(`the real alert's shared page (${lang})`, realBody);
+    expect(realBody, `${lang} real`).toContain('property="og:description"');
+
+    const drill = await request.get(`/a/${DRILL.slug}?l=${lang}`, { maxRedirects: 0 });
+    expect(drill.status(), `${lang} drill`).toBe(404);
+    expect(drill.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+    const body = await drill.text();
+    for (const marker of [DRILL.alertId, DRILL.entryId, "EXERCISE ONLY", "drill alert that no resident"]) expect(body, `404 of ${lang}`).not.toContain(marker);
+    expect(body, `404 of ${lang}`).not.toContain('property="og:');
+    // The share screen is the same 404.
+    expect((await request.get(`/${lang}/alerts/${DRILL.slug}/share`, { maxRedirects: 0 })).status(), `${lang} share screen`).toBe(404);
+  }
+});
+
 test("the building page the drill covers has nothing of it", async ({ request }) => {
   const page = await request.get(`/en/buildings/${rsn}`, { maxRedirects: 0 });
 
@@ -146,7 +167,7 @@ test("every resident route and API, enumerated from the app, is without the dril
   const routes = residentRoutes(["en", "ur"], { slug: DRILL.slug, rsn, guide: "power", id: "P101", v: "1", file: "en.json" });
   // The routes the story names are among them, and so is every API a resident can reach: the list is read from the folders, not remembered.
   const urls = routes.map((route) => route.url);
-  for (const named of ["/api/feed", "/en", `/en/alerts/${DRILL.slug}`, `/en/alerts/${DRILL.slug}/verified`, `/en/buildings/${rsn}`, "/api/buildings"]) {
+  for (const named of ["/api/feed", "/en", `/en/alerts/${DRILL.slug}`, `/en/alerts/${DRILL.slug}/verified`, `/en/alerts/${DRILL.slug}/share`, `/en/a/${DRILL.slug}`, `/en/buildings/${rsn}`, "/api/buildings"]) {
     expect(urls, `the enumeration includes ${named}`).toContain(named);
   }
   expect(routes.filter((route) => route.kind === "api").length).toBeGreaterThanOrEqual(4);
