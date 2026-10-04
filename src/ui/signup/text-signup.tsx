@@ -116,7 +116,10 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
   }, [choices, edits, lang, languages, list, neighbourhoods]);
 
   useEffect(() => {
-    if (status === "sent") sentRef.current?.focus();
+    // R-06 starts at its heading, wherever the form was scrolled to when it was sent.
+    if (status !== "sent") return;
+    sentRef.current?.scrollIntoView({ block: "start" });
+    sentRef.current?.focus({ preventScroll: true });
   }, [status]);
 
   const shown = useMemo(() => {

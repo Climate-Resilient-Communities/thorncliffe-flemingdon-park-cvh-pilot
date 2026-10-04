@@ -5,6 +5,7 @@
  */
 @layer components {
   .signup-field {
+    overflow-wrap: anywhere;
     display: flex;
     flex-direction: column;
     gap: var(--gap-label);
@@ -72,7 +73,9 @@
   }
 
   /* R-06: what happens next, set apart so it is the first thing read. */
+  /* Long words (Tamil, Greek compounds) break rather than push the card past the screen at 320 px. */
   .signup-sent {
+    overflow-wrap: anywhere;
     padding: var(--inset-card);
     border: 2px solid var(--accent-text);
     border-radius: var(--radius-card);
