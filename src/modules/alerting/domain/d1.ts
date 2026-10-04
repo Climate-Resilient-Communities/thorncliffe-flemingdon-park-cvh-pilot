@@ -1,6 +1,6 @@
 // D-1: which entries appear on the web at submit, as "Not yet verified", before anyone has approved them (S08.03, AD-5 "Web publication" and "D-1
 // eligibility", FR-A15). `isD1Eligible` is the ONLY place that decides it; the use case asks here, and the entry trigger
-// (db/migrations/20261005210000_d1_web_first.sql) refuses a publication at submit that does not meet the same facts, so a use case that forgot the rule is
+// (db/migrations/20261006000000_d1_web_first.sql) refuses a publication at submit that does not meet the same facts, so a use case that forgot the rule is
 // still refused. Pure: no I/O, no clock.
 //
 // An entry is D-1 when ALL of these hold:
