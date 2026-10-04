@@ -16,7 +16,11 @@ const cvhApp = pgRole("cvh_app").existing();
  */
 const staffAccountKey = pgTable("staff_account", { id: uuid().primaryKey() });
 
-/** The first-text spike's ledger (S01.15; E06 removes it): one claim per test text, taken before Twilio is called. */
+/**
+ * The removed first-text spike's ledger (S01.15). No code reads or writes it since S06.09, but the table stays: the release in production may still write
+ * to it, so a migration that drops it needs a contract note naming the release that stopped using it (AD-15, db:check-destructive). Declared here
+ * until that migration, which removes this declaration too.
+ */
 export const smsTestSend = pgTable(
   "sms_test_send",
   {

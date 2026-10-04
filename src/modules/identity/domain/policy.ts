@@ -61,9 +61,7 @@ export const AUTHORITY_MATRIX = [
     // authority one step earlier: choosing which loaded providers are published and confirming them is what the
     // directory is published from, so it follows the row's "publish directory" (Admin only, aal2).
     row: "Drills, publish directory, accounts, cap, pause",
-    // `sms.test_send` (S01.15): the first-text spike, one test text from production to an approved phone;
-    // an Admin does it, like the other things that touch what the Hub sends (E06 removes it).
-    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "sms.test_send", "oncall.manage"],
+    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {

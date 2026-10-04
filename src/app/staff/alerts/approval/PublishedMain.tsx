@@ -2,6 +2,7 @@
 // approved, beside the aside that holds every language's web text and text message.
 import { Stack } from "@/ui";
 import { ExerciseMarker } from "../../ExerciseMarker";
+import { SendingProgress } from "../sending/SendingProgress";
 import type { ApprovalScreen, PublishedLanguageView, PublishedRowView } from "./view";
 
 function Languages({ label, items, id }: { label: string; items: PublishedLanguageView[]; id: string }) {
@@ -76,6 +77,13 @@ export function PublishedMain({ screen }: { screen: ApprovalScreen & { published
           </Stack>
         </Stack>
       </section>
+      {/* What became of the texts, per language (S06.09). It reloads itself every 15 seconds while texts are going out. */}
+      {screen.sending?.kind === "progress" ? <SendingProgress view={screen.sending.view} /> : null}
+      {screen.sending?.kind === "unavailable" ? (
+        <p role="alert" className="hub-error hub-wrap" data-testid="sending-unavailable">
+          {screen.sending.note}
+        </p>
+      ) : null}
       <section aria-labelledby="english-title" data-testid="english-text">
         <Stack gap="related">
           <h2 id="english-title" className="hub-wrap">{screen.english.title}</h2>

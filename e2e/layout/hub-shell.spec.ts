@@ -109,8 +109,8 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: twelve pages that exist (Incidents, Log a disruption, Compose an alert, Coverage, People, Providers, Directory, Buildings, Pause texts, On-call numbers, Drills and the first-text spike's Test text) and one that is listed but not built yet.
-      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(12);
+      // The menu is the real one for an Admin: eleven pages that exist (Incidents, Log a disruption, Compose an alert, Coverage, People, Providers, Directory, Buildings, Pause texts, On-call numbers, and Drills) and one that is listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(11);
       await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(1);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
@@ -285,7 +285,6 @@ test.describe("what a screen reader reads", () => {
       ["/staff/people/new", "People"],
       ["/staff/providers", "Providers"],
       ["/staff/directory", "Directory"],
-      ["/staff/sms-test", "Test text"],
       ["/staff/buildings", "Buildings"],
       ["/staff/texts", "Pause texts"],
       ["/staff/coverage", "Coverage"],
@@ -296,7 +295,7 @@ test.describe("what a screen reader reads", () => {
       await open(page, { texts: REAL_TEXTS, current: path });
 
       const links = page.getByTestId("hub-side").locator("a[href]");
-      await expect(links).toHaveCount(12);
+      await expect(links).toHaveCount(11);
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
       await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");
@@ -328,7 +327,7 @@ test.describe("what a screen reader reads", () => {
       await expect(sideNav(page).getByRole("link", { name, disabled: true })).toHaveCount(1);
       await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(0);
     }
-    for (const name of ["Incidents", "Log a disruption", "Compose an alert", "Coverage", "People", "Directory", "Buildings", "Test text"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
+    for (const name of ["Incidents", "Log a disruption", "Compose an alert", "Coverage", "People", "Directory", "Buildings"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
 
     // Tab visits the pages and passes over the unbuilt ones.
     await sideNav(page).getByTestId("hub-nav-incidents").focus();
