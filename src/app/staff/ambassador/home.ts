@@ -36,7 +36,7 @@ export async function loadAmbassadorHome(session: Pick<StaffSession, "staffId">,
     neighbourhoodOf: new Map(plans.map((plan) => [plan.rsn, plan.neighbourhoodId])),
   };
   const [home, round] = await Promise.all([(alertsAndPosts ??= createAmbassadorHome(getDb())).read(scope), reader.openFor(current)]);
-  return { buildings: assigned, alerts: home.alerts, posts: home.posts, round };
+  return { buildings: assigned, alerts: home.alerts, posts: home.posts, drills: home.drills, round };
 }
 
 /** Test seam: forget the composition. */

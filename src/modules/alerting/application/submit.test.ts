@@ -53,7 +53,7 @@ function setup(options: { begin?: unknown; prepare?: EntryPreparer["prepare"]; c
   const calls: string[] = [];
   const ops: OpsEvent[] = [];
   const lifecycle = {
-    beginSubmit: vi.fn(async () => (calls.push("begin"), options.begin ?? { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null } })),
+    beginSubmit: vi.fn(async () => (calls.push("begin"), options.begin ?? { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null, attribution: { role: "hub" } } })),
     completeSubmit: vi.fn(async () => (calls.push("complete"), options.complete ?? { ok: true, value: { version: 1 } })),
     // True: this call ended the attempt (it was still running); false: it was no longer running.
     failSubmit: vi.fn(async () => (calls.push("fail"), options.failEnds ?? true)),
@@ -91,7 +91,8 @@ describe("a submit that works", () => {
     expect(t.lifecycle.recordBudget).toHaveBeenCalledWith(REF, KEY, 25_000);
     expect(t.lifecycle.recordProgress.mock.calls.map((call) => [call[2], call[3]])).toEqual([["ur", "translated"], ["ps", "fallback_en"]]);
     // The commit gets what the draft was when Submit was pressed, so a change since is refused.
-    expect(t.lifecycle.completeSubmit).toHaveBeenCalledWith(ACTOR, REF, KEY, FROZEN, CONTENT, null);
+    // ... and who the texts say it is from as the start worked it out (S08.02), which the commit checks is still so.
+    expect(t.lifecycle.completeSubmit).toHaveBeenCalledWith(ACTOR, REF, KEY, FROZEN, CONTENT, null, { role: "hub" });
     expect(t.lifecycle.failSubmit).not.toHaveBeenCalled();
   });
 
@@ -142,7 +143,7 @@ describe("the budget is counted from the press", () => {
     const t = setup({ prepare: async (_content, _context, hooks) => (seen.push(hooks?.spentMs), { ok: true, value: FROZEN } as FreezeResult) });
     t.lifecycle.beginSubmit.mockImplementation(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      return { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null } } as never;
+      return { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null, attribution: { role: "hub" } } } as never;
     });
 
     const run = t.submitter.submit(ACTOR, REF, KEY);

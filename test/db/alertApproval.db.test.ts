@@ -858,7 +858,8 @@ describe("Discard", () => {
       actor_staff_id: coordB.id,
       subject_id: ref.entryId,
       is_drill: false,
-      meta: { entry_id: ref.entryId, version: 1, from: "pending_approval" },
+      // S08.02: an approver who is not the author discards it, so the Hub declined it.
+      meta: { entry_id: ref.entryId, version: 1, from: "pending_approval", discard_reason: "declined" },
     });
     expect((await alerting.incidents({ staffId: authorA.id })).mine).toEqual([]);
     // Nothing is published and the feed is untouched.
@@ -1049,10 +1050,11 @@ describe("the timings (FR-M2)", () => {
         const approved = entry.approvedAt !== null;
         await tx`
           insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version, content_hash, sms_bodies, submitted_at,
-                                   approved_by, approved_at, approved_version, approved_hash, web_published_at, created_at, updated_at)
+                                   approved_by, approved_at, approved_version, approved_hash, web_published_at, created_at, updated_at, discard_reason)
           values (${id}, ${alertId}, ${entry.kind}, ${approved ? "approved" : "discarded"}, ${authorA.id}, ${[authorA.id]}, 'Power is out.', ${["power"]},
                   ${tx.json({ scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] })}, 'problem', ${at(60 * 24 * 10)}, 1, ${sha(id)}, ${tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } })}, ${entry.createdAt},
-                  ${approved ? coordB.id : null}, ${entry.approvedAt}, ${approved ? 1 : null}, ${approved ? sha(id) : null}, ${entry.approvedAt}, ${entry.createdAt}, ${entry.createdAt})`;
+                  ${approved ? coordB.id : null}, ${entry.approvedAt}, ${approved ? 1 : null}, ${approved ? sha(id) : null}, ${entry.approvedAt}, ${entry.createdAt}, ${entry.createdAt},
+                  ${approved ? null : "declined"})`;
       }
       await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
       await tx.unsafe("alter table alert enable trigger alert_insert_guard");

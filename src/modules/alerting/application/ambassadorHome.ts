@@ -8,6 +8,8 @@ import { and, desc, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
 import { AudienceSchema, type Audience } from "../../../contracts/audience";
 import type { Db } from "../../../platform/db";
 import { readOpenThreads } from "../adapters/resident/readThreads";
+import { coveringEntry } from "../domain/thread";
+import { publishedSummaries } from "./threads";
 import { alert, alertEntry } from "../adapters/schema";
 import { audienceCoversAssigned, coveringFeedEntry, postIsInScope, postState, type AmbassadorPostState } from "../domain/ambassadorHome";
 
@@ -27,6 +29,8 @@ export interface AmbassadorAlert {
   headline: string;
   /** Whether the Hub has verified the covering entry ("Verified"), or it is still "Not yet verified". */
   verified: boolean;
+  /** Whether the covering entry is a building ambassador's post (S08.02: as frozen with its texts), not the Hub's. */
+  fromAmbassador?: boolean;
   publishedAt: Date;
   validUntil: Date;
   /** The assigned buildings (rsn) this alert is about. */
@@ -46,13 +50,24 @@ export interface AmbassadorPost {
   buildings: readonly string[];
 }
 
+/** An open drill about the person's buildings (S08.02): kept apart, never among the alerts residents read; the ambassador may post practice updates in it. */
+export interface AmbassadorDrill {
+  alertId: string;
+  types: readonly string[];
+  /** The English text of the entry that covers the drill. */
+  headline: string;
+  buildings: readonly string[];
+}
+
 export interface AmbassadorHomeView {
   alerts: AmbassadorAlert[];
   posts: AmbassadorPost[];
+  /** S08.02: the open drills about their buildings, apart (AD-6): where a practice post goes. */
+  drills: AmbassadorDrill[];
 }
 
 const POSTS_SHOWN = 20;
-const EMPTY: AmbassadorHomeView = { alerts: [], posts: [] };
+const EMPTY: AmbassadorHomeView = { alerts: [], posts: [], drills: [] };
 
 /** The assigned buildings an audience is about, for the line under an item. */
 const rsnsOf = (audience: Audience, assigned: ReadonlySet<string>, neighbourhoodOf: ReadonlyMap<string, string>): string[] =>
@@ -78,7 +93,8 @@ export function createAmbassadorHome(db: Db) {
               eq(alert.isDrill, false),
               // Only what `postState` can show, so unsubmitted drafts and withdrawn-before-submit discards never crowd real posts out of the window.
               or(ne(alertEntry.status, "draft"), eq(alertEntry.returnedFor, "return")),
-              or(ne(alertEntry.status, "discarded"), isNotNull(alertEntry.submittedAt)),
+              // A discarded post is shown only when the Hub declined it or its alert closed first (S08.02): never one its author took back.
+              or(ne(alertEntry.status, "discarded"), and(isNotNull(alertEntry.submittedAt), inArray(alertEntry.discardReason, ["declined", "by_close"]))),
             ),
           )
           .orderBy(desc(alertEntry.createdAt), desc(alertEntry.id))
@@ -96,6 +112,7 @@ export function createAmbassadorHome(db: Db) {
           types: thread.types,
           headline: covering.original.body,
           verified: covering.verified,
+          fromAmbassador: covering.attribution.role === "ambassador",
           publishedAt: new Date(covering.published_at),
           validUntil: new Date(thread.valid_until),
           buildings: rsnsOf(audience.data, assigned, scope.neighbourhoodOf),
@@ -135,6 +152,7 @@ export function createAmbassadorHome(db: Db) {
           approvedAt: entry.approvedAt,
           webPublishedAt: entry.webPublishedAt,
           returnedFor: entry.returnedFor,
+          discardReason: entry.discardReason,
           replacedBy: replacedBy.get(entry.id) ?? null,
         });
         if (state === null) continue;
@@ -150,7 +168,24 @@ export function createAmbassadorHome(db: Db) {
         });
         if (posts.length === POSTS_SHOWN) break;
       }
-      return { alerts, posts };
+      // The open drills about their buildings (S08.02): read from the staff tables, apart from what residents read, never among the alerts above. Newest first, by
+      // when each drill was reported (ties by id), so the list keeps one order from one request to the next.
+      const drillThreads = await db
+        .select({ id: alert.id })
+        .from(alert)
+        .where(and(eq(alert.isDrill, true), eq(alert.status, "open")))
+        .orderBy(desc(alert.reportedAt), desc(alert.id))
+        .limit(50);
+      const drillRows = drillThreads.length === 0 ? [] : await db.select().from(alertEntry).where(inArray(alertEntry.alertId, drillThreads.map((thread) => thread.id)));
+      const drills: AmbassadorDrill[] = [];
+      for (const thread of drillThreads) {
+        const covering = coveringEntry(publishedSummaries(drillRows.filter((row) => row.alertId === thread.id)));
+        if (covering === null) continue;
+        const audience = AudienceSchema.safeParse(covering.audience);
+        if (!audience.success || !audienceCoversAssigned(audience.data, assigned, scope.neighbourhoodOf)) continue;
+        drills.push({ alertId: thread.id, types: covering.types, headline: covering.text, buildings: rsnsOf(audience.data, assigned, scope.neighbourhoodOf) });
+      }
+      return { alerts, posts, drills };
     },
   };
 }

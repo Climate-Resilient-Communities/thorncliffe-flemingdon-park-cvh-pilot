@@ -36,6 +36,25 @@ export const nondrillAlertEntryV2 = pgView("nondrill_alert_entry_v2", {
   supersedesId: uuid("supersedes_id"),
 }).existing();
 
+/** (v3, S08.02: v2 stays as it was for the previous release; this one appends `attributed_rsn`.) The same entries, with the building an ambassador's post is attributed to. */
+export const nondrillAlertEntryV3 = pgView("nondrill_alert_entry_v3", {
+  id: uuid().notNull(),
+  alertId: uuid("alert_id").notNull(),
+  slug: text().notNull(),
+  kind: text().notNull(),
+  phase: text().notNull(),
+  types: text().array().notNull(),
+  audience: jsonb().notNull(),
+  validUntil: timestamp("valid_until", { withTimezone: true }).notNull(),
+  originalText: text("original_text").notNull(),
+  webPublishedAt: timestamp("web_published_at", { withTimezone: true }).notNull(),
+  verified: boolean().notNull(),
+  superseded: boolean().notNull(),
+  supersedesId: uuid("supersedes_id"),
+  /** S08.02: the building (rsn) an ambassador's post is attributed to ("Building ambassador, {building}"); null for the Hub's own entries. */
+  attributedRsn: text("attributed_rsn"),
+}).existing();
+
 /** The frozen web text of each of those entries, one row per translated language. */
 export const nondrillAlertEntryTranslation = pgView("nondrill_alert_entry_translation", {
   entryId: uuid("entry_id").notNull(),

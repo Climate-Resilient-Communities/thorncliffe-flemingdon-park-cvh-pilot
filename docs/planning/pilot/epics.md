@@ -3388,7 +3388,7 @@ So that I know what residents are seeing and what I have posted.
 
 ### Story S08.02 — An ambassador posts an update or incident for their floors
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 50 min (started 2026-10-04 01:30 UTC, built 03:20 UTC)
 - **Traces:** FR-E2, FR-A1, FR-A15, UX-DR17 (A-02) · **Depends on:** S08.01, S04.05 · **Branch:** `e08-s02-ambassador-post`
 
 As a building ambassador,
