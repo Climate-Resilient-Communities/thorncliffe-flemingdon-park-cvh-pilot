@@ -766,14 +766,13 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
 
   /**
    * The entry a correction or a withdrawal names, locked under the thread's lock (S05.02): the role policy first (a Director never; an Ambassador only their own
-   * pending entry, which is E08's, so now never), then whether it is a valid target, so someone who may not learns nothing of the thread's entries.
+   * pending entry, S08.04: `own_pending_entry`, asked of the locked entry, so another person's entry, a missing one and one that is not pending all read as
+   * `OUT_OF_SCOPE` and nothing of the thread is learned), then whether it is a valid target (E05: pending only when residents already read it), so someone who may
+   * not learns nothing of the thread's entries.
    */
   async function lockedTarget(tx: DbTransaction, thread: ThreadRow, standing: StaffStanding, actor: AlertActor, targetId: string, action: "alert.correct" | "alert.withdraw"): Promise<EntryRow> {
     const asked = decidePolicy(standing.role, action, { actorId: actor.staffId });
     if (asked === "forbidden") throw new Refused("NOT_ALLOWED");
-    // TODO(E08): an Ambassador corrects or withdraws only their own pending entries (the policy's `own_pending_entry`), which only E08's D-1 posts can be (web-published
-    // before approval). Until then they are refused whatever the entry: the policy's context for them is never asked.
-    if (standing.role === "ambassador") throw new Refused("OUT_OF_SCOPE");
     if (!UUID.test(targetId)) throw new Refused(asked === "out_of_scope" ? "OUT_OF_SCOPE" : "TARGET_NOT_VALID");
     const [target] = await tx
       .select()
@@ -1452,8 +1451,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     /**
      * "Correct" (O-15, S05.02): makes a draft `correction` that names `ref.targetId`, in one transaction under the thread's lock. The target must be a valid
      * target (approved, or pending approval and web-published, not already replaced, not a withdrawal notice: TARGET_NOT_VALID, TARGET_SUPERSEDED,
-     * TARGET_NOT_PUBLISHED), in an open thread (ALERT_CLOSED); the role policy (`alert.correct`) is asked against the target, so an Ambassador is refused (their
-     * own pending entries are E08's) and a Director too, and a Coordinator or an Admin may correct any valid target. The correction starts from what covers the
+     * TARGET_NOT_PUBLISHED), in an open thread (ALERT_CLOSED); the role policy (`alert.correct`) is asked against the target: an Ambassador corrects only their
+     * own pending entry (S08.04: another's is `OUT_OF_SCOPE`), a Director never, and a Coordinator or an Admin may correct any valid target. The correction starts from what covers the
      * thread (the audience, the types, the valid-until choice), like an update; the phase is the author's and required. It goes on through the composer,
      * submit and a second person's approval like any entry; approving it replaces the target (`approveEntry`). Audited as `entry.created`. A request that names
      * an entry id this person already made as a correction of this target returns it and changes nothing.
@@ -1474,7 +1473,17 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const rows = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
         const covering = coveringEntry(publishedSummaries(rows)) ?? publishedSummaries([target])[0];
         const start = updateStart(covering, at);
-        const content: EntryContent = { text: input.text, types: start.types, audience: start.audience, phase: input.phase, validUntil: input.validUntil, validUntilMode: input.validUntilMode };
+        // An Ambassador corrects their own post (S08.04), which is for their building: it keeps the post's own types and audience, whatever covers the thread now
+        // (the Hub's wider entry may), so the correction is judged and attributed as the post was.
+        const own = standing.role === "ambassador";
+        const content: EntryContent = {
+          text: input.text,
+          types: own ? target.types : start.types,
+          audience: own ? (target.audience as Audience) : start.audience,
+          phase: input.phase,
+          validUntil: input.validUntil,
+          validUntilMode: input.validUntilMode,
+        };
         mustAuthor(standing, actor.staffId, content);
         const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
         if (invalid) throw new Refused(invalid);
