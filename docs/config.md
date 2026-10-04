@@ -303,11 +303,35 @@ By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"202
 | Environment | Secrets and variables | Rules |
 |---|---|---|
 | `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
-| `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
+| `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for open pull requests of this repository that carry the label `preview` |
 
 `VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
 scoped to that team: `vercel promote` and `vercel rollback` look up the token's user and fail with
 "User not found (404)" otherwise.
+
+### CI (`.github/workflows`)
+
+- **Checks.** Every push runs `ci.yml`. Its job named exactly `Checks` (the one to require in branch protection) needs three jobs that run at
+  once (`checks.yml`): `Static` (lint, types, CSS and string checks, unit tests, dependency rules), `Database` (the disposable Supabase
+  Postgres: migrations, RLS, `test:db`, the destructive-change check) and `Browser` (one build; the layout, staff, resident and Hub suites in
+  the pinned Playwright image, so the runner installs no browser; then the smoke check of the build). `npm run ci:local` runs the same steps one after the other.
+- **Skip on main.** On a push to `main`, `scripts/ci/tested-tree.sh` skips the three jobs, and `Checks` passes as "tested at `<sha>`", only
+  when the pushed commit is a merge commit whose tree equals the tree of the merged pull request's head, and that head has a successful
+  `Checks` of `ci.yml`. The decision is in the job summary. Anything else (a squash, main moved, no passing run, an API error) runs everything.
+  Production still deploys after `Checks`, with every guard unchanged.
+- **Previews are on demand.** Apply the label `preview` to a pull request of this repository (one preview a batch, on the last pull request);
+  `preview.yml` waits for the head's `Checks` to succeed, then deploys, and deploys again on each push while the label stays. A fork's
+  pull request never gets one. Create the label once (Issues > Labels).
+- **Nightly and latency.** `nightly.yml` runs the same checks on `main` every night (no deploy). `search-latency.yml` sends one English search
+  to `PRODUCTION_URL` every day and fails, with an annotation, when the answer is not `ok` with a result, or when its response time or `Server-Timing`
+  total passes the budget. Both only alert (a failed run); neither touches production. `codeql.yml` scans the code, apart from `Checks`;
+  Dependabot opens weekly grouped pull requests for npm and the actions (`@playwright/test` is bumped by hand with the image tag and baselines).
+- **Repository variables** (Settings > Secrets and variables > Actions > Variables; `PRODUCTION_URL` must be a repository variable too, for the latency probe):
+  `SMOKE_SEARCH` (default on; `off` skips the one real search of the production smoke check and the daily probe, which each spend one Cohere
+  call), `SMOKE_SEARCH_PREVIEW` (`on` also runs that search against a preview, which needs a Cohere key; default off) and `SEARCH_LATENCY_BUDGET_MS`
+  (default `3000`). The production smoke check records the search's response time and `Server-Timing` total in the job summary; a failed search
+  fails the smoke check and so rolls production back like any other failed smoke check.
+- **Actions are pinned** to full commit SHAs with the version in a comment; Dependabot proposes the updates.
 
 The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
 `seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.

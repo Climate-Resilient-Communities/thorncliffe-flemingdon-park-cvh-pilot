@@ -1,0 +1,36 @@
+name: Search latency
+
+# Once a day, one English search to the live site (the same fixed question as the production smoke check), reading its
+# Server-Timing. It fails with an annotation when the answer is not a good one, or when the response time or the Server-Timing
+# total passes SEARCH_LATENCY_BUDGET_MS (repository variable, default 3000). Alert-only: it reads the public site, needs no
+# secret and no environment, and never deploys or rolls anything back. It spends one Cohere call a day; the repository variable
+# SMOKE_SEARCH=off (the switch the production smoke check uses) turns it off too.
+on:
+  schedule:
+    # 08:43 UTC, an off-peak minute.
+    - cron: "43 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Search latency probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/ci
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - name: Ask one question and read its timing
+        run: node scripts/ci/search-latency.mjs
+        env:
+          # The repository variable (not an environment's: this job has no environment, so it holds no secret).
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+          SEARCH_LATENCY_BUDGET_MS: ${{ vars.SEARCH_LATENCY_BUDGET_MS }}
+          SMOKE_SEARCH: ${{ vars.SMOKE_SEARCH }}

@@ -1,12 +1,12 @@
-// scripts/ci/local.sh must run what the "Checks" job of .github/workflows/ci.yml runs:
-// the same npm/npx commands, with the same arguments, in the same order.
+// scripts/ci/local.sh must run what the three checks jobs of .github/workflows/checks.yml (Static, Database, Browser) run,
+// in that order: the same npm/npx commands, with the same arguments, in the same order.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
 const root = path.join(__dirname, "..");
-const workflowText = readFileSync(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
+const workflowText = readFileSync(path.join(root, ".github", "workflows", "checks.yml"), "utf8");
 const scriptText = readFileSync(path.join(root, "scripts", "ci", "local.sh"), "utf8");
 
 interface Entry {
@@ -24,9 +24,16 @@ interface WorkflowStep {
   env?: Record<string, string>;
 }
 
-/** The npm/npx commands of the Checks job, one entry per command line. */
+/** The checks jobs, in the order local.sh runs them. */
+const JOBS = ["static", "database", "browser"];
+
+/**
+ * The npm/npx commands of the three checks jobs, one entry per command line. Each job installs on its own runner
+ * (`npm ci`); local.sh installs once, so only the first install is an entry.
+ */
 function workflowEntries(text: string): Entry[] {
-  const steps: WorkflowStep[] = parse(text).jobs.checks.steps;
+  const jobs = parse(text).jobs;
+  const steps: WorkflowStep[] = JOBS.flatMap((name) => jobs[name].steps as WorkflowStep[]);
   const entries: Entry[] = [];
   for (const step of steps) {
     if (!step.run) continue;
@@ -34,6 +41,7 @@ function workflowEntries(text: string): Entry[] {
     if (step.if && !always) throw new Error(`step "${step.name ?? step.run}" has an if that local.sh cannot mirror: ${step.if}`);
     for (const line of step.run.split("\n").map((l) => l.trim())) {
       if (!/^(npm|npx)\b/.test(line)) continue;
+      if (line === "npm ci" && entries.some((entry) => entry.command === "npm ci")) continue;
       entries.push({ command: line, always, env: Object.keys(step.env ?? {}).sort() });
     }
   }
@@ -90,7 +98,7 @@ function compare(workflow: string, script: string): string[] {
     }
   }
   for (const extra of remaining) {
-    problems.push(`step ${describeEntry(extra)} of scripts/ci/local.sh is not in the CI Checks job`);
+    problems.push(`step ${describeEntry(extra)} of scripts/ci/local.sh is not in the CI checks jobs`);
   }
   if (problems.length === 0) {
     const order = (entries: Entry[]) => entries.map((e) => e.command);
@@ -111,8 +119,8 @@ function withExtraStep(text: string, after: string, extra: string): string {
   return lines.join("\n");
 }
 
-describe("scripts/ci/local.sh mirrors the Checks job", () => {
-  it("has every npm/npx step of the Checks job, in the same order, with the same arguments", () => {
+describe("scripts/ci/local.sh mirrors the checks jobs", () => {
+  it("has every npm/npx step of the Static, Database and Browser jobs, in the same order, with the same arguments", () => {
     expect(compare(workflowText, scriptText)).toEqual([]);
   });
 
@@ -134,7 +142,7 @@ describe("scripts/ci/local.sh mirrors the Checks job", () => {
   it("reports a step added to local.sh but not to CI", () => {
     const script = scriptText.replace("step npm run lint\n", "step npm run lint\nstep npm run fake:check\n");
 
-    expect(compare(workflowText, script)).toEqual(["step `npm run fake:check` of scripts/ci/local.sh is not in the CI Checks job"]);
+    expect(compare(workflowText, script)).toEqual(["step `npm run fake:check` of scripts/ci/local.sh is not in the CI checks jobs"]);
   });
 
   it("reports changed arguments", () => {
