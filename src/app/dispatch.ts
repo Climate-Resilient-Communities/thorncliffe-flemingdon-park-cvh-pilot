@@ -27,7 +27,7 @@ import {
   type DispatcherConfig,
   type MessagingLog,
   type OpsRecorder,
-  type ServiceCheckResult,
+  type ServiceCheckFinding,
 } from "@/modules/messaging";
 import { recordOpsEvent, recordOpsEventUnlessBusy } from "@/modules/ops";
 import { forgetOptedOutSignup } from "@/modules/subscriptions";
@@ -207,7 +207,7 @@ function scheduleAfterResponse(task: () => Promise<void>): void {
 /** The daily check of the Messaging Service's Smart Encoding setting; under `log` there is no Twilio account to ask and nothing is read. */
 export async function runMessagingServiceCheck(
   parts: { env?: Pick<Env, "smsMode" | "twilio">; db?: Db; log?: MessagingLog; ops?: OpsRecorder } = {},
-): Promise<ServiceCheckResult | { status: "not_live" }> {
+): Promise<ServiceCheckFinding | { status: "not_live" }> {
   const env = parts.env ?? getEnv();
   if (env.smsMode !== "live") return { status: "not_live" };
   const twilio = env.twilio;

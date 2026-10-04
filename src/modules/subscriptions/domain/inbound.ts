@@ -129,11 +129,18 @@ export function decide(keyword: InboundKeyword, state: NumberState): Decision {
  * every later one that day (Toronto) gets no reply, nothing is done for it, and only the day's count is kept. Deletion requests and Twilio's
  * opt-out events are decided before this limit and are never counted or limited: a number that sent too many can always STOP.
  */
+/** The scope of the inbound limit's keyed hashes (`clientHash` and the `rate_limit` rows): one value for the application and the store. */
+export const INBOUND_SCOPE = "inbound";
+
 export const INBOUND_LIMIT = { perHour: 20, windowMs: 60 * 60_000 } as const;
 
-/** Whether the message is decided before the inbound limit: a deletion (STOP, the second 0) or an opt-out event (STOP, START, HELP). */
+/**
+ * Whether the message is decided before the inbound limit: a deletion request (the first 0, which opens the confirmation, and the second, which
+ * deletes) or an opt-out event (STOP, START, HELP). The first 0 sends one prompt reply and a second one within 10 minutes deletes the number, so
+ * exempting it is bounded and a limited subscriber can still leave.
+ */
 export function exemptFromInboundLimit(keyword: InboundKeyword, action: InboundAction): boolean {
-  return action.kind === "delete" || keyword === "stop" || keyword === "start" || keyword === "help";
+  return action.kind === "delete" || action.kind === "ask_delete" || keyword === "stop" || keyword === "start" || keyword === "help";
 }
 
 /** How long the deletion's confirmation stays open: "Reply 0 again within 10 minutes". */

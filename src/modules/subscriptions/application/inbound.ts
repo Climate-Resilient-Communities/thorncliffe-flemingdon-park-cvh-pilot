@@ -28,7 +28,7 @@ import { countSms, normaliseSms, type DeliveryResult, type Enqueued, type Recipi
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { pendingSignupStore, type PendingSignupRow, type PendingSignupStore } from "../adapters/pendingSignupStore";
 import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type SubscriberStore } from "../adapters/subscriberStore";
-import { DELETE_CONFIRM_MS, INBOUND_LIMIT, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
+import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
 import { clientHash } from "./rateLimit";
 import type { SignupPlaces, SubscriberLookup } from "./webSignup";
 
@@ -36,7 +36,6 @@ import type { SignupPlaces, SubscriberLookup } from "./webSignup";
 export const SIGNUP_INFO_SCOPE = "signup_info";
 
 /** The scope of the inbound limit's keyed hash (more than 20 messages an hour from one number, S07.09). */
-export const INBOUND_LIMIT_SCOPE = "inbound";
 
 /**
  * Port: `checkins`' `deleteForSubscriber(subscriberId, tx)` (E07 handoffs). Deleting a subscriber calls it in the deletion's transaction,
@@ -265,7 +264,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
         // The inbound limit (step 4), after deletions and opt-out events and before anything else is done: a number that sent more than 20 an
         // hour gets no reply, changes nothing (not even a YES) and is only counted for the rest of the day (S07.09). The number is hashed, never kept.
         if (!exemptFromInboundLimit(keyword, action)) {
-          const limited = await inbound.limitInbound(tx, clientHash(deps.numberKey(), INBOUND_LIMIT_SCOPE, phone), INBOUND_LIMIT);
+          const limited = await inbound.limitInbound(tx, clientHash(deps.numberKey(), INBOUND_SCOPE, phone), INBOUND_LIMIT);
           if (limited !== "allowed") return { kind: "handled", keyword, state: state.kind, action: "rate_limited", replied: false };
         }
         if (cancelPrompt && subscriber) await subscribers.clearPrompt(tx, subscriber.id);

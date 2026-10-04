@@ -217,6 +217,17 @@ describe("the Messaging Service's abuse protections (S07.09)", () => {
     await expect(reader({ sms_pumping_protection: true, geo_permissions: [" ca "] }).service.readAbuseSettings(SERVICE_SID)).resolves.toMatchObject({ geoCanadaOnly: true });
   });
 
+  it("reads both settings from one fetch of the service", async () => {
+    const both = reader({ smart_encoding: false, sms_pumping_protection: true, geo_permissions: ["CA"] });
+    await expect(both.service.readBoth(SERVICE_SID)).resolves.toEqual({
+      encoding: { kind: "read", smartEncoding: false },
+      settings: { kind: "read", geoCanadaOnly: true, pumpingProtection: true },
+    });
+    expect(both.fetchMock).toHaveBeenCalledTimes(1);
+    const failed = reader({ code: 20404 }, 404);
+    await expect(failed.service.readBoth(SERVICE_SID)).resolves.toEqual({ encoding: { kind: "unreadable", reason: "http_404" }, settings: { kind: "unreadable", reason: "http_404" } });
+  });
+
   it("does not call geo permissions Canada-only when another country is allowed or none is listed, nor pumping protection on when it is off", async () => {
     await expect(reader({ sms_pumping_protection: true, geo_permissions: ["CA", "US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: true });
     await expect(reader({ sms_pumping_protection: false, geo_permissions: ["US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: false });

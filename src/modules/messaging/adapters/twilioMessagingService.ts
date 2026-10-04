@@ -9,7 +9,7 @@
 // Every request sets `SmartEncoded=false` (AD-21: the frozen body is sent byte for byte, with no character replaced), whatever the
 // caller does, and carries the status callback URL the caller gives. The credentials are used only in the Authorization header:
 // they are never put in a URL, a log line or an error, and an error's message is masked before it goes anywhere.
-import type { AbuseSettingsReading, MessageSubmission, MessageSubmitter, MessagingServiceReader } from "../application/dispatcherPorts";
+import type { AbuseSettingsReading, MessageSubmission, MessageSubmitter, MessagingServiceReader, SmartEncodingReading } from "../application/dispatcherPorts";
 import { PROVIDER_TIMEOUT_MS, type NoAnswerReason, type NotSentReason, type SubmitAnswer } from "../domain/dispatchRules";
 import { maskPhoneNumbers } from "../domain/phoneNumber";
 
@@ -175,30 +175,41 @@ export function twilioMessagingServiceReader(config: TwilioServiceConfig): Messa
     return { kind: "fields", fields: read.kind === "body" && isRecord(read.body) ? read.body : {} };
   }
 
+  type Service = Awaited<ReturnType<typeof readService>>;
+
+  function parseSmartEncoding(service: Service): SmartEncodingReading {
+    if (service.kind === "unreadable") return service;
+    const flag = service.fields.smart_encoding;
+    // A setting that is not plainly true or false is not read as "off": the check reports that it could not tell.
+    return typeof flag === "boolean" ? { kind: "read", smartEncoding: flag } : { kind: "unreadable", reason: "setting_missing" };
+  }
+
+  /**
+   * The two protections against abuse (S07.09). ASSUMED field names, to be confirmed against the production Twilio account at the launch
+   * rehearsal (IT; docs/config.md): `sms_pumping_protection` (boolean) and `geo_permissions` (the ISO codes of the countries the service
+   * may text). Anything that is not plainly one of those shapes is "could not tell", never "right"; the daily check treats "could not tell"
+   * as a failing check (it alerts on-call), so a wrong guess about the API is loud, not a silent pass.
+   */
+  function parseAbuseSettings(service: Service): AbuseSettingsReading {
+    if (service.kind === "unreadable") return service;
+    const pumping = service.fields.sms_pumping_protection;
+    const countries = service.fields.geo_permissions;
+    if (typeof pumping !== "boolean") return { kind: "unreadable", reason: "pumping_setting_missing" };
+    if (!Array.isArray(countries) || countries.some((code) => typeof code !== "string")) return { kind: "unreadable", reason: "geo_setting_missing" };
+    const codes = new Set((countries as string[]).map((code) => code.trim().toUpperCase()));
+    return { kind: "read", geoCanadaOnly: codes.size === 1 && codes.has("CA"), pumpingProtection: pumping };
+  }
+
   return {
     async readSmartEncoding(messagingServiceSid) {
-      const service = await readService(messagingServiceSid);
-      if (service.kind === "unreadable") return service;
-      const flag = service.fields.smart_encoding;
-      // A setting that is not plainly true or false is not read as "off": the check reports that it could not tell.
-      return typeof flag === "boolean" ? { kind: "read", smartEncoding: flag } : { kind: "unreadable", reason: "setting_missing" };
+      return parseSmartEncoding(await readService(messagingServiceSid));
     },
-
-    /**
-     * The two protections against abuse (S07.09). ASSUMED field names, to be confirmed against the production Twilio account at the launch
-     * rehearsal (IT; docs/config.md): `sms_pumping_protection` (boolean) and `geo_permissions` (the ISO codes of the countries the service
-     * may text). Anything that is not plainly one of those shapes is "could not tell", never "right": a wrong guess shows up as a warning
-     * every day, not as a silent pass.
-     */
-    async readAbuseSettings(messagingServiceSid): Promise<AbuseSettingsReading> {
+    async readAbuseSettings(messagingServiceSid) {
+      return parseAbuseSettings(await readService(messagingServiceSid));
+    },
+    async readBoth(messagingServiceSid) {
       const service = await readService(messagingServiceSid);
-      if (service.kind === "unreadable") return service;
-      const pumping = service.fields.sms_pumping_protection;
-      const countries = service.fields.geo_permissions;
-      if (typeof pumping !== "boolean") return { kind: "unreadable", reason: "pumping_setting_missing" };
-      if (!Array.isArray(countries) || countries.some((code) => typeof code !== "string")) return { kind: "unreadable", reason: "geo_setting_missing" };
-      const codes = new Set((countries as string[]).map((code) => code.trim().toUpperCase()));
-      return { kind: "read", geoCanadaOnly: codes.size === 1 && codes.has("CA"), pumpingProtection: pumping };
+      return { encoding: parseSmartEncoding(service), settings: parseAbuseSettings(service) };
     },
   };
 }

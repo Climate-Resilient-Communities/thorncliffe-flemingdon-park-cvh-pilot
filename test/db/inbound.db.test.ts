@@ -26,6 +26,7 @@ import {
   type InboundRouter,
 } from "../../src/modules/subscriptions";
 import { createDb, type Db } from "../../src/platform/db";
+import { inboundStore } from "../../src/modules/subscriptions/adapters/inboundStore";
 import { BASE_URL, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
 
@@ -535,6 +536,30 @@ describe("the inbound limit (S07.09): more than 20 messages an hour from one num
     await owner`update rate_limit set at = (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute' where scope = 'inbound_mute'`;
     expect(await send("hello")).toMatchObject({ action: "signup_info", replied: true });
     expect(await limitedCounts()).toEqual([{ messages: 2, numbers: 1 }]);
+  });
+
+  it("starts the new day clean: a number muted yesterday does not carry its counted messages from before midnight into today", async () => {
+    const hash = hashOf(NUMBER);
+    const dayStart = "(date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto')";
+    const limit = { perHour: 20, windowMs: 48 * 3_600_000 }; // wide enough that the rows from before midnight are inside the window whatever the time
+    const decide = () => app.transaction((tx) => inboundStore.limitInbound(tx, hash, limit));
+    // Control: 20 counted messages from before midnight, inside the window: the limit is reached (and the number muted).
+    await owner.unsafe(`insert into rate_limit (scope, client_hash, at) select 'inbound', '${hash}', ${dayStart} - interval '5 minutes' from generate_series(1, 20)`);
+    expect(await decide()).toBe("reached");
+    // That mute is from before midnight: today the number starts clean (the old counted messages no longer count) and is allowed.
+    await owner.unsafe(`update rate_limit set at = ${dayStart} - interval '1 minute' where scope = 'inbound_mute' and client_hash = '${hash}'`);
+    expect(await decide()).toBe("allowed");
+    expect(await inboundRows()).toBe(21);
+  });
+
+  it("does not limit the first 0 (a deletion request) of a number over the limit: it is asked to confirm and the second 0 deletes", async () => {
+    await signUp({ places: [{ rsn: RSN, floors: [FLOOR_1] }] });
+    await send("YES");
+    await seed(20, 5);
+    expect(await send("hello")).toMatchObject({ action: "rate_limited", replied: false });
+    expect(await send("0")).toMatchObject({ action: "ask_delete", replied: true });
+    expect(await send("0")).toMatchObject({ action: "delete", replied: false });
+    expect(await subscribers()).toEqual([]);
   });
 
   it("is decided after deletion: STOP, the second 0 and Twilio's opt-out events are neither counted nor limited by a number over the limit", async () => {

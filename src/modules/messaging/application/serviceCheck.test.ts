@@ -22,6 +22,10 @@ function check(reading: SmartEncodingReading, settings: AbuseSettingsReading = R
       asked.push(sid);
       return settings;
     },
+    async readBoth(sid) {
+      asked.push(sid);
+      return { encoding: reading, settings };
+    },
   };
   const log: MessagingLog = { info: (evt, fields) => void lines.push({ level: "info", evt, fields }), error: (evt, fields) => void lines.push({ level: "error", evt, fields }) };
   const service = createMessagingServiceCheck({ db, reader, messagingServiceSid: SERVICE, ops: { record: async (_executor, event) => void events.push(event) }, log });
@@ -31,8 +35,8 @@ function check(reading: SmartEncodingReading, settings: AbuseSettingsReading = R
 describe("the Messaging Service check", () => {
   it("reads the service's Smart Encoding setting and, when it is off, records that it was found off (the health job's recovery) and logs that it checked", async () => {
     const { service, asked, events, lines } = check({ kind: "read", smartEncoding: false });
-    await expect(service.run()).resolves.toEqual({ status: "smart_encoding_off", settings: "right" });
-    expect(asked).toEqual([SERVICE, SERVICE]);
+    await expect(service.run()).resolves.toEqual({ encoding: { status: "smart_encoding_off" }, settings: { settings: "right" } });
+    expect(asked).toEqual([SERVICE]); // one fetch of the service gives both readings
     expect(events).toEqual([
       { kind: "messaging.smart_encoding_off", detail: {} },
       { kind: "messaging.service_settings_ok", detail: {} },
@@ -45,15 +49,15 @@ describe("the Messaging Service check", () => {
 
   it("raises an ops_event of severity error, for the on-call alert, when Smart Encoding is on", async () => {
     const { service, events, lines } = check({ kind: "read", smartEncoding: true });
-    await expect(service.run()).resolves.toEqual({ status: "smart_encoding_on", settings: "right" });
+    await expect(service.run()).resolves.toEqual({ encoding: { status: "smart_encoding_on" }, settings: { settings: "right" } });
     expect(events[0]).toEqual({ kind: "messaging.smart_encoding_on", detail: {} });
     expect(lines.map((line) => [line.level, line.evt])[0]).toEqual(["error", "messaging_service.smart_encoding_on"]);
   });
 
   it("does not take a setting it could not read for 'off': it records that the check failed, with a code", async () => {
     const { service, events, lines } = check({ kind: "unreadable", reason: "http_401" });
-    await expect(service.run()).resolves.toMatchObject({ status: "unreadable", reason: "http_401" });
-    expect(events[0]).toEqual({ kind: "messaging.service_check_failed", detail: { reason: "http_401" } });
+    await expect(service.run()).resolves.toMatchObject({ encoding: { status: "unreadable", reason: "http_401" } });
+    expect(events[0]).toEqual({ kind: "messaging.service_check_failed", detail: { reason: "http_401", check: "smart_encoding" } });
     expect(lines.map((line) => line.evt)[0]).toBe("messaging_service.check_failed");
   });
 
@@ -67,21 +71,52 @@ describe("the Messaging Service check", () => {
     ] as const)("raises messaging.service_settings_wrong, severity error and so the on-call alert, when %s", async (_name, settings, detail) => {
       const { service, events, lines } = check(OFF, settings);
       await expect(service.run()).resolves.toEqual({
-        status: "smart_encoding_off",
-        settings: "wrong",
-        geoNotCanadaOnly: detail.geo_not_canada_only,
-        pumpingProtectionOff: detail.pumping_protection_off,
+        encoding: { status: "smart_encoding_off" },
+        settings: { settings: "wrong", geoNotCanadaOnly: detail.geo_not_canada_only, pumpingProtectionOff: detail.pumping_protection_off },
       });
       expect(events.at(-1)).toEqual({ kind: "messaging.service_settings_wrong", detail });
       expect(events.some((event) => event.kind === "messaging.service_settings_ok")).toBe(false);
       expect(lines.at(-1)).toEqual({ level: "error", evt: "messaging_service.settings_wrong", fields: detail });
     });
 
-    it("does not take a protection it could not read for right: it records that the check failed, with a code", async () => {
-      const { service, events } = check(OFF, { kind: "unreadable", reason: "pumping_setting_missing" });
-      await expect(service.run()).resolves.toEqual({ status: "smart_encoding_off", settings: "unreadable", reason: "pumping_setting_missing" });
-      expect(events.at(-1)).toEqual({ kind: "messaging.service_check_failed", detail: { reason: "pumping_setting_missing" } });
+    it("counts a protection it could not read as a failing check, never quieter than wrong: on-call is alerted, with the code and which read failed as a warning", async () => {
+      const { service, events, lines } = check(OFF, { kind: "unreadable", reason: "pumping_setting_missing" });
+      await expect(service.run()).resolves.toEqual({ encoding: { status: "smart_encoding_off" }, settings: { settings: "unreadable", reason: "pumping_setting_missing" } });
+      expect(events).toContainEqual({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: false, pumping_protection_off: false, unreadable: true } });
+      expect(events).toContainEqual({ kind: "messaging.service_check_failed", detail: { reason: "pumping_setting_missing", check: "abuse_settings" } });
       expect(events.some((event) => event.kind === "messaging.service_settings_ok")).toBe(false);
+      expect(lines.map((line) => line.evt)).toContain("messaging_service.settings_check_failed");
+    });
+
+    it("keeps both reasons when Smart Encoding and the protections are both unreadable, each under its own check", async () => {
+      const { service, events } = check({ kind: "unreadable", reason: "setting_missing" }, { kind: "unreadable", reason: "geo_setting_missing" });
+      await expect(service.run()).resolves.toEqual({ encoding: { status: "unreadable", reason: "setting_missing" }, settings: { settings: "unreadable", reason: "geo_setting_missing" } });
+      expect(events).toContainEqual({ kind: "messaging.service_check_failed", detail: { reason: "setting_missing", check: "smart_encoding" } });
+      expect(events).toContainEqual({ kind: "messaging.service_check_failed", detail: { reason: "geo_setting_missing", check: "abuse_settings" } });
+    });
+
+    it("still judges the protections when recording the Smart Encoding finding fails, then reports the failure", async () => {
+      const events: MessagingOpsEvent[] = [];
+      const reader: MessagingServiceReader = {
+        readSmartEncoding: async () => ({ kind: "read", smartEncoding: true }),
+        readAbuseSettings: async () => ({ kind: "read", geoCanadaOnly: false, pumpingProtection: true }),
+        readBoth: async () => ({ encoding: { kind: "read", smartEncoding: true }, settings: { kind: "read", geoCanadaOnly: false, pumpingProtection: true } }),
+      };
+      const log: MessagingLog = { info: () => undefined, error: () => undefined };
+      const service = createMessagingServiceCheck({
+        db,
+        reader,
+        messagingServiceSid: SERVICE,
+        ops: {
+          record: async (_executor, event) => {
+            if (event.kind === "messaging.smart_encoding_on") throw new Error("write failed");
+            events.push(event);
+          },
+        },
+        log,
+      });
+      await expect(service.run()).rejects.toThrow("write failed");
+      expect(events).toEqual([{ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: false } }]);
     });
   });
 });

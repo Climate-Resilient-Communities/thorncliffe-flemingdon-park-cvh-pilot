@@ -49,6 +49,8 @@ export type AbuseSettingsReading = { kind: "read"; geoCanadaOnly: boolean; pumpi
 export interface MessagingServiceReader {
   readSmartEncoding(messagingServiceSid: string): Promise<SmartEncodingReading>;
   readAbuseSettings(messagingServiceSid: string): Promise<AbuseSettingsReading>;
+  /** Both readings from one fetch of the service, so they cannot disagree and the daily check makes one call. */
+  readBoth(messagingServiceSid: string): Promise<{ encoding: SmartEncodingReading; settings: AbuseSettingsReading }>;
 }
 
 /** Where the dispatcher sends: a provider (production, with its credentials), or nowhere (`SMS_MODE=log`: no provider, no credentials). */
@@ -197,8 +199,8 @@ export type MessagingOpsEvent =
   | { kind: "dispatch.provider_auth_failed"; detail: { http_status: number } }
   | { kind: "messaging.smart_encoding_on"; detail: Record<string, never> }
   | { kind: "messaging.smart_encoding_off"; detail: Record<string, never> }
-  | { kind: "messaging.service_check_failed"; detail: { reason: string } }
-  | { kind: "messaging.service_settings_wrong"; detail: { geo_not_canada_only: boolean; pumping_protection_off: boolean } }
+  | { kind: "messaging.service_check_failed"; detail: { reason: string; check?: "smart_encoding" | "abuse_settings" } }
+  | { kind: "messaging.service_settings_wrong"; detail: { geo_not_canada_only: boolean; pumping_protection_off: boolean; unreadable?: boolean } }
   | { kind: "messaging.service_settings_ok"; detail: Record<string, never> }
   | { kind: "delivery.unknown_resolved"; deliveryId: string; detail: { status: CallbackTarget } }
   /** `deliveryId` when the callback named a delivery that exists. */

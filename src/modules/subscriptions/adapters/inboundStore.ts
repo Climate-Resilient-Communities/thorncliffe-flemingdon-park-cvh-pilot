@@ -1,15 +1,15 @@
 // The inbound router's own tables (S07.04): the MessageSid hashes that make a retried webhook do nothing, the daily keyword counts, the
 // short-lived `inbound_reply` rows that hold a number with no subscription until its one reply is handed off, and the once-a-day limit of
 // that reply (a keyed hash of the number in `rate_limit`, deleted after 24 hours). Every statement runs in the caller's transaction.
-import { and, count, eq, gt, gte, lt, sql } from "drizzle-orm";
+import { and, count, eq, gt, lt, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
+import { INBOUND_SCOPE } from "../domain/inbound";
 import { inboundKeywordCount, inboundLimitedCount, inboundReply, inboundSeen, rateLimit } from "./schema";
 
 /** The day a keyword is counted under: the date in Toronto, by the database's clock. */
 const TORONTO_DAY = sql`(now() at time zone 'America/Toronto')::date`;
 
 /** The scopes of the inbound limit's keyed hashes in `rate_limit` (S07.09): one row per counted message, and one row for a number that reached the limit. */
-export const INBOUND_SCOPE = "inbound";
 export const INBOUND_MUTE_SCOPE = "inbound_mute";
 
 /** Midnight in Toronto that began today, by the database's clock. */
@@ -41,16 +41,17 @@ export const inboundStore = {
    * `reached` or `muted` message is added to the day's count of unanswered messages (counts only). Old hashes are deleted as they pass 24 hours.
    */
   async limitInbound(tx: DbTransaction, hash: string, limit: { perHour: number; windowMs: number }): Promise<InboundLimitResult> {
-    const muted = await tx
-      .select({ id: rateLimit.id })
+    const mutes = await tx
+      .select({ today: sql<boolean>`${rateLimit.at} >= ${TORONTO_DAY_START}` })
       .from(rateLimit)
-      .where(and(eq(rateLimit.scope, INBOUND_MUTE_SCOPE), eq(rateLimit.clientHash, hash), gte(rateLimit.at, TORONTO_DAY_START)))
-      .limit(1);
-    if (muted.length > 0) {
+      .where(and(eq(rateLimit.scope, INBOUND_MUTE_SCOPE), eq(rateLimit.clientHash, hash)));
+    if (mutes.some((mute) => mute.today)) {
       await countLimited(tx, false);
       return "muted";
     }
-    const since = sql`now() - ${limit.windowMs / 1000} * interval '1 second'`;
+    // A number muted on an earlier day starts the new day clean: its counted messages from before midnight do not count towards today's limit.
+    const windowStart = sql`now() - ${limit.windowMs / 1000} * interval '1 second'`;
+    const since = mutes.length > 0 ? sql`greatest(${windowStart}, ${TORONTO_DAY_START})` : windowStart;
     const [row] = await tx
       .select({ n: count() })
       .from(rateLimit)

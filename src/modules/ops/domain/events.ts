@@ -180,7 +180,7 @@ export const OPS_EVENT_KINDS = {
   /** The daily check could not read the Messaging Service's setting (S06.02), so it cannot say Smart Encoding is off. A code only. */
   "messaging.service_check_failed": {
     severity: "warning",
-    detail: z.strictObject({ reason: code }),
+    detail: z.strictObject({ reason: code, check: z.enum(["smart_encoding", "abuse_settings"]).optional() }),
   },
   /**
    * The daily check found the Messaging Service's geo permissions allowing more than Canada, or SMS pumping protection off (S07.09, AD-22): the
@@ -188,7 +188,8 @@ export const OPS_EVENT_KINDS = {
    */
   "messaging.service_settings_wrong": {
     severity: "error",
-    detail: z.strictObject({ geo_not_canada_only: z.boolean(), pumping_protection_off: z.boolean() }),
+    // `unreadable`: the check could not read the settings, which is never quieter than finding them wrong (S07.09).
+    detail: z.strictObject({ geo_not_canada_only: z.boolean(), pumping_protection_off: z.boolean(), unreadable: z.boolean().optional() }),
   },
   /** The daily check found both protections as they must be (S07.09): the health job reads it as the end of an earlier "wrong". At most one a day. */
   "messaging.service_settings_ok": {

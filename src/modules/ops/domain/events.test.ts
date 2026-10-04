@@ -235,6 +235,12 @@ describe("the health job's events (S06.07)", () => {
       severity: "error",
       detail: { geo_not_canada_only: true, pumping_protection_off: false },
     });
+    expect(toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: false, pumping_protection_off: false, unreadable: true } })).toMatchObject({
+      severity: "error",
+      detail: { unreadable: true },
+    });
+    expect(toOpsEventRecord({ kind: "messaging.service_check_failed", detail: { reason: "http_404", check: "abuse_settings" } })).toMatchObject({ severity: "warning" });
+    expect(() => toOpsEventRecord({ kind: "messaging.service_check_failed", detail: { reason: "http_404", check: "other" } as never })).toThrow(OpsEventError);
     expect(toOpsEventRecord({ kind: "messaging.service_settings_ok", detail: {} })).toMatchObject({ severity: "info", detail: {} });
     expect(() => toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true } as never })).toThrow(OpsEventError);
     expect(() => toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: true, countries: "US" } as never })).toThrow(OpsEventError);

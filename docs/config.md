@@ -240,12 +240,15 @@ cannot read is recorded as `messaging.service_check_failed` (warning), never tak
 **Messaging Service: Canada-only geo permissions and SMS pumping protection (S07.09, AD-22).** The same daily check reads two more settings: the countries
 the service may text must be Canada and nothing else, and SMS pumping protection must be on. When either is not, it records
 `messaging.service_settings_wrong` (severity error; the detail says which, as two flags) and the health job's `messaging_settings` condition texts the on-call
-Admins once and shows on the Hub until a later check finds both right (`messaging.service_settings_ok`). A setting it cannot read is a
-`messaging.service_check_failed` warning, never taken for right. **IT confirms at the launch rehearsal:** the adapter (`readAbuseSettings` in
-`src/modules/messaging/adapters/twilioMessagingService.ts`) reads the Messaging Service resource's `sms_pumping_protection` (boolean) and `geo_permissions`
-(the countries' ISO codes); those field names are an assumption, written without a Twilio account to try them against. If the real API names them otherwise or
-keeps them elsewhere, the check shows `pumping_setting_missing` or `geo_setting_missing` warnings every day until the one function is corrected; it never
-passes silently.
+Admins once and shows on the Hub until a later check finds both right (`messaging.service_settings_ok`). A setting it cannot read is never taken for right and
+never quieter than wrong: it records a `messaging.service_check_failed` warning (the code, and `check: abuse_settings`) and also
+`messaging.service_settings_wrong` with `unreadable: true`, so the on-call Admins are texted and the Hub shows it until a check reads both settings as right.
+**Launch gate (IT, at the launch rehearsal):** confirm against the production Twilio account where these two settings really live. The adapter
+(`readAbuseSettings` in `src/modules/messaging/adapters/twilioMessagingService.ts`) reads the Messaging Service resource's `sms_pumping_protection`
+(boolean) and `geo_permissions` (the countries' ISO codes); those field names are an assumption, written without a Twilio account to try them against, and
+Twilio may keep geo permissions and pumping protection as account-level settings instead. If the real API names them otherwise or keeps them elsewhere, the
+check alerts on-call every day (`pumping_setting_missing` or `geo_setting_missing`) until the one function is corrected; it never passes silently. Do not
+launch until a check has read both settings as right.
 
 **Pausing texts (S06.06).** No variable, secret or schedule is involved: an Admin signed in with the authenticator (`aal2`) opens Hub, Administration,
 "Pause texts" (`/staff/texts`), gives the reason and presses "Pause all texts". From that moment the dispatcher claims nothing except texts to on-call

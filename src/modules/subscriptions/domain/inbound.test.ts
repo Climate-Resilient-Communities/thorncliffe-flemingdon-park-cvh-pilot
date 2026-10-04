@@ -125,7 +125,7 @@ describe("the inbound limit (S07.09, E07 'Inbound order': opt-out events and del
     expect(INBOUND_LIMIT).toEqual({ perHour: 20, windowMs: 3_600_000 });
   });
 
-  it("never limits a deletion or an opt-out event, whatever the number's state", () => {
+  it("never limits a deletion request (either 0) or an opt-out event, whatever the number's state", () => {
     for (const state of states) {
       expect(exemptFromInboundLimit("stop", decide("stop", state).action)).toBe(true);
       expect(exemptFromInboundLimit("start", decide("start", state).action)).toBe(true);
@@ -133,15 +133,17 @@ describe("the inbound limit (S07.09, E07 'Inbound order': opt-out events and del
     }
     // The second 0 within 10 minutes is a deletion.
     expect(exemptFromInboundLimit("0", decide("0", { kind: "active", prompt: "delete_confirm" }).action)).toBe(true);
+    // The first 0 opens the confirmation: it is a deletion request too, so a limited subscriber can still start leaving.
+    expect(exemptFromInboundLimit("0", decide("0", { kind: "active", prompt: "none" }).action)).toBe(true);
   });
 
-  it("limits everything else: a YES, a menu choice, the first 0, any other text, from any state", () => {
+  it("limits everything else: a YES, a menu choice, any other text, from any state", () => {
     for (const state of states) {
       for (const keyword of ["yes", "0", "1", "2", "3", "other"] as const) {
         const { action } = decide(keyword, state);
-        expect(exemptFromInboundLimit(keyword, action), `${keyword} in ${JSON.stringify(state)}`).toBe(action.kind === "delete");
+        expect(exemptFromInboundLimit(keyword, action), `${keyword} in ${JSON.stringify(state)}`).toBe(action.kind === "delete" || action.kind === "ask_delete");
       }
     }
-    expect(exemptFromInboundLimit("0", decide("0", { kind: "active", prompt: "none" }).action)).toBe(false);
+    expect(exemptFromInboundLimit("0", decide("0", { kind: "none" }).action)).toBe(false);
   });
 });
