@@ -192,6 +192,7 @@ describe("the open alerts about an Ambassador's buildings", () => {
         types: ["power"],
         headline: "Power is out at 41 Home Test Dr.",
         verified: true,
+        fromAmbassador: false,
         publishedAt: expect.any(Date),
         validUntil: VALID_UNTIL,
         buildings: [RSN_A],
@@ -217,7 +218,9 @@ describe("the open alerts about an Ambassador's buildings", () => {
 
     const data = await home();
     expect(data.alerts).toEqual([]);
-    expect(JSON.stringify(data)).not.toMatch(/EXERCISE/);
+    // A drill is never among the alerts or the posts; S08.02 lists the open drills about their buildings apart, where a practice post goes.
+    expect(JSON.stringify({ alerts: data.alerts, posts: data.posts })).not.toMatch(/EXERCISE/);
+    expect(data.drills).toEqual([expect.objectContaining({ headline: "EXERCISE: power is out", types: ["power"], buildings: [RSN_A] })]);
   });
 
   it("lists a pending entry that was web-published at submit (a D-1 post) as not yet verified, then as verified once the Hub approves it", async () => {
@@ -366,7 +369,7 @@ describe("an Ambassador whose assignment changes", () => {
   it("sees nothing at all with no assignment: no buildings, no alerts, no posts", async () => {
     await seedThread({ slug: "noassign01", entries: [{ author: coordinator }] });
     await seedThread({ slug: "noassign02", entries: [{ author: ambassador }] });
-    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], round: null });
+    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], drills: [], round: null });
   });
 
   it("sees nothing once suspended or locked: their assignments do not count (the guard has already refused their session, S01.08)", async () => {
@@ -377,7 +380,7 @@ describe("an Ambassador whose assignment changes", () => {
 
     for (const status of ["suspended", "locked_pending_reissue"]) {
       await owner`update staff_account set status = ${status} where id = ${ambassador}`;
-      expect(await home(), status).toEqual({ buildings: [], alerts: [], posts: [], round: null });
+      expect(await home(), status).toEqual({ buildings: [], alerts: [], posts: [], drills: [], round: null });
     }
     await owner`update staff_account set status = 'active' where id = ${ambassador}`;
     expect((await home()).alerts.length).toBeGreaterThan(0);
@@ -388,7 +391,7 @@ describe("an Ambassador whose assignment changes", () => {
     await seedThread({ slug: "rolechg001", entries: [{ author: coordinator }] });
     expect((await home()).alerts).toHaveLength(1);
     await owner`update staff_account set role = 'coordinator' where id = ${ambassador}`;
-    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], round: null });
+    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], drills: [], round: null });
   });
 });
 

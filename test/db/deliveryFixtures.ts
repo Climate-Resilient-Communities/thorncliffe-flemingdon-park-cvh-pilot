@@ -90,13 +90,13 @@ export function deliveryFixtures(owner: Sql) {
       }
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
                                         version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at,
-                                        supersedes_id, withdrawal_reason)
+                                        supersedes_id, withdrawal_reason, discard_reason)
                values (${entryId}, ${alertId}, ${options.kind ?? "ack"}, ${status}, ${author}, ${[author]}, 'text', ${types},
                        ${tx.json(audience)}, 'problem', ${options.validUntil ?? new Date("2026-10-04T15:00:00Z")},
                        ${frozen ? 1 : 0}, ${frozen ? hash : null}, ${frozen ? tx.json(bodies as never) : null}, ${frozen ? NOW : null},
                        ${status === "approved" ? approver : null}, ${status === "approved" ? NOW : null}, ${status === "approved" ? 1 : null},
                        ${status === "approved" ? hash : null}, ${status === "approved" ? NOW : null},
-                       ${targetId}, ${options.kind === "withdrawal" ? "wrong_information" : null})`;
+                       ${targetId}, ${options.kind === "withdrawal" ? "wrong_information" : null}, ${status === "discarded" ? "declined" : null})`;
       await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
       if (targetId !== null) replacedIds.push(targetId);
     });

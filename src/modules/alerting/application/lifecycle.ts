@@ -1135,7 +1135,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     const subject = creating ? { type: "alert" as const, id: input.alertId } : { type: "alert_entry" as const, id: input.entryId };
     return change(creating ? "alert.created" : "entry.created", actor, subject, async (tx) => {
       if (!UUID.test(threadId) || !UUID.test(input.entryId)) throw new Refused("ENTRY_ID_INVALID");
-      // AD-18: the first statement locks the thread, when it exists (a new thread's id is the page's; one made by an earlier press of the same post exists).
+      // AD-18: the thread is locked first. A new thread's row does not exist yet, so its id (the page's) is locked instead, for the transaction: the same
+      // post sent twice at once makes it once, the second press waiting and then finding it.
+      if (creating) await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`alert:${threadId}`}, 0))`);
+      // ... then the thread's row, when it exists (made by an earlier press of the same post, or the open thread an update goes in).
       const [existingThread] = await tx.select({ id: alert.id }).from(alert).where(eq(alert.id, threadId)).for("update");
       const at = now();
       const contentFor = async (standing: StaffStanding, types: readonly string[]): Promise<EntryContent> => {
@@ -1319,8 +1322,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
      * `alert.created` for a new thread and `entry.created` for an update; the submit, translation, freeze and second-person approval that follow are E04's, unchanged.
      */
     async postFromAmbassador(actor: AlertActor, input: AmbassadorPostInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
-      // The same new post sent twice at once: there is no thread row yet to lock, so both may try to make it; the one that loses the race on the thread's
-      // (or the entry's) primary key is rolled back whole and runs again, and then finds the thread and the entry the other made (the same press).
+      // The same new post sent twice at once waits on the lock of the new thread's id (`postOnce`); should a press still lose a race on a primary key (the
+      // entry's id), it is rolled back whole and runs once again, and then finds what the other made (the same press).
       try {
         return await postOnce(actor, input);
       } catch (error) {

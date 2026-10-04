@@ -58,10 +58,11 @@ async function seedThread(opts: { drill?: boolean; closed?: boolean; slug: strin
       const published = entry.publishedAt === undefined ? (approved ? new Date(NOW.getTime() - 60_000 * (10 - index)) : null) : entry.publishedAt;
       const hash = sha(`${id}`);
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
-                                         version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at)
+                                         version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, discard_reason)
                values (${id}, ${alertId}, ${entry.kind ?? "ack"}, ${status}, ${author}, ${[author]}, ${text}, ${["power"]}, ${tx.json(AUDIENCE)}, ${entry.phase ?? "problem"},
                        ${entry.validUntil ?? new Date("2026-10-02T15:00:00Z")}, ${frozen ? 1 : 0}, ${frozen ? hash : null}, ${frozen ? tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } }) : null},
-                       ${frozen ? NOW : null}, ${approved ? approver : null}, ${approved ? NOW : null}, ${approved ? 1 : null}, ${approved ? hash : null}, ${published})`;
+                       ${frozen ? NOW : null}, ${approved ? approver : null}, ${approved ? NOW : null}, ${approved ? 1 : null}, ${approved ? hash : null}, ${published},
+                       ${status === "discarded" ? "declined" : null})`;
       for (const [lang, t] of Object.entries(entry.translations ?? {})) {
         const model = t.model === undefined ? (t.status === "fallback_en" ? null : "north-small-translate-09-2026") : t.model;
         const conversion = t.status === "script_converted" ? tx.json({ from: "zh", from_text_hash: sha("zh text"), opencc_version: "1.4.2", config: "cn2t" }) : null;
@@ -279,8 +280,10 @@ describe("the resident views", () => {
     expect(await asApp((sql) => sql`select id from nondrill_alert`)).toEqual([{ id: real.alertId }]);
     expect(await asApp((sql) => sql`select id, slug from nondrill_alert_entry`)).toEqual([{ id: real.entryIds[0], slug: "realslug1" }]);
     expect(await asApp((sql) => sql`select id, slug from nondrill_alert_entry_v2`)).toEqual([{ id: real.entryIds[0], slug: "realslug1" }]);
+    // S08.02: v3 adds the building an ambassador's post is attributed to; a Hub entry has none.
+    expect(await asApp((sql) => sql`select id, slug, attributed_rsn from nondrill_alert_entry_v3`)).toEqual([{ id: real.entryIds[0], slug: "realslug1", attributed_rsn: null }]);
     expect(await asApp((sql) => sql`select entry_id, lang from nondrill_alert_entry_translation`)).toEqual([{ entry_id: real.entryIds[0], lang: "ur" }]);
-    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_v2", "nondrill_alert_entry_translation"]) {
+    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_v2", "nondrill_alert_entry_v3", "nondrill_alert_entry_translation"]) {
       const column = view === "nondrill_alert" ? "id" : view.startsWith("nondrill_alert_entry") && view !== "nondrill_alert_entry_translation" ? "alert_id" : "entry_id";
       const hidden = view === "nondrill_alert" ? [drill.alertId] : view.startsWith("nondrill_alert_entry") && view !== "nondrill_alert_entry_translation" ? [drill.alertId] : drill.entryIds;
       const rows = await asApp((sql) => sql.unsafe(`select ${column} as k from ${view}`));
@@ -299,7 +302,7 @@ describe("the resident views", () => {
   });
 
   it("run with the caller's rights, and only the app's role may read them", async () => {
-    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_v2", "nondrill_alert_entry_translation"]) {
+    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_v2", "nondrill_alert_entry_v3", "nondrill_alert_entry_translation"]) {
       const [info] = await owner`select reloptions from pg_class where oid = ${`public.${view}`}::regclass`;
       expect(info.reloptions, view).toContain("security_invoker=true");
       for (const role of ["anon", "authenticated", "service_role", "public"]) {

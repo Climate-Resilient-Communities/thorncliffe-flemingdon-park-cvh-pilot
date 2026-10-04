@@ -808,8 +808,8 @@ describe("what a submit refuses", () => {
 
     expect(await r.submitter.submit(actorOf(approver), ref, KEYS.one)).toEqual({ state: "refused", refusal: "OUT_OF_SCOPE" });
     expect(await r.submitter.submit(actorOf(director), ref, KEYS.one)).toEqual({ state: "refused", refusal: "OUT_OF_SCOPE" });
-    // An Ambassador's post is attributed to their building and not yet verified (E08): not through these texts, which say "from the Hub".
-    expect(await r.submitter.submit(actorOf(ambassador), ref, KEYS.one)).toEqual({ state: "refused", refusal: "NOT_ALLOWED" });
+    // An Ambassador submits their own posts (S08.02), never someone else's draft: they are not an editor of it.
+    expect(await r.submitter.submit(actorOf(ambassador), ref, KEYS.one)).toEqual({ state: "refused", refusal: "OUT_OF_SCOPE" });
     expect(await attempts(ref.entryId)).toEqual([]);
   });
 
