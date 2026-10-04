@@ -403,7 +403,7 @@ describe("making a withdrawal", () => {
 describe("who may correct or withdraw, and what", () => {
   it.each([
     ["a Director", () => director, "NOT_ALLOWED", "forbidden"],
-    ["an Ambassador (their own pending entries are E08's)", () => ambassador, "OUT_OF_SCOPE", "out_of_scope"],
+    ["an Ambassador, for an entry that is not theirs (S08.04: only their own pending entry)", () => ambassador, "OUT_OF_SCOPE", "out_of_scope"],
   ] as const)("refuses %s, makes nothing and audits the refusal with its reason", async (_name, who, error, reason) => {
     const { ref } = await approvedThread();
     for (const make of [
@@ -417,18 +417,20 @@ describe("who may correct or withdraw, and what", () => {
     expect(await entryRows(ref.alertId)).toHaveLength(1);
   });
 
-  it("refuses an Ambassador whatever the target: even an entry they wrote themselves (their own pending entries are E08's, so nothing is theirs to correct yet)", async () => {
+  it("judges an Ambassador's own entry by E05's rules (S08.04): not while it is a draft; once submitted and on the web (a D-1 post) it is theirs to correct or withdraw", async () => {
     try {
       const assignments = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
       expect(await assignments.assign(adminC.id, { staffId: ambassador.id, rsn: RSN, floorIds: null })).toMatchObject({ ok: true });
       const created = await alerting.createAlert(actorOf(ambassador), { kind: "ack", isDrill: false, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
       if (!created.ok) throw new Error(`createAlert refused: ${created.error}`);
       const mine = { alertId: created.value.thread.id, entryId: created.value.entry.id };
-      // Their own draft, then their own submitted entry (frozen the way a submit would).
+      // Their own draft: not pending, so not theirs to correct.
       expect(await alerting.correctEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, correctInput())).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+      // Their own submitted entry (frozen the way a submit would; a lower-risk post is on the web from its submit): pending and read by residents, so theirs.
       expect(await seams.freeze(actorOf(ambassador), mine, frozen("a1"))).toMatchObject({ ok: true });
-      expect(await alerting.correctEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, correctInput())).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
-      expect(await alerting.withdrawEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, withdrawInput())).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+      expect((await entryRow(mine.entryId)).web_published_at).not.toBeNull();
+      expect(await alerting.correctEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, correctInput())).toMatchObject({ ok: true, value: { entry: { kind: "correction", authorId: ambassador.id, supersedesId: mine.entryId } } });
+      expect(await alerting.withdrawEntry(actorOf(ambassador), { alertId: mine.alertId, targetId: mine.entryId }, withdrawInput())).toMatchObject({ ok: true, value: { entry: { kind: "withdrawal", authorId: ambassador.id, supersedesId: mine.entryId } } });
     } finally {
       await owner`delete from ambassador_assignment where staff_id = ${ambassador.id}`;
     }

@@ -23,7 +23,8 @@ export type SendState =
   | { kind: "unsent" }
   /** The server has it and is still translating it: asked again shortly with the same key. */
   | { kind: "working" }
-  | { kind: "done" }
+  /** `live`: the server committed it and residents already read it on the web, as "Not yet verified" (a D-1 post, S08.03). */
+  | { kind: "done"; live?: boolean }
   /** Not sent: `code` is the server's refusal or failure code, or `signed_out`, `not_assigned`, `failed`. */
   | { kind: "error"; code: string };
 
@@ -49,20 +50,25 @@ export const UNSENT_RETRY_MS = 20_000;
 /** How long one request may go without an answer before it is given up and the post is held as unsent. */
 export const REQUEST_TIMEOUT_MS = 20_000;
 
-export interface PostSender {
+/** Any request the sender delivers: the body of a press and the key of its outcome. S08.04's follow-up requests (correct, withdraw, resolve) are delivered the same way. */
+export type KeyedRequest = { key: string };
+
+export interface PostSender<B extends KeyedRequest = AmbassadorPostRequest> {
   /** Sends one press. Ignored while a press is on its way (sending, unsent or working): the page disables the button then. */
-  press(body: PostBody): void;
+  press(body: B extends unknown ? Omit<B, "key"> : never): void;
   state(): SendState;
   /** Stops listening and retrying (the page is going away). */
   stop(): void;
 }
 
-export function createPostSender(env: SenderEnv, onChange: (state: SendState) => void): PostSender {
+export function createPostSender<B extends KeyedRequest = AmbassadorPostRequest>(env: SenderEnv, onChange: (state: SendState) => void): PostSender<B> {
   let current: SendState = { kind: "idle" };
   /** The key of the last press whose outcome is not known yet; null once it is. */
   let openKey: string | null = null;
+  /** The entry the open key was made for: a press about another entry never reuses it (one key is one press of one request). */
+  let openEntry: string | null = null;
   /** The request on its way; null when none is. */
-  let inFlight: AmbassadorPostRequest | null = null;
+  let inFlight: B | null = null;
   let cleanups: (() => void)[] = [];
 
   const set = (next: SendState) => {
@@ -76,6 +82,7 @@ export function createPostSender(env: SenderEnv, onChange: (state: SendState) =>
   /** The outcome of the press is known: its key is retired and nothing is held any more. */
   const settle = (next: SendState) => {
     openKey = null;
+    openEntry = null;
     inFlight = null;
     clearWaits();
     set(next);
@@ -131,7 +138,7 @@ export function createPostSender(env: SenderEnv, onChange: (state: SendState) =>
       return set({ kind: "error", code: "failed" });
     }
     const result = parsed.data;
-    if (result.state === "committed") return settle({ kind: "done" });
+    if (result.state === "committed") return settle(result.entry_state?.entry.web_published === true ? { kind: "done", live: true } : { kind: "done" });
     if (result.state === "running" || result.outcome === "SUBMIT_IN_PROGRESS") {
       // Still being translated: ask again with the same key, which answers with this press's result once it has one.
       set({ kind: "working" });
@@ -144,8 +151,13 @@ export function createPostSender(env: SenderEnv, onChange: (state: SendState) =>
   return {
     press(body) {
       if (current.kind === "sending" || current.kind === "unsent" || current.kind === "working") return;
-      openKey ??= env.newKey();
-      inFlight = { ...body, key: openKey };
+      const entry = (body as { entry_id?: string }).entry_id ?? null;
+      if (openKey !== null && entry !== openEntry) openKey = null;
+      if (openKey === null) {
+        openKey = env.newKey();
+        openEntry = entry;
+      }
+      inFlight = { ...body, key: openKey } as unknown as B;
       void deliver();
     },
     state: () => current,

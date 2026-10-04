@@ -35,6 +35,8 @@ export interface AmbassadorAlert {
   validUntil: Date;
   /** The assigned buildings (rsn) this alert is about. */
   buildings: readonly string[];
+  /** S08.04: the alert is about exactly one building, one they are assigned to, so they may write its final message ("Mark resolved"). */
+  canResolve?: boolean;
 }
 
 /** One of the person's own posts and where it stands. */
@@ -77,6 +79,10 @@ const rsnsOf = (audience: Audience, assigned: ReadonlySet<string>, neighbourhood
 
 export function createAmbassadorHome(db: Db) {
   return {
+    /** One of the person's own posts and where it stands (A-03, S08.04); null for anything that is not theirs to see. */
+    status: (scope: AmbassadorScope, entryId: string) => readPostStatus(db, scope, entryId),
+    /** The alert "Mark resolved" is for (S08.04): its covering words and whether a final message already waits; null when it is not theirs to resolve. */
+    resolvable: (scope: AmbassadorScope, alertId: string) => readResolvable(db, scope, alertId),
     /** The home of a person with this scope. Nobody assigned: nothing is read (fail closed). */
     async read(scope: AmbassadorScope): Promise<AmbassadorHomeView> {
       const assigned = new Set(scope.assignedRsns);
@@ -116,6 +122,7 @@ export function createAmbassadorHome(db: Db) {
           publishedAt: new Date(covering.published_at),
           validUntil: new Date(thread.valid_until),
           buildings: rsnsOf(audience.data, assigned, scope.neighbourhoodOf),
+          canResolve: audience.data.scope === "buildings" && audience.data.buildings.length === 1 && assigned.has(audience.data.buildings[0].rsn),
         });
       }
 
@@ -187,6 +194,144 @@ export function createAmbassadorHome(db: Db) {
         drills.push({ alertId: thread.id, types: covering.types, headline: covering.text, buildings: rsnsOf(audience.data, assigned, scope.neighbourhoodOf) });
       }
       return { alerts, posts, drills };
+    },
+  };
+}
+
+/** What replaced one of the person's posts, or is waiting to (S08.04). */
+export interface PostReplacement {
+  entryId: string;
+  kind: "correction" | "withdrawal";
+  /** The words residents read in its place. */
+  text: string;
+  at: Date;
+}
+
+/** One of the person's own posts as its status screen (A-03) shows it. */
+export interface AmbassadorPostStatus {
+  entryId: string;
+  alertId: string;
+  slug: string;
+  kind: string;
+  types: readonly string[];
+  text: string;
+  phase: string;
+  state: AmbassadorPostState;
+  /** The note an approver wrote when sending it back; only for a returned post. */
+  note: string | null;
+  /** The buildings the post is for, each with the floor ids it names (null: the whole building). */
+  buildings: readonly { rsn: string; floors: readonly string[] | null }[];
+  postedAt: Date;
+  approvedAt: Date | null;
+  validUntil: Date;
+  /** The approved correction or withdrawal that replaced it: what residents read now instead. */
+  replacedWith: PostReplacement | null;
+  /** A correction or withdrawal of it that was submitted and waits for the Hub. */
+  waitingReplacement: PostReplacement | null;
+  /** A final message of the thread that was submitted and waits for the Hub (anyone's). */
+  waitingFinal: boolean;
+  threadOpen: boolean;
+  /**
+   * What the person may do with it now (S08.04): correct or withdraw it (E05's rules: their own pending post that residents already read, in an open thread, with
+   * nothing already replacing it or waiting to), and mark the alert resolved (an open thread about their one building, with something residents read and no final
+   * waiting). The use cases judge both again under the thread's lock.
+   */
+  can: { replace: boolean; resolve: boolean };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The entry that covers a thread (what residents read as current) when the thread is about exactly one building and the person is assigned to it: the only
+ * alert an Ambassador writes the final message of, because the final is attributed to one building ("Building ambassador, {building}"). Null otherwise.
+ */
+function resolvableCovering(rows: readonly (typeof alertEntry.$inferSelect)[], assigned: ReadonlySet<string>) {
+  const covering = coveringEntry(publishedSummaries(rows));
+  if (covering === null) return null;
+  const audience = AudienceSchema.safeParse(covering.audience);
+  return audience.success && audience.data.scope === "buildings" && audience.data.buildings.length === 1 && assigned.has(audience.data.buildings[0].rsn) ? covering : null;
+}
+
+/**
+ * What "Mark resolved" is for: an open, real (non-drill) thread that covers exactly one building the person is assigned to now, and whether a final message of it
+ * already waits for the Hub. Null for anything else, and nothing says which (a thread that is not theirs, a drill, a closed one, a missing one).
+ */
+export async function readResolvable(db: Db, scope: AmbassadorScope, alertId: string): Promise<{ headline: string; waitingFinal: boolean } | null> {
+  const assigned = new Set(scope.assignedRsns);
+  if (assigned.size === 0 || !UUID.test(alertId)) return null;
+  const [thread] = await db.select().from(alert).where(and(eq(alert.id, alertId), eq(alert.isDrill, false), eq(alert.status, "open")));
+  if (!thread) return null;
+  const rows = await db.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
+  const covering = resolvableCovering(rows, assigned);
+  return covering === null ? null : { headline: covering.text, waitingFinal: rows.some((row) => row.kind === "final" && row.status === "pending_approval") };
+}
+
+/**
+ * One of the person's own posts and where it stands, for A-03. Only their own entry, in a real (non-drill) thread, for buildings they are all still assigned to:
+ * anyone else's entry, a drill's, a missing one and one outside their assignments all read as null, and nothing says which.
+ */
+export async function readPostStatus(db: Db, scope: AmbassadorScope, entryId: string): Promise<AmbassadorPostStatus | null> {
+  const assigned = new Set(scope.assignedRsns);
+  if (assigned.size === 0 || !UUID.test(entryId)) return null;
+  const [found] = await db
+    .select({ entry: alertEntry, thread: alert })
+    .from(alertEntry)
+    .innerJoin(alert, eq(alert.id, alertEntry.alertId))
+    .where(and(eq(alertEntry.id, entryId), eq(alertEntry.authorId, scope.staffId), eq(alert.isDrill, false)));
+  if (!found) return null;
+  const { entry, thread } = found;
+  const audience = AudienceSchema.safeParse(entry.audience);
+  if (!audience.success || audience.data.scope !== "buildings" || !postIsInScope(audience.data, assigned)) return null;
+  const rows = await db.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
+  type Row = (typeof rows)[number];
+  const replacers = rows.filter((row) => row.supersedesId === entry.id && (row.kind === "correction" || row.kind === "withdrawal"));
+  const newest = (list: Row[]): Row | null => [...list].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1))[0] ?? null;
+  const settled = replacers.filter((row) => ["approved", "superseded", "published_system"].includes(row.status));
+  // A withdrawal outranks a correction of the same entry (the entry is gone), as on the home.
+  const replacer = newest(settled.filter((row) => row.kind === "withdrawal")) ?? newest(settled);
+  const waiting = newest(replacers.filter((row) => row.status === "pending_approval"));
+  const state = postState({
+    status: entry.status,
+    submittedAt: entry.submittedAt,
+    approvedAt: entry.approvedAt,
+    webPublishedAt: entry.webPublishedAt,
+    returnedFor: entry.returnedFor,
+    discardReason: entry.discardReason,
+    replacedBy: replacer === null ? null : (replacer.kind as "correction" | "withdrawal"),
+  });
+  if (state === null) return null;
+  const replacement = (row: Row, withText = true): PostReplacement => ({ entryId: row.id, kind: row.kind as "correction" | "withdrawal", text: withText ? row.originalText : "", at: row.webPublishedAt ?? row.approvedAt ?? row.createdAt });
+  const threadOpen = thread.status === "open";
+  const waitingFinal = rows.some((row) => row.kind === "final" && row.status === "pending_approval");
+  const resolvable = threadOpen && resolvableCovering(rows, assigned) !== null;
+  return {
+    entryId: entry.id,
+    alertId: thread.id,
+    slug: thread.slug ?? "",
+    kind: entry.kind,
+    types: entry.types,
+    text: entry.originalText,
+    phase: entry.phase,
+    state,
+    note: state === "returned" ? entry.returnedNote : null,
+    buildings: audience.data.buildings.map((building) => ({ rsn: building.rsn, floors: building.floors })),
+    postedAt: entry.submittedAt ?? entry.createdAt,
+    approvedAt: entry.approvedAt,
+    validUntil: entry.validUntil,
+    replacedWith: replacer === null ? null : replacement(replacer),
+    // What waits is not approved yet: the ambassador learns that it waits, never its words.
+    waitingReplacement: waiting === null ? null : replacement(waiting, false),
+    waitingFinal,
+    threadOpen,
+    can: {
+      replace:
+        threadOpen &&
+        entry.status === "pending_approval" &&
+        entry.webPublishedAt !== null &&
+        (entry.kind === "ack" || entry.kind === "update" || entry.kind === "correction") &&
+        waiting === null &&
+        replacer === null,
+      resolve: resolvable && !waitingFinal,
     },
   };
 }

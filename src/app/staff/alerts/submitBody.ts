@@ -22,6 +22,7 @@ export function entryStateBody(state: EntryState | null, now: Date): EntryStateB
       version: entry.version,
       content_hash: entry.contentHash,
       possible_duplicate_of: entry.possibleDuplicateOf,
+      web_published: (entry.webPublishedAt ?? null) !== null,
     },
     attempt:
       attempt === null
