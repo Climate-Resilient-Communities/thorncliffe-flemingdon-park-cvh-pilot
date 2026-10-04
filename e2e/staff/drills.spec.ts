@@ -42,9 +42,10 @@ const audits = (like = "drill_roster.%") => sql`select action, actor_staff_id, s
 const roster = () => sql`select label, phone, lang, added_by from drill_roster order by created_at, id`;
 
 async function addPhone(page: Page, label: string, number: string, language: string) {
-  await page.getByLabel("Name or role").first().fill(label);
-  await page.getByLabel("Mobile number").first().fill(number);
-  await page.getByLabel("Language of the drill text").first().selectOption({ label: language });
+  // The add form's own fields (each phone's Edit form, closed, has fields of the same names above it).
+  await page.locator("#drill-roster-label").fill(label);
+  await page.locator("#drill-roster-number").fill(number);
+  await page.locator("#drill-roster-lang").selectOption({ label: language });
   await page.getByRole("button", { name: "Add phone" }).click();
 }
 
@@ -86,7 +87,8 @@ test("an Admin adds, changes and removes drill roster phones, sees only their la
 
   // Nothing on the page, in any form, holds a whole number.
   const html = await page.content();
-  for (const number of ["4165550123", "6475550199", "416-555-0123", "416 555 0123"]) expect(html).not.toContain(number);
+  // (The hint under the number field has the example 416-555-0123, which is not a number on the roster.)
+  for (const number of ["4165550123", "6475550199", "416 555 0123", "647-555-0199", "647 555 0199"]) expect(html).not.toContain(number);
   expect(await roster()).toEqual([
     { label: "Hub phone", phone: "+14165550123", lang: "en", added_by: admin.id },
     { label: "Priya", phone: "+16475550199", lang: "ur", added_by: admin.id },
@@ -156,8 +158,9 @@ test("an Admin starts a drill, a second Admin approves it, only the roster is te
   const page = phone.page;
   try {
     await page.goto("/staff/drills");
-    await expect(page.getByTestId("drills-none")).toBeVisible();
+    // (Drills of earlier runs may be listed: the database is shared by the run's specs. This drill is the newest, so it is the first.)
     await expect(page.getByTestId("drills-roster-summary")).toHaveText("2 people are on the drill roster.");
+    const drillsBefore = await page.getByTestId("drill").count();
     await page.getByRole("button", { name: "Start a drill" }).click();
     await expect(page).toHaveURL(/\/staff\/drills\/start$/);
     await expect(page.getByTestId("exercise-marker")).toContainText("Nothing here is sent to residents.");
@@ -213,13 +216,14 @@ test("an Admin starts a drill, a second Admin approves it, only the roster is te
 
     // The Drills page shows the drill with what became of its texts, per member and language (SMS_MODE=log: the texts are waiting, or already logged and never sent).
     await page.goto("/staff/drills");
-    await expect(page.getByTestId("drill")).toHaveCount(1);
-    await expect(page.getByTestId("drill-entries")).toContainText("Acknowledgement (approved)");
-    await expect(page.getByTestId("drill-result-row")).toHaveCount(2);
-    await expect(page.getByTestId("drill-results")).toContainText("Hub phone");
-    await expect(page.getByTestId("drill-results")).toContainText("Priya");
-    await expect(page.getByTestId("drill-results")).toContainText("Handed off: 0");
-    await expect(page.getByTestId("drill-results")).toContainText("Unknown: 0");
+    await expect(page.getByTestId("drill")).toHaveCount(drillsBefore + 1);
+    const drill = page.getByTestId("drill").first();
+    await expect(drill.getByTestId("drill-entries")).toContainText("Acknowledgement (approved)");
+    await expect(drill.getByTestId("drill-result-row")).toHaveCount(2);
+    await expect(drill.getByTestId("drill-results")).toContainText("Hub phone");
+    await expect(drill.getByTestId("drill-results")).toContainText("Priya");
+    await expect(drill.getByTestId("drill-results")).toContainText("Handed off: 0");
+    await expect(drill.getByTestId("drill-results")).toContainText("Unknown: 0");
     await expectNoHorizontalScroll(page);
 
     // The Hub home lists it in its own section, and the resident surface knows nothing of it: the share link is a 404.

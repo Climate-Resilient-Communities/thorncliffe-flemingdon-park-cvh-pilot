@@ -169,8 +169,8 @@ test("a roster phone's Edit form, opened, at 390px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: HEIGHT });
   await mount(page, "DrillRosterFixture", { texts: REAL_TEXTS, brand, ...ROSTER_STATES.list() }, { lang: "en" });
   await page.getByTestId("drill-roster-row").first().locator("summary").click();
-  await expect(page.getByRole("button", { name: "Save changes" })).toBeVisible();
-  await expect(page.getByText("Leave empty to keep the number.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save changes" }).first()).toBeVisible();
+  await expect(page.getByText("Leave empty to keep the number.").first()).toBeVisible();
   await noScroll(page);
   await fit(page, 390);
   await expectBaseline(page, "drill-roster-en-edit-open-390.png", { fullPage: true });
