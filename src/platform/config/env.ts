@@ -155,9 +155,9 @@ import { PRODUCTION_HOST } from "./hosts";
  * RESIDENT_ALERTS_ENABLED
  *                      server   optional                 `true` or `false`: whether the feed and the alert pages tell residents
  *                                                        about any alert (AD-17, S04.08), the launch gate. Production runs with
- *                                                        it OFF until E05's corrections and closing are released: unset means
- *                                                        false there, and `true` in production fails start-up while
- *                                                        RESIDENT_ALERTS_RELEASED (below) is false. Previews and local development
+ *                                                        it OFF unless the variable is `true`: unset means false there. E05 is
+ *                                                        released, so the code lock (RESIDENT_ALERTS_RELEASED, below) is open and
+ *                                                        `true` in production starts and turns the gate on. Previews and local development
  *                                                        run with it on unless it is set to false. A value that is neither fails
  *                                                        start-up (a typo must not switch the gate)
  * MAP_TILE_*           build    optional                 the resident map's tile provider, its credit and whether and how long a
@@ -339,13 +339,12 @@ export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 export const DEFAULT_SMS_USD_TO_CAD_RATE = 1.4;
 
 /**
- * The launch gate of E04 (S04.08, epics: "Launch gate kept"): production does not show residents any alert until E05's corrections and
- * closing are released. While this is false, `RESIDENT_ALERTS_ENABLED=true` in production fails start-up and the variable unset is off, so
- * the production configuration cannot turn alerts on by a setting alone. E05's last story ("an Admin changes RESIDENT_ALERTS_ENABLED to
- * true through a production deploy") flips this to true in that same deploy, records it in the launch-readiness checklist, and updates the
- * configuration test (src/platform/config/residentAlerts.test.ts), which pins it.
+ * The launch gate of E04 (S04.08, epics: "Launch gate kept"). E05's corrections and closing are complete in production, so the code lock
+ * is released: `RESIDENT_ALERTS_ENABLED=true` now starts in production and turns the gate on. The default stays off (unset or `false` in
+ * production), so the switch is only the Vercel variable, set by an Admin with a production redeploy and recorded in the launch-readiness
+ * checklist. The configuration test (src/platform/config/residentAlerts.test.ts) pins this.
  */
-export const RESIDENT_ALERTS_RELEASED = false;
+export const RESIDENT_ALERTS_RELEASED = true;
 
 export interface Env {
   environment: AppEnvironment;
@@ -810,8 +809,8 @@ export function parseSearchEnv(source: Record<string, string | undefined>): Sear
 }
 
 /**
- * The launch gate. Production: off unless RESIDENT_ALERTS_ENABLED is `true` AND the alerts have been released
- * (RESIDENT_ALERTS_RELEASED); `true` before that is refused, so a setting in Vercel cannot show residents an alert early. Everywhere
+ * The launch gate. Production: off unless RESIDENT_ALERTS_ENABLED is `true`; while RESIDENT_ALERTS_RELEASED is false (the code lock, released as
+ * of E05) `true` is refused, so a setting in Vercel could not show residents an alert early. Everywhere
  * else the default is on (previews run with it on), and `false` turns it off. Anything but `true` or `false` is refused.
  */
 function parseResidentAlerts(value: string | undefined, environment: AppEnvironment, problems: string[]): boolean {

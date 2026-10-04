@@ -225,7 +225,7 @@ export interface FeedWiring {
   alerts?: FeedAlerts;
   /**
    * `RESIDENT_ALERTS_ENABLED` from the validated environment (AD-17, S04.08), the launch gate: false (and not saying so counts as
-   * false) and the feed tells no one about any alert, whatever else is wired. Production runs with it off until E05 is released.
+   * false) and the feed tells no one about any alert, whatever else is wired. Production runs with it off unless RESIDENT_ALERTS_ENABLED is true (E05 is released).
    */
   alertsEnabled?: boolean;
   now?: () => Date;
