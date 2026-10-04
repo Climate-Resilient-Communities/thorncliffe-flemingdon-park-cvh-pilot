@@ -92,3 +92,24 @@ describe("shouldRetry", () => {
     expect(shouldRetry(FEED_MAX_RETRIES + 1)).toBe(false);
   });
 });
+
+describe("a copy the service worker kept (S02.12)", () => {
+  it("is shown as last loaded at the time it was kept, never as current", () => {
+    const model = run([{ type: "ask", lang: "en" }, { type: "kept", lang: "en", feed: feed(4), at: T0 }]);
+
+    expect(model).toEqual({ lang: "en", feed: feed(4), at: T0, failed: true, checking: false });
+    expect(feedView(model, "en", T0 + 5_000)).toMatchObject({ feed: feed(4), failed: true, staleMs: 5_000 });
+  });
+
+  it("does not replace a feed the screen already has from later", () => {
+    const model = run([{ type: "answered", lang: "en", feed: feed(5), at: T0 + 10 }, { type: "ask", lang: "en" }, { type: "kept", lang: "en", feed: feed(4), at: T0 }]);
+
+    expect(model).toMatchObject({ feed: feed(5), at: T0 + 10, failed: true });
+  });
+
+  it("gives way to the server's answer as soon as there is one", () => {
+    const model = run([{ type: "kept", lang: "en", feed: feed(4), at: T0 }, { type: "ask", lang: "en" }, { type: "answered", lang: "en", feed: feed(6), at: T0 + 99 }]);
+
+    expect(model).toEqual({ lang: "en", feed: feed(6), at: T0 + 99, failed: false, checking: false });
+  });
+});

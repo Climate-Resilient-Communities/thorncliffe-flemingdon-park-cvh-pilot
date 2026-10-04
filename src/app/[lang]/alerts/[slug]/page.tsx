@@ -6,8 +6,9 @@ import { isLaunchCode } from "@/i18n/languages";
 import { loadAlert } from "../source";
 
 // An alert (R-07, S04.08) is public and the same for every visitor, read from the feed (../source.ts): never built ahead, because the alerts come
-// from the database, which a build does not reach, and never kept as a page, because it must show the state the feed shows (a correction, an
-// update, the end of the alert) within the feed's own 15 seconds. An address nobody has an alert at is a 404 inside the shell, which a shared
+// from the database, which a build does not reach. The server's answer is shown whenever there is signal, within the feed's own 15 seconds (a
+// correction, an update, the end of the alert); a copy kept by the phone's worker (S02.12) is shown only without signal or after its 6 s timeout,
+// always with the note that says so and since when. An address nobody has an alert at is a 404 inside the shell, which a shared
 // cache must not keep (the default for a dynamic page, no-store, applies to it).
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";

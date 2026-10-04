@@ -1431,4 +1431,18 @@
     "suggestApply": "Afficher seulement {place}"
    }
   });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Cette page n'est pas enregistrée sur votre téléphone",
+    "body": "Elle n'a pas encore été ouverte sur ce téléphone avec du réseau, elle a donc besoin de réseau. Les numéros sont toujours enregistrés sur votre téléphone.",
+    "available": "Vous pouvez lire ceci sans réseau",
+    "none": "Rien d'autre n'est encore enregistré sur ce téléphone. Les pages que vous ouvrez avec du réseau sont enregistrées pour plus tard."
+   },
+   "R34": {
+    "offlineTitle": "Lire sans réseau",
+    "offlineHelp": "Les pages que vous ouvrez avec du réseau sont enregistrées sur ce téléphone, pour que vous puissiez les relire sans réseau. Les numéros sont toujours enregistrés. La première fois, le CVH a besoin de réseau pour s'ouvrir.",
+    "offlineNote": "Ce téléphone ne gardera peut-être pas les pages pour une utilisation hors ligne"
+   }
+  });
 })();

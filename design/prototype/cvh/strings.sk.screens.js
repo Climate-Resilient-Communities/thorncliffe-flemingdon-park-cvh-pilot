@@ -1431,4 +1431,18 @@
     "suggestApply": "Zobraziť len {place}"
    }
   });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Táto stránka nie je uložená vo vašom telefóne",
+    "body": "V tomto telefóne ešte nebola otvorená so signálom, preto potrebuje signál. Čísla sú vo vašom telefóne uložené vždy.",
+    "available": "Toto si môžete prečítať bez signálu",
+    "none": "V tomto telefóne zatiaľ nie je uložené nič iné. Stránky, ktoré otvoríte so signálom, sa uložia na neskôr."
+   },
+   "R34": {
+    "offlineTitle": "Čítanie bez signálu",
+    "offlineHelp": "Stránky, ktoré otvoríte so signálom, sa uložia v tomto telefóne, takže si ich neskôr môžete znova prečítať bez signálu. Čísla sú uložené vždy. Prvýkrát potrebuje CVH na otvorenie signál.",
+    "offlineNote": "Tento telefón nemusí uchovávať stránky na použitie bez signálu"
+   }
+  });
 })();

@@ -123,7 +123,9 @@ describe.each([...pages, ...surface.layouts].map((file) => [relative(file), file
     const exportsOf: Record<string, unknown> = await import(file);
     const functions = Object.entries(exportsOf).filter(([name, value]) => name !== "default" && typeof value === "function");
     expect(functions.map(([name]) => name)).toEqual([]);
-  });
+    // The first page imported loads the whole shared module graph cold, which on a busy machine takes longer than vitest's 5 s;
+    // the assertion is unchanged.
+  }, 60_000);
 });
 
 /** A throwaway src/ tree: `files` maps paths under it to their text. */

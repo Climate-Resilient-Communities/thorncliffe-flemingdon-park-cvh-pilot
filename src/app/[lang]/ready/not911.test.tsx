@@ -40,6 +40,7 @@ import NumbersPage from "./numbers/page";
 import HomePage from "../page";
 import AlertPage from "../alerts/[slug]/page";
 import VerifiedPage from "../alerts/[slug]/verified/page";
+import OfflinePage from "../offline/page";
 
 /** The marker the 911 block carries (src/ui/emergency/not-911.tsx). */
 export const hasNot911 = (html: string) => (html.match(/data-component="not-911"/g) ?? []).length;
@@ -65,6 +66,8 @@ const PAGES: { name: string; render: Render }[] = [
   // An alert (R-07, S04.08): the full block, once. What "verified" means (R-28) has the short form, as in the prototype.
   { name: "alert detail", render: async (lang) => (await AlertPage({ params: Promise.resolve({ lang, slug: "kbcdfghj" }) } as never)) as ReactElement },
   { name: "what verified means", render: async (lang) => (await VerifiedPage({ params: Promise.resolve({ lang, slug: "kbcdfghj" }) } as never)) as ReactElement },
+  // The offline page (S02.12): what a phone without signal shows for a page it has not kept.
+  { name: "offline", render: async (lang) => (await OfflinePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
 ];
 
 beforeEach(() => {
@@ -73,7 +76,7 @@ beforeEach(() => {
 });
 
 describe("the 911 block", () => {
-  it("is on every guide, the essential-numbers page, Be ready, home, an alert and what verified means, exactly once, in English and in Urdu", async () => {
+  it("is on every guide, the essential-numbers page, Be ready, home, an alert, what verified means and the offline page, exactly once, in English and in Urdu", async () => {
     for (const { name, render } of PAGES) {
       for (const lang of ["en", "ur"]) {
         const html = renderToStaticMarkup(await render(lang));
@@ -128,7 +131,7 @@ describe("the 911 block", () => {
   });
 
   it("is the one component: no page of the list writes its own copy of the words", () => {
-    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx", "../../../ui/alert/alert-detail.tsx", "../../../ui/alert/verified-explainer.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
+    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx", "../../../ui/alert/alert-detail.tsx", "../../../ui/alert/verified-explainer.tsx", "../offline/page.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
     for (const source of sources) {
       expect(source).toMatch(/<Not911 /);
       expect(source).not.toMatch(/not an emergency service/i);

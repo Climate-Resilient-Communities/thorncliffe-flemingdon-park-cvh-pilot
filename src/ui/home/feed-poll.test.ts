@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { FEED_OUTDATED_MS, FEED_POLL_MS, FEED_TIMEOUT_MS, agoText, fetchFeed, isOutdated, isStale } from "./feed-poll";
+import { FEED_OUTDATED_MS, FEED_POLL_MS, FEED_TIMEOUT_MS, agoText, fetchFeed, fetchFeedAnswer, isOutdated, isStale } from "./feed-poll";
 
 const feed = { v: 1, feed_version: 4, server_now: "2026-10-01T15:00:00.000Z", threads: [], places: { buildings: [], neighbourhoods: [{ id: "TP", status: "none", verified: true }] } };
 const answer = (body: unknown, status = 200) => vi.fn(async () => new Response(typeof body === "string" ? body : JSON.stringify(body), { status })) as unknown as typeof fetch;
@@ -102,5 +102,20 @@ describe("agoText", () => {
     [-5000, "justNow"],
   ])("%d ms is %s", (elapsed, expected) => {
     expect(agoText(elapsed, t)).toBe(expected);
+  });
+});
+
+describe("fetchFeedAnswer: a copy the service worker kept (S02.12)", () => {
+  const kept = (at: string | null) =>
+    vi.fn(async () => new Response(JSON.stringify(feed), { status: 200, headers: { "x-cvh-fallback": "1", ...(at === null ? {} : { "x-cvh-cached-at": at }) } })) as unknown as typeof fetch;
+
+  it("is told apart from the server's answer, with when it was kept", async () => {
+    expect(await fetchFeedAnswer("en", answer(feed))).toEqual({ feed, keptAt: null });
+    expect(await fetchFeedAnswer("en", kept("1700000000000"))).toEqual({ feed, keptAt: 1_700_000_000_000 });
+  });
+
+  it("is never the current feed for fetchFeed, and a kept copy with no time is a failure", async () => {
+    expect(await fetchFeed("en", kept("1700000000000"))).toBeNull();
+    expect(await fetchFeedAnswer("en", kept(null))).toBeNull();
   });
 });

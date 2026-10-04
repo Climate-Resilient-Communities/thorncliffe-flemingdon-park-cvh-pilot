@@ -36,7 +36,12 @@ export type FeedEvent =
   | { type: "failed"; lang: string }
   | { type: "answered"; lang: string; feed: FeedV1; at: number }
   /** The latest ask was answered with a feed older than one already seen: nothing changes but that the ask is over. */
-  | { type: "discarded"; lang: string };
+  | { type: "discarded"; lang: string }
+  /**
+   * The latest ask failed, but the service worker had kept a copy of the feed, stored at `at` (S02.12). It is shown as what
+   * was last loaded, never as current, and only if it is newer than what the screen already has.
+   */
+  | { type: "kept"; lang: string; feed: FeedV1; at: number };
 
 export const initialModel = (lang: string): FeedModel => ({ lang, feed: null, at: null, failed: false, checking: false });
 
@@ -51,6 +56,9 @@ export function feedReducer(state: FeedModel, event: FeedEvent): FeedModel {
       return { ...model, feed: event.feed, at: event.at, failed: false, checking: false };
     case "discarded":
       return { ...model, checking: false };
+    case "kept":
+      if (model.at !== null && model.at >= event.at) return { ...model, failed: true, checking: false };
+      return { ...model, feed: event.feed, at: event.at, failed: true, checking: false };
   }
 }
 
