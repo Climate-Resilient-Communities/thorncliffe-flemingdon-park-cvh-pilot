@@ -292,15 +292,17 @@ describe("search", () => {
 
     it("reads the vectors once and keeps them in memory", async () => {
       await publish();
-      const reads = vi.spyOn(storage, "get");
+      // The compact vectors and the English listing: two reads of the store.
+      const reads = [vi.spyOn(storage, "get"), vi.spyOn(storage, "getBytes")];
+      const count = () => reads.reduce((sum, spy) => sum + spy.mock.calls.length, 0);
       const search = service(fakeQueryEmbedder().embedder);
 
       await search.search({ q: "lawyer", lang: "en" });
-      const first = reads.mock.calls.length;
+      const first = count();
       await search.search({ q: "doctor", lang: "en" });
 
       expect(first).toBe(2);
-      expect(reads.mock.calls.length).toBe(first);
+      expect(count()).toBe(first);
     });
   });
 
@@ -337,6 +339,7 @@ describe("search", () => {
     it("fails with search_unavailable, not a wrong answer, when the vectors file is not what the release recorded", async () => {
       await publish();
       storage.files.set("releases/1/vectors.json", "{}");
+      storage.binaries.clear(); // an older release has no binary: the JSON file is what is read
       const notes: SearchFailureNote[] = [];
 
       await expect(service(fakeQueryEmbedder().embedder, { onFailure: async (n) => void notes.push(n) }).search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ name: "SearchFailure", code: "search_unavailable" });
@@ -344,9 +347,34 @@ describe("search", () => {
       expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1, error: "vectors_hash" }]);
     });
 
+    it("reads the compact binary vectors, not the JSON file, and tells vectors_hash when the binary is not the one recorded", async () => {
+      await publish();
+      expect(storage.binaries.has("releases/1/vectors.bin")).toBe(true);
+      const jsonReads = vi.spyOn(storage, "get");
+      const answer = await service(fakeQueryEmbedder().embedder).search({ q: "lawyer", lang: "en" });
+      expect(SearchV1Schema.parse(answer)).toMatchObject({ release_v: 1 });
+      expect(jsonReads.mock.calls.map((c) => c[0])).not.toContain("releases/1/vectors.json");
+
+      const changed = storage.binaries.get("releases/1/vectors.bin")!;
+      changed[changed.length - 1] ^= 0xff;
+      const notes: SearchFailureNote[] = [];
+      await expect(service(fakeQueryEmbedder().embedder, { onFailure: async (n) => void notes.push(n) }).search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
+      expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1, error: "vectors_hash" }]);
+    });
+
+    it("falls back to the JSON file when the binary is missing from the store", async () => {
+      await publish();
+      storage.binaries.clear();
+
+      const answer = await service(fakeQueryEmbedder().embedder).search({ q: "lawyer", lang: "en" });
+
+      expect(SearchV1Schema.parse(answer)).toMatchObject({ release_v: 1 });
+    });
+
     it("tells a vectors file the store no longer has as vectors_missing, written to the ops event with the release", async () => {
       await publish();
       storage.files.delete("releases/1/vectors.json");
+      storage.binaries.clear();
 
       await expect(service(fakeQueryEmbedder().embedder, { onFailure: (note) => recordSearchNote(app, note) }).search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
 

@@ -11,6 +11,9 @@ export interface DirectoryStorage {
   put(path: string, body: string): Promise<void>;
   /** The text at the path, or null when there is nothing there. Throws when the store cannot be reached. */
   get(path: string): Promise<string | null>;
+  /** The same for a binary file (the compact vectors). Absent in a store that only keeps text: nothing is then written, and readers use the JSON file. */
+  putBytes?(path: string, body: Uint8Array): Promise<void>;
+  getBytes?(path: string): Promise<Uint8Array | null>;
 }
 
 /** The catalogue's source version a release records. */

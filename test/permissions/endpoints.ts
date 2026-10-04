@@ -112,6 +112,8 @@ const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
+const DRILL_ROSTER_ACTIONS = "src/app/staff/drills/roster/actions.ts";
+const DRILL_START_ACTIONS = "src/app/staff/drills/start/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -166,6 +168,9 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/oncall", kind: "page", file: "src/app/staff/oncall/page.tsx", export: "default", route: "/staff/oncall", action: "oncall.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/drills", kind: "page", file: "src/app/staff/drills/page.tsx", export: "default", route: "/staff/drills", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/drills/roster", kind: "page", file: "src/app/staff/drills/roster/page.tsx", export: "default", route: "/staff/drills/roster", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/drills/start", kind: "page", file: "src/app/staff/drills/start/page.tsx", export: "default", route: "/staff/drills/start", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -626,6 +631,57 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { id: "01900000-0000-7000-8000-0000000000e9" },
+    expected: ADMIN_ONLY,
+  },
+  // S06.05: "Add phone", "Save changes" and "Remove" of the drill roster, and "Start a drill" (policy action `drill.run`, Admins at aal2). Called as an allowed Admin,
+  // the add really adds a (fictional) phone to the roster (test/db/permissions.db.test.ts clears the roster before each call), the edit and the remove are refused because
+  // no such phone exists, and the start is refused by the form (no type ticked), so nothing is sent and no drill is made.
+  {
+    id: `action ${DRILL_ROSTER_ACTIONS}#addDrillPhoneAction`,
+    kind: "action",
+    file: DRILL_ROSTER_ACTIONS,
+    export: "addDrillPhoneAction",
+    route: "/staff/drills/roster",
+    action: "drill.run",
+    writes: "business",
+    gate: "hub",
+    form: { label: "Hub phone", number: "416-555-0123", lang: "en" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${DRILL_ROSTER_ACTIONS}#editDrillPhoneAction`,
+    kind: "action",
+    file: DRILL_ROSTER_ACTIONS,
+    export: "editDrillPhoneAction",
+    route: "/staff/drills/roster",
+    action: "drill.run",
+    writes: "business",
+    gate: "hub",
+    form: { id: "01900000-0000-7000-8000-0000000000e9", label: "Hub phone", number: "", lang: "en" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${DRILL_ROSTER_ACTIONS}#removeDrillPhoneAction`,
+    kind: "action",
+    file: DRILL_ROSTER_ACTIONS,
+    export: "removeDrillPhoneAction",
+    route: "/staff/drills/roster",
+    action: "drill.run",
+    writes: "business",
+    gate: "hub",
+    form: { id: "01900000-0000-7000-8000-0000000000e9" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${DRILL_START_ACTIONS}#startDrillAction`,
+    kind: "action",
+    file: DRILL_START_ACTIONS,
+    export: "startDrillAction",
+    route: "/staff/drills/start",
+    action: "drill.run",
+    writes: "business",
+    gate: "hub",
+    form: { kind: "ack" },
     expected: ADMIN_ONLY,
   },
 ];

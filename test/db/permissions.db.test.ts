@@ -28,8 +28,9 @@ import {
   type StaffAuthService,
 } from "../../src/modules/identity";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
-import { createAlertSubmitter, createAlerting } from "../../src/modules/alerting";
-import { createDeliveryQueue, createMessagingPause } from "../../src/modules/messaging";
+import { createAlertSubmitter, createAlerting, createDrillThreads } from "../../src/modules/alerting";
+import { createDeliveryQueue, createMessagingPause, drillResults } from "../../src/modules/messaging";
+import { createDrillRoster } from "../../src/modules/subscriptions";
 import { createOncallRoster } from "../../src/modules/ops";
 import { noTranslation } from "../../src/modules/translation";
 import { createBuildingService, floorsOfBuilding } from "../../src/modules/places";
@@ -54,6 +55,9 @@ const wired = vi.hoisted(() => ({
   publish: null as unknown,
   pause: null as unknown,
   oncall: null as unknown,
+  drills: null as unknown,
+  drillThreads: null as unknown,
+  drillResults: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -89,6 +93,12 @@ vi.mock("../../src/app/staff/messagingPause", () => ({
 }));
 // The On-call numbers page and its actions (S06.07) run the roster on the app's own connection.
 vi.mock("../../src/app/oncall", () => ({ oncallRoster: () => wired.oncall }));
+// The Drills page, the drill roster page and their actions (S06.05) run the roster, the drill threads and their results on the app's own connection.
+vi.mock("../../src/app/drills", () => ({
+  drillRoster: () => wired.drills,
+  drillThreads: () => wired.drillThreads,
+  drillResultsReader: () => wired.drillResults,
+}));
 // The assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
 
@@ -146,6 +156,8 @@ async function reset() {
   await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
   // An Admin's allowed "Add number" (S06.07) names the Admin who added it: clear the roster before the accounts go.
   await owner`delete from oncall_roster`;
+  // ... and an allowed "Add phone" (S06.05) names the Admin who added it, too.
+  await owner`delete from drill_roster`;
   await owner.begin(async (tx) => {
     await tx.unsafe(`
       alter table audit_event disable trigger audit_event_no_update_or_delete;
@@ -217,6 +229,13 @@ beforeEach(async () => {
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
   });
+  wired.drills = createDrillRoster({
+    db: app,
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
+    skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+  });
+  wired.drillThreads = createDrillThreads({ db: app });
+  wired.drillResults = { forAlert: (alertId: string) => drillResults.forAlert(app, alertId) };
   wired.places = createBuildingService({
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },

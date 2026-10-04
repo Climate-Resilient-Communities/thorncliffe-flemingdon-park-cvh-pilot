@@ -4,7 +4,7 @@
 // Nothing here reads a database or a clock, so every rule below is a unit test (residentThreads.test.ts); the database
 // adapter (adapters/resident/readThreads.ts) and the local fixture (adapters/residentFixture.ts) only produce rows.
 import { createHash } from "node:crypto";
-import type { FeedThread } from "../../../contracts/feed";
+import type { ArchiveThread, FeedThread } from "../../../contracts/feed";
 import type { LangCode } from "../../../contracts/lang";
 
 /** One frozen web text of an entry in one language (`nondrill_alert_entry_translation`). */
@@ -152,4 +152,29 @@ export function assembleThreads(rows: readonly ResidentEntryRow[], lang: LangCod
 export function assembleClosedThread(rows: readonly ResidentEntryRow[], lang: LangCode, reason: string | null): FeedThread | null {
   if (rows.length === 0 || reason === null || !CLOSE_REASONS.includes(reason)) return null;
   return threadOf(rows, lang, reason as ResidentCloseReason).thread;
+}
+
+/** One closed thread of the archive page: how it closed and when (the alert's `closed_reason` and `closed_at`). */
+export interface ArchiveHead {
+  threadId: string;
+  reason: string | null;
+  closedAt: Date;
+}
+
+/**
+ * One page of the archive (S05.07): the closed threads `heads` names, in the order given (newest closed first, which the reader's query decides), each assembled as
+ * R-07 shows a closed thread (`assembleClosedThread`: every entry, correction and withdrawal as when live) with `closed_at`. A head with no published entry, or a reason
+ * that is not one of the three, is left out: the archive lists only what a resident can read.
+ */
+export function assembleArchive(rows: readonly ResidentEntryRow[], lang: LangCode, heads: readonly ArchiveHead[]): ArchiveThread[] {
+  const byThread = new Map<string, ResidentEntryRow[]>();
+  for (const row of rows) {
+    const entries = byThread.get(row.threadId);
+    if (entries) entries.push(row);
+    else byThread.set(row.threadId, [row]);
+  }
+  return heads.flatMap((head) => {
+    const thread = assembleClosedThread(byThread.get(head.threadId) ?? [], lang, head.reason);
+    return thread && thread.close_reason ? [{ ...thread, state: "closed" as const, close_reason: thread.close_reason as ArchiveThread["close_reason"], closed_at: head.closedAt.toISOString() }] : [];
+  });
 }

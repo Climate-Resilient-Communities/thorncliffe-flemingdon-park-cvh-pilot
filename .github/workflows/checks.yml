@@ -1,0 +1,184 @@
+name: Checks suite
+
+# The checks of every push (called by ci.yml) and of the nightly backstop (nightly.yml): three jobs that run at once, each with
+# its own timeout. ci.yml adds the job named "Checks" that needs all three. Nothing here deploys, and no job reads a secret.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  static:
+    name: Static
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Full history, as the database job has: some tests read git.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run check:tokens
+      - run: npm run check:spacing
+      - run: npm run check:layout
+      - run: npm run check:layers
+      - run: npm run check:logical
+      - run: npm test
+      - run: npm run lint:deps
+      # Fails if a catalog is stale or a required string is missing; the per-language report
+      # of missing keys goes to the job summary. Runs even if an earlier check failed.
+      - if: ${{ !cancelled() }}
+        run: npm run check:strings
+
+  database:
+    name: Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # A disposable database built like Supabase's (pg_cron, pg_net, the anon and
+    # authenticated roles), the image Supabase CLI 2.119.0 runs locally. It never
+    # holds real data and is gone when the job ends.
+    services:
+      postgres:
+        image: supabase/postgres:17.11.0.002
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      CI_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      # Full history: the destructive-migration check compares with origin/main
+      # and checks that a contract note's release is an ancestor of production.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Also records what each migration removed, read from the database, for
+      # the destructive-change check below (DO blocks, EXECUTE, CASCADE).
+      - name: Apply all migrations to a fresh database
+        run: npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
+        env:
+          MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      - name: Check RLS and table ownership
+        run: npm run db:check
+        env:
+          MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      - name: Database tests (runner, checks, Drizzle drift)
+        run: npm run test:db
+        env:
+          TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      # Reads the release in production from PRODUCTION_URL only when a migration
+      # carries a contract note. On main HEAD is origin/main, so comparing with it
+      # would check nothing: there the base is the commit before the push (all of a
+      # multi-commit push), or the first parent when that is unknown (a new branch,
+      # a forced push, the nightly run). The production job checks pending migrations again.
+      - name: Check migrations for destructive changes
+        run: |
+          base=origin/main
+          if [ "$GITHUB_REF" = refs/heads/main ]; then
+            base=HEAD~1
+            before=${{ github.event.before }}
+            if [[ "$before" =~ [1-9a-f] ]] && git merge-base --is-ancestor "$before" HEAD; then base=$before; fi
+          fi
+          npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+
+  browser:
+    name: Browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # The staff suite signs in against a disposable database (scripts/staff-docker.sh migrates it and runs with the
+    # container on the host's network), the same image as the Database job's and as gone when the job ends.
+    services:
+      postgres:
+        image: supabase/postgres:17.11.0.002
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      CI_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Built once; the staff, resident and smoke steps all use this build.
+      - run: npm run build
+        env:
+          APP_VERSION: ${{ github.sha }}
+      # Every browser suite runs in the pinned Playwright image (scripts/*-docker.sh, one tag), so the runner installs no
+      # browser. The layout tests and the Hub shell's screenshots render static HTML and need no server.
+      - name: Layout tests
+        run: npm run test:layout:docker
+        env:
+          CI: "true"
+      # Staff sign-in and the first setup gate in a browser (S01.07), against the build just made, with
+      # the identity fake instead of Supabase Auth and the disposable database above (as cvh_app_login).
+      - name: Staff sign-in end to end
+        run: npm run test:staff:docker
+        env:
+          CI: "true"
+          STAFF_TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      # The resident shell in every language at 320, 390 and 768 px (baseline screenshots, right-to-left
+      # mirroring, light/navy boxes, language control, fonts, no cookies), against the build just made. It runs
+      # in the pinned Playwright image (scripts/resident-docker.sh), the one environment the baselines are made
+      # and compared in; the runner's own Ubuntu rasterises text differently. node_modules and .next are the
+      # host's (the same linux x64).
+      - name: Test the resident surface in the production build
+        run: npm run test:resident:docker
+        env:
+          CI: "true"
+      # The Hub shell at 390, 699, 700 and 1280 px in en and ur (baseline screenshots), in the same pinned image
+      # (scripts/hub-docker.sh). It renders the layout fixture with the app's compiled stylesheet, so it needs
+      # no server; the shell's behaviour is asserted in `npm run test:layout` and `npm run test:staff`.
+      - name: Test the Hub shell screenshots
+        run: npm run test:hub:docker
+        env:
+          CI: "true"
+      # The diffs and actual screenshots of a failed comparison (the resident surface's and the Hub shell's).
+      - name: Upload the browser test results
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: browser-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+      # No real search here: the build has no Cohere key, so the one real search of the smoke spec runs only against production.
+      - name: Smoke check the production build
+        run: npm run test:smoke
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}

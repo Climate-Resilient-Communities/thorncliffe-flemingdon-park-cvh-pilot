@@ -93,14 +93,13 @@ describe("seed-production workflow", () => {
     expect(text).not.toMatch(/printenv|^\s*env\s*$/m);
   });
 
-  it("pins actions to the versions ci.yml uses", () => {
-    const ci = readFileSync(
-      path.join(root, ".github", "workflows", "ci.yml"),
-      "utf8",
-    );
+  it("pins actions to the commits ci.yml and checks.yml use", () => {
+    const ci = ["ci.yml", "checks.yml"]
+      .map((file) => readFileSync(path.join(root, ".github", "workflows", file), "utf8"))
+      .join("\n");
     const used = (t: string) =>
       new Set(
-        [...t.matchAll(/uses: (actions\/[a-z-]+@v\d+)/g)].map((m) => m[1]),
+        [...t.matchAll(/uses: (actions\/[a-z-]+@[0-9a-f]{40})/g)].map((m) => m[1]),
       );
     const ciActions = used(ci);
     expect(used(text).size).toBeGreaterThan(0);

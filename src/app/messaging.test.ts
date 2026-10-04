@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { RECIPIENT_KINDS, RECIPIENT_OWNER, ContactSourceNotWired, type MessagingLog, type RecipientKind, type RecipientNumberSource } from "@/modules/messaging";
 import type { DbTransaction } from "@/platform/db";
 import { oncallNumberSource } from "@/modules/ops";
+import { drillNumberSource } from "@/modules/subscriptions";
 import { contactResolver, resetMessagingComposition, wireContactResolver, wireContactSources, type OwnerNumberSources } from "./messaging";
 
 const tx = {} as DbTransaction;
@@ -63,9 +64,11 @@ describe("the messaging composition root", () => {
     await expect(resolver.resolve(tx, { deliveryId: DELIVERY, kind: "oncall", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
   });
 
-  it("gives the dispatcher one resolver, with ops' on-call source wired and the others not yet", async () => {
+  it("gives the dispatcher one resolver, with ops' on-call source and subscriptions' drill roster source wired and the others not yet", async () => {
     expect(contactResolver()).toBe(contactResolver());
     expect(Object.keys(wireContactSources({ ops: oncallNumberSource }))).toEqual(["oncall"]);
+    expect(Object.keys(wireContactSources({ subscriptions: { roster: drillNumberSource } }))).toEqual(["roster"]);
     await expect(contactResolver().resolve(tx, { deliveryId: DELIVERY, kind: "subscriber", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
+    await expect(contactResolver().resolve(tx, { deliveryId: DELIVERY, kind: "pending_signup", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
   });
 });

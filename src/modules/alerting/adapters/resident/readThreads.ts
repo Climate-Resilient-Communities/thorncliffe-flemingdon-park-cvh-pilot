@@ -5,12 +5,13 @@
 // view's `where not is_drill`), and an entry that is not web-published is not in the second, so neither can reach a
 // resident however this query is changed. The rule against naming another alert relation here is `eslint.config.mjs`'s
 // `resident-queries-read-nondrill-only`.
-import { and, asc, eq, gt, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gt, inArray, or, sql, type SQL } from "drizzle-orm";
 import type { LangCode } from "../../../../contracts/lang";
 import type { Db } from "../../../../platform/db";
 import { AudienceSchema } from "../../../../contracts/audience";
+import type { ArchiveThread } from "../../../../contracts/feed";
 import type { EntryKind } from "../../domain/lifecycle";
-import { assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../../domain/residentThreads";
+import { assembleArchive, assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../../domain/residentThreads";
 import { RESOLVED_WINDOW_MS, type StatusEntry, type StatusThread } from "../../domain/status";
 import { nondrillAlert, nondrillAlertEntryV3, nondrillAlertEntryTranslation } from "./views";
 
@@ -143,4 +144,24 @@ export async function readStatusThreads(db: Db, now: Date): Promise<StatusThread
     });
   }
   return [...threads.values()];
+}
+
+/**
+ * One page of the archive (S05.07): the non-drill threads that closed and have a published entry, newest closed first (ties by id, so a page never repeats or skips a
+ * thread), `size` to a page, each with every published entry in `lang`. One more row than a page is asked for, to say whether there is a next page. It reads the same
+ * resident views as the feed, so a drill never appears, whatever its state. `page` is 1-based.
+ */
+export async function readArchivePage(db: Db, lang: LangCode, page: number, size: number): Promise<{ threads: ArchiveThread[]; hasMore: boolean }> {
+  const closedAt = sql<Date>`coalesce(${nondrillAlert.closedAt}, ${nondrillAlert.createdAt})`;
+  const heads = await db
+    .select({ threadId: nondrillAlert.id, reason: nondrillAlert.closedReason, closedAt })
+    .from(nondrillAlert)
+    .where(and(eq(nondrillAlert.status, "closed"), exists(db.select({ one: sql`1` }).from(nondrillAlertEntryV3).where(eq(nondrillAlertEntryV3.alertId, nondrillAlert.id)))))
+    .orderBy(desc(closedAt), desc(nondrillAlert.id))
+    .limit(size + 1)
+    .offset((page - 1) * size);
+  const shown = heads.slice(0, size).map((head) => ({ ...head, closedAt: new Date(head.closedAt) }));
+  if (shown.length === 0) return { threads: [], hasMore: false };
+  const rows = await readEntries(db, lang, inArray(nondrillAlert.id, shown.map((head) => head.threadId)));
+  return { threads: assembleArchive(rows, lang, shown), hasMore: heads.length > size };
 }

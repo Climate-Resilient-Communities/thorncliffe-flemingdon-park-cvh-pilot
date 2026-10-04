@@ -6,9 +6,9 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { FeedV1 } from "../../src/contracts/feed";
+import { ARCHIVE_PAGE_SIZE, ArchiveThreadSchema, ArchiveV1, FeedV1 } from "../../src/contracts/feed";
 import { LANG_CODES, type LangCode } from "../../src/contracts/lang";
-import { createFeed } from "../../src/modules/alerting";
+import { createArchive, createFeed } from "../../src/modules/alerting";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -38,7 +38,7 @@ interface SeedEntry {
   translations?: Record<string, { body: string; status: "translated" | "fallback_en" | "script_converted"; model?: string | null }>;
 }
 
-async function seedThread(opts: { drill?: boolean; closed?: boolean; slug: string; entries: SeedEntry[] }): Promise<{ alertId: string; entryIds: string[] }> {
+async function seedThread(opts: { drill?: boolean; closed?: boolean; closedReason?: "resolved" | "expired" | "withdrawn"; closedAt?: Date; slug: string; entries: SeedEntry[] }): Promise<{ alertId: string; entryIds: string[] }> {
   const alertId = randomUUID();
   await owner.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${author}, true)`;
@@ -73,7 +73,14 @@ async function seedThread(opts: { drill?: boolean; closed?: boolean; slug: strin
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
     await tx.unsafe("alter table alert_entry_translation enable trigger alert_entry_translation_guard");
   });
-  if (opts.closed) await owner`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${alertId}`;
+  if (opts.closed || opts.closedReason) {
+    // The alert's guard sets `closed_at` to the closing time itself; a test that names the time switches it off for the one statement, as a migration owner could.
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table alert disable trigger alert_guard");
+      await tx`update alert set status = 'closed', closed_reason = ${opts.closedReason ?? "resolved"}, closed_at = ${opts.closedAt ?? new Date()} where id = ${alertId}`;
+      await tx.unsafe("alter table alert enable trigger alert_guard");
+    });
+  }
   return { alertId, entryIds };
 }
 
@@ -130,6 +137,7 @@ afterAll(async () => {
 beforeEach(clear);
 
 const feed = (lang: LangCode = "en", alertsEnabled = true) => createFeed({ db: app, alertsEnabled, now: () => NOW }).read(lang);
+const archive = (lang: LangCode = "en", page = 1, alertsEnabled = true) => createArchive({ db: app, alertsEnabled, now: () => NOW }).read(lang, page);
 const asApp = <T,>(run: (sql: postgres.Sql) => PromiseLike<T>) => run(appSql);
 
 describe("the feed's threads, read as the app's role from the resident views", () => {
@@ -347,5 +355,91 @@ describe("the resident views", () => {
     await expect(asApp((sql) => sql`update nondrill_alert set status = 'closed'`)).rejects.toThrow(/permission denied/);
     await expect(asApp((sql) => sql`delete from nondrill_alert_entry`)).rejects.toThrow(/permission denied|cannot delete from view/);
     await expect(asApp((sql) => sql`insert into nondrill_alert_entry_translation (entry_id, lang, body, status, source_hash) values (gen_random_uuid(), 'ur', 'x', 'translated', 'x')`)).rejects.toThrow(/permission denied|cannot insert into view/);
+  });
+});
+
+describe("the archive (S05.07), read as the app's role from the resident views", () => {
+  // Distinct, explicit closing times: a page is ordered by them (then by id), never by when the rows happened to be made.
+  const closedAt = (minutesAgo: number) => new Date(NOW.getTime() - minutesAgo * 60_000);
+  const slugOf = (n: number) => `arch${String(n).padStart(4, "0")}`;
+
+  it("lists the closed threads newest closed first, each as the live feed shows a thread, with how and when it closed", async () => {
+    const older = await seedThread({ slug: "closedold", closedReason: "expired", closedAt: closedAt(300), entries: [{ translations: URDU }] });
+    const newer = await seedThread({ slug: "closednew", closedReason: "resolved", closedAt: closedAt(30), entries: [{ translations: URDU }, { kind: "final", translations: URDU }] });
+    const withdrawn = await seedThread({ slug: "closedwdr", closedReason: "withdrawn", closedAt: closedAt(100), entries: [{ translations: URDU }] });
+
+    const answer = await archive("ur");
+
+    expect(ArchiveV1.parse(answer)).toEqual(answer);
+    expect(answer).toMatchObject({ v: 1, page: 1, has_more: false, server_now: NOW.toISOString() });
+    expect(answer.threads.map((thread) => [thread.slug, thread.close_reason, thread.closed_at])).toEqual([
+      ["closednew", "resolved", closedAt(30).toISOString()],
+      ["closedwdr", "withdrawn", closedAt(100).toISOString()],
+      ["closedold", "expired", closedAt(300).toISOString()],
+    ]);
+    // Every entry, in the language asked for, with the same fields the live feed gives.
+    const [first] = answer.threads;
+    expect(first.id).toBe(newer.alertId);
+    expect(first.entries.map((entry) => entry.kind)).toEqual(["ack", "final"]);
+    expect(first.entries[0].text).toMatchObject({ lang: "ur", body: "بجلی بند ہے۔", status: "ok" });
+    expect(older.alertId).not.toBe(withdrawn.alertId);
+    for (const thread of answer.threads) expect(ArchiveThreadSchema.safeParse(thread).success).toBe(true);
+  });
+
+  it("gives a closed thread exactly the entries it had when live", async () => {
+    const live = await seedThread({ slug: "closedlive", entries: [{ translations: URDU }, { kind: "update", phase: "in_progress", translations: URDU }] });
+    const before = (await feed("ur")).threads.find((thread) => thread.id === live.alertId)!;
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table alert disable trigger alert_guard");
+      await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = ${closedAt(5)} where id = ${live.alertId}`;
+      await tx.unsafe("alter table alert enable trigger alert_guard");
+    });
+
+    const after = (await archive("ur")).threads[0];
+
+    expect([after.id, after.slug, after.types, after.audience, after.valid_until]).toEqual([before.id, before.slug, before.types, before.audience, before.valid_until]);
+    expect(after.entries).toEqual(before.entries);
+    expect((await feed("ur")).threads).toEqual([]);
+  });
+
+  it(`pages ${ARCHIVE_PAGE_SIZE} to a page with no thread repeated or skipped, and says whether there is a next page`, async () => {
+    // 25 threads, two of them closed at the very same time: the order is still total.
+    for (let n = 0; n < 25; n += 1) await seedThread({ slug: slugOf(n), closedReason: "resolved", closedAt: closedAt(n === 24 ? 23 : n), entries: [{}] });
+
+    const one = await archive("en", 1);
+    const two = await archive("en", 2);
+    const three = await archive("en", 3);
+
+    expect(one.threads).toHaveLength(ARCHIVE_PAGE_SIZE);
+    expect(one.has_more).toBe(true);
+    expect(two.threads).toHaveLength(5);
+    expect(two).toMatchObject({ page: 2, has_more: false });
+    expect(three).toMatchObject({ page: 3, has_more: false, threads: [] });
+    const slugs = [...one.threads, ...two.threads].map((thread) => thread.slug);
+    expect(new Set(slugs).size).toBe(25);
+    const times = [...one.threads, ...two.threads].map((thread) => Date.parse(thread.closed_at));
+    expect(times).toEqual([...times].sort((a, b) => b - a));
+  });
+
+  it("never lists a drill, an open thread, or a closed thread none of whose entries was published", async () => {
+    await seedThread({ slug: "drillslug", drill: true, closedReason: "resolved", closedAt: closedAt(10), entries: [{ text: "EXERCISE: Power is out in 88 Test Dr.", translations: URDU }] });
+    await seedThread({ slug: "openslug1", entries: [{ translations: URDU }] });
+    await seedThread({ slug: "unpublish", closedReason: "expired", closedAt: closedAt(20), entries: [{ status: "pending_approval", publishedAt: null }] });
+    const real = await seedThread({ slug: "realslug1", closedReason: "resolved", closedAt: closedAt(30), entries: [{ translations: URDU }] });
+
+    for (const lang of LANG_CODES) {
+      const answer = await archive(lang);
+      expect(answer.threads.map((thread) => thread.id), lang).toEqual([real.alertId]);
+      expect(JSON.stringify(answer), lang).not.toMatch(/drillslug|EXERCISE|openslug1|unpublish/);
+    }
+    // The drill is really there and really closed: only the views leave it out.
+    expect((await owner`select count(*)::int as n from alert where is_drill and status = 'closed'`)[0].n).toBe(1);
+  });
+
+  it("lists nothing while the launch gate is off, and nothing for a page past the last", async () => {
+    await seedThread({ slug: "realslug1", closedReason: "resolved", closedAt: closedAt(30), entries: [{}] });
+
+    expect((await archive("en", 1, false)).threads).toEqual([]);
+    expect((await archive("en", 2)).threads).toEqual([]);
   });
 });

@@ -11,13 +11,13 @@
 // Precedence active > in_progress > resolved > none. `verified` is true when at least one thread giving the winning status has a verified covering entry, and
 // false only when every one of them rests on an unverified (D-1) entry; a place with no status claims nothing unverified (`NO_STATUS`).
 import { audienceCoversBuilding, audienceCoversNeighbourhood, type Audience } from "../../../contracts/audience";
-import type { PlaceStatus } from "../../../contracts/feed";
+import { RESOLVED_WINDOW_MS, type PlaceStatus } from "../../../contracts/feed";
 import { NO_STATUS, type PlaceState } from "./feed";
 import type { EntryKind } from "./lifecycle";
 import { isSubstantive } from "./thread";
 
-/** How long after closing a thread closed `resolved` still gives its places the status `resolved`. */
-export const RESOLVED_WINDOW_MS = 12 * 60 * 60 * 1000;
+/** How long after closing a thread closed `resolved` still gives its places the status `resolved` (the contract's, so a phone measures the same window). */
+export { RESOLVED_WINDOW_MS };
 
 /** What status reads of one published entry of a thread (from the resident views: `nondrill_alert_entry_v2`). */
 export interface StatusEntry {

@@ -893,7 +893,8 @@
    "todayAt": "dnes o {time}",
    "dayAt": "{day} o {time}",
    "linkLine": "Najnovšie aktualizácie a opravy: {url}",
-   "sendLine": "Telefón sa vás opýta, cez ktorú aplikáciu to chcete poslať."
+   "sendLine": "Telefón sa vás opýta, cez ktorú aplikáciu to chcete poslať.",
+   "placeMore": "a {n} ďalších"
   },
   "R30": {
    "deviceLabel": "Upozornenie v skupine na WhatsAppe",
@@ -1382,6 +1383,67 @@
     "buildingsCount": "Počet domov: {n}",
     "buildingsCountOne": "1 dom",
     "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
+   }
+  });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "Nič aktívne"
+   },
+   "R03": {
+    "currentAlerts": "Aktuálne upozornenia",
+    "noCurrentAlerts": "Žiadne aktuálne upozornenia",
+    "myBuildings": "Vaše budovy",
+    "checking": "Kontrolujú sa upozornenia",
+    "feedFailed": "Upozornenia sa práve nepodarilo skontrolovať. Miesto s nápisom „Neznáme“ môže mať aj tak upozornenie. Skúsime to znova.",
+    "feedFailedOld": "Nové upozornenia sa nepodarilo skontrolovať. Zobrazuje sa to, čo sa naposledy načítalo {t}."
+   },
+   "R09": {
+    "searching": "Hľadá sa",
+    "needsSignal": "Vyhľadávanie potrebuje signál",
+    "needsSignalBody": "Stále môžete vybrať tému nižšie alebo zavolať do Hubu.",
+    "busy": "Vyhľadávanie je preťažené, skúste to znova o pár minút",
+    "busyBody": "Môžete vybrať tému nižšie alebo zavolať do Hubu.",
+    "updating": "Výsledky vyhľadávania sa aktualizujú, skúste to znova",
+    "updatingBody": "Kým sa aktualizujú, môžete vybrať tému nižšie alebo zavolať do Hubu.",
+    "browseAll": "Zobraziť všetky služby a organizácie",
+    "loading": "Témy sa načítavajú"
+   },
+   "R10": {
+    "shownIn": "Zobrazené v jazyku {lang}"
+   },
+   "directory": {
+    "title": "Služby a organizácie",
+    "lead": "To, čo Hub overil v Thorncliffe Parku a Flemingdon Parku. Zoznam zúžite výberom témy alebo štvrte.",
+    "count": "Počet služieb: {n}",
+    "countOne": "1 služba",
+    "topic": "Téma",
+    "emergency": "Pomáha v tiesňovej situácii",
+    "emergencyRole": "Úloha v tiesňovej situácii",
+    "lastConfirmed": "Naposledy overil Hub {date}",
+    "lastUpdated": "Naposledy aktualizované {time}",
+    "loading": "Adresár sa načítava",
+    "couldNotLoad": "Adresár sa nepodarilo načítať",
+    "couldNotLoadBody": "Hub vám môže pomôcť nájsť službu cez telefón.",
+    "couldNotLoadNumbers": "Na stránke s číslami sú ďalšie čísla, ktoré môžete potrebovať.",
+    "numbersLink": "Zobraziť dôležité čísla",
+    "backToList": "Všetky služby a organizácie",
+    "suggestApply": "Zobraziť len {place}"
+   }
+  });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Táto stránka nie je uložená vo vašom telefóne",
+    "body": "V tomto telefóne ešte nebola otvorená so signálom, preto potrebuje signál. Čísla sú vo vašom telefóne uložené vždy.",
+    "available": "Toto si môžete prečítať bez signálu",
+    "none": "V tomto telefóne zatiaľ nie je uložené nič iné. Stránky, ktoré otvoríte so signálom, sa uložia na neskôr."
+   },
+   "R34": {
+    "offlineTitle": "Čítanie bez signálu",
+    "offlineHelp": "Stránky, ktoré otvoríte so signálom, sa uložia v tomto telefóne, takže si ich neskôr môžete znova prečítať bez signálu. Čísla sú uložené vždy. Prvýkrát potrebuje CVH na otvorenie signál.",
+    "offlineNote": "Tento telefón nemusí uchovávať stránky na použitie bez signálu"
    }
   });
   /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */

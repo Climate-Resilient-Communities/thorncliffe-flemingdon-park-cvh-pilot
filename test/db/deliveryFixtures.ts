@@ -45,6 +45,23 @@ export function deliveryFixtures(owner: Sql) {
     return { id, role };
   }
 
+  let rosterSerial = 0;
+
+  /**
+   * A drill roster member (S06.05): a row of `drill_roster` with a fictitious number (the 555 exchange), added by an Admin account of its own. A drill's texts are
+   * written only for such a row (the delivery insert guard), so a test that seeds one for a drill makes the member first. `id` makes the member with that id (once).
+   */
+  async function rosterMember(options: { id?: string; lang?: string } = {}): Promise<string> {
+    const id = options.id ?? randomUUID();
+    const existing = await owner`select id from drill_roster where id = ${id}`;
+    if (existing.length > 0) return id;
+    const admin = (await staff("admin")).id;
+    rosterSerial += 1;
+    const phone = `+1416555${String(1000 + (rosterSerial % 9000)).padStart(4, "0")}`;
+    await owner`insert into drill_roster (id, label, phone, lang, added_by) values (${id}, ${`Member ${rosterSerial}`}, ${phone}, ${options.lang ?? "en"}, ${admin})`;
+    return id;
+  }
+
   /** An alert thread with one entry in `status`, carrying the frozen SMS bodies a submit would have stored. */
   async function entry(
     status: EntryStatus = "pending_approval",
@@ -137,6 +154,8 @@ export function deliveryFixtures(owner: Sql) {
 
   async function cleanup() {
     await owner`delete from delivery`;
+    // The roster members name the Admin accounts that added them (S06.05): they go before the accounts.
+    await owner`delete from drill_roster`;
     await owner.begin(async (tx) => {
       // A thread that a close recorded the closing entry of refers to that entry (S05.03), and a closed thread never changes: the reference is cleared with the guard off.
       await tx.unsafe("alter table alert disable trigger alert_guard");
@@ -154,7 +173,7 @@ export function deliveryFixtures(owner: Sql) {
     entryIds.length = 0;
   }
 
-  return { staff, entry, finalIn, approve, cleanup };
+  return { staff, entry, finalIn, approve, cleanup, rosterMember };
 }
 
 /** A fake E.164 number the tests look for in places it must never be (obviously not a real one). */

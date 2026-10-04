@@ -40,3 +40,18 @@ export function validUntilLine(validUntil: Date, now: Date, locale: string, t: T
       : t("R29.dayAt", { day: days === 1 ? t("time.tomorrow") : t(`time.days7.${WEEKDAYS[torontoDay(validUntil).weekday]}`), time });
   return t("R07.validLine", { until: t("time.until", { t: when }) });
 }
+
+/**
+ * When something happened, as a clock time a message can carry (the shared message and the link's preview are read later, so "5 minutes ago" would be wrong
+ * by then): "today at 3:00 p.m.", "Thursday at 9:00 p.m.", or the date for something older than a week, all in Toronto time and on the Gregorian calendar, with
+ * "today" the Toronto day of `now` (the feed's `server_now`, never a phone's clock). A time ahead of `now` reads as today. The words come from the catalog's
+ * `R29.todayAt` and `R29.dayAt` and the weekday words of `time`.
+ */
+export function clockPhrase(at: Date, now: Date, locale: string, t: Translate): string {
+  const time = new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit", timeZone: TORONTO, calendar: "gregory" }).format(at);
+  const back = torontoDaysBetween(at, now);
+  if (back <= 0) return t("R29.todayAt", { time });
+  if (back < 7) return t("R29.dayAt", { day: t(`time.days7.${WEEKDAYS[torontoDay(at).weekday]}`), time });
+  const day = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: TORONTO, calendar: "gregory" }).format(at);
+  return t("R29.dayAt", { day, time });
+}

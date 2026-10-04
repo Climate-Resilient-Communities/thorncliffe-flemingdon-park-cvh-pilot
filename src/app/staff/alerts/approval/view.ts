@@ -19,6 +19,7 @@ import { changeView } from "../audience/change";
 import { asideOf } from "../audience/view";
 import { approveHref, updateHref } from "../pages";
 import { typeName } from "../typeNames";
+import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
 
@@ -127,7 +128,7 @@ export interface ApprovalScreen {
    */
   pauseNotice: string | null;
   /** `update`: this is an update to an alert residents already read (S05.01); null for a thread's first entry. */
-  header: { types: string; submitted: string; drill: string | null; by: string | null; update: string | null };
+  header: { types: string; submitted: string; drill: string | null; exercise: ExerciseWords | null; by: string | null; update: string | null };
   english: { title: string; body: string };
   facts: {
     title: string;
@@ -426,6 +427,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       types: entry.content.types.map(typeName).join(", "),
       submitted: entry.submittedAt ? t("submitted", { time: formatTorontoDateTime(entry.submittedAt), version: entry.version }) : "",
       drill: thread.isDrill ? t("drill") : null,
+      exercise: thread.isDrill ? exerciseWords() : null,
       by: variant === "ambassador" ? t("ambassadorBy") : null,
       update: entry.kind === "update" && review.threadAudience !== null ? t("updateNote") : null,
     },

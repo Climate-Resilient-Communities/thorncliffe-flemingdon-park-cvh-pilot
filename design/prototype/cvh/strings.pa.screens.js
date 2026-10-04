@@ -893,7 +893,8 @@
    "todayAt": "ਅੱਜ {time} ਵਜੇ",
    "dayAt": "{day} {time} ਵਜੇ",
    "linkLine": "ਸਭ ਤੋਂ ਨਵੇਂ ਅੱਪਡੇਟ ਅਤੇ ਕੋਈ ਵੀ ਸੋਧ: {url}",
-   "sendLine": "ਤੁਹਾਡਾ ਫ਼ੋਨ ਪੁੱਛੇਗਾ ਕਿ ਇਹ ਕਿਸ ਐਪ ਨਾਲ ਭੇਜਣਾ ਹੈ।"
+   "sendLine": "ਤੁਹਾਡਾ ਫ਼ੋਨ ਪੁੱਛੇਗਾ ਕਿ ਇਹ ਕਿਸ ਐਪ ਨਾਲ ਭੇਜਣਾ ਹੈ।",
+   "placeMore": "ਅਤੇ {n} ਹੋਰ"
   },
   "R30": {
    "deviceLabel": "WhatsApp ਗਰੁੱਪ ਵਿੱਚ ਚੇਤਾਵਨੀ",
@@ -1382,6 +1383,67 @@
     "buildingsCount": "{n} ਇਮਾਰਤਾਂ",
     "buildingsCountOne": "1 ਇਮਾਰਤ",
     "filtered": "ਸਿਰਫ਼ ਉਹ ਥਾਵਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ ਜੋ ਡਾਇਰੈਕਟਰੀ ਵਿੱਚ ਤੁਹਾਡੇ ਚੁਣੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।"
+   }
+  });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "ਕੁਝ ਵੀ ਸਰਗਰਮ ਨਹੀਂ"
+   },
+   "R03": {
+    "currentAlerts": "ਮੌਜੂਦਾ ਚੇਤਾਵਨੀਆਂ",
+    "noCurrentAlerts": "ਕੋਈ ਮੌਜੂਦਾ ਚੇਤਾਵਨੀ ਨਹੀਂ",
+    "myBuildings": "ਤੁਹਾਡੀਆਂ ਬਿਲਡਿੰਗਾਂ",
+    "checking": "ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਹੋ ਰਹੀ ਹੈ",
+    "feedFailed": "ਅਸੀਂ ਹੁਣੇ ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕਰ ਸਕੇ। ਜਿਸ ਥਾਂ ਉੱਤੇ \"ਪਤਾ ਨਹੀਂ\" ਲਿਖਿਆ ਹੈ, ਉੱਥੇ ਫਿਰ ਵੀ ਕੋਈ ਚੇਤਾਵਨੀ ਹੋ ਸਕਦੀ ਹੈ। ਅਸੀਂ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰਾਂਗੇ।",
+    "feedFailedOld": "ਅਸੀਂ ਨਵੀਆਂ ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕਰ ਸਕੇ। ਆਖ਼ਰੀ ਵਾਰ {t} ਲੋਡ ਹੋਈ ਜਾਣਕਾਰੀ ਦਿਖਾਈ ਜਾ ਰਹੀ ਹੈ।"
+   },
+   "R09": {
+    "searching": "ਲੱਭਿਆ ਜਾ ਰਿਹਾ ਹੈ",
+    "needsSignal": "ਲੱਭਣ ਲਈ ਸਿਗਨਲ ਚਾਹੀਦਾ ਹੈ",
+    "needsSignalBody": "ਤੁਸੀਂ ਅਜੇ ਵੀ ਹੇਠਾਂ ਕੋਈ ਵਿਸ਼ਾ ਚੁਣ ਸਕਦੇ ਹੋ, ਜਾਂ ਹੱਬ ਨੂੰ ਕਾਲ ਕਰ ਸਕਦੇ ਹੋ।",
+    "busy": "ਖੋਜ ਇਸ ਵੇਲੇ ਰੁੱਝੀ ਹੋਈ ਹੈ, ਕੁਝ ਮਿੰਟਾਂ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
+    "busyBody": "ਤੁਸੀਂ ਹੇਠਾਂ ਕੋਈ ਵਿਸ਼ਾ ਚੁਣ ਸਕਦੇ ਹੋ, ਜਾਂ ਹੱਬ ਨੂੰ ਕਾਲ ਕਰ ਸਕਦੇ ਹੋ।",
+    "updating": "ਖੋਜ ਦੇ ਨਤੀਜੇ ਅੱਪਡੇਟ ਹੋ ਰਹੇ ਹਨ, ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ",
+    "updatingBody": "ਜਦੋਂ ਤੱਕ ਨਤੀਜੇ ਅੱਪਡੇਟ ਹੋ ਰਹੇ ਹਨ, ਤੁਸੀਂ ਹੇਠਾਂ ਕੋਈ ਵਿਸ਼ਾ ਚੁਣ ਸਕਦੇ ਹੋ, ਜਾਂ ਹੱਬ ਨੂੰ ਕਾਲ ਕਰ ਸਕਦੇ ਹੋ।",
+    "browseAll": "ਸਾਰੀਆਂ ਸੇਵਾਵਾਂ ਅਤੇ ਸੰਸਥਾਵਾਂ ਦੇਖੋ",
+    "loading": "ਵਿਸ਼ੇ ਲੋਡ ਹੋ ਰਹੇ ਹਨ"
+   },
+   "R10": {
+    "shownIn": "{lang} ਵਿੱਚ ਦਿਖਾਇਆ"
+   },
+   "directory": {
+    "title": "ਸੇਵਾਵਾਂ ਅਤੇ ਸੰਸਥਾਵਾਂ",
+    "lead": "Thorncliffe Park ਅਤੇ Flemingdon Park ਵਿੱਚ ਉਹ ਸੇਵਾਵਾਂ ਅਤੇ ਸੰਸਥਾਵਾਂ ਜਿਨ੍ਹਾਂ ਦੀ ਹੱਬ ਨੇ ਪੁਸ਼ਟੀ ਕੀਤੀ ਹੈ। ਸੂਚੀ ਛੋਟੀ ਕਰਨ ਲਈ ਕੋਈ ਵਿਸ਼ਾ ਜਾਂ ਇਲਾਕਾ ਚੁਣੋ।",
+    "count": "{n} ਸੇਵਾਵਾਂ",
+    "countOne": "1 ਸੇਵਾ",
+    "topic": "ਵਿਸ਼ਾ",
+    "emergency": "ਐਮਰਜੈਂਸੀ ਵਿੱਚ ਮਦਦ ਕਰਦੀ ਹੈ",
+    "emergencyRole": "ਐਮਰਜੈਂਸੀ ਵਿੱਚ ਭੂਮਿਕਾ",
+    "lastConfirmed": "ਹੱਬ ਨੇ ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਪੁਸ਼ਟੀ ਕੀਤੀ",
+    "lastUpdated": "ਆਖ਼ਰੀ ਵਾਰ {time} ਅੱਪਡੇਟ ਕੀਤਾ",
+    "loading": "ਡਾਇਰੈਕਟਰੀ ਲੋਡ ਹੋ ਰਹੀ ਹੈ",
+    "couldNotLoad": "ਡਾਇਰੈਕਟਰੀ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀ",
+    "couldNotLoadBody": "ਹੱਬ ਫ਼ੋਨ ਉੱਤੇ ਕੋਈ ਸੇਵਾ ਲੱਭਣ ਵਿੱਚ ਤੁਹਾਡੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹੈ।",
+    "couldNotLoadNumbers": "ਨੰਬਰਾਂ ਵਾਲੇ ਪੰਨੇ ਉੱਤੇ ਉਹ ਹੋਰ ਨੰਬਰ ਹਨ ਜਿਨ੍ਹਾਂ ਦੀ ਤੁਹਾਨੂੰ ਲੋੜ ਪੈ ਸਕਦੀ ਹੈ।",
+    "numbersLink": "ਜ਼ਰੂਰੀ ਨੰਬਰ ਦੇਖੋ",
+    "backToList": "ਸਾਰੀਆਂ ਸੇਵਾਵਾਂ ਅਤੇ ਸੰਸਥਾਵਾਂ",
+    "suggestApply": "ਸਿਰਫ਼ {place} ਦਿਖਾਓ"
+   }
+  });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "ਇਹ ਪੰਨਾ ਤੁਹਾਡੇ ਫ਼ੋਨ 'ਤੇ ਸੰਭਾਲਿਆ ਨਹੀਂ ਗਿਆ",
+    "body": "ਇਹ ਪੰਨਾ ਇਸ ਫ਼ੋਨ 'ਤੇ ਹਾਲੇ ਸਿਗਨਲ ਨਾਲ ਨਹੀਂ ਖੋਲ੍ਹਿਆ ਗਿਆ, ਇਸ ਲਈ ਇਸਨੂੰ ਸਿਗਨਲ ਚਾਹੀਦਾ ਹੈ। ਨੰਬਰ ਹਮੇਸ਼ਾ ਤੁਹਾਡੇ ਫ਼ੋਨ 'ਤੇ ਸੰਭਾਲੇ ਰਹਿੰਦੇ ਹਨ।",
+    "available": "ਤੁਸੀਂ ਇਹ ਸਿਗਨਲ ਤੋਂ ਬਿਨਾਂ ਪੜ੍ਹ ਸਕਦੇ ਹੋ",
+    "none": "ਇਸ ਫ਼ੋਨ 'ਤੇ ਹਾਲੇ ਹੋਰ ਕੁਝ ਸੰਭਾਲਿਆ ਨਹੀਂ ਗਿਆ। ਸਿਗਨਲ ਨਾਲ ਖੋਲ੍ਹੇ ਪੰਨੇ ਬਾਅਦ ਲਈ ਸੰਭਾਲੇ ਜਾਂਦੇ ਹਨ।"
+   },
+   "R34": {
+    "offlineTitle": "ਸਿਗਨਲ ਤੋਂ ਬਿਨਾਂ ਪੜ੍ਹਨਾ",
+    "offlineHelp": "ਸਿਗਨਲ ਨਾਲ ਖੋਲ੍ਹੇ ਪੰਨੇ ਇਸ ਫ਼ੋਨ 'ਤੇ ਸੰਭਾਲੇ ਜਾਂਦੇ ਹਨ, ਤਾਂ ਜੋ ਤੁਸੀਂ ਉਨ੍ਹਾਂ ਨੂੰ ਬਾਅਦ ਵਿੱਚ ਸਿਗਨਲ ਤੋਂ ਬਿਨਾਂ ਮੁੜ ਪੜ੍ਹ ਸਕੋ। ਨੰਬਰ ਹਮੇਸ਼ਾ ਸੰਭਾਲੇ ਰਹਿੰਦੇ ਹਨ। ਪਹਿਲੀ ਵਾਰ CVH ਖੋਲ੍ਹਣ ਲਈ ਸਿਗਨਲ ਚਾਹੀਦਾ ਹੈ।",
+    "offlineNote": "ਹੋ ਸਕਦਾ ਹੈ ਇਹ ਫ਼ੋਨ ਸਿਗਨਲ ਤੋਂ ਬਿਨਾਂ ਵਰਤੋਂ ਲਈ ਪੰਨੇ ਨਾ ਸੰਭਾਲੇ"
    }
   });
   /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */

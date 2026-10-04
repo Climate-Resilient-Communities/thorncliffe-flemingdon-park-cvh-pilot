@@ -1,0 +1,19 @@
+name: Nightly checks
+
+# A backstop: the full checks (the same three jobs as every push, checks.yml) on the head of main every night, so a change that
+# slipped through (a skipped run of a tested tree, a dependency or a base image that moved underneath) shows up within a day.
+# Alert-only: it never deploys and never touches production. A failed run is GitHub's own alert (an e-mail to whoever last
+# changed this schedule, and a red run in the Actions tab).
+on:
+  schedule:
+    # 03:17 in Toronto in summer (07:17 UTC), an off-peak minute.
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Nightly checks
+    uses: ./.github/workflows/checks.yml

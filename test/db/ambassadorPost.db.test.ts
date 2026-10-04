@@ -214,16 +214,18 @@ const approve = async (ref: EntryRef, by: Account = coordinator) => {
 async function hubThread(isDrill = false, types: string[] = ["elevator"]): Promise<EntryRef> {
   const audience: Audience = { scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [], types: [...types].sort() };
   const content: EntryContent = { text: "The elevator is out of service.", types, audience, phase: "problem", validUntil: new Date("2026-10-02T15:00:00Z"), validUntilMode: "at" };
-  const created = await alerting.createAlert(actorOf(coordinator), { kind: "ack", isDrill, reportedAt: new Date("2026-10-01T14:50:00Z"), content });
+  // Only an Admin at aal2 starts a drill (S06.05); the other Hub person approves it.
+  const [author, approver] = isDrill ? [admin, coordinator] : [coordinator, admin];
+  const created = await alerting.createAlert(actorOf(author), { kind: "ack", isDrill, reportedAt: new Date("2026-10-01T14:50:00Z"), content });
   if (!created.ok) throw new Error(`createAlert refused: ${created.error}`);
   const ref = { alertId: created.value.thread.id, entryId: created.value.entry.id };
-  const frozen = await seams.freeze(actorOf(coordinator), ref, {
+  const frozen = await seams.freeze(actorOf(author), ref, {
     contentHash: sha("hub"),
     smsBodies: { en: { body: "en hub", encoding: "gsm7", segments: 1 } },
     translations: [{ lang: "ur", body: "ur hub", machine: true, model: "m1", status: "translated", sourceHash: sha("source") }],
   });
   if (!frozen.ok) throw new Error(`freeze refused: ${frozen.error}`);
-  const approved = await alerting.approveEntry(actorOf(admin), ref, { version: 1, contentHash: sha("hub") });
+  const approved = await alerting.approveEntry(actorOf(approver), ref, { version: 1, contentHash: sha("hub") });
   if (!approved.ok) throw new Error(`approve refused: ${approved.error}`);
   return ref;
 }

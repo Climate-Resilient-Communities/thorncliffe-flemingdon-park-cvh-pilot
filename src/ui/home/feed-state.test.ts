@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { FeedV1 } from "@/contracts/feed";
 import { FEED_OUTDATED_MS } from "./feed-poll";
-import { FEED_MAX_RETRIES, feedReducer, feedView, initialModel, shouldRetry, type FeedEvent, type FeedModel } from "./feed-state";
+import { FEED_MAX_RETRIES, feedReducer, feedView, initialModel, judgeAnswer, shouldRetry, type FeedEvent, type FeedModel } from "./feed-state";
 
 const feed = (version: number): FeedV1 => ({ v: 1, feed_version: version, server_now: "2026-10-01T15:00:00.000Z", threads: [], places: { buildings: [], neighbourhoods: [] } });
 const run = (events: FeedEvent[], from: FeedModel = initialModel("en")) => events.reduce(feedReducer, from);
@@ -80,7 +80,7 @@ describe("feedView", () => {
   });
 
   it("shows nothing of another language's state", () => {
-    expect(feedView(answered, "ur", T0)).toEqual({ feed: null, failed: false, at: null, staleMs: null, checking: false });
+    expect(feedView(answered, "ur", T0)).toEqual({ feed: null, failed: false, at: null, staleMs: null, checking: false, now: T0 });
   });
 });
 
@@ -90,5 +90,64 @@ describe("shouldRetry", () => {
     expect(shouldRetry(1)).toBe(true);
     expect(shouldRetry(FEED_MAX_RETRIES)).toBe(true);
     expect(shouldRetry(FEED_MAX_RETRIES + 1)).toBe(false);
+  });
+});
+
+describe("a copy the service worker kept (S02.12)", () => {
+  it("is shown as last loaded at the time it was kept, never as current", () => {
+    const model = run([{ type: "ask", lang: "en" }, { type: "kept", lang: "en", feed: feed(4), at: T0 }]);
+
+    expect(model).toEqual({ lang: "en", feed: feed(4), at: T0, failed: true, checking: false });
+    expect(feedView(model, "en", T0 + 5_000)).toMatchObject({ feed: feed(4), failed: true, staleMs: 5_000 });
+  });
+
+  it("does not replace a feed the screen already has from later", () => {
+    const model = run([{ type: "answered", lang: "en", feed: feed(5), at: T0 + 10 }, { type: "ask", lang: "en" }, { type: "kept", lang: "en", feed: feed(4), at: T0 }]);
+
+    expect(model).toMatchObject({ feed: feed(5), at: T0 + 10, failed: true });
+  });
+
+  it("gives way to the server's answer as soon as there is one", () => {
+    const model = run([{ type: "kept", lang: "en", feed: feed(4), at: T0 }, { type: "ask", lang: "en" }, { type: "answered", lang: "en", feed: feed(6), at: T0 + 99 }]);
+
+    expect(model).toEqual({ lang: "en", feed: feed(6), at: T0 + 99, failed: false, checking: false });
+  });
+});
+
+describe("feed_version never goes down on a phone (S05.07)", () => {
+  const server = (version: number) => ({ feed: feed(version), keptAt: null });
+  const kept = (version: number, at = T0) => ({ feed: feed(version), keptAt: at });
+
+  it("judges the server's answers served out of order: the lower ones are discarded, equal and higher ones taken", () => {
+    let highest = -1;
+    const seen: string[] = [];
+    for (const version of [5, 4, 5, 7, 6, 3, 8]) {
+      const verdict = judgeAnswer(highest, server(version));
+      highest = verdict.highest;
+      seen.push(`${version}:${verdict.kind}`);
+    }
+
+    expect(seen).toEqual(["5:answered", "4:discarded", "5:answered", "7:answered", "6:discarded", "3:discarded", "8:answered"]);
+    expect(highest).toBe(8);
+  });
+
+  it("never lets a kept copy older than a feed seen stand in for it, and shows a newer or equal one as last loaded", () => {
+    expect(judgeAnswer(9, kept(8))).toEqual({ kind: "failed", highest: 9 });
+    expect(judgeAnswer(9, kept(9))).toEqual({ kind: "kept", highest: 9 });
+    expect(judgeAnswer(9, kept(10))).toEqual({ kind: "kept", highest: 9 });
+    // A copy shown is never what raises the highest: only the server's answer does.
+    expect(judgeAnswer(-1, kept(4))).toEqual({ kind: "kept", highest: -1 });
+  });
+
+  it("reads no answer as a failure and keeps the highest", () => {
+    expect(judgeAnswer(6, null)).toEqual({ kind: "failed", highest: 6 });
+  });
+
+  it("keeps the feed on screen when an answer or a kept copy with a lower version reaches the reducer, whatever asked", () => {
+    const on = run([{ type: "answered", lang: "en", feed: feed(9), at: T0 }, { type: "ask", lang: "en" }]);
+
+    expect(feedReducer(on, { type: "answered", lang: "en", feed: feed(8), at: T0 + 50 })).toEqual({ lang: "en", feed: feed(9), at: T0, failed: false, checking: false });
+    expect(feedReducer(on, { type: "kept", lang: "en", feed: feed(8), at: T0 + 50 })).toMatchObject({ feed: feed(9), at: T0, failed: true, checking: false });
+    expect(feedReducer(on, { type: "answered", lang: "en", feed: feed(9), at: T0 + 50 })).toMatchObject({ feed: feed(9), at: T0 + 50 });
   });
 });

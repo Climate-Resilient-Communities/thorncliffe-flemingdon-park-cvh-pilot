@@ -1267,12 +1267,12 @@ So that I can see at a glance whether anything affects me.
 **When** it is shown, with or without chosen buildings
 **Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is directly under the "Every day" destinations, above the link to what the resident has told the CVH, and nowhere else on the screen (owner decisions 36 and 37)
 
-**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`) is not built: no archive route exists yet (`/api/feed/archive` and the archive screen R-08 arrive with S05.07), so home has no link to it.
+**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`, "Alerts that have ended") is built with S05.07: home links to the archive screen R-08 at `/{lang}/archive`, and a `resolved` status links to its closed thread (R-07).
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** NFR-N3, AR-3, FR-M1 (installs) · **Depends on:** S02.06, S02.07, S02.10, S02.11 · **Branch:** `e02-s12-install-offline`
+- **Size:** M · **Estimate:** 7 h · **Actual:** (owned by the other developer; taken over and merged by the staff engineer on 2026-10-04)
+- **Traces:** NFR-N3, AR-3, FR-M1 (installs) · **Depends on:** S02.06, S02.07, S02.10, S02.11 · **Branch:** `e02-s12-offline`
 
 As a resident on an older phone with poor signal,
 I want to install the CVH and still read it when signal drops,
@@ -2414,7 +2414,7 @@ So that I know whether to act before reading every alert.
 
 ### Story S05.07 — Every phone shows the latest state of each alert, and an archive
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 12 min (started 2026-10-04 04:12 UTC, built 05:24 UTC)
 - **Traces:** AR-25, FR-A7 (archive), NFR-N3, UX-DR8 · **Depends on:** S05.03, S02.12 · **Branch:** `e05-s07-feed-currency-archive`
 
 As a resident,
@@ -2445,7 +2445,7 @@ So that I never act on something that was withdrawn or is over.
 
 ### Story S05.08 — Residents share an alert in one step
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 38 min (started 2026-10-04 01:06 UTC, built 02:44 UTC)
 - **Traces:** FR-A11, AR-25 (share URL), AR-10 (drill 404), UX-DR7 · **Depends on:** S05.02, S05.06 · **Branch:** `e05-s08-share`
 
 As a resident,
@@ -2749,7 +2749,7 @@ So that we know who received an alert and can follow up on failures.
 
 ### Story S06.05 — Admins run drills that reach only the drill roster
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 18 min (started 2026-10-04 01:06 UTC, built 03:24 UTC)
 - **Traces:** FR-A17, AR-10, NFR-N6, FR-M4 (drills) · **Depends on:** S06.03, S06.04 · **Branch:** `e06-s05-drills`
 
 As a Hub Admin,
@@ -2785,6 +2785,16 @@ So that we practise sending without any chance of reaching residents.
 **Given** a production drill
 **When** run as part of launch readiness
 **Then** it covers an alert, an update, a correction and a final, and each roster phone receives each text in its language with the exercise marker, with no automatic duplicate submission; any `unknown` is investigated before launch
+
+**What is built, and the seams the other stories use.** `subscriptions` owns `drill_roster` (`20261004110000_drill_roster.sql`: label, Canadian number, language, who added it; the app may add, change label, number and language, and delete; `delivery_forget_recipient('roster')` is its `ON DELETE SET NULL`, in the migration that creates it). Its number is protected as the on-call roster's is (S06.07): read only by the ContactResolver's source (`drillNumberSource`, wired in `ownerSources()`, answers only for an `alert` text) and by the roster screen, masked to its last four digits, and in no delivery row, log, audit record or error; the roster's own tests search every table, line and record for it. `/staff/drills` (the Drills page: "Start a drill", the roster's size and link, the recent drills with their counts), `/staff/drills/roster` (add, edit, remove) and `/staff/drills/start` are all the policy action `drill.run` (Admin only, at `aal2` for every action), in the Administration menu as "Drills"; the audit actions are `drill_roster.added`, `.edited` and `.removed` (meta: the roster's size afterwards, nothing else). The drill trigger is the replaced body of `delivery_insert_guard()` (no new trigger on `delivery`): an `alert` text of a drill entry is accepted only for a `roster` recipient that is a row of `drill_roster`, and an `alert` text of any other entry never for a `roster` recipient (`test/db/drills.db.test.ts` shows each refusal by direct SQL as the app's role and as the owner; the hand-off's `drill_recipient_mismatch` skip stays as the second defence). A drill starts only through `createAlert` or `logDisruption` with `isDrill`, which refuse anyone but an Admin at `aal2`; `alert.is_drill` stays immutable (S04.03's trigger; the same test shows it for the app and the owner).
+
+- **Approval (S04.07).** `captureRecipients` returns, for a drill entry, every roster member as `{kind: "roster", id, lang}` with their own language, the rows locked `FOR SHARE` in the approval's transaction (so a member removed meanwhile waits for the approval, and the removal then skips the text it finds); `countRecipients` counts them under the language of the text each gets (their own where the entry has a frozen text message in it, else English: `zh-Hant` has none), with `open: true`, so the approver reviews the roster's count and a roster that changed since is `RECIPIENT_COUNT_CHANGED`. The texts go through `enqueueAlertDeliveries` in the entry's frozen body for that language, whose first line is the exercise marker (the renderer's part 1). A real entry captures nobody here, as before E07, whatever is on the roster.
+- **The drill view (FR-M4).** The view `drill_delivery_result` (messaging; threads whose `is_drill` is true only) counts per entry, roster member and language the texts waiting, handed off, delivered, undelivered, failed, `unknown` and never sent; `/staff/drills` shows, per drill, the members by label (a removed member as "Removed from the roster") and the five counts the story names, flags an `unknown` text for investigation before launch, and says drill counts are kept apart from real alerts (nothing that counts a real alert reads the view, and the view holds no real alert).
+- **Screens.** Every Hub screen of a drill carries the exercise marker (X-10, "Exercise. This is practice." / "Nothing here is sent to residents."): "Start a drill", the composers (acknowledgement, alert, update, correction, withdrawal, final), the audience pages, the approval and its confirmation, and the drill pages; the Hub home lists drills in their own section (S04.10). The approval confirmation's drill words no longer say nothing was sent: "Its texts went only to the people on the drill roster."
+- **The share link.** `/[lang]/alerts/{slug}` of a drill is a 404 (the resident readers select from the `nondrill_` views only; shown for an approved, web-published drill, open and closed, in `test/db/drills.db.test.ts`, and for every resident route in `e2e/staff/resident-drill.spec.ts`). **S05.08 (`/a/{slug}`) must read the same views** and add its drill case to its tests: that route is not on this branch's base.
+- **Procedures (S09.03).** Drills page, "Start a drill"; write, submit and approve (a second Admin or Coordinator) as for an alert; Drills page again for what happened to each phone's text; Administration, Drills, "Open the drill roster" to add the staff phones before a drill. A production drill covers an alert, an update, a correction and a final, each a text on every roster phone in its language with the marker first; any `unknown` is investigated before launch.
+- **Re-consent rehearsal (S09.07).** A campaign text is `subscriber`-only by the table's shape check and `campaignRefusal`, so the rehearsal on the drill roster needs that rule widened (a `roster` recipient for a campaign that is a rehearsal) by S09.07, with its own trigger rule and test.
+- **Proposals for the owner to confirm.** (1) A drill's correction, withdrawal or final goes to the whole roster as it is when it is approved, not only to those who got the original (a phone added since gets it): the roster is staff phones, and the entry's own text says what it is. (2) At most 20 phones. (3) A phone's language is any of the 16 language codes; `zh-Hant` is texted the English text, as every recipient without a text in their language is. (4) A drill with an empty roster can be approved and reaches nobody; the approval and the Drills page say the count is 0. (5) The Drills page lists the 10 most recent drills. (6) "Drills" shares the phone icon with "On-call numbers" and "Test text".
 
 ### Story S06.06 — An Admin can pause all sending at once
 

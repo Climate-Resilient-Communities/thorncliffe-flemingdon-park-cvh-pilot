@@ -30,6 +30,8 @@ export interface LogDeps {
   /** The buildings and their floors, for the suggested text. */
   plans: () => Promise<readonly BuildingFloorPlan[]>;
   now: () => Date;
+  /** "Start a drill" (S06.05): the thread made is a drill. Only its own action sets it, behind the policy action `drill.run`; the form never carries it. */
+  isDrill?: boolean;
 }
 
 const t = (key: string, values?: Record<string, string | number>) => englishText(`staff.log.${key}`, values);
@@ -83,7 +85,7 @@ export async function logDisruptionFromForm(deps: LogDeps, session: Pick<StaffSe
     { staffId: session.staffId, aal: session.aal },
     {
       kind,
-      isDrill: false,
+      isDrill: deps.isDrill === true,
       reportedAt: reported.instant,
       types,
       place: place.choice,

@@ -93,8 +93,9 @@ describe("an expired thread with the expire job's system final (S05.04)", () => 
 
   it("previews the system's words in a shared link, which say it expired and never that it was resolved", () => {
     const v = view(t);
-    expect(v.preview.description).toBe(SYSTEM);
-    expect(v.preview.description).not.toMatch(/resolved/i);
+    expect(v.preview.description.endsWith(` — ${SYSTEM}`)).toBe(true);
+    expect(v.preview.title).toMatch(/^Elevator: Expired /);
+    expect(`${v.preview.title} ${v.preview.description}`).not.toMatch(/resolved/i);
     expect(v.closed?.reason).not.toBe("resolved");
   });
 });
@@ -109,7 +110,8 @@ describe("a withdrawn thread", () => {
     // What stands is the reason, never the wording that was withdrawn, on the page and in the share preview.
     expect(v.current.text.body).toBe(REASON);
     expect(v.current.mark?.kind).toBe("withdrawn");
-    expect(v.preview.description).toBe(REASON);
+    expect(v.preview.description.endsWith(` — ${REASON}`)).toBe(true);
+    expect(v.preview.title).toBe("Elevator: Withdrawn");
     expect(detail(t)).not.toContain(`>${FIRST}<`);
     expect(detail(t)).toContain('<span class="alert-ico alert-ico--info" aria-hidden="true"></span>');
   });

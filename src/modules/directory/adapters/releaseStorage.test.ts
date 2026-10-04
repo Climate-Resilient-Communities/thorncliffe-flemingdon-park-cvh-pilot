@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DIRECTORY_BUCKET, fileDirectoryStorage, memoryDirectoryStorage, supabaseDirectoryStorage } from "./releaseStorage";
 
 const dirs: string[] = [];
@@ -50,18 +50,21 @@ describe("the Supabase Storage store", () => {
     body?: string;
   }
   /** A Storage API of our own: a bucket that exists or not, objects in memory. Nothing reaches a real project. */
-  function fakeStorage(options: { bucket?: "private" | "public" | "missing"; failUploads?: boolean } = {}) {
+  function fakeStorage(options: { bucket?: "private" | "public" | "missing"; failUploads?: boolean; allowedMime?: string[] | null; limit?: number | null } = {}) {
     const calls: Call[] = [];
     const objects = new Map<string, string>();
+    const raw = new Map<string, Uint8Array>();
     let bucket = options.bucket ?? "missing";
     const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
     const fakeFetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? "GET";
+      const rawBody = init?.body instanceof FormData ? ((init.body.get("") as Blob | null) ?? null) : init?.body instanceof Blob ? init.body : null;
       const body = init?.body instanceof FormData ? String(await (init.body.get("") as Blob | null)?.text()) : typeof init?.body === "string" ? init.body : init?.body instanceof Blob ? await init.body.text() : undefined;
       calls.push({ method, url, body });
       const bucketUrl = `/storage/v1/bucket/${DIRECTORY_BUCKET}`;
-      if (url.endsWith(bucketUrl) && method === "GET") return bucket === "missing" ? json({ statusCode: "404", error: "Bucket not found", message: "Bucket not found" }, 404) : json({ id: DIRECTORY_BUCKET, name: DIRECTORY_BUCKET, public: bucket === "public" });
+      if (url.endsWith(bucketUrl) && method === "GET") return bucket === "missing" ? json({ statusCode: "404", error: "Bucket not found", message: "Bucket not found" }, 404) : json({ id: DIRECTORY_BUCKET, name: DIRECTORY_BUCKET, public: bucket === "public", allowed_mime_types: options.allowedMime ?? null, file_size_limit: options.limit ?? null });
+      if (url.endsWith(bucketUrl) && method === "PUT") return json({ message: "Successfully updated" });
       if (url.endsWith("/storage/v1/bucket") && method === "POST") {
         bucket = "private";
         return json({ name: DIRECTORY_BUCKET });
@@ -70,12 +73,14 @@ describe("the Supabase Storage store", () => {
       if (object && (method === "POST" || method === "PUT")) {
         if (options.failUploads) return json({ message: "boom" }, 500);
         objects.set(object, body ?? "");
+        if (rawBody) raw.set(object, new Uint8Array(await rawBody.arrayBuffer()));
         return json({ Key: `${DIRECTORY_BUCKET}/${object}` });
       }
+      if (object && method === "GET" && raw.has(object) && object.endsWith(".bin")) return new Response(raw.get(object) as BodyInit);
       if (object && method === "GET") return objects.has(object) ? new Response(objects.get(object)) : json({ statusCode: "404", error: "not_found", message: "Object not found" }, 400);
       return json({ message: "unexpected" }, 500);
     }) as typeof fetch;
-    return { calls, objects, fetch: fakeFetch };
+    return { calls, objects, raw, fetch: fakeFetch };
   }
   const make = (fake: ReturnType<typeof fakeStorage>) => supabaseDirectoryStorage({ url: "https://project.supabase.test", secretKey: "sb_secret_test", fetch: fake.fetch });
 
@@ -112,6 +117,64 @@ describe("the Supabase Storage store", () => {
     const open = fakeStorage({ bucket: "public" });
     await expect(make(open).put("releases/1/en.json", "{}")).rejects.toThrow(/must be private/);
     expect(open.objects.size).toBe(0);
+  });
+
+  const bucketPut = (call: Call) => call.method === "PUT" && call.url.endsWith(`/bucket/${DIRECTORY_BUCKET}`);
+
+  it("widens an existing bucket that only allows JSON to accept the binary type, keeping it private and its size limit", async () => {
+    const fake = fakeStorage({ bucket: "private", allowedMime: ["application/json"], limit: 5_000_000 });
+    await make(fake).put("releases/1/en.json", "{}");
+
+    const updates = fake.calls.filter(bucketPut);
+    expect(updates).toHaveLength(1);
+    expect(JSON.parse(updates[0].body as string)).toMatchObject({ public: false, allowed_mime_types: ["application/json", "application/octet-stream"], file_size_limit: 5_000_000 });
+  });
+
+  it("leaves a bucket alone that already allows the binary type or has no restriction, and sends no size limit when it had none", async () => {
+    for (const allowedMime of [["application/json", "application/octet-stream"], null]) {
+      const fake = fakeStorage({ bucket: "private", allowedMime });
+      await make(fake).put("releases/1/en.json", "{}");
+      expect(fake.calls.some(bucketPut)).toBe(false);
+    }
+    const fake = fakeStorage({ bucket: "private", allowedMime: ["application/json"] });
+    await make(fake).put("releases/1/en.json", "{}");
+    expect(JSON.parse(fake.calls.find(bucketPut)!.body as string)).not.toHaveProperty("file_size_limit");
+  });
+
+  it("logs a safe line, and still stores, when the bucket cannot be widened", async () => {
+    const fake = fakeStorage({ bucket: "private", allowedMime: ["application/json"] });
+    const failing = ((input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith(`/bucket/${DIRECTORY_BUCKET}`) && init?.method === "PUT" ? Promise.resolve(new Response(JSON.stringify({ message: "secret vendor text" }), { status: 400 })) : fake.fetch(input, init)) as typeof fetch;
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const store = supabaseDirectoryStorage({ url: "https://project.supabase.test", secretKey: "sb_secret_test", fetch: failing });
+      await store.put("releases/1/en.json", "{}");
+      expect(logged).toHaveBeenCalledTimes(1);
+      expect(String(logged.mock.calls[0][0])).toContain("directory_bucket_update_failed");
+      expect(String(logged.mock.calls[0][0])).not.toContain("secret vendor text");
+    } finally {
+      logged.mockRestore();
+    }
+  });
+
+  it("stores bytes as octet-stream and reads the same bytes back; a missing binary reads as null", async () => {
+    const fake = fakeStorage({ bucket: "private" });
+    const store = make(fake);
+    const bytes = new Uint8Array([0, 1, 2, 250, 255, 128]);
+
+    await store.putBytes!("releases/1/vectors.bin", bytes);
+
+    expect(Array.from((await store.getBytes!("releases/1/vectors.bin"))!)).toEqual(Array.from(bytes));
+    expect(await store.getBytes!("releases/2/vectors.bin")).toBeNull();
+  });
+
+  it("allows only the release's own vectors.bin besides the language files", async () => {
+    const store = make(fakeStorage({ bucket: "private" }));
+    await expect(store.putBytes!("releases/1/vectors.bin", new Uint8Array(1))).resolves.toBeUndefined();
+    for (const file of ["releases/1/x.bin", "releases/1/vectors.bin.json", "releases/0/vectors.bin", "../releases/1/vectors.bin", "releases/1/a/vectors.bin"]) {
+      await expect(store.putBytes!(file, new Uint8Array(1))).rejects.toThrow(/not a release file path/);
+      await expect(store.getBytes!(file)).rejects.toThrow(/not a release file path/);
+    }
   });
 
   it("says a failed upload failed, without the store's own message", async () => {

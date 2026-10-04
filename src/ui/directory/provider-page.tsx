@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
-import { isEnglishFallback, ResidentText } from "../text/resident-text";
+import { isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { CallHub } from "./call-hub";
 import { formatMoment } from "./format";
 import { Inline911, isFallbackText, UnavailableNote } from "./listing-text";
@@ -54,7 +54,7 @@ export function ProviderPage({ lang, id }: { lang: LaunchCode; id: string }) {
         )}
         {directory.status === "ready" && !directory.current && (
           <ResidentText as="p" className="dir-updated" testId="directory-last-updated">
-            {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallback(t("directory.lastUpdated")) ? "en-CA" : locale) })}
+            {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallbackMessage(t, "directory.lastUpdated") ? "en-CA" : locale) })}
           </ResidentText>
         )}
         {directory.status === "ready" && !provider && (

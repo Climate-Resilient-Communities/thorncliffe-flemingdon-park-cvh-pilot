@@ -1,6 +1,8 @@
 import path from "node:path";
 import { defineConfig } from "@playwright/test";
 import { ALERTS_PORT, ALERTS_URL, FEED_FIXTURE } from "./e2e/resident/alerts-server";
+import { PUBLIC_ORIGINS } from "./e2e/resident/public-origin";
+import { FALLBACK_KEYS, FALLBACK_PORT, FALLBACK_URL } from "./e2e/resident/fallback-server";
 
 // Page tests of the resident surface (/[lang]/…) against the production build: run `npm run build` first.
 // PLAYWRIGHT_CHROMIUM_EXECUTABLE points at a local Chromium when the one Playwright expects is not installed.
@@ -9,6 +11,18 @@ import { ALERTS_PORT, ALERTS_URL, FEED_FIXTURE } from "./e2e/resident/alerts-ser
 const port = process.env.E2E_PORT ?? "3000";
 const localUrl = `http://localhost:${port}`;
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
+// The server refuses to start without a safe environment (S01.02); a local run is development.
+// CVH_FAKE_BUILDINGS_FILE: the building page (S02.08) and the contacts on the numbers page (S02.10) read these sample
+// buildings instead of the database. CVH_FAKE_GUIDES_FILE: the guides and numbers pages (S02.10) read these sample rows.
+// PUBLIC_BASE_URL is a fixed origin for each server (e2e/resident/public-origin.ts), not the address it listens on: the links the pages build (the share link)
+// must not depend on the port, and each server still has an origin of its own, which the feed's cache key needs (src/app/feedCache.ts).
+const serverEnv = (publicOrigin: string) => ({
+  SMS_MODE: "log",
+  PUBLIC_BASE_URL: publicOrigin,
+  CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json"),
+  CVH_FAKE_GUIDES_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "guides.json"),
+});
+const welcomed = { name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) };
 
 export default defineConfig({
   testDir: "./e2e/resident",
@@ -35,37 +49,34 @@ export default defineConfig({
     // Every test starts as a returning resident who has been through the first-run steps (S02.03), so a page that
     // sends a first visit to R-01 does not redirect them. A test of the first visit starts empty:
     // test.use({ storageState: { cookies: [], origins: [] } }).
-    storageState: { cookies: [], origins: [{ origin: localUrl, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] },
+    storageState: { cookies: [], origins: [localUrl, FALLBACK_URL].map((origin) => ({ origin, localStorage: [welcomed] })) },
     browserName: "chromium",
+    // The service worker (S02.12) answers a page's requests itself, and page.route cannot see what it answers, so every
+    // test runs without it except the offline tests, which allow it (offline.spec.ts: test.use({ serviceWorkers: "allow" })).
+    serviceWorkers: "block",
     launchOptions: executablePath ? { executablePath } : undefined,
   },
   webServer: [
     {
       command: `npm run start -- --port ${port}`,
       url: localUrl,
-      // The server refuses to start without a safe environment (S01.02); a local run is development.
-      // CVH_FAKE_BUILDINGS_FILE: the building page (S02.08) and the contacts on the numbers page (S02.10) read these sample
-      // buildings instead of the database. CVH_FAKE_GUIDES_FILE: the guides and numbers pages (S02.10) read these sample rows.
-      env: {
-        SMS_MODE: "log",
-        PUBLIC_BASE_URL: localUrl,
-        CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json"),
-        CVH_FAKE_GUIDES_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "guides.json"),
-      },
+      env: serverEnv(PUBLIC_ORIGINS.main),
       reuseExistingServer: !process.env.CI,
     },
     {
-      // The second server (S04.08, e2e/resident/alerts-server.ts): the same, with the threads of fixtures/feed.json in the feed and on the
+      // The server of the alert tests (S04.08, e2e/resident/alerts-server.ts): the same, with the threads of fixtures/feed.json in the feed and on the
       // alert pages (CVH_FAKE_FEED_FILE), so the pages that show alerts are tested with alerts and every other page with none.
       command: `npm run start -- --port ${ALERTS_PORT}`,
       url: ALERTS_URL,
-      env: {
-        SMS_MODE: "log",
-        PUBLIC_BASE_URL: ALERTS_URL,
-        CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json"),
-        CVH_FAKE_GUIDES_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "guides.json"),
-        CVH_FAKE_FEED_FILE: FEED_FIXTURE,
-      },
+      env: { ...serverEnv(PUBLIC_ORIGINS.alerts), CVH_FAKE_FEED_FILE: FEED_FIXTURE },
+      reuseExistingServer: !process.env.CI,
+    },
+    // The same build again, with a few catalog keys shown as English fallback in every language but English
+    // (e2e/resident/fallback-server.ts): fallback.spec.ts measures the fallback there whatever has been translated.
+    {
+      command: `npm run start -- --port ${FALLBACK_PORT}`,
+      url: FALLBACK_URL,
+      env: { ...serverEnv(PUBLIC_ORIGINS.fallback), CVH_FAKE_UNTRANSLATED_KEYS: FALLBACK_KEYS.join(",") },
       reuseExistingServer: !process.env.CI,
     },
   ],

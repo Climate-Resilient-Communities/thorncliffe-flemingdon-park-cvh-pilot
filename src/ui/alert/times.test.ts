@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { torontoDay, torontoDaysBetween, validUntilLine, type Translate } from "./times";
+import { clockPhrase, torontoDay, torontoDaysBetween, validUntilLine, type Translate } from "./times";
 
 // The catalog's words, as a translator would give them (src/i18n/messages/en.json).
 const WORDS: Record<string, string> = {
@@ -75,5 +75,33 @@ describe("the valid-until line", () => {
 
   it("is written in the language's own way: its tag decides the digits and the day period", () => {
     expect(line("2026-10-01T19:00:00Z", "2026-10-01T15:00:00Z", "fr")).toMatch(/^Valid until today at 15:00$/);
+  });
+});
+
+describe("a clock time for a message (S05.08)", () => {
+  const phrase = (at: string, now: string, locale = "en") => clockPhrase(new Date(at), new Date(now), locale, t).replace(/[  ]/g, " ");
+
+  it("says 'today at' for the Toronto day of the feed's clock, in Toronto time", () => {
+    expect(phrase("2026-10-01T14:40:00Z", "2026-10-01T15:00:00Z")).toBe("today at 10:40 AM");
+    // 01:30 UTC on the 2nd is 9:30 PM on the 1st in Toronto: still the same day as 11:00 PM that evening.
+    expect(phrase("2026-10-02T01:30:00Z", "2026-10-02T02:00:00Z")).toBe("today at 9:30 PM");
+  });
+
+  it("names the weekday for the days before, up to a week", () => {
+    // 1 October 2026 is a Thursday.
+    expect(phrase("2026-09-30T14:00:00Z", "2026-10-01T15:00:00Z")).toBe("Wednesday at 10:00 AM");
+    expect(phrase("2026-09-25T14:00:00Z", "2026-10-01T15:00:00Z")).toBe("Friday at 10:00 AM");
+  });
+
+  it("gives the date for something a week old or more, so a weekday is never ambiguous", () => {
+    expect(phrase("2026-09-24T14:00:00Z", "2026-10-01T15:00:00Z")).toBe("Sep 24, 2026 at 10:00 AM");
+  });
+
+  it("reads a time that is ahead of the clock as today, never a day that has not come", () => {
+    expect(phrase("2026-10-01T16:00:00Z", "2026-10-01T15:00:00Z")).toBe("today at 12:00 PM");
+  });
+
+  it("is written in the language's own way", () => {
+    expect(phrase("2026-10-01T14:40:00Z", "2026-10-01T15:00:00Z", "fr")).toBe("today at 10:40");
   });
 });

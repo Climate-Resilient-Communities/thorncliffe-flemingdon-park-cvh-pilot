@@ -284,6 +284,14 @@ export const AUDIT_META = {
   // `conflict`: the roster is full; `not_found`: the entry was already removed).
   "oncall.added": meta({ roster_size: count.optional() }),
   "oncall.removed": meta({ roster_size: count.optional() }),
+
+  // The drill roster (S06.05): an Admin at aal2 adds, edits or removes a roster entry. The subject is the roster row (type `drill_roster`, its id); the
+  // number, the label and the language are in no audit record, which holds only how many entries the roster has afterwards. A refusal holds only its
+  // reason (`validation`: no label, a label that is too long, not a Canadian number or not a language; `duplicate`: the number is already on the roster;
+  // `conflict`: the roster is full; `not_found`: the entry was already removed).
+  "drill_roster.added": meta({ roster_size: count.optional() }),
+  "drill_roster.edited": meta({ roster_size: count.optional() }),
+  "drill_roster.removed": meta({ roster_size: count.optional() }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type AuditAction = keyof typeof AUDIT_META;
@@ -311,6 +319,9 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "sending.resumed": ["waiting"],
   "oncall.added": ["roster_size"],
   "oncall.removed": ["roster_size"],
+  "drill_roster.added": ["roster_size"],
+  "drill_roster.edited": ["roster_size"],
+  "drill_roster.removed": ["roster_size"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];

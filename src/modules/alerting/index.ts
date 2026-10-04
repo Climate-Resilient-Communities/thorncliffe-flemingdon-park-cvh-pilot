@@ -6,8 +6,8 @@ import { addressesOfBuildings, createResidentBuildings, floorsOfBuilding, neighb
 import * as audit from "../audit";
 import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
-import { NO_ALERTS_YET, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
-import { readClosedSlugs, readClosedThread, readOpenThreads, readStatusThreads } from "./adapters/resident/readThreads";
+import { NO_ALERTS_YET, createArchiveReader, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type ArchiveReader, type FeedReader } from "./application/feed";
+import { readArchivePage, readClosedSlugs, readClosedThread, readOpenThreads, readStatusThreads } from "./adapters/resident/readThreads";
 import { createCloseAlert } from "./application/closeAlert";
 import { createExpirer, type Expirer } from "./application/expire";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
@@ -172,6 +172,8 @@ export type {
   ThreadView,
 } from "./application/lifecycle";
 export type { ClosedThread, RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
+// S06.05: the drill threads the Hub reviews (staff only; a resident reads the nondrill views).
+export { createDrillThreads, type DrillEntrySummary, type DrillThreadSummary, type DrillThreads } from "./application/drillThreads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
 // S05.02: the one close path (`closeAlert`, AR-8) and the rules of corrections and withdrawals (the valid target, the reason catalog, when a withdrawal closes the thread).
 // S05.04: the expire job and when a thread expires (the covering entry's valid-until, compared as instants).
@@ -241,6 +243,7 @@ export function createResidentAlerts(db: Db): FeedAlerts {
     readStatusThreads: (now) => readStatusThreads(db, now),
     readClosed: (lang, slug) => readClosedThread(db, lang, slug),
     readClosedSlugs: () => readClosedSlugs(db),
+    readArchive: (lang, page, size) => readArchivePage(db, lang, page, size),
   };
 }
 
@@ -256,7 +259,13 @@ export function createFeed(wiring: FeedWiring): FeedReader {
   });
 }
 
-export type { FeedAlerts, FeedPlaces, FeedReader } from "./application/feed";
+/** `GET /api/feed/archive` (S05.07): one page of the closed threads. With the launch gate off (`alertsEnabled` not true) it lists none, as the feed does. */
+export function createArchive(wiring: Omit<FeedWiring, "places" | "version">): ArchiveReader {
+  const alerts = wiring.alertsEnabled !== true ? NO_ALERTS_YET : (wiring.alerts ?? (wiring.db ? createResidentAlerts(wiring.db) : NO_ALERTS_YET));
+  return createArchiveReader({ alerts, now: wiring.now });
+}
+
+export type { ArchiveReader, FeedAlerts, FeedPlaces, FeedReader } from "./application/feed";
 export { NO_ALERTS_YET } from "./application/feed";
 export { readFeedFixtureFile, type FeedFixture } from "./adapters/residentFixture";
 export { NO_STATUS, type PlaceState } from "./domain/feed";
