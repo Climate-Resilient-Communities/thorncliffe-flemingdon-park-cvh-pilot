@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { IN_HOME_VIEW, IN_MIDDLE, MAP_BUILDINGS, stubMap, TILE_URL, type MapServer } from "./map-fixture";
 import { expectBaseline, openResident, waitForFonts } from "./helpers";
+import { expectUsageRequest, isUsageRequest, seenRequest } from "./usage-fixture";
 
 // S02.07: a resident finds providers and buildings on a map (/{lang}/map: R-14 map, R-15 list, R-16 preview). The release
 // routes, the building list and the tile provider are answered by map-fixture.ts. The server runs with the default tile
@@ -214,7 +215,11 @@ test("map tiles are the only cross-origin request, and they carry nothing about 
     for (const secret of ["4154146", "seniors", "cvh.choices"]) expect(text, request.url()).not.toContain(secret);
   }
   // The data requests are the ones every visitor makes.
-  const data = seen.filter((request) => new URL(request.url()).origin === origin && new URL(request.url()).pathname.startsWith("/api/"));
+  // S02.15: the usage events (map_view) are the one other request, and the fixed message.
+  const usage = seen.filter((request) => isUsageRequest(request.url()));
+  expect(usage.length).toBeGreaterThan(0);
+  for (const request of usage) expectUsageRequest(await seenRequest(request));
+  const data = seen.filter((request) => new URL(request.url()).origin === origin && new URL(request.url()).pathname.startsWith("/api/") && !isUsageRequest(request.url()));
   for (const request of data) expect(new URL(request.url()).pathname, request.url()).toMatch(/^\/api\/(?:directory\/manifest|directory\/\d+\/en\.json|buildings)$/);
 
   const crossOrigin = seen.filter((request) => !request.url().startsWith("data:") && !request.url().startsWith("blob:") && new URL(request.url()).origin !== origin);
