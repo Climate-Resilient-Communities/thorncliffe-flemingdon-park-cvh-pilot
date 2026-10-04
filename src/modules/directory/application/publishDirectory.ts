@@ -31,7 +31,7 @@
 //    stays `building` and the next press resumes it from the files already stored.
 // Reads inside a transaction use the transaction (test/transaction-executor.test.ts).
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, max, sql } from "drizzle-orm";
 import { record, recordRefusal } from "@/modules/audit";
 import type { Db, DbExecutor, DbTransaction } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
@@ -502,4 +502,13 @@ export async function currentReleaseSummary(db: DbExecutor): Promise<ReleaseSumm
 export async function latestReleaseSummary(db: DbExecutor): Promise<ReleaseSummary | null> {
   const [row] = await db.select(summaryColumns).from(directoryRelease).orderBy(desc(directoryRelease.number)).limit(1);
   return row ? summaryOf(row) : null;
+}
+
+/**
+ * When the last directory publish that succeeded completed (null: none has). The health job (ops, S09.01) holds `publish_failed` for the
+ * failures recorded after it, so a publish that succeeds clears the condition.
+ */
+export async function lastPublishedAt(db: DbExecutor): Promise<Date | null> {
+  const [row] = await db.select({ at: max(directoryRelease.publishedAt) }).from(directoryRelease).where(eq(directoryRelease.status, "complete"));
+  return row?.at == null ? null : new Date(row.at);
 }

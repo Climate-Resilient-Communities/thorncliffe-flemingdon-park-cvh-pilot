@@ -1,7 +1,7 @@
 // Drizzle tables of the ops module (AD-2), written by hand to match db/migrations/20261002230000_directory_release.sql;
 // the drift test compares them. The grants (select and insert to cvh_app, nothing to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, index, jsonb, pgPolicy, pgRole, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, jsonb, pgPolicy, pgRole, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -64,7 +64,8 @@ export const oncallRoster = pgTable(
 
 /**
  * What the health job (`/api/jobs/health`) remembers of each condition it watches (S06.07): whether it holds, since when, when the on-call
- * Admins were last texted about it and up to which `ops_event` it has told them. No personal data. The five rows are made by the migration.
+ * Admins were last texted about it and up to which `ops_event` it has told them. No personal data. The rows are made by the migrations (five by
+ * S06.07, five more by S09.01).
  */
 export const healthCondition = pgTable(
   "health_condition",
@@ -77,9 +78,29 @@ export const healthCondition = pgTable(
     checkedAt: timestamp("checked_at", { withTimezone: true }),
   },
   (t) => [
-    check("health_condition_known", sql`${t.condition} in ('queue_stuck', 'delivery_unknown', 'sender_stalled', 'smart_encoding_on', 'signature_failures')`),
+    check(
+      "health_condition_known",
+      sql`${t.condition} in ('queue_stuck', 'delivery_unknown', 'sender_stalled', 'smart_encoding_on', 'signature_failures', 'job_failed', 'translation_fallback', 'publish_failed', 'transactional_ceiling', 'cap_overrun')`,
+    ),
     check("health_condition_since_stated", sql`${t.active} = (${t.since} is not null)`),
     pgPolicy("health_condition_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("health_condition_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * The health job's heartbeat (S09.01): one row, the time of its last run that judged every condition. `/api/health/heartbeat` answers 200 only
+ * while it is less than 3 minutes old; an uptime monitor outside the CVH's providers calls it every minute. Made by the migration.
+ */
+export const healthHeartbeat = pgTable(
+  "health_heartbeat",
+  {
+    id: smallint().primaryKey().default(1),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    check("health_heartbeat_one_row", sql`${t.id} = 1`),
+    pgPolicy("health_heartbeat_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("health_heartbeat_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, isNotNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, ne, or, sql } from "drizzle-orm";
 import {
   STUCK_QUEUE_AFTER_MS,
   UNKNOWN_IDS_LIMIT,
@@ -37,6 +37,16 @@ export const drizzleSenderHealth: SenderHealthReader = {
       .where(and(eq(delivery.state, "unknown"), gt(delivery.updatedAt, behind(UNKNOWN_WINDOW_MS))))
       .orderBy(desc(delivery.updatedAt), desc(delivery.id))
       .limit(UNKNOWN_IDS_LIMIT);
+    const [today] = await executor
+      .select({ n: sql<number>`count(*)::int` })
+      .from(delivery)
+      .where(
+        and(
+          eq(delivery.kind, "transactional"),
+          ne(delivery.recipientKind, "oncall"),
+          gte(delivery.createdAt, sql`(date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto')`),
+        ),
+      );
     return {
       paused: facts?.paused ?? true,
       stuckQueued: Number(facts?.stuckQueued ?? 0),
@@ -44,6 +54,7 @@ export const drizzleSenderHealth: SenderHealthReader = {
       leaseRenewedAgoMs: lease === undefined ? null : Number(lease.agoMs),
       unsettledHandOffs: Number(facts?.unsettled ?? 0),
       unknownDeliveryIds: unknown.map((row) => row.id),
+      transactionalToday: Number(today?.n ?? 0),
     };
   },
 };

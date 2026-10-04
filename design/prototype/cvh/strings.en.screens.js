@@ -1633,10 +1633,22 @@
       aal2Required: 'An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.',
       failed: 'The list was not changed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT.' } },
+  /* The health banner (S06.07, S09.01): one plain line per open condition, in the order the health job lists them. Admins and Coordinators see
+     every condition; everyone else at the Hub sees the two that mean the sender itself is failing. */
   health: {
     banner: 'Sending is failing',
+    bannerOther: 'Something is not working',
     queue_stuck: 'Texts have waited more than 5 minutes to be sent. Texts to the on-call Admins may be late too.',
     sender_stalled: 'No sender has run for more than 3 minutes while texts are waiting. Texts to the on-call Admins may be late too.',
+    delivery_unknown: 'Some texts may or may not have arrived: the provider did not say what happened to them.',
+    smart_encoding_on: 'Smart Encoding is on in the Twilio Messaging Service, so texts may arrive with characters changed.',
+    signature_failures: 'Many messages from Twilio failed the signature check in the last 10 minutes.',
+    job_failed: 'A scheduled job failed in the last 10 minutes, for example sending, closing expired alerts or this check.',
+    translation_fallback: 'An alert was submitted in the last 24 hours with a whole language in English, because its translation failed.',
+    publish_failed: 'The last directory publish failed. Residents still see the previous directory.',
+    transactional_ceiling: 'More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.',
+    cap_overrun: 'An approval this month went over the monthly text message spending cap. Texts keep sending.',
+    stale: 'The health check has not run for more than 3 minutes, so a new problem may not be shown here.',
     since: 'Since {when}',
     tell: 'Tell IT now.' } },
   ops: { oncall: { text: {
@@ -1644,7 +1656,12 @@
     delivery_unknown: 'CVH: texts with an unknown outcome: {count}. Check the Hub.',
     sender_stalled: 'CVH: no sender has run for over 3 minutes. Texts waiting: {count}. Check sending.',
     smart_encoding_on: 'CVH: Smart Encoding is on in the Twilio Messaging Service. Turn it off.',
-    signature_failures: 'CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.' } } } });
+    signature_failures: 'CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.',
+    job_failed: 'CVH: scheduled jobs failed in the last 10 minutes: {count}. Check the Hub.',
+    translation_fallback: 'CVH: alerts with a whole language in English because translation failed, last 24 hours: {count}. Check the Hub.',
+    publish_failed: 'CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.',
+    transactional_ceiling: 'CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.',
+    cap_overrun: 'CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.' } } } });
   /* Adding an update to a running alert (S05.01, O-14 "Add an update", O-13 "Promote to full alert"), the pilot's staff version. In the prototype an update
      is published at once from a template; here the author writes it on the same composer as every entry (the text, where things stand, the valid-until),
      submits it, and a second person approves it. The alert's audience, types and languages are carried over from the entry that covers it. The prototype's

@@ -273,6 +273,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
 | `drill_roster` (subscriptions) | S06.05 | | |
 | `oncall_roster`, `health_condition` (ops) | S06.07 | | |
+| `health_heartbeat` (ops) | S09.01 | | |
 
 The feed endpoint in S02.11 returns `feed_version: 0` until S04.03 creates the table.
 
@@ -3693,8 +3694,8 @@ The Hub learns about problems before residents do, can deliberately resend texts
 
 ### Story S09.01 — The Hub hears about failures before residents do, even if texting is down
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** AR-21, NFR-N4, NFR-N6 · **Depends on:** S06.07 · **Branch:** `e09-s01-health-outside-check`
+- **Size:** M · **Estimate:** 7 h · **Actual:** 45 min (started 2026-10-04 01:36 UTC, built 02:21 UTC)
+- **Traces:** AR-21, NFR-N4, NFR-N6 · **Depends on:** S06.07 · **Branch:** `e09-s01-failure-monitoring`
 
 As the on-call Admin,
 I want every known failure to reach me, and a check that does not rely on the CVH itself,
@@ -3717,6 +3718,10 @@ So that a silent failure cannot leave residents without alerts.
 **Given** the Hub screens
 **When** an open health condition exists
 **Then** every Admin and Coordinator screen shows a banner naming it in plain words, until it clears
+
+**What is built, and the seams the other stories use.** The migration `20261004210000_health_every_condition.sql` adds five rows to `health_condition` (`job_failed`, `translation_fallback`, `publish_failed`, `transactional_ceiling`, `cap_overrun`), the one-row `health_heartbeat` and `health_job_failures(ms)` (a `security definer` count of failed pg_cron runs and non-2xx job calls, since the app's role cannot read the `cron` schema). `createHealthJob` (`ops`) judges all ten conditions in `HEALTH_CONDITIONS` order, each with a database test in `test/db/healthJob.db.test.ts` that triggers it and its recovery; its new deps are `transactionalDailyCeiling` (`SMS_TRANSACTIONAL_DAILY_CEILING`, default 300, provisional) and `lastPublishedAt` (directory's, so ops reads no directory table); messaging's `SenderHealth` adds `transactionalToday` and `renderOncallText` the five new one-segment texts. A run that judged every condition stamps the heartbeat; `GET /api/health/heartbeat` (`src/app/heartbeat.ts`) answers 200 or 503 and nothing else. The banner is `src/app/staff/healthBannerModel.ts` and `HealthBanner.tsx` (replacing `senderBanner.ts` and `SenderBanner.tsx`): Admins and Coordinators see every open condition and a stopped health check; everyone else sees "Sending is failing" as before. The outside check is IT's to choose and set up (docs/config.md, "The heartbeat and the outside check", with the launch rehearsal; the solution design's launch checklist has the item); the spine's AD-23 "As built (S09.01)" has the rest. **Seams:** S07.08 records `spend.cap_overrun` (an `ops_event`, `over_cents` optional) when an approval passes the cap, and the health job does the rest; S07.09's ceiling AC is met by `transactional_ceiling` (S07.09 confirms the default), and its geo-permission and pumping-protection findings extend the daily check behind `smart_encoding_on` or add a condition of their own.
+
+- **Proposals for the owner to confirm.** (1) `translation_fallback` holds for 24 hours after the last fallback (like an unknown delivery), since nothing later says it was put right. (2) `cap_overrun` holds until the month ends in Toronto. (3) `job_failed` counts failures in the last 10 minutes and clears 10 minutes after the last. (4) The heartbeat is stamped only by a run that judged every condition, so one condition that keeps failing to be judged sends the outside check's email. (5) Ambassadors and Directors keep seeing only "Sending is failing"; the AC names Admins and Coordinators. (6) Not health conditions (AD-23 does not list them), so they reach neither a text nor the banner, only `ops_event` and the logs: a search that answered `search_unavailable`, a search leg past the vendor's quota (`translate_quota`), `dispatch.provider_auth_failed` (Twilio refusing the credentials), `messaging.service_check_failed` and `alert.expire_failed`; a failed deployment is invisible to the heartbeat, since the previous release keeps serving.
 
 ### Story S09.02 — An Admin resends texts that failed
 

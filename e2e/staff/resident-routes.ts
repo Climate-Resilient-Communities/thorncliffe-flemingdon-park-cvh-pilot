@@ -15,7 +15,8 @@ export interface RouteKind {
 }
 
 const APP = path.join(__dirname, "..", "..", "src", "app");
-const NOT_RESIDENT_API = /^api\/(?:staff|jobs|twilio)(?:\/|$)/;
+// The heartbeat (S09.01) is the outside uptime monitor's, not a resident's: it answers 503 by design while the health job has not run.
+const NOT_RESIDENT_API = /^api\/(?:staff|jobs|twilio|health\/heartbeat)(?:\/|$)/;
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -36,7 +37,7 @@ export function residentRoutes(languages: readonly string[], samples: Readonly<R
     const segments = relative.filter((segment) => !/^\(.*\)$/.test(segment));
     const joined = segments.join("/");
     const isApi = /\/route\.ts$/.test(file);
-    // The staff surface, the jobs and the Twilio webhooks are not a resident's: everything else under src/app is.
+    // The staff surface, the jobs, the Twilio webhooks and the heartbeat are not a resident's: everything else under src/app is.
     if (joined === "staff" || joined.startsWith("staff/") || NOT_RESIDENT_API.test(joined)) continue;
     const expand = (lang: string) =>
       "/" +
