@@ -5,6 +5,17 @@ import type { ZhHantConverter } from "../domain/directoryRelease";
 import type { ProviderNeighbourhoods } from "../domain/providerNeighbourhoods";
 import type { EmbeddingConfig } from "../domain/searchData";
 
+/**
+ * A write to the store that failed. `classification` is a safe token for ops and the Admin (a status such as `http_413`, `mime_not_allowed`,
+ * `bucket_update_http_400`): never the vendor's message, which can name the project or the bucket.
+ */
+export class StorageWriteError extends Error {
+  override name = "StorageWriteError";
+  constructor(readonly classification: string) {
+    super("the directory file could not be stored");
+  }
+}
+
 /** The private place the release files are kept (Supabase Storage; a folder in local runs; memory in tests). */
 export interface DirectoryStorage {
   /** Stores the text at the path, replacing what is there (the same bytes, when a stopped publish resumes). Throws when it cannot. */
