@@ -882,7 +882,8 @@
    "todayAt": "ngayong araw nang {time}",
    "dayAt": "{day} nang {time}",
    "linkLine": "Pinakabagong update at anumang pagtatama: {url}",
-   "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala."
+   "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala.",
+   "placeMore": "at {n} pa"
   },
   "R30": {
    "deviceLabel": "Ang alerto sa isang WhatsApp group",
@@ -1403,4 +1404,65 @@
    }
   });
   m(t, {"smsTexts": {"confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."}});
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "Walang aktibo"
+   },
+   "R03": {
+    "currentAlerts": "Mga kasalukuyang alerto",
+    "noCurrentAlerts": "Walang kasalukuyang alerto",
+    "myBuildings": "Ang iyong mga gusali",
+    "checking": "Tinitingnan kung may alerto",
+    "feedFailed": "Hindi namin matingnan ang mga alerto ngayon. Ang lugar na may nakasulat na \"Hindi alam\" ay maaaring may alerto pa rin. Susubukan naming muli.",
+    "feedFailedOld": "Hindi namin matingnan ang mga bagong alerto. Ipinapakita ang huling na-load {t}."
+   },
+   "R09": {
+    "searching": "Naghahanap",
+    "needsSignal": "Kailangan ng signal para maghanap",
+    "needsSignalBody": "Maaari ka pa ring pumili ng paksa sa ibaba, o tawagan ang Hub.",
+    "busy": "Abala ang paghahanap, subukan muli pagkalipas ng ilang minuto",
+    "busyBody": "Maaari kang pumili ng paksa sa ibaba, o tawagan ang Hub.",
+    "updating": "Ina-update ang mga resulta ng paghahanap, subukan muli",
+    "updatingBody": "Maaari kang pumili ng paksa sa ibaba habang ina-update ang mga ito, o tawagan ang Hub.",
+    "browseAll": "Tingnan ang lahat ng serbisyo at organisasyon",
+    "loading": "Nilo-load ang mga paksa"
+   },
+   "R10": {
+    "shownIn": "Ipinapakita sa {lang}"
+   },
+   "directory": {
+    "title": "Mga serbisyo at organisasyon",
+    "lead": "Ang mga kinumpirma ng Hub sa Thorncliffe Park at Flemingdon Park. Pumili ng paksa o kapitbahayan para paikliin ang listahan.",
+    "count": "{n} serbisyo",
+    "countOne": "1 serbisyo",
+    "topic": "Paksa",
+    "emergency": "Tumutulong sa emerhensiya",
+    "emergencyRole": "Tungkulin sa emerhensiya",
+    "lastConfirmed": "Huling kinumpirma ng Hub {date}",
+    "lastUpdated": "Huling na-update {time}",
+    "loading": "Nilo-load ang direktoryo",
+    "couldNotLoad": "Hindi na-load ang direktoryo",
+    "couldNotLoadBody": "Matutulungan ka ng Hub na makahanap ng serbisyo sa telepono.",
+    "couldNotLoadNumbers": "Nasa pahina ng mga numero ang iba pang numerong maaaring kailanganin mo.",
+    "numbersLink": "Tingnan ang mahahalagang numero",
+    "backToList": "Lahat ng serbisyo at organisasyon",
+    "suggestApply": "Ipakita lang ang {place}"
+   }
+  });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Hindi naka-save sa iyong telepono ang pahinang ito",
+    "body": "Hindi pa ito nabubuksan sa teleponong ito nang may signal, kaya kailangan nito ng signal. Laging naka-save sa iyong telepono ang mga numero.",
+    "available": "Mababasa mo ang mga ito nang walang signal",
+    "none": "Wala pang ibang naka-save sa teleponong ito. Ang mga pahinang binubuksan mo nang may signal ay sine-save para sa susunod."
+   },
+   "R34": {
+    "offlineTitle": "Pagbasa nang walang signal",
+    "offlineHelp": "Ang mga pahinang binubuksan mo nang may signal ay sine-save sa teleponong ito, kaya mababasa mo ulit ang mga ito nang walang signal. Laging naka-save ang mga numero. Sa unang pagkakataon, kailangan ng CVH ng signal para bumukas.",
+    "offlineNote": "Maaaring hindi mag-save ang teleponong ito ng mga pahina para magamit nang walang signal"
+   }
+  });
 })();

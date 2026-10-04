@@ -361,7 +361,7 @@
     "progress": "কাজ চলছে",
     "resolved": "সমাধান হয়েছে",
     "unknown": "জানা নেই",
-    "none": "[EN] Nothing active"
+    "none": "কিছুই সক্রিয় নেই"
   },
   "groups": {
     "seniors": {
@@ -544,12 +544,12 @@
     "ambassadorHome": "অ্যাম্বাসেডর: আমার বিল্ডিং",
     "ambassadorLine": "{building}-এর জন্য হালনাগাদ পোস্ট করুন বা আপনার রাউন্ড দিন",
     "noBuildingLine": "আপনার পাড়ার সতর্কতা এখানে দেখায়। আপনার বিল্ডিংয়ের সতর্কতা আগে দেখতে বিল্ডিং যোগ করুন।",
-    "currentAlerts": "[EN] Current alerts",
-    "noCurrentAlerts": "[EN] No current alerts",
-    "myBuildings": "[EN] Your buildings",
-    "checking": "[EN] Checking for alerts",
-    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
-    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
+    "currentAlerts": "বর্তমান সতর্কতা",
+    "noCurrentAlerts": "বর্তমানে কোনো সতর্কতা নেই",
+    "myBuildings": "আপনার বিল্ডিংগুলো",
+    "checking": "সতর্কতা যাচাই করা হচ্ছে",
+    "feedFailed": "এই মুহূর্তে আমরা সতর্কতা যাচাই করতে পারিনি। যে জায়গায় \"জানা নেই\" লেখা আছে, সেখানে তবুও সতর্কতা থাকতে পারে। আমরা আবার চেষ্টা করব।",
+    "feedFailedOld": "আমরা নতুন সতর্কতা যাচাই করতে পারিনি। সর্বশেষ {t} যা লোড হয়েছিল তা দেখানো হচ্ছে।"
   },
   "R04": {
     "deviceLabel": "সাধারণ ফোনে টেক্সট মেসেজ",
@@ -719,7 +719,8 @@
     "validLine": "বৈধ {until}",
     "timeLine": "পোস্ট করা হয়েছে {posted} · হালনাগাদ {updated}",
     "timeLineOne": "পোস্ট করা হয়েছে {posted}",
-    "basicMore": "আগের হালনাগাদ: {n}"
+    "basicMore": "আগের হালনাগাদ: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "যে সতর্কতা শেষ হয়েছে",
@@ -729,7 +730,10 @@
     "emptyBody": "কোনো সতর্কতা শেষ হলে তা এখানে চলে আসে এবং পড়া যায়।",
     "lead": "প্রতিটি সতর্কতা শেষ হওয়ার পরও এখানে পড়া যায়।",
     "endedOn": "পোস্ট করা হয়েছে {posted}",
-    "backHome": "\"এখন\" পাতায় ফিরে যান"
+    "backHome": "\"এখন\" পাতায় ফিরে যান",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "সাহায্য খুঁজুন",
@@ -752,15 +756,15 @@
     "testTitle": "পরীক্ষার প্রশ্ন",
     "testNote": "সহায়কদের জন্য: ব্রিফ থেকে একটি তৈরি করা খোঁজ চালাতে একটিতে চাপ দিন। বাসিন্দারা এটি দেখেন না।",
     "testGloss": "(দারি: {gloss})",
-    "searching": "[EN] Searching",
-    "needsSignal": "[EN] Search needs signal",
-    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
-    "busy": "[EN] Search is busy, try again in a few minutes",
-    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
-    "updating": "[EN] Search results are being updated, try again",
-    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
-    "browseAll": "[EN] See all services and organisations",
-    "loading": "[EN] Loading the topics"
+    "searching": "খোঁজা হচ্ছে",
+    "needsSignal": "খোঁজার জন্য সিগন্যাল দরকার",
+    "needsSignalBody": "আপনি এখনও নিচে একটি বিষয় বেছে নিতে পারেন, অথবা হাবে কল করতে পারেন।",
+    "busy": "খোঁজার ব্যবস্থা এখন ব্যস্ত, কয়েক মিনিট পরে আবার চেষ্টা করুন",
+    "busyBody": "আপনি নিচে একটি বিষয় বেছে নিতে পারেন, অথবা হাবে কল করতে পারেন।",
+    "updating": "খোঁজার ফলাফল হালনাগাদ হচ্ছে, আবার চেষ্টা করুন",
+    "updatingBody": "হালনাগাদ চলার সময় আপনি নিচে একটি বিষয় বেছে নিতে পারেন, অথবা হাবে কল করতে পারেন।",
+    "browseAll": "সব পরিষেবা ও সংস্থা দেখুন",
+    "loading": "বিষয়গুলো লোড হচ্ছে"
   },
   "R10": {
     "title": "ফলাফল",
@@ -796,7 +800,7 @@
     "communityOffer": "কমিউনিটির দেওয়া সাহায্য",
     "inCat": "বিষয়: {cat}",
     "helpEmpty": "এ বিষয়ে সাহায্য করতে পারে এমন কোনো সেবা এই ফিল্টারগুলোর সাথে মেলে না।",
-    "shownIn": "[EN] Shown in {lang}"
+    "shownIn": "{lang}-এ দেখানো হচ্ছে"
   },
   "R11": {
     "title": "আমরা এখনও এটি খুঁজে পাইনি",
@@ -1236,7 +1240,13 @@
     "todayAt": "আজ {time}-এ",
     "dayAt": "{day} {time}-এ",
     "linkLine": "সর্বশেষ হালনাগাদ ও যেকোনো সংশোধন: {url}",
-    "sendLine": "আপনার ফোন জিজ্ঞেস করবে কোন অ্যাপ দিয়ে পাঠাবেন।"
+    "sendLine": "আপনার ফোন জিজ্ঞেস করবে কোন অ্যাপ দিয়ে পাঠাবেন।",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "এবং আরও {n}টি"
   },
   "R30": {
     "deviceLabel": "একটি WhatsApp গ্রুপে সতর্কতা",
@@ -1408,7 +1418,10 @@
     "floorsOne": "1টি ফ্লোর বেছে নেওয়া হয়েছে",
     "floorsMany": "{n}টি ফ্লোর বেছে নেওয়া হয়েছে",
     "buildingsNone": "কিছু বেছে নেওয়া হয়নি",
-    "removeItem": "সরান: {item}"
+    "removeItem": "সরান: {item}",
+    "offlineTitle": "সিগন্যাল ছাড়া পড়া",
+    "offlineHelp": "সিগন্যাল থাকা অবস্থায় আপনি যে পাতাগুলো খোলেন সেগুলো এই ফোনে সংরক্ষিত হয়, তাই পরে সিগন্যাল ছাড়াও আবার পড়তে পারবেন। নম্বরগুলো সবসময় সংরক্ষিত থাকে। প্রথমবার CVH খুলতে সিগন্যাল লাগে।",
+    "offlineNote": "এই ফোন হয়তো সিগন্যাল ছাড়া ব্যবহারের জন্য পাতা সংরক্ষণ করবে না"
   },
   "R35": {
     "title": "আপনার বিল্ডিংয়ের সতর্কতা পান",
@@ -1486,7 +1499,8 @@
       "providers": "[EN] Providers",
       "directory": "[EN] Directory",
       "texts": "[EN] Pause texts",
-      "oncall": "[EN] On-call numbers"
+      "oncall": "[EN] On-call numbers",
+      "drills": "[EN] Drills"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -4454,7 +4468,13 @@
         "unknownType": "[EN] That type of disruption does not exist. Reload the page.",
         "futureTime": "[EN] The first report cannot be later than now.",
         "invalid": "[EN] That disruption could not be logged. Reload the page and try again."
-      }
+      },
+      "drillTitle": "[EN] Start a drill",
+      "drillLead": "[EN] Say what the exercise is about, where, and when. The acknowledgement is written for you on the next screen. Everything started here is marked as an exercise, and its texts go only to the drill roster.",
+      "drillBenchmark": "[EN] Practice only: no resident gets anything from a drill.",
+      "drillSubmit": "[EN] Continue to the drill acknowledgement",
+      "drillForbidden": "[EN] Only an Admin can start a drill.",
+      "drillAal2Required": "[EN] An Admin must sign in with their authenticator code to start a drill. Sign in again and enter the code."
     },
     "compose": {
       "ackTitle": "[EN] Acknowledge the disruption",
@@ -4781,7 +4801,7 @@
         "titleCorrection": "[EN] The correction is out",
         "titleWithdrawal": "[EN] The withdrawal is out",
         "webWithdrawn": "[EN] Residents now read \"Withdrawn\" and the reason in the place of the entry.",
-        "leadDrill": "[EN] This is a drill. The rows below show what would have gone where.",
+        "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
         "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
@@ -4794,7 +4814,7 @@
         "textsLabel": "[EN] Text messages",
         "textsNotOpen": "[EN] Not yet. Text sign-up is not open, so no text goes out now. These texts are ready in {n} languages and go out once texting is live.",
         "textsNone": "[EN] No text message was written for this entry.",
-        "textsDrill": "[EN] Not sent: practice only.",
+        "textsDrill": "[EN] Sent to the drill roster only. No resident gets them.",
         "textsLanguages": "[EN] Languages with a text ready",
         "validLabel": "[EN] Valid until",
         "nextTitle": "[EN] What happens next",
@@ -5121,6 +5141,105 @@
     },
     "expire": {
       "finalText": "[EN] This alert has expired without a further update. The problem may continue. Contact the Hub for current information."
+    },
+    "drills": {
+      "title": "[EN] Drills",
+      "lead": "[EN] Rehearse a real alert on the live system with staff phones only. A drill is marked as an exercise on every screen and in every text, and it can reach no one but the people on the drill roster.",
+      "start": "[EN] Start a drill",
+      "startLead": "[EN] A drill is written, approved by a second person and sent like a real alert. Its texts go only to the drill roster.",
+      "rosterLink": "[EN] Open the drill roster",
+      "roster": {
+        "none": "[EN] The drill roster is empty, so a drill reaches no one yet.",
+        "one": "[EN] 1 person is on the drill roster.",
+        "many": "[EN] {n} people are on the drill roster."
+      },
+      "recentTitle": "[EN] Recent drills",
+      "recentNone": "[EN] No drill has been run yet.",
+      "heading": "[EN] Drill reported {time}",
+      "status": {
+        "open": "[EN] Running",
+        "closed": "[EN] Ended"
+      },
+      "entries": "[EN] Entries: {entries}",
+      "entryLine": "{kind} ({state})",
+      "entryState": {
+        "draft": "[EN] draft",
+        "pending_approval": "[EN] waiting for approval",
+        "approved": "[EN] approved",
+        "superseded": "[EN] replaced",
+        "discarded": "[EN] discarded"
+      },
+      "results": {
+        "title": "[EN] What happened to the texts",
+        "none": "[EN] No text has been written for this drill yet.",
+        "removed": "[EN] Removed from the roster",
+        "handedOff": "[EN] Handed off: {n}",
+        "delivered": "[EN] Delivered: {n}",
+        "undelivered": "[EN] Undelivered: {n}",
+        "failed": "[EN] Failed: {n}",
+        "unknown": "[EN] Unknown: {n}",
+        "waiting": "[EN] Still waiting to be sent: {n}.",
+        "notSent": "[EN] Never sent: {n}.",
+        "unknownNote": "[EN] An unknown text may or may not have arrived. Find out what happened before launch.",
+        "apart": "[EN] Drill counts are kept apart from real alerts and never added to them."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can run drills.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to run drills. Sign in again and enter the code.",
+        "unreadable": "[EN] The Hub could not read the drills. Reload the page. If this stays, tell IT."
+      }
+    },
+    "drillRoster": {
+      "title": "[EN] Drill roster",
+      "lead": "[EN] The staff phones a drill is texted on. Each phone gets the drill text in the language chosen here. A drill never reaches a resident.",
+      "back": "[EN] Back to Drills",
+      "listHeading": "[EN] Phones that get drill texts",
+      "empty": "[EN] The drill roster is empty.",
+      "emptyConsequence": "[EN] A drill reaches no one until you add a phone.",
+      "count": "[EN] {n} phones on the roster",
+      "countOne": "[EN] 1 phone on the roster",
+      "hidden": "[EN] Only the last four digits of a number are shown. A number is never written to a record of what Admins did.",
+      "languageLine": "[EN] Drill text in {language}",
+      "english": "[EN] English",
+      "addHeading": "[EN] Add a phone",
+      "label": "[EN] Name or role",
+      "labelHint": "[EN] For example \"Hub phone\". Up to 40 characters. Shown only here.",
+      "number": "[EN] Mobile number",
+      "numberHint": "[EN] A Canadian number, for example 416-555-0123. It is stored for sending drill texts and shown here only as its last four digits.",
+      "language": "[EN] Language of the drill text",
+      "add": "[EN] Add phone",
+      "adding": "[EN] Adding phone",
+      "edit": "[EN] Edit",
+      "editFor": "[EN] Edit {label}",
+      "editNumberHint": "[EN] Leave empty to keep the number.",
+      "save": "[EN] Save changes",
+      "saving": "[EN] Saving changes",
+      "remove": "[EN] Remove",
+      "removing": "[EN] Removing",
+      "removeFor": "[EN] Remove {label}",
+      "done": {
+        "added": "[EN] {label} was added. The roster now has {n} phones.",
+        "addedOne": "[EN] {label} was added. The roster now has 1 phone.",
+        "edited": "[EN] {label} was changed.",
+        "removed": "[EN] {label} was removed. The roster now has {n} phones.",
+        "removedOne": "[EN] {label} was removed. The roster now has 1 phone.",
+        "removedNone": "[EN] {label} was removed. The roster is now empty.",
+        "skipped": "[EN] {n} waiting drill texts to that phone were cancelled.",
+        "skippedOne": "[EN] 1 waiting drill text to that phone was cancelled."
+      },
+      "errors": {
+        "label_missing": "[EN] Give the phone a name or role.",
+        "label_too_long": "[EN] The name or role can have at most 40 characters.",
+        "number_invalid": "[EN] That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.",
+        "number_duplicate": "[EN] That number is already on the roster.",
+        "language_invalid": "[EN] Choose a language from the list.",
+        "roster_full": "[EN] The roster is full: at most 20 phones. Remove one first.",
+        "not_found": "[EN] That phone is no longer on the roster. Reload the page.",
+        "forbidden": "[EN] Only an Admin can change the drill roster.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
+        "failed": "[EN] The roster was not changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the drill roster. Reload the page. If this stays, tell IT."
+      }
     }
   },
   "building": {
@@ -5147,22 +5266,22 @@
     "providedByHub": "হাবের দেওয়া, সর্বশেষ হালনাগাদ {date}"
   },
   "directory": {
-    "title": "[EN] Services and organisations",
-    "lead": "[EN] What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
-    "count": "[EN] {n} services",
-    "countOne": "[EN] 1 service",
-    "topic": "[EN] Topic",
-    "emergency": "[EN] Helps in an emergency",
-    "emergencyRole": "[EN] Emergency role",
-    "lastConfirmed": "[EN] Last confirmed by the Hub {date}",
-    "lastUpdated": "[EN] Last updated {time}",
-    "loading": "[EN] Loading the directory",
-    "couldNotLoad": "[EN] The directory could not load",
-    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
-    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
-    "numbersLink": "[EN] See the essential numbers",
-    "backToList": "[EN] All services and organisations",
-    "suggestApply": "[EN] Show only {place}"
+    "title": "পরিষেবা ও সংস্থা",
+    "lead": "থর্নক্লিফ পার্ক ও ফ্লেমিংডন পার্কে হাব যেসব পরিষেবা ও সংস্থা নিশ্চিত করেছে। তালিকা ছোট করতে একটি বিষয় বা একটি এলাকা বেছে নিন।",
+    "count": "{n}টি পরিষেবা",
+    "countOne": "1টি পরিষেবা",
+    "topic": "বিষয়",
+    "emergency": "জরুরি অবস্থায় সাহায্য করে",
+    "emergencyRole": "জরুরি অবস্থায় ভূমিকা",
+    "lastConfirmed": "হাব সর্বশেষ নিশ্চিত করেছে {date}",
+    "lastUpdated": "সর্বশেষ হালনাগাদ {time}",
+    "loading": "ডিরেক্টরি লোড হচ্ছে",
+    "couldNotLoad": "ডিরেক্টরি লোড হয়নি",
+    "couldNotLoadBody": "হাব ফোনে আপনাকে একটি পরিষেবা খুঁজে পেতে সাহায্য করতে পারে।",
+    "couldNotLoadNumbers": "নম্বরের পাতায় আপনার দরকার হতে পারে এমন অন্য নম্বরগুলো আছে।",
+    "numbersLink": "প্রয়োজনীয় নম্বরগুলো দেখুন",
+    "backToList": "সব পরিষেবা ও সংস্থা",
+    "suggestApply": "শুধু {place} দেখান"
   },
   "map": {
     "lead": "থর্নক্লিফ পার্ক ও ফ্লেমিংডন পার্কের পরিষেবা, সংস্থা এবং অ্যাপার্টমেন্ট ভবন। কোনোটি কী তা দেখতে একটি পিনে ট্যাপ করুন।",
@@ -5224,5 +5343,11 @@
   },
   "smsTexts": {
     "confirmation": "CVH সতর্কতা পেতে YES লিখে উত্তর দিন। বন্ধ করতে STOP লিখে উত্তর দিন।"
+  },
+  "offline": {
+    "title": "এই পাতাটি আপনার ফোনে সংরক্ষিত নেই",
+    "body": "এই পাতাটি এখনও এই ফোনে সিগন্যাল থাকা অবস্থায় খোলা হয়নি, তাই এর জন্য সিগন্যাল লাগবে। নম্বরগুলো সবসময় আপনার ফোনে সংরক্ষিত থাকে।",
+    "available": "এগুলো আপনি সিগন্যাল ছাড়া পড়তে পারেন",
+    "none": "এই ফোনে এখনও আর কিছু সংরক্ষিত নেই। সিগন্যাল থাকা অবস্থায় আপনি যে পাতাগুলো খোলেন সেগুলো পরে পড়ার জন্য সংরক্ষিত হয়।"
   }
 }

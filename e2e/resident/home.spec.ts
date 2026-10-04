@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
-import { feedOf, stubFeed } from "./home-fixture";
-import { catalogText, expectBaseline, openResident } from "./helpers";
+import { FEED_URL, feedOf, stubFeed } from "./home-fixture";
+import { catalogText, expectBaseline, isFallback, openResident } from "./helpers";
 
 // S02.11: home (R-03) shows the resident's buildings first, each with its status in words, icon and colour and a link
 // to its page; the neighbourhood; and the current alerts. The feed is fetched again every 60 seconds and an answer older
@@ -89,7 +89,7 @@ test.describe("a resident with chosen buildings", () => {
     await expect(statusOf(page, "home-neighbourhood-TP")).toHaveText("Work in progress");
   });
 
-  test("with no threads says 'No current alerts' in the page language: the interface string with its visible [EN] where it is not translated yet", async ({ page }) => {
+  test("with no threads says 'No current alerts' in the page language: the interface string, with its visible [EN] where it is not translated yet", async ({ page }) => {
     await stubFeed(page, [feedOf(1)]);
     await choose(page, MILEPOST);
 
@@ -99,8 +99,11 @@ test.describe("a resident with chosen buildings", () => {
 
     await openResident(page, "/ur", 390);
     await ready(page);
-    await expect(page.getByTestId("no-current-alerts")).toContainText("[EN] No current alerts");
-    await expect(page.getByTestId("no-current-alerts").locator("p").first()).toHaveAttribute("lang", "en");
+    const urdu = catalogText("ur", "R03.noCurrentAlerts");
+    await expect(page.getByTestId("no-current-alerts")).toContainText(urdu);
+    const line = page.getByTestId("no-current-alerts").locator("p").first();
+    if (isFallback(urdu)) await expect(line).toHaveAttribute("lang", "en");
+    else await expect(line).not.toHaveAttribute("lang", "en");
   });
 
   test("says Not known, never 'Nothing active', when the feed cannot be read, and says so", async ({ page }) => {
@@ -190,9 +193,9 @@ const setVisibility = (page: Page, state: "hidden" | "visible") =>
 
 /** From now on /api/feed is held: each request is kept, unanswered, until the test answers it. */
 async function holdFeed(page: Page) {
-  await page.unroute("**/api/feed**");
+  await page.unroute(FEED_URL);
   const held: Route[] = [];
-  await page.route("**/api/feed**", (route) => {
+  await page.route(FEED_URL, (route) => {
     held.push(route);
   });
   return held;

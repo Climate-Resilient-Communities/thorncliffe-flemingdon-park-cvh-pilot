@@ -765,9 +765,13 @@ describe("alert deliveries", () => {
     expect(await refusal(() => asApp((tx) => insertRow(tx, alertRow(entry, { recipient_id: recipient })), entry.entryId))).toMatch(/delivery_idempotency_key_unique/);
   });
 
-  it("go to a subscriber or a drill-roster member, and name no purpose, campaign or other module", async () => {
+  it("go to a subscriber or, for a drill, a drill-roster member, and name no purpose, campaign or other module", async () => {
     const entry = await fx.entry("pending_approval");
-    for (const kind of ["subscriber", "roster"]) await expect(asApp((tx) => insertRow(tx, alertRow(entry, { recipient_kind: kind })), entry.entryId), kind).resolves.toBeDefined();
+    await expect(asApp((tx) => insertRow(tx, alertRow(entry, { recipient_kind: "subscriber" })), entry.entryId)).resolves.toBeDefined();
+    // The drill rule (S06.05) is shown row by row in test/db/drills.db.test.ts: a drill goes to a row of the roster, and nothing else is changed here.
+    const drill = await fx.entry("pending_approval", { isDrill: true });
+    const member = await fx.rosterMember();
+    await expect(asApp((tx) => insertRow(tx, alertRow(drill, { recipient_kind: "roster", recipient_id: member })), drill.entryId)).resolves.toBeDefined();
     for (const kind of ["pending_signup", "staff", "oncall", "inbound_reply"]) {
       expect(await refusal(() => asApp((tx) => insertRow(tx, alertRow(entry, { recipient_kind: kind })), entry.entryId)), kind).toMatch(/delivery_kind_shape/);
     }
@@ -1047,14 +1051,13 @@ describe("a deleted recipient", () => {
   });
 
   it("is forgotten only by rows of its kind: another kind's row with the same id is left alone", async () => {
-    const table = await recipientTable("roster");
-    const shared = randomUUID();
-    await owner.unsafe(`insert into ${table} (id) values ('${shared}')`);
-    // A roster text is an alert: written inside an approval, for an entry.
-    const entry = await fx.entry("pending_approval");
+    // The drill roster's own table and its own trigger (S06.05's migration).
+    const shared = await fx.rosterMember();
+    // A roster text is an alert of a drill: written inside an approval, for an entry.
+    const entry = await fx.entry("pending_approval", { isDrill: true });
     const rosterRow = await asApp((tx) => insertRow(tx, alertRow(entry, { recipient_kind: "roster", recipient_id: shared })), entry.entryId);
     const otherKind = await rowIn("queued", { over: { recipient_kind: "subscriber", recipient_id: shared } });
-    await asApp((tx) => tx.unsafe(`delete from ${table} where id = '${shared}'`));
+    await asApp((tx) => tx`delete from drill_roster where id = ${shared}`);
     expect((await rowOf(rosterRow.id)).recipient_id).toBeNull();
     expect((await rowOf(otherKind)).recipient_id).toBe(shared);
   });

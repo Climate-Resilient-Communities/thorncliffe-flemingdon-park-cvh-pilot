@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FeedV1 } from "../../src/contracts/feed";
+import { ArchiveV1, FeedV1 } from "../../src/contracts/feed";
 import { LANGUAGES } from "./helpers";
 
 // S02.02, AD-3: resident routes set no cookies (next-intl runs with localeCookie: false, and Supabase
@@ -18,6 +18,29 @@ test("no response to a /{lang}/** page request sets a cookie", async ({ request 
     }
   }
   expect(checked).toHaveLength(LANGUAGES.length * PATHS.length);
+});
+
+// S05.08, AD-3: the share link /a/{slug}?l={lang} sets no cookie, in any language, whatever it answers (this server has no alert, so it is the 404 of an address nobody
+// has an alert at; alerts.spec.ts checks the alert and the closed thread on the server that has them). It is answered where it is, never redirected.
+test("no response to the share link /a/** sets a cookie, with or without a language", async ({ request }) => {
+  const checked: string[] = [];
+  for (const { code } of LANGUAGES) {
+    for (const path of [`/a/kbcdfghj?l=${code}`, `/a/nosuchslug?l=${code}`]) {
+      const response = await request.get(path, { maxRedirects: 0 });
+
+      expect(response.status(), path).toBe(404);
+      expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), path).toEqual([]);
+      checked.push(path);
+    }
+  }
+  for (const path of ["/a/kbcdfghj", "/a/kbcdfghj?l=", "/a/kbcdfghj?l=xx", "/a", "/a/kbcdfghj/more"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+
+    expect(response.status(), path).toBe(404);
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), path).toEqual([]);
+    checked.push(path);
+  }
+  expect(checked).toHaveLength(LANGUAGES.length * 2 + 5);
 });
 
 test("no redirect to /en/ sets a cookie either, and the browser ends up with none", async ({ page, request, context }) => {
@@ -61,6 +84,21 @@ test("the feed sets no cookie, in any language, and is a valid FeedV1 with every
     expect(feed.threads, code).toEqual([]);
     expect(feed.places.buildings.length, code).toBeGreaterThan(0);
     expect([...feed.places.buildings, ...feed.places.neighbourhoods].every((place) => place.status === "none"), code).toBe(true);
+  }
+});
+
+// S05.07: the archive of closed alerts is public and the same for everyone, so it sets no cookie either, in any language, on any page of it, and is shared for at most 60 seconds.
+test("the archive API and the archive screen set no cookie, in any language, and the API is a valid ArchiveV1 shared for 60 seconds", async ({ request }) => {
+  for (const { code } of LANGUAGES) {
+    const response = await request.get(`/api/feed/archive?lang=${code}&page=2`, { maxRedirects: 0 });
+
+    expect(response.status(), code).toBe(200);
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), code).toEqual([]);
+    expect(response.headers()["cache-control"], code).toBe("public, max-age=0, s-maxage=60");
+    expect(ArchiveV1.parse(await response.json()), code).toMatchObject({ page: 2, threads: [] });
+    const screen = await request.get(`/${code}/archive`, { maxRedirects: 0 });
+    expect(screen.status(), code).toBe(200);
+    expect(screen.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), code).toEqual([]);
   }
 });
 

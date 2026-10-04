@@ -9,6 +9,7 @@ import { GROUPS, type Group } from "@/contracts/groups";
 import type { LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { useOfflineSupport } from "../offline/use-offline-support";
 import { Isolated, isolatedInString, withIsolated } from "../text/isolated";
 import { ResidentText } from "../text/resident-text";
 import { baseChoices, choicesStore } from "./choices-store";
@@ -43,6 +44,7 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
   useReconcileChoices(state);
   const [removedItem, setRemovedItem] = useState<ReactNode | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const offline = useOfflineSupport(lang);
 
   if (choices === undefined) {
     return (
@@ -242,6 +244,18 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
         <ResidentText as="p" className="choice-hint" testId="on-device">
           {t("onDevice")}
         </ResidentText>
+
+        {/* S02.12: reading without signal, and the first visit that needs signal; the note when this phone may not keep pages. */}
+        <Told id="told-offline" title={t("offlineTitle")}>
+          <ResidentText as="p" className="choice-hint" testId="offline-help">
+            {t("offlineHelp")}
+          </ResidentText>
+          {offline === "limited" && (
+            <div role="status" className="choice-note" data-testid="offline-limited">
+              <ResidentText as="p">{t("offlineNote")}</ResidentText>
+            </div>
+          )}
+        </Told>
 
         {confirming ? (
           <section className="choice-note" aria-labelledby="clear-title" data-testid="clear-confirm">

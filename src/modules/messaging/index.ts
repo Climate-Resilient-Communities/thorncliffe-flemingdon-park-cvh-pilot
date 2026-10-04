@@ -122,6 +122,9 @@ export {
   type SenderHealthReader,
 } from "./application/senderHealth";
 
+// A drill's results (S06.05, FR-M4): per roster member and language, kept apart from every count of a real alert.
+export { drillResults, type DrillResultRow, type DrillResults } from "./application/drillResults";
+
 export type MessagingServiceCheckWiring = MessagingServiceCheckDeps;
 
 /** The daily check of the Messaging Service's Smart Encoding setting (S06.02). */

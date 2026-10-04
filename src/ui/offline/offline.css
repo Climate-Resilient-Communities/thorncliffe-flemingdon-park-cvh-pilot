@@ -1,0 +1,42 @@
+/*
+ * Offline reading (S02.12): the note at the top of a resident page shown without signal, and the offline page's list of
+ * what can be read without signal. The note is the home screen's notice (home.css .home-note): cream with the yellow bar.
+ */
+@layer components {
+  .offline-note {
+    margin-block-start: var(--gap-related);
+    margin-inline: var(--gutter-resident);
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .offline-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .offline-link {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-block-size: var(--tap-current);
+    padding: var(--inset-card-compact);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .offline-link:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}

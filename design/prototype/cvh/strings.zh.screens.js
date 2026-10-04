@@ -893,7 +893,8 @@
    "todayAt": "今天{time}",
    "dayAt": "{day} {time}",
    "linkLine": "最新更新和任何更正：{url}",
-   "sendLine": "您的手机会问您用哪个应用发送。"
+   "sendLine": "您的手机会问您用哪个应用发送。",
+   "placeMore": "以及另外 {n} 处"
   },
   "R30": {
    "deviceLabel": "WhatsApp 群里的警报",
@@ -1414,4 +1415,65 @@
    }
   });
   m(t, {"smsTexts": {"confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。"}});
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "没有当前问题"
+   },
+   "R03": {
+    "currentAlerts": "当前警报",
+    "noCurrentAlerts": "目前没有警报",
+    "myBuildings": "您的楼宇",
+    "checking": "正在检查警报",
+    "feedFailed": "我们暂时无法检查警报。显示“不详”的地点可能仍有警报。我们会再试一次。",
+    "feedFailedOld": "我们无法检查新警报。显示的是{t}最后加载的内容。"
+   },
+   "R09": {
+    "searching": "正在搜索",
+    "needsSignal": "搜索需要信号",
+    "needsSignalBody": "您仍可以在下方选择一个主题，或打电话给中心。",
+    "busy": "搜索繁忙，请几分钟后再试",
+    "busyBody": "您可以在下方选择一个主题，或打电话给中心。",
+    "updating": "搜索结果正在更新，请再试一次",
+    "updatingBody": "更新期间，您可以在下方选择一个主题，或打电话给中心。",
+    "browseAll": "查看所有服务和机构",
+    "loading": "正在加载主题"
+   },
+   "R10": {
+    "shownIn": "以{lang}显示"
+   },
+   "directory": {
+    "title": "服务和机构",
+    "lead": "中心在 Thorncliffe Park 和 Flemingdon Park 确认过的服务和机构。选择一个主题或社区来缩小列表范围。",
+    "count": "{n} 项服务",
+    "countOne": "1 项服务",
+    "topic": "主题",
+    "emergency": "在紧急情况下提供帮助",
+    "emergencyRole": "紧急情况中的作用",
+    "lastConfirmed": "中心最后确认于{date}",
+    "lastUpdated": "最后更新于{time}",
+    "loading": "正在加载目录",
+    "couldNotLoad": "目录无法加载",
+    "couldNotLoadBody": "中心可以通过电话帮您找到服务。",
+    "couldNotLoadNumbers": "号码页面列出了您可能需要的其他号码。",
+    "numbersLink": "查看重要电话号码",
+    "backToList": "所有服务和机构",
+    "suggestApply": "只显示{place}"
+   }
+  });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "此页面未保存在您的手机上",
+    "body": "此页面还没有在这部手机上有信号时打开过，所以需要信号。电话号码始终保存在您的手机上。",
+    "available": "以下内容没有信号时也能阅读",
+    "none": "这部手机上还没有保存其他内容。有信号时打开的页面会保存下来，供以后阅读。"
+   },
+   "R34": {
+    "offlineTitle": "没有信号时阅读",
+    "offlineHelp": "有信号时打开的页面会保存在这部手机上，以后没有信号也能再次阅读。电话号码始终会保存。第一次打开 CVH 需要信号。",
+    "offlineNote": "这部手机可能无法保存页面供离线使用"
+   }
+  });
 })();

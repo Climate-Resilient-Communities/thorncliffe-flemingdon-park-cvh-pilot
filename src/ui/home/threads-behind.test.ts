@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Audience } from "@/contracts/audience";
 import type { BuildingList } from "@/contracts/buildingList";
-import type { FeedThread, FeedV1 } from "@/contracts/feed";
-import { homeRows, threadsBehind } from "./home-view";
+import type { ArchiveThread, FeedThread, FeedV1 } from "@/contracts/feed";
+import { behindOf, homeRows, resolvedBehind, threadsBehind, type ClosedThreads } from "./home-view";
 
 // The links home and the building page show under a status (S05.06): the open threads of the feed that give it.
 
@@ -97,5 +97,76 @@ describe("homeRows with threads behind", () => {
     const rows = homeRows({ chosen: ["200"], list, view: { feed: null, failed: false } });
 
     expect(rows.buildings[0].behind).toEqual([]);
+  });
+});
+
+// A resolved status is traced to the closed thread in the archive (S05.07): the feed's list holds open threads only.
+describe("resolvedBehind (S05.07)", () => {
+  const serverNow = new Date("2026-10-01T15:00:00.000Z");
+  const hoursAgo = (hours: number) => new Date(serverNow.getTime() - hours * 3_600_000).toISOString();
+  const closed = (slug: string, audience: Audience, over: Partial<ArchiveThread> = {}): ArchiveThread => ({
+    ...thread(slug, audience, [entry(1), entry(2, { kind: "final", phase: undefined })]),
+    state: "closed",
+    close_reason: "resolved",
+    closed_at: hoursAgo(1),
+    ...over,
+  });
+  const closedThreads = (...threads: ArchiveThread[]): ClosedThreads => ({ threads, serverNow });
+
+  it("names the threads closed resolved less than 12 hours ago that cover the place", () => {
+    const found = resolvedBehind(place, closedThreads(closed("aaaa", buildings(["power"], "100")), closed("bbbb", hood(["power", "water"], "TP")), closed("cccc", buildings(["power"], "200"))));
+
+    expect(found).toEqual([
+      { slug: "aaaa", types: ["power"] },
+      { slug: "bbbb", types: ["power", "water"] },
+    ]);
+  });
+
+  it("counts the 12 hours from the closing time, by the archive's own clock: at exactly 12 hours it is over", () => {
+    const audience = buildings(["power"], "100");
+
+    expect(resolvedBehind(place, closedThreads(closed("aaaa", audience, { closed_at: hoursAgo(11.99) }))).map((t) => t.slug)).toEqual(["aaaa"]);
+    expect(resolvedBehind(place, closedThreads(closed("aaaa", audience, { closed_at: hoursAgo(12) })))).toEqual([]);
+  });
+
+  it("never names a thread that expired or was withdrawn: they give no resolved status", () => {
+    const audience = buildings(["power"], "100");
+
+    expect(resolvedBehind(place, closedThreads(closed("aaaa", audience, { close_reason: "expired" }), closed("bbbb", audience, { close_reason: "withdrawn" })))).toEqual([]);
+  });
+
+  it("covers a neighbourhood only through a neighbourhood audience", () => {
+    const found = resolvedBehind({ kind: "neighbourhood", id: "TP" }, closedThreads(closed("aaaa", buildings(["power"], "100")), closed("bbbb", hood(["power"], "TP"))));
+
+    expect(found.map((t) => t.slug)).toEqual(["bbbb"]);
+  });
+
+  it("names none until the archive has been read", () => {
+    expect(resolvedBehind(place, null)).toEqual([]);
+  });
+
+  it("is what behindOf gives for a resolved place, and open threads still give the others", () => {
+    const feed: FeedV1 = { v: 1, feed_version: 1, server_now: serverNow.toISOString(), threads: [thread("open1", buildings(["power"], "100"), [entry(1)])], places: { buildings: [], neighbourhoods: [] } };
+    const closedNow = closedThreads(closed("aaaa", buildings(["power"], "100")));
+
+    expect(behindOf({ kind: "status", status: "resolved", verified: true }, feed, place, closedNow).map((t) => t.slug)).toEqual(["aaaa"]);
+    expect(behindOf({ kind: "status", status: "active", verified: true }, feed, place, closedNow).map((t) => t.slug)).toEqual(["open1"]);
+    expect(behindOf({ kind: "status", status: "resolved", verified: true }, feed, place)).toEqual([]);
+  });
+
+  it("puts the closed thread on the row of a chosen building whose status is resolved", () => {
+    const feed: FeedV1 = {
+      v: 1,
+      feed_version: 2,
+      server_now: serverNow.toISOString(),
+      threads: [],
+      places: { buildings: [{ rsn: "100", status: "resolved", verified: true }], neighbourhoods: [{ id: "TP", status: "resolved", verified: true }] },
+    };
+
+    const rows = homeRows({ chosen: ["100"], list, view: { feed, failed: false }, closed: closedThreads(closed("aaaa", hood(["power"], "TP"))) });
+
+    expect(rows.buildings[0].behind.map((t) => t.slug)).toEqual(["aaaa"]);
+    expect(rows.neighbourhoods[0].behind.map((t) => t.slug)).toEqual(["aaaa"]);
+    expect(homeRows({ chosen: ["100"], list, view: { feed, failed: false } }).buildings[0].behind).toEqual([]);
   });
 });

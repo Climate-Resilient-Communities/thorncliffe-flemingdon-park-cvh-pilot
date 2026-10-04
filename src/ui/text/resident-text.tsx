@@ -6,6 +6,16 @@ export const FALLBACK_MARKER = "[EN] ";
 /** True for a catalog string that is English standing in for a missing translation. */
 export const isEnglishFallback = (text: string) => text.startsWith(FALLBACK_MARKER);
 
+/**
+ * True when the catalog's message for `key` is an English fallback, read from the message as written (`t.raw`).
+ * A message with a `{placeholder}` cannot be probed with `t(key)` and no values: next-intl reports that as a
+ * FORMATTING_ERROR and hands back the key itself in development, so the probe would always say "translated".
+ */
+export const isEnglishFallbackMessage = (t: { raw(key: string): unknown }, key: string): boolean => {
+  const raw = t.raw(key);
+  return typeof raw === "string" && isEnglishFallback(raw);
+};
+
 /** The elements ResidentText can be: the block that holds the whole text. */
 export type ResidentTextTag = "p" | "h1" | "h2" | "h3" | "li" | "dt" | "dd" | "span" | "div" | "legend";
 

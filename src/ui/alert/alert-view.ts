@@ -13,7 +13,7 @@ import { entriesNewestFirst, type FeedThread } from "@/contracts/feed";
 import { isLaunchCode, languageOf, type LaunchCode } from "@/i18n/languages";
 import { agoText } from "../home/feed-poll";
 import { guideDuringHref, guidesFor } from "./guides";
-import { validUntilLine, type Translate } from "./times";
+import { clockPhrase, validUntilLine, type Translate } from "./times";
 
 export type { Translate } from "./times";
 
@@ -98,6 +98,11 @@ export interface AlertView {
   cardTime: string;
   /** "Valid until today at 3:00 p.m.", or null when the time has passed. */
   valid: string | null;
+  /** The thread's valid-until (ISO) and the feed's own clock when this was read (ISO): with them a phone with no signal says "may have ended" once the time passes (S05.07). */
+  validUntil: string;
+  serverNow: string;
+  /** "This alert may have ended. Check again when you have signal": said instead of the valid-until line (and of the card's "current" look) once a kept copy's time has passed. */
+  mayHaveEnded: string;
   /** Said when the alert's time has passed and the thread is not closed yet: "This alert reached its end time without a final update." */
   ended: string | null;
   /** Set when the thread closed (S05.03): how, and when; the alert is then no longer valid or live, and its final message is the entry on top. Null for an open thread. */
@@ -116,12 +121,19 @@ export interface AlertView {
   guides: { id: string; label: string; href: string }[];
   /** Every entry, newest first (R-07's "Updates, newest first"); more than one only once the thread has an update. A withdrawal notice is not among them. */
   entries: EntryView[];
-  /** The share preview (S05.08 builds the link): the title and description a shared link shows, from `current`, so it says what the alert says. */
+  /** Where the alert is, in words (S05.08), or null when the caller gave no place or none could be named. */
+  place: string | null;
+  /** The moments the shared message states (ISO 8601, from the feed): the first entry, the newest when there is more than one, and the closing entry of a closed thread. */
+  stamps: { posted: string; updated: string | null; closed: string | null };
+  /**
+   * The share preview (S05.08): the title and description a shared link shows, so it says what the alert says now: the types, and for a closed thread how it ended;
+   * the verification, the place and the time, a dash, then the words of `current`.
+   */
   preview: { title: string; description: string };
 }
 
-/** The longest description a link preview carries. */
-const PREVIEW_MAX = 200;
+/** The longest description a link preview carries: the facts in front (never cut) and as many of the alert's words as fit after them. */
+const PREVIEW_MAX = 300;
 
 const ENGLISH = languageOf("en");
 
@@ -207,8 +219,9 @@ function closedOf(thread: FeedThread, serverNow: Date, t: Translate): ClosedView
  * The view of a thread for a reader of `lang`. `serverNow` is the feed's `server_now`: every "ago" and the comparison with the valid-until
  * are measured against it, so a phone with a wrong clock reads the same words as everyone else.
  */
-export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverNow: Date; t: Translate }): AlertView {
+export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverNow: Date; t: Translate; place?: string | null }): AlertView {
   const { lang, serverNow, t } = input;
+  const place = input.place ?? null;
   const timeT: Translate = (key, values) => t(`time.${key}`, values);
   const language = languageOf(lang);
   // The feed carries the entries oldest first and does not refuse an order; R-07 reads them newest first, by their own times (S05.01).
@@ -219,6 +232,9 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   const newestFirst = visible.length > 0 ? visible : entriesNewestFirst(thread.entries);
   const standing = newestFirst.find((entry) => !replacers.has(entry.id)) ?? newestFirst[0];
   const latest = newestFirst[0];
+  // The time a preview or a shared message gives for the last update is the newest entry whose words still stand: an update that was withdrawn is on the page, marked,
+  // but is not what a neighbour is told changed last.
+  const lastStanding = newestFirst.find((entry) => replacers.get(entry.id)?.kind !== "withdrawal") ?? latest;
   const first = newestFirst[newestFirst.length - 1];
   const ago = (iso: string) => agoText(serverNow.getTime() - new Date(iso).getTime(), timeT);
   const times =
@@ -238,6 +254,9 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     times,
     cardTime: standing.id !== first.id ? t("R03.updated", { t: ago(standing.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
     valid,
+    validUntil: thread.valid_until,
+    serverNow: serverNow.toISOString(),
+    mayHaveEnded: t("R07.mayHaveEnded"),
     ended: closed === null && valid === null ? t("R07.expiredNote") : null,
     closed,
     unavailableTitle: t("x04.unavailable"),
@@ -248,18 +267,45 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     machineFrom: t("x04.from", { lang: ENGLISH.native }),
     guides: guidesFor(thread.types).map((id) => ({ id, label: t("R07.guide", { hazard: lowerHazard(id) }), href: guideDuringHref(lang, id) })),
     entries: newestFirst.map((entry) => entryOf(entry, serverNow, t, replacers.get(entry.id))),
-    preview: previewOf(thread, withdrawnBy ?? standing, t),
+    place,
+    stamps: { posted: first.published_at, updated: lastStanding.id !== first.id ? lastStanding.published_at : null, closed: closed ? entriesNewestFirst(thread.entries)[0].published_at : null },
+    preview: previewOf({ thread, shown: withdrawnBy ?? standing, standing, closed, first, latest: lastStanding, place, serverNow, locale: language.bcp47, t }),
   };
 }
 
 /**
- * The title and description of a shared link (S05.02; the share action is S05.08): the types' words, and the words of what is true now, so a link to a
- * corrected alert previews the correction and never the wording it replaced. It reads the same `standing` entry as the card and the alert, from the same feed.
+ * The title and description of a shared link (S05.02, S05.08): readable without opening it. The title is the types' words, and for a thread that closed how it ended with
+ * when ("Elevator: Resolved today at 11:00 a.m."); the description is the verification, the place and the time, then the words of what is true now, so a link to a
+ * corrected alert previews the correction and never the wording it replaced. It reads the same `standing` entry as the card and the alert, from the same feed, and
+ * times are clock times in Toronto, because the preview is read later. The facts are never cut; the words give way to fit.
  */
-function previewOf(thread: FeedThread, standing: FeedEntry, t: Translate): AlertView["preview"] {
-  const title = thread.types.map((type) => typeOf(type, t).word).join(", ");
-  const words = standing.text.body.replace(/\s+/g, " ").trim();
-  const lead = standing.kind === "correction" ? `${t("R07.kinds.correction")}: ${words}` : words;
+function previewOf(input: {
+  thread: FeedThread;
+  shown: FeedEntry;
+  standing: FeedEntry;
+  closed: ClosedView | null;
+  first: FeedEntry;
+  latest: FeedEntry;
+  place: string | null;
+  serverNow: Date;
+  locale: string;
+  t: Translate;
+}): AlertView["preview"] {
+  const { thread, shown, standing, closed, first, latest, place, serverNow, locale, t } = input;
+  const clock = (iso: string) => clockPhrase(new Date(iso), serverNow, locale, t);
+  const types = thread.types.map((type) => typeOf(type, t).word).join(", ");
+  let ending: string | null = null;
+  if (closed) {
+    const closedAt = clock(entriesNewestFirst(thread.entries)[0].published_at);
+    ending = closed.reason === "resolved" ? t("R07.resolvedTitle", { t: closedAt }) : closed.reason === "expired" ? t("R07.expiredTitle", { t: closedAt }) : t("R07.withdrawn");
+  }
+  const title = ending === null ? types : `${types}: ${ending}`;
+  const time = closed ? null : latest.id !== first.id ? t("R29.updatedAt", { t: clock(latest.published_at) }) : t("R29.postedAt", { t: clock(first.published_at) });
+  const facts = [originOf(standing, t).verification, place, time].filter((part): part is string => part !== null).join(" \u00b7 ");
+  const words = shown.text.body.replace(/\s+/g, " ").trim();
+  const lead = shown.kind === "correction" ? `${t("R07.kinds.correction")}: ${words}` : words;
+  const room = Math.max(0, PREVIEW_MAX - [...facts].length - 3);
   const chars = [...lead];
-  return { title, description: chars.length > PREVIEW_MAX ? `${chars.slice(0, PREVIEW_MAX - 1).join("")}\u2026` : lead };
+  const fitted = chars.length > room ? `${chars.slice(0, Math.max(0, room - 1)).join("")}\u2026` : lead;
+  return { title, description: `${facts} \u2014 ${fitted}` };
 }

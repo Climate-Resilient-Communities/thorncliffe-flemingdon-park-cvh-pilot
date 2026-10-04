@@ -69,3 +69,16 @@ export {
   type SignupPlaces,
   type SubscriberLookup,
 } from "./application/webSignup";
+// S06.05: the drill roster, the staff phones a drill is texted on (composed in src/app/drills.ts), and the ContactResolver's source for `roster` recipients.
+export {
+  createDrillRoster,
+  drillNumberSource,
+  type AddOutcome as DrillRosterAddOutcome,
+  type DrillMember,
+  type DrillRoster,
+  type DrillRosterDeps,
+  type DrillRosterEntry,
+  type EditOutcome as DrillRosterEditOutcome,
+  type RemoveOutcome as DrillRosterRemoveOutcome,
+} from "./application/drillRoster";
+export { DRILL_LABEL_MAX_CHARS, DRILL_ROSTER_MAX, bodyLangOf, parseRosterLabel, parseRosterLang, parseRosterNumber, type DrillRosterRefusal } from "./domain/drillRoster";

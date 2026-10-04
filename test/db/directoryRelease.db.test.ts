@@ -28,12 +28,13 @@ import {
 } from "@/modules/directory";
 import { directoryRelease } from "@/modules/directory/adapters/schema";
 import { VectorsFileSchema } from "@/modules/directory/domain/searchData";
+import { decodeVectorsBinary } from "@/modules/directory/domain/vectorsBinary";
 import { catalogueTextId } from "@/modules/directory/adapters/hash";
 import { PUBLISH_LOCK_KEY } from "@/modules/directory/application/publishLock";
 import { recordOpsEvent } from "@/modules/ops";
 import { SPEND_LOCK_KEY } from "@/modules/spend";
 import { createDb, type Db } from "@/platform/db";
-import { sha256Hex } from "@/platform/hash";
+import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { connect, serverUrl } from "./helpers";
 
 // The real audit module writes audit_event; the spy only lets a test make it fail once.
@@ -993,6 +994,58 @@ describe("the directory release (S02.05)", () => {
         embedded: 2,
       });
       expect((await releases())[0]).toMatchObject({ status: "complete", is_current: true, staged: false });
+    });
+
+    it("writes the compact binary vectors beside the JSON file: the same providers and numbers, recorded with its own hash", async () => {
+      const d = deps({ search: searchOf(fakeEmbedder().embedder) });
+
+      await publish(d);
+
+      const bytes = d.storage.binaries.get("releases/1/vectors.bin") as Uint8Array;
+      const decoded = decodeVectorsBinary(bytes, sha256HexBytes);
+      const file = vectorsOf(d, 1);
+      expect(decoded.header).toMatchObject({ release_v: 1, catalogue_hash: "b".repeat(64), embed_model: MODEL, dims: 4, count: 2, ids: ["M001", "M002"] });
+      expect(decoded.vectors.map((v) => [...v])).toEqual(file.providers.map((p) => p.vector.map(Math.fround)));
+      expect(await searchRow(1)).toMatchObject({ binary: { path: "releases/1/vectors.bin", sha256: sha256HexBytes(bytes), bytes: bytes.length } });
+      // The binary is as private as the JSON file: the manifest names neither as a resident file.
+      expect(Object.values((await currentManifest(app))?.files ?? {}).some((path) => path.includes("vectors"))).toBe(false);
+    });
+
+    it.each([
+      ["cannot keep bytes", (storage: ReturnType<typeof memoryDirectoryStorage>) => ({ ...storage, putBytes: undefined, getBytes: undefined })],
+      [
+        "refuses them",
+        (storage: ReturnType<typeof memoryDirectoryStorage>) => ({
+          ...storage,
+          putBytes: async () => {
+            throw new Error("refused");
+          },
+        }),
+      ],
+    ])("publishes with the JSON vectors alone, and no binary in the record, when the store %s", async (_name, change) => {
+      const d = deps({ search: searchOf(fakeEmbedder().embedder), storage: change(memoryDirectoryStorage()) as Harness["storage"] });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: true, release: 1, search: { vectors: 2 } });
+      expect(d.storage.files.has("releases/1/vectors.json")).toBe(true);
+      expect((await searchRow(1)).binary).toBeUndefined();
+    });
+
+    it("refuses to make a release current when its binary vectors are not the ones recorded", async () => {
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder) });
+      const putBytes = d.storage.putBytes!;
+      d.storage.putBytes = async (file, body) => {
+        const changed = body.slice();
+        changed[changed.length - 1] ^= 0xff;
+        await putBytes(file, changed);
+      };
+
+      const result = await publish(d);
+
+      // The record's hash is of the bytes the job wrote, so a store that changed them on the way is caught on the read back.
+      expect(result).toMatchObject({ ok: false });
     });
 
     it("the manifest of a release with matching search data says it is available, with the model and the vectors path", async () => {

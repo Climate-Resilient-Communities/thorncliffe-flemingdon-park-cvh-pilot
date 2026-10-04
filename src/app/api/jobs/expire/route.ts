@@ -1,6 +1,8 @@
 // `/api/jobs/expire` (S05.04, FR-A7): closes the alerts that ran past their valid-until, called every minute by pg_cron with the environment's job secret
 // (docs/config.md has the cron statement; it is not applied to production by this repository). Each overdue thread is closed `expired` in its own transaction,
 // with a system final; one that could not be closed is an `ops_event` and the next run tries it again. The answer is counts only: never a thread, a slug or a text.
+import { revalidateTag } from "next/cache";
+import { FEED_TAG } from "@/contracts/feed";
 import { runExpireJob } from "@/app/expire";
 import { getEnv } from "@/platform/config/env";
 import { checkJobSecret } from "../jobAuth";
@@ -15,6 +17,14 @@ export async function POST(request: Request) {
   if (denied) return denied;
   try {
     const report = await runExpireJob();
+    // A thread that closed changes what the web shows (the feed, the archive): the tag is expired at once, as after an approval, not at the end of the cache's lifetime.
+    if (report.closed > 0) {
+      try {
+        revalidateTag(FEED_TAG, { expire: 0 });
+      } catch {
+        // The caches' own lifetimes still bring it in (15 and 60 seconds).
+      }
+    }
     // Threads that failed were recorded and are the next run's; the run itself answered. Only a run that closed nothing and failed everything it tried (the
     // database is unreachable or the close is broken) is an error, so that pg_cron's run shows it.
     const everythingFailed = report.failed > 0 && report.closed === 0 && report.skipped === 0;

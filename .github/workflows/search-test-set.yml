@@ -90,7 +90,7 @@ jobs:
           fi
       # The exact commit this run was started on, which is main's head. The token is not kept in the checkout's git config: the
       # steps after this one, which hold the secrets, have no use for it (the head of main is read without it, the repository is public).
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
@@ -123,7 +123,7 @@ jobs:
           check HAVE_SUPABASE_SECRET_KEY secret SUPABASE_SECRET_KEY
           check HAVE_SUPABASE_URL variable NEXT_PUBLIC_SUPABASE_URL
           exit $missing
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -162,7 +162,7 @@ jobs:
       # a progress file of the same kind. Nothing that was printed is in the folder.
       - name: Upload the reports
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: search-test-set-${{ github.run_id }}
           path: ${{ runner.temp }}/search-test-set

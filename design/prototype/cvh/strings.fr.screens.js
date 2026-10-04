@@ -893,7 +893,8 @@
    "todayAt": "aujourd'hui à {time}",
    "dayAt": "{day} à {time}",
    "linkLine": "Dernières mises à jour et corrections : {url}",
-   "sendLine": "Votre téléphone vous demandera avec quelle application l'envoyer."
+   "sendLine": "Votre téléphone vous demandera avec quelle application l'envoyer.",
+   "placeMore": "et {n} de plus"
   },
   "R30": {
    "deviceLabel": "L'alerte dans un groupe WhatsApp",
@@ -1414,4 +1415,65 @@
    }
   });
   m(t, {"smsTexts": {"confirmation": "Répondez YES pour recevoir les alertes du CVH. Répondez STOP pour arrêter."}});
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "Rien en cours"
+   },
+   "R03": {
+    "currentAlerts": "Alertes en cours",
+    "noCurrentAlerts": "Aucune alerte en cours",
+    "myBuildings": "Vos immeubles",
+    "checking": "Vérification des alertes",
+    "feedFailed": "Nous n'avons pas pu vérifier les alertes pour le moment. Un lieu marqué « Inconnu » peut tout de même avoir une alerte. Nous allons réessayer.",
+    "feedFailedOld": "Nous n'avons pas pu vérifier s'il y a de nouvelles alertes. Affichage de ce qui a été chargé pour la dernière fois {t}."
+   },
+   "R09": {
+    "searching": "Recherche en cours",
+    "needsSignal": "La recherche a besoin de réseau",
+    "needsSignalBody": "Vous pouvez quand même choisir un sujet ci-dessous, ou appeler le Hub.",
+    "busy": "La recherche est surchargée, réessayez dans quelques minutes",
+    "busyBody": "Vous pouvez choisir un sujet ci-dessous, ou appeler le Hub.",
+    "updating": "Les résultats de recherche sont en cours de mise à jour, réessayez",
+    "updatingBody": "Vous pouvez choisir un sujet ci-dessous pendant leur mise à jour, ou appeler le Hub.",
+    "browseAll": "Voir tous les services et organismes",
+    "loading": "Chargement des sujets"
+   },
+   "R10": {
+    "shownIn": "Affiché en {lang}"
+   },
+   "directory": {
+    "title": "Services et organismes",
+    "lead": "Ce que le Hub a confirmé à Thorncliffe Park et Flemingdon Park. Choisissez un sujet ou un quartier pour réduire la liste.",
+    "count": "{n} services",
+    "countOne": "1 service",
+    "topic": "Sujet",
+    "emergency": "Aide en cas d'urgence",
+    "emergencyRole": "Rôle en cas d'urgence",
+    "lastConfirmed": "Confirmé par le Hub pour la dernière fois le {date}",
+    "lastUpdated": "Dernière mise à jour le {time}",
+    "loading": "Chargement du répertoire",
+    "couldNotLoad": "Le répertoire n'a pas pu se charger",
+    "couldNotLoadBody": "Le Hub peut vous aider à trouver un service par téléphone.",
+    "couldNotLoadNumbers": "La page des numéros donne les autres numéros dont vous pourriez avoir besoin.",
+    "numbersLink": "Voir les numéros essentiels",
+    "backToList": "Tous les services et organismes",
+    "suggestApply": "Afficher seulement {place}"
+   }
+  });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Cette page n'est pas enregistrée sur votre téléphone",
+    "body": "Elle n'a pas encore été ouverte sur ce téléphone avec du réseau, elle a donc besoin de réseau. Les numéros sont toujours enregistrés sur votre téléphone.",
+    "available": "Vous pouvez lire ceci sans réseau",
+    "none": "Rien d'autre n'est encore enregistré sur ce téléphone. Les pages que vous ouvrez avec du réseau sont enregistrées pour plus tard."
+   },
+   "R34": {
+    "offlineTitle": "Lire sans réseau",
+    "offlineHelp": "Les pages que vous ouvrez avec du réseau sont enregistrées sur ce téléphone, pour que vous puissiez les relire sans réseau. Les numéros sont toujours enregistrés. La première fois, le CVH a besoin de réseau pour s'ouvrir.",
+    "offlineNote": "Ce téléphone ne gardera peut-être pas les pages pour une utilisation hors ligne"
+   }
+  });
 })();

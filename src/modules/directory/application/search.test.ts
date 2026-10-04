@@ -12,7 +12,7 @@ import { detect } from "../domain/questionLanguage";
 import { QueryEmbedError, type QueryEmbedder } from "./ports";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
 import { SafeDetailError } from "@/platform/safeError";
-import { LISTING_PATH, RELEASE_V, VECTORS_PATH, never, releaseDb, releaseFiles, releaseRow, releaseStore } from "../../../../test/helpers/searchRelease";
+import { BINARY_PATH, LISTING_PATH, RELEASE_V, VECTORS_PATH, never, releaseBinary, releaseDb, releaseFiles, releaseRow, releaseStore } from "../../../../test/helpers/searchRelease";
 import { DEFAULT_STORAGE_TIMEOUT_MS } from "../adapters/releaseStorage";
 import {
   ANSWER_MARGIN_MS,
@@ -1481,6 +1481,98 @@ describe("the request's deadline over the snapshot read and the writes", () => {
         { reason: "timed_out", releaseV: RELEASE_V, ms: DEFAULT_LEG_TIMEOUT_MS, error: "timed_out" },
         { reason: "snapshot_failed", releaseV: RELEASE_V, ms: joined.took(), error: "timed_out" },
       ]);
+    });
+  });
+
+  describe("the compact binary vectors file", () => {
+    let logged: MockInstance<typeof console.error>;
+    beforeEach(() => {
+      logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    });
+    afterEach(() => logged.mockRestore());
+
+    const withBinary = (bytes: Uint8Array | null = releaseBinary()) => ({
+      db: releaseDb({ row: releaseRow(releaseFiles(), releaseBinary()) }),
+      store: releaseStore({ bytes: new Map(bytes === null ? [] : [[BINARY_PATH, bytes]]) }),
+    });
+
+    it("answers from the binary file and never downloads the JSON vectors", async () => {
+      const { db, store } = withBinary();
+      const search = start(service({ db, store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject({ status: "ok", results: [{ provider_id: "M001" }] });
+      expect(store.gets).toContain(BINARY_PATH);
+      expect(store.gets).not.toContain(VECTORS_PATH);
+    });
+
+    it("falls back to the JSON file when the binary is not in the store", async () => {
+      const { db, store } = withBinary(null);
+      const search = start(service({ db, store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject({ status: "ok", results: [{ provider_id: "M001" }] });
+      expect(store.gets).toEqual(expect.arrayContaining([BINARY_PATH, VECTORS_PATH]));
+    });
+
+    it("uses the JSON file for an older release, whose record names no binary, even from a store that can read bytes", async () => {
+      const store = releaseStore({ bytes: new Map([[BINARY_PATH, releaseBinary()]]) });
+      const search = start(service({ db: releaseDb(), store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject({ status: "ok", results: [{ provider_id: "M001" }] });
+      expect(store.gets).not.toContain(BINARY_PATH);
+      expect(store.gets).toContain(VECTORS_PATH);
+    });
+
+    it("tells vectors_hash for a binary that is not the one recorded, and does not fall back to the JSON file", async () => {
+      const changed = releaseBinary();
+      changed[changed.length - 1] ^= 0xff;
+      const { db, store } = withBinary(changed);
+      const search = start(service({ db, store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "vectors_hash" }]);
+      expect(store.gets).not.toContain(VECTORS_PATH);
+    });
+
+    it("tells vectors_release for a binary whose hash matches the record but that names another release", async () => {
+      const other = releaseBinary(RELEASE_V + 1);
+      const store = releaseStore({ bytes: new Map([[BINARY_PATH, other]]) });
+      const search = start(service({ db: releaseDb({ row: releaseRow(releaseFiles(), other) }), store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "vectors_release" }]);
+    });
+
+    it("tells vectors_schema:binary_magic for a file that is not a vectors binary even when its hash matches the record", async () => {
+      const bad = new Uint8Array(64).fill(7);
+      const store = releaseStore({ bytes: new Map([[BINARY_PATH, bad]]) });
+      const search = start(service({ db: releaseDb({ row: releaseRow(releaseFiles(), bad) }), store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "vectors_schema:binary_magic" }]);
+    });
+
+    it("tells vectors_missing when neither the binary nor the JSON file is there", async () => {
+      const files = releaseFiles();
+      files.delete(VECTORS_PATH);
+      const store = releaseStore({ files, bytes: new Map() });
+      const search = start(service({ db: releaseDb({ row: releaseRow(releaseFiles(), releaseBinary()) }), store }));
+
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "vectors_missing" }]);
     });
   });
 

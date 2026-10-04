@@ -95,7 +95,9 @@ What it fixes in code and in the migration, so changing one is a change to both 
 The windows marked "proposed" are engineering proposals for the owner to confirm; the others are in the E06 definitions. A text still
 queued after its `send_by` is skipped at the hand-off point, not sent late. Logs show a phone number only as its last two digits
 (`+*********23`), whichever field it reaches. The sources that give the dispatcher a recipient's number are wired in
-`src/app/messaging.ts`; none exists until the stories that create the recipients' tables (S06.05, S06.07, S07.02, S07.04).
+`src/app/messaging.ts`; the drill roster's (S06.05) and the on-call roster's (S06.07) exist, and the others come with the stories that create the
+recipients' tables (S07.02, S07.04). The drill roster's numbers are entered by an Admin on `/staff/drills/roster` in the running system and are never in
+the repository or CI.
 
 ## Messaging sender (S06.02)
 
@@ -318,11 +320,35 @@ sign up again. Every accepted sign-up, new number or not, answers HTTP 202 `{"v"
 | Environment | Secrets and variables | Rules |
 |---|---|---|
 | `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
-| `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
+| `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for open pull requests of this repository that carry the label `preview` |
 
 `VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
 scoped to that team: `vercel promote` and `vercel rollback` look up the token's user and fail with
 "User not found (404)" otherwise.
+
+### CI (`.github/workflows`)
+
+- **Checks.** Every push runs `ci.yml`. Its job named exactly `Checks` (the one to require in branch protection) needs three jobs that run at
+  once (`checks.yml`): `Static` (lint, types, CSS and string checks, unit tests, dependency rules), `Database` (the disposable Supabase
+  Postgres: migrations, RLS, `test:db`, the destructive-change check) and `Browser` (one build; the layout, staff, resident and Hub suites in
+  the pinned Playwright image, so the runner installs no browser; then the smoke check of the build). `npm run ci:local` runs the same steps one after the other.
+- **Skip on main.** On a push to `main`, `scripts/ci/tested-tree.sh` skips the three jobs, and `Checks` passes as "tested at `<sha>`", only
+  when the pushed commit is a merge commit whose tree equals the tree of the merged pull request's head, and that head has a successful
+  `Checks` of `ci.yml`. The decision is in the job summary. Anything else (a squash, main moved, no passing run, an API error) runs everything.
+  Production still deploys after `Checks`, with every guard unchanged.
+- **Previews are on demand.** Apply the label `preview` to a pull request of this repository (one preview a batch, on the last pull request);
+  `preview.yml` waits for the head's `Checks` to succeed, then deploys, and deploys again on each push while the label stays. A fork's
+  pull request never gets one. Create the label once (Issues > Labels).
+- **Nightly and latency.** `nightly.yml` runs the same checks on `main` every night (no deploy). `search-latency.yml` sends one English search
+  to `PRODUCTION_URL` every day and fails, with an annotation, when the answer is not `ok` with a result, or when its response time or `Server-Timing`
+  total passes the budget. Both only alert (a failed run); neither touches production. `codeql.yml` scans the code, apart from `Checks`;
+  Dependabot opens weekly grouped pull requests for npm and the actions (`@playwright/test` is bumped by hand with the image tag and baselines).
+- **Repository variables** (Settings > Secrets and variables > Actions > Variables; `PRODUCTION_URL` must be a repository variable too, for the latency probe):
+  `SMOKE_SEARCH` (default on; `off` skips the one real search of the production smoke check and the daily probe, which each spend one Cohere
+  call), `SMOKE_SEARCH_PREVIEW` (`on` also runs that search against a preview, which needs a Cohere key; default off) and `SEARCH_LATENCY_BUDGET_MS`
+  (default `3000`). The production smoke check records the search's response time and `Server-Timing` total in the job summary; a failed search
+  fails the smoke check and so rolls production back like any other failed smoke check.
+- **Actions are pinned** to full commit SHAs with the version in a comment; Dependabot proposes the updates.
 
 The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
 `seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
@@ -382,16 +408,63 @@ A change to which translations a release carries reaches residents only through 
 
 1. **Deploy** the change (merge to `main`; production deploys from it). Check that `GET /api/health` returns the
    merged commit as `version`.
-2. **Let phones pick up the new app.** No service worker is registered yet, and the app's scripts are content-hashed
-   files, so a phone runs the new code from its next page load; only a tab left open keeps the old code until it is
-   reloaded. Wait at least 24 hours after the deploy before step 3. An old app version still reads the new release
-   (`DirectoryListingV1` did not change), but it shows an unreviewed machine translation with the older "Translated by
-   machine" label instead of "Machine-translated; not reviewed by a person", which is why the publish waits. Once a
-   service worker is shipped (AD-1), wait until its new version has taken over phones instead (how soon depends on its
-   update settings: check them then).
+2. **Let phones pick up the new app.** Since S02.12 a service worker is registered (AD-1; how it updates is in "How a
+   deploy reaches residents' phones" below). Pages are network first, so a phone with signal runs the new code from its
+   next page load; the copies kept on the phone are used only without signal (or when the network takes more than 6
+   seconds), and without signal a phone cannot fetch a newer release, so old kept code rarely meets the new release. A
+   phone that is not opened keeps the old version until it next opens the CVH with signal. Wait at least 24 hours after
+   the deploy before step 3. An old app version still reads the new release (`DirectoryListingV1` did not change), but it
+   shows an unreviewed machine translation with the older "Translated by machine" label instead of "Machine-translated;
+   not reviewed by a person", which is why the publish waits.
 3. **Seed, then publish.** Run "Seed production" with `seed:providers` as a dry run, compare its report with the one
    in the pull request, then run it to apply. Then an Admin presses **Publish directory**. Nothing changes for
    residents until that publish: they keep the current release, built from the earlier seed.
+
+### Compact vectors for search (cold start)
+
+The publish job writes `releases/{n}/vectors.bin` beside `vectors.json`: little-endian Float32 behind a small JSON header
+(release, catalogue version, model, dimensions, provider order, sha256 of the numbers). The release record names it
+(`search.binary`, an optional field, with its own sha256). The search reads it first, checks its hash, and uses
+`vectors.json` when the binary is missing (a release published before this change, or a store that refused it), with the
+same errors (`vectors_missing`, `vectors_hash`, `vectors_release`). A binary that is there but does not match its
+recorded hash fails the search as `vectors_hash`, like the JSON file would.
+
+**Owner action: press Publish directory once after this is deployed.** Until then the current release has no binary, and a
+cold instance still downloads and parses the JSON file. The release is built from the same texts, so the publish copies
+the vectors from the current release and calls the embedding model for none of them. The first publish also lets the
+`directory-releases` bucket accept `application/octet-stream` (an existing bucket only allowed JSON); if that update is
+refused, the publish still succeeds with JSON vectors only (the server then logs `directory_bucket_update_failed`).
+
+Rollback: a build from before this change rejects the record's `search.binary` field, which turns search off. After the
+re-publish, rolling the app back to such a build needs a publish from that build (or search stays unavailable).
+
+The expected cold snapshot is download-dominated: about 0.2 to 0.5 s instead of 0.5 to 0.9 s (about 0.7 MB over Storage
+instead of 2 to 3 MB; sha256, parse and validation fall from roughly 50 ms to a few ms, more on a slow cold vCPU). Confirm it
+with the `Server-Timing` snapshot phase after the re-publish.
+
+## How a deploy reaches residents' phones (S02.12)
+
+The resident service worker is `src/app/sw.ts` (Serwist, `@serwist/turbopack`), built with the app and served at
+`/serwist/sw.js` with scope `/`. Its rules are in `src/app/offline/rules.ts`; nothing here is an environment variable.
+
+- **Which worker is current.** Each build's worker carries the list of that build's scripts and styles (content-hashed),
+  so any code change is a new worker, and its caches are named after a hash of that list (`cvh-pages-{build}`,
+  `cvh-static-{build}`).
+- **When a phone looks for it.** The browser checks `/serwist/sw.js` when a CVH page loads with signal, bypassing its own
+  cache.
+- **Install.** A new worker downloads the new build's scripts and styles (files that did not change are kept), and
+  stores home, the numbers page and the offline page in every language the phone uses, then fetches again up to 20
+  pages the previous version kept. If signal drops before the scripts, styles and those critical pages are stored,
+  the install fails and the previous version stays in use; the browser tries again on a later page load.
+- **Take over.** Once installed it takes over at once (`skipWaiting`, `clientsClaim`): open pages use it from their
+  next request, and it deletes the previous build's page and static caches. Serwist removes the old precached files.
+  The directory files (`cvh-data-v1`) are not tied to a build and stay; the map's tile cache (`cvh-map-tiles-v1`) is
+  never touched.
+- **How long it takes.** A phone with signal runs the new code from its first page load after the deploy (pages are
+  network first) and has the new worker within seconds of it. A phone that does not open the CVH keeps the previous
+  version, offline copies included, until it next opens it with signal. There is no forced refresh.
+- **Order for a change residents must see together with a release:** deploy, wait (24 hours, as above), seed, publish.
+
 ## Translation of alerts (S04.02)
 
 Alerts are translated at submit by the routes in the `translation_route` table (spine AD-10). The routes are not an environment

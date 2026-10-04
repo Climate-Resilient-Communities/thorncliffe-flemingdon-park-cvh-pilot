@@ -7,7 +7,8 @@ import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { FeedAlerts } from "../application/feed";
 import { AudienceSchema } from "../../../contracts/audience";
-import { assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../domain/residentThreads";
+import { ARCHIVE_PAGE_SIZE } from "../../../contracts/feed";
+import { assembleArchive, assembleClosedThread, assembleThreads, type ArchiveHead, type ResidentEntryRow } from "../domain/residentThreads";
 import { RESOLVED_WINDOW_MS, type StatusThread } from "../domain/status";
 import type { EntryKind } from "../domain/lifecycle";
 
@@ -112,6 +113,18 @@ export function fixtureStatusThreads(text: string, now: Date): StatusThread[] {
   });
 }
 
+/** The closed threads of a fixture file as the archive's heads: newest closed first, ties by id (the database's order). */
+export function fixtureArchiveHeads(text: string): ArchiveHead[] {
+  const fixture = FixtureSchema.parse(JSON.parse(text));
+  return fixture.threads
+    .flatMap((thread) => {
+      if (thread.closed === undefined) return [];
+      const lastEntry = Math.max(...thread.entries.map((entry) => Date.parse(entry.published_at)));
+      return [{ threadId: thread.id, reason: thread.closed as string | null, closedAt: new Date(thread.closed_at ?? lastEntry) }];
+    })
+    .sort((a, b) => b.closedAt.getTime() - a.closedAt.getTime() || (a.threadId < b.threadId ? 1 : a.threadId > b.threadId ? -1 : 0));
+}
+
 export function readFeedFixtureFile(file: string): FeedFixture {
   return {
     version: () => fixtureRows(readFileSync(file, "utf8"), "en").version,
@@ -121,6 +134,12 @@ export function readFeedFixtureFile(file: string): FeedFixture {
         threads: assembleThreads(fixtureRows(readFileSync(file, "utf8"), lang).rows, lang),
       }),
       readStatusThreads: async (now) => fixtureStatusThreads(readFileSync(file, "utf8"), now),
+      readArchive: async (lang, page, size = ARCHIVE_PAGE_SIZE) => {
+        const text = readFileSync(file, "utf8");
+        const heads = fixtureArchiveHeads(text);
+        const shown = heads.slice((page - 1) * size, page * size);
+        return { threads: assembleArchive(fixtureRows(text, lang, true).rows, lang, shown), hasMore: heads.length > page * size };
+      },
       readClosedSlugs: async () => [...new Set(fixtureRows(readFileSync(file, "utf8"), "en", true).rows.map((row) => row.slug))],
       readClosed: async (lang, slug) => {
         const { rows, reasons } = fixtureRows(readFileSync(file, "utf8"), lang, true);
