@@ -227,9 +227,12 @@ test.describe("at 1280 px", () => {
     await expect(page.getByTestId("hub-main").locator(".layout-screen[data-surface='staff']")).toHaveCount(1);
     expect(await computed(page.getByTestId("hub-main"), "overflow-y")).toBe("visible");
     expect(await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight)).toBe(true);
-    // The side navigation stays in view while the page scrolls.
+    // The side navigation's links stay in view while the page scrolls ...
     await page.evaluate(() => window.scrollTo(0, 300));
-    expect((await box(sideNav(page))).top).toBe(0);
+    expect((await box(sideNav(page).locator(".hub-side__sticky"))).top).toBe(0);
+    // ... and its column (background and border) runs the full height of the page.
+    const [column, page_] = await Promise.all([box(sideNav(page)), page.evaluate(() => document.documentElement.scrollHeight)]);
+    expect(column.height).toBeCloseTo(page_, 0);
   });
 
   test("the shell has the staff type set: 16 px body text and the Arabic-script line height of 1.9 in ur", async ({ page }) => {
