@@ -21,228 +21,69 @@ env:
   VERCEL_CLI: vercel@62.1.0
 
 jobs:
+  # On main only: can the checks be skipped because this exact tree was already tested? (scripts/ci/tested-tree.sh: HEAD is a
+  # merge commit with the tree of its second parent, and that parent's "Checks" succeeded.) It only ever skips work; whatever it
+  # cannot confirm runs the checks. Any other branch goes straight to the checks.
+  tested-tree:
+    name: Tested tree
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      checks: read
+      actions: read
+    outputs:
+      skip: ${{ steps.decide.outputs.skip }}
+      tested_sha: ${{ steps.decide.outputs.tested_sha }}
+    steps:
+      # The merge commit and both its parents.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Decide whether this tree was already tested
+        id: decide
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: scripts/ci/tested-tree.sh
+
+  # The three checks jobs (Static, Database, Browser), run at once (checks.yml). Skipped when the tested-tree check says so.
+  # `!cancelled()` lets this run when tested-tree itself was skipped (every branch but main) or failed (then skip is empty).
+  suite:
+    name: Check suite
+    needs: tested-tree
+    if: ${{ !cancelled() && needs.tested-tree.outputs.skip != 'true' }}
+    uses: ./.github/workflows/checks.yml
+
+  # The one result everything else waits for and watches: branch protection, the preview gate, and the tested-tree check of a
+  # later merge all read the check run named "Checks". It succeeds when the suite succeeded, or when the suite was skipped
+  # because the tree was already tested.
   checks:
     name: Checks
+    needs: [tested-tree, suite]
+    if: ${{ always() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # A disposable database built like Supabase's (pg_cron, pg_net, the anon and
-    # authenticated roles), the image Supabase CLI 2.119.0 runs locally. It never
-    # holds real data and is gone when the job ends.
-    services:
-      postgres:
-        image: supabase/postgres:17.11.0.002
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 30
+    timeout-minutes: 5
     env:
-      CI_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      SKIP: ${{ needs.tested-tree.outputs.skip }}
+      TESTED_SHA: ${{ needs.tested-tree.outputs.tested_sha }}
+      SUITE_RESULT: ${{ needs.suite.result }}
     steps:
-      # Full history: the destructive-migration check compares with origin/main
-      # and checks that a contract note's release is an ancestor of production.
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run check:tokens
-      - run: npm run check:spacing
-      - run: npm run check:layout
-      - run: npm run check:layers
-      - run: npm run check:logical
-      - run: npm test
-      - run: npm run lint:deps
-      # Also records what each migration removed, read from the database, for
-      # the destructive-change check below (DO blocks, EXECUTE, CASCADE).
-      - name: Apply all migrations to a fresh database
-        run: npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
-        env:
-          MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
-      - name: Check RLS and table ownership
-        run: npm run db:check
-        env:
-          MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
-      - name: Database tests (runner, checks, Drizzle drift)
-        run: npm run test:db
-        env:
-          TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
-      # Reads the release in production from PRODUCTION_URL only when a migration
-      # carries a contract note. On main HEAD is origin/main, so comparing with it
-      # would check nothing: there the base is the commit before the push (all of a
-      # multi-commit push), or the first parent when that is unknown (a new branch,
-      # a forced push). The production job checks pending migrations again.
-      - name: Check migrations for destructive changes
+      - name: Report the result of the checks
         run: |
-          base=origin/main
-          if [ "$GITHUB_REF" = refs/heads/main ]; then
-            base=HEAD~1
-            before=${{ github.event.before }}
-            if [[ "$before" =~ [1-9a-f] ]] && git merge-base --is-ancestor "$before" HEAD; then base=$before; fi
+          if [ "$SKIP" = true ] && [ "$SUITE_RESULT" = skipped ]; then
+            echo "tested at $TESTED_SHA" | tee -a "$GITHUB_STEP_SUMMARY"
+          elif [ "$SUITE_RESULT" = success ]; then
+            echo "Static, Database and Browser succeeded." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error title=Checks failed::The check suite ended as '$SUITE_RESULT' (Static, Database and Browser must all succeed)."
+            exit 1
           fi
-          npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
-        env:
-          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
-      # Fails if a catalog is stale or a required string is missing; the per-language report
-      # of missing keys goes to the job summary. Runs even if an earlier check failed.
-      - if: ${{ !cancelled() }}
-        run: npm run check:strings
-      - name: Install Chromium for the layout tests
-        run: npx playwright install --with-deps chromium
-      - run: npm run test:layout
-      - run: npm run build
-        env:
-          APP_VERSION: ${{ github.sha }}
-      # Staff sign-in and the first setup gate in a browser (S01.07), against the build just made, with
-      # the identity fake instead of Supabase Auth and the disposable database above (as cvh_app_login).
-      - name: Staff sign-in end to end
-        run: npm run test:staff
-        env:
-          STAFF_TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
-      # The resident shell in every language at 320, 390 and 768 px (baseline screenshots, right-to-left
-      # mirroring, light/navy boxes, language control, fonts, no cookies), against the build just made. It runs
-      # in the pinned Playwright image (scripts/resident-docker.sh), the one environment the baselines are made
-      # and compared in; the runner's own Ubuntu rasterises text differently. node_modules and .next are the
-      # host's (the same linux x64).
-      - name: Test the resident surface in the production build
-        run: npm run test:resident:docker
-        env:
-          CI: "true"
-      # The Hub shell at 390, 699, 700 and 1280 px in en and ur (baseline screenshots), in the same pinned image
-      # (scripts/hub-docker.sh). It renders the layout fixture with the app's compiled stylesheet, so it needs
-      # no server; the shell's behaviour is asserted in `npm run test:layout` and `npm run test:staff`.
-      - name: Test the Hub shell screenshots
-        run: npm run test:hub:docker
-        env:
-          CI: "true"
-      # The diffs and actual screenshots of a failed comparison (the resident surface's and the Hub shell's).
-      - name: Upload the resident test results
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: resident-test-results
-          path: test-results/
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Smoke check the production build
-        run: npm run test:smoke
-        env:
-          EXPECTED_VERSION: ${{ github.sha }}
 
   # The Vercel CLI reads VERCEL_ORG_ID and VERCEL_PROJECT_ID from the environment. VERCEL_TOKEN
   # is given only to the steps that call the Vercel API, never to npm installs, builds or tests.
-  #
-  # Vercel's Hobby plan caps file uploads per day, so previews are limited to branches with an open
-  # pull request and deploys upload one tarball (--archive=tgz) instead of every built file. This
-  # workflow runs on push only, so a branch pushed before its pull request is opened gets no
-  # preview; the first push after opening the pull request gets one.
-  preview:
-    name: Vercel preview
-    needs: checks
-    if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # Previews share the single Supabase project, so `vercel pull --environment=preview`
-    # brings its DATABASE_URL and SUPABASE_SECRET_KEY (change proposal 2026-10-02-single-supabase).
-    # This environment keeps PRODUCTION_DATABASE_URL (the migration secret) and production
-    # promotion to main. A Vercel token is team-scoped: a preview token is least-privilege
-    # only if the owner creates it with minimal scope.
-    environment: preview
-    permissions:
-      contents: read
-      pull-requests: read
-    env:
-      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-      PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
-    steps:
-      - name: Check Vercel settings
-        id: settings
-        env:
-          HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
-          HAS_BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
-        run: |
-          missing=()
-          [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
-          [ "$HAS_BYPASS" = true ] || missing+=("secret VERCEL_AUTOMATION_BYPASS_SECRET")
-          [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
-          [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
-          [ -n "$PRODUCTION_URL" ] || missing+=("variable PRODUCTION_URL")
-          if [ ${#missing[@]} -gt 0 ]; then
-            echo "::warning title=Vercel preview not built::Checks passed, but no preview was deployed because the repository has no ${missing[*]}."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          fi
-      - if: steps.settings.outputs.ok == 'true'
-        uses: actions/checkout@v7
-      # The gates are the scripts that get a token before any branch code has
-      # run, so they come from main, not from the branch being previewed.
-      - name: Check out main's CI scripts
-        if: steps.settings.outputs.ok == 'true'
-        uses: actions/checkout@v7
-        with:
-          ref: main
-          path: trusted
-          sparse-checkout: scripts/ci
-          persist-credentials: false
-      - name: Confirm the branch has an open pull request
-        id: pr
-        if: steps.settings.outputs.ok == 'true'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: trusted/scripts/ci/open-pr-gate.sh
-      - name: Confirm production already has a deployment
-        id: vercel
-        if: steps.pr.outputs.open == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: trusted/scripts/ci/preview-gate.sh
-      - if: steps.vercel.outputs.deploy == 'true'
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - if: steps.vercel.outputs.deploy == 'true'
-        run: |
-          npm ci
-          npm install --global "$VERCEL_CLI"
-      - if: steps.vercel.outputs.deploy == 'true'
-        run: vercel pull --yes --environment=preview
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      # vercel build needs no token once vercel pull has fetched the project settings.
-      - if: steps.vercel.outputs.deploy == 'true'
-        run: vercel build
-        env:
-          APP_VERSION: ${{ github.sha }}
-      - name: Deploy preview
-        id: deploy
-        if: steps.vercel.outputs.deploy == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          url=$(vercel deploy --prebuilt --archive=tgz --json | jq -er .url)
-          url="https://${url#https://}"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
-      # Previews are behind Deployment Protection; the bypass secret is sent as a header.
-      - name: Smoke check the preview
-        if: steps.vercel.outputs.deploy == 'true'
-        run: npm run test:smoke
-        env:
-          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
-          EXPECTED_VERSION: ${{ github.sha }}
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+  # Previews are built by preview.yml, on demand.
 
   production:
     name: Vercel production
@@ -282,10 +123,10 @@ jobs:
             exit 1
           fi
       # Full history: a contract note's release must be an ancestor of production.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -350,6 +191,8 @@ jobs:
         env:
           SMOKE_BASE_URL: ${{ vars.PRODUCTION_URL }}
           EXPECTED_VERSION: ${{ github.sha }}
+          # One real search (one Cohere call a deploy): on unless the repository variable SMOKE_SEARCH is "off".
+          SMOKE_SEARCH: ${{ vars.SMOKE_SEARCH == 'off' && 'off' || 'on' }}
       - name: Roll back after a failed smoke check
         if: failure() && steps.smoke.outcome == 'failure'
         env:

@@ -1,0 +1,142 @@
+name: Preview
+
+# A preview is built on demand: only for an open pull request of this repository that carries the label "preview" (one preview
+# a batch, on the last pull request: Vercel's Hobby plan caps file uploads per day, and a deploy uploads one tarball,
+# --archive=tgz, instead of every built file). Applying the label builds one; each later push to the labelled pull request builds
+# the new head. The run first waits for the head commit's "Checks" (ci.yml) and builds only if they succeeded.
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  contents: read
+
+# One preview run a pull request: a newer push or label replaces a run that is still waiting for the checks or building.
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  VERCEL_CLI: vercel@62.1.0
+
+jobs:
+  # The Vercel CLI reads VERCEL_ORG_ID and VERCEL_PROJECT_ID from the environment. VERCEL_TOKEN
+  # is given only to the steps that call the Vercel API, never to npm installs, builds or tests.
+  preview:
+    name: Vercel preview
+    # Only the label "preview" (applying another label does nothing), only a pull request from this repository (a fork's code
+    # never gets the preview environment's secrets; the gate below checks it again from the API), and a push only while the
+    # pull request carries the label.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && contains(github.event.pull_request.labels.*.name, 'preview')
+      && (github.event.action != 'labeled' || github.event.label.name == 'preview')
+    runs-on: ubuntu-latest
+    # Up to 25 minutes of this are the wait for the checks (scripts/ci/preview-ready.sh).
+    timeout-minutes: 45
+    # Previews share the single Supabase project, so `vercel pull --environment=preview`
+    # brings its DATABASE_URL and SUPABASE_SECRET_KEY (change proposal 2026-10-02-single-supabase).
+    # This environment keeps PRODUCTION_DATABASE_URL (the migration secret) and production
+    # promotion to main. A Vercel token is team-scoped: a preview token is least-privilege
+    # only if the owner creates it with minimal scope.
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+      actions: read
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Check Vercel settings
+        id: settings
+        env:
+          HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+          HAS_BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
+        run: |
+          missing=()
+          [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
+          [ "$HAS_BYPASS" = true ] || missing+=("secret VERCEL_AUTOMATION_BYPASS_SECRET")
+          [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
+          [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
+          [ -n "$PRODUCTION_URL" ] || missing+=("variable PRODUCTION_URL")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning title=Vercel preview not built::No preview was deployed because the repository has no ${missing[*]}."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      # The pull request's head commit (not the merge ref a pull_request run checks out by default).
+      - if: steps.settings.outputs.ok == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      # The gates are the scripts that get a token before any branch code has
+      # run, so they come from main, not from the branch being previewed.
+      - name: Check out main's CI scripts
+        if: steps.settings.outputs.ok == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          path: trusted
+          sparse-checkout: scripts/ci
+          persist-credentials: false
+      - name: Confirm the pull request, its label, its origin and its passing checks
+        id: pr
+        if: steps.settings.outputs.ok == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: trusted/scripts/ci/preview-ready.sh
+      - name: Confirm production already has a deployment
+        id: vercel
+        if: steps.pr.outputs.ready == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: trusted/scripts/ci/preview-gate.sh
+      - if: steps.vercel.outputs.deploy == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.vercel.outputs.deploy == 'true'
+        run: |
+          npm ci
+          npm install --global "$VERCEL_CLI"
+      - if: steps.vercel.outputs.deploy == 'true'
+        run: vercel pull --yes --environment=preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # vercel build needs no token once vercel pull has fetched the project settings.
+      - if: steps.vercel.outputs.deploy == 'true'
+        run: vercel build
+        env:
+          APP_VERSION: ${{ github.event.pull_request.head.sha }}
+      - name: Deploy preview
+        id: deploy
+        if: steps.vercel.outputs.deploy == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prebuilt --archive=tgz --json | jq -er .url)
+          url="https://${url#https://}"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+      # Previews are behind Deployment Protection; the bypass secret is sent as a header.
+      # The one real search (a Cohere call) runs only when the repository variable SMOKE_SEARCH_PREVIEW is "on" (and
+      # SMOKE_SEARCH is not "off"): previews have no Cohere key unless the owner configured one.
+      - name: Smoke check the preview
+        if: steps.vercel.outputs.deploy == 'true'
+        run: npm run test:smoke
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+          EXPECTED_VERSION: ${{ github.event.pull_request.head.sha }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          SMOKE_SEARCH: ${{ vars.SMOKE_SEARCH_PREVIEW == 'on' && vars.SMOKE_SEARCH != 'off' && 'on' || 'off' }}

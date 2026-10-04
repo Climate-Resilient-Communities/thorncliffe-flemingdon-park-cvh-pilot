@@ -192,9 +192,9 @@ describe("search-test-set workflow", () => {
     expect(step(/Run the search test set/).run).toContain('--summary-file "$out/summary.md"');
   });
 
-  it("pins actions to the versions ci.yml uses", () => {
-    const ci = readFileSync(path.join(root, ".github", "workflows", "ci.yml"), "utf8");
-    const used = (t: string) => new Set([...t.matchAll(/uses: (actions\/[a-z-]+@v\d+)/g)].map((m) => m[1]));
+  it("pins actions to the commits ci.yml and checks.yml use", () => {
+    const ci = ["ci.yml", "checks.yml"].map((file) => readFileSync(path.join(root, ".github", "workflows", file), "utf8")).join("\n");
+    const used = (t: string) => new Set([...t.matchAll(/uses: (actions\/[a-z-]+@[0-9a-f]{40})/g)].map((m) => m[1]));
     const ciActions = used(ci);
     expect(used(text).size).toBeGreaterThan(0);
     for (const action of used(text)) expect(ciActions.has(action), action).toBe(true);
