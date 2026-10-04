@@ -1,0 +1,93 @@
+/*
+ * Text-alert sign-up (S07.02; prototype R-05 and R-06 and the .cvh-field, .cvh-errorbox and .cvh-tag rules of cvh.css). Built on the
+ * choices' classes (choices.css); spacing from the semantic tokens, direction from logical properties only, so it mirrors in Urdu,
+ * Pashto and Dari without a [dir] rule. Colours are existing tokens.
+ */
+@layer components {
+  .signup-field {
+    overflow-wrap: anywhere;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+  }
+
+  /* "Required" and "Optional" beside a label: quieter than the label, never wrapped inside itself. */
+  .signup-tag {
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* A number reads left to right in every language; in a right-to-left page it still lines up with the label's start. */
+  .signup-phone {
+    text-align: start;
+  }
+
+  .signup-error {
+    font-weight: 700;
+    color: var(--danger);
+  }
+
+  .signup-errorbox {
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .signup-errorbox:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .signup-draft {
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+    font-weight: 700;
+  }
+
+  .signup-link {
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .signup-link:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .signup-send {
+    inline-size: 100%;
+  }
+
+  .signup-send:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+
+  /* R-06: what happens next, set apart so it is the first thing read. */
+  /* Long words (Tamil, Greek compounds) break rather than push the card past the screen at 320 px. */
+  .signup-sent {
+    overflow-wrap: anywhere;
+    padding: var(--inset-card);
+    border: 2px solid var(--accent-text);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .signup-sent h1:focus {
+    outline: none;
+  }
+
+  .signup-lead {
+    font-weight: 700;
+    color: var(--ink);
+  }
+}

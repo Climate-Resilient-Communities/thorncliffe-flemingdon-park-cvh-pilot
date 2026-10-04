@@ -5331,6 +5331,35 @@
       }
     }
   },
+  "signup": {
+    "termsAgree": "Prečítal(a) som si stránku s podmienkami a ochranou súkromia a súhlasím.",
+    "termsLink": "Prečítajte si stránku s podmienkami a ochranou súkromia",
+    "termsVersion": "Verzia podmienok {version}",
+    "age": "Mám 16 rokov alebo viac, alebo mi pomáha rodič či opatrovník.",
+    "missingTerms": "váš súhlas s podmienkami",
+    "missingAge": "vyhlásenie o veku",
+    "sending": "Odosiela sa...",
+    "onItsWay": "Ak toto číslo môže prijímať SMS, správa je na ceste.",
+    "expect": "Odpovedzte na túto správu YES do 48 hodín a začnete dostávať upozornenia. Kým neodpoviete YES, nedostanete cez SMS žiadne upozornenia.",
+    "howChange": "Ak budete chcieť neskôr zmeniť budovu, poschodie alebo jazyk, odpovedzte 1 alebo 2 na ktorúkoľvek SMS od Hubu.",
+    "startHelp": "Neprišla SMS do 5 minút? Pošlite START na {number} a potom sa prihláste znova.",
+    "startHelpNoNumber": "Neprišla SMS do 5 minút? Pošlite START na číslo, z ktorého chodia naše SMS, a potom sa prihláste znova.",
+    "error": {
+      "invalid_request": "Niečo vo formulári sa nedalo prečítať. Načítajte stránku znova a skúste to znova.",
+      "phone_not_canadian": "Použite kanadské telefónne číslo s 10 číslicami, napríklad 416 555 0123.",
+      "neighbourhood_missing": "Vyberte svoju štvrť.",
+      "terms_not_agreed": "Ak sa chcete prihlásiť, súhlaste s podmienkami.",
+      "age_not_confirmed": "Ak sa chcete prihlásiť, potvrďte vyhlásenie o veku.",
+      "terms_changed": "Podmienky sa zmenili, kým bola táto stránka otvorená. Prečítajte si ich znova a potom súhlaste.",
+      "place_unknown": "Jedna z vašich budov alebo poschodí už nie je v zozname. Skontrolujte svoje budovy a skúste to znova.",
+      "rate_limited": "Z tohto pripojenia prišlo priveľa prihlásení. Skúste to znova o hodinu.",
+      "signup_unavailable": "Prihlásenie na SMS teraz nie je k dispozícii. Skúste to znova neskôr.",
+      "network": "Nepodarilo sa spojiť s CVH. Skontrolujte pripojenie a skúste to znova."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "Odpovedzte YES a budete dostávať upozornenia CVH. Odpovedzte STOP a správy skončia."
+  },
   "offline": {
     "title": "Táto stránka nie je uložená vo vašom telefóne",
     "body": "V tomto telefóne ešte nebola otvorená so signálom, preto potrebuje signál. Čísla sú vo vašom telefóne uložené vždy.",

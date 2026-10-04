@@ -5331,6 +5331,35 @@
       }
     }
   },
+  "signup": {
+    "termsAgree": "He leído la página de términos y privacidad, y estoy de acuerdo.",
+    "termsLink": "Leer la página de términos y privacidad",
+    "termsVersion": "Versión de los términos {version}",
+    "age": "Tengo 16 años o más, o me ayuda mi madre, mi padre o mi tutor.",
+    "missingTerms": "su acuerdo con los términos",
+    "missingAge": "la declaración de edad",
+    "sending": "Enviando...",
+    "onItsWay": "Si este número puede recibir mensajes de texto, hay un mensaje en camino.",
+    "expect": "Responda YES a ese mensaje en un plazo de 48 horas para empezar a recibir alertas. Hasta que responda YES, no recibirá alertas por mensaje de texto.",
+    "howChange": "Para cambiar más adelante su edificio, piso o idioma, responda 1 o 2 a cualquier mensaje del Hub.",
+    "startHelp": "¿No le llegó un mensaje en 5 minutos? Envíe START al {number} y luego vuelva a inscribirse.",
+    "startHelpNoNumber": "¿No le llegó un mensaje en 5 minutos? Envíe START al número desde el que llegan nuestros mensajes y luego vuelva a inscribirse.",
+    "error": {
+      "invalid_request": "No se pudo leer algo del formulario. Vuelva a cargar la página e inténtelo de nuevo.",
+      "phone_not_canadian": "Use un número de teléfono canadiense de 10 dígitos, como 416 555 0123.",
+      "neighbourhood_missing": "Elija su barrio.",
+      "terms_not_agreed": "Para inscribirse, acepte los términos.",
+      "age_not_confirmed": "Para inscribirse, confirme la declaración de edad.",
+      "terms_changed": "Los términos cambiaron mientras esta página estaba abierta. Vuelva a leerlos y luego acéptelos.",
+      "place_unknown": "Uno de sus edificios o pisos ya no está en la lista. Revise sus edificios e inténtelo de nuevo.",
+      "rate_limited": "Llegaron demasiadas inscripciones desde esta conexión. Inténtelo de nuevo dentro de una hora.",
+      "signup_unavailable": "La inscripción por mensaje de texto no está disponible ahora. Inténtelo más tarde.",
+      "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas."
+  },
   "offline": {
     "title": "Esta página no está guardada en su teléfono",
     "body": "Todavía no se ha abierto en este teléfono con señal, así que necesita señal. Los números siempre están guardados en su teléfono.",

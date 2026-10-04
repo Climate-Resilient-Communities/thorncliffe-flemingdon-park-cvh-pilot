@@ -1817,6 +1817,33 @@
     closedLine: '{reason} {time}',
     closedReason: { resolved: 'Resolved', expired: 'Expired', withdrawn: 'Withdrawn' },
     closedFinal: 'Final entry: {text}' } } });
+  /* S07.02: the web sign-up for text alerts (R-05, R-06 as built) and the confirmation text. The keywords residents text (YES, STOP,
+     START) and "CVH" stay in English in every language. */
+  m(en, { signup: {
+    termsAgree: 'I have read the terms and privacy page, and I agree.',
+    termsLink: 'Read the terms and privacy page',
+    termsVersion: 'Terms version {version}',
+    age: 'I am 16 or older, or a parent or guardian is helping me.',
+    missingTerms: 'your agreement to the terms',
+    missingAge: 'the age statement',
+    sending: 'Sending...',
+    onItsWay: 'If this number can get texts, a message is on its way.',
+    expect: 'Reply YES to that message within 48 hours to start getting alerts. Until you reply YES, you get no alerts by text.',
+    howChange: 'To change your building, floor or language later, reply 1 or 2 to any text from the Hub.',
+    startHelp: 'No text within 5 minutes? Text START to {number}, then sign up again.',
+    startHelpNoNumber: 'No text within 5 minutes? Text START to the number our texts come from, then sign up again.',
+    error: {
+      invalid_request: 'Something in the form could not be read. Reload the page and try again.',
+      phone_not_canadian: 'Use a Canadian phone number with 10 digits, like 416 555 0123.',
+      neighbourhood_missing: 'Choose your neighbourhood.',
+      terms_not_agreed: 'To sign up, agree to the terms.',
+      age_not_confirmed: 'To sign up, confirm the age statement.',
+      terms_changed: 'The terms changed while this page was open. Read them again, then agree.',
+      place_unknown: 'One of your buildings or floors is no longer on the list. Check your buildings and try again.',
+      rate_limited: 'Too many sign-ups came from this connection. Try again in an hour.',
+      signup_unavailable: 'Text sign-up is not available just now. Try again later.',
+      network: 'We could not reach the CVH. Check your connection and try again.' } } });
+  m(en, { smsTexts: { confirmation: 'Reply YES to get CVH alerts. Reply STOP to stop.' } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

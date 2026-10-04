@@ -328,6 +328,23 @@ By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"202
 - *A message Twilio never prices.* A month with an outbound message that has no price keeps the whole month pending (its estimates stay counted). If Twilio leaves a failed or cancelled message unpriced for good, the owner decides whether that counts as zero.
 - *Before the first real run.* The Twilio adapter follows Twilio's documentation (the date filters `DateSent>` and `DateSent<` as GMT dates `YYYY-MM-DD`, widened by a day on each side because a date cannot say where in its day an instant is, with the exact interval applied afterwards; `next_page_uri`, `price` and `price_unit`) and has been tested only against a fake. IT checks the first real month's count and total against Twilio's usage page.
 
+## Web sign-up for text alerts (S07.02)
+
+`/{lang}/text-alerts` (R-05, then R-06 once sent) posts to `POST /api/signup`. It adds no environment variable; what it reads and fixes:
+
+| What | Where | Value |
+|---|---|---|
+| Canadian area codes | `src/contracts/canadianAreaCodes.ts` | The Canadian geographic area codes of the numbering plan, by province (non-geographic and toll-free codes left out). A number is accepted only as `+1` and ten digits whose area code is on the list. Add a new overlay there, with its province, before it is in service; the form and the server read the same list. |
+| Sign-ups per client | `SIGNUP_RATE_LIMIT` in `src/modules/subscriptions/application/webSignup.ts` | 5 in an hour from one client (a keyed hash of its address in `rate_limit`, scope `signup`, deleted after 24 hours); the sixth is answered 429 and nothing is stored. |
+| Terms version recorded | `signupConsentVersion` in `src/modules/subscriptions/application/termsService.ts` | The published `consent_version`. Outside production, while the terms are a draft, the draft's version (the form says the terms are a draft, as the terms page does); in production the page is a 404 and the endpoint answers 503 until the terms are published. |
+| The number residents text START to | `TWILIO_FROM_NUMBER` (production) | Shown on R-06: "No text within 5 minutes? Text START to {number}, then sign up again". Where it is not set the line names no number. |
+| The confirmation text | catalog `smsTexts.confirmation`, all 15 languages | "Reply YES to get CVH alerts. Reply STOP to stop." `transactional`, purpose `confirmation`, `send_by` 48 hours (the pending sign-up's `expires_at`). |
+| Expired pending sign-ups | pg_cron job `subscriptions-purge-pending-signup` (migration `20261004220000_pending_signup.sql`) | Every 15 minutes, as the table's owner, deletes pending sign-ups whose 48 hours have passed. |
+
+A confirmation the provider refuses because the number texted STOP (Twilio error 21610), at once or in a later status callback, deletes
+the pending sign-up (`forgetOptedOutSignup`, the sender's and callbacks' `afterFailure` seam): R-06 tells the resident to text START and
+sign up again. Every accepted sign-up, new number or not, answers HTTP 202 `{"v":1,"status":"accepted"}` after the same statements.
+
 ## GitHub: environments
 
 | Environment | Secrets and variables | Rules |
