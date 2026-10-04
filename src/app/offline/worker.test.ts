@@ -148,6 +148,36 @@ describe("pages: network first, kept for later, the kept copy without signal (S0
     expect(await failed.text()).toContain("Be ready");
   });
 
+  it("an alert page (R-07, closed or open) is the server's answer with signal and only ever the kept copy, marked, without it (S04.08, S05.03)", async () => {
+    const w = worker();
+    net.answers.set("/en/alerts/kbcdfghj", html("Elevator out of service"));
+    net.answers.set("/en/alerts/rslvdabc", html("Power is back"));
+    await respond(w, navigation("/en/alerts/kbcdfghj"));
+    await respond(w, navigation("/en/alerts/rslvdabc"));
+    // With signal the page is what the server says now, not what was kept: an update replaces it at once.
+    clock += 60_000;
+    net.answers.set("/en/alerts/kbcdfghj", html("Elevator back in service"));
+    const live = await respond(w, navigation("/en/alerts/kbcdfghj"), context("window-1"));
+    expect(live.headers.get(FALLBACK_HEADER)).toBeNull();
+    expect(await live.text()).toContain("Elevator back in service");
+    expect(w.servedFor("window-1")).toBeNull();
+    // An alert that has since closed is the server's 404 or its closed page, never the kept open one.
+    net.answers.set("/en/alerts/rslvdabc", { status: 404, body: "gone", headers: { "content-type": "text/html" } });
+    expect((await respond(w, navigation("/en/alerts/rslvdabc"))).status).toBe(404);
+
+    clock += 60_000;
+    net.down = true;
+    const kept = await respond(w, navigation("/en/alerts/kbcdfghj"), context("window-2"));
+    expect(kept.headers.get(FALLBACK_HEADER)).toBe("1");
+    expect(await kept.text()).toContain("Elevator back in service");
+    // The page is told when the copy was stored (the note says "last loaded {time}"), the time of the last answer it kept.
+    expect(w.servedFor("window-2")).toBe(1_060_000);
+    // An alert never opened is the offline page, not another alert.
+    const never = await respond(w, navigation("/en/alerts/mnpqrstv"));
+    expect(never.headers.get(FALLBACK_HEADER)).toBe("1");
+    expect(await never.text()).toContain("This page is not saved on your phone");
+  });
+
   it("keeps a page the phone moved to inside the app (a Next link)", async () => {
     const w = worker();
     await w.keepPage("/en/ready/heat");
