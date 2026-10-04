@@ -644,10 +644,11 @@ describe("approving a correction", () => {
   });
 
   it("raises no feed version for a drill's correction, still supersedes, and the outcome says so", async () => {
-    const created = await alerting.createAlert(actorOf(authorA), { kind: "ack", isDrill: true, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
+    // An Admin starts the drill: only an Admin at aal2 may (S06.05).
+    const created = await alerting.createAlert(actorOf(adminC), { kind: "ack", isDrill: true, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
     if (!created.ok) throw new Error("createAlert refused");
     const ref = { alertId: created.value.thread.id, entryId: created.value.entry.id };
-    await seams.freeze(actorOf(authorA), ref, frozen("drill"));
+    await seams.freeze(actorOf(adminC), ref, frozen("drill"));
     expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("drill") })).toMatchObject({ ok: true });
     const correction = await pendingCorrection(ref);
     const before = await feedVersion();

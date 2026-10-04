@@ -13,7 +13,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import type { Audience } from "../../src/contracts/audience";
-import { createAlerting, freezeContent, type AlertActor, type AlertLifecycle, type EntryContent, type EntryRef, type FrozenContent } from "../../src/modules/alerting";
+import { createAlerting, createDrillThreads, freezeContent, type AlertActor, type AlertLifecycle, type EntryContent, type EntryRef, type FrozenContent } from "../../src/modules/alerting";
 import { readClosedSlugs, readClosedThread, readOpenEntries, readStatusThreads } from "../../src/modules/alerting/adapters/resident/readThreads";
 import { record, recordRefusal } from "../../src/modules/audit";
 import { createContactResolver, createDeliveryQueue, drillResults, type MessagingLog } from "../../src/modules/messaging";
@@ -483,5 +483,26 @@ describe("the drill view's counts", () => {
     const results = await drillResults.forAlert(app, drill.entry.alertId);
     expect(results.find((row) => row.recipientId === a)).toMatchObject({ handedOff: 1, unknown: 1 });
     expect(results.find((row) => row.recipientId === null)).toMatchObject({ notSent: 1, handedOff: 0 });
+  });
+});
+
+describe("the drill threads the Hub lists", () => {
+  it("are the drills only, newest first, each with the kinds and states of its entries (a discarded one left out), and never a real thread", async () => {
+    const first = await pendingDrill();
+    await alerting.approveEntry(actor(secondAdmin), first.ref, { version: 1, contentHash: first.frozen.contentHash, recipients: { total: 0, byLanguage: {} } });
+    const second = await pendingDrill();
+    const discarded = await alerting.discardEntry(actor(admin), second.ref);
+    expect(discarded).toMatchObject({ ok: true });
+    await pendingDrill(false);
+
+    const threads = await createDrillThreads({ db: app }).recent(10);
+
+    // The newer drill first (a real thread of the same moment is not among them).
+    expect(threads.map((thread) => thread.id)).toEqual([second.ref.alertId, first.ref.alertId]);
+    const byId = Object.fromEntries(threads.map((thread) => [thread.id, thread]));
+    expect(byId[first.ref.alertId]).toMatchObject({ status: "open", types: ["power"], entries: [{ id: first.ref.entryId, kind: "ack", status: "approved" }] });
+    expect(byId[second.ref.alertId].entries).toEqual([]);
+    expect(threads.every((thread) => thread.reportedAt instanceof Date)).toBe(true);
+    expect(await createDrillThreads({ db: app }).recent(1)).toHaveLength(1);
   });
 });

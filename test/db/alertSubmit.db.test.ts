@@ -825,8 +825,10 @@ describe("what a submit refuses", () => {
 describe("a possible duplicate", () => {
   /** An approved or pending entry of another thread, written by the use cases. */
   async function otherThread(over: Partial<EntryContent>, options: { drill?: boolean } = {}): Promise<EntryRef> {
-    const ref = await newDraft(editor, over, options.drill === true);
-    const report = await r.submitter.submit(actorOf(editor), ref, `0190b000-0000-7000-8000-${randomBytes(6).toString("hex")}`);
+    // An Admin starts a drill: only an Admin at aal2 may (S06.05).
+    const by = options.drill === true ? approver : editor;
+    const ref = await newDraft(by, over, options.drill === true);
+    const report = await r.submitter.submit(actorOf(by), ref, `0190b000-0000-7000-8000-${randomBytes(6).toString("hex")}`);
     if (report.state !== "committed") throw new Error(`other thread did not submit: ${JSON.stringify(report)}`);
     return ref;
   }
@@ -888,8 +890,8 @@ describe("a possible duplicate", () => {
     expect((await entryRow(mine.entryId)).possible_duplicate_of).toBeNull();
 
     await otherThread(content());
-    const drill = await newDraft(author, {}, true);
-    expect((await r.submitter.submit(actorOf(author), drill, KEYS.three)).state).toBe("committed");
+    const drill = await newDraft(approver, {}, true);
+    expect((await r.submitter.submit(actorOf(approver), drill, KEYS.three)).state).toBe("committed");
     expect((await entryRow(drill.entryId)).possible_duplicate_of).toBeNull();
   });
 
