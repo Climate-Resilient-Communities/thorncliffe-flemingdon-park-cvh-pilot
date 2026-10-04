@@ -5195,5 +5195,34 @@
         "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
       }
     }
+  },
+  "signup": {
+    "termsAgree": "J'ai lu la page des conditions et de la confidentialité, et j'accepte.",
+    "termsLink": "Lire la page des conditions et de la confidentialité",
+    "termsVersion": "Version des conditions {version}",
+    "age": "J'ai 16 ans ou plus, ou un parent ou un tuteur m'aide.",
+    "missingTerms": "votre accord avec les conditions",
+    "missingAge": "la déclaration d'âge",
+    "sending": "Envoi en cours...",
+    "onItsWay": "Si ce numéro peut recevoir des textos, un message est en route.",
+    "expect": "Répondez YES à ce message dans les 48 heures pour commencer à recevoir les alertes. Tant que vous n'avez pas répondu YES, vous ne recevez aucune alerte par texto.",
+    "howChange": "Pour changer plus tard d'immeuble, d'étage ou de langue, répondez 1 ou 2 à n'importe quel texto du Hub.",
+    "startHelp": "Pas de texto après 5 minutes ? Envoyez START au {number}, puis inscrivez-vous de nouveau.",
+    "startHelpNoNumber": "Pas de texto après 5 minutes ? Envoyez START au numéro d'où viennent nos textos, puis inscrivez-vous de nouveau.",
+    "error": {
+      "invalid_request": "Une partie du formulaire n'a pas pu être lue. Rechargez la page et réessayez.",
+      "phone_not_canadian": "Utilisez un numéro de téléphone canadien à 10 chiffres, par exemple 416 555 0123.",
+      "neighbourhood_missing": "Choisissez votre quartier.",
+      "terms_not_agreed": "Pour vous inscrire, acceptez les conditions.",
+      "age_not_confirmed": "Pour vous inscrire, confirmez la déclaration d'âge.",
+      "terms_changed": "Les conditions ont changé pendant que cette page était ouverte. Relisez-les, puis acceptez-les.",
+      "place_unknown": "Un de vos immeubles ou étages n'est plus dans la liste. Vérifiez vos immeubles et réessayez.",
+      "rate_limited": "Trop d'inscriptions sont venues de cette connexion. Réessayez dans une heure.",
+      "signup_unavailable": "L'inscription par texto n'est pas disponible pour le moment. Réessayez plus tard.",
+      "network": "Nous n'avons pas pu joindre le CVH. Vérifiez votre connexion et réessayez."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "Répondez YES pour recevoir les alertes du CVH. Répondez STOP pour arrêter."
   }
 }

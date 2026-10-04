@@ -4,7 +4,7 @@ import realTerms from "../../../../data/catalogue/terms.json";
 import { termsReviewHash, type TermsSource } from "../domain/terms";
 import { bundledTermsInput } from "../adapters/bundledTerms";
 import { currentConsentVersion, currentPublishedTerms, termsPageView } from "../index";
-import { createTermsService, termsPageMode } from "./termsService";
+import { createTermsService, signupConsentVersion, termsPageMode } from "./termsService";
 
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
@@ -78,5 +78,17 @@ describe("what the page does with unpublished terms", () => {
     expect(termsPageMode({ status: "draft" }, "production")).toBe("hidden");
     expect(termsPageMode({ status: "draft" }, "preview")).toBe("draft");
     expect(termsPageMode({ status: "draft" }, "development")).toBe("draft");
+  });
+});
+
+describe("the terms version a sign-up records (S07.02)", () => {
+  it("is the published version everywhere, and the draft's outside production only; in production no sign-up is taken until the terms are published", () => {
+    for (const environment of ["production", "preview", "development"] as const) {
+      expect(signupConsentVersion({ status: "published", consentVersion: "2026-10-02.1" }, environment)).toBe("2026-10-02.1");
+    }
+    expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "production")).toBeNull();
+    expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "preview")).toBe("2026-10-02.1");
+    expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "development")).toBe("2026-10-02.1");
+    expect(signupConsentVersion({ status: "draft", consentVersion: null }, "preview")).toBeNull();
   });
 });

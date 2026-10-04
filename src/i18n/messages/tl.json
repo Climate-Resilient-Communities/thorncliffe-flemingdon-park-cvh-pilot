@@ -5195,5 +5195,34 @@
         "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
       }
     }
+  },
+  "signup": {
+    "termsAgree": "Nabasa ko ang pahina ng mga tuntunin at privacy, at pumapayag ako.",
+    "termsLink": "Basahin ang pahina ng mga tuntunin at privacy",
+    "termsVersion": "Bersyon ng mga tuntunin {version}",
+    "age": "Ako ay 16 taong gulang o higit pa, o tinutulungan ako ng magulang o tagapag-alaga.",
+    "missingTerms": "ang pagpayag ninyo sa mga tuntunin",
+    "missingAge": "ang pahayag tungkol sa edad",
+    "sending": "Ipinapadala...",
+    "onItsWay": "Kung nakakatanggap ng text ang numerong ito, may mensaheng papunta na.",
+    "expect": "Sumagot ng YES sa mensaheng iyon sa loob ng 48 oras para magsimulang makatanggap ng alerto. Hangga't hindi kayo sumasagot ng YES, wala kayong matatanggap na alerto sa text.",
+    "howChange": "Para palitan ang inyong gusali, palapag o wika sa ibang pagkakataon, sumagot ng 1 o 2 sa anumang text mula sa Hub.",
+    "startHelp": "Walang text sa loob ng 5 minuto? Mag-text ng START sa {number}, pagkatapos ay mag-sign up ulit.",
+    "startHelpNoNumber": "Walang text sa loob ng 5 minuto? Mag-text ng START sa numerong pinanggagalingan ng aming mga text, pagkatapos ay mag-sign up ulit.",
+    "error": {
+      "invalid_request": "May bahagi ng form na hindi mabasa. I-reload ang pahina at subukan ulit.",
+      "phone_not_canadian": "Gumamit ng numero ng telepono sa Canada na may 10 digit, tulad ng 416 555 0123.",
+      "neighbourhood_missing": "Piliin ang inyong kapitbahayan.",
+      "terms_not_agreed": "Para mag-sign up, pumayag sa mga tuntunin.",
+      "age_not_confirmed": "Para mag-sign up, kumpirmahin ang pahayag tungkol sa edad.",
+      "terms_changed": "Nagbago ang mga tuntunin habang bukas ang pahinang ito. Basahin ulit ang mga ito, pagkatapos ay pumayag.",
+      "place_unknown": "Wala na sa listahan ang isa sa inyong mga gusali o palapag. Tingnan ang inyong mga gusali at subukan ulit.",
+      "rate_limited": "Masyadong maraming sign-up ang nanggaling sa koneksyong ito. Subukan ulit pagkalipas ng isang oras.",
+      "signup_unavailable": "Hindi magagamit ngayon ang pag-sign up para sa text. Subukan ulit mamaya.",
+      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."
   }
 }

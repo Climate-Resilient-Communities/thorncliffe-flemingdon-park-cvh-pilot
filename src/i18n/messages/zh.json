@@ -5195,5 +5195,34 @@
         "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
       }
     }
+  },
+  "signup": {
+    "termsAgree": "我已阅读条款和隐私页面，并且同意。",
+    "termsLink": "阅读条款和隐私页面",
+    "termsVersion": "条款版本 {version}",
+    "age": "我年满 16 岁，或有父母或监护人在帮我。",
+    "missingTerms": "您对条款的同意",
+    "missingAge": "年龄声明",
+    "sending": "正在发送……",
+    "onItsWay": "如果这个号码可以接收短信，一条短信正在发出。",
+    "expect": "请在 48 小时内对这条短信回复 YES，即可开始接收警报。回复 YES 之前，您不会收到任何短信警报。",
+    "howChange": "以后如要更改楼宇、楼层或语言，请对中心的任何一条短信回复 1 或 2。",
+    "startHelp": "5 分钟内没有收到短信？请发送 START 到 {number}，然后重新登记。",
+    "startHelpNoNumber": "5 分钟内没有收到短信？请向我们发短信的号码发送 START，然后重新登记。",
+    "error": {
+      "invalid_request": "表格中的某些内容无法读取。请重新加载页面后再试。",
+      "phone_not_canadian": "请使用 10 位数字的加拿大电话号码，例如 416 555 0123。",
+      "neighbourhood_missing": "请选择您的社区。",
+      "terms_not_agreed": "如要登记，请同意条款。",
+      "age_not_confirmed": "如要登记，请确认年龄声明。",
+      "terms_changed": "在此页面打开期间，条款已更改。请重新阅读，然后同意。",
+      "place_unknown": "您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。",
+      "rate_limited": "来自此连接的登记太多。请一小时后再试。",
+      "signup_unavailable": "短信登记暂时无法使用。请稍后再试。",
+      "network": "无法连接到 CVH。请检查网络连接后再试。"
+    }
+  },
+  "smsTexts": {
+    "confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。"
   }
 }

@@ -6,6 +6,7 @@ export { readTermsCatalogue } from "./adapters/termsFiles";
 export { bundledTermsInput } from "./adapters/bundledTerms";
 export {
   createTermsService,
+  signupConsentVersion,
   termsPageMode,
   type DraftTerms,
   type PublishedTerms,
@@ -49,3 +50,22 @@ export {
 
 // The approval's recipient-count and snapshot port (S04.07): empty until E07 opens text sign-up.
 export { captureRecipients, countRecipients, recipientsPort, type AlertRecipient, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "./application/recipients";
+
+// The web sign-up (S07.02): the use case, the pending sign-up's number source for the ContactResolver, and the seam that forgets a sign-up
+// whose confirmation was refused because the number texted STOP.
+export {
+  ConfirmationNotQueued,
+  SIGNUP_RATE_LIMIT,
+  TWILIO_OPTED_OUT_ERROR,
+  confirmationText,
+  createSignup,
+  forgetOptedOutSignup,
+  noSubscribersYet,
+  pendingSignupNumberSource,
+  type Signup,
+  type SignupChannel,
+  type SignupDeps,
+  type SignupOutcome,
+  type SignupPlaces,
+  type SubscriberLookup,
+} from "./application/webSignup";

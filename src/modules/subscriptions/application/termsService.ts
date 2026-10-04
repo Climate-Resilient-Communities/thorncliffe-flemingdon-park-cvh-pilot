@@ -59,6 +59,16 @@ export function termsPageMode(view: Pick<TermsView, "status">, environment: "pro
   return environment === "production" ? "hidden" : "draft";
 }
 
+/**
+ * The terms version a sign-up may record (S07.02), by the same rule as the page (termsPageMode): published terms everywhere; in a preview or
+ * in development, the draft's version too, so staff can try the sign-up against the text the page shows under its draft banner (those
+ * environments send no text: SMS_MODE is `log`). Null in production while the terms are not published, so no sign-up is taken there.
+ */
+export function signupConsentVersion(view: Pick<TermsView, "status" | "consentVersion">, environment: "production" | "preview" | "development"): string | null {
+  if (view.status === "published") return view.consentVersion;
+  return environment === "production" ? null : view.consentVersion;
+}
+
 export function createTermsService(deps: TermsServiceDeps) {
   const plan = (): TermsPlan => planTerms(deps.load(), { hash: deps.hash, today: deps.today() });
 

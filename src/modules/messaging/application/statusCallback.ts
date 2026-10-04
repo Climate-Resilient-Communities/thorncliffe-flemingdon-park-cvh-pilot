@@ -90,6 +90,12 @@ export interface StatusCallbackDeps {
    * rules as `afterOutcome`; called before it. Not called when the delivery already had the id.
    */
   afterProviderId?: (tx: DbTransaction, delivery: DeliveryView) => Promise<void>;
+  /**
+   * S07.02's seam, the dispatcher's `afterFailure` for a refusal the provider reports later: called when the callback moves the row to `failed`
+   * or `undelivered`, with the updated row and the callback's error code (null when it had none), in a savepoint of the callback's
+   * transaction (a hook that throws undoes only its own writes; the status stays and `callback.failure_hook_failed` is logged).
+   */
+  afterFailure?: (tx: DbTransaction, delivery: DeliveryView, errorCode: number | null) => Promise<void>;
 }
 
 export interface StatusCallbacks {
@@ -159,7 +165,7 @@ export function createStatusCallbacks(deps: StatusCallbackDeps): StatusCallbacks
       if (!updated) throw new Error("The callback's change matched no row although the row was locked");
       if (decision.resolvesUnknown) await ops.record(tx, { kind: "delivery.unknown_resolved", deliveryId: row.id, detail: { status: decision.to } });
       // S06.08's seams, each in a savepoint of its own: a hook that throws undoes only its own writes, and the status stays.
-      const { afterProviderId, afterOutcome } = deps;
+      const { afterProviderId, afterOutcome, afterFailure } = deps;
       if (decision.storeProviderId && afterProviderId) {
         try {
           await tx.transaction((savepoint) => afterProviderId(savepoint, updated));
@@ -172,6 +178,13 @@ export function createStatusCallbacks(deps: StatusCallbackDeps): StatusCallbacks
           await tx.transaction((savepoint) => afterOutcome(savepoint, updated, "submitted"));
         } catch (error) {
           log.error("callback.spend_hook_failed", { hook: "outcome", delivery_id: row.id, error: nameOf(error) });
+        }
+      }
+      if ((decision.to === "failed" || decision.to === "undelivered") && afterFailure) {
+        try {
+          await tx.transaction((savepoint) => afterFailure(savepoint, updated, decision.errorCode ?? null));
+        } catch (error) {
+          log.error("callback.failure_hook_failed", { delivery_id: row.id, error: nameOf(error) });
         }
       }
       return { kind: "applied", from: decision.from, to: decision.to, deliveryId: row.id };

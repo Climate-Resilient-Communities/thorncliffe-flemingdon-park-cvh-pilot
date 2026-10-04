@@ -224,6 +224,16 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
           await ops.record(tx, { kind: "delivery.unknown", deliveryId: row.id, detail: outcome.httpStatus === null ? { cause: outcome.cause } : { cause: outcome.cause, http_status: outcome.httpStatus } });
         }
         if (outcome.kind === "submitted" || outcome.kind === "unknown") await deps.afterOutcome?.(tx, row, outcome.kind);
+        if (outcome.kind === "failed" && deps.afterFailure) {
+          // S07.02's seam: the recipient's module hears of a refusal for good (a confirmation to a number that texted STOP deletes its pending
+          // sign-up). In a savepoint: a failing hook never undoes the outcome.
+          const failed = { ...row, state: "failed" as const, providerErrorCode: outcome.errorCode };
+          try {
+            await tx.transaction((savepoint) => deps.afterFailure!(savepoint, failed, outcome.errorCode));
+          } catch (error) {
+            log.error("dispatch.failure_hook_failed", { delivery_id: row.id, error: nameOf(error) });
+          }
+        }
         return true;
       });
       if (!applied) return;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import type { DeviceChoices } from "@/contracts/deviceChoices";
@@ -224,6 +225,19 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
             </ChoiceButton>
           </div>
         </Told>
+
+        {/* S07.02: the way to text alerts (R-34's invite). Nothing here says whether this phone's number is signed up: the server keeps that, not the phone. */}
+        <section className="choice-told" aria-labelledby="told-texts" data-testid="text-invite">
+          <p className="choice-told__key" id="told-texts">
+            <ResidentText>{t("textAlerts")}</ResidentText>
+          </p>
+          <ResidentText as="p">{t("invite")}</ResidentText>
+          <div className="choice-told__acts">
+            <Link className="choice-btn choice-btn--secondary tap" href={`/${lang}/text-alerts`} data-testid="text-invite-yes">
+              <ResidentText>{t("inviteYes")}</ResidentText>
+            </Link>
+          </div>
+        </section>
 
         <ResidentText as="p" className="choice-hint" testId="on-device">
           {t("onDevice")}
