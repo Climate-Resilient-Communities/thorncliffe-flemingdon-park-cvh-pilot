@@ -123,7 +123,7 @@ describe("POST /api/twilio/inbound", () => {
   });
 
   it("answers 200 and does nothing for a signed request with no usable MessageSid or From", async () => {
-    for (const over of [{ MessageSid: "not-a-sid" }, { From: "" }]) {
+    for (const over of [{ MessageSid: "not-a-sid" }, { From: "" }] as Record<string, string>[]) {
       const form = fields(over);
       expect((await POST(request({ fields: form }))).status).toBe(200);
     }
