@@ -9,9 +9,15 @@ import { sql, type SQL } from "drizzle-orm";
 import { SAFETY_OVERRIDE_TYPES, type Audience } from "../../../contracts/audience";
 import type { LangCode } from "../../../contracts/lang";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
+import { RECEIVING_STATES } from "./subscriberStore";
 
-/** The states in which a subscriber gets alerts (epics, "Receiving subscriber"): `active`, `reconsent_pending` and `retained`. E09's deadline removes the rest. */
-const RECEIVING = sql`s.retention_state in ('active', 'reconsent_pending', 'retained')`;
+/**
+ * The states in which a subscriber gets alerts (epics, "Receiving subscriber"), built from the one list `phoneOf` also uses at the hand-off, so the reviewed count and
+ * the texts sent cannot disagree.
+ * TODO(E09, S09.07 reconsent campaign): a `reconsent_pending` subscriber receives only before the campaign deadline. That rule must change here AND in
+ * `subscriberStore.phoneOf` together (both read RECEIVING_STATES today).
+ */
+const RECEIVING = sql`s.retention_state in (${sql.join(RECEIVING_STATES.map((state) => sql`${state}`), sql`, `)})`;
 
 /** A subscriber the alert reaches: their id and the language they chose. */
 export interface RecipientRow {

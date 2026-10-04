@@ -18,8 +18,9 @@ import type { Audience } from "../../src/contracts/audience";
 import { entriesNewestFirst } from "../../src/contracts/feed";
 import { smsStrings } from "../../src/i18n/smsStrings";
 import { createAlerting, createResidentAlerts, freezeContent, type AlertActor, type AlertLifecycle, type EntryContent, type EntryRef, type FrozenContent } from "../../src/modules/alerting";
-import { createContactResolver } from "../../src/modules/messaging";
-import { captureRecipients, countRecipients, recipientsPort, subscriberNumberSource, type RecipientsPort } from "../../src/modules/subscriptions";
+import { createContactResolver, createDeliveryQueue } from "../../src/modules/messaging";
+import { floorsOfBuilding } from "../../src/modules/places";
+import { captureRecipients, countRecipients, createInboundRouter, recipientsPort, subscriberNumberSource, type RecipientsPort } from "../../src/modules/subscriptions";
 import { createDb, type Db } from "../../src/platform/db";
 import { submitSeams } from "./alertSubmitSeams";
 import { deferred, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
@@ -604,6 +605,41 @@ describe("a subscriber who changes during the approval is wholly in or wholly ou
     // Included in the approval, then deleted: the text was queued and forgets its recipient.
     expect((await deliveriesOf(ref.entryId)).map((row) => row.recipient_id).sort()).toEqual(sorted([stays, null]));
   });
+
+  it("makes a real STOP wait for a correction's approval (deliveries first, then the subscriber), and both commit without a deadlock", async () => {
+    const stays = await subscriber({ places: [{ rsn: RSN_A, floor: A1 }] });
+    const leaves = await subscriber({ places: [{ rsn: RSN_A, floor: A1 }] });
+    const original = await pendingAck(audience);
+    await approved(original.ref);
+    const correction = await correctionOf(original.ref);
+    const [{ phone }] = await owner<{ phone: string }[]>`select phone from subscriber where id = ${leaves}`;
+    const router = createInboundRouter({
+      db: app,
+      places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
+      enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
+      skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+      checkins: { deleteForSubscriber: async () => {} },
+      numberKey: () => "a-test-key-for-the-reply-limit",
+      publicBaseUrl: () => BASE_URL,
+      pricePerSegmentCents: () => 1.5,
+      log: { info: () => {} },
+    });
+    const held = await approvalHeld();
+    const running = approve(correction.ref, approver, held.gated);
+    await held.reached.promise;
+    // The approval has stopped the original's queued texts and holds the subscribers FOR SHARE: the STOP queues behind it.
+    const stopping = router.handle({ messageSid: `SM${randomUUID().replace(/-/g, "")}`, from: phone, body: "STOP", optOutType: "STOP" });
+    await world.untilSomeoneWaitsForALock();
+    held.gate.resolve();
+    expect((await running).result).toMatchObject({ ok: true, value: { recipients: { total: 2 } } });
+    expect(await stopping).toMatchObject({ kind: "handled", keyword: "stop", action: "delete" });
+    expect(await owner`select 1 from subscriber where id = ${leaves}`).toHaveLength(0);
+    // The correction was queued to both, then the STOP skipped the leaver's text and made it forget them.
+    const rows = await owner<{ recipient_id: string | null; state: string }[]>`select recipient_id, state from delivery where entry_id = ${correction.ref.entryId}`;
+    expect(rows.map((row) => row.recipient_id).sort()).toEqual(sorted([stays, null]));
+    expect(rows.find((row) => row.recipient_id === null)?.state).toBe("skipped");
+    expect(rows.find((row) => row.recipient_id === stays)?.state).toBe("queued");
+  }, 60_000);
 
   it("keeps a subscriber who changes places during the approval as they were (the change waits for the commit)", async () => {
     const mover = await subscriber({ places: [{ rsn: RSN_A, floor: A1 }] });

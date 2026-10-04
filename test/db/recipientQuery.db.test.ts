@@ -18,8 +18,10 @@ const LANGS = ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi"
 const STATES = ["active", "reconsent_pending", "retained"];
 const BUILDINGS = ["9100001", "9100002", "9100003", "9100004", "9100005", "9100006"];
 const FLOORS_PER_BUILDING = 4;
-const SUBSCRIBERS = 24;
-const AUDIENCES = 4000;
+const ROUNDS = 40; // each round deletes the generated subscribers and seeds a fresh set of profiles
+const SUBSCRIBERS = 60; // per round, so thousands of profiles in all
+const AUDIENCES_PER_ROUND = 100;
+const AUDIENCES = ROUNDS * AUDIENCES_PER_ROUND;
 const SEED = 20261006;
 
 let owner: ReturnType<typeof connect>;
@@ -85,8 +87,8 @@ afterAll(async () => {
   await owner.end({ timeout: 5 });
 });
 
-async function insertSubscribers(): Promise<Generated[]> {
-  const rng = random(SEED);
+async function insertSubscribers(rng: ReturnType<typeof random>): Promise<Generated[]> {
+  await owner`delete from subscriber where phone like '+1416555%'`;
   const made: Generated[] = [];
   for (let i = 0; i < SUBSCRIBERS; i += 1) {
     const id = crypto.randomUUID();
@@ -131,7 +133,7 @@ function audienceOf(rng: ReturnType<typeof random>): Audience {
 
 describe("the recipient query is the matcher", () => {
   it("returns exactly the receiving subscribers `matches` accepts, on thousands of generated audiences and profiles", async () => {
-    const subscribers = await insertSubscribers();
+    const profileRng = random(SEED);
     const rng = random(SEED + 1);
     let matchedSomething = 0;
     let matchedNobody = 0;
@@ -139,30 +141,53 @@ describe("the recipient query is the matcher", () => {
     let floorCases = 0;
     let overrideCases = 0;
     let mutedSomeone = 0;
-    for (let i = 0; i < AUDIENCES; i += 1) {
-      const audience = audienceOf(rng);
-      const expected = subscribers.filter((subscriber) => matches(audience, subscriber.profile)).map((subscriber) => subscriber.id).sort();
-      const got = (await recipientStore.reached(app, audience)).map((person) => person.id);
-      expect(got, JSON.stringify(audience)).toEqual(expected);
-      if (expected.length > 0) matchedSomething += 1;
-      else matchedNobody += 1;
-      if (audience.scope === "neighbourhood") neighbourhoodCases += 1;
-      else if (audience.buildings.some((building) => building.floors !== null)) floorCases += 1;
-      if (audience.types.some((type) => SAFETY_OVERRIDE_TYPES.includes(type))) overrideCases += 1;
-      if (subscribers.some((subscriber) => subscriber.profile.mutedTopics.length > 0 && audience.types.every((type) => subscriber.profile.mutedTopics.includes(type)))) mutedSomeone += 1;
+    // The shapes of profile the generator must really have produced, counted over every round.
+    const shapes = { mixedFloors: 0, buildingTwice: 0, noPlaces: 0, noFloorOnly: 0, profiles: 0 };
+    for (let round = 0; round < ROUNDS; round += 1) {
+      const subscribers = await insertSubscribers(profileRng);
+      const ownIds = new Set(subscribers.map((subscriber) => subscriber.id));
+      for (const { profile } of subscribers) {
+        shapes.profiles += 1;
+        if (profile.places.some((place) => place.floors.length > 0) && profile.places.some((place) => place.floors.length === 0)) shapes.mixedFloors += 1;
+        if (profile.places.length === 0) shapes.noPlaces += 1;
+        if (profile.places.some((place) => place.floors.length === 0)) shapes.noFloorOnly += 1;
+      }
+      const rows = await owner<{ id: string; n: number }[]>`select subscriber_id as id, count(*)::int as n from subscriber_place where subscriber_id = any(${[...ownIds]}) group by subscriber_id, rsn having count(*) > 1`;
+      shapes.buildingTwice += rows.length;
+      for (let i = 0; i < AUDIENCES_PER_ROUND; i += 1) {
+        const audience = audienceOf(rng);
+        const expected = subscribers.filter((subscriber) => matches(audience, subscriber.profile)).map((subscriber) => subscriber.id).sort();
+        const got = (await recipientStore.reached(app, audience)).map((person) => person.id).filter((id) => ownIds.has(id));
+        expect(got, JSON.stringify(audience)).toEqual(expected);
+        if (expected.length > 0) matchedSomething += 1;
+        else matchedNobody += 1;
+        if (audience.scope === "neighbourhood") neighbourhoodCases += 1;
+        else if (audience.buildings.some((building) => building.floors !== null)) floorCases += 1;
+        if (audience.types.some((type) => SAFETY_OVERRIDE_TYPES.includes(type))) overrideCases += 1;
+        if (subscribers.some((subscriber) => subscriber.profile.mutedTopics.length > 0 && audience.types.every((type) => subscriber.profile.mutedTopics.includes(type)))) mutedSomeone += 1;
+      }
+      // Only this round's profiles are there.
+      expect((await owner`select count(*)::int as n from subscriber where phone like '+1416555%'`)[0]!.n).toBe(SUBSCRIBERS);
     }
     // The generator really exercised the rules: both outcomes, both scopes, floors, the fire override and topic opt-outs.
     expect(matchedSomething).toBeGreaterThan(AUDIENCES * 0.3);
-    expect(matchedNobody).toBeGreaterThan(AUDIENCES * 0.03);
+    expect(matchedNobody).toBeGreaterThan(5); // 60 profiles per round: an audience nobody fits is rarer than before
     expect(neighbourhoodCases).toBeGreaterThan(500);
     expect(floorCases).toBeGreaterThan(500);
     expect(overrideCases).toBeGreaterThan(500);
     expect(mutedSomeone).toBeGreaterThan(500);
-  }, 600_000);
+    // ... and every shape of profile, thousands of profiles over.
+    expect(shapes.profiles).toBe(ROUNDS * SUBSCRIBERS);
+    expect(shapes.profiles).toBeGreaterThanOrEqual(2000);
+    expect(shapes.mixedFloors).toBeGreaterThan(100);
+    expect(shapes.buildingTwice).toBeGreaterThan(50);
+    expect(shapes.noPlaces).toBeGreaterThan(100);
+    expect(shapes.noFloorOnly).toBeGreaterThan(100);
+  }, 900_000);
 
   it("locks the same people the count reads, in id order, and they are the matcher's", async () => {
     const subscribers = await owner<{ id: string }[]>`select id from subscriber where phone like '+1416555%'`;
-    expect(subscribers.length).toBe(SUBSCRIBERS);
+    expect(subscribers.length).toBe(SUBSCRIBERS); // the last round's profiles
     const rng = random(SEED + 2);
     for (let i = 0; i < 60; i += 1) {
       const audience = audienceOf(rng);
