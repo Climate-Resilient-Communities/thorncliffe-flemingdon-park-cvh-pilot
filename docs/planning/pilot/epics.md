@@ -2673,8 +2673,8 @@ So that residents get the most urgent text first and nobody gets duplicates from
 
 ### Story S06.03 — Cancelled and closed alerts never send stale texts
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
-- **Traces:** AR-12, AR-9, FR-A16 (cancellation side) · **Depends on:** S06.02, S05.03 · **Branch:** `e06-s03-cancel-queued`
+- **Size:** S · **Estimate:** 3 h · **Actual:** 41 min (started 2026-10-03 23:01 UTC, built 23:42 UTC)
+- **Traces:** AR-12, AR-9, FR-A16 (cancellation side) · **Depends on:** S06.02, S05.03 · **Branch:** `e06-s03-no-stale-texts`
 
 As a Hub Coordinator,
 I want texts for withdrawn, corrected or closed alerts stopped before they are handed off,

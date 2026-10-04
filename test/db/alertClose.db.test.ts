@@ -8,7 +8,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import postgres from "postgres";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import type { RecipientCounts } from "../../src/contracts/alertApproval";
 import type { Audience } from "../../src/contracts/audience";
@@ -36,6 +36,8 @@ import type { AlertRecipient, RecipientEntry, RecipientsPort } from "../../src/m
 import { createDb, type Db, type DbTransaction } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 import { submitSeams } from "./alertSubmitSeams";
+import { deferred, dispatcherWorld, fakeResolver, type DispatcherWorld } from "./dispatcherSupport";
+import { drizzleDispatchStore } from "../../src/modules/messaging";
 
 const RSN = "4154346";
 const floorId = (rsn: string, index: number) => `01900000-0000-7000-8000-${rsn.padStart(8, "0")}${String(index).padStart(4, "0")}`;
@@ -54,7 +56,7 @@ const content = (over: Partial<EntryContent> = {}): EntryContent => ({
   types: ["power"],
   audience: audienceOf(RSN),
   phase: "problem",
-  validUntil: new Date("2026-10-02T15:00:00Z"),
+  validUntil: liveUntil ?? new Date("2026-10-02T15:00:00Z"),
   validUntilMode: "at",
   ...over,
 });
@@ -89,6 +91,9 @@ let appSql: postgres.Sql;
 let app: Db;
 let alerting: AlertLifecycle;
 let seams: ReturnType<typeof submitSeams>;
+let world: DispatcherWorld;
+/** Set by the sender's tests: the sender judges a valid-until by the real database clock, so their entries must be valid until after today. */
+let liveUntil: Date | undefined;
 const accounts: Account[] = [];
 
 async function account(role: Role): Promise<Account> {
@@ -158,9 +163,11 @@ beforeAll(async () => {
   ambassador = await account("ambassador");
   alerting = createAlerting({ db: app, now: () => clock, recipients: port, pricePerSegmentCents: () => 5 });
   seams = submitSeams(owner, alerting);
+  world = dispatcherWorld(owner, appSql, app);
 });
 
 afterAll(async () => {
+  await world.reset();
   await clear();
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
@@ -239,7 +246,7 @@ const updateInput = (over: Partial<Parameters<AlertLifecycle["addUpdate"]>[2]> =
   entryId: randomUUID(),
   text: "Toronto Hydro is on site. Power may be back after 11 pm.",
   phase: "in_progress" as const,
-  validUntil: new Date("2026-10-02T09:00:00Z"),
+  validUntil: liveUntil ?? new Date("2026-10-02T09:00:00Z"),
   validUntilMode: "at" as const,
   ...over,
 });
@@ -889,5 +896,131 @@ describe("what a resident reads of a thread that closed", () => {
       ["ack", undefined],
       ["withdrawal", ref.entryId],
     ]);
+  });
+});
+
+// --- the sender after a close (S06.03) ---------------------------------------------------------------------------------------------------------
+// The real approval, the real `cancelQueued` and the real sender (the provider and the numbers are fakes): the texts a close stops never go, and the text that
+// closes the thread still does, whether texting is paused or not.
+
+const bodyOfEntry = async (entryId: string) => (await owner<{ body: string }[]>`select body from delivery where entry_id = ${entryId} limit 1`)[0].body;
+
+describe("a close and the sender (S06.03)", () => {
+  beforeEach(() => {
+    // The alerting clock follows the real one here, so the valid-until the sender's standing check needs (after the database's now()) stays within the 7-day limit.
+    clock = new Date();
+    liveUntil = new Date(clock.getTime() + 2 * 86_400_000);
+  });
+
+  afterEach(async () => {
+    liveUntil = undefined;
+    clock = NOW;
+    await world.reset();
+  });
+
+  it("a final approved over an update whose texts are queued, while texts are paused: the update's rows are cancelled, the final's stay queued through the pause and are sent after the resume though the thread is closed", async () => {
+    const { ref } = await approvedThread();
+    const update = await approvedUpdate(ref.alertId, 3);
+    const final = await pendingFinal(ref.alertId);
+    await world.setPause(true);
+    recipientIds = [randomUUID(), randomUUID()];
+
+    expect(await alerting.approveEntry(actorOf(coordB), final, await shownOfRow(final))).toMatchObject({ ok: true });
+    expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closing_entry_id: final.entryId });
+    expect(await stateCounts(update.entryId)).toEqual({ cancelled: 3 });
+    expect(await stateCounts(final.entryId)).toEqual({ queued: 2 });
+
+    // Paused: the sender claims nothing and sends nothing.
+    await world.dispatcher().run();
+    expect(world.provider.calls).toHaveLength(0);
+    expect(await stateCounts(final.entryId)).toEqual({ queued: 2 });
+
+    // Resumed: the final goes to its two recipients although its thread is closed, and not one of the update's texts goes.
+    await world.setPause(false);
+    const report = await world.dispatcher().run();
+    expect(report).toMatchObject({ submitted: 2 });
+    expect(await stateCounts(final.entryId)).toEqual({ submitted: 2 });
+    expect(await stateCounts(update.entryId)).toEqual({ cancelled: 3 });
+    const finalBody = await bodyOfEntry(final.entryId);
+    expect(world.provider.calls.map((call) => call.body)).toEqual([finalBody, finalBody]);
+  });
+
+  it("a withdrawal that closes its thread: its rows are created and sent after the close, and the withdrawn entry's queued rows are cancelled and never sent", async () => {
+    const { ref } = await approvedThread({}, 2);
+    clock = new Date(clock.getTime() + 1000);
+    const made = await alerting.withdrawEntry(actorOf(authorA), { alertId: ref.alertId, targetId: ref.entryId }, { entryId: randomUUID(), reason: "duplicate", text: "This alert was withdrawn because it was a duplicate." });
+    if (!made.ok) throw new Error(`withdrawEntry refused: ${made.error}`);
+    const withdrawal = await submitted({ alertId: ref.alertId, entryId: made.value.entry.id });
+    recipientIds = [randomUUID(), randomUUID()];
+
+    expect(await alerting.approveEntry(actorOf(coordB), withdrawal, await shownOfRow(withdrawal))).toMatchObject({ ok: true });
+    expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "withdrawn", closing_entry_id: withdrawal.entryId });
+    expect(await stateCounts(ref.entryId)).toEqual({ cancelled: 2 });
+
+    const report = await world.dispatcher().run();
+    expect(report).toMatchObject({ submitted: 2 });
+    expect(await stateCounts(withdrawal.entryId)).toEqual({ submitted: 2 });
+    expect(await stateCounts(ref.entryId)).toEqual({ cancelled: 2 });
+    const body = await bodyOfEntry(withdrawal.entryId);
+    expect(world.provider.calls.map((call) => call.body)).toEqual([body, body]);
+  });
+
+  it("a final's approval that commits between the sender's claim and its hand-off: the update's row is cancelled, the hand-off commits nothing and the provider is not called for it", async () => {
+    const { ref } = await approvedThread();
+    const update = await approvedUpdate(ref.alertId, 1);
+    const final = await pendingFinal(ref.alertId);
+    recipientIds = [randomUUID()];
+    const shown = await shownOfRow(final);
+    let approved: unknown;
+    const store = {
+      ...drizzleDispatchStore,
+      async claim(...args: Parameters<typeof drizzleDispatchStore.claim>) {
+        const result = await drizzleDispatchStore.claim(...args);
+        // The row is claimed and committed; the close now commits in full (on its own connections) before the hand-off asks for the row.
+        if (result.kind === "claimed" && approved === undefined) approved = await alerting.approveEntry(actorOf(coordB), final, shown);
+        return result;
+      },
+    };
+
+    await world.dispatcher({ store }).run();
+
+    expect(approved).toMatchObject({ ok: true });
+    expect(await stateCounts(update.entryId)).toEqual({ cancelled: 1 });
+    // Only the final's own text went, after the close.
+    expect(world.provider.calls.map((call) => call.body)).toEqual([await bodyOfEntry(final.entryId)]);
+  });
+
+  it("a final's approval that starts while a hand-off holds the update's row: the approval waits, finds the text handed off, leaves it, and the final still closes the thread and goes out", async () => {
+    const { ref } = await approvedThread();
+    const update = await approvedUpdate(ref.alertId, 1);
+    const final = await pendingFinal(ref.alertId);
+    recipientIds = [randomUUID()];
+    const shown = await shownOfRow(final);
+    const inside = deferred();
+    const proceed = deferred();
+    let first = true;
+    const resolver = fakeResolver({
+      onResolve: async () => {
+        if (!first) return;
+        first = false;
+        inside.resolve();
+        await proceed.promise;
+      },
+    });
+    const run = world.dispatcher({ resolver: resolver.resolver }).run();
+    await inside.promise;
+    const approving = alerting.approveEntry(actorOf(coordB), final, shown);
+    await world.untilSomeoneWaitsForALock();
+    proceed.resolve();
+    const [, approved] = await Promise.all([run, approving]);
+
+    expect(approved).toMatchObject({ ok: true });
+    // The update's text was already in flight, so it went; the close stopped nothing of it.
+    expect(await stateCounts(update.entryId)).toEqual({ submitted: 1 });
+    expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed" });
+    // The final's own row is sent by a run, though the thread is closed.
+    await world.dispatcher().run();
+    expect(await stateCounts(final.entryId)).toEqual({ submitted: 1 });
+    expect(world.provider.calls.map((call) => call.body)).toEqual([await bodyOfEntry(update.entryId), await bodyOfEntry(final.entryId)]);
   });
 });
