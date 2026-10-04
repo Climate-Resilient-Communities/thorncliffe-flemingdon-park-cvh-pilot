@@ -2485,6 +2485,8 @@ So that neighbours without the app still get trustworthy information.
 **When** the Hub decides to show alerts to residents in production
 **Then** an Admin changes `RESIDENT_ALERTS_ENABLED` to true through a production deploy, the change is recorded in the launch-readiness checklist, and the S04.08 configuration test is updated to expect it on
 
+*Release note:* the code lock `RESIDENT_ALERTS_RELEASED` is released (true) as of E05 and the S04.08 configuration test now expects production to start with the variable `true`; the switch is only the Vercel variable (default off), set by an Admin with a production redeploy.
+
 ## E06 — Texts go out safely
 
 Every outbound text goes through one queue and one sender: in a fixed priority order, at a shared, controlled pace, with no automatic duplicate submissions, never after it was cancelled before hand-off, and with delivery status tracked from signed callbacks. Drills reach only the drill roster, an Admin can pause all sending, and a stuck queue alerts the on-call Admin. This epic proves the whole path end to end with drills to staff phones before any resident signs up (E07), and removes the E01 spike.

@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { StorageWriteError } from "../application/ports";
 import { DIRECTORY_BUCKET, fileDirectoryStorage, memoryDirectoryStorage, supabaseDirectoryStorage } from "./releaseStorage";
 
 const dirs: string[] = [];
@@ -50,7 +51,7 @@ describe("the Supabase Storage store", () => {
     body?: string;
   }
   /** A Storage API of our own: a bucket that exists or not, objects in memory. Nothing reaches a real project. */
-  function fakeStorage(options: { bucket?: "private" | "public" | "missing"; failUploads?: boolean; allowedMime?: string[] | null; limit?: number | null } = {}) {
+  function fakeStorage(options: { bucket?: "private" | "public" | "missing"; failUploads?: boolean; refuseBinary?: number; allowedMime?: string[] | null; limit?: number | null } = {}) {
     const calls: Call[] = [];
     const objects = new Map<string, string>();
     const raw = new Map<string, Uint8Array>();
@@ -72,6 +73,7 @@ describe("the Supabase Storage store", () => {
       const object = url.split(`/storage/v1/object/${DIRECTORY_BUCKET}/`)[1];
       if (object && (method === "POST" || method === "PUT")) {
         if (options.failUploads) return json({ message: "boom" }, 500);
+        if (options.refuseBinary && object.endsWith(".bin")) return json({ message: "secret vendor text: mime type application/octet-stream is not supported" }, options.refuseBinary);
         objects.set(object, body ?? "");
         if (rawBody) raw.set(object, new Uint8Array(await rawBody.arrayBuffer()));
         return json({ Key: `${DIRECTORY_BUCKET}/${object}` });
@@ -181,6 +183,35 @@ describe("the Supabase Storage store", () => {
     const store = make(fakeStorage({ bucket: "private", failUploads: true }));
 
     await expect(store.put("releases/1/en.json", "{}")).rejects.toThrow("the directory file could not be stored");
+  });
+
+  it("classifies a refused binary upload as a safe token, without the vendor's message", async () => {
+    const store = make(fakeStorage({ bucket: "private", refuseBinary: 415 }));
+
+    const error = await store.putBytes!("releases/1/vectors.bin", new Uint8Array(1)).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(StorageWriteError);
+    expect((error as StorageWriteError).classification).toBe("mime_not_allowed");
+    expect((error as StorageWriteError).message).not.toContain("secret vendor text");
+    // The JSON file is not affected by the refusal of the binary.
+    await expect(store.put("releases/1/en.json", "{}")).resolves.toBeUndefined();
+  });
+
+  it("names a refused bucket widening as the reason when the binary upload is then refused too", async () => {
+    const fake = fakeStorage({ bucket: "private", allowedMime: ["application/json"], refuseBinary: 400 });
+    const failing = ((input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith(`/bucket/${DIRECTORY_BUCKET}`) && init?.method === "PUT" ? Promise.resolve(new Response(JSON.stringify({ message: "secret vendor text" }), { status: 403 })) : fake.fetch(input, init)) as typeof fetch;
+    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const store = supabaseDirectoryStorage({ url: "https://project.supabase.test", secretKey: "sb_secret_test", fetch: failing });
+
+      const error = await store.putBytes!("releases/1/vectors.bin", new Uint8Array(1)).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(StorageWriteError);
+      expect((error as StorageWriteError).classification).toBe("bucket_update_http_403");
+    } finally {
+      logged.mockRestore();
+    }
   });
 
   it("gives up a download the store never answers after its own timeout (a search's shared load of a release cannot hang on it)", async () => {

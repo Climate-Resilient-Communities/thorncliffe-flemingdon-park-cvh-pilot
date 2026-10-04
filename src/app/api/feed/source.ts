@@ -1,7 +1,7 @@
 // Where the feed route gets its FeedV1 (AD-2: the app wires the alerting module to the database). Server only.
 //
 // The launch gate (RESIDENT_ALERTS_ENABLED, S04.08) is passed to the alerting module here: with it off the feed lists no thread, whatever
-// has been approved, so production shows residents no alert until E05 is released.
+// has been approved, so production shows residents no alert unless RESIDENT_ALERTS_ENABLED is true (E05 is released).
 //
 // Locally only (the environment check refuses them on Vercel): CVH_FAKE_BUILDINGS_FILE swaps the database for the sample buildings of
 // the resident page tests (the feed then lists those buildings and the two neighbourhoods, at version 0, all at status none), and

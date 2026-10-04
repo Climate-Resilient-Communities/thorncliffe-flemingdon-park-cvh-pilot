@@ -1,12 +1,7 @@
-// The launch gate of E04 (S04.08): production runs with RESIDENT_ALERTS_ENABLED off, so the feed returns no threads and no
-// alert page opens there, until E05's corrections and closing are released. This is the configuration test the story asks
-// for ("a test checks the production configuration keeps it off until E05 is released"): it reads the production
-// configuration every way the repository can say it (the environment schema's defaults and refusals, the document of
-// record, docs/config.md, and the deploy files) and fails if any of them turns the gate on.
-//
-// WHEN E05 IS RELEASED (its last story): flip RESIDENT_ALERTS_RELEASED in env.ts, set the variable to `true` in
-// production's Vercel variables through a production deploy, record it in the launch-readiness checklist, and change the
-// expectations marked "E05" below to expect it on. Until then nothing here may.
+// The launch gate of E04 (S04.08), as released by E05: the code lock (RESIDENT_ALERTS_RELEASED) is open, so production
+// starts with RESIDENT_ALERTS_ENABLED=true and turns the gate on. The default stays off (unset or "false"), so the switch is
+// only the Vercel variable, set by an Admin with a production redeploy and recorded in the launch-readiness checklist.
+// No deploy file may set it. A value that is neither true nor false still fails start-up.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -41,40 +36,42 @@ afterEach(() => {
   resetEnvCache();
 });
 
-describe("production keeps resident alerts off until E05 is released", () => {
-  it("has not released the alerts (E05: this is the expectation to change)", () => {
-    expect(RESIDENT_ALERTS_RELEASED).toBe(false);
+describe("production, with the alerts released by E05", () => {
+  it("has released the alerts (the code lock is open)", () => {
+    expect(RESIDENT_ALERTS_RELEASED).toBe(true);
   });
 
-  it("is off when RESIDENT_ALERTS_ENABLED is not set, or is false", () => {
+  it("is off by default: RESIDENT_ALERTS_ENABLED unset, empty or false (the owner turns it on in Vercel)", () => {
     expect(parseEnv(production).residentAlertsEnabled).toBe(false);
     expect(parseEnv({ ...production, RESIDENT_ALERTS_ENABLED: "" }).residentAlertsEnabled).toBe(false);
     expect(parseEnv({ ...production, RESIDENT_ALERTS_ENABLED: "false" }).residentAlertsEnabled).toBe(false);
     expect(parseEnv({ ...production, RESIDENT_ALERTS_ENABLED: " FALSE " }).residentAlertsEnabled).toBe(false);
   });
 
-  it.each(["true", "TRUE", " true ", "True"])("refuses to start with RESIDENT_ALERTS_ENABLED=%j (E05: this is the expectation to change)", (value) => {
-    const problems = problemsOf({ ...production, RESIDENT_ALERTS_ENABLED: value });
-
-    expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/^RESIDENT_ALERTS_ENABLED: must not be "true" in production until E05/);
+  it.each(["true", "TRUE", " true ", "True"])("starts with RESIDENT_ALERTS_ENABLED=%j and turns the gate on", (value) => {
+    expect(parseEnv({ ...production, RESIDENT_ALERTS_ENABLED: value }).residentAlertsEnabled).toBe(true);
   });
 
-  it("is off in the environment the app reads at run time, through getEnv, whatever else Vercel sets", () => {
+  it("reads the setting at run time through getEnv: on with true, off when unset", () => {
+    for (const [name, value] of Object.entries({ ...production, RESIDENT_ALERTS_ENABLED: "true" })) vi.stubEnv(name, value);
+    resetEnvCache();
+    expect(getEnv().residentAlertsEnabled).toBe(true);
+
+    vi.unstubAllEnvs();
+    resetEnvCache();
     for (const [name, value] of Object.entries({ ...production, RESIDENT_ALERTS_ENABLED: undefined })) vi.stubEnv(name, value);
     resetEnvCache();
-
     expect(getEnv().residentAlertsEnabled).toBe(false);
   });
 
-  it("is off in the production setting document of record (docs/config.md), which names the gate and its value", () => {
+  it("documents the default (off) in docs/config.md, which names the variable as the only switch", () => {
     const row = read("docs/config.md")
       .split("\n")
       .find((line) => line.startsWith("| `RESIDENT_ALERTS_ENABLED`"));
 
     expect(row, "docs/config.md lists RESIDENT_ALERTS_ENABLED among production's variables").toBeDefined();
-    // E05: change `false` to `true` here in the deploy that releases the alerts, with the launch-readiness entry.
     expect(row).toMatch(/^\| `RESIDENT_ALERTS_ENABLED` \| no \| `false` /);
+    expect(row).toMatch(/only this Vercel variable/);
   });
 
   it("is not turned on by a deploy file: neither the workflow nor vercel.json nor next.config.ts sets it", () => {
