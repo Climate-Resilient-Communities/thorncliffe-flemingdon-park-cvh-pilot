@@ -1476,4 +1476,51 @@
     "offlineNote": "Es posible que este teléfono no guarde páginas para usarlas sin conexión"
    }
   });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "¿Qué edificio?",
+    "allFloorsLine": "Los {n} pisos",
+    "listLabel": "Algunos pisos",
+    "listLine": "Marque cada piso",
+    "rangeLabel": "Varios pisos seguidos",
+    "rangeLine": "De un piso a otro",
+    "fromFloor": "Desde el piso",
+    "toFloor": "Hasta el piso",
+    "chooseFloor": "Elegir",
+    "phaseTitle": "Cómo están las cosas",
+    "phaseProblem": "Hay un problema",
+    "phaseProgress": "Se está trabajando en ello",
+    "validTitle": "¿Hasta cuándo?",
+    "validResolved": "Hasta que se arregle (24 horas desde ahora)",
+    "validAt": "Hasta una fecha y hora",
+    "dateLabel": "Fecha",
+    "timeLabel": "Hora (hora de Toronto)",
+    "validHint": "Como máximo 7 días a partir de ahora.",
+    "textLabel": "Qué está pasando, en inglés",
+    "textHint": "Como máximo {max} caracteres. Los residentes lo leen en su idioma; el Hub lo revisa primero.",
+    "inAlert": "Esta novedad va en la alerta: {headline}",
+    "typesFixed": "Qué está pasando: {types}",
+    "unsent": "Todavía no se ha enviado. Mantenga esta página abierta; se enviará cuando tenga señal.",
+    "unsentClose": "Si cierra esta página, esta novedad se pierde.",
+    "sending": "Enviando al Hub...",
+    "errPhase": "Elija cómo están las cosas.",
+    "errText": "Diga qué está pasando, en inglés.",
+    "errTextLong": "Es demasiado largo. Use como máximo {max} caracteres.",
+    "errValid": "Escriba una fecha y una hora.",
+    "errValidPast": "Esa hora ya pasó. Elija una hora posterior.",
+    "errValidFar": "Elija una hora dentro de los próximos 7 días como máximo.",
+    "errValidSkipped": "Esa noche cambia la hora, así que esa hora no está clara. Elija otra hora.",
+    "errRange": "El primer piso está por encima del último. Ponga primero el piso más bajo.",
+    "errNotAssigned": "Ahora no está asignado a este edificio, así que no puede publicar para él.",
+    "errClosed": "Esta alerta terminó. Mejor publique una novedad nueva.",
+    "errSignedOut": "Se cerró su sesión, así que esto no se envió. Vuelva a iniciar sesión y publíquelo otra vez.",
+    "errFailed": "Esto no se envió. Inténtelo de nuevo. Si sigue pasando, llame al Hub."
+   },
+   "A03": {
+    "states": {
+     "ended": "No enviado: la alerta terminó antes de que el Hub la revisara"
+    }
+   }
+  });
 })();

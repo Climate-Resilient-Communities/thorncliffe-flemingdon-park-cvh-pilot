@@ -78,4 +78,6 @@ export type AlertRefusal =
    * S06.07, the approval of a non-drill alert while texting is live: the on-call roster has no number, so a stuck queue or a failing sender would
    * go unreported. Nothing was approved. Off where texting is not live (the app decides, `AlertLifecycleDeps.oncall`), and never for a correction or a withdrawal (staff engineer's decision).
    */
-  | "ONCALL_REQUIRED";
+  | "ONCALL_REQUIRED"
+  /** S08.02: an ambassador's post is attributed to one building ("Building ambassador, {building}"), so it is for exactly one building. */
+  | "ONE_BUILDING_ONLY";

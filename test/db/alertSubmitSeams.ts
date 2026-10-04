@@ -21,8 +21,8 @@ import {
 export function submitSeams(owner: postgres.Sql, alerting: AlertLifecycle) {
   return {
     /**
-     * Freezes `frozen` as the next version of the draft: the attempt `beginSubmit` would have recorded (so an Ambassador's freeze, which
-     * beginSubmit refuses until E08, can still be tested at the rules of the freeze itself), then `completeSubmit`. `expected` is the draft
+     * Freezes `frozen` as the next version of the draft: the attempt `beginSubmit` would have recorded (so a freeze can be tested at the rules of
+     * the freeze itself, with content no preparation made), then `completeSubmit`. `expected` is the draft
      * the preparation was made from; the draft as it is now when not given.
      */
     async freeze(actor: AlertActor, ref: EntryRef, frozen: FrozenContent, expected?: EntryContent): Promise<AlertResult<EntryView>> {

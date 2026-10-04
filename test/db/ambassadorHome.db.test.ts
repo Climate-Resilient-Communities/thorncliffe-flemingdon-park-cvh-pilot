@@ -62,14 +62,16 @@ interface SeedEntry {
   returnedFor?: "return" | "edit" | null;
   note?: string;
   supersedes?: number;
+  /** Why a discarded entry was discarded (S08.02); a discarded entry defaults to `declined`. Null is an entry discarded before the reason was recorded. */
+  discardReason?: "by_author" | "declined" | "by_close" | null;
 }
 
 /** An alert thread with entries inserted directly (as a migration owner would: the lifecycle's triggers off), the way residentAlerts.db.test.ts does. */
-async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolean; entries: SeedEntry[] }): Promise<{ alertId: string; entryIds: string[] }> {
+async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolean; reportedAt?: Date; entries: SeedEntry[] }): Promise<{ alertId: string; entryIds: string[] }> {
   const alertId = randomUUID();
   await owner.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${coordinator}, true)`;
-    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${opts.drill ?? false}, ${new Date(NOW.getTime() - 3_600_000)}, ${coordinator}, ${opts.slug})`;
+    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${opts.drill ?? false}, ${opts.reportedAt ?? new Date(NOW.getTime() - 3_600_000)}, ${coordinator}, ${opts.slug})`;
   });
   const entryIds: string[] = [];
   await owner.begin(async (tx) => {
@@ -85,13 +87,14 @@ async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolea
       const published = entry.publishedAt === undefined ? approvedAt : entry.publishedAt;
       const hash = randomBytes(32).toString("hex");
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version, content_hash, sms_bodies,
-                                         submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, returned_for, returned_note, supersedes_id, withdrawal_reason)
+                                         submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, returned_for, returned_note, supersedes_id, withdrawal_reason, discard_reason)
                values (${id}, ${alertId}, ${entry.kind ?? "ack"}, ${status}, ${entry.author}, ${[entry.author]}, ${entry.text ?? "Power is out."}, ${entry.types ?? ["power"]},
                        ${tx.json((entry.audience ?? buildingsAudience(RSN_A)) as never)}, 'problem', ${VALID_UNTIL}, ${frozen ? 1 : 0}, ${frozen ? hash : null},
                        ${frozen ? tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } }) : null}, ${submitted ? new Date(NOW.getTime() - 3_600_000 + index * 1000) : null},
                        ${approved ? approver : null}, ${approvedAt}, ${approved ? 1 : null}, ${approved ? hash : null}, ${published},
                        ${entry.returnedFor ?? null}, ${entry.returnedFor === "return" ? (entry.note ?? "Which floors?") : null},
-                       ${entry.supersedes === undefined ? null : entryIds[entry.supersedes]}, ${entry.kind === "withdrawal" ? "wrong_place" : null})`;
+                       ${entry.supersedes === undefined ? null : entryIds[entry.supersedes]}, ${entry.kind === "withdrawal" ? "wrong_place" : null},
+                       ${status === "discarded" ? (entry.discardReason === undefined ? "declined" : entry.discardReason) : null})`;
     }
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
   });
@@ -189,6 +192,7 @@ describe("the open alerts about an Ambassador's buildings", () => {
         types: ["power"],
         headline: "Power is out at 41 Home Test Dr.",
         verified: true,
+        fromAmbassador: false,
         publishedAt: expect.any(Date),
         validUntil: VALID_UNTIL,
         buildings: [RSN_A],
@@ -214,7 +218,18 @@ describe("the open alerts about an Ambassador's buildings", () => {
 
     const data = await home();
     expect(data.alerts).toEqual([]);
-    expect(JSON.stringify(data)).not.toMatch(/EXERCISE/);
+    // A drill is never among the alerts or the posts; S08.02 lists the open drills about their buildings apart, where a practice post goes.
+    expect(JSON.stringify({ alerts: data.alerts, posts: data.posts })).not.toMatch(/EXERCISE/);
+    expect(data.drills).toEqual([expect.objectContaining({ headline: "EXERCISE: power is out", types: ["power"], buildings: [RSN_A] })]);
+  });
+
+  it("lists the open drills newest reported first, whatever order they were made in", async () => {
+    await assign(ambassador, RSN_A);
+    const middle = await seedThread({ slug: "drillmid01", drill: true, reportedAt: new Date(NOW.getTime() - 2 * 3_600_000), entries: [{ author: coordinator, text: "EXERCISE: middle" }] });
+    const oldest = await seedThread({ slug: "drillold01", drill: true, reportedAt: new Date(NOW.getTime() - 3 * 3_600_000), entries: [{ author: coordinator, text: "EXERCISE: oldest" }] });
+    const newest = await seedThread({ slug: "drillnew01", drill: true, reportedAt: new Date(NOW.getTime() - 3_600_000), entries: [{ author: coordinator, text: "EXERCISE: newest" }] });
+
+    expect(((await home()).drills ?? []).map((drill) => drill.alertId)).toEqual([newest.alertId, middle.alertId, oldest.alertId]);
   });
 
   it("lists a pending entry that was web-published at submit (a D-1 post) as not yet verified, then as verified once the Hub approves it", async () => {
@@ -277,18 +292,30 @@ describe("an Ambassador's own posts", () => {
     const waiting = await seedThread({ slug: "waitbldg01", entries: [{ author: ambassador, status: "pending_approval", publishedAt: null, text: "Waiting post." }] });
     const approved = await seedThread({ slug: "apprbldg01", entries: [{ author: ambassador, text: "Approved post." }] });
     const returned = await seedThread({ slug: "retnbldg01", entries: [{ author: ambassador, status: "draft", submitted: false, returnedFor: "return", note: "Which floors?", text: "Returned post." }] });
-    const declined = await seedThread({ slug: "declbldg01", entries: [{ author: ambassador, status: "discarded", text: "Declined post." }] });
+    const declined = await seedThread({ slug: "declbldg01", entries: [{ author: ambassador, status: "discarded", discardReason: "declined", text: "Declined post." }] });
+    // S08.02: a post the alert's close discarded reads as ended, and one its author took back is not shown: neither is "Not sent by the Hub".
+    const ended = await seedThread({ slug: "endbldg001", entries: [{ author: ambassador, status: "discarded", discardReason: "by_close", text: "Ended post." }] });
+    await seedThread({ slug: "ownbldg001", entries: [{ author: ambassador, status: "discarded", discardReason: "by_author", text: "Taken back post." }] });
     await seedThread({ slug: "othrbldg01", entries: [{ author: other, text: "Someone else's post." }] });
     await seedThread({ slug: "coorbldg01", entries: [{ author: coordinator, text: "A Coordinator's alert." }] });
 
     const { posts } = await home();
 
     const byText = Object.fromEntries(posts.map((post) => [post.text, post]));
-    expect(Object.keys(byText).sort()).toEqual(["Approved post.", "Declined post.", "Returned post.", "Waiting post."]);
+    expect(Object.keys(byText).sort()).toEqual(["Approved post.", "Declined post.", "Ended post.", "Returned post.", "Waiting post."]);
     expect(byText["Waiting post."]).toMatchObject({ entryId: waiting.entryIds[0], state: "waiting", note: null, buildings: [RSN_A] });
     expect(byText["Approved post."]).toMatchObject({ entryId: approved.entryIds[0], state: "approved" });
     expect(byText["Returned post."]).toMatchObject({ entryId: returned.entryIds[0], state: "returned", note: "Which floors?" });
     expect(byText["Declined post."]).toMatchObject({ entryId: declined.entryIds[0], state: "declined" });
+    expect(byText["Ended post."]).toMatchObject({ entryId: ended.entryIds[0], state: "ended" });
+  });
+
+  it("does not list a post discarded before S08.02 recorded why (no reason): it cannot say whether the Hub declined it, so it says nothing", async () => {
+    await assign(ambassador, RSN_A);
+    await seedThread({ slug: "oldscard01", entries: [{ author: ambassador, status: "discarded", discardReason: null, text: "Discarded before the reason." }] });
+    const kept = await seedThread({ slug: "keptpost01", entries: [{ author: ambassador, text: "Approved post." }] });
+
+    expect((await home()).posts.map((post) => post.entryId)).toEqual([kept.entryIds[0]]);
   });
 
   it("keeps a heavy author's real posts in view: more than 200 newer unsubmitted drafts do not crowd them out", async () => {
@@ -359,7 +386,7 @@ describe("an Ambassador whose assignment changes", () => {
   it("sees nothing at all with no assignment: no buildings, no alerts, no posts", async () => {
     await seedThread({ slug: "noassign01", entries: [{ author: coordinator }] });
     await seedThread({ slug: "noassign02", entries: [{ author: ambassador }] });
-    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], round: null });
+    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], drills: [], round: null });
   });
 
   it("sees nothing once suspended or locked: their assignments do not count (the guard has already refused their session, S01.08)", async () => {
@@ -370,7 +397,7 @@ describe("an Ambassador whose assignment changes", () => {
 
     for (const status of ["suspended", "locked_pending_reissue"]) {
       await owner`update staff_account set status = ${status} where id = ${ambassador}`;
-      expect(await home(), status).toEqual({ buildings: [], alerts: [], posts: [], round: null });
+      expect(await home(), status).toEqual({ buildings: [], alerts: [], posts: [], drills: [], round: null });
     }
     await owner`update staff_account set status = 'active' where id = ${ambassador}`;
     expect((await home()).alerts.length).toBeGreaterThan(0);
@@ -381,7 +408,7 @@ describe("an Ambassador whose assignment changes", () => {
     await seedThread({ slug: "rolechg001", entries: [{ author: coordinator }] });
     expect((await home()).alerts).toHaveLength(1);
     await owner`update staff_account set role = 'coordinator' where id = ${ambassador}`;
-    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], round: null });
+    expect(await home()).toEqual({ buildings: [], alerts: [], posts: [], drills: [], round: null });
   });
 });
 

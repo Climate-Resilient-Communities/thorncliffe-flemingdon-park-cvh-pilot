@@ -91,6 +91,13 @@ export const alertEntry = pgTable(
     supersedesId: uuid("supersedes_id").references((): AnyPgColumn => alertEntry.id),
     /** S05.02: why a withdrawal was made, from the catalog (`wrong_place`, `wrong_information`, `duplicate`, `other`); a withdrawal only. */
     withdrawalReason: text("withdrawal_reason"),
+    /**
+     * S08.02: why the entry was discarded (`by_author`, `declined`, `by_close`), set in the same change that discards it; null for every entry that is not
+     * discarded, and for those discarded before the column existed (db/migrations/20261004230000_ambassador_post.sql).
+     */
+    discardReason: text("discard_reason"),
+    /** S08.02: the building (rsn) an ambassador's post is attributed to, frozen at submit with its texts and cleared by a return; null for the Hub's own entries. */
+    attributedRsn: text("attributed_rsn"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -99,6 +106,7 @@ export const alertEntry = pgTable(
     check("alert_entry_supersedes_not_self", sql`${t.supersedesId} is null or ${t.supersedesId} <> ${t.id}`),
     check("alert_entry_withdrawal_reason_valid", sql`${t.withdrawalReason} is null or ${t.withdrawalReason} in ('wrong_place', 'wrong_information', 'duplicate', 'other')`),
     check("alert_entry_withdrawal_reason_kind", sql`(${t.kind} = 'withdrawal') = (${t.withdrawalReason} is not null)`),
+    check("alert_entry_discard_reason_valid", sql`${t.discardReason} is null or ${t.discardReason} in ('by_author', 'declined', 'by_close')`),
     index("alert_entry_supersedes_id_idx").on(t.supersedesId),
     check("alert_entry_duplicate_not_self", sql`${t.possibleDuplicateOf} is null or ${t.possibleDuplicateOf} <> ${t.alertId}`),
     check("alert_entry_draft_no_duplicate", sql`${t.status} <> 'draft' or ${t.possibleDuplicateOf} is null`),

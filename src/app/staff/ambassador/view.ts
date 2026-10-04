@@ -4,7 +4,8 @@
 // Four parts, in the order a person on a phone needs them: which buildings and floors are theirs, what is happening in them (the open alerts residents are
 // reading about them, newest first), their own posts with each one's state, and their round. Nothing links to posting yet (S08.02) or to the round (the
 // round stories that follow): a link is added by the story that builds its page.
-import type { AmbassadorAlert, AmbassadorPost } from "@/modules/alerting";
+import { BUILDING_TYPES } from "@/contracts/alertContent";
+import type { AmbassadorAlert, AmbassadorDrill, AmbassadorPost } from "@/modules/alerting";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
 import { typeName } from "../alerts/typeNames";
@@ -26,6 +27,8 @@ export interface AmbassadorHomeData {
   buildings: readonly AssignedBuilding[];
   alerts: readonly AmbassadorAlert[];
   posts: readonly AmbassadorPost[];
+  /** S08.02: the open drills about their buildings, kept apart; absent is none. */
+  drills?: readonly AmbassadorDrill[];
   /** The open round's requests for the person's floors; null while no round is open. */
   round: { requests: number } | null;
 }
@@ -43,6 +46,18 @@ export interface AlertItemView {
   until: string;
   /** The page residents read it on. */
   link: { href: string; label: string };
+  /** S08.02: "Post an update about this" (A-02 for this alert), for an alert of the types an Ambassador posts; null for the Hub's neighbourhood-wide ones. */
+  postLink: { href: string; label: string } | null;
+}
+
+/** An open drill about their buildings (S08.02), apart from the alerts: a practice post goes to the Hub only. */
+export interface DrillItemView {
+  key: string;
+  title: string;
+  headline: string;
+  about: string;
+  /** Null for a drill of a type an Ambassador may not post (heat, smoke, winter: the Hub's, for the whole neighbourhood). */
+  link: { href: string; label: string } | null;
 }
 
 export interface PostItemView {
@@ -61,10 +76,20 @@ export interface AmbassadorHomeView {
   /** Set instead of the rest when the person is assigned to no building. */
   notAssigned: string | null;
   assigned: string[];
+  /** S08.02: "Post a building update" (A-02); null for a person assigned to no building. */
+  post: { href: string; label: string } | null;
   active: { title: string; none: string; items: AlertItemView[] };
   posts: { title: string; none: string; items: PostItemView[] };
   round: { title: string; line: string | null; none: string | null };
+  /** S08.02: the open drills about their buildings, apart; null while there is none. */
+  drills: { title: string; lead: string; items: DrillItemView[] } | null;
 }
+
+/** The post screen (A-02, S08.02); with an alert, an update to it. */
+export const ambassadorPostHref = (alertId?: string): string => (alertId ? `/staff/ambassador/post?${new URLSearchParams({ alert: alertId }).toString()}` : "/staff/ambassador/post");
+
+/** An Ambassador posts updates of these types only (heat, smoke and winter storm are the Hub's, for a whole neighbourhood). */
+const postable = (types: readonly string[]) => types.every((type) => (BUILDING_TYPES as readonly string[]).includes(type));
 
 const SEPARATOR = " · ";
 
@@ -89,6 +114,7 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
     lead: t("lead"),
     notAssigned: notAssigned ? t("notAssigned") : null,
     assigned: data.buildings.map((building) => assignedLine(building, t)),
+    post: notAssigned ? null : { href: ambassadorPostHref(), label: englishText("A01.post") },
     active: {
       title: t("activeTitle"),
       none: t("activeNone"),
@@ -96,10 +122,11 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
         key: `alert-${alert.alertId}`,
         title: alert.types.map(typeName).join(", "),
         headline: alert.headline,
-        meta: [englishText("A01.fromHub"), alert.verified ? englishText("A01.verifiedWord") : englishText("A01.notVerifiedWord"), englishText("A01.postedAgo", { t: formatTorontoDateTime(alert.publishedAt) })].join(SEPARATOR),
+        meta: [englishText(alert.fromAmbassador ? "A01.fromAmb" : "A01.fromHub"), alert.verified ? englishText("A01.verifiedWord") : englishText("A01.notVerifiedWord"), englishText("A01.postedAgo", { t: formatTorontoDateTime(alert.publishedAt) })].join(SEPARATOR),
         about: about(alert.buildings),
         until: t("until", { time: formatTorontoDateTime(alert.validUntil) }),
         link: { href: residentAlertHref(alert.slug), label: t("residentsRead") },
+        postLink: postable(alert.types) ? { href: ambassadorPostHref(alert.alertId), label: t("postUpdate") } : null,
       })),
     },
     posts: {
@@ -119,5 +146,19 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
       line: data.round === null ? null : data.round.requests === 1 ? t("roundCountOne") : t("roundCount", { n: data.round.requests }),
       none: data.round === null ? t("roundNone") : null,
     },
+    drills:
+      (data.drills ?? []).length === 0
+        ? null
+        : {
+            title: t("drillsTitle"),
+            lead: t("drillsLead"),
+            items: (data.drills ?? []).map((drill) => ({
+              key: `drill-${drill.alertId}`,
+              title: drill.types.map(typeName).join(", "),
+              headline: drill.headline,
+              about: about(drill.buildings),
+              link: postable(drill.types) ? { href: ambassadorPostHref(drill.alertId), label: t("practicePost") } : null,
+            })),
+          },
   };
 }

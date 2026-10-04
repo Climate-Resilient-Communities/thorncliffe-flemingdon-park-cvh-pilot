@@ -37,6 +37,8 @@ export interface ResidentEntryRow {
   superseded: boolean;
   /** The entry a correction or a withdrawal replaces (S05.02); null, or left out by a reader that has no such column, for every other entry. */
   supersedesId?: string | null;
+  /** S08.02: the building an ambassador's post is attributed to, frozen at submit; null, or left out by a reader that has no such column, for the Hub's own entries. */
+  attributedRsn?: string | null;
   translation: ResidentTranslationRow | null;
 }
 
@@ -49,12 +51,16 @@ const PHASED_KINDS: ReadonlySet<string> = new Set(["ack", "update", "correction"
 const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
 /**
- * The attribution of an entry: role and building, never a person (definitions, "Attribution"). Every entry that exists in
- * this epic is the Hub's: `beginSubmit` refuses an Ambassador author until E08. SEAM for E08: S08.02 persists the
- * attribution with the freeze (spine, AD-5 "Seam for E08"), and the view above then carries it, so that a post is never
- * shown as the Hub's when an ambassador wrote it.
+ * The attribution of an entry: role and building, never a person (definitions, "Attribution"). The Hub's own entries are the Hub's; an ambassador's post is
+ * attributed to the building frozen with it at submit (S08.02: `alert_entry.attributed_rsn`, read through `nondrill_alert_entry_v3`), so a post is never shown
+ * as the Hub's when an ambassador wrote it, whatever their role is now.
  */
 export const HUB_ATTRIBUTION = { role: "hub" } as const;
+
+/** The attribution residents read for an entry: the Hub's, or "Building ambassador" of the building frozen with it. */
+export function attributionOf(row: Pick<ResidentEntryRow, "attributedRsn">): FeedThread["entries"][number]["attribution"] {
+  return row.attributedRsn ? { role: "ambassador", rsn: row.attributedRsn } : { ...HUB_ATTRIBUTION };
+}
 
 /**
  * An entry's text for a reader of `lang` (AD-20 `Translated`):
@@ -82,7 +88,7 @@ function entryOf(row: ResidentEntryRow, lang: LangCode): FeedThread["entries"][n
     ...(PHASED_KINDS.has(row.kind) ? { phase: row.phase as "problem" | "in_progress" } : {}),
     ...(row.supersedesId ? { supersedes_id: row.supersedesId } : {}),
     verified: row.verified,
-    attribution: { ...HUB_ATTRIBUTION },
+    attribution: attributionOf(row),
     published_at: row.publishedAt.toISOString(),
     text: textOf(row, lang),
     original: { lang: "en", body: row.originalText },

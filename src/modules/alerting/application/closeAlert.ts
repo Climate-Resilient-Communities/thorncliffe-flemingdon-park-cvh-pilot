@@ -92,7 +92,8 @@ export function createCloseAlert(deps: CloseAlertDeps) {
     if (discarding.length > 0) {
       await tx
         .update(alertEntry)
-        .set({ status: "discarded" })
+        // Why (S08.02): the thread closed with it unread; an ambassador's post discarded so is not "declined" by the Hub.
+        .set({ status: "discarded", discardReason: "by_close" })
         .where(
           and(
             eq(alertEntry.alertId, thread.id),
@@ -109,7 +110,7 @@ export function createCloseAlert(deps: CloseAlertDeps) {
           subjectType: "alert_entry",
           subjectId: entry.id,
           isDrill: thread.isDrill,
-          meta: { entry_id: entry.id, version: entry.version, from: entry.status as "draft" | "pending_approval", by_close: true },
+          meta: { entry_id: entry.id, version: entry.version, from: entry.status as "draft" | "pending_approval", by_close: true, discard_reason: "by_close" },
         });
       }
     }

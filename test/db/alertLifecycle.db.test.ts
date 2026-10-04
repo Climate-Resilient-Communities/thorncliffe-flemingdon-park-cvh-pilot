@@ -303,11 +303,12 @@ async function seedRaw(status: EntryStatus): Promise<{ alertId: string; entryId:
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
     await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
-                                      version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at)
+                                      version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, discard_reason)
              values (${entryId}, ${alertId}, 'ack', ${status}, ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")},
                      ${frozenCols ? 1 : 0}, ${frozenCols ? hash : null}, ${frozenCols ? tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } }) : null}, ${frozenCols ? NOW : null},
                      ${status === "approved" || status === "superseded" ? coordB.id : null}, ${status === "approved" || status === "superseded" ? NOW : null},
-                     ${status === "approved" || status === "superseded" ? 1 : null}, ${status === "approved" || status === "superseded" ? hash : null}, ${status === "approved" ? NOW : null})`;
+                     ${status === "approved" || status === "superseded" ? 1 : null}, ${status === "approved" || status === "superseded" ? hash : null}, ${status === "approved" ? NOW : null},
+                     ${status === "discarded" ? "by_author" : null})`;
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
   });
   return { alertId, entryId };
@@ -323,6 +324,8 @@ async function legalChange(tx: postgres.TransactionSql, id: string, from: EntryS
   if (from === "pending_approval" && to === "approved") {
     return tx`update alert_entry set status = 'approved', approved_by = ${coordB.id}, approved_at = now(), approved_version = version, approved_hash = content_hash, web_published_at = now() where id = ${id}`;
   }
+  // A discard says why (S08.02): the author takes back their own entry.
+  if (to === "discarded") return tx`update alert_entry set status = 'discarded', discard_reason = 'by_author' where id = ${id}`;
   return tx`update alert_entry set status = ${to} where id = ${id}`;
 }
 
@@ -401,7 +404,7 @@ describe("the entry trigger and lifecycle.ts", () => {
     await expect(
       asApp(authorA.id, async (tx) => {
         await tx`select set_config('cvh.closing', 'on', true)`;
-        return tx`update alert_entry set status = 'discarded' where id = ${pending.entryId}`;
+        return tx`update alert_entry set status = 'discarded', discard_reason = 'by_close' where id = ${pending.entryId}`;
       }),
     ).resolves.toBeDefined();
     expect((await entryRow(pending.entryId)).status).toBe("discarded");

@@ -1476,4 +1476,51 @@
     "offlineNote": "Ce téléphone ne gardera peut-être pas les pages pour une utilisation hors ligne"
    }
   });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "Quel immeuble?",
+    "allFloorsLine": "Les {n} étages",
+    "listLabel": "Certains étages",
+    "listLine": "Cochez chaque étage",
+    "rangeLabel": "Une suite d'étages",
+    "rangeLine": "D'un étage à un autre",
+    "fromFloor": "De l'étage",
+    "toFloor": "À l'étage",
+    "chooseFloor": "Choisir",
+    "phaseTitle": "Où en sont les choses",
+    "phaseProblem": "Il y a un problème",
+    "phaseProgress": "Des travaux sont en cours",
+    "validTitle": "Jusqu'à quand?",
+    "validResolved": "Jusqu'à ce que ce soit réglé (24 heures à partir de maintenant)",
+    "validAt": "Jusqu'à une date et une heure",
+    "dateLabel": "Date",
+    "timeLabel": "Heure (heure de Toronto)",
+    "validHint": "Au plus 7 jours à l'avance.",
+    "textLabel": "Ce qui se passe, en anglais",
+    "textHint": "Au plus {max} caractères. Les résidents le lisent dans leur langue; le Hub le vérifie d'abord.",
+    "inAlert": "Cette mise à jour va dans l'alerte : {headline}",
+    "typesFixed": "Ce qui se passe : {types}",
+    "unsent": "Pas encore envoyé. Gardez cette page ouverte; l'envoi se fera quand vous aurez du réseau.",
+    "unsentClose": "Si vous fermez cette page, cette mise à jour est perdue.",
+    "sending": "Envoi au Hub...",
+    "errPhase": "Choisissez où en sont les choses.",
+    "errText": "Dites ce qui se passe, en anglais.",
+    "errTextLong": "C'est trop long. Utilisez au plus {max} caractères.",
+    "errValid": "Entrez une date et une heure.",
+    "errValidPast": "Cette heure est passée. Choisissez une heure plus tard.",
+    "errValidFar": "Choisissez une heure dans les 7 prochains jours au plus.",
+    "errValidSkipped": "On change l'heure cette nuit-là, donc cette heure n'est pas claire. Choisissez une autre heure.",
+    "errRange": "Le premier étage est au-dessus du dernier. Mettez l'étage le plus bas en premier.",
+    "errNotAssigned": "Vous n'êtes pas affecté à cet immeuble en ce moment, donc vous ne pouvez pas publier pour lui.",
+    "errClosed": "Cette alerte est terminée. Publiez plutôt une nouvelle mise à jour.",
+    "errSignedOut": "Vous avez été déconnecté, donc ceci n'a pas été envoyé. Reconnectez-vous, puis publiez-le de nouveau.",
+    "errFailed": "Ceci n'a pas été envoyé. Réessayez. Si cela continue, appelez le Hub."
+   },
+   "A03": {
+    "states": {
+     "ended": "Pas envoyé : l'alerte a pris fin avant que le Hub la vérifie"
+    }
+   }
+  });
 })();
