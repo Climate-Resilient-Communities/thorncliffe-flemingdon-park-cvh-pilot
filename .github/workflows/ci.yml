@@ -195,8 +195,7 @@ jobs:
         env:
           SMOKE_BASE_URL: ${{ vars.PRODUCTION_URL }}
           EXPECTED_VERSION: ${{ github.sha }}
-          # One real search (one Cohere call a deploy): on unless the repository variable SMOKE_SEARCH is "off".
-          SMOKE_SEARCH: ${{ vars.SMOKE_SEARCH == 'off' && 'off' || 'on' }}
+          SMOKE_SEARCH: "off"
       - name: Roll back after a failed smoke check
         if: failure() && steps.smoke.outcome == 'failure'
         env:
@@ -223,3 +222,13 @@ jobs:
             echo "::error title=Rollback failed::Production is serving the failing deployment $DEPLOYMENT_URL."
             exit 1
           fi
+      # One real search (one Cohere call a deploy), alert only: a vendor outage, rate limit or an unclear answer is
+      # not fixed by rolling back, so it never triggers the rollback above. On unless SMOKE_SEARCH is "off".
+      - name: Search smoke (alert only)
+        if: ${{ !cancelled() && steps.smoke.outcome == 'success' && vars.SMOKE_SEARCH != 'off' }}
+        continue-on-error: true
+        run: npm run test:smoke -- --grep "search answers a question in English"
+        env:
+          SMOKE_BASE_URL: ${{ vars.PRODUCTION_URL }}
+          EXPECTED_VERSION: ${{ github.sha }}
+          SMOKE_SEARCH: "on"

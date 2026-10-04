@@ -454,13 +454,18 @@ describe('the "Checks" aggregate and the tested-tree skip', () => {
     }
   });
 
-  it("gives the production smoke check the one real search, on unless SMOKE_SEARCH is off", () => {
+  it("keeps the real search out of the rollback smoke check and runs it after, alert only, unless SMOKE_SEARCH is off", () => {
     const all = steps(job("production"));
-    const smoke = all[stepIndex(all, /npm run test:smoke/)];
+    const smokeAt = stepIndex(all, /name: Smoke check production/);
+    const rollbackAt = stepIndex(all, /name: Roll back after a failed smoke check/);
+    const searchAt = stepIndex(all, /name: Search smoke \(alert only\)/);
 
-    expect(smoke).toMatch(
-      /SMOKE_SEARCH: \$\{\{ vars\.SMOKE_SEARCH == 'off' && 'off' \|\| 'on' \}\}/,
-    );
+    expect(all[smokeAt]).toMatch(/SMOKE_SEARCH: "off"/);
+    expect(searchAt).toBeGreaterThan(rollbackAt);
+    expect(all[searchAt]).toMatch(/continue-on-error: true/);
+    expect(all[searchAt]).toMatch(/steps\.smoke\.outcome == 'success'/);
+    expect(all[searchAt]).toMatch(/vars\.SMOKE_SEARCH != 'off'/);
+    expect(all[searchAt]).toMatch(/SMOKE_SEARCH: "on"/);
   });
 });
 
