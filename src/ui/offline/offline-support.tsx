@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { agoText } from "../home/feed-poll";
 import { ResidentText } from "../text/resident-text";
-import { SW_SCOPE, SW_URL, type PageMessage } from "./protocol";
+import { KEPT_AT_META, SW_SCOPE, SW_URL, type PageMessage } from "./protocol";
 import { askPersistOnce, askServed, keptAt } from "./support";
 
 const subscribeOnline = (change: () => void) => {
@@ -19,6 +19,14 @@ const subscribeOnline = (change: () => void) => {
 
 /** Whether the browser says it has a connection (true on the server and in the first render). */
 const useOnline = (): boolean => useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
+
+const never = () => () => {};
+
+/** When the worker says the copy of this document was stored, from the <meta> it wrote into it (null when it did not). */
+function keptAtMeta(): number | null {
+  const at = Number(document.querySelector(`meta[name="${KEPT_AT_META}"]`)?.getAttribute("content"));
+  return Number.isFinite(at) && at > 0 ? at : null;
+}
 
 function phoneStorage(): Storage | null {
   try {
@@ -58,6 +66,11 @@ export function OfflineSupport() {
   const [served, setServed] = useState<{ path: string; at: number } | null>(null);
   const [kept, setKept] = useState<{ path: string; at: number | null } | null>(null);
   const [now, setNow] = useState(0);
+  // The document itself says whether the worker handed it out from its cache (a timeout, a server error or no signal), so the note
+  // does not depend on a worker that the browser may have stopped meanwhile. Only the document the app was loaded with carries it.
+  const [loadedAt] = useState(pathname);
+  const [signalBack, setSignalBack] = useState(false);
+  const writtenAt = useSyncExternalStore(never, keptAtMeta, () => null);
 
   useEffect(() => {
     registerWorker();
@@ -86,7 +99,10 @@ export function OfflineSupport() {
 
   // Signal back: the note goes. The feed and the directory ask the server again themselves (use-feed.ts, use-directory.ts).
   useEffect(() => {
-    const back = () => setServed(null);
+    const back = () => {
+      setServed(null);
+      setSignalBack(true);
+    };
     window.addEventListener("online", back);
     return () => window.removeEventListener("online", back);
   }, []);
@@ -103,7 +119,7 @@ export function OfflineSupport() {
     };
   }, [online, pathname]);
 
-  const servedHere = served?.path === pathname ? served.at : null;
+  const servedHere = served?.path === pathname ? served.at : pathname === loadedAt && !signalBack ? writtenAt : null;
   const showing = !online || servedHere !== null;
   useEffect(() => {
     if (!showing) return;

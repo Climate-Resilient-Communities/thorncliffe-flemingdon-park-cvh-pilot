@@ -107,3 +107,21 @@ test("home without signal: the alerts of the feed kept on the phone are shown as
   await expect(page.getByTestId("feed-last-loaded")).toBeVisible();
   await expect(page.getByTestId("home-alerts")).toBeVisible();
 });
+
+test("a kept alert shown because the server is too slow, with signal, still carries the note and since when", async ({ page }) => {
+  await page.goto("/en");
+  await workerReady(page);
+  await page.goto(`/en/alerts/${OPEN}`);
+  await page.reload();
+  await expect.poll(() => isKept(page, `/en/alerts/${OPEN}`)).toBe(true);
+
+  // The phone has signal (navigator.onLine stays true) but the server takes longer than the worker waits (6 s).
+  await page.context().route(`**/en/alerts/${OPEN}`, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 9_000));
+    await route.fallback();
+  });
+  await page.goto(`/en/alerts/${OPEN}`, { timeout: 30_000 });
+  expect(await page.evaluate(() => navigator.onLine)).toBe(true);
+  await expect(page.getByTestId("alert-article")).toContainText(OPEN_TEXT);
+  await expect(page.getByTestId("offline-note")).toContainText("You are offline. Showing what was last loaded");
+});

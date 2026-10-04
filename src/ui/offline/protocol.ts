@@ -12,6 +12,11 @@ export const SW_SCOPE = "/";
 export const FALLBACK_HEADER = "x-cvh-fallback";
 /** When (ms since 1970, the phone's clock) the worker stored a response: "Last updated" for a page, the feed or the manifest. */
 export const CACHED_AT_HEADER = "x-cvh-cached-at";
+/**
+ * The <meta> the worker writes into a kept page it hands out instead of the network's answer: its content is when (ms since
+ * 1970) that copy was stored. The page reads it on its first render to say "last loaded" (offline-support.tsx).
+ */
+export const KEPT_AT_META = "cvh-kept-at";
 /** A kept page's <title>, URI-encoded, for the offline page's list of what can be read without signal. */
 export const TITLE_HEADER = "x-cvh-title";
 /** A kept feed's `feed_version`, so the worker never replaces a feed with an older one (AD-17). */

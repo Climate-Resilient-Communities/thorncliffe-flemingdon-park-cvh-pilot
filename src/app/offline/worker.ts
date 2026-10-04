@@ -7,6 +7,7 @@ import {
   DATA_CACHE,
   FALLBACK_HEADER,
   FEED_VERSION_HEADER,
+  KEPT_AT_META,
   PAGES_CACHE_PREFIX,
   TITLE_HEADER,
   criticalPaths,
@@ -174,6 +175,24 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
     return work;
   }
 
+  /**
+   * A kept page handed out because the network did not answer, with the time it was stored written into the document itself
+   * (<meta name="cvh-kept-at">), so the page can say "last loaded" from its own first render, with or without signal, and
+   * whether or not the browser has stopped this worker since (the in-memory `served` list below is only a second source).
+   */
+  async function fallbackPage(kept: Response, cachedAt: number): Promise<Response> {
+    let html: string;
+    try {
+      html = await kept.text();
+    } catch {
+      return fallback(kept);
+    }
+    const marked = Number.isFinite(cachedAt) ? html.replace(/<head(\s[^>]*)?>/i, (head) => `${head}<meta name="${KEPT_AT_META}" content="${cachedAt}">`) : html;
+    const headers = new Headers(kept.headers);
+    headers.set(FALLBACK_HEADER, "1");
+    return new Response(marked, { status: 200, statusText: "OK", headers });
+  }
+
   /** The kept page, or the offline page of its language; null when neither is kept. */
   async function keptPage(key: string, lang: LaunchCode, context: FetchContext): Promise<Response | null> {
     const kept = await match(pages, key);
@@ -184,10 +203,20 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
         // Only the last few windows matter; the map must not grow for as long as the worker lives.
         if (served.size > 20) served.delete(served.keys().next().value as string);
       }
-      return fallback(kept);
+      return fallbackPage(kept, cachedAt);
     }
     const offline = await match(pages, pageKey(`${env.origin}${offlinePath(lang)}`));
     return offline ? fallback(offline) : null;
+  }
+
+  /** The server says this page does not exist (any more): the copy kept for it is not offered again. */
+  async function forget(key: string): Promise<void> {
+    try {
+      const cache = await env.caches.open(pages);
+      await cache.delete(key);
+    } catch {
+      // A store that cannot be opened keeps nothing to remove.
+    }
   }
 
   async function page(request: Request, lang: LaunchCode, context: FetchContext): Promise<Response> {
@@ -201,7 +230,9 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
         context.waitUntil(ensureLanguage(lang));
         return response;
       }
-      // A 404 or a redirect is the server's answer. A server error is not: a kept copy is better than an error page.
+      // A 404 or a redirect is the server's answer; a 404 or 410 also removes the copy kept for that address (an alert that no
+      // longer resolves is not offered again). A server error is not an answer: a kept copy is better than an error page.
+      if (response.status === 404 || response.status === 410) context.waitUntil(forget(key));
       if (response.status < 500) return response;
       return (await keptPage(key, lang, context)) ?? response;
     }

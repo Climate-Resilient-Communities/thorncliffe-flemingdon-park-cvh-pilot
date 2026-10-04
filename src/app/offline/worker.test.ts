@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { FakeCaches } from "../../../test/helpers/fake-caches";
 import { TILE_CACHE_NAME } from "@/ui/map/tile-cache";
-import { CACHED_AT_HEADER, DATA_CACHE, FALLBACK_HEADER, TITLE_HEADER } from "@/ui/offline/protocol";
+import { CACHED_AT_HEADER, DATA_CACHE, FALLBACK_HEADER, KEPT_AT_META, TITLE_HEADER } from "@/ui/offline/protocol";
 import { createOfflineWorker, type FetchContext } from "./worker";
 
 const ORIGIN = "https://cvh.example";
@@ -164,6 +164,8 @@ describe("pages: network first, kept for later, the kept copy without signal (S0
     // An alert that has since closed is the server's 404 or its closed page, never the kept open one.
     net.answers.set("/en/alerts/rslvdabc", { status: 404, body: "gone", headers: { "content-type": "text/html" } });
     expect((await respond(w, navigation("/en/alerts/rslvdabc"))).status).toBe(404);
+    // The server said the address does not exist: its kept copy is gone, so later without signal the offline page shows instead.
+    expect(await caches.match(`${ORIGIN}/en/alerts/rslvdabc`)).toBeUndefined();
 
     clock += 60_000;
     net.down = true;
@@ -172,10 +174,35 @@ describe("pages: network first, kept for later, the kept copy without signal (S0
     expect(await kept.text()).toContain("Elevator back in service");
     // The page is told when the copy was stored (the note says "last loaded {time}"), the time of the last answer it kept.
     expect(w.servedFor("window-2")).toBe(1_060_000);
+    // The alert the server no longer knows is not offered from the phone either.
+    const forgotten = await respond(w, navigation("/en/alerts/rslvdabc"));
+    expect(await forgotten.text()).toContain("This page is not saved on your phone");
     // An alert never opened is the offline page, not another alert.
     const never = await respond(w, navigation("/en/alerts/mnpqrstv"));
     expect(never.headers.get(FALLBACK_HEADER)).toBe("1");
     expect(await never.text()).toContain("This page is not saved on your phone");
+  });
+
+  it("a kept page handed out while the network is up (a server error, a timeout) carries when it was stored in the document itself", async () => {
+    const w = worker({ pageTimeoutMs: 20 });
+    net.answers.set("/en/alerts/kbcdfghj", html("Elevator out of service"));
+    await respond(w, navigation("/en/alerts/kbcdfghj"));
+    // The server fails: no connection problem, so only the document can say the copy is old (no worker memory is consulted).
+    clock += 90_000;
+    net.answers.set("/en/alerts/kbcdfghj", { status: 503, body: "down", headers: { "content-type": "text/html" } });
+    const failed = await respond(w, navigation("/en/alerts/kbcdfghj"));
+    expect(failed.headers.get(FALLBACK_HEADER)).toBe("1");
+    const failedHtml = await failed.text();
+    expect(failedHtml).toContain("Elevator out of service");
+    expect(failedHtml).toContain(`<meta name="${KEPT_AT_META}" content="1000000">`);
+    // Too slow: the same.
+    net.answers.set("/en/alerts/kbcdfghj", "hang");
+    // (not through respond(): the hanging request's own wait never settles)
+    const slow = await w.handle(navigation("/en/alerts/kbcdfghj"), context());
+    expect(await slow?.text()).toContain(`<meta name="${KEPT_AT_META}" content="1000000">`);
+    // The network's own answer never carries it.
+    net.answers.set("/en/alerts/kbcdfghj", html("Elevator back in service"));
+    expect(await (await respond(w, navigation("/en/alerts/kbcdfghj"))).text()).not.toContain(KEPT_AT_META);
   });
 
   it("keeps a page the phone moved to inside the app (a Next link)", async () => {
