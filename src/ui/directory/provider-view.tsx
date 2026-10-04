@@ -6,7 +6,7 @@ import { useState } from "react";
 import type { ListingProvider, ListingText } from "@/contracts/directory";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
-import { isEnglishFallback, ResidentText } from "../text/resident-text";
+import { isEnglishFallback, isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { Isolated } from "../text/isolated";
 import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
@@ -133,7 +133,7 @@ export function ProviderView({
   const machineList = machineTexts(provider, categories);
   const machine = machineList.length > 0;
   const unreviewed = machineList.some(isUnreviewedMachineText);
-  const confirmed = t("directory.lastConfirmed", { date: formatDayText(provider.last_confirmed, isEnglishFallback(t("directory.lastConfirmed")) ? "en-CA" : locale) });
+  const confirmed = t("directory.lastConfirmed", { date: formatDayText(provider.last_confirmed, isEnglishFallbackMessage(t, "directory.lastConfirmed") ? "en-CA" : locale) });
   const Heading = variant === "page" ? "h1" : "h2";
 
   return (

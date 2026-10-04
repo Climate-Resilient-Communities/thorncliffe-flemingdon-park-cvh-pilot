@@ -15,7 +15,7 @@ import { isFallbackText, ListingBlock } from "../directory/listing-text";
 import { useDirectory } from "../directory/use-directory";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
-import { FALLBACK_MARKER, isEnglishFallback, ResidentText } from "../text/resident-text";
+import { FALLBACK_MARKER, isEnglishFallback, isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { keepBuildings, readKeptBuildings, type KeptBuilding } from "./kept-buildings";
 import { createMap, type MapHandle, type PinWords, type TileSettings } from "./leaflet-map";
 import { mapNotice } from "./notice";
@@ -199,7 +199,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         </ResidentText>
         {directory.status === "ready" && !directory.current && (
           <ResidentText as="p" className="map-hint" testId="map-last-updated">
-            {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallback(t("directory.lastUpdated")) ? "en-CA" : locale) })}
+            {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallbackMessage(t, "directory.lastUpdated") ? "en-CA" : locale) })}
           </ResidentText>
         )}
         {directory.status === "loading" && (
