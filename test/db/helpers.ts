@@ -63,3 +63,12 @@ export function migrationsDir(files: Record<string, string>) {
   for (const [name, sql] of Object.entries(files)) write(name, sql);
   return { dir, write, remove: () => rmSync(dir, { recursive: true, force: true }) };
 }
+
+/**
+ * An instant `days` days from the real clock (negative: in the past). The database judges many columns against its own
+ * now() (a valid-until must be ahead at approval, a hand-off skips a text past its valid-until), so a test must never write
+ * a fixed calendar date there: it would pass on the day it was written and fail once that day has gone by.
+ */
+export function inDays(days: number): Date {
+  return new Date(Date.now() + days * 24 * 3600 * 1000);
+}
