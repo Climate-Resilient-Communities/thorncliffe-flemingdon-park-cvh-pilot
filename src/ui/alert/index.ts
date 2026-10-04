@@ -6,3 +6,7 @@ export { VerifiedExplainer } from "./verified-explainer";
 export { alertView, originOf, TYPE_IDS, type AlertView, type EntryView, type OriginView, type TextView, type Translate, type TypeView } from "./alert-view";
 export { guideDuringHref, guidesFor, MAPPED_GUIDES } from "./guides";
 export { validUntilLine } from "./times";
+export { FollowDeviceLanguage } from "./follow-device-language";
+export { PLACE_ADDRESSES_SHOWN, placeLine } from "./place";
+export { shareLink, shareMessage, whatsappHref, type ShareMessage } from "./share-message";
+export { ShareScreen } from "./share-screen";

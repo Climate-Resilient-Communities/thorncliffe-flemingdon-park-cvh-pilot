@@ -11,6 +11,7 @@ import postgres from "postgres";
 import { memoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { memoryTotpSecret, totpCode } from "../../src/modules/identity/adapters/memoryTotp";
 import { pepperPassword } from "../../src/modules/identity/application/passwordPepper";
+import { sharedPreview } from "./alert-flow";
 
 const ownerUrl = process.env.STAFF_TEST_DATABASE_URL;
 const fakeFile = process.env.CVH_FAKE_IDENTITY_FILE;
@@ -115,7 +116,7 @@ const translationCount = async (entryId: string) => (await sql`select count(*)::
 const runningItem = (page: Page, alertId: string) => page.getByTestId("running-item").filter({ has: page.locator(`a[href*="alert=${alertId}"]`) });
 
 
-test("a Coordinator corrects an acknowledgement and a second Coordinator approves it: the acknowledgement stays readable underneath, superseded", async ({ page, browser, baseURL }) => {
+test("a Coordinator corrects an acknowledgement and a second Coordinator approves it: the acknowledgement stays readable underneath, superseded", async ({ page, browser, baseURL, request }) => {
   test.setTimeout(180_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   const author = await signIn(page, "coordinator");
@@ -126,6 +127,15 @@ test("a Coordinator corrects an acknowledgement and a second Coordinator approve
     await approve(phone, ack);
     const acknowledgement = await entryRow(ack.entryId);
     expect(acknowledgement.status).toBe("approved");
+
+    // The shared link (S05.08), straight after the approval: the alert as residents read it, with the facts and the words in its preview.
+    const slug = (await sql`select slug from alert where id = ${ack.alertId}`)[0].slug as string;
+    const shared = await sharedPreview(request, slug);
+    expect(shared.status).toBe(200);
+    expect(shared.cookies).toEqual([]);
+    expect(shared.title).toBe("Elevator");
+    expect(shared.description).toContain(`Verified by the Hub \u00b7 ${ADDRESS} \u00b7 Posted today at`);
+    expect(shared.description).toContain(acknowledgement.original_text);
 
     // The Hub home lists the running alert with the two new next steps.
     await page.goto("/staff");
@@ -200,6 +210,13 @@ test("a Coordinator corrects an acknowledgement and a second Coordinator approve
     expect((await auditOf(entryId)).map((row) => [row.action, row.outcome])).toEqual([["entry.created", "ok"], ["entry.submitted", "ok"], ["entry.approved", "ok"]]);
     expect((await sql`select status from alert where id = ${ack.alertId}`)[0].status).toBe("open");
 
+    // The shared link again, straight after the correction: it previews the correction, never the wording it replaced.
+    const corrected = await sharedPreview(request, slug);
+    expect(corrected.status).toBe(200);
+    expect(corrected.description).toContain("Correction: The elevator at 98 Correction Test Dr is out of service on floors 1 to 4, not floor 1 only.");
+    expect(corrected.description).toContain("Updated today at");
+    expect(corrected.description).not.toContain(acknowledgement.original_text);
+
     // The entry it replaced is no longer offered; the correction is.
     await page.goto(`/staff/alerts/correct?alert=${ack.alertId}`);
     await expect(page.getByTestId("target")).toHaveCount(1);
@@ -209,7 +226,7 @@ test("a Coordinator corrects an acknowledgement and a second Coordinator approve
   }
 });
 
-test("a Coordinator withdraws the only entry and a second Coordinator approves it: the alert closes withdrawn in the same approval, and nothing more can be added to it", async ({ page, browser, baseURL }) => {
+test("a Coordinator withdraws the only entry and a second Coordinator approves it: the alert closes withdrawn in the same approval, and nothing more can be added to it", async ({ page, browser, baseURL, request }) => {
   test.setTimeout(180_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   await signIn(page, "coordinator");
@@ -256,6 +273,13 @@ test("a Coordinator withdraws the only entry and a second Coordinator approves i
     expect((await sql`select status, closed_reason from alert where id = ${ack.alertId}`)[0]).toEqual({ status: "closed", closed_reason: "withdrawn" });
     expect(await feedVersion()).toBe(feedBefore + 1);
     expect((await sql`select meta from audit_event where action = 'alert.closed' and subject_id = ${ack.alertId}`)[0].meta).toEqual({ closed_as: "withdrawn", discarded: 0, kept_entry_id: entryId });
+
+    // The shared link (S05.08), straight after the withdrawal closed the alert: it says it was withdrawn with the reason, never the wording that was withdrawn.
+    const withdrawn = await sharedPreview(request, (await sql`select slug from alert where id = ${ack.alertId}`)[0].slug as string);
+    expect(withdrawn.status).toBe(200);
+    expect(withdrawn.title).toBe("Elevator: Withdrawn");
+    expect(withdrawn.description).toContain("This alert repeated another alert. It has been withdrawn.");
+    expect(withdrawn.description).not.toContain((await entryRow(ack.entryId)).original_text);
 
     // Closed: not on the Hub home, and its pages offer no form.
     await page.goto("/staff");

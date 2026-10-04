@@ -1236,7 +1236,13 @@
     "todayAt": "hoy a las {time}",
     "dayAt": "{day} a las {time}",
     "linkLine": "Novedades más recientes y correcciones: {url}",
-    "sendLine": "Su teléfono le preguntará con qué aplicación enviarlo."
+    "sendLine": "Su teléfono le preguntará con qué aplicación enviarlo.",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "y {n} más"
   },
   "R30": {
     "deviceLabel": "La alerta en un grupo de WhatsApp",

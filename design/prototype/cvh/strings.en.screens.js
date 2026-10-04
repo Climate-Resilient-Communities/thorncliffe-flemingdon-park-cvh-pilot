@@ -896,7 +896,9 @@
   /* R29_Share.html */
   m(en, { R29: { lead: 'Your neighbours get the alert as the Hub wrote it, with where it came from and a link to the newest version.',
   postedAt: 'Posted {t}', updatedAt: 'Updated {t}', todayAt: 'today at {time}', dayAt: '{day} at {time}',
-  linkLine: 'Newest updates and any corrections: {url}', sendLine: 'Your phone will ask which app to send it with.' } });
+  linkLine: 'Newest updates and any corrections: {url}', sendLine: 'Your phone will ask which app to send it with.',
+  copy: 'Copy the message', copied: 'Copied. You can paste it into any app.', copyFailed: 'Your phone would not copy it. Press and hold the message above to copy it.',
+  whatsapp: 'Send on WhatsApp', noSheet: 'Your phone does not offer share options here. Copy the message, or send it on WhatsApp.', placeMore: 'and {n} more' } });
   /* R30_WhatsApp.html */
   m(en, { R30: { groupBuilding: '{building} neighbours', members: '{name}, Maria, you and 9 others', membersOut: 'Maria, Farhan and 10 others',
   today: 'Today', forwarded: 'Forwarded', you: 'You', askLine: 'Is anyone else\'s power out?', askLineOther: 'Does anyone know what is happening with the elevator?',

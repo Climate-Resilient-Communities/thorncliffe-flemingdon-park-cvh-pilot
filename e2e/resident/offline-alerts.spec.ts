@@ -125,3 +125,26 @@ test("a kept alert shown because the server is too slow, with signal, still carr
   await expect(page.getByTestId("alert-article")).toContainText(OPEN_TEXT);
   await expect(page.getByTestId("offline-note")).toContainText("You are offline. Showing what was last loaded");
 });
+
+// S05.08 with S02.12: the share screen is a resident page like the alert it belongs to, so its kept copy is handed out only without signal (or too slowly) and
+// with the note; and the share link's landing, /a/{slug}, is not one of the pages the worker keeps (its content follows `?l=`, which a kept copy would lose).
+test("the share screen of a kept alert is kept like the alert, shows the note without signal, and the share link's landing is never kept", async ({ page }) => {
+  const phone = await signal(page);
+  await page.goto("/en");
+  await workerReady(page);
+
+  await page.goto(`/en/alerts/${OPEN}/share`);
+  await page.reload();
+  await expect(page.getByTestId("share-screen")).toBeVisible();
+  await expect(page.getByTestId("offline-note")).toHaveCount(0);
+  await expect.poll(() => isKept(page, `/en/alerts/${OPEN}/share`)).toBe(true);
+
+  await page.goto(`/a/${OPEN}?l=en`);
+  await expect(page.getByTestId("alert-article")).toBeVisible();
+  expect(await isKept(page, `/a/${OPEN}`)).toBe(false);
+
+  await phone.off();
+  await page.goto(`/en/alerts/${OPEN}/share`);
+  await expect(page.getByTestId("share-screen")).toBeVisible();
+  await expect(page.getByTestId("offline-note")).toContainText("You are offline. Showing what was last loaded");
+});

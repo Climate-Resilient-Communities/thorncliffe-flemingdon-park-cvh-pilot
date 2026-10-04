@@ -893,7 +893,8 @@
    "todayAt": "dnes o {time}",
    "dayAt": "{day} o {time}",
    "linkLine": "Najnovšie aktualizácie a opravy: {url}",
-   "sendLine": "Telefón sa vás opýta, cez ktorú aplikáciu to chcete poslať."
+   "sendLine": "Telefón sa vás opýta, cez ktorú aplikáciu to chcete poslať.",
+   "placeMore": "a {n} ďalších"
   },
   "R30": {
    "deviceLabel": "Upozornenie v skupine na WhatsAppe",

@@ -1236,7 +1236,13 @@
     "todayAt": "σήμερα στις {time}",
     "dayAt": "{day} στις {time}",
     "linkLine": "Οι πιο πρόσφατες ενημερώσεις και τυχόν διορθώσεις: {url}",
-    "sendLine": "Το τηλέφωνό σας θα ρωτήσει με ποια εφαρμογή να το στείλει."
+    "sendLine": "Το τηλέφωνό σας θα ρωτήσει με ποια εφαρμογή να το στείλει.",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "και {n} ακόμη"
   },
   "R30": {
     "deviceLabel": "Η ειδοποίηση σε ομάδα WhatsApp",

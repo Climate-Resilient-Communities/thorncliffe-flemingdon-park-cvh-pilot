@@ -71,7 +71,11 @@ describe("which requests the service worker answers (S02.12, AD-1)", () => {
     // A language the CVH does not have, and the site's own root, are not resident pages.
     expect(kind(page("/de/ready"))).toBe("pass");
     expect(kind(page("/"))).toBe("pass");
+    // The share link's landing (S05.08, /a/{slug}?l={lang}) is the network's: its content follows `?l=`, which a kept copy (keyed without the query) would lose.
+    // The alert page it moves to, and the share screen, are resident pages and are kept.
     expect(kind(page("/a/heat-1"))).toBe("pass");
+    expect(kind(page("/a/kbcdfghj?l=ur"))).toBe("pass");
+    expect(kind(page("/en/alerts/kbcdfghj/share"))).toBe("page");
   });
 });
 
@@ -89,6 +93,7 @@ describe("what may ever be stored", () => {
     expect(mayStore(`${ORIGIN}/api/search`, ORIGIN)).toBe(false);
     expect(mayStore(`${ORIGIN}/api/buildings`, ORIGIN)).toBe(false);
     expect(mayStore(`${ORIGIN}/`, ORIGIN)).toBe(false);
+    expect(mayStore(`${ORIGIN}/a/kbcdfghj?l=ur`, ORIGIN)).toBe(false);
     expect(mayStore("not a url", ORIGIN)).toBe(false);
   });
 

@@ -2445,7 +2445,7 @@ So that I never act on something that was withdrawn or is over.
 
 ### Story S05.08 — Residents share an alert in one step
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 38 min (started 2026-10-04 01:06 UTC, built 02:44 UTC)
 - **Traces:** FR-A11, AR-25 (share URL), AR-10 (drill 404), UX-DR7 · **Depends on:** S05.02, S05.06 · **Branch:** `e05-s08-share`
 
 As a resident,
