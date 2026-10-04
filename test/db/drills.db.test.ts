@@ -490,7 +490,7 @@ describe("the drill view's counts", () => {
     expect(await owner`select count(*)::int as n from drill_delivery_result where alert_id = ${real.entry.alertId}`).toEqual([{ n: 0 }]);
     expect(results.reduce((sum, row) => sum + row.delivered, 0)).toBe(1);
     // The view holds no number and no body.
-    expect(JSON.stringify(results)).not.toMatch(/\+1416|555/);
+    expect(JSON.stringify(results)).not.toMatch(/\+1\d{10}|\b\d{3}-555-\d{4}\b|\b555-\d{4}\b|\b\d{10}\b/);
     expect(await owner`select column_name from information_schema.columns where table_name = 'drill_delivery_result' order by ordinal_position`).toEqual(
       ["alert_id", "entry_id", "recipient_id", "lang", "waiting", "handed_off", "delivered", "undelivered", "failed", "unknown", "not_sent"].map((column_name) => ({ column_name })),
     );
