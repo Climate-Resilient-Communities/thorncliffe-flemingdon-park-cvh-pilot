@@ -6,6 +6,7 @@ import { preload } from "react-dom";
 import type { CSSProperties } from "react";
 import { ResidentShell, type NavItem } from "@/ui/shell";
 import { OfflineSupport } from "@/ui/offline";
+import { InstallCount } from "@/ui/usage";
 import { isLaunchCode, LAUNCH_CODES, LAUNCH_LANGUAGES, languageOf } from "@/i18n/languages";
 import "../globals.css";
 import "./fonts.generated.css";
@@ -96,6 +97,7 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
         >
           <NextIntlClientProvider locale={lang} messages={clientMessages}>
             <OfflineSupport />
+            <InstallCount lang={lang} />
             {children}
           </NextIntlClientProvider>
         </ResidentShell>

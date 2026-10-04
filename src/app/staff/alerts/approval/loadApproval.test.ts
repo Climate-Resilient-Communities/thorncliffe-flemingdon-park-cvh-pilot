@@ -21,6 +21,7 @@ function deps(options: { review?: ReviewOptions | null; paused?: () => Promise<b
     pricePerSegmentCents: () => 1.5,
     residentAlertsEnabled: () => true,
     pauseNotice: options.pauseNotice ?? (() => pauseNoticeForApprover({ paused, logError: pauseLog })),
+    sending: async () => null,
     logError,
   };
   return { wired, review, paused, pauseLog, logError };

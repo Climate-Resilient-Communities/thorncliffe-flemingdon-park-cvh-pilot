@@ -2,6 +2,7 @@ import { expect, test, type Request } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
 import { stubFeed } from "./home-fixture";
 import { openResident } from "./helpers";
+import { expectUsageRequest, isUsageRequest } from "./usage-fixture";
 import { feedWithAlerts, THREADS } from "./tailored-fixture";
 
 // S02.03, AD-3: the saved selection stays on the phone. A resident with saved choices goes through every screen of the
@@ -38,7 +39,7 @@ test("no request carries the saved selection, and the only data requests are the
   });
 
   // Every screen of the epic, as a returning resident with saved choices, and the first-run steps again.
-  for (const path of ["/en", "/ur", "/en/choices", "/en/choices/groups", "/en/choices/place", "/en/choices/language", "/en/welcome", "/en/welcome/groups", "/en/welcome/place", "/ur/choices", "/en/terms"]) {
+  for (const path of ["/en", "/ur", "/en/choices", "/en/choices/groups", "/en/choices/place", "/en/choices/language", "/en/welcome", "/en/welcome/groups", "/en/welcome/place", "/ur/choices", "/en/terms", "/en/ready/numbers", "/en/ready/power"]) {
     await openResident(page, path, 390);
     await page.waitForLoadState("networkidle");
   }
@@ -70,7 +71,13 @@ test("no request carries the saved selection, and the only data requests are the
   // The data requests: only the building list and the public feed (home), with no body and no cookie, the same for
   // everyone: the list with no query, the feed with the page language and nothing else.
   const own = seen.filter((request) => new URL(request.url).origin === new URL(page.url()).origin);
-  const data = own.filter((request) => new URL(request.url).pathname.startsWith("/api/"));
+  // S02.15: the only other requests derived from the resident are usage events, each the fixed message {evt, lang, nbhd?} (the numbers page and a guide send one each; the choices screens and home send none).
+  const usage = own.filter((one) => isUsageRequest(one.url)).map((request) => expectUsageRequest(request));
+  expect(usage).toEqual([
+    { evt: "numbers_view", lang: "en" },
+    { evt: "guide_view", lang: "en" },
+  ]);
+  const data = own.filter((request) => new URL(request.url).pathname.startsWith("/api/") && !isUsageRequest(request.url));
   expect(data.length).toBeGreaterThan(0);
   for (const request of data) {
     expect(request.method).toBe("GET");

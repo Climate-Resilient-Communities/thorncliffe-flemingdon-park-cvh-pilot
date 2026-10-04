@@ -526,71 +526,63 @@ describe("failClosedEnvironment (what the terms page uses to decide whether a dr
   });
 });
 
-describe("the first-text spike's variables (S01.15)", () => {
-  // Obviously fake numbers (the 555-01xx range), never real ones.
-  const FROM = "+18885550100";
+describe("the removed first-text spike's variable SMS_TEST_ALLOWLIST (S01.15, removed by S06.09)", () => {
   const ALLOWED = "+14165550101";
-  const OTHER = "+14165550102";
 
-  it("reads the from-number with the Twilio credentials and the allowlist, in production", () => {
-    const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: ` ${FROM} `, SMS_TEST_ALLOWLIST: ` ${ALLOWED}, ${OTHER} ,${ALLOWED},, ` });
-    expect(env.twilio).toMatchObject({ accountSid: "AC123", fromNumber: FROM });
-    expect(env.smsTestAllowlist).toEqual([ALLOWED, OTHER]);
-  });
-
-  it("has no approved number when the allowlist is unset or blank", () => {
-    expect(parseEnv(production).smsTestAllowlist).toEqual([]);
-    expect(parseEnv({ ...production, SMS_TEST_ALLOWLIST: "  " }).smsTestAllowlist).toEqual([]);
-    expect(parseEnv(preview).smsTestAllowlist).toEqual([]);
-  });
-
-  it("does not fail start-up when an allowlist entry is not an E.164 number: no number is approved, the rule is named, no entry is shown", () => {
-    for (const bad of [`${ALLOWED},4165550101`, "+0123456789", "not a number", `${ALLOWED};${OTHER}`, "+1 416 555 0101"]) {
-      const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM, SMS_TEST_ALLOWLIST: bad });
-      expect(env.smsTestAllowlist, bad).toEqual([]);
-      expect(env.smsTestProblem).toMatch(/^SMS_TEST_ALLOWLIST: every entry must be an E\.164 number/);
-      expect(env.smsTestProblem).not.toContain("5550101");
-      // The rest of the environment is untouched.
-      expect(env.twilio).toMatchObject({ accountSid: "AC123", fromNumber: FROM });
+  it("no longer reads SMS_TEST_ALLOWLIST: it is ignored everywhere, neither approving a number nor failing start-up, and the environment has no field for it", () => {
+    for (const base of [production, preview, local]) {
+      const env = parseEnv({ ...base, SMS_TEST_ALLOWLIST: ALLOWED }) as unknown as Record<string, unknown>;
+      expect(env).not.toHaveProperty("smsTestAllowlist");
+      expect(env).not.toHaveProperty("smsTestProblem");
+      expect(JSON.stringify(env)).not.toContain("5550101");
     }
   });
 
-  it("does not fail start-up when TWILIO_FROM_NUMBER is malformed: the from-number is dropped and the rule is named without the value", () => {
-    const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: "9995550177", SMS_TEST_ALLOWLIST: ALLOWED });
-    expect(env.smsTestProblem).toBe("TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)");
+  it("does not log a spike rule when getEnv reads a leftover SMS_TEST_ALLOWLIST", () => {
+    resetEnvCache();
+    for (const [k, v] of Object.entries({ ...production, ...twilio, SMS_TEST_ALLOWLIST: `${ALLOWED},oops-4165550199` })) vi.stubEnv(k, v);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    getEnv();
+    expect(log).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    resetEnvCache();
+  });
+
+});
+
+describe("the number residents text START to (TWILIO_FROM_NUMBER, S07.02)", () => {
+  const FROM = "+18885550100";
+
+  it("is read with the Twilio credentials, in production, trimmed", () => {
+    expect(parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: ` ${FROM} ` }).twilio).toMatchObject({ accountSid: "AC123", fromNumber: FROM });
+    expect(parseEnv({ ...production, ...twilio }).twilioFromNumberProblem).toBeUndefined();
+  });
+
+  it("does not fail start-up when it is malformed: the number is dropped and the rule is named without the value", () => {
+    const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: "9995550177" });
+    expect(env.twilioFromNumberProblem).toBe("TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)");
     expect(env.twilio?.fromNumber).toBeUndefined();
     expect(env.twilio).toMatchObject({ accountSid: "AC123" });
-    expect(JSON.stringify(env.smsTestProblem)).not.toContain("9995550177");
+    expect(JSON.stringify(env.twilioFromNumberProblem)).not.toContain("9995550177");
   });
 
-  it("has no smsTestProblem when the spike variables are well formed or unset", () => {
-    expect(parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM, SMS_TEST_ALLOWLIST: ALLOWED }).smsTestProblem).toBeUndefined();
-    expect(parseEnv(production).smsTestProblem).toBeUndefined();
-  });
-
-  it("logs the rule, once and without the value, when getEnv reads a malformed spike variable (and still returns the environment)", () => {
+  it("logs the rule once, without the value, when getEnv reads a malformed one (and still returns the environment)", () => {
     resetEnvCache();
-    for (const [k, v] of Object.entries({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM, SMS_TEST_ALLOWLIST: `${ALLOWED},oops-4165550199` })) vi.stubEnv(k, v);
+    for (const [k, v] of Object.entries({ ...production, ...twilio, TWILIO_FROM_NUMBER: "oops-4165550199" })) vi.stubEnv(k, v);
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    const env = getEnv();
     getEnv();
-
-    expect(env.smsTestAllowlist).toEqual([]);
+    getEnv();
     expect(log).toHaveBeenCalledTimes(1);
     const line = String(log.mock.calls[0][0]);
-    expect(JSON.parse(line)).toMatchObject({ evt: "env.sms_test_not_configured", rule: expect.stringMatching(/^SMS_TEST_ALLOWLIST: every entry/) });
-    expect(line).not.toContain("5550101");
+    expect(JSON.parse(line)).toMatchObject({ evt: "env.twilio_from_number_not_valid", rule: expect.stringMatching(/^TWILIO_FROM_NUMBER: must be an E\.164/) });
     expect(line).not.toContain("5550199");
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
     resetEnvCache();
   });
 
-  it("still fails start-up when the allowlist is set outside production (a secret-placement rule)", () => {
-    for (const base of [preview, local, { ...local, VERCEL_ENV: "development" }]) {
-      expect(problemsOf({ ...base, SMS_TEST_ALLOWLIST: ALLOWED }).join("\n")).toMatch(/SMS_TEST_ALLOWLIST: only allowed in production/);
-    }
+  it("is refused outside production like every Twilio variable (a secret-placement rule)", () => {
     expect(problemsOf({ ...preview, TWILIO_FROM_NUMBER: FROM }).join("\n")).toMatch(/TWILIO_FROM_NUMBER: Twilio credentials are only allowed in production/);
   });
 });

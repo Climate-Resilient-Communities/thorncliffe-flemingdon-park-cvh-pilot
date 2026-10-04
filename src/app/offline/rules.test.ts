@@ -69,6 +69,9 @@ describe("which requests the service worker answers (S02.12, AD-1)", () => {
 
   it("leaves search, the building list, Next's data requests, other API routes and non-GET requests to the network", () => {
     expect(classify(req("/api/search", { method: "POST" }), ORIGIN)).toEqual({ kind: "pass", reason: "method" });
+    // S02.15: a usage event is a POST, so the worker never answers or keeps it: it goes to the network as if there were no worker.
+    expect(classify(req("/api/metrics", { method: "POST" }), ORIGIN)).toEqual({ kind: "pass", reason: "method" });
+    expect(classify(req("/api/metrics"), ORIGIN)).toEqual({ kind: "pass", reason: "not-listed" });
     expect(kind(req("/api/search?q=food"))).toBe("pass");
     expect(kind(req("/api/buildings"))).toBe("pass");
     expect(kind(req("/api/health"))).toBe("pass");
