@@ -4,18 +4,18 @@ import "../globals.css";
 import "./fonts.generated.css";
 import "./staff.css";
 import { can } from "@/modules/identity";
-import { activeSenderConditions } from "@/modules/ops";
+import { activeHealthConditions, readHeartbeat } from "@/modules/ops";
 import { getDb } from "@/platform/db";
 import { AdminShortfallBanner } from "./AdminShortfallBanner";
 import { logShortfallCheckFailure, showAdminShortfallBanner } from "./adminShortfall";
 import { PUBLIC_SANS_LATIN } from "./fonts";
+import { HealthBanner } from "./HealthBanner";
+import { loadHealthBanner, logHealthBannerFailure, seesEveryCondition } from "./healthBannerModel";
 import { hubShellUser, hubTabTitle } from "./hubShell";
 import { identity } from "./identity";
 import { messagingPause, pausedByName } from "./messagingPause";
 import { PauseBanner } from "./PauseBanner";
 import { loadPauseBanner, logPauseBannerFailure } from "./pauseBanner";
-import { SenderBanner } from "./SenderBanner";
-import { loadSenderBanner, logSenderBannerFailure } from "./senderBanner";
 import { currentStaffSession } from "./session";
 import { StaffShell } from "./StaffShell";
 
@@ -29,7 +29,9 @@ export const metadata: Metadata = { title: hubTabTitle() };
 // A root layout of its own: the staff <html> is English, and a resident page's carries its language.
 // Every Admin sees the "Fewer than two usable Admins" banner above each staff screen (S01.06), inside the
 // Hub shell's content area when the shell is shown (S01.09). Everyone at the Hub sees "Texts are paused", with who
-// paused, when and why, above each Hub screen while an Admin has paused texts (S06.06). Links in the shell are plain
+// paused, when and why, above each Hub screen while an Admin has paused texts (S06.06). Every Admin and Coordinator sees each condition the
+// health job has found open, in plain words, above each Hub screen until it clears (S09.01); everyone else at the Hub sees "Sending is failing"
+// while the sender itself is (S06.07). Links in the shell are plain
 // anchors, so a move between staff screens is a full page load and this layout, with the banners, is evaluated again.
 export default async function StaffLayout({ children }: LayoutProps<"/staff">) {
   // The one font file every staff page needs (Latin text), preloaded as the resident layout preloads its own.
@@ -46,14 +48,24 @@ export default async function StaffLayout({ children }: LayoutProps<"/staff">) {
           logError: logPauseBannerFailure,
         })
       : null,
-    // "Sending is failing" (S06.07): from what the health job last found, on a Hub screen only, like the pause banner.
-    session && hubShellUser(session) ? loadSenderBanner({ active: () => activeSenderConditions(getDb()), logError: logSenderBannerFailure }) : null,
+    // The health banner (S06.07, S09.01): from what the health job last found, on a Hub screen only, like the pause banner.
+    session && hubShellUser(session)
+      ? loadHealthBanner({
+          facts: async () => {
+            const db = getDb();
+            const [active, heartbeat] = await Promise.all([activeHealthConditions(db), readHeartbeat(db)]);
+            return { active, heartbeat };
+          },
+          everything: seesEveryCondition(session.role),
+          logError: logHealthBannerFailure,
+        })
+      : null,
   ]);
   return (
     <html lang="en">
       <body>
         <StaffShell session={session}>
-          {failing && <SenderBanner view={failing} />}
+          {failing && <HealthBanner view={failing} />}
           {paused && <PauseBanner view={paused} />}
           {shortfall && <AdminShortfallBanner />}
           {children}

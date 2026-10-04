@@ -80,6 +80,13 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        1.4. PROVISIONAL: the owner confirms it. Each actual price keeps the rate it
  *                                                        was converted at and is shown labelled with it. Not a TWILIO_ variable: it is
  *                                                        not a credential and is allowed everywhere
+ * SMS_TRANSACTIONAL_DAILY_CEILING
+ *                      server   optional                 the daily ceiling on non-alert (`transactional`) texts, menus and prompts
+ *                                                        included and texts to on-call numbers not counted (AD-22, S09.01): more
+ *                                                        than this many created since midnight in Toronto raises the health job's
+ *                                                        `transactional_ceiling` condition (the on-call Admins are texted once
+ *                                                        that day; texts keep sending). A whole number of at least 1; default 300.
+ *                                                        PROVISIONAL: the owner confirms it against the expected sign-ups a day
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -155,9 +162,9 @@ import { PRODUCTION_HOST } from "./hosts";
  * RESIDENT_ALERTS_ENABLED
  *                      server   optional                 `true` or `false`: whether the feed and the alert pages tell residents
  *                                                        about any alert (AD-17, S04.08), the launch gate. Production runs with
- *                                                        it OFF until E05's corrections and closing are released: unset means
- *                                                        false there, and `true` in production fails start-up while
- *                                                        RESIDENT_ALERTS_RELEASED (below) is false. Previews and local development
+ *                                                        it OFF unless the variable is `true`: unset means false there. E05 is
+ *                                                        released, so the code lock (RESIDENT_ALERTS_RELEASED, below) is open and
+ *                                                        `true` in production starts and turns the gate on. Previews and local development
  *                                                        run with it on unless it is set to false. A value that is neither fails
  *                                                        start-up (a typo must not switch the gate)
  * MAP_TILE_*           build    optional                 the resident map's tile provider, its credit and whether and how long a
@@ -235,6 +242,7 @@ const rawSchema = z.object({
   SMS_TEST_ALLOWLIST: optionalText,
   SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
   SMS_USD_TO_CAD_RATE: optionalText,
+  SMS_TRANSACTIONAL_DAILY_CEILING: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_FEED_FILE: optionalText,
@@ -335,17 +343,19 @@ const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** PROVISIONAL (S04.06): cents CAD per text message segment until IT records Twilio's price for Canadian toll-free numbers. */
 export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 
+/** PROVISIONAL (S09.01): the daily ceiling on non-alert texts until the owner confirms one (AD-22). */
+export const DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING = 300;
+
 /** PROVISIONAL (S06.08): Canadian dollars per US dollar, the rate Twilio's prices (billed in US dollars) are converted at until the owner sets one. */
 export const DEFAULT_SMS_USD_TO_CAD_RATE = 1.4;
 
 /**
- * The launch gate of E04 (S04.08, epics: "Launch gate kept"): production does not show residents any alert until E05's corrections and
- * closing are released. While this is false, `RESIDENT_ALERTS_ENABLED=true` in production fails start-up and the variable unset is off, so
- * the production configuration cannot turn alerts on by a setting alone. E05's last story ("an Admin changes RESIDENT_ALERTS_ENABLED to
- * true through a production deploy") flips this to true in that same deploy, records it in the launch-readiness checklist, and updates the
- * configuration test (src/platform/config/residentAlerts.test.ts), which pins it.
+ * The launch gate of E04 (S04.08, epics: "Launch gate kept"). E05's corrections and closing are complete in production, so the code lock
+ * is released: `RESIDENT_ALERTS_ENABLED=true` now starts in production and turns the gate on. The default stays off (unset or `false` in
+ * production), so the switch is only the Vercel variable, set by an Admin with a production redeploy and recorded in the launch-readiness
+ * checklist. The configuration test (src/platform/config/residentAlerts.test.ts) pins this.
  */
-export const RESIDENT_ALERTS_RELEASED = false;
+export const RESIDENT_ALERTS_RELEASED = true;
 
 export interface Env {
   environment: AppEnvironment;
@@ -365,6 +375,8 @@ export interface Env {
   smsPricePerSegmentCents: number;
   /** Canadian dollars per US dollar (at most four decimals): the rate a reconciliation converts Twilio's prices at (S06.08). */
   smsUsdToCadRate: number;
+  /** The daily ceiling on non-alert texts (S09.01, AD-22): the health job's `transactional_ceiling` condition. */
+  smsTransactionalDailyCeiling: number;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
@@ -810,8 +822,8 @@ export function parseSearchEnv(source: Record<string, string | undefined>): Sear
 }
 
 /**
- * The launch gate. Production: off unless RESIDENT_ALERTS_ENABLED is `true` AND the alerts have been released
- * (RESIDENT_ALERTS_RELEASED); `true` before that is refused, so a setting in Vercel cannot show residents an alert early. Everywhere
+ * The launch gate. Production: off unless RESIDENT_ALERTS_ENABLED is `true`; while RESIDENT_ALERTS_RELEASED is false (the code lock, released as
+ * of E05) `true` is refused, so a setting in Vercel could not show residents an alert early. Everywhere
  * else the default is on (previews run with it on), and `false` turns it off. Anything but `true` or `false` is refused.
  */
 function parseResidentAlerts(value: string | undefined, environment: AppEnvironment, problems: string[]): boolean {
@@ -870,6 +882,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   }
   const smsPricePerSegmentCents = parseSmsPrice(raw.SMS_PRICE_PER_SEGMENT_CENTS, problems);
   const smsUsdToCadRate = parseSmsRate(raw.SMS_USD_TO_CAD_RATE, problems);
+  const smsTransactionalDailyCeiling = positiveInteger("SMS_TRANSACTIONAL_DAILY_CEILING", raw.SMS_TRANSACTIONAL_DAILY_CEILING, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -967,6 +980,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     smsTestProblem,
     smsPricePerSegmentCents,
     smsUsdToCadRate,
+    smsTransactionalDailyCeiling,
     cohereApiKey: raw.COHERE_API_KEY?.trim(),
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,

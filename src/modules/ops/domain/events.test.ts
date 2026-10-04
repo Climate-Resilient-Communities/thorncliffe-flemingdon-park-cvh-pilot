@@ -203,7 +203,29 @@ describe("the health job's events (S06.07)", () => {
     expect(() => toOpsEventRecord({ kind: "alert.expire_late", detail: { minutes_late: 5, slug: "abc" } as never })).toThrow(OpsEventError);
   });
 
-  it("names the five conditions", () => {
-    expect([...HEALTH_CONDITIONS]).toEqual(["queue_stuck", "delivery_unknown", "sender_stalled", "smart_encoding_on", "signature_failures"]);
+  it("records a spending cap overrun (S07.08's, read by the health job of S09.01) with a count only", () => {
+    expect(toOpsEventRecord({ kind: "spend.cap_overrun", subjectType: "alert_entry", subjectId: "01900000-0000-7000-8000-000000000001", detail: { over_cents: 1250 } })).toMatchObject({
+      kind: "spend.cap_overrun",
+      severity: "warning",
+      detail: { over_cents: 1250 },
+    });
+    expect(toOpsEventRecord({ kind: "spend.cap_overrun", detail: {} })).toMatchObject({ detail: {} });
+    expect(() => toOpsEventRecord({ kind: "spend.cap_overrun", detail: { over_cents: -1 } })).toThrow(OpsEventError);
+    expect(() => toOpsEventRecord({ kind: "spend.cap_overrun", detail: { approver: "Ann" } as never })).toThrow(OpsEventError);
+  });
+
+  it("names every condition of AD-23 (S06.07's five and S09.01's five)", () => {
+    expect([...HEALTH_CONDITIONS]).toEqual([
+      "queue_stuck",
+      "delivery_unknown",
+      "sender_stalled",
+      "smart_encoding_on",
+      "signature_failures",
+      "job_failed",
+      "translation_fallback",
+      "publish_failed",
+      "transactional_ceiling",
+      "cap_overrun",
+    ]);
   });
 });

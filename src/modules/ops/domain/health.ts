@@ -1,4 +1,4 @@
-// The health job's decisions (S06.07, AD-23): given what a condition remembered and what the job sees now, what happens. Pure: no I/O, no clock
+// The health job's decisions (S06.07, S09.01, AD-23): given what a condition remembered and what the job sees now, what happens. Pure: no I/O, no clock
 // (the caller gives the database's instant), so every rule below is a table in a test.
 //
 // Two kinds of condition:
@@ -17,6 +17,21 @@ export const ALERT_INTERVAL_MS = 30 * 60_000;
 /** Webhook signature failures are counted over this long, and alert when they exceed SIGNATURE_FAILURE_LIMIT. */
 export const SIGNATURE_WINDOW_MS = 10 * 60_000;
 export const SIGNATURE_FAILURE_LIMIT = 5;
+
+/** A scheduled job's failures (a failed pg_cron run, a job call that did not answer 2xx) are counted over this long (S09.01). */
+export const JOB_FAILURE_WINDOW_MS = 10 * 60_000;
+/** A whole language that fell back to English in an alert is the health job's business for this long (S09.01), like an unknown delivery. */
+export const FALLBACK_WINDOW_MS = 24 * 60 * 60_000;
+/**
+ * The heartbeat (S09.01, E09 "Heartbeat"): the health job records the time of each run that judged every condition; `/api/health/heartbeat` answers
+ * 200 only while that time is less than this old, and the outside check emails the on-call Admins when it fails twice in a row.
+ */
+export const HEARTBEAT_STALE_AFTER_MS = 3 * 60_000;
+
+/** Whether the health job's last complete run is recent enough for the heartbeat to answer 200 (never run: not fresh). */
+export function heartbeatFresh(completedAt: Date | null, now: Date): boolean {
+  return completedAt !== null && now.getTime() - completedAt.getTime() < HEARTBEAT_STALE_AFTER_MS;
+}
 
 /** The conditions that mean the sender itself is not sending: the Hub shows the banner for these, since an on-call text may be stuck behind them. */
 export const SENDER_CONDITIONS = ["queue_stuck", "sender_stalled"] as const satisfies readonly HealthCondition[];

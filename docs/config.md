@@ -20,9 +20,10 @@ are in `src/platform/config/env.ts`.
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
-| `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. It stays `false` in production until E05's corrections and closing are released: while `RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is false, `true` in production fails start-up. Previews and local development run with it on unless it is `false`. When E05 is released an Admin changes it through a production deploy, records it in the launch-readiness checklist and updates the configuration test (`src/platform/config/residentAlerts.test.ts`) | default (off) |
+| `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. The code lock is released as of E05 (`RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is true), so `true` now starts in production and turns the gate on. The switch is only this Vercel variable: an Admin sets it with a production redeploy and records it in the launch-readiness checklist. Previews and local development run with it on unless it is `false` | default (off) |
 | `SMS_PRICE_PER_SEGMENT_CENTS` | no | the price of one text message segment, in cents CAD: a positive number with at most three decimals, no more than 100. The estimated cost of an alert (S04.06) is segments × recipients × this price, rounded up to whole cents, and is always shown as an estimate. PROVISIONAL default `1.5` (about CAD 0.015 a segment): IT confirms it from Twilio's price for Canadian toll-free numbers and sets it here. Any environment may set it. Each text's own estimate in `spend_event` (S06.08) is its segments × this price, rounded up to whole cents | default |
 | `SMS_USD_TO_CAD_RATE` | no | the exchange rate, Canadian dollars per US dollar, that a reconciliation (S06.08) converts the prices Twilio reports (billed in US dollars) at: a positive number with at most four decimals, between 0.5 and 5. PROVISIONAL default `1.4`: the owner confirms it and sets it here. Each actual price keeps the rate it was converted at and is shown labelled with it. Any environment may set it (not a `TWILIO_` variable: it is no credential) | default |
+| `SMS_TRANSACTIONAL_DAILY_CEILING` | no | the daily ceiling on non-alert (`transactional`) texts, menus and prompts included and the texts to on-call numbers not counted (AD-22, S09.01): more than this many created since midnight in Toronto raises the health job's "daily limit" condition, which texts the on-call Admins once that day and shows on the Hub until midnight; texts keep sending. A whole number of at least 1. PROVISIONAL default `300`: the owner confirms it against the sign-ups expected on the busiest day (a launch event). Any environment may set it | default |
 | `EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH` | no | `500` | 2026-10-02 |
 | `EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH` | no | `1000000` | 2026-10-02 |
 | `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | not yet |
@@ -146,12 +147,18 @@ job open. If Vercel's deployment protection covers the production URL, `net.http
 Vercel and deploy; `select vault.update_secret((select id from vault.secrets where name = 'cvh_job_secret'), '<new value>')`; then remove
 `JOB_SECRET_PREVIOUS`. To stop sending without a deploy, pause the texts (Hub, Administration, "Pause texts"; see "Pausing texts" below); to stop the schedule, `select cron.unschedule('cvh-dispatch')`.
 
-**The health job (S06.07, `/api/jobs/health`).** Every minute it judges five conditions (texts queued and due for more than 5 minutes outside a pause; a
-delivery that became `unknown`, or a text handed off with no outcome for 10 minutes; no renewal of the sender lease for 3 minutes while texts are due;
-Smart Encoding found on; more than 5 webhook signature failures in 10 minutes), records an `ops_event` (no personal data) when it texts the on-call
-Admins and when a condition clears, and queues one text per number on the on-call roster, at most once per condition per 30 minutes. It needs the same
-`JOB_SECRET` as the other job routes and no other variable; it works in every environment (outside production its texts become `skipped_env` like all
-others). **The owner schedules it, once, in production's Supabase SQL editor as `postgres`, after the Vault secrets of step 1 above exist; this
+**The health job (S06.07, S09.01, `/api/jobs/health`).** Every minute it judges every condition of AD-23: texts queued and due for more than 5 minutes
+outside a pause; a delivery that became `unknown`, or a text handed off with no outcome for 10 minutes; no renewal of the sender lease for 3 minutes while
+texts are due; Smart Encoding found on; more than 5 webhook signature failures in 10 minutes (S06.07); and (S09.01) a scheduled job that failed in the last
+10 minutes (a failed run in `cron.job_run_details`, or a job's call in `net._http_response` that did not answer 2xx, timed out or could not connect; pg_net
+records no URL, so every failed pg_net call counts, and pg_net must be used for nothing but the jobs' calls to `/api/jobs/`); an alert
+submitted with a whole language in English in the last 24 hours; a directory publish that failed with none succeeding since; more non-alert texts today
+than `SMS_TRANSACTIONAL_DAILY_CEILING`; and a spending cap overrun this month (`spend.cap_overrun`, which S07.08 records). It records an `ops_event` (no
+personal data) when it texts the on-call Admins and when a condition clears, and queues one text per number on the on-call roster, at most once per
+condition per 30 minutes (the daily limit once a day). Every Admin and Coordinator screen names each open condition in plain words until it clears;
+everyone else at the Hub sees only "Sending is failing". Each run that judged every condition records the time in `health_heartbeat`, which the heartbeat
+below reads. It needs the same `JOB_SECRET` as the other job routes and `SMS_TRANSACTIONAL_DAILY_CEILING` (optional); it works in every environment
+(outside production its texts become `skipped_env` like all others). **The owner schedules it, once, in production's Supabase SQL editor as `postgres`, after the Vault secrets of step 1 above exist; this
 repository does not apply it, and it is never run in a preview:**
 
 ```sql
@@ -165,7 +172,30 @@ select cron.schedule('cvh-health', '* * * * *', $$
 $$);
 ```
 
-To stop it, `select cron.unschedule('cvh-health')`. An independent outside check of the job itself (what looks if pg_cron or the app stops altogether) is E09's.
+To stop it, `select cron.unschedule('cvh-health')`; the heartbeat then answers 503 within 3 minutes and the outside check emails the on-call Admins.
+
+**The heartbeat and the outside check (S09.01).** `GET /api/health/heartbeat` (or `HEAD`) answers 200 only if the health job judged every condition less than
+3 minutes ago, else 503, with an empty body, `Cache-Control: no-store` and no cookie; it is public and needs no secret, and says nothing else. A health
+job that does not run (pg_cron stopped, the job secret wrong, Vercel down), cannot reach the database, or keeps failing to judge a condition all make it 503;
+so does a database that does not answer in 5 seconds or an app that is down (no answer at all). Nothing in the CVH can text anyone about those, so an
+uptime monitor outside Vercel, Supabase and Twilio watches it. **IT chooses the monitor and sets it up before launch (nothing in this repository does), and
+records its name in the spine (AD-23, "As built (S09.01)"):**
+
+- a free-tier HTTP(S) uptime monitor that is not hosted on Vercel, Supabase or Twilio and does not send through the CVH;
+- it requests `https://<production host>/api/health/heartbeat` every minute (a 1-minute interval: one that only offers 3 or 5 minutes does not meet the
+  5-minute promise below), with a timeout of 10 seconds, and counts any answer other than 200 (and no answer) as down;
+- it alerts only after **2 failed checks in a row**, and then emails every on-call Admin (the same people as the On-call numbers page; their email
+  addresses are kept in the monitor, never in this repository), and emails again when the heartbeat recovers;
+- if Vercel's deployment protection covers the production URL, the monitor needs the protection bypass header (as pg_cron does), or the path is
+  excluded from protection.
+
+With a 1-minute interval and 2 failures in a row, the email leaves within about 2 minutes of the heartbeat turning 503 (which itself happens within
+3 minutes of the job's last complete run), so the on-call Admins hear within 5 minutes of the heartbeat failing.
+
+**The launch rehearsal (before launch, once, with IT and an on-call Admin; recorded in the launch checklist):** in production's SQL editor,
+`select cron.unschedule('cvh-health')`; confirm `GET /api/health/heartbeat` answers 503 within 3 minutes and the monitor's email reaches every on-call
+Admin within 5 minutes after that; then schedule the job again with statement 4 above, confirm the heartbeat answers 200 within 2 minutes and the
+monitor's recovery email arrives. A failed rehearsal blocks launch.
 
 **The expire job (S05.04, `/api/jobs/expire`).** Every minute it closes each open alert thread whose latest published, non-superseded entry is past its
 valid-until (compared as UTC instants, so the clock changes cannot move it): in one transaction per thread, under the thread's lock, it adds a web-only system

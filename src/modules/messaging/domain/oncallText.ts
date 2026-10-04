@@ -5,7 +5,18 @@ import { englishText } from "../../../i18n/text";
 import { countSms, normaliseSms, type SmsEncoding } from "./smsEncoding";
 
 /** The conditions the health job texts about. ops owns their meaning; this is the set of wordings. */
-export const ONCALL_TEXT_CONDITIONS = ["queue_stuck", "delivery_unknown", "sender_stalled", "smart_encoding_on", "signature_failures"] as const;
+export const ONCALL_TEXT_CONDITIONS = [
+  "queue_stuck",
+  "delivery_unknown",
+  "sender_stalled",
+  "smart_encoding_on",
+  "signature_failures",
+  "job_failed",
+  "translation_fallback",
+  "publish_failed",
+  "transactional_ceiling",
+  "cap_overrun",
+] as const;
 export type OncallTextCondition = (typeof ONCALL_TEXT_CONDITIONS)[number];
 
 export interface RenderedOncallText {

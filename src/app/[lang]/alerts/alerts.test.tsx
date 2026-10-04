@@ -108,7 +108,7 @@ describe("the alert page", () => {
     expect(state.reads).toEqual([]);
   });
 
-  it("is a 404, whatever the feed holds and without reading it, while RESIDENT_ALERTS_ENABLED is off (production until E05)", async () => {
+  it("is a 404, whatever the feed holds and without reading it, while RESIDENT_ALERTS_ENABLED is off (production by default)", async () => {
     state.enabled = false;
 
     await expect(AlertPage(params("en", "kbcdfghj"))).rejects.toThrow("NEXT_NOT_FOUND");

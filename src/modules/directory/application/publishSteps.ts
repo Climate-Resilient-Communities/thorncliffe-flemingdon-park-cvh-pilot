@@ -10,6 +10,15 @@ export interface ReleaseClaim {
   resumedFiles: number;
 }
 
+/** What the search build of a release reports: the vector counts and, when the compact copy was not written, why (a safe classification). */
+export interface BuiltSearch {
+  vectors: number;
+  reused: number;
+  embedded: number;
+  /** `binary_put_failed:<class>` when vectors.bin could not be written and the release was published with its JSON vectors alone. */
+  binary_issue?: string;
+}
+
 /** A step that failed for a reason the Admin is told, and whether another pass can fix it. */
 export class PublishStepError extends Error {
   override name = "PublishStepError";
