@@ -3811,7 +3811,7 @@ So that sending, correcting and recovering are done the same way every time.
 
 ### Story S09.04 — The Hub reviews reliability every week
 
-- **Size:** S · **Estimate:** 2 h · **Actual:** —
+- **Size:** S · **Estimate:** 2 h · **Actual:** 1 h (started 2026-10-04 18:39 UTC, built 19:38 UTC)
 - **Traces:** NFR-N4, AR-21 (weekly view), AR-18 · **Depends on:** S09.01 · **Branch:** `e09-s04-weekly-review`
 
 As a Hub Admin,
