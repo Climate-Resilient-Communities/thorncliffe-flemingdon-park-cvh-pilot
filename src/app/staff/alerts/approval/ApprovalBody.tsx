@@ -134,9 +134,12 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
         >
           {changed ? screen.actions.approveConfirmed : screen.actions.approve}
         </button>
-        <button className="hub-button hub-button--secondary" type="button" disabled={busy} onClick={() => setMode("return")} data-testid="return-button">
-          {screen.actions.returnToAuthor}
-        </button>
+        {/* A post residents already read never returns to draft (S08.03): it can only be approved or discarded (withdrawn). */}
+        {screen.live === null && (
+          <button className="hub-button hub-button--secondary" type="button" disabled={busy} onClick={() => setMode("return")} data-testid="return-button">
+            {screen.actions.returnToAuthor}
+          </button>
+        )}
         <button className="hub-button hub-button--secondary" type="button" disabled={busy} onClick={() => setMode("discard")} data-testid="discard-button">
           {screen.actions.discard}
         </button>
@@ -197,6 +200,11 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
             {screen.locked.note && <p className="hub-wrap hub-preline">{screen.locked.note}</p>}
           </Stack>
         </section>
+      )}
+      {screen.live && screen.status === "review" && (
+        <p role="note" className="hub-flag hub-wrap" data-testid="live-note">
+          {screen.live.text}
+        </p>
       )}
       {/* While texts are paused (S06.06): on the view an approver decides on and on the confirmation of an approval. It only informs; Approve works as always. */}
       {screen.pauseNotice && (

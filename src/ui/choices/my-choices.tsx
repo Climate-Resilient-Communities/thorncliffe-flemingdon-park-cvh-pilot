@@ -7,6 +7,7 @@ import { useState, type ReactNode } from "react";
 import type { DeviceChoices } from "@/contracts/deviceChoices";
 import { GROUPS, type Group } from "@/contracts/groups";
 import type { LaunchCode } from "@/i18n/languages";
+import { isBasic, saveBasicChoice } from "../basic";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { useOfflineSupport } from "../offline/use-offline-support";
@@ -38,6 +39,7 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
   const place = useTranslations("R35");
   const groupText = useTranslations("groups");
   const shell = useTranslations("shell");
+  const x07 = useTranslations("x07");
   const router = useRouter();
   const choices = useChoices();
   const { state } = useBuildingList();
@@ -198,6 +200,18 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
           <div className="choice-told__acts">
             <ChoiceButton variant="secondary" onClick={() => router.push(`/${lang}/choices/place`)} testId="change-place">
               {buildings.length === 0 ? t("whereLive") : t("change")}
+            </ChoiceButton>
+          </div>
+        </Told>
+
+        {/* X-07 (S02.14): always here, so the mode can be turned on from R-34 as well as from the header, and off again. */}
+        <Told id="told-basic" title={t("basic")}>
+          <p className="choice-told__value" data-testid="told-basic-value">
+            <ResidentText>{isBasic(saved) ? t("on") : x07("off")}</ResidentText>
+          </p>
+          <div className="choice-told__acts">
+            <ChoiceButton variant="secondary" onClick={() => saveBasicChoice(!isBasic(saved))} testId="change-basic">
+              {isBasic(saved) ? t("turnOff") : x07("turnOn")}
             </ChoiceButton>
           </div>
         </Told>

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
+import { basicAttributeSet, useBasic } from "../basic";
 import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
 import { activeKeys, filterProviders, NO_FILTERS, type FilterState } from "../directory/filters";
@@ -26,6 +27,9 @@ import "./map.css";
 
 /** The tile provider's settings as the page passes them (from MAP_TILE_*, src/platform/config/mapTiles.ts). */
 export type MapTiles = TileSettings & { attribution: string; attributionUrl: string | null };
+
+/** R-15 in basic mode lists this many places at a time. */
+const BASIC_PAGE = 5;
 
 const plain = (text: string) => (isEnglishFallback(text) ? text.slice(FALLBACK_MARKER.length) : text);
 
@@ -89,9 +93,14 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const directory = useDirectory(lang);
   const buildings = useBuildingPins();
   const online = useOnline();
-  const [view, setView] = useState<"map" | "list">("map");
-  const [bounds, setBounds] = useState<Bounds>(NEIGHBOURHOODS_VIEW);
-  const [selected, setSelected] = useState<string | null>(null);
+  // Basic mode has no map tiles (the prototype's R-14): the same destination opens as the list, with the whole area in it.
+  const basic = useBasic();
+  const [chosenView, setView] = useState<"map" | "list">("map");
+  const [areaInView, setBounds] = useState<Bounds>(NEIGHBOURHOODS_VIEW);
+  const [pinSelected, setSelected] = useState<string | null>(null);
+  const view = basic ? "list" : chosenView;
+  const bounds = basic ? NEIGHBOURHOODS_VIEW : areaInView;
+  const selected = basic ? null : pinSelected;
   const [missingTiles, setMissingTiles] = useState(0);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
   // The filters applied in the directory this visit (kept in the tab, never sent).
@@ -103,6 +112,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const card = useRef<HTMLElement>(null);
   /** Set when "Show the whole area" was used in the list: the map shows it once it is on screen again. */
   const wholeArea = useRef(false);
+  // R-15 in basic mode (the prototype's `page = b.basic ? 5 : 20`): five places at a time, "Show n more" for the next five.
+  const [pages, setPages] = useState(1);
+  const firstNew = useRef<HTMLUListElement>(null);
+  const grew = useRef(false);
 
   const listing = directory.status === "ready" ? directory.listing : null;
 
@@ -114,6 +127,15 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     [listing, filters, buildings],
   );
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
+  const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
+  const providersLeft = inView.providers.length - providersShown.length;
+  useEffect(() => {
+    // The button goes when it was the last page, so focus moves to the first place it brought, and a screen reader reads on from there.
+    if (!grew.current) return;
+    grew.current = false;
+    const first = firstNew.current?.children[(pages - 1) * BASIC_PAGE]?.querySelector<HTMLElement>("a");
+    first?.focus();
+  }, [pages]);
   const chosen = pins.find((pin) => pin.key === selected) ?? null;
 
   const kindOf = (pin: MapPin): string =>
@@ -135,7 +157,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   useEffect(() => {
     const at = element.current;
-    if (!at) return;
+    // The attribute is there before the first render has heard the choices: the tiles are never asked for in basic mode.
+    if (!at || basic || basicAttributeSet()) return;
     let live = true;
     const proxy: PinWords = {
       word: (pin) => words.current!.word(pin),
@@ -161,8 +184,9 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
       live = false;
       handle.current?.destroy();
       handle.current = null;
+      setMapStatus("loading");
     };
-  }, [tiles]);
+  }, [tiles, basic]);
 
   useEffect(() => {
     if (mapStatus === "ready") handle.current?.setPins(pins);
@@ -199,7 +223,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
       <UsageView evt="map_view" lang={lang} nbhd={viewed} />
       <Stack gap="related">
         <ResidentText as="h1">{t("R14.title")}</ResidentText>
-        <ResidentText as="p" className="map-hint">
+        <ResidentText as="p" className="map-hint hide-basic">
           {t("map.lead")}
         </ResidentText>
         {directory.status === "ready" && !directory.current && (
@@ -217,7 +241,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             {t("directory.couldNotLoad")}
           </ResidentText>
         )}
-        <div className="map-segment" role="group" aria-label={plain(t("R14.title"))}>
+        <div className="map-segment hide-basic" role="group" aria-label={plain(t("R14.title"))}>
           <button type="button" className="map-segment__btn tap" aria-pressed={view === "map"} onClick={() => setView("map")} data-testid="map-view-map">
             <span className="map-ico map-ico--map" aria-hidden="true" />
             <ResidentText>{t("R14.mapView")}</ResidentText>
@@ -318,7 +342,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
               <ResidentText as="h2" testId="map-list-title">
                 {t("map.listTitle")}
               </ResidentText>
-              <ResidentText as="p" className="map-hint">
+              <ResidentText as="p" className="map-hint hide-basic">
                 {t("map.listLead")}
               </ResidentText>
             </Stack>
@@ -329,7 +353,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                 </ResidentText>
                 <button
                   type="button"
-                  className="map-btn map-btn--secondary tap"
+                  className="map-btn map-btn--secondary tap hide-basic"
                   onClick={() => {
                     setView("map");
                     wholeArea.current = true;
@@ -347,8 +371,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                     <ResidentText as="p" className="map-hint" testId="map-list-count">
                       {inView.providers.length === 1 ? t("R15.countOne") : t("R15.count", { n: inView.providers.length })}
                     </ResidentText>
-                    <ul className="map-entries" data-testid="map-list-providers">
-                      {inView.providers.map((pin) => (
+                    <ul className="map-entries" data-testid="map-list-providers" ref={firstNew}>
+                      {providersShown.map((pin) => (
                         <li key={pin.id} className="map-entry" data-testid={`map-entry-${pin.id}`}>
                           <PinMark pin={pin} />
                           <span className="map-entry__text">
@@ -360,6 +384,19 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                         </li>
                       ))}
                     </ul>
+                    {providersLeft > 0 && (
+                      <button
+                        type="button"
+                        className="map-btn map-btn--secondary tap"
+                        onClick={() => {
+                          grew.current = true;
+                          setPages((n) => n + 1);
+                        }}
+                        data-testid="map-list-more"
+                      >
+                        <ResidentText>{t("R15.more", { n: Math.min(BASIC_PAGE, providersLeft) })}</ResidentText>
+                      </button>
+                    )}
                   </Stack>
                 )}
                 {inView.buildings.length > 0 && (

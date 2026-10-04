@@ -74,8 +74,12 @@ async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolea
     await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${opts.drill ?? false}, ${opts.reportedAt ?? new Date(NOW.getTime() - 3_600_000)}, ${coordinator}, ${opts.slug})`;
   });
   const entryIds: string[] = [];
+  // An entry discarded before S08.02 recorded why (no reason) is as production holds them: made with the check that requires a reason off, which is put back
+  // NOT VALID as its migration made it (20261005230000_alert_entry_discard_checks.sql).
+  const beforeTheCheck = opts.entries.some((entry) => entry.status === "discarded" && entry.discardReason === null);
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+    if (beforeTheCheck) await tx.unsafe("alter table alert_entry drop constraint alert_entry_discard_reason_status");
     for (const [index, entry] of opts.entries.entries()) {
       const id = randomUUID();
       entryIds.push(id);
@@ -95,6 +99,9 @@ async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolea
                        ${entry.returnedFor ?? null}, ${entry.returnedFor === "return" ? (entry.note ?? "Which floors?") : null},
                        ${entry.supersedes === undefined ? null : entryIds[entry.supersedes]}, ${entry.kind === "withdrawal" ? "wrong_place" : null},
                        ${status === "discarded" ? (entry.discardReason === undefined ? "declined" : entry.discardReason) : null})`;
+    }
+    if (beforeTheCheck) {
+      await tx.unsafe("alter table alert_entry add constraint alert_entry_discard_reason_status check ((status = 'discarded') = (discard_reason is not null)) not valid");
     }
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
   });

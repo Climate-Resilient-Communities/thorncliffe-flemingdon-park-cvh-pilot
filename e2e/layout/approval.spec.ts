@@ -66,6 +66,8 @@ const PAGES: Page_[] = [
   { name: "O-05 an alert waiting for approval", review: {}, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-05 with texting open, languages that fell back and a possible duplicate", review: { recipients: OPEN, fallback: ["ur", "ps", "prs"], duplicate: { alertId: "01900000-0000-7000-8000-00000000a1e8", entryId: "01900000-0000-7000-8000-00000000e178" } }, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-07 an ambassador's post", review: { authorRole: "ambassador" }, actions: ["approve-button", "return-button", "discard-button"] },
+  // S08.03: a lower-risk post residents already read as "Not yet verified" (D-1): the note says so, and a web-published entry never returns to draft, so no "Return to author".
+  { name: "O-07 a post residents already read (D-1)", review: { authorRole: "ambassador", entry: { webPublishedAt: new Date("2026-10-04T14:00:00.000Z") } }, actions: ["approve-button", "discard-button"] },
   {
     // S05.01: an update to a running alert that widens who it is for (a floor and a building added, the people outside the groups reached) and narrows it (a floor dropped):
     // "Now also for: ..." and "No longer for: ..." sit right under who it is for, above the fold, in every language with the longest labels.

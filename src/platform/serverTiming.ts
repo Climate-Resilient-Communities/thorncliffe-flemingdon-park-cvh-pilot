@@ -8,8 +8,8 @@
 export const TIMING_PHASES = ["boot", "limiter", "snapshot", "embed", "translate", "rank", "total"] as const;
 export type TimingPhase = (typeof TIMING_PHASES)[number];
 
-/** The one flag a phase can carry: the work came from storage (a cold instance), not from this instance's memory. */
-export type TimingFlag = "cold";
+/** The flag a phase can carry: `cold`, the work came from storage (a cold instance), not from this instance's memory; `cache`, a cold instance got it from the shared data cache instead of storage. */
+export type TimingFlag = "cold" | "cache";
 
 /** Where phases are recorded; the search use case takes one so that it can report its own phases without knowing about HTTP. */
 export interface PhaseTimings {
@@ -22,14 +22,14 @@ export interface TimingEntry {
   flag?: TimingFlag;
 }
 
-/** `phase;dur=12.3` (milliseconds, one decimal) with `;desc=cold` for the flagged ones; entries with an unknown phase or a bad number are left out. */
+/** `phase;dur=12.3` (milliseconds, one decimal) with `;desc=cold` or `;desc=cache` for the flagged ones; entries with an unknown phase or a bad number are left out. */
 export function formatServerTiming(entries: readonly TimingEntry[]): string {
   const parts: string[] = [];
   for (const entry of entries) {
     if (!(TIMING_PHASES as readonly string[]).includes(entry.phase)) continue;
     if (typeof entry.ms !== "number" || !Number.isFinite(entry.ms)) continue;
     const dur = (Math.round(Math.max(0, entry.ms) * 10) / 10).toString();
-    parts.push(`${entry.phase};dur=${dur}${entry.flag === "cold" ? ";desc=cold" : ""}`);
+    parts.push(`${entry.phase};dur=${dur}${entry.flag === "cold" || entry.flag === "cache" ? `;desc=${entry.flag}` : ""}`);
   }
   return parts.join(", ");
 }

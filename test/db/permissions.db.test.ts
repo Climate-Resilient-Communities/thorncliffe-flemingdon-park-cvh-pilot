@@ -70,7 +70,7 @@ vi.mock("../../src/app/staff/identity", () => ({
   },
 }));
 // A provider change asks Next to refresh the list, which only a request inside Next can do.
-vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
+vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {} }));
 // The providers screen (S02.04) reads and writes through the app's database connection.
 // "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
 vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));

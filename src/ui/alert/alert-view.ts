@@ -227,7 +227,9 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   // The feed carries the entries oldest first and does not refuse an order; R-07 reads them newest first, by their own times (S05.01).
   // A withdrawal notice is the reason shown on the entry it withdrew, never an entry of its own; a correction replaces the entry it names (S05.02).
   const replacers = new Map<string, FeedEntry>();
-  for (const entry of thread.entries) if (entry.supersedes_id !== undefined) replacers.set(entry.supersedes_id, entry);
+  // An entry replaces another only once the Hub verified it, or when it is a withdrawal (the system's one too, which the database makes only in the transaction that
+  // supersedes its target): a web-published correction that is still "Not yet verified" (S08.03) has not replaced anything, and a discarded one never does.
+  for (const entry of thread.entries) if (entry.supersedes_id !== undefined && (entry.verified || entry.kind === "withdrawal")) replacers.set(entry.supersedes_id, entry);
   const visible = entriesNewestFirst(thread.entries.filter((entry) => entry.kind !== "withdrawal"));
   const newestFirst = visible.length > 0 ? visible : entriesNewestFirst(thread.entries);
   const standing = newestFirst.find((entry) => !replacers.has(entry.id)) ?? newestFirst[0];

@@ -1,6 +1,7 @@
 import { SubmitRequestSchema } from "@/contracts/alertSubmit";
 import { alertSubmitter } from "@/app/staff/alerts";
 import { readJson, staffJson, staffRoute } from "@/app/staff/guard";
+import { afterSubmit } from "@/app/staff/alerts/afterWebChange";
 import { submitResultBody } from "@/app/staff/alerts/submitBody";
 
 export const dynamic = "force-dynamic";
@@ -24,5 +25,7 @@ export const POST = staffRoute({ route: "/api/staff/alerts/entries/submit", acce
   const ref = { alertId: body.value.alert_id, entryId: body.value.entry_id };
   const submitter = alertSubmitter();
   const report = await submitter.submit({ staffId: session.staffId, aal: session.aal }, ref, body.value.key, body.value.draft);
+  // A D-1 post is on the web from this commit (S08.03): the feed is read again at once.
+  afterSubmit(report);
   return staffJson(submitResultBody(report, await submitter.state(ref), new Date()));
 });

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LaunchCode } from "@/i18n/languages";
+import { EarlierUpdates } from "../basic";
 import { Not911 } from "../emergency";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
@@ -61,8 +62,9 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
 
         {view.guides.length > 0 && (
           <section className="alert-actions" aria-label={t("R07.whatToDo")} data-testid="alert-actions">
-            {view.guides.map((guide) => (
-              <Link className="alert-dest tap" href={guide.href} prefetch={false} key={guide.id} data-testid={`alert-guide-${guide.id}`}>
+            {/* Basic mode keeps the first guide only (the prototype's guideList.slice(0, 1)). */}
+            {view.guides.map((guide, index) => (
+              <Link className={`alert-dest tap${index > 0 ? " hide-basic" : ""}`} href={guide.href} prefetch={false} key={guide.id} data-testid={`alert-guide-${guide.id}`}>
                 {/* A guide's id is the name of its icon in the shell's set (a test keeps them so). */}
                 <span className={`shell-ico shell-ico--${guide.id}`} aria-hidden="true" />
                 <span className="alert-dest__label">
@@ -90,10 +92,12 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
             <ResidentText as="h2" testId="alert-thread-title">
               {t("R07.thread")}
             </ResidentText>
+            {/* Basic mode shows the latest entry and "Earlier updates: n" (the prototype's showAllThread); every entry is in the page for the rest. */}
+            <EarlierUpdates label={<ResidentText>{t("R07.basicMore", { n: view.entries.length - 1 })}</ResidentText>}>
             <ol className="alert-thread">
               {view.entries.map((entry, index) => (
                 <li
-                  className={`alert-entry${index === 0 ? " alert-entry--latest" : ""}${entry.mark ? ` alert-entry--${entry.mark.kind}` : ""}`}
+                  className={`alert-entry${index === 0 ? " alert-entry--latest" : " basic-earlier__item"}${entry.mark ? ` alert-entry--${entry.mark.kind}` : ""}`}
                   key={entry.id}
                   data-testid={`alert-entry-${entry.id}`}
                   data-mark={entry.mark?.kind}
@@ -124,6 +128,7 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
                 </li>
               ))}
             </ol>
+            </EarlierUpdates>
           </section>
         )}
       </Stack>

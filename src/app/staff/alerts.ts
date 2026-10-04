@@ -3,6 +3,7 @@
 // that alerting wires itself (src/modules/alerting/index.ts), and Submit on top of it (S04.05): the translation of
 // this environment (./alertTranslation.ts) and the renderer's public origin (./freezeEntry.ts). Server only.
 import { createAlertSubmitter, createAlerting, type AlertLifecycle, type AlertSubmitter } from "@/modules/alerting";
+import { englishText } from "@/i18n/text";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { textingIsLive } from "../textingLive";
@@ -18,7 +19,7 @@ let submitter: AlertSubmitter | undefined;
  */
 export function alerting(): AlertLifecycle {
   // The on-call rule (S06.07): once texting is live, a real alert is approved only with an on-call number on the roster; off until then.
-  return (service ??= createAlerting({ db: getDb(), pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents, oncall: { required: () => textingIsLive(getEnv()) } }));
+  return (service ??= createAlerting({ db: getDb(), pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents, discardWithdrawalText: () => englishText("staff.discard.withdrawnText"), oncall: { required: () => textingIsLive(getEnv()) } }));
 }
 
 /** Submit and "Try translation again" (S04.05): from the browser's key to a frozen, pending entry, and the entry's state a browser fetches when it did not see the outcome. */

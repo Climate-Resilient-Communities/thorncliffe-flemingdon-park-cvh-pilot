@@ -45,6 +45,7 @@ describe("device choices", () => {
       ["a flag that is not a boolean", '{"v":1,"lang":"ur","welcomed":"yes"}', { v: 1, lang: "ur" }],
       ["a removed count below zero", '{"v":1,"lang":"ur","removed":{"buildings":-1,"floors":0}}', { v: 1, lang: "ur" }],
       ["a savedAt that is not a number", '{"v":1,"lang":"ur","savedAt":"yesterday"}', { v: 1, lang: "ur" }],
+      ["a basic flag that is not a boolean (S02.14)", '{"v":1,"lang":"ur","basic":"true"}', { v: 1, lang: "ur" }],
       ["a null field", '{"v":1,"lang":"ur","groups":null}', { v: 1, lang: "ur" }],
     ])("%s is dropped on its own; the language and the rest are kept", (_name, raw, expected) => {
       expect(parseDeviceChoices(raw)).toEqual(expected);

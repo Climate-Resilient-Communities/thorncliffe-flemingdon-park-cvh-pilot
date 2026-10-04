@@ -29,7 +29,7 @@ export function ShareScreen({ view, message, lang, t }: { view: AlertView; messa
           <ResidentText as="h1" testId="share-title">
             {t("R29.title")}
           </ResidentText>
-          <ResidentText as="p">{t("R29.lead")}</ResidentText>
+          <ResidentText as="p" className="hide-basic">{t("R29.lead")}</ResidentText>
         </Stack>
 
         <section className="alert-section" aria-label={t("R29.preview")} data-testid="share-preview">
@@ -73,7 +73,7 @@ export function ShareScreen({ view, message, lang, t }: { view: AlertView; messa
             whatsapp={message.whatsapp}
             labels={{ send: t("R29.send"), copy: t("R29.copy"), copied: t("R29.copied"), copyFailed: t("R29.copyFailed"), whatsapp: t("R29.whatsapp"), noSheet: t("R29.noSheet") }}
           />
-          <ResidentText as="p" className="alert-caption" testId="share-send-line">
+          <ResidentText as="p" className="alert-caption hide-basic" testId="share-send-line">
             {t("R29.sendLine")}
           </ResidentText>
         </Stack>

@@ -3,6 +3,11 @@
  * The facts row (version, owner, last updated) wraps, so a long translated label never forces a scroll.
  */
 @layer components {
+  .terms-body:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
   .terms-facts {
     display: flex;
     flex-direction: column;

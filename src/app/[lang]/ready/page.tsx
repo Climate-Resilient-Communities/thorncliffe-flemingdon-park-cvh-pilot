@@ -47,7 +47,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
       <Stack gap="section-resident">
         <Stack gap="related">
           <ResidentText as="h1">{t("R24.title")}</ResidentText>
-          <ResidentText as="p">{t("R24.lead")}</ResidentText>
+          <ResidentText as="p" className="hide-basic">{t("R24.lead")}</ResidentText>
           {showUnavailableNote && <UnavailableNote t={t} native={languageOf(lang).native} testId="ready-unavailable" />}
         </Stack>
 
@@ -64,7 +64,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
                         <ContentText as="span" unavailable={guide.title.unavailable} className="ready-dest__title">
                           {guide.title.text}
                         </ContentText>
-                        <ResidentText as="span" className="ready-dest__line" testId={`ready-read-${guide.id}`}>
+                        <ResidentText as="span" className="ready-dest__line hide-basic" testId={`ready-read-${guide.id}`}>
                           {t("R24.readTime", { n: guide.readMins })}
                         </ResidentText>
                       </span>
@@ -91,7 +91,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
                 <ResidentText as="span" className="ready-dest__title">
                   {t("R24.numbers")}
                 </ResidentText>
-                <ResidentText as="span" className="ready-dest__line">
+                <ResidentText as="span" className="ready-dest__line hide-basic">
                   {t("R24.numbersLine")}
                 </ResidentText>
               </span>

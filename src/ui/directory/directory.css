@@ -117,6 +117,10 @@
     gap: var(--gap-target);
   }
 
+  :root[data-basic="true"] .dir-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .dir-actions > * {
     inline-size: 100%;
   }
