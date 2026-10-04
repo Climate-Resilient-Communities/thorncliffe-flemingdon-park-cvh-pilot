@@ -30,6 +30,8 @@ import { createDb, type Db } from "../../src/platform/db";
 import { ROOT, connect, serverUrl } from "./helpers";
 
 const ADMIN = randomUUID();
+// What was typed, in any of the forms the tests use; never the bare digits 555, which a random id can contain.
+const PHONE_TYPED = /555[\s-]?0123/;
 const REGISTER = path.join(ROOT, "data", "seed", "apartment_building_reg.geojson");
 
 /** The audit module's writers, as the composition roots wire them into places. */
@@ -500,7 +502,7 @@ describe("the building contact (S02.08)", () => {
     expect(await buildingRow("601")).toMatchObject({ contact_role: "superintendent", contact_phone: "+14165550123", contact_owner: "hub", contact_updated_at: NOW });
     expect(await buildingRow("602")).toMatchObject({ contact_role: null, contact_owner: null });
     expect((await auditRows()).at(-1)).toMatchObject({ action: "building.contact_changed", outcome: "ok", actor_staff_id: ADMIN, subject_type: "building", subject_id: "601", meta: {} });
-    expect(JSON.stringify((await auditRows()).at(-1))).not.toContain("555");
+    expect(JSON.stringify((await auditRows()).at(-1))).not.toMatch(PHONE_TYPED);
     expect((await dated.getBuilding("601"))?.contact).toEqual(contact);
     expect((await readPublicBuilding(app, "601"))?.contact).toEqual(contact);
     expect((await readPublicBuilding(app, "602"))?.contact).toBeNull();
@@ -541,7 +543,7 @@ describe("the building contact (S02.08)", () => {
     expect((await buildingRow("601")).contact_role).toBeNull();
     const last = (await auditRows()).at(-1)!;
     expect(last).toMatchObject({ action: "building.contact_changed", outcome: "refused", meta: { reason: "validation" } });
-    expect(JSON.stringify(last)).not.toContain("555");
+    expect(JSON.stringify(last)).not.toMatch(PHONE_TYPED);
     expect(JSON.stringify(last)).not.toContain("script");
   });
 
