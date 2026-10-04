@@ -3681,8 +3681,8 @@ The Hub learns about problems before residents do, can deliberately resend texts
 
 ### Story S09.01 — The Hub hears about failures before residents do, even if texting is down
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** AR-21, NFR-N4, NFR-N6 · **Depends on:** S06.07 · **Branch:** `e09-s01-health-outside-check`
+- **Size:** M · **Estimate:** 7 h · **Actual:** — (started 2026-10-04 01:36 UTC)
+- **Traces:** AR-21, NFR-N4, NFR-N6 · **Depends on:** S06.07 · **Branch:** `e09-s01-failure-monitoring`
 
 As the on-call Admin,
 I want every known failure to reach me, and a check that does not rely on the CVH itself,
