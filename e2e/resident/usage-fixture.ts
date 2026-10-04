@@ -27,8 +27,16 @@ export function expectUsageRequest(request: SeenRequest): UsageEvent {
   return parsed.data as UsageEvent;
 }
 
+/**
+ * What a request carried. `allHeaders()` waits for the browser's second report of the request (the headers it added on the wire, the cookie
+ * among them), which never comes for every request: the service worker's own script fetch (/serwist/sw.js, made again by the browser's update
+ * check) may never get one, and awaiting it then hangs until the test times out. A usage request always reaches the network, so it is read
+ * with `allHeaders()` (the check that it has no cookie needs the wire headers); any other request is read with `headers()`, which is
+ * answered at once and holds everything the page or worker set, which is what the tests that look for the saved selection search.
+ */
 export async function seenRequest(request: Request): Promise<SeenRequest> {
-  return { method: request.method(), url: request.url(), headers: JSON.stringify(await request.allHeaders()), body: request.postData() ?? "" };
+  const headers = isUsageRequest(request.url()) ? await request.allHeaders() : request.headers();
+  return { method: request.method(), url: request.url(), headers: JSON.stringify(headers), body: request.postData() ?? "" };
 }
 
 /** Answers /api/metrics with 204 and keeps what was sent, as the events counted. */
