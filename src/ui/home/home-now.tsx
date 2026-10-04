@@ -105,7 +105,7 @@ function CurrentAlerts({
           <ResidentText as="p" className="home-place__name">
             {t("noCurrentAlerts")}
           </ResidentText>
-          <ResidentText as="p">{t("nothingActiveBody")}</ResidentText>
+          <ResidentText as="p" className="hide-basic">{t("nothingActiveBody")}</ResidentText>
         </Stack>
       </div>
     );

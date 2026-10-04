@@ -55,7 +55,7 @@ export function ArchiveScreen({ lang, initial }: { lang: LaunchCode; initial: Ar
           <ResidentText as="h1" testId="archive-title">
             {t("title")}
           </ResidentText>
-          <ResidentText as="p">{t("lead")}</ResidentText>
+          <ResidentText as="p" className="hide-basic">{t("lead")}</ResidentText>
         </Stack>
 
         {cards.length === 0 && last !== null ? (

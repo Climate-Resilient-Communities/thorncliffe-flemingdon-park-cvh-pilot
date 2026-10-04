@@ -121,7 +121,7 @@ export function AlertText({ text, testId = "alert-text", className = "alert-text
 /** "Read it in English": the English the machine translation was made from, a native disclosure so it works with no script. */
 export function ShowEnglish({ english, summary, label, testId = "alert-english" }: { english: string; summary: string; label: string; testId?: string }): ReactNode {
   return (
-    <details className="alert-english" data-testid={testId}>
+    <details className="alert-english hide-basic" data-testid={testId}>
       <summary className="tap" data-testid={`${testId}-toggle`}>
         <ResidentText>{summary}</ResidentText>
       </summary>

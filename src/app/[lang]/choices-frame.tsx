@@ -8,7 +8,7 @@ import type { StepLanguage } from "@/ui/choices";
 
 // The first-run steps and R-34 (S02.03) run on the phone, so their client components get just these parts of the
 // language's catalog, not the whole of it.
-const NAMESPACES = ["R01", "R26", "R34", "R35", "groups", "shell"] as const;
+const NAMESPACES = ["R01", "R26", "R34", "R35", "groups", "shell", "x07"] as const;
 
 /** The 15 launch languages as the language step lists them, each in its own name. */
 export const STEP_LANGUAGES: readonly StepLanguage[] = LAUNCH_LANGUAGES.map(({ code, bcp47, dir, native }) => ({ code, bcp47, dir, native }));

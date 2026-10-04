@@ -91,7 +91,7 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
             <ResidentText>{t("R24.title")}</ResidentText>
           </Link>
           <ResidentText as="h1">{t("R31.title")}</ResidentText>
-          <ResidentText as="p">{t("R31.lead")}</ResidentText>
+          <ResidentText as="p" className="hide-basic">{t("R31.lead")}</ResidentText>
           {showUnavailableNote && <UnavailableNote t={t} native={language.native} testId="numbers-unavailable" />}
         </Stack>
 
