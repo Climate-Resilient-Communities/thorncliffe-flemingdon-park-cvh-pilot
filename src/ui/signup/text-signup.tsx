@@ -118,7 +118,8 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
   useEffect(() => {
     // R-06 starts at its heading, wherever the form was scrolled to when it was sent.
     if (status !== "sent") return;
-    sentRef.current?.scrollIntoView({ block: "start" });
+    window.scrollTo(0, 0);
+    sentRef.current?.closest("main")?.scrollTo(0, 0);
     sentRef.current?.focus({ preventScroll: true });
   }, [status]);
 
