@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { stubBuildingList } from "./choices-fixture";
 import { newServer, stubDirectory, type DirectoryServer } from "./directory-fixture";
+import { isUsageRequest } from "./usage-fixture";
 import { catalogText, expectBaseline, filledPattern, isFallback, openResident, waitForFonts } from "./helpers";
 
 // S02.06: a resident browses and filters the directory (/{lang}/directory, /{lang}/directory/{id}). The release routes
@@ -86,10 +87,13 @@ test("reads only the published release files, and filtering makes no request at 
   const server = await setUp(page);
   const others: string[] = [];
   const all: string[] = [];
+  // S02.15: the usage events (one for the directory, one for the listing opened) are the only other requests; they are checked in usage.spec.ts.
+  const usage: string[] = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
     all.push(`${request.method()} ${url.pathname}`);
-    if (url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/directory/")) others.push(`${request.method()} ${url.pathname}`);
+    if (isUsageRequest(request.url())) usage.push(request.postData() ?? "");
+    else if (url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/directory/")) others.push(`${request.method()} ${url.pathname}`);
   });
   await openResident(page, "/en/directory", 390);
   await waitForList(page);
@@ -117,6 +121,10 @@ test("reads only the published release files, and filtering makes no request at 
   await page.waitForLoadState("networkidle");
   expect(server.requests.filter((r) => r.includes(".json"))).toEqual(["GET /api/directory/7/en.json"]);
   expect(others).toEqual([]);
+  expect(usage.map((body) => JSON.parse(body))).toEqual([
+    { evt: "directory_view", lang: "en" },
+    { evt: "listing_view", lang: "en", nbhd: "FP" },
+  ]);
 });
 
 test("filters narrow the list, the applied-filter bar shows each with a remove control, and Clear all restores the full list", async ({ page }) => {

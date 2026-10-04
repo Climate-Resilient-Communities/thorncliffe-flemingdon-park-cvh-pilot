@@ -149,3 +149,20 @@ test("the Twilio status callback sets no cookie and is not cacheable, for a requ
   expect(get.status()).toBe(405);
   expect(get.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
 });
+
+// S02.15: the usage counter takes one fixed message and nothing else, sets no cookie whatever it answers, and is never cacheable. This server has no database,
+// so a valid event is told it could not be counted (503); with one it is 204 (test/db/usageCount.db.test.ts). A body that is not exactly the message is 400.
+test("the usage endpoint sets no cookie and is not cacheable, for a valid event, a refused one and a request of the wrong kind", async ({ request }) => {
+  const valid = { evt: "directory_view", lang: "en", nbhd: "TP" };
+  const refused: unknown[] = [{ evt: "directory_view", lang: "xx" }, { evt: "page_view", lang: "en" }, { ...valid, rsn: "4154146" }, { evt: "install" }, { evt: "install", lang: "en", pad: "x".repeat(300) }];
+  for (const data of [valid, ...refused]) {
+    const response = await request.post("/api/metrics", { data, headers: { cookie: "sid=abc123" }, maxRedirects: 0 });
+
+    expect(data === valid ? [204, 503] : [400], JSON.stringify(data)).toContain(response.status());
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), JSON.stringify(data)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
+  const get = await request.get("/api/metrics", { maxRedirects: 0 });
+  expect(get.status()).toBe(405);
+  expect(get.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});

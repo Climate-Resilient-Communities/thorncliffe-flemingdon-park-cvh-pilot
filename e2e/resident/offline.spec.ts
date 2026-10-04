@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { newServer, stubDirectory } from "./directory-fixture";
 import { FEED_URL, feedOf } from "./home-fixture";
 import { stubMap, TILE_URL } from "./map-fixture";
+import { BUILDINGS, FLOOR } from "./choices-fixture";
+import { expectUsageRequest, isUsageRequest, seenRequest, type SeenRequest } from "./usage-fixture";
 
 // S02.12: the resident installs the CVH and reads it without signal. These tests run with the service worker, against the
 // production build (the worker is registered only there). Every other resident test blocks it (playwright.resident.config.ts).
@@ -264,4 +266,44 @@ test.describe("an alert read without signal after its time (S05.07)", () => {
     // It is still a link to the alert, which opens from the kept copy.
     await expect(page.getByTestId("alert-card-kbcdfghj")).toHaveAttribute("href", "/en/alerts/kbcdfghj");
   });
+});
+
+// S02.15: with the worker in charge, a usage event is a POST, which the worker leaves to the network: it is never answered from a cache, never kept, and (as in
+// every other test) no request carries the saved selection. Without signal the event is dropped and nothing is sent when the signal comes back.
+test("usage events pass the worker untouched: not kept, not queued, and no request carries the saved selection", async ({ page, context }) => {
+  const saved = { v: 1, lang: "en", welcomed: true, groups: ["seniors"], buildings: [BUILDINGS[0].rsn], floors: [FLOOR.milepost2], muted: ["zz-muted-topic"], basic: true };
+  await page.addInitScript(([key, value]) => {
+    if (!sessionStorage.getItem("seeded")) {
+      sessionStorage.setItem("seeded", "1");
+      localStorage.setItem(key, value);
+    }
+  }, ["cvh.choices", JSON.stringify(saved)]);
+  const pending: Promise<SeenRequest>[] = [];
+  context.on("request", (request) => pending.push(seenRequest(request)));
+  await page.goto("/en/ready/numbers");
+  await workerReady(page);
+  // A page opened with the worker in charge: its view is sent through the worker to the network.
+  await page.goto("/en/ready/power");
+  await page.waitForLoadState("networkidle");
+
+  expect((await everything(page)).filter((entry) => entry.includes("/api/metrics"))).toEqual([]);
+  const offline = await signal(page);
+  const before = (await Promise.all(pending)).filter((request) => isUsageRequest(request.url)).length;
+  await offline.off();
+  await page.goto("/en/ready/numbers");
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(500);
+  await offline.on();
+  await page.waitForTimeout(500);
+
+  const all = await Promise.all(pending);
+  const sent = all.filter((request) => isUsageRequest(request.url));
+  expect(sent.length).toBe(before);
+  expect(before).toBeGreaterThanOrEqual(2);
+  for (const request of sent) expectUsageRequest(request);
+  for (const request of all) {
+    for (const secret of [BUILDINGS[0].rsn, FLOOR.milepost2, "seniors", "zz-muted-topic", "cvh.choices"]) {
+      expect(`${request.url}\n${request.headers}\n${request.body}`, `${request.url} carries ${secret}`).not.toContain(secret);
+    }
+  }
 });

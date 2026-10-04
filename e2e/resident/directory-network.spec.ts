@@ -2,6 +2,7 @@ import { expect, test, type Request } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
 import { newServer, stubDirectory } from "./directory-fixture";
 import { openResident } from "./helpers";
+import { expectUsageRequest, isUsageRequest } from "./usage-fixture";
 
 // S02.06, AD-3: the saved choices stay on the phone. A resident with saved choices browses and filters the directory,
 // and no request carries what was saved: not the buildings or floors, the groups, the muted topics or basic mode, nor the
@@ -64,7 +65,11 @@ test("no request carries the saved selection, the filters applied or the provide
   }
 
   const own = seen.filter((request) => new URL(request.url).origin === new URL(page.url()).origin);
-  const data = own.filter((request) => new URL(request.url).pathname.startsWith("/api/"));
+  // S02.15: the usage events are the one other request, and each is the fixed message with none of the above in it.
+  const usage = own.filter((request) => isUsageRequest(request.url));
+  expect(usage.length).toBeGreaterThan(0);
+  for (const request of usage) expectUsageRequest(request);
+  const data = own.filter((request) => new URL(request.url).pathname.startsWith("/api/") && !isUsageRequest(request.url));
   expect(data.length).toBeGreaterThan(0);
   const allowed = [/^\/api\/directory\/manifest$/, /^\/api\/directory\/7\/(?:en|ur)\.json$/, /^\/api\/buildings$/];
   for (const request of data) {
