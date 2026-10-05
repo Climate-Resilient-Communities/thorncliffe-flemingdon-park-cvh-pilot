@@ -3241,7 +3241,7 @@ So that I don't have to step through text menus.
 
 ### Story S07.07 — Approved alerts reach exactly the matching subscribers
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 20 min (started 2026-10-04 19:39 UTC, built 20:59 UTC)
 - **Traces:** FR-A1 (SMS), FR-A2, FR-A16 (SMS), AR-11, FR-A3 (recipients per language) · **Depends on:** S07.04, S06.03 · **Branch:** `e07-s07-subscriber-fanout`
 
 As a resident subscriber,
@@ -3312,7 +3312,7 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 ### Story S07.09 — Abuse of sign-up and texting is limited
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 20 min (started 2026-10-04 19:39 UTC, built 20:59 UTC)
 - **Traces:** AR-20, NFR-N9 · **Depends on:** S07.04 · **Branch:** `e07-s09-abuse-limits`
 
 As a Hub Admin,
@@ -3813,7 +3813,7 @@ So that sending, correcting and recovering are done the same way every time.
 
 ### Story S09.04 — The Hub reviews reliability every week
 
-- **Size:** S · **Estimate:** 2 h · **Actual:** —
+- **Size:** S · **Estimate:** 2 h · **Actual:** 1 h (started 2026-10-04 18:39 UTC, built 19:38 UTC)
 - **Traces:** NFR-N4, AR-21 (weekly view), AR-18 · **Depends on:** S09.01 · **Branch:** `e09-s04-weekly-review`
 
 As a Hub Admin,

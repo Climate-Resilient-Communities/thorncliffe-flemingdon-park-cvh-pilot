@@ -17,6 +17,7 @@ import { floorsOfBuilding, neighbourhoodIds } from "../../src/modules/places";
 import {
   createInboundRouter,
   createInboundWebhook,
+  clientHash,
   createRateLimiter,
   createSignup,
   subscriberLookup,
@@ -25,6 +26,7 @@ import {
   type InboundRouter,
 } from "../../src/modules/subscriptions";
 import { createDb, type Db } from "../../src/platform/db";
+import { inboundStore } from "../../src/modules/subscriptions/adapters/inboundStore";
 import { BASE_URL, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
 
@@ -69,7 +71,8 @@ async function resetAll() {
   await owner`delete from inbound_reply`;
   await owner`delete from inbound_seen`;
   await owner`delete from inbound_keyword_count`;
-  await owner`delete from rate_limit where scope in ('signup', 'signup_info')`;
+  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', 'inbound_mute')`;
+  await owner`delete from inbound_limited_count`;
   await owner`delete from ops_event where kind = 'webhook.signature_invalid'`;
   await world.reset();
   routerLines.length = 0;
@@ -157,6 +160,7 @@ describe("the subscriber tables", () => {
       inbound_seen: "select,insert",
       inbound_reply: "select,insert,delete",
       inbound_keyword_count: "select,insert,update",
+      inbound_limited_count: "select,insert,update",
     };
     for (const [table, expected] of Object.entries(rights)) {
       const [rls] = await owner`select relrowsecurity from pg_class where relname = ${table}`;
@@ -471,6 +475,141 @@ describe("the reply to a number with no subscription (inbound_reply)", () => {
     await owner.unsafe(job!.command as string);
     expect(await replies()).toEqual([]);
     expect((await world.rowOf(info!.id as string)).recipient_id).toBeNull();
+  });
+});
+
+describe("the inbound limit (S07.09): more than 20 messages an hour from one number", () => {
+  const hashOf = (phone: string, scope = "inbound") => clientHash(KEY, scope, phone);
+  /** Puts `n` counted messages from the number `minutesAgo` minutes ago in the limit's table (as if that many had arrived). */
+  const seed = (n: number, minutesAgo: number, phone = NUMBER) =>
+    owner`insert into rate_limit (scope, client_hash, at) select 'inbound', ${hashOf(phone)}, now() - ${minutesAgo} * interval '1 minute' from generate_series(1, ${n})`;
+  const limitedCounts = async () => (await owner`select messages, numbers from inbound_limited_count`).map((row) => ({ messages: row.messages as number, numbers: row.numbers as number }));
+  const inboundRows = async (phone = NUMBER) => (await owner`select count(*)::int as n from rate_limit where scope = 'inbound' and client_hash = ${hashOf(phone)}`)[0]!.n as number;
+
+  it("lets the 20th message in an hour through and gives the 21st no reply and no effect, counted only: twenty-one real messages from a subscriber", async () => {
+    await signUp();
+    await send("YES"); // the 1st: confirms, welcome queued
+    for (let i = 2; i <= 20; i++) expect(await send("YES"), `message ${i}`).toMatchObject({ action: "already_signed_up", replied: true });
+    expect(await texts("prompt_reply")).toHaveLength(19);
+    expect(await limitedCounts()).toEqual([]);
+    expect(await inboundRows()).toBe(20);
+
+    // Just over: no reply, no change, only the day's counts.
+    expect(await send("YES")).toEqual({ kind: "handled", keyword: "yes", state: "active", action: "rate_limited", replied: false });
+    expect(await texts("prompt_reply")).toHaveLength(19);
+    expect(await limitedCounts()).toEqual([{ messages: 1, numbers: 1 }]);
+    expect(await inboundRows()).toBe(20);
+    // Further ones that day: still none, whatever they say, counted; the number is counted once.
+    expect(await send("hello")).toMatchObject({ action: "rate_limited", replied: false });
+    expect(await send("1")).toMatchObject({ action: "rate_limited", replied: false });
+    expect(await limitedCounts()).toEqual([{ messages: 3, numbers: 1 }]);
+    expect(await texts("prompt_reply")).toHaveLength(19);
+    // The keywords are still counted (the only trace of a body).
+    expect(await counts()).toMatchObject({ yes: 21, other: 1, "1": 1 });
+  });
+
+  it("is per number: another number is not limited, and a message from a number that is not a subscriber is limited the same way", async () => {
+    await seed(20, 5);
+    expect(await send("hello")).toMatchObject({ action: "rate_limited", replied: false });
+    expect(await send("hello", { from: OTHER })).toMatchObject({ action: "signup_info", replied: true });
+    expect(await texts("signup_info")).toHaveLength(1);
+    expect(await limitedCounts()).toEqual([{ messages: 1, numbers: 1 }]);
+  });
+
+  it("counts a window of an hour: 20 from 59 minutes ago still count, 20 from 61 minutes ago do not", async () => {
+    await seed(20, 59);
+    expect(await send("hello")).toMatchObject({ action: "rate_limited" });
+    await resetAll();
+    await seed(20, 61);
+    expect(await send("hello")).toMatchObject({ action: "signup_info", replied: true });
+    expect(await limitedCounts()).toEqual([]);
+  });
+
+  it("holds for the rest of the day (Toronto) once reached, even after the hour has passed, and lifts when the day ends", async () => {
+    await seed(20, 5);
+    expect(await send("hello")).toMatchObject({ action: "rate_limited" });
+    // The hour passes: the number is still muted for the day.
+    await owner`update rate_limit set at = at - interval '2 hours' where scope = 'inbound'`;
+    expect(await send("hello")).toMatchObject({ action: "rate_limited" });
+    expect(await limitedCounts()).toEqual([{ messages: 2, numbers: 1 }]);
+    // The day ends: the mute row is from yesterday in Toronto and no longer binds.
+    await owner`update rate_limit set at = (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute' where scope = 'inbound_mute'`;
+    expect(await send("hello")).toMatchObject({ action: "signup_info", replied: true });
+    expect(await limitedCounts()).toEqual([{ messages: 2, numbers: 1 }]);
+  });
+
+  it("starts the new day clean: a number muted yesterday does not carry its counted messages from before midnight into today", async () => {
+    const hash = hashOf(NUMBER);
+    const dayStart = "(date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto')";
+    const limit = { perHour: 20, windowMs: 48 * 3_600_000 }; // wide enough that the rows from before midnight are inside the window whatever the time
+    const decide = () => app.transaction((tx) => inboundStore.limitInbound(tx, hash, limit));
+    // Control: 20 counted messages from before midnight, inside the window: the limit is reached (and the number muted).
+    await owner.unsafe(`insert into rate_limit (scope, client_hash, at) select 'inbound', '${hash}', ${dayStart} - interval '5 minutes' from generate_series(1, 20)`);
+    expect(await decide()).toBe("reached");
+    // That mute is from before midnight: today the number starts clean (the old counted messages no longer count) and is allowed.
+    await owner.unsafe(`update rate_limit set at = ${dayStart} - interval '1 minute' where scope = 'inbound_mute' and client_hash = '${hash}'`);
+    expect(await decide()).toBe("allowed");
+    expect(await inboundRows()).toBe(21);
+  });
+
+  it("does not limit the first 0 (a deletion request) of a number over the limit: it is asked to confirm and the second 0 deletes", async () => {
+    await signUp({ places: [{ rsn: RSN, floors: [FLOOR_1] }] });
+    await send("YES");
+    await seed(20, 5);
+    expect(await send("hello")).toMatchObject({ action: "rate_limited", replied: false });
+    expect(await send("0")).toMatchObject({ action: "ask_delete", replied: true });
+    expect(await send("0")).toMatchObject({ action: "delete", replied: false });
+    expect(await subscribers()).toEqual([]);
+  });
+
+  it("is decided after deletion: STOP, the second 0 and Twilio's opt-out events are neither counted nor limited by a number over the limit", async () => {
+    await signUp({ places: [{ rsn: RSN, floors: [FLOOR_1] }] });
+    await send("YES");
+    await send("0"); // the deletion's prompt is open
+    await seed(20, 5);
+    await owner`update rate_limit set at = at - interval '1 minute' where scope = 'inbound'`;
+    expect(await send("hello")).toMatchObject({ action: "rate_limited" });
+    const before = await inboundRows();
+    // The prompt is still open (a limited message changes nothing): the second 0 deletes.
+    expect(await send("0")).toMatchObject({ action: "delete", replied: false });
+    expect(await subscribers()).toEqual([]);
+    expect(await inboundRows()).toBe(before);
+
+    // START and HELP (Twilio's) and STOP typed without an OptOutType are not limited either.
+    await resetAll();
+    await signUp();
+    await send("YES");
+    await seed(19, 5);
+    expect(await send("hello")).toMatchObject({ action: "rate_limited" });
+    expect(await send("help", { optOutType: "HELP" })).toMatchObject({ keyword: "help", action: "none" });
+    expect(await send("START", { optOutType: "START" })).toMatchObject({ keyword: "start", action: "none" });
+    expect(await send("STOP")).toMatchObject({ action: "delete", replied: false });
+    expect(await subscribers()).toEqual([]);
+    expect(await limitedCounts()).toEqual([{ messages: 1, numbers: 1 }]);
+  });
+
+  it("keeps only keyed hashes and counts: no number or message in rate_limit or inbound_limited_count", async () => {
+    await seed(20, 5);
+    await send("my unit is 1204 call me");
+    await send("again");
+    const stored = JSON.stringify({ limit: await owner`select * from rate_limit where scope like 'inbound%'`, counts: await owner`select * from inbound_limited_count` });
+    for (const needle of ["5550123", "1204", "again"]) expect(stored, needle).not.toContain(needle);
+    expect(stored).toContain(hashOf(NUMBER));
+    expect(routerLines.map((line) => JSON.stringify(line))).toContain(JSON.stringify({ evt: "inbound.handled", fields: { keyword: "other", state: "none", action: "rate_limited", replied: false } }));
+    expect(JSON.stringify(routerLines)).not.toContain("5550123");
+  });
+});
+
+describe("the rate-limit hashes (job)", () => {
+  it("are deleted after 24 hours by the purge job, whether or not any request comes in, and the newer ones stay", async () => {
+    const hash = clientHash(KEY, "search", "203.0.113.9");
+    await owner`insert into rate_limit (scope, client_hash, at) values ('search', ${hash}, now() - interval '25 hours'), ('inbound', ${hash}, now() - interval '24 hours 1 minute'),
+                  ('signup', ${hash}, now() - interval '23 hours 59 minutes'), ('inbound_mute', ${hash}, now())`;
+    const [job] = await owner`select command, schedule from cron.job where jobname = 'subscriptions-purge-rate-limit'`;
+    expect(job!.schedule).toBe("7 * * * *");
+    await owner.unsafe(job!.command as string);
+    expect((await owner`select scope from rate_limit where client_hash = ${hash} order by scope`).map((row) => row.scope)).toEqual(["inbound_mute", "signup"]);
+    await owner`delete from rate_limit where client_hash = ${hash}`;
   });
 });
 

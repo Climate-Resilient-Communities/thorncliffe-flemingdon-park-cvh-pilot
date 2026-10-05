@@ -48,7 +48,7 @@ export {
   type RateLimiter,
 } from "./application/rateLimit";
 
-// The approval's recipient-count and snapshot port (S04.07): empty until E07 opens text sign-up.
+// The approval's recipient-count and snapshot port (S04.07; S07.07 made it the real subscriber fan-out).
 export { captureRecipients, countRecipients, recipientsPort, type AlertRecipient, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "./application/recipients";
 
 // The web sign-up (S07.02): the use case, the pending sign-up's number source for the ContactResolver, and the seam that forgets a sign-up

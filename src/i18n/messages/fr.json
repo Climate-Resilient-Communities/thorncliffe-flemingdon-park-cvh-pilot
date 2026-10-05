@@ -5219,6 +5219,7 @@
       "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
       "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
       "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "messaging_settings": "[EN] The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.",
       "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
       "tell": "[EN] Tell IT now."
@@ -5542,7 +5543,8 @@
         "translation_fallback": "[EN] CVH: alerts with a whole language in English because translation failed, last 24 hours: {count}. Check the Hub.",
         "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
         "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
-        "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub."
+        "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
+        "messaging_settings": "[EN] CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio."
       }
     }
   },

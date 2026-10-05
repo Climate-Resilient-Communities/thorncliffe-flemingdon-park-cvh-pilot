@@ -237,6 +237,19 @@ cannot read is recorded as `messaging.service_check_failed` (warning), never tak
 (S09.03) repeat: only named Admins change the Messaging Service, texts are paused while they do, and the check is run again before texts resume
 (`curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config`).
 
+**Messaging Service: Canada-only geo permissions and SMS pumping protection (S07.09, AD-22).** The same daily check reads two more settings: the countries
+the service may text must be Canada and nothing else, and SMS pumping protection must be on. When either is not, it records
+`messaging.service_settings_wrong` (severity error; the detail says which, as two flags) and the health job's `messaging_settings` condition texts the on-call
+Admins once and shows on the Hub until a later check finds both right (`messaging.service_settings_ok`). A setting it cannot read is never taken for right and
+never quieter than wrong: it records a `messaging.service_check_failed` warning (the code, and `check: abuse_settings`) and also
+`messaging.service_settings_wrong` with `unreadable: true`, so the on-call Admins are texted and the Hub shows it until a check reads both settings as right.
+**Launch gate (IT, at the launch rehearsal):** confirm against the production Twilio account where these two settings really live. The adapter
+(`readAbuseSettings` in `src/modules/messaging/adapters/twilioMessagingService.ts`) reads the Messaging Service resource's `sms_pumping_protection`
+(boolean) and `geo_permissions` (the countries' ISO codes); those field names are an assumption, written without a Twilio account to try them against, and
+Twilio may keep geo permissions and pumping protection as account-level settings instead. If the real API names them otherwise or keeps them elsewhere, the
+check alerts on-call every day (`pumping_setting_missing` or `geo_setting_missing`) until the one function is corrected; it never passes silently. Do not
+launch until a check has read both settings as right.
+
 **Pausing texts (S06.06).** No variable, secret or schedule is involved: an Admin signed in with the authenticator (`aal2`) opens Hub, Administration,
 "Pause texts" (`/staff/texts`), gives the reason and presses "Pause all texts". From that moment the dispatcher claims nothing except texts to on-call
 numbers (so a problem with sending is still reported), a text it had already claimed goes back to the queue before it is handed to Twilio, and every Hub
@@ -355,6 +368,8 @@ needs and fixes:
 | Replies | catalog `smsTexts.welcome`, `smsTexts.alreadySignedUp`, `smsTexts.deletePrompt`, `smsTexts.signupInfo`, all 15 languages | `welcome` (after YES; purpose `welcome`; reply 0, STOP and the overnight notice, with replies 1, 2 and 3 added by S07.05), `alreadySignedUp` and `deletePrompt` (purpose `prompt_reply`, one text in every language), `signupInfo` (the sign-up link `/{lang}/text-alerts`, purpose `signup_info`, through a 30-minute `inbound_reply` row). |
 | The words for yes | catalog `smsKeywords.yes`, comma-separated | Accepted besides YES and Y, in the number's language (for example `oui`, `sí, si`, `ہاں, جی`). Read, never sent. |
 | The sign-up link to an unknown number | `SIGNUP_INFO_SCOPE` in `src/modules/subscriptions/application/inbound.ts` | At most once in 24 hours per number (a keyed hash in `rate_limit`, scope `signup_info`). |
+| The inbound limit (S07.09) | `INBOUND_LIMIT` in `src/modules/subscriptions/domain/inbound.ts` | More than 20 messages in an hour from one number: the 21st and every later one that day (Toronto) get no reply and change nothing; only the day's count is kept (`inbound_limited_count`: messages, and numbers that reached it). Kept as keyed hashes in `rate_limit` (scopes `inbound`, `inbound_mute`). STOP, the second 0, and Twilio's STOP, START and HELP are decided before this limit and are never limited or counted. |
+| The rate-limit hashes | pg_cron job `subscriptions-purge-rate-limit` (migration `20261006060000_abuse_limits.sql`) | Every hour at :07: every `rate_limit` row older than 24 hours is deleted, whether or not any request comes in. |
 | Old message ids, reply rows and prompts | pg_cron job `subscriptions-purge-inbound` (migration `20261006010000_subscriber_inbound.sql`) | Every 15 minutes: `inbound_seen` hashes after 48 hours, `inbound_reply` rows past their 30 minutes, run-out `sms_prompt` rows. |
 
 STOP (and a second reply 0 within 10 minutes) deletes the subscriber, its places, muted topics and prompt, any pending sign-up and any

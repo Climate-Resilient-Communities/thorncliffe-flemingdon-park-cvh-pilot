@@ -31,4 +31,8 @@ describe("the text to the on-call Admins (S06.07, S09.01)", () => {
     expect(oncallText("transactional_ceiling", 301)).toBe("CVH: sign-up and reply texts today passed the daily limit: 301. They keep sending. Check the Hub.");
     expect(oncallText("cap_overrun", 1)).toBe("CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.");
   });
+
+  it("names the Messaging Service settings S07.09 checks, in one segment", () => {
+    expect(oncallText("messaging_settings", 1)).toBe("CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.");
+  });
 });

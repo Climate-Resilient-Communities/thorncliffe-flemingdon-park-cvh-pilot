@@ -214,7 +214,7 @@ describe("the health job's events (S06.07)", () => {
     expect(() => toOpsEventRecord({ kind: "spend.cap_overrun", detail: { approver: "Ann" } as never })).toThrow(OpsEventError);
   });
 
-  it("names every condition of AD-23 (S06.07's five and S09.01's five)", () => {
+  it("names every condition of AD-23 (S06.07's five, S09.01's five and S07.09's)", () => {
     expect([...HEALTH_CONDITIONS]).toEqual([
       "queue_stuck",
       "delivery_unknown",
@@ -226,6 +226,23 @@ describe("the health job's events (S06.07)", () => {
       "publish_failed",
       "transactional_ceiling",
       "cap_overrun",
+      "messaging_settings",
     ]);
+  });
+
+  it("records that the Messaging Service's abuse protections are wrong, as flags only, and that they were found right (S07.09)", () => {
+    expect(toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: false } })).toMatchObject({
+      severity: "error",
+      detail: { geo_not_canada_only: true, pumping_protection_off: false },
+    });
+    expect(toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: false, pumping_protection_off: false, unreadable: true } })).toMatchObject({
+      severity: "error",
+      detail: { unreadable: true },
+    });
+    expect(toOpsEventRecord({ kind: "messaging.service_check_failed", detail: { reason: "http_404", check: "abuse_settings" } })).toMatchObject({ severity: "warning" });
+    expect(() => toOpsEventRecord({ kind: "messaging.service_check_failed", detail: { reason: "http_404", check: "other" } as never })).toThrow(OpsEventError);
+    expect(toOpsEventRecord({ kind: "messaging.service_settings_ok", detail: {} })).toMatchObject({ severity: "info", detail: {} });
+    expect(() => toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true } as never })).toThrow(OpsEventError);
+    expect(() => toOpsEventRecord({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: true, countries: "US" } as never })).toThrow(OpsEventError);
   });
 });
