@@ -24,6 +24,8 @@ import type { PauseBannerView } from "@/app/staff/pauseBanner";
 import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
 import { TextsView } from "@/app/staff/texts/TextsView";
 import type { PausedView } from "@/app/staff/texts/view";
+import { MeasuresView } from "@/app/staff/measures/MeasuresView";
+import type { MeasuresView as MeasuresModel } from "@/app/staff/measures/view";
 import type { ComponentProps, ReactNode } from "react";
 import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
 import { SignOutButton } from "@/app/staff/SignOutButton";
@@ -832,6 +834,40 @@ export function TextsFixture({
       {banner ? <PauseBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <TextsView paused={paused} unreadable={unreadable} form={<PauseTextsFormView {...form} />} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the pilot measures page (S07.10): the real, read-only body (MeasuresView) with the view model a Director (the cost of each alert
+ * included), a Coordinator (no cost, AD-4), or either before anything is counted would be given. Counts, languages and amounts: nothing here is a phone number.
+ */
+export function MeasuresFixture({ texts, brand, view, role = "director" }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; view: MeasuresModel; role?: "director" | "coordinator" | "admin" }) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role }}
+      navigation={texts.navigation}
+      currentPath="/staff/measures"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <MeasuresView view={view} />
       </Screen>
     </HubShell>
   );

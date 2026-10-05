@@ -119,3 +119,17 @@ export {
   type RemoveOutcome as DrillRosterRemoveOutcome,
 } from "./application/drillRoster";
 export { DRILL_LABEL_MAX_CHARS, DRILL_ROSTER_MAX, bodyLangOf, parseRosterLabel, parseRosterLang, parseRosterNumber, type DrillRosterRefusal } from "./domain/drillRoster";
+
+// S07.10: the daily subscriber measures (FR-M1 subscribers) and the Hub's reading of them: counts by language and neighbourhood, the small-number rule applied by the view.
+export { createSubscriberMeasuresJob, readSubscriberMeasures, type SubscriberMeasuresJob, type SubscriberMeasuresReport } from "./application/subscriberMeasures";
+export {
+  FEWER_THAN_FIVE as SUBSCRIBER_FEWER_THAN_FIVE,
+  NOT_SHOWN as SUBSCRIBER_NOT_SHOWN,
+  SUBSCRIBER_LANGS,
+  SUBSCRIBER_MEASURES,
+  type MeasureReading,
+  type MeasuredDay,
+  type ShownCount,
+  type SubscriberMeasure,
+  type SubscriberMeasuresDay,
+} from "./domain/subscriberMeasures";

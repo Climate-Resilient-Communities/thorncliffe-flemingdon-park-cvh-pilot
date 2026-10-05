@@ -37,10 +37,10 @@ describe("hubNavigation", () => {
 
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
     expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Check-in rounds"]);
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage"]);
-    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills"]);
+    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend", "Measures"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Measures"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "Measures", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -60,6 +60,13 @@ describe("hubNavigation", () => {
     const coverage = items("admin").find((item) => item.id === "coverage");
     expect(coverage).toEqual({ id: "coverage", label: "Coverage", href: "/staff/coverage", icon: "ready" });
     expect(items("admin").filter((item) => item.icon === coverage?.icon)).toHaveLength(1);
+  });
+
+  it("adds Measures (S07.10) for exactly the roles whose policy allows coverage.view", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/measures"), role).toBe(can(role, "coverage.view"));
+    }
+    expect(items("director").find((item) => item.id === "measures")).toEqual({ id: "measures", label: "Measures", href: "/staff/measures", icon: "layers" });
   });
 
   it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {

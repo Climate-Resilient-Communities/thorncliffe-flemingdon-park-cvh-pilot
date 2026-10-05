@@ -95,6 +95,12 @@ export interface AlertTranslation {
   cacheFailures: number;
 }
 
+/** The alert entry a translation is made for (S07.10): its spend events carry it, so the Hub can give an alert's share of the vendor's usage, drills apart. */
+export interface AlertSpendEntry {
+  entryId: string;
+  isDrill: boolean;
+}
+
 export interface AlertTranslator {
   /**
    * Translates `english` into every language. Resolves with a text for each; `signal` cancels what is still running (those
@@ -102,7 +108,7 @@ export interface AlertTranslator {
    * store without limit. It rejects only when the English is empty (AlertTranslationInputError) or the routes cannot be read
    * (what `routes` threw, or AlertRoutesUnavailableError when it did not answer within STORE_GRACE_MS).
    */
-  translate(input: { english: string; signal?: AbortSignal }): Promise<AlertTranslation>;
+  translate(input: { english: string; signal?: AbortSignal; entry?: AlertSpendEntry }): Promise<AlertTranslation>;
 }
 
 /** The English text to translate is empty: a bug in the caller, which validates an entry's text before it asks. */
@@ -160,7 +166,7 @@ export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslato
   const grace = deps.storeGraceMs ?? STORE_GRACE_MS;
 
   return {
-    async translate({ english, signal }) {
+    async translate({ english, signal, entry }) {
       if (english.trim() === "") throw new AlertTranslationInputError();
       const sourceHash = sha256Hex(english);
       const pending: Promise<void>[] = [];
@@ -220,6 +226,7 @@ export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslato
         tokens,
         tokensEstimated: estimated,
         ms,
+        ...(entry ? { entryId: entry.entryId, isDrill: entry.isDrill } : {}),
       });
 
       /** Calls one model for one language: the attempt's own timeout, the language's stop, and no use of an answer that comes after either. */

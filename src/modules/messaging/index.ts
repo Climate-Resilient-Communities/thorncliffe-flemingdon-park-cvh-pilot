@@ -377,6 +377,9 @@ export {
   type ReachRow,
 } from "./domain/deliveryMeasures";
 
+// How far corrections, withdrawals and finals reached, for the Hub (S07.10, FR-M4): the SQL view `correction_reach`, drills apart.
+export { CORRECTION_REACH_KINDS, readCorrectionReach, type CorrectionReachKind, type CorrectionReachReport, type CorrectionReachRow } from "./application/reachReport";
+
 // The subscribers an alert's entries were queued to text (S07.07): what subscriptions' recipient port adds to a correction's, a withdrawal's and a final's own audience.
 export { subscribersQueuedFor } from "./adapters/entryRecipientStore";
 

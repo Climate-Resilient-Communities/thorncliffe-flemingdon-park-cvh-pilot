@@ -3339,7 +3339,7 @@ So that nobody can use the CVH to send texts to strangers or run up costs.
 
 ### Story S07.10 — The Hub counts subscribers and correction reach
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 5 min (started 2026-10-05 05:48 UTC, built 06:53 UTC)
 - **Traces:** FR-M1 (subscribers), FR-M4 (correction reach), FR-M5 · **Depends on:** S07.07 · **Branch:** `e07-s10-subscriber-measures`
 
 As a Hub Director,

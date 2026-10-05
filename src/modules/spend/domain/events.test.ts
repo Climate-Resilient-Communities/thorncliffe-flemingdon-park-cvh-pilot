@@ -5,7 +5,7 @@ const embed = { kind: "embed", purpose: "publish", model: "embed-v4.0", releaseV
 
 describe("a spend event", () => {
   it("records the model, the tokens and the release, with one call and no price while the price is unknown", () => {
-    expect(toSpendEvent(embed)).toEqual({ ...embed, calls: 1, tokensEstimated: false, ms: null, pricePerMillionTokensCad: null });
+    expect(toSpendEvent(embed)).toEqual({ ...embed, calls: 1, tokensEstimated: false, ms: null, pricePerMillionTokensCad: null, entryId: null, isDrill: null });
   });
 
   it("can say its tokens are an estimate and how long the call took", () => {
@@ -38,6 +38,16 @@ describe("a spend event", () => {
     ["a negative price", { pricePerMillionTokensCad: -1 }],
   ])("is refused with %s", (_name, change) => {
     expect(() => toSpendEvent({ ...embed, ...change } as never)).toThrow(SpendEventError);
+  });
+
+  it("can say which alert entry a call was made for and whether it is a drill's, both together and for the alert purpose only (S07.10)", () => {
+    const alert = { kind: "translate", purpose: "alert", model: "north-small-translate-09-2026", tokens: 640 } as const;
+    const entryId = "01900000-0000-7000-8000-0000000000e1";
+    expect(toSpendEvent({ ...alert, entryId, isDrill: true })).toMatchObject({ entryId, isDrill: true });
+    expect(() => toSpendEvent({ ...alert, entryId })).toThrow(SpendEventError);
+    expect(() => toSpendEvent({ ...alert, isDrill: false })).toThrow(SpendEventError);
+    expect(() => toSpendEvent({ ...embed, entryId, isDrill: false })).toThrow(SpendEventError);
+    expect(() => toSpendEvent({ ...alert, entryId: "not an id", isDrill: false })).toThrow(SpendEventError);
   });
 
   it("names the fields that are wrong and never their values", () => {

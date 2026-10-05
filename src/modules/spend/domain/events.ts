@@ -26,6 +26,15 @@ export const SpendEventSchema = z.strictObject({
   ms: z.number().int().min(0).nullable().default(null),
   /** Null while the vendor's price is unknown: usage is then counted in calls and tokens only. */
   pricePerMillionTokensCad: z.number().min(0).nullable().default(null),
+  /**
+   * The alert entry a call was made for, and whether that entry is a drill's (S07.10: the alert's share of Cohere usage, per alert, drills apart).
+   * Both or neither, and only for the `alert` purpose.
+   */
+  entryId: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).nullable().default(null),
+  isDrill: z.boolean().nullable().default(null),
+}).refine((event) => (event.entryId === null) === (event.isDrill === null) && (event.entryId === null || event.purpose === "alert"), {
+  message: "an entry and its drill flag come together, for the alert purpose only",
+  path: ["entryId"],
 });
 export type SpendEventInput = z.input<typeof SpendEventSchema>;
 export type SpendEvent = z.output<typeof SpendEventSchema>;

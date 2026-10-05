@@ -128,6 +128,9 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/providers", kind: "page", file: "src/app/staff/providers/page.tsx", export: "default", route: "/staff/providers", action: "provider.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/buildings", kind: "page", file: "src/app/staff/buildings/page.tsx", export: "default", route: "/staff/buildings", action: "buildings.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/coverage", kind: "page", file: "src/app/staff/coverage/page.tsx", export: "default", route: "/staff/coverage", action: "coverage.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
+  // S07.10: the pilot measures (subscribers, correction reach, cost per alert): counts, read only, for the roles that see counts (`coverage.view`). The cost of an alert on the
+  // page is `spend.view` (a Director and an Admin, AD-4) and is left out for a Coordinator by the page's own loader (src/app/staff/measures/load.test.ts).
+  { id: "page /staff/measures", kind: "page", file: "src/app/staff/measures/page.tsx", export: "default", route: "/staff/measures", action: "coverage.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
   // S06.09: the sending progress of an approved entry and the list of its texts that did not arrive: read only, for the roles that write to a running alert (the policy
   // action `alert.author_wide`: a Coordinator or an Admin, like the pages that add to it). The pages name no entry here, so a role let through gets the page's own "not found".
   { id: "page /staff/alerts/sending", kind: "page", file: "src/app/staff/alerts/sending/page.tsx", export: "default", route: "/staff/alerts/sending", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },

@@ -49,8 +49,10 @@ export const spendEvent = pgTable(
     and ${t.purpose} in ('alert', 'transactional', 'campaign')
     and (${t.entryId} is not null) = (${t.purpose} = 'alert'))
   or (${t.kind} <> 'sms'
-    and ${t.deliveryId} is null and ${t.lang} is null and ${t.entryId} is null and ${t.isDrill} is null
-    and ${t.segments} is null and ${t.costEstimateCents} is null)`,
+    and ${t.deliveryId} is null and ${t.lang} is null
+    and ${t.segments} is null and ${t.costEstimateCents} is null
+    and (${t.entryId} is null) = (${t.isDrill} is null)
+    and (${t.entryId} is null or ${t.purpose} = 'alert'))`,
     ),
     check("spend_event_lang_format", sql`${t.lang} is null or ${t.lang} ~ '^[A-Za-z]{2,3}(-[A-Za-z]{2,8})?$'`),
     uniqueIndex("spend_event_delivery_id_idx").on(t.deliveryId).where(sql`${t.deliveryId} is not null`),

@@ -30,6 +30,8 @@ export async function recordSpendEvent(executor: DbExecutor, input: SpendEventIn
     tokensEstimated: event.tokensEstimated,
     ms: event.ms,
     pricePerMillionTokensCad: event.pricePerMillionTokensCad === null ? null : String(event.pricePerMillionTokensCad),
+    entryId: event.entryId,
+    isDrill: event.isDrill,
   });
 }
 

@@ -22,6 +22,8 @@ export interface EntryTranslator {
     onLanguage?: (translated: Translated) => void;
     onBudget?: (budgetMs: number) => void;
     spentMs?: number;
+    /** The entry the translation is for, so its vendor usage is told per alert and drills apart (S07.10). */
+    entry?: { entryId: string; isDrill: boolean };
   }): Promise<{ translations: readonly Translated[] }>;
 }
 
@@ -39,6 +41,7 @@ export function createEntryPreparer(deps: EntryPreparerDeps): EntryPreparer {
         signal: hooks.signal,
         onBudget: hooks.onBudget,
         spentMs: hooks.spentMs,
+        entry: { entryId: context.entryId, isDrill: context.isDrill },
         onLanguage: (translated) => {
           // Progress is for a screen: a text the mapper refuses here is refused again, loudly, when the whole set is mapped below.
           try {

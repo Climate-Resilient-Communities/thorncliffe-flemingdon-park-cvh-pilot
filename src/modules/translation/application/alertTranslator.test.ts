@@ -677,6 +677,20 @@ describe("what each call records in spend", () => {
     expect(t.spend.map((event) => event.model).sort()).toEqual(t.calls.map((call) => call.model).sort());
   });
 
+  it("tells which entry and whether a drill's it was made for, on every call, when it is given the entry (S07.10), and says nothing of an entry when it is not", async () => {
+    const entry = { entryId: "01900000-0000-7000-8000-0000000000e1", isDrill: true };
+    const t = setup({ behaviour: (call) => ({ text: GOOD[call.lang]!, inputTokens: 100, outputTokens: 40, afterMs: 250 }) });
+    await finish(t.alerts.translate({ english: ENGLISH_ALERT, entry }));
+    expect(t.spend).toHaveLength(14);
+    for (const event of t.spend) {
+      expect(event).toMatchObject({ entryId: entry.entryId, isDrill: true });
+      expect(() => toSpendEvent(event)).not.toThrow();
+    }
+    const without = setup({ behaviour: ALL_GOOD });
+    await translate(without);
+    for (const event of without.spend) expect(Object.keys(event)).not.toContain("entryId");
+  });
+
   it("holds no text: only codes and numbers, never the English or a translation", async () => {
     const t = setup({ behaviour: (call) => (call.lang === "ta" ? { text: "The elevator is out of service." } : ALL_GOOD(call)) });
 

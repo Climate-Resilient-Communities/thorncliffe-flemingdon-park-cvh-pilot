@@ -16,7 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 that residents are told to text START to (R-06, S07.02). The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`, `/api/jobs/subscriber-measures`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. The code lock is released as of E05 (`RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is true), so `true` now starts in production and turns the gate on. The switch is only this Vercel variable: an Admin sets it with a production redeploy and records it in the launch-readiness checklist. Previews and local development run with it on unless it is `false` | default (off) |
@@ -331,6 +331,20 @@ $$);
 ```
 
 By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"2026-10"}' <production URL>/api/jobs/reconcile-spend` answers each month's result (counts and codes, no message and no number).
+
+**The daily subscriber measures (S07.10, `/api/jobs/subscriber-measures`).** Once a day it stores, for the Toronto day that has just ended, receiving subscribers by state, pending sign-ups,
+confirmations and deletions by language and neighbourhood, as counts only (`subscriber_measure`; the Hub's Measures page shows them, a count of 1 to 4 as "Fewer than 5"). It reads no Twilio credential and works in every environment.
+The state figures (receiving subscribers, pending sign-ups) are taken at the run and filed under the day that has just ended, and the day's confirmations and deletions are counted up to midnight, so the job runs just after Toronto midnight: 05:05 UTC is 00:05 in winter and 01:05 in summer (pg_cron has no time zone, so one schedule cannot be exact in both; an hour is the most a state figure can be ahead of its day's events). A run that is late or retried is filed under the same day but is taken later, so the gap widens by that delay; a second run on the same day replaces that day's figures. A day on which the job did not run has no subscriber figures. The owner runs this once in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it:
+
+```sql
+select cron.schedule('cvh-subscriber-measures', '5 5 * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/subscriber-measures',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+```
 
 **Owner decisions recorded here (S06.08).**
 
