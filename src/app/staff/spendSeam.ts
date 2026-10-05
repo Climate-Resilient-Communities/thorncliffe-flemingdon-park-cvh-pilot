@@ -17,7 +17,9 @@ export function spendCap(): SpendCapService {
 /** The spend view's figures for now, against the configured budget. */
 export function readOverview(now: Date = new Date()): Promise<SpendOverview> {
   const env = getEnv();
-  return readSpendOverview(getDb(), { now, budgetCents: env.spendPilotBudgetCents, cohereEstimateCadPerMillionTokens: env.spendTokenEstimateCadPerMillion });
+  const options = { now, budgetCents: env.spendPilotBudgetCents, cohereEstimateCadPerMillionTokens: env.spendTokenEstimateCadPerMillion };
+  // One snapshot, so this month, the pilot to date, the budget and the cap agree on one page view.
+  return getDb().transaction((tx) => readSpendOverview(tx, options), { isolationLevel: "repeatable read" });
 }
 
 /** Operational error log (structured, no personal data). */

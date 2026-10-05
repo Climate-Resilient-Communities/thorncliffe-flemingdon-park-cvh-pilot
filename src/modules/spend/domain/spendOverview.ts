@@ -145,11 +145,13 @@ export interface SpendOverview {
   remainingCents: number;
   /** The monthly cap in cents, or null while none is set. */
   capCents: number | null;
+  /** When the cap was set, read with the cap; null while none is set. */
+  capSetAt: Date | null;
   /** How much of the cap this month's text message spending has used, in whole percent (null with no cap); may pass 100. The cap is on texts. */
   capUsedPercent: number | null;
 }
 
-export function buildOverview(input: { month: MonthKey; thisMonth: PeriodSpend; pilot: PeriodSpend; budgetCents: number; capCents: number | null }): SpendOverview {
+export function buildOverview(input: { month: MonthKey; thisMonth: PeriodSpend; pilot: PeriodSpend; budgetCents: number; capCents: number | null; capSetAt?: Date | null }): SpendOverview {
   return {
     month: input.month,
     thisMonth: input.thisMonth,
@@ -157,6 +159,7 @@ export function buildOverview(input: { month: MonthKey; thisMonth: PeriodSpend; 
     budgetCents: input.budgetCents,
     remainingCents: input.budgetCents - input.pilot.totalCents,
     capCents: input.capCents,
+    capSetAt: input.capSetAt ?? null,
     capUsedPercent: input.capCents === null ? null : Math.floor((input.thisMonth.sms.countedCents / input.capCents) * 100),
   };
 }

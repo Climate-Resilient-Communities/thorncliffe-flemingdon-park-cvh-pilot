@@ -56,7 +56,7 @@ const PILOT = sms({
 const overview = (cohere: CohereSpend, over: Partial<SpendOverview> = {}): SpendOverview => {
   const thisMonth = period(OCTOBER, cohere);
   const pilot = period(PILOT, cohere);
-  return { month: "2026-10", thisMonth, pilot, budgetCents: 100_000, remainingCents: 100_000 - pilot.totalCents, capCents: 25_000, capUsedPercent: Math.floor((OCTOBER.countedCents / 25_000) * 100), ...over };
+  return { month: "2026-10", thisMonth, pilot, budgetCents: 100_000, remainingCents: 100_000 - pilot.totalCents, capCents: 25_000, capSetAt: new Date("2026-10-02T14:30:00Z"), capUsedPercent: Math.floor((OCTOBER.countedCents / 25_000) * 100), ...over };
 };
 
 const screenOf = (cohere: CohereSpend, over: Partial<SpendOverview> = {}): SpendScreen => spendScreen(overview(cohere, over), { setOn: new Date("2026-10-02T14:30:00Z") });

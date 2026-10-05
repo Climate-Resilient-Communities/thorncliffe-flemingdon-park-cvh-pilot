@@ -1,4 +1,4 @@
-// The spend view's figures (S07.08, FR-G6): read with the executor given, one reading, nothing written. The Toronto calendar month is the month
+// The spend view's figures (S07.08, FR-G6): read with the executor given, nothing written. Give it a transaction at repeatable read (the seam does) for one consistent reading. The Toronto calendar month is the month
 // everywhere (`inCalendarMonth`'s rule, here as the month's exact UTC interval); the pilot to date is every month that has a text message
 // estimate, a reconciliation, or is the current month.
 import { sql } from "drizzle-orm";
@@ -80,5 +80,5 @@ export async function readSpendOverview(executor: DbExecutor, options: SpendOver
   );
   const pilot = buildPeriod(summariseSms(reports), buildCohereSpend(await cohereFigures(executor, { to: interval.endUtc }), rate));
   const cap = await readSpendCap(executor);
-  return buildOverview({ month: current, thisMonth, pilot, budgetCents: options.budgetCents, capCents: cap.monthlyCents });
+  return buildOverview({ month: current, thisMonth, pilot, budgetCents: options.budgetCents, capCents: cap.monthlyCents, capSetAt: cap.setAt });
 }

@@ -1813,22 +1813,6 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const { counts: snapshot, costCents: entryCostCents } = await queueSnapshot(tx, await recipientEntryOf(tx, approved, thread));
         const reviewed = shown.recipients ?? NO_RECIPIENTS;
         if (!sameRecipientCounts(reviewed, snapshot)) throw new Refused("RECIPIENT_COUNT_CHANGED", { recipients: snapshot, reviewed });
-        // The monthly cap on text message spending (S07.08, AR-12) warns and never blocks: if this entry's texts take the month past it, the overrun is
-        // audited here and recorded as an ops event (the health job texts the on-call Admins), in this same transaction, and the approval goes on. The
-        // cap is the last row locked (AD-18). Nothing is asked when no one is texted.
-        if (deps.spendCap && snapshot.total > 0) {
-          const overrun = await deps.spendCap(tx, { entryId: row.id, entryCostCents, now: now() });
-          if (overrun) {
-            await audit.record(tx, {
-              action: "spend.cap_overrun",
-              actorStaffId: actor.staffId,
-              subjectType: "alert_entry",
-              subjectId: row.id,
-              isDrill: thread.isDrill,
-              meta: { over_cents: overrun.overCents, cap_cents: overrun.capCents, entry_cents: entryCostCents },
-            });
-          }
-        }
         await audit.record(tx, {
           action: "entry.approved",
           actorStaffId: actor.staffId,
@@ -1843,6 +1827,22 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           const after = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
           if (!substantiveRemains(after.map((entry) => ({ id: entry.id, kind: entry.kind as EntryKind, status: entry.status as EntryStatus, webPublishedAt: entry.webPublishedAt })), [target.id])) {
             await closeAlert(tx, actor, { alertId: thread.id, reason: "withdrawn", keepEntryId: row.id, feedRaised: true });
+          }
+        }
+        // The monthly cap on text message spending (S07.08, AR-12) warns and never blocks: if this entry's texts take the month past it, the overrun is
+        // audited here and recorded as an ops event (the health job texts the on-call Admins), in this same transaction, and the approval goes on. The
+        // cap is the last row locked (AD-18), so it is taken after a withdrawal's own closing of the thread. Nothing is asked when no one is texted.
+        if (deps.spendCap && snapshot.total > 0) {
+          const overrun = await deps.spendCap(tx, { entryId: row.id, entryCostCents, now: now() });
+          if (overrun) {
+            await audit.record(tx, {
+              action: "spend.cap_overrun",
+              actorStaffId: actor.staffId,
+              subjectType: "alert_entry",
+              subjectId: row.id,
+              isDrill: thread.isDrill,
+              meta: { over_cents: overrun.overCents, cap_cents: overrun.capCents, entry_cents: entryCostCents },
+            });
           }
         }
         return { entry: entryOf(approved), recipients: snapshot, feedVersion: feedVersionNow };

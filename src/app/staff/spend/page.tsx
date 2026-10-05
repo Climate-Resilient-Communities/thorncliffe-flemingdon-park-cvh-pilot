@@ -3,7 +3,7 @@ import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import { Screen, Stack } from "@/ui";
 import { staffPage } from "../guard";
-import { logSpendError, readOverview, spendCap } from "../spendSeam";
+import { logSpendError, readOverview } from "../spendSeam";
 import { CapForm } from "./CapForm";
 import type { CapLabels } from "./CapFormView";
 import { SpendBody } from "./SpendBody";
@@ -18,8 +18,8 @@ const labels = (): CapLabels => ({ label: t("cap.label"), hint: t("cap.hint"), s
 /** The page as words, or null when the spend could not be read (the page says so and shows no figure). */
 async function readScreen(): Promise<{ screen: SpendScreen; capCents: number | null } | null> {
   try {
-    const [overview, cap] = await Promise.all([readOverview(), spendCap().read()]);
-    return { screen: spendScreen(overview, { setOn: cap.setAt }), capCents: overview.capCents };
+    const overview = await readOverview();
+    return { screen: spendScreen(overview, { setOn: overview.capSetAt }), capCents: overview.capCents };
   } catch (error) {
     logSpendError("spend.read_failed", { error: error instanceof Error ? error.name : "NonError" });
     return null;

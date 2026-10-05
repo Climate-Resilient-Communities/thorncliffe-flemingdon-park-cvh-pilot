@@ -371,6 +371,40 @@ describe("approving an alert near the cap", () => {
     expect(await opsOf()).toEqual([{ kind: "spend.cap_overrun", severity: "warning", subject_type: "alert_entry", subject_id: ref.entryId, detail: { over_cents: 1 } }]);
   });
 
+  it("judges a withdrawal's approval too, with the cap still the last row taken: the thread closes withdrawn and the overrun is audited", async () => {
+    await subscribers(SUBSCRIBERS);
+    const { ref } = await pendingAck();
+    expect((await approve(ref)).ok).toBe(true);
+    const made = await alerting.withdrawEntry(actor(author), { alertId: ref.alertId, targetId: ref.entryId }, { entryId: randomUUID(), reason: "other", text: "Sent for the wrong building." });
+    if (!made.ok) throw new Error(`withdrawEntry refused: ${made.error}`);
+    const withdrawal = { alertId: ref.alertId, entryId: made.value.entry.id };
+    const entry = await alerting.getEntry(withdrawal);
+    const thread = await alerting.getThread(ref.alertId);
+    if (!entry || !thread) throw new Error("no such entry");
+    const frozen = freezeContent({
+      alertId: ref.alertId,
+      kind: "withdrawal",
+      supersedesId: ref.entryId,
+      isDrill: false,
+      channels: ["sms", "web"],
+      content: entry.content,
+      translations: ["ur", "es", "ps", "ta", "fr", "hi", "pa"].map((lang) => ({ lang, body: entry.content.text, machine: false, model: null, status: "fallback_en" as const, sourceHash: sha(entry.content.text) })),
+      verified: true,
+      attribution: { role: "hub" },
+      slug: thread.slug,
+      publicBaseUrl: BASE_URL,
+    });
+    if (!frozen.ok) throw new Error(`freeze refused: ${frozen.error}`);
+    const submitted = await seams.freeze(actor(author), withdrawal, frozen.value);
+    if (!submitted.ok) throw new Error(`submit refused: ${submitted.error}`);
+    await setCap(1);
+
+    expect((await approve(withdrawal)).ok).toBe(true);
+
+    expect((await owner`select status, closed_reason from alert where id = ${ref.alertId}`)[0]).toMatchObject({ closed_reason: "withdrawn" });
+    expect((await auditOf("spend.cap_overrun")).map((row) => row.subject_id)).toEqual([withdrawal.entryId]);
+  });
+
   it("states a larger shortfall as the whole amount over the cap", async () => {
     await subscribers(SUBSCRIBERS);
     const { ref, textCents } = await pendingAck();
