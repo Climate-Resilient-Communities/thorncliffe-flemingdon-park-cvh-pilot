@@ -65,6 +65,9 @@ end
 $$;
 revoke all on function subscriber_count_event() from public, anon, authenticated, service_role;
 
+-- The release in production when this applies writes subscriber rows whose lang (subscriber_lang_known) and neighbourhood_id (a neighbourhood id,
+-- neighbourhood_id_format) always satisfy subscriber_event_count's checks, so these triggers never raise on its writes.
+-- contract: 6028e3f5dcdb1f3b9cd6e71b6e938c5740b644f0
 create trigger subscriber_count_confirmed after insert on subscriber for each row execute function subscriber_count_event();
 create trigger subscriber_count_deleted after delete on subscriber for each row execute function subscriber_count_event();
 
