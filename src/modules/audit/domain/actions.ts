@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isIsoDate } from "@/contracts/contentReview";
+import { SIGNUP_ERROR_CODES } from "../../../contracts/signup";
 import { STAFF_ROLES } from "../../../contracts/staffRoles";
 
 /**
@@ -285,6 +286,13 @@ export const AUDIT_META = {
   "drill_roster.added": meta({ roster_size: count.optional() }),
   "drill_roster.edited": meta({ roster_size: count.optional() }),
   "drill_roster.removed": meta({ roster_size: count.optional() }),
+
+  // The staff-assisted sign-up (S07.03): a Coordinator, an Ambassador or an Admin starts a sign-up for a resident. The actor is the staff member; the
+  // subject type is `pending_signup` with no id (an id would tie the record to the number, and tell a new number from one already pending or
+  // subscribed: an accepted sign-up is the same record for all three). The number, the language and the places are in no record. A refusal holds its
+  // reason (`validation`, `conflict` for terms that changed, `throttled` for the staff account's 40 in 24 hours, `not_available`) and the sign-up's own
+  // refusal code.
+  "signup.assisted": meta({ code: z.enum(SIGNUP_ERROR_CODES).optional() }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type AuditAction = keyof typeof AUDIT_META;
