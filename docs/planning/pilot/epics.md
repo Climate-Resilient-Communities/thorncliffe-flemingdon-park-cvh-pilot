@@ -3752,7 +3752,7 @@ So that a silent failure cannot leave residents without alerts.
 
 ### Story S09.02 — An Admin resends texts that failed
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 20 min (started 2026-10-05 06:54 UTC, built 08:14 UTC)
 - **Traces:** AR-21 (resend), AR-12, FR-G6 · **Depends on:** S06.04, S07.08 · **Branch:** `e09-s02-resend`
 
 As a Hub Admin,
