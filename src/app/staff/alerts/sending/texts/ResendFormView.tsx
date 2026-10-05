@@ -46,6 +46,8 @@ export function ResendOneFormView({
 }) {
   const confirmId = `resend-confirm-${view.deliveryId}`;
   const errorId = `resend-error-${view.deliveryId}`;
+  // A text that has been resent is not pressed again: the next press would only be refused ("a newer text was already made").
+  const resent = answer.status === "done";
   return (
     <form action={action} className="hub-form" data-testid="resend-one" aria-describedby={answer.status === "refused" ? errorId : undefined}>
       <Stack gap="related">
@@ -59,7 +61,7 @@ export function ResendOneFormView({
           </label>
         ) : null}
         <div>
-          <button className="hub-button hub-button--secondary" type="submit" disabled={saving} aria-label={saving ? undefined : view.ariaLabel}>
+          <button className="hub-button hub-button--secondary" type="submit" disabled={saving || resent} aria-label={saving ? undefined : view.ariaLabel}>
             {saving ? view.sending : view.label}
           </button>
         </div>

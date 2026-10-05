@@ -214,7 +214,8 @@ export function problemListView(input: {
     line: t("list.item", { ref: text.reference, language: languageLabel(text.lang, t, input.compose), when: formatTorontoDateTime(text.at) }),
     meaning: meaningText(text.meaning, text.code, t),
     meaningId: text.meaning,
-    note: resendNote(text, t),
+    // What the chain says about resending is for the Admin, who can resend: anyone else sees the list as it was.
+    note: canResend ? resendNote(text, t) : null,
     resend:
       canResend && canBeResent(text)
         ? {

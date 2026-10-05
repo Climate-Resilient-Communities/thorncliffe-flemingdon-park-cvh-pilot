@@ -207,7 +207,7 @@ describe("the delivery table", () => {
       [
         "attempts", "body", "callback_ref", "campaign_id", "channel", "claim_rank", "claim_token", "claimed_at", "claimed_by", "completed_at", "cost_estimate_cents",
         "created_at", "created_by_module", "due_at", "entry_id", "handed_off_at", "id", "idempotency_key", "kind", "lang", "provider_error_code",
-        "provider_message_id", "purpose", "recipient_id", "recipient_kind", "segments", "send_by", "state", "submitted_at", "updated_at",
+        "provider_message_id", "purpose", "recipient_id", "recipient_kind", "resend_n", "resend_of", "segments", "send_by", "state", "submitted_at", "updated_at",
       ].sort(),
     );
     for (const { column_name: name } of columns) expect(name, name).not.toMatch(/phone|msisdn|mobile|^to$|^to_|number$|e164/);

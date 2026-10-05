@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { englishText } from "@/i18n/text";
 import { staffAction, type ActionRefusal } from "../../../guard";
 import { logResendError, resendService, startSending } from "../../../resendSeam";
@@ -30,8 +29,8 @@ export const resendTextAction = staffAction<[ResendState, FormData], ResendState
   SPEC,
   async (session, _previous, form) => {
     const answer = await resendOneFromForm(deps, session, form);
-    // The list reads the chains again.
-    revalidatePath(LIST_PAGE);
+    // The page is not revalidated: the answer is shown by the form that was pressed, and a refresh of the list would take the form away (the resent text has no "Resend"
+    // any more) with the answer in it. The list shows the new state when it is opened again.
     return answered(answer);
   },
   (error) => refused(error),
@@ -42,7 +41,6 @@ export const resendAllAction = staffAction<[ResendState, FormData], ResendState>
   SPEC,
   async (session, _previous, form) => {
     const answer = await resendAllFromForm(deps, session, form);
-    revalidatePath(LIST_PAGE);
     return answered(answer);
   },
   (error) => refused(error),

@@ -12,7 +12,6 @@ const world = vi.hoisted(() => ({
   refuseUnauthenticated: vi.fn(async () => {}),
   resend: vi.fn(),
   startSending: vi.fn(async () => {}),
-  revalidatePath: vi.fn(),
 }));
 
 vi.mock("../../../session", () => ({ currentStaffSession: async () => world.session }));
@@ -22,7 +21,6 @@ vi.mock("../../../identity", () => ({
   staffAuth: () => ({ refuseByPolicy: world.refuseByPolicy, refuseBelowAal2: world.refuseBelowAal2, refuseOutsideGate: world.refuseOutsideGate }),
 }));
 vi.mock("../../../resendSeam", () => ({ resendService: () => ({ resend: world.resend }), startSending: world.startSending, logResendError: vi.fn() }));
-vi.mock("next/cache", () => ({ revalidatePath: world.revalidatePath }));
 vi.mock("next/navigation", () => ({
   redirect: (location: string) => {
     throw new Error(`NEXT_REDIRECT ${location}`);
@@ -66,13 +64,12 @@ describe("the resend actions name the policy action delivery.resend, Admins at a
 });
 
 describe("an Admin at aal2", () => {
-  it("resends one text as themselves, starts the sender, and the list reads the chains again", async () => {
+  it("resends one text as themselves and starts the sender", async () => {
     const answer = await pressOne();
 
     expect(world.resend).toHaveBeenCalledWith({ actorStaffId: STAFF, entryId: ENTRY, scope: "one", deliveryId: TEXT, seen: "failed", confirmedUnknown: false });
     expect(answer).toMatchObject({ status: "done", lines: ["The text was resent. It is in the queue and goes out in its usual order."], at: expect.any(Number) });
     expect(world.startSending).toHaveBeenCalledTimes(1);
-    expect(world.revalidatePath).toHaveBeenCalledWith("/staff/alerts/sending/texts");
   });
 
   it("resends all the failed and undelivered texts of a language", async () => {
@@ -104,7 +101,6 @@ describe("calling the resend actions directly", () => {
     expect(world.refuseByPolicy).toHaveBeenCalledWith(STAFF, "/staff/alerts/sending/texts", "delivery.resend", "forbidden");
     expect(world.resend).not.toHaveBeenCalled();
     expect(world.startSending).not.toHaveBeenCalled();
-    expect(world.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("as an Admin without aal2 is refused, audited as below aal2, and resends nothing", async () => {

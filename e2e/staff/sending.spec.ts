@@ -349,7 +349,9 @@ test("an Admin resends one failed text from the list, and the chain, the audit a
   await expect(page.getByTestId("sending-list-note")).toHaveText("Cannot be resent: the number cannot receive texts.");
   await expectNoHorizontalScroll(page);
   await page.getByRole("button", { name: /^Resend text / }).click();
-  await expect(page.getByTestId("resend-answer").first()).toHaveText("The text was resent. It is in the queue and goes out in its usual order.");
+  await expect(page.getByTestId("resend-one").getByTestId("resend-answer")).toHaveText("The text was resent. It is in the queue and goes out in its usual order.");
+  // It was resent: the button is not pressed again.
+  await expect(page.getByRole("button", { name: /^Resend text / })).toBeDisabled();
 
   const made = await resendsOf(entry);
   expect(made).toHaveLength(1);
@@ -391,7 +393,7 @@ test("a text with an unknown outcome is resent only after the Admin ticks that i
 
   await warning.check();
   await page.getByRole("button", { name: /^Resend text / }).click();
-  await expect(page.getByTestId("resend-answer").first()).toContainText("The text was resent");
+  await expect(page.getByTestId("resend-one").getByTestId("resend-answer")).toContainText("The text was resent");
   expect(await resendsOf(entry)).toMatchObject([{ resend_of: ids[0], resend_n: 1 }]);
   // The unknown text itself is untouched: only a late callback resolves it.
   expect((await sql`select state from delivery where id = ${ids[0]}`)[0].state).toBe("unknown");

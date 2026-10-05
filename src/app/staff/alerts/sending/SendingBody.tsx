@@ -60,7 +60,9 @@ export function ProblemListBody({ screen, resend }: { screen: ProblemListScreen;
       {resend && list.resendIntro ? (
         <section aria-labelledby="resend-title" data-testid="resend-intro">
           <Stack gap="related">
-            <h2 id="resend-title">{list.resendIntro.title}</h2>
+            <h2 id="resend-title" className="hub-wrap">
+              {list.resendIntro.title}
+            </h2>
             <p className="hub-wrap">{list.resendIntro.lead}</p>
             {list.resendAll.length > 0 ? (
               <Stack as="ul" gap="related" testId="resend-all-forms">
