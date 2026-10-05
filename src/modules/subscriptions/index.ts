@@ -82,6 +82,7 @@ export {
   signupLink,
   subscriberLookup,
   subscriberNumberSource,
+  subscriberReceives,
   yesWordsFor,
   type CheckinCleanup,
   type Deleted,

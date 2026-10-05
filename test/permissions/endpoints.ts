@@ -114,6 +114,7 @@ const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
 const SPEND_ACTIONS = "src/app/staff/spend/actions.ts";
+const RESEND_ACTIONS = "src/app/staff/alerts/sending/texts/actions.ts";
 const DRILL_ROSTER_ACTIONS = "src/app/staff/drills/roster/actions.ts";
 const DRILL_START_ACTIONS = "src/app/staff/drills/start/actions.ts";
 
@@ -668,6 +669,33 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { cap: "250" },
+    expected: ADMIN_ONLY,
+  },
+  // S09.02: "Resend" on one text and "Resend the failed and undelivered texts in {language}" (policy action `delivery.resend`, Admins at aal2). Called as an allowed
+  // Admin, both name an entry that is not there, so the use case refuses them as `not_found` (audited as a refusal) and nothing is made or sent; every other role is refused
+  // by the guard before the use case runs.
+  {
+    id: `action ${RESEND_ACTIONS}#resendTextAction`,
+    kind: "action",
+    file: RESEND_ACTIONS,
+    export: "resendTextAction",
+    route: "/staff/alerts/sending/texts",
+    action: "delivery.resend",
+    writes: "business",
+    gate: "hub",
+    form: { entry: "01900000-0000-7000-8000-0000000000ea", delivery: "01900000-0000-7000-8000-0000000000eb", seen: "failed" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${RESEND_ACTIONS}#resendAllAction`,
+    kind: "action",
+    file: RESEND_ACTIONS,
+    export: "resendAllAction",
+    route: "/staff/alerts/sending/texts",
+    action: "delivery.resend",
+    writes: "business",
+    gate: "hub",
+    form: { entry: "01900000-0000-7000-8000-0000000000ea", lang: "en" },
     expected: ADMIN_ONLY,
   },
   // S06.05: "Add phone", "Save changes" and "Remove" of the drill roster, and "Start a drill" (policy action `drill.run`, Admins at aal2). Called as an allowed Admin,

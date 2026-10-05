@@ -603,6 +603,43 @@ describe("spend.cap_set and spend.cap_overrun (S07.08)", () => {
   });
 });
 
+describe("delivery.resent (S09.02)", () => {
+  const resent = (meta: Record<string, unknown>) =>
+    event({ action: "delivery.resent", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);
+
+  it("records one text resent as a count and which resend of its chain it is, and nothing else", () => {
+    expect(toAuditRecord(resent({ scope: "one", resent: 1, not_resent: 0, resend_n: 2 }), "ok")).toMatchObject({
+      action: "delivery.resent",
+      subjectType: "alert_entry",
+      outcome: "ok",
+      meta: { scope: "one", resent: 1, not_resent: 0, resend_n: 2 },
+    });
+  });
+
+  it("records a resend of all as the language and the counts", () => {
+    expect(toAuditRecord(resent({ scope: "language", lang: "zh-Hant", resent: 40, not_resent: 3 }), "ok").meta).toEqual({ scope: "language", lang: "zh-Hant", resent: 40, not_resent: 3 });
+  });
+
+  it("must say the scope and how many were resent when it is ok", () => {
+    expect(() => toAuditRecord(resent({ resent: 1 }), "ok")).toThrow("meta is missing scope");
+    expect(() => toAuditRecord(resent({ scope: "one" }), "ok")).toThrow("meta is missing resent");
+  });
+
+  it("has nowhere to put a number, a recipient, a body or a resend that is not the first or second", () => {
+    expect(() => toAuditRecord(resent({ scope: "one", resent: 1, phone: "+14165550123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(resent({ scope: "one", resent: 1, recipient: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(resent({ scope: "one", resent: 1, resend_n: 3 }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(resent({ scope: "language", lang: "+14165550123", resent: 1 }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it.each(["not_found", "confirm_needed", "status_changed", "resend_limit", "already_resent", "not_resendable", "cannot_receive", "recipient_gone", "recipient_not_receiving", "not_sendable"])(
+    "records a refusal with its reason %s and nothing more",
+    (reason) => {
+      expect(toAuditRecord(resent({ reason }), "refused").meta).toEqual({ reason });
+    },
+  );
+});
+
 describe("oncall.added and oncall.removed (S06.07)", () => {
   const roster = (action: "oncall.added" | "oncall.removed", meta: Record<string, unknown>) =>
     event({ action, subjectType: "oncall_roster", subjectId: "0190c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6", meta } as Partial<AuditEvent>);

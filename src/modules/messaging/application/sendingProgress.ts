@@ -15,6 +15,9 @@ export interface ProblemRow {
   providerErrorCode: number | null;
   attempts: number;
   at: Date;
+  resendN: number | null;
+  resends: number;
+  resent: boolean;
 }
 
 /** Port: the outbox's rows for the progress view (adapters/progressStore.ts). Ids, states, languages and instants only. */
@@ -43,7 +46,7 @@ export function createSendingProgress(deps: { store: ProgressStore }): SendingPr
       const rows = await deps.store.problemRows(executor, entryId, state === undefined ? PROBLEM_STATES : [state], PROBLEM_LIST_LIMIT + 1);
       const texts = rows.slice(0, PROBLEM_LIST_LIMIT).map((row): ProblemText => {
         const { meaning, code } = problemMeaning({ state: row.state, providerErrorCode: row.providerErrorCode, attempts: row.attempts });
-        return { id: row.id, reference: referenceOf(row.id), lang: row.lang, state: row.state, meaning, code, at: row.at };
+        return { id: row.id, reference: referenceOf(row.id), lang: row.lang, state: row.state, meaning, code, at: row.at, resendN: row.resendN, resends: row.resends, resent: row.resent };
       });
       return { texts, more: rows.length > PROBLEM_LIST_LIMIT };
     },

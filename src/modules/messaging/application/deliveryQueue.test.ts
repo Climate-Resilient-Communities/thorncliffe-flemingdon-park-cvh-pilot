@@ -49,6 +49,8 @@ const viewOf = (row: NewDelivery): DeliveryView => ({
   completedAt: null,
   createdAt: NOW,
   updatedAt: NOW,
+  resendOf: null,
+  resendN: null,
 });
 
 function queueOf() {

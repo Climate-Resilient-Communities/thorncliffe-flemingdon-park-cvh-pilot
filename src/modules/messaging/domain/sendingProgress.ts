@@ -181,6 +181,12 @@ export interface ProblemText {
   code: number | null;
   /** When the state was last changed. */
   at: Date;
+  /** Which resend of its chain this text is (S09.02), 1 or 2; null for a text that is not a resend. */
+  resendN: number | null;
+  /** How many resends its chain has in all. */
+  resends: number;
+  /** Whether a newer text of its chain was made for it: this one is then not the one to resend. */
+  resent: boolean;
 }
 
 /** A text's short reference: the last six characters of its id (uuid v7 ids end in random bits). */

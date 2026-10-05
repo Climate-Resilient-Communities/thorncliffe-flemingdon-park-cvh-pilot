@@ -87,6 +87,20 @@ export const subscriberStore = {
     return row?.phone ?? null;
   },
 
+  /**
+   * Whether the subscriber exists and is in a receiving state, their row locked `FOR SHARE` for the caller's transaction (no number is read). The lock is taken
+   * without waiting (`SKIP LOCKED`): a row someone holds `FOR UPDATE` is being deleted (STOP, reply 0), which reads as "does not receive", so a resend never waits
+   * on a deletion that is itself waiting for the delivery rows the resend holds.
+   */
+  async receivesShared(tx: DbTransaction, id: string): Promise<boolean> {
+    const rows = await tx
+      .select({ id: subscriber.id })
+      .from(subscriber)
+      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])))
+      .for("share", { skipLocked: true });
+    return rows.length > 0;
+  },
+
   /** The subscriber's open prompt that has not run out (by the database's clock), or null. */
   async openPrompt(tx: DbTransaction, subscriberId: string): Promise<string | null> {
     const [row] = await tx

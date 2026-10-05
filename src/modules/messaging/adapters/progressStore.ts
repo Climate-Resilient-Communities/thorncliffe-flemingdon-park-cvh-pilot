@@ -45,6 +45,11 @@ export const drizzleProgressStore: ProgressStore = {
         providerErrorCode: delivery.providerErrorCode,
         attempts: delivery.attempts,
         at: delivery.updatedAt,
+        resendN: delivery.resendN,
+        // The chain's resends (S09.02), and whether a newer text of the chain exists (then this one is not the one to resend).
+        // (The outer row is named in full: Drizzle leaves a column unqualified in a single-table select, and the subquery's own columns would then be read instead.)
+        resends: sql<number>`(select count(*)::int from delivery as r where r.resend_of = coalesce("delivery"."resend_of", "delivery"."id"))`,
+        resent: sql<boolean>`exists (select 1 from delivery as r where r.resend_of = coalesce("delivery"."resend_of", "delivery"."id") and r.resend_n > coalesce("delivery"."resend_n", 0))`,
       })
       .from(delivery)
       .where(and(eq(delivery.entryId, entryId), eq(delivery.recipientKind, "subscriber"), inArray(delivery.state, [...states])))

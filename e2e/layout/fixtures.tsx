@@ -15,6 +15,8 @@ import { SpendBody } from "@/app/staff/spend/SpendBody";
 import type { SpendScreen } from "@/app/staff/spend/view";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
 import { ProblemListBody, SendingBody } from "@/app/staff/alerts/sending/SendingBody";
+import type { ResendState } from "@/app/staff/alerts/sending/texts/control";
+import { ResendAllFormView, ResendOneFormView } from "@/app/staff/alerts/sending/texts/ResendFormView";
 import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
 import { RosterFormsView } from "@/app/staff/drills/roster/RosterFormsView";
 import { RosterView } from "@/app/staff/drills/roster/RosterView";
@@ -838,17 +840,20 @@ export function TextsFixture({
 /**
  * The Hub shell around the sending progress of an alert (S06.09), as a Coordinator sees it: the real body of the alert's staff view (SendingBody, drawn without
  * the 15 second reload) or of the list of the texts that did not arrive (ProblemListBody). Counts, languages and meanings only: nothing here is a phone number.
+ * With `resend` the list is the Admin's (S09.02): the real, behaviour-free "Resend" forms, each showing `resend.answer` when one is given (the state a press would leave).
  */
 export function SendingFixture({
   texts,
   brand,
   screen,
   list,
+  resend,
 }: {
   texts: HubShellTexts;
   brand: { logoSrc: string; symbolSrc: string };
   screen?: ComponentProps<typeof SendingBody>["screen"];
   list?: ComponentProps<typeof ProblemListBody>["screen"];
+  resend?: { answer?: ResendState };
 }) {
   return (
     <HubShell
@@ -874,7 +879,19 @@ export function SendingFixture({
     >
       <Screen surface="staff" width="review" testId="screen">
         {screen ? <SendingBody screen={screen} live={false} /> : null}
-        {list ? <ProblemListBody screen={list} /> : null}
+        {list ? (
+          <ProblemListBody
+            screen={list}
+            resend={
+              resend
+                ? {
+                    one: (view) => <ResendOneFormView view={view} answer={resend.answer} />,
+                    all: (view) => <ResendAllFormView view={view} answer={resend.answer} />,
+                  }
+                : undefined
+            }
+          />
+        ) : null}
       </Screen>
     </HubShell>
   );

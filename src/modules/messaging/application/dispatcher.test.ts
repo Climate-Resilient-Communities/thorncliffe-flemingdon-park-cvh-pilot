@@ -55,6 +55,8 @@ function view(over: Partial<DeliveryView> = {}): DeliveryView {
     completedAt: null,
     createdAt: new Date(NOW),
     updatedAt: new Date(NOW),
+    resendOf: null,
+    resendN: null,
     ...over,
   };
 }

@@ -14,7 +14,7 @@ const approved: ReviewOptions = { entry: { status: "approved" } };
 function deps(options: { review?: ReviewOptions | null; progress?: EntryProgress; paused?: () => Promise<boolean>; forEntry?: () => Promise<EntryProgress>; problemTexts?: () => Promise<never> } = {}) {
   const logError = vi.fn();
   const forEntry = vi.fn(options.forEntry ?? (async () => options.progress ?? waitingAndSent));
-  const problemTexts = vi.fn(options.problemTexts ?? (async () => ({ texts: [{ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed" as const, meaning: "not_in_service" as const, code: null, at: new Date("2026-10-05T18:15:00Z") }], more: false })));
+  const problemTexts = vi.fn(options.problemTexts ?? (async () => ({ texts: [{ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed" as const, meaning: "not_in_service" as const, code: null, at: new Date("2026-10-05T18:15:00Z"), resendN: null, resends: 0, resent: false }], more: false })));
   const paused = vi.fn(options.paused ?? (async () => false));
   const review = vi.fn(async () => (options.review === null ? null : reviewOf(options.review ?? approved)));
   const wired: SendingDeps = { review, progress: { forEntry, problemTexts }, paused, logError };
@@ -116,6 +116,29 @@ describe("the list of the texts that did not arrive", () => {
     expect(screen).toMatchObject({ kind: "missing", message: expect.stringMatching(/could not be read/), back: { href: "/staff" } });
     expect(d.logError).toHaveBeenCalledWith("sending.problems_failed", { error: "TypeError" });
     expect(JSON.stringify(d.logError.mock.calls)).not.toContain("database is down");
+  });
+
+  // A text whose failure has no known cause, so it can be resent (the default text above is "Number not in service", which cannot).
+  const resendable = async () => ({
+    texts: [{ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed" as const, meaning: "no_reason" as const, code: null, at: new Date("2026-10-05T18:15:00Z"), resendN: null, resends: 0, resent: false }],
+    more: false,
+  });
+
+  it("gives an Admin the Resend on each text and a button for each language that has a failed or undelivered text, and gives no one else either", async () => {
+    const d = deps({ problemTexts: resendable as never });
+    const admin = await loadProblemList({ ...query, state: "failed" }, d.wired, undefined, { canResend: true });
+    expect(admin).toMatchObject({ kind: "list", list: { items: [{ resend: { label: "Resend", seen: "failed" } }], resendAll: [{ lang: "ur", entryId: ENTRY }] } });
+    const coordinator = await loadProblemList({ ...query, state: "failed" }, d.wired);
+    expect(coordinator).toMatchObject({ kind: "list", list: { items: [{ resend: null }], resendAll: [], resendIntro: null } });
+  });
+
+  it("offers no 'resend all' on the list of unknown texts, and keeps the per-text buttons when the counts cannot be read", async () => {
+    const unknown = await loadProblemList({ ...query, state: "unknown" }, deps({ problemTexts: resendable as never }).wired, undefined, { canResend: true });
+    expect(unknown).toMatchObject({ kind: "list", list: { resendAll: [] } });
+    const d = deps({ forEntry: async () => Promise.reject(new TypeError("down")), problemTexts: resendable as never });
+    const screen = await loadProblemList({ ...query, state: "failed" }, d.wired, undefined, { canResend: true });
+    expect(screen).toMatchObject({ kind: "list", list: { items: [{ resend: { label: "Resend" } }], resendAll: [] } });
+    expect(d.logError).toHaveBeenCalledWith("sending.progress_failed", { error: "TypeError" });
   });
 
   it("understands the three states and nothing else", () => {

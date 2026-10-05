@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { approvalScreen } from "../../src/app/staff/alerts/approval/view";
 import type { ProblemListScreen, SendingScreen } from "../../src/app/staff/alerts/sending/load";
 import { problemListView, sendingProgressView } from "../../src/app/staff/alerts/sending/view";
+import type { ResendState } from "../../src/app/staff/alerts/sending/texts/control";
 import { progressOf, type ProblemText } from "../../src/modules/messaging";
 import { APPROVER, PLANS, reviewOf } from "../../test/helpers/approvalReview";
 import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
@@ -12,7 +13,9 @@ import { expectBaseline } from "./helpers";
 // sentence about the texts already handed to the provider), once everything has an answer (with the links to the lists of the texts that did not arrive), with
 // skipped texts, for an alert with no text, for a practice alert and for a progress that could not be read; and the lists of the failed texts and of the texts with an
 // unknown outcome, each with what it means in plain words and no phone number. The pages' real bodies render from view models built here; the behaviour is
-// asserted in src/app/staff/alerts/sending and test/db/sendingProgress.db.test.ts, and these pictures show what it looks like.
+// asserted in src/app/staff/alerts/sending and test/db/sendingProgress.db.test.ts, and these pictures show what it looks like. S09.02 adds the Admin's lists: "Resend" on each text
+// that can be resent, a note on the ones that cannot, the warning and the box to tick on a text with an unknown outcome, "Resend the failed and undelivered texts in {language}"
+// for each language, and the answers a press leaves (done, and refused with nothing resent).
 const brand = hubBrand();
 const HEIGHT = 844;
 const REF = { alertId: "01900000-0000-7000-8000-00000000a1e7", entryId: "01900000-0000-7000-8000-00000000e177" };
@@ -52,7 +55,7 @@ const STATES: Record<string, SendingScreen> = {
 };
 
 const at = new Date("2026-10-05T18:15:00Z");
-const text = (n: number, over: Partial<ProblemText>): ProblemText => ({ id: `01900000-0000-7000-8000-0000000abc${String(n).padStart(2, "0")}`, reference: `0abc${String(n).padStart(2, "0")}`, lang: "ur", state: "failed", meaning: "not_in_service", code: null, at, ...over });
+const text = (n: number, over: Partial<ProblemText>): ProblemText => ({ id: `01900000-0000-7000-8000-0000000abc${String(n).padStart(2, "0")}`, reference: `0abc${String(n).padStart(2, "0")}`, lang: "ur", state: "failed", meaning: "not_in_service", code: null, at, resendN: null, resends: 0, resent: false, ...over });
 const list = (state: ProblemText["state"], texts: ProblemText[], more = false): ProblemListScreen => ({
   kind: "list",
   ref: REF,
@@ -69,6 +72,65 @@ const LISTS: Record<string, ProblemListScreen> = {
   ]),
   "list-unknown": list("unknown", [text(6, { state: "unknown", meaning: "unclear", lang: "zh-Hant" }), text(7, { state: "unknown", meaning: "unclear", lang: "prs" })], true),
   "list-empty": list("undelivered", []),
+};
+
+const ADMIN_LISTS: Record<string, { screen: ProblemListScreen; answer?: ResendState }> = {
+  "admin-failed": {
+    screen: {
+      kind: "list",
+      ref: REF,
+      heading: HEADING,
+      list: problemListView({
+        ref: REF,
+        state: "failed",
+        texts: [
+          text(1, { meaning: "no_reason" }),
+          text(2, { lang: "zh-Hant", meaning: "retries_exhausted" }),
+          text(3, { lang: "en", meaning: "sender_not_ready", resendN: 1, resends: 1 }),
+          text(4, { lang: "hi", meaning: "invalid_number" }),
+          text(5, { lang: "prs", meaning: "no_reason", resent: true, resends: 1 }),
+          text(6, { lang: "ur", meaning: "no_reason", resendN: 2, resends: 2 }),
+        ],
+        more: false,
+        limit: 200,
+        canResend: true,
+        resendLanguages: ["en", "ur", "zh-Hant"],
+      }),
+    },
+  },
+  "admin-unknown": {
+    screen: {
+      kind: "list",
+      ref: REF,
+      heading: HEADING,
+      list: problemListView({
+        ref: REF,
+        state: "unknown",
+        texts: [text(7, { state: "unknown", meaning: "unclear", lang: "zh-Hant" }), text(8, { state: "unknown", meaning: "unclear", lang: "prs" })],
+        more: false,
+        limit: 200,
+        canResend: true,
+      }),
+    },
+  },
+  "admin-failed-refused": {
+    screen: {
+      kind: "list",
+      ref: REF,
+      heading: HEADING,
+      list: problemListView({ ref: REF, state: "failed", texts: [text(9, { meaning: "no_reason" })], more: false, limit: 200, canResend: true, resendLanguages: ["ur"] }),
+    },
+    answer: { status: "refused", message: "This text has already been resent twice, which is the most. Nothing was resent.", at: 1 },
+  },
+  "admin-failed-done": {
+    screen: {
+      kind: "list",
+      ref: REF,
+      heading: HEADING,
+      list: problemListView({ ref: REF, state: "failed", texts: [text(10, { meaning: "no_reason" })], more: false, limit: 200, canResend: true, resendLanguages: ["ur"] }),
+    },
+    answer: { status: "done", lines: ["3 texts were resent. They are in the queue and go out in their usual order.", "1 left out: 1 the number cannot receive texts."], at: 1 },
+  },
 };
 
 async function fit(page: Page, width: number) {
@@ -150,6 +212,41 @@ for (const state of Object.keys(LISTS)) {
       // No phone number is on the screen.
       expect(await page.locator("main, [data-testid='screen']").first().innerText()).not.toMatch(/\+\d|\d{3}[ -]\d{3}[ -]\d{4}/);
       await tapTargetsAre44(page, '[data-testid="sending-list-back"]');
+
+      await expectBaseline(page, `sending-en-${state}-${width}.png`, { fullPage: true });
+    });
+  }
+}
+
+for (const state of Object.keys(ADMIN_LISTS)) {
+  for (const width of [390, 1280]) {
+    test(`sending texts for an Admin, ${state} at ${width}px`, async ({ page }) => {
+      await fit(page, width);
+      const { screen, answer } = ADMIN_LISTS[state];
+      await mount(page, "SendingFixture", { texts: REAL_TEXTS, brand, list: screen, resend: { answer } }, { lang: "en" });
+
+      await expect(page.getByTestId("resend-intro")).toBeVisible();
+      await noScroll(page);
+      if (state === "admin-failed") {
+        // A Resend on the four texts that can be resent, a note on the other two and on the resent ones, and a button for each language with something to resend.
+        await expect(page.getByTestId("resend-one")).toHaveCount(3);
+        await expect(page.getByTestId("sending-list-note")).toHaveCount(4);
+        await expect(page.getByTestId("resend-all-en")).toBeVisible();
+        await expect(page.getByTestId("resend-all-ur")).toBeVisible();
+        await expect(page.getByTestId("resend-all-zh-Hant")).toBeVisible();
+        await expect(page.getByRole("button", { name: "Resend text 0abc01" })).toBeVisible();
+        await expect(page.getByRole("button", { name: "Resend the failed and undelivered texts in English" })).toBeVisible();
+      }
+      if (state === "admin-unknown") {
+        await expect(page.getByTestId("resend-one")).toHaveCount(2);
+        await expect(page.getByTestId("resend-all-en")).toHaveCount(0);
+        await expect(page.getByLabel("This text may already have arrived; resending may send it twice")).toHaveCount(2);
+        await expect(page.getByLabel("This text may already have arrived; resending may send it twice").first()).not.toBeChecked();
+      }
+      if (state === "admin-failed-refused") await expect(page.getByTestId("resend-error").first()).toHaveText(/Nothing was resent/);
+      if (state === "admin-failed-done") await expect(page.getByTestId("resend-answer").first()).toContainText("3 texts were resent");
+      await tapTargetsAre44(page, '[data-testid="sending-list-back"], [data-testid="resend-one"] button, [data-testid^="resend-all-"] button');
+      expect(await page.locator("main, [data-testid='screen']").first().innerText()).not.toMatch(/\+\d|\d{3}[ -]\d{3}[ -]\d{4}/);
 
       await expectBaseline(page, `sending-en-${state}-${width}.png`, { fullPage: true });
     });

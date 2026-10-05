@@ -29,7 +29,7 @@ import {
 } from "../../src/modules/identity";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
 import { createAlertSubmitter, createAlerting, createDrillThreads } from "../../src/modules/alerting";
-import { createDeliveryQueue, createMessagingPause, drillResults } from "../../src/modules/messaging";
+import { createDeliveryQueue, createMessagingPause, createResend, drillResults } from "../../src/modules/messaging";
 import { createDrillRoster } from "../../src/modules/subscriptions";
 import { createOncallRoster } from "../../src/modules/ops";
 import { createSpendCap, readSpendOverview } from "../../src/modules/spend";
@@ -57,6 +57,7 @@ const wired = vi.hoisted(() => ({
   pause: null as unknown,
   oncall: null as unknown,
   spend: null as unknown,
+  resend: null as unknown,
   spendOverview: null as null | (() => Promise<unknown>),
   drills: null as unknown,
   drillThreads: null as unknown,
@@ -107,6 +108,8 @@ vi.mock("../../src/app/staff/spendSeam", () => ({
   logSpendError: () => {},
   capNoticeFor: async () => null,
 }));
+// The sending texts page's resend actions (S09.02) run the resend on the app's own connection; starting a dispatcher run after a resend is a no-op here.
+vi.mock("../../src/app/staff/resendSeam", () => ({ resendService: () => wired.resend, startSending: async () => {}, logResendError: () => {} }));
 // The Drills page, the drill roster page and their actions (S06.05) run the roster, the drill threads and their results on the app's own connection.
 vi.mock("../../src/app/drills", () => ({
   drillRoster: () => wired.drills,
@@ -246,6 +249,12 @@ beforeEach(async () => {
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
   });
   wired.spend = createSpendCap({ db: app, audit: { record: (tx, event) => record(tx, event), recordRefusal: (db, event) => recordRefusal(db, event) } });
+  wired.resend = createResend({
+    db: app,
+    recipients: { receives: async () => false },
+    standing: { standingOf: async () => null },
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
+  });
   wired.spendOverview = () => readSpendOverview(app, { now: new Date(), budgetCents: 100_000, cohereEstimateCadPerMillionTokens: null });
   wired.drills = createDrillRoster({
     db: app,

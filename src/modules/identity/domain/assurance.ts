@@ -33,6 +33,7 @@ export const PRIVILEGED_ACTIONS = [
   "sending.pause",
   "buildings.manage",
   "oncall.manage",
+  "delivery.resend",
 ] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];

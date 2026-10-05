@@ -322,6 +322,15 @@ export function subscriberNumberSource(store: SubscriberStore = subscriberStore)
 }
 
 /**
+ * Whether the subscriber still exists and receives alerts (E09 "Receiving subscriber"), with their row locked `FOR SHARE` in the caller's transaction: a resend
+ * (S09.02) asks it before it adds a text, so a STOP or a deletion that comes next waits for that transaction and then skips the text. A subscriber who is being
+ * deleted right now (their row locked by the deletion) does not receive. Reads no number.
+ */
+export function subscriberReceives(tx: DbTransaction, id: string, store: SubscriberStore = subscriberStore): Promise<boolean> {
+  return store.receivesShared(tx, id);
+}
+
+/**
  * The ContactResolver's source for `inbound_reply` recipients: the number is taken (`consume`), the row locked, read and deleted in the
  * hand-off transaction; a row past its 30 minutes gives no number. Only a `signup_info` text has such a recipient.
  */

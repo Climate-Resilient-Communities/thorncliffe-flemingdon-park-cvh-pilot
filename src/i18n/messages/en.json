@@ -5111,6 +5111,74 @@
         "undelivered_no_reason": "The carrier did not deliver it and gave no reason",
         "unclear": "Outcome unclear; not re-sent"
       },
+      "resend": {
+        "title": "Resend texts",
+        "lead": "A resend sends the same words once more, to the same person, in its usual place in the queue. A text can be resent twice at most. It is counted in spend when the provider accepts it, and against the monthly cap like any other text.",
+        "one": "Resend",
+        "oneFor": "Resend text {ref}",
+        "sending": "Resending",
+        "all": "Resend the failed and undelivered texts in {language}",
+        "allHint": "Takes the latest text of each person in {language} that failed or was not delivered. Texts with an unknown outcome are never included: resend those one at a time, after reading the warning.",
+        "confirm": "This text may already have arrived; resending may send it twice",
+        "confirmHint": "Tick the box to resend this text anyway.",
+        "note": {
+          "resend": "Resend {n} of 2.",
+          "resent": "Already resent: a newer text was made for this one.",
+          "limit": "Resent twice already, which is the most.",
+          "cannot": "Cannot be resent: the number cannot receive texts."
+        },
+        "done": {
+          "one": "The text was resent. It is in the queue and goes out in its usual order.",
+          "many": "{n} texts were resent. They are in the queue and go out in their usual order.",
+          "none": "No text needed resending. Nothing was changed.",
+          "left": "{n} left out: {reasons}.",
+          "more": "There are more texts to resend. Press the button again to take the next ones.",
+          "overrun": "These texts took this month's text spending {over} past the cap of {cap}. They were still resent."
+        },
+        "left": {
+          "not_found": "not found",
+          "not_resendable": "not a text that can be resent",
+          "status_changed": "its status changed",
+          "confirm_needed": "not confirmed",
+          "resend_limit": "resent twice already",
+          "already_resent": "already resent",
+          "cannot_receive": "the number cannot receive texts",
+          "recipient_gone": "the person left",
+          "recipient_not_receiving": "the person no longer gets alerts",
+          "not_sendable": "the alert no longer sends it"
+        },
+        "refused": {
+          "not_found": "That text was not found for this alert. Nothing was resent.",
+          "not_resendable": "That text is {status}, so it cannot be resent. Only a text that failed, was undelivered or has an unknown outcome can be. Nothing was resent.",
+          "status_changed": "This text is now {status}, not {seen}, so it was not resent. Reload the page to see where it stands.",
+          "confirm_needed": "This text has an unknown outcome. Tick the box to confirm that it may arrive twice. Nothing was resent.",
+          "resend_limit": "This text has already been resent twice, which is the most. Nothing was resent.",
+          "already_resent": "A newer text was already made for this one ({status}), so it was not resent again. Reload the page to see it.",
+          "cannot_receive": "The provider said \"{reason}\", so this number cannot receive texts. Nothing was resent.",
+          "recipient_gone": "The person is gone (they replied STOP or their number was deleted), so nothing was resent.",
+          "recipient_not_receiving": "The person no longer gets alerts, so nothing was resent.",
+          "not_sendable": "This alert can no longer send this text: {cause}. Nothing was resent."
+        },
+        "cause": {
+          "paused": "texts are paused",
+          "send_by_passed": "it is too late for it",
+          "recipient_gone": "the person is gone",
+          "entry_missing": "the entry is gone",
+          "entry_not_approved": "the entry is not approved",
+          "entry_superseded": "a newer entry replaced it",
+          "entry_discarded": "the entry was discarded",
+          "thread_closed": "the alert is closed",
+          "valid_until_passed": "its valid-until time has passed",
+          "drill_recipient_mismatch": "it is a practice alert",
+          "campaign_not_sendable": "it is not sendable"
+        },
+        "errors": {
+          "forbidden": "Only an Admin can resend texts.",
+          "aal2Required": "An Admin must sign in with their authenticator code to resend texts. Sign in again and enter the code.",
+          "invalid": "The form was not understood. Nothing was resent. Reload the page and try again.",
+          "failed": "The texts could not be resent just now. Nothing was resent. Reload the page and try again. If this stays, tell IT."
+        }
+      },
       "errors": {
         "forbidden": "Only an Admin or a Coordinator can see sending progress.",
         "missing": "That alert entry was not found."
