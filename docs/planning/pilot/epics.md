@@ -3281,7 +3281,7 @@ So that every text I get matters to me.
 
 ### Story S07.08 — Admins see spend against the budget and set a monthly cap
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 5 min (started 2026-10-05 05:48 UTC, built 06:53 UTC)
 - **Traces:** FR-G6, NFR-N9, FR-M5, AR-12 (spend cap) · **Depends on:** S07.07, S06.08 · **Branch:** `e07-s08-spend-cap`
 
 As a Hub Admin,
