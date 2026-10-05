@@ -764,8 +764,11 @@ describe("the daily ceiling on non-alert texts", () => {
     // Texts keep sending: the job queues and holds nothing.
     expect(await owner`select count(*)::int as n from delivery where purpose <> 'oncall_alert' and state = 'queued'`).toEqual([{ n: 4 }]);
 
-    // Not again that day, however long it holds; the on-call texts themselves are not counted.
-    await backdateAlert("transactional_ceiling", 120);
+    // Not again that day, however long it holds; the on-call texts themselves are not counted. Two hours back, but never before
+    // midnight in Toronto: between 00:00 and 02:00 there two hours would be yesterday, when texting again is right.
+    await owner`update health_condition set last_alerted_at = greatest(now() - interval '120 minutes',
+                  (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') + interval '1 second')
+                where condition = 'transactional_ceiling'`;
     expect(await reportOf("transactional_ceiling", job({ ceiling: 3 }))).toMatchObject({ holds: true, action: "held" });
     expect(await oncallTexts()).toHaveLength(2);
   });
