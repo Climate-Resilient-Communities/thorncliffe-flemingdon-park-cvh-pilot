@@ -3241,7 +3241,7 @@ So that I don't have to step through text menus.
 
 ### Story S07.07 — Approved alerts reach exactly the matching subscribers
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 20 min (started 2026-10-04 19:39 UTC, built 20:59 UTC)
 - **Traces:** FR-A1 (SMS), FR-A2, FR-A16 (SMS), AR-11, FR-A3 (recipients per language) · **Depends on:** S07.04, S06.03 · **Branch:** `e07-s07-subscriber-fanout`
 
 As a resident subscriber,
