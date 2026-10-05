@@ -1,6 +1,6 @@
 // The subscriber measures (S07.10, FR-M1 subscribers): the daily counts the Hub keeps of who is receiving texts, who is waiting to confirm and how many
 // confirmed or left each day. Pure. Counts only, by language and neighbourhood, with no identifier of any kind; a group of 1 to 4 is shown as
-// "fewer than 5" (the view `subscriber_measures` applies that rule, db/migrations/20261006100000_subscriber_measures.sql; nothing here adds to what it shows).
+// "fewer than 5" (the view `subscriber_measures` applies that rule, db/migrations/20261006110000_subscriber_measures.sql; nothing here adds to what it shows).
 
 /** What is counted each day, in the order the Hub lists it. */
 export const SUBSCRIBER_MEASURES = [
@@ -20,6 +20,9 @@ export const SUBSCRIBER_LANGS = ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el"
 
 /** What the view says in place of a count of 1 to 4 (E09 "Small-number rule"). */
 export const FEWER_THAN_FIVE = "fewer than 5";
+
+/** What the view says in place of a cell it hid only to protect another (it may be 5 or more, so it is not "fewer than 5"). */
+export const NOT_SHOWN = "not shown";
 
 /** A count as the Hub shows it: the number, or null where the rule hides it, and the text to print either way. */
 export interface ShownCount {

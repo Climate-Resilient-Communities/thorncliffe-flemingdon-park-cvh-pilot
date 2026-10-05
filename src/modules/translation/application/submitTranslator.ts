@@ -18,6 +18,7 @@ import { ALERT_TARGET_LANGS } from "../domain/alertTranslation";
 import { longestRouteDeadlineMs, submitBudgetMs, type TranslationRoute } from "../domain/alertRoutes";
 import {
   AlertRoutesUnavailableError,
+  type AlertSpendEntry,
   STORE_GRACE_MS,
   createAlertTranslator,
   type AlertTranslation,
@@ -52,6 +53,8 @@ export interface SubmitTranslateInput {
   onBudget?: (budgetMs: number) => void;
   /** Milliseconds of the press already used before this call (the transaction that began the attempt); 0 when not given. */
   spentMs?: number;
+  /** The entry the translation is for: its spend events carry it and whether it is a drill's (S07.10, an alert's share of the vendor's usage). */
+  entry?: AlertSpendEntry;
 }
 
 export interface SubmitTranslator {
@@ -81,7 +84,7 @@ export function createSubmitTranslator(deps: SubmitTranslatorDeps): SubmitTransl
   const grace = deps.storeGraceMs ?? STORE_GRACE_MS;
   const clock = deps.clock ?? (() => performance.now());
   return {
-    async translate({ english, signal, onLanguage, onBudget, spentMs = 0 }) {
+    async translate({ english, signal, onLanguage, onBudget, spentMs = 0, entry }) {
       const began = clock();
       const routes = await readRoutes(deps.routes, grace);
       const budgetMs = submitBudgetMs(routes);
@@ -104,7 +107,7 @@ export function createSubmitTranslator(deps: SubmitTranslatorDeps): SubmitTransl
       }, Math.max(0, longestRouteDeadlineMs(routes) + STOP_AFTER_ROUTES_MS - used));
       try {
         const translator = createAlertTranslator({ ...deps, routes: async () => routes, onLanguage });
-        const result = await translator.translate({ english, signal: stop.signal });
+        const result = await translator.translate({ english, signal: stop.signal, entry });
         return { ...result, budgetMs, stoppedAtBudget: stoppedAtBudget && !signal?.aborted };
       } finally {
         clearTimeout(timer);

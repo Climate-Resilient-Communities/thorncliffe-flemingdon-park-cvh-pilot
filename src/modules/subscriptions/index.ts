@@ -123,6 +123,7 @@ export { DRILL_LABEL_MAX_CHARS, DRILL_ROSTER_MAX, bodyLangOf, parseRosterLabel, 
 export { createSubscriberMeasuresJob, readSubscriberMeasures, type SubscriberMeasuresJob, type SubscriberMeasuresReport } from "./application/subscriberMeasures";
 export {
   FEWER_THAN_FIVE as SUBSCRIBER_FEWER_THAN_FIVE,
+  NOT_SHOWN as SUBSCRIBER_NOT_SHOWN,
   SUBSCRIBER_LANGS,
   SUBSCRIBER_MEASURES,
   type MeasureReading,

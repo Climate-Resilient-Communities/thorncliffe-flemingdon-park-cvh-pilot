@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CorrectionReachReport, CorrectionReachRow } from "@/modules/messaging";
-import type { AlertCost, AlertCostReport, AlertCostRow, CohereShare } from "@/modules/spend";
+import type { AlertCost, AlertCostReport, AlertCostRow, CohereEntryShare, CohereShare } from "@/modules/spend";
 import type { SubscriberMeasuresDay } from "@/modules/subscriptions";
 import { centsText, costView, countText, dayText, millicentsText, reachView, subscribersView } from "./view";
 
@@ -48,7 +48,7 @@ describe("the subscribers section", () => {
 
   it("names the day, each measure, the total and the splits, with hidden counts as 'Fewer than 5'", () => {
     const view = subscribersView(day);
-    expect(view.lead).toBe("Counted by the daily job for October 4, 2026. People who signed up for texts, by language and neighbourhood.");
+    expect(view.lead).toBe("Counted by the daily job for October 4, 2026. The numbers who were receiving texts or waiting to reply YES are as they stood shortly after midnight when the day ended; confirmations and deletions are those of the day. By language and neighbourhood.");
     expect(view.measures).toEqual([
       {
         id: "receiving_active",
@@ -58,6 +58,11 @@ describe("the subscribers section", () => {
         byNeighbourhood: "By neighbourhood: Flemingdon Park: 22; Thorncliffe Park: 40",
       },
     ]);
+  });
+
+  it("prints a cell hidden only to protect another as 'Not shown'", () => {
+    const [reading] = subscribersView({ day: "2026-10-04", measures: [{ ...day.measures[0]!, byLanguage: [{ lang: "en", count: { n: null, shown: "not shown" } }] }] }).measures;
+    expect(reading?.byLanguage).toBe("By language: English: Not shown");
   });
 
   it("says the daily count has not run when there is nothing to show", () => {
@@ -119,6 +124,7 @@ describe("the cost section", () => {
     approvedAt: new Date("2026-10-04T16:00:00Z"),
     total: cell({ lang: null, texts: count(55), countedMillicents: 120_500, basis: "mixed" }),
     languages: [cell({}), cell({ lang: "ur", texts: count(null), basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null })],
+    cohere: [],
     ...over,
   });
   const report = (real: AlertCost[], drills: AlertCost[] = []): AlertCostReport => ({ real, drills });
@@ -126,12 +132,16 @@ describe("the cost section", () => {
     month: "2026-10",
     allCalls: 40,
     alertCalls: 10,
+    drillCalls: 0,
     allTokens: 4000,
     alertTokens: 1000,
+    drillTokens: 0,
     alertTokenSharePercent: 25,
+    drillTokenSharePercent: 0,
     tokensEstimated: false,
     allCostCents: null,
     alertCostCents: null,
+    drillCostCents: 0,
     ...over,
   });
 
@@ -141,7 +151,7 @@ describe("the cost section", () => {
     expect(view.real[0]?.lines).toEqual([
       "All languages: 55 texts. $1.205 CAD (part actual, part estimate)",
       "English: 40 texts. $0.80 CAD (estimate)",
-      "Urdu: Fewer than 5 texts. No amount: fewer than 5 texts",
+      "Urdu: Fewer than 5 texts. No amount: it would give away a small number of texts",
     ]);
   });
 
@@ -153,13 +163,55 @@ describe("the cost section", () => {
   });
 
   it("prints the alerts' share of Cohere use, and an unknown price as unknown, never zero", () => {
-    expect(costView(report([]), [share()]).cohere.lines).toEqual(["2026-10: alerts used 25% of the billed tokens (10 of 40 calls).", "Cost: unknown, because a price is not set."]);
+    expect(costView(report([]), [share()]).cohere.lines).toEqual(["2026-10: real alerts used 25% of the billed tokens (10 of 40 calls).", "Cost: unknown, because a price is not set."]);
     expect(costView(report([]), [share({ allCostCents: 350, alertCostCents: 87.5, tokensEstimated: true })]).cohere.lines).toEqual([
-      "2026-10: alerts used 25% of the billed tokens (10 of 40 calls).",
-      "Cost to alerts: $0.875 CAD. All use: $3.50 CAD.",
+      "2026-10: real alerts used 25% of the billed tokens (10 of 40 calls).",
+      "Cost to real alerts: $0.875 CAD. All use: $3.50 CAD.",
       "Some token counts are estimates.",
     ]);
     expect(costView(report([]), [share({ allTokens: 0, alertTokens: 0, alertTokenSharePercent: null })]).cohere.lines[0]).toBe("2026-10: no billed tokens yet (10 of 40 calls).");
     expect(costView(report([]), []).cohere.lines).toEqual([]);
+  });
+
+  it("prints a drill's use of the vendor apart from the real alerts'", () => {
+    const lines = costView(report([]), [share({ drillCalls: 3, drillTokens: 400, drillTokenSharePercent: 10, drillCostCents: 2, allCostCents: 350, alertCostCents: 87.5 })]).cohere.lines;
+    expect(lines).toEqual([
+      "2026-10: real alerts used 25% of the billed tokens (10 of 40 calls).",
+      "Cost to real alerts: $0.875 CAD. All use: $3.50 CAD.",
+      "2026-10: drills used 10% of the billed tokens (3 of 40 calls).",
+      "Cost to drills: $0.02 CAD.",
+    ]);
+  });
+
+  it("prints each alert's own share of the vendor's use under its texts, an unknown price as unknown, and an alert with no texts yet", () => {
+    const month = (over: Partial<CohereEntryShare> = {}): CohereEntryShare => ({ month: "2026-10", calls: 14, tokens: 2500, tokenSharePercent: 12, tokensEstimated: false, costCents: 31.25, ...over });
+    const view = costView(report([entry({ cohere: [month()] }), entry({ entryId: "01900000-0000-7000-8000-0000000000e3", total: null, languages: [], cohere: [month({ costCents: null, tokensEstimated: true })] })]), []);
+    expect(view.real[0]?.lines.slice(-2)).toEqual(["Translation, 2026-10: 12% of the vendor's billed tokens that month (14 calls).", "Translation cost: $0.313 CAD."]);
+    expect(view.real[1]?.lines).toEqual([
+      "No texts were sent for this alert.",
+      "Translation, 2026-10: 12% of the vendor's billed tokens that month (14 calls).",
+      "Translation cost: unknown, because a price is not set.",
+      "Some token counts are estimates.",
+    ]);
+    expect(view.real[0]?.lines.some((line) => line.includes("undefined"))).toBe(false);
+  });
+
+  it("keeps a drill's share of the vendor's use in the drills' list", () => {
+    const view = costView(report([], [entry({ cohere: [{ month: "2026-10", calls: 1, tokens: 10, tokenSharePercent: 1, tokensEstimated: false, costCents: null }] })]), []);
+    expect(view.real).toEqual([]);
+    expect(view.drills[0]?.lines.join(" ")).toContain("1% of the vendor's billed tokens");
+  });
+});
+
+describe("a figure hidden to protect another", () => {
+  it("is 'Not shown', not 'Fewer than 5', and a cost line says no amount for it", () => {
+    expect(countText({ n: null, shown: "not shown" })).toBe("Not shown");
+    expect(countText({ n: null, shown: "fewer than 5" })).toBe("Fewer than 5");
+    const cell = (shown: string): AlertCostRow => ({ lang: "en", texts: { n: null, shown }, basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null });
+    const entry: AlertCost = { entryId: "e", alertId: "a", kind: "ack", approvedAt: null, total: cell("fewer than 5"), languages: [cell("not shown")], cohere: [] };
+    expect(costView({ real: [entry], drills: [] }, []).real[0]?.lines).toEqual([
+      "All languages: Fewer than 5 texts. No amount: it would give away a small number of texts",
+      "English: Number of texts not shown. No amount: it would give away a small number of texts",
+    ]);
   });
 });

@@ -4,14 +4,14 @@
 //    not attempted; a recipient deleted since cannot be matched), for a correction, a withdrawal and a final (the union of the thread), drills apart;
 //  - cost: SMS cost per alert entry and language, the actual where the provider reported one and a labelled estimate otherwise, drills apart, the small-number
 //    rule applied (a cell of fewer than 5 texts has no amount, a second cell hidden when one would be revealed);
-//  - Cohere: the alerts' share of the vendor's usage, an unknown price shown as unknown;
+//  - Cohere: each alert entry's share of the vendor's usage (its own translation calls, drills apart) and the month's, an unknown price shown as unknown;
 //  - no personal data: the views' columns hold no number, recipient id or body, and the client roles cannot read them.
 // Nothing reaches a provider: the dispatcher runs against a fake. Every number is fictional.
 import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { readCorrectionReach } from "../../src/modules/messaging";
+import { createDeliveryMeasures, readCorrectionReach } from "../../src/modules/messaging";
 import { readAlertCost, readCohereShare, recordSmsEstimate, recordSpendEvent } from "../../src/modules/spend";
 import { createDb, type Db } from "../../src/platform/db";
 import { dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
@@ -152,6 +152,31 @@ describe("how far a correction, a withdrawal and a final reached", () => {
     });
   });
 
+  it("agrees with messaging's own correctionReach (S06.08) for the same pair of entries, whatever became of each text", async () => {
+    const recipients = ids(16);
+    const original = await world.seedAlert({ recipients });
+    await dispatcher().run();
+    for (const id of original.ids) await deliver(id);
+    // A correction to all of them and a newcomer; some texts are cancelled or skipped before the hand-off, some handed off and not delivered, some delivered.
+    const correction = await world.seedAlert({ recipients: [...recipients, randomUUID()], kind: "correction" });
+    await joinThread(correction.entry.entryId, original.entry);
+    await appSql`update delivery set state = 'cancelled' where id = ${correction.ids[14]!}`;
+    await appSql`update delivery set state = 'skipped' where id = ${correction.ids[15]!}`;
+    await dispatcher().run();
+    for (const id of correction.ids.slice(0, 8)) await deliver(id);
+    const viaView = await reachOf(correction.entry.entryId);
+    const viaMessaging = await createDeliveryMeasures().correctionReach(app, { originalEntryId: original.entry.entryId, correctionEntryId: correction.entry.entryId });
+    expect(viaMessaging.attemptedReach).toBeGreaterThanOrEqual(5);
+    expect(viaMessaging.confirmedReach).toBeGreaterThanOrEqual(5);
+    expect(viaView).toMatchObject({
+      originalRecipients: { n: viaMessaging.originalRecipients },
+      attemptedReach: { n: viaMessaging.attemptedReach },
+      confirmedReach: { n: viaMessaging.confirmedReach },
+      attemptedPercent: Math.floor(100 * (viaMessaging.attemptedShare ?? 0)),
+      confirmedPercent: Math.floor(100 * (viaMessaging.confirmedShare ?? 0)),
+    });
+  });
+
   it("measures a withdrawal against the entry it withdraws", async () => {
     const recipients = ids(6);
     const original = await world.seedAlert({ recipients });
@@ -247,7 +272,7 @@ describe("how far a correction, a withdrawal and a final reached", () => {
     for (const recipient of recipients) expect(everything).not.toContain(recipient);
     expect(everything).not.toContain("Reply STOP");
     expect(everything).not.toMatch(/\+1[0-9]{10}/);
-    for (const view of ["correction_reach", "alert_cost", "cohere_alert_share", "subscriber_measures"]) {
+    for (const view of ["correction_reach", "alert_cost", "cohere_alert_entry", "cohere_alert_share", "subscriber_measures"]) {
       for (const role of ["anon", "authenticated", "service_role"]) {
         const [row] = await owner`select has_table_privilege(${role}, ${view}, 'select') as ok`;
         expect(row!.ok, `${role} on ${view}`).toBe(false);
@@ -323,7 +348,8 @@ describe("what an alert cost", () => {
     const cost = await entryCost(entryId);
     expect(languageRow(cost, "hi")).toMatchObject({ texts: { n: null, shown: "fewer than 5" }, basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null });
     // hi (3) is hidden; the total (15) minus the visible cells would give it, so the smallest visible cell (en, 6; ur ties and en comes first) is hidden too.
-    expect(languageRow(cost, "en")).toMatchObject({ texts: { n: null, shown: "fewer than 5" }, countedMillicents: null });
+    // That cell is not "fewer than 5" (it is 6): it reads "not shown".
+    expect(languageRow(cost, "en")).toMatchObject({ texts: { n: null, shown: "not shown" }, countedMillicents: null });
     expect(languageRow(cost, "ur")).toMatchObject({ texts: { n: 6, shown: "6" }, countedMillicents: 24_000 });
     expect(cost?.total).toMatchObject({ texts: { n: 15, shown: "15" }, countedMillicents: (12 + 24 + 6) * 1000 });
     // A whole entry of fewer than 5 texts has no total amount either.
@@ -340,8 +366,8 @@ describe("what an alert cost", () => {
     const report = await readAlertCost(app, 50);
     expect(report.real.map((row) => row.entryId)).toEqual([real]);
     expect(report.drills.map((row) => row.entryId)).toEqual([drill]);
-    expect(report.real[0]?.total.texts.n).toBe(6);
-    expect(report.drills[0]?.total.texts.n).toBe(9);
+    expect(report.real[0]?.total?.texts.n).toBe(6);
+    expect(report.drills[0]?.total?.texts.n).toBe(9);
   });
 
   it("holds no personal data and no delivery or recipient id", async () => {
@@ -359,13 +385,14 @@ describe("what an alert cost", () => {
 describe("the alerts' share of the vendor's usage", () => {
   const event = (over: Record<string, unknown>) =>
     recordSpendEvent(app, { kind: "translate", purpose: "alert", model: "command-a-translate", calls: 1, tokens: 1_000, pricePerMillionTokensCad: null, ...over } as never);
+  const seedEntry = async (options: { isDrill?: boolean } = {}) => (await world.seedAlert({ isDrill: options.isDrill, recipients: 1 })).entry.entryId;
 
   it("gives the share of calls and tokens made for alerts, and an unknown price as unknown rather than zero", async () => {
     await event({ tokens: 1_000, calls: 2 });
     await event({ kind: "embed", purpose: "publish", model: "embed-multilingual-v3.0", tokens: 2_000, calls: 3 });
     await event({ kind: "embed", purpose: "search", model: "embed-multilingual-v3.0", tokens: 1_000, calls: 5 });
     const [month] = await readCohereShare(app, 1);
-    expect(month).toMatchObject({ allCalls: 10, alertCalls: 2, allTokens: 4_000, alertTokens: 1_000, alertTokenSharePercent: 25, allCostCents: null, alertCostCents: null });
+    expect(month).toMatchObject({ allCalls: 10, alertCalls: 2, drillCalls: 0, allTokens: 4_000, alertTokens: 1_000, alertTokenSharePercent: 25, allCostCents: null, alertCostCents: null });
   });
 
   it("gives amounts once every price is known, and keeps months apart", async () => {
@@ -379,5 +406,63 @@ describe("the alerts' share of the vendor's usage", () => {
     expect(months[0]).toMatchObject({ alertTokenSharePercent: 25, alertCostCents: 200, allCostCents: 350 });
     expect(months[1]).toMatchObject({ allCalls: 4, alertCalls: 0, alertTokens: 0, alertTokenSharePercent: 0 });
     expect(months[0]!.month > months[1]!.month).toBe(true);
+  });
+
+  it("gives each alert entry its own share of the month's billed tokens, with its calls and cost, and an unknown price as unknown", async () => {
+    const first = await seedEntry();
+    const second = await seedEntry();
+    await event({ entryId: first, isDrill: false, tokens: 1_000_000, calls: 2, pricePerMillionTokensCad: 2 });
+    await event({ entryId: first, isDrill: false, tokens: 500_000, calls: 1, pricePerMillionTokensCad: 2 });
+    await event({ entryId: second, isDrill: false, tokens: 500_000, calls: 3, pricePerMillionTokensCad: null });
+    await event({ kind: "embed", purpose: "publish", model: "embed-multilingual-v3.0", tokens: 2_000_000, pricePerMillionTokensCad: 1 });
+    const report = await readAlertCost(app, 50);
+    const of = (entryId: string) => report.real.find((row) => row.entryId === entryId);
+    // The month used 4,000,000 billed tokens: the first entry 1,500,000 (37%), the second 500,000 (12%).
+    expect(of(first)?.cohere).toEqual([expect.objectContaining({ calls: 3, tokens: 1_500_000, tokenSharePercent: 37, costCents: 300, tokensEstimated: false })]);
+    expect(of(second)?.cohere).toEqual([expect.objectContaining({ calls: 3, tokens: 500_000, tokenSharePercent: 12, costCents: null })]);
+    // Entries with a translation and no texts yet are listed too, with no total.
+    expect(of(first)?.total).toBeNull();
+    expect(of(first)?.languages).toEqual([]);
+  });
+
+  it("puts an entry's share beside its texts, and reports a drill's translations apart from every real alert's", async () => {
+    const real = await seedEntry();
+    const drill = await seedEntry({ isDrill: true });
+    const texts = async (entryId: string, isDrill: boolean) => {
+      for (let i = 0; i < 5; i += 1) await recordSmsEstimate(app, { deliveryId: randomUUID(), entryId, lang: "en", isDrill, segments: 1, costCents: 2, purpose: "alert" });
+    };
+    await texts(real, false);
+    await texts(drill, true);
+    await event({ entryId: real, isDrill: false, tokens: 3_000, calls: 2 });
+    await event({ entryId: drill, isDrill: true, tokens: 1_000, calls: 1 });
+    const report = await readAlertCost(app, 50);
+    expect(report.real.map((row) => row.entryId)).toEqual([real]);
+    expect(report.drills.map((row) => row.entryId)).toEqual([drill]);
+    expect(report.real[0]?.total?.texts.n).toBe(5);
+    expect(report.real[0]?.cohere).toEqual([expect.objectContaining({ calls: 2, tokens: 3_000, tokenSharePercent: 75 })]);
+    expect(report.drills[0]?.cohere).toEqual([expect.objectContaining({ calls: 1, tokens: 1_000, tokenSharePercent: 25 })]);
+    // The month: real alerts and drills are told apart, and the drill's tokens are not in the real alerts'.
+    const [month] = await readCohereShare(app, 1);
+    expect(month).toMatchObject({ allCalls: 3, alertCalls: 2, drillCalls: 1, allTokens: 4_000, alertTokens: 3_000, drillTokens: 1_000, alertTokenSharePercent: 75, drillTokenSharePercent: 25 });
+  });
+
+  it("holds no personal data in the per-alert view", async () => {
+    const columns = (await owner`select column_name from information_schema.columns where table_name = 'cohere_alert_entry' order by ordinal_position`).map((row) => row.column_name);
+    expect(columns).toEqual([
+      "entry_id", "alert_id", "kind", "approved_at", "is_drill", "month", "calls", "tokens", "month_tokens", "token_share_percent", "tokens_estimated", "price_known", "cost_cents",
+    ]);
+  });
+
+  it("refuses an entry without its drill flag, a flag without its entry, and an entry on a purpose that is not an alert's; a row as the release before wrote it is still accepted", async () => {
+    const entryId = await seedEntry();
+    await expect(event({ entryId, isDrill: null })).rejects.toThrow();
+    await expect(event({ entryId: null, isDrill: true })).rejects.toThrow();
+    await expect(event({ entryId, isDrill: false, purpose: "search" })).rejects.toThrow();
+    // The database says the same to a writer that skips the module.
+    await expect(appSql`insert into spend_event (kind, purpose, model, tokens, entry_id) values ('translate', 'alert', 'm', 1, ${entryId})`).rejects.toThrow(/spend_event_sms_shape/);
+    await expect(appSql`insert into spend_event (kind, purpose, model, tokens, entry_id, is_drill) values ('embed', 'search', 'm', 1, ${entryId}, false)`).rejects.toThrow(/spend_event_sms_shape/);
+    // A row as the release before wrote it: no entry, no flag.
+    await appSql`insert into spend_event (kind, purpose, model, tokens) values ('translate', 'alert', 'm', 1)`;
+    await event({ entryId, isDrill: false });
   });
 });

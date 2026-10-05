@@ -1,11 +1,11 @@
 -- S07.10: how far corrections, withdrawals and finals reached (FR-M4) and what each alert cost (FR-M5). Views only: they create no table, so they add nothing
--- to the spine's table ownership. `correction_reach` is read by messaging (its S06.08 delivery measures), `alert_cost` and `cohere_alert_share` by spend. Each
+-- to the spine's table ownership. `correction_reach` is read by messaging (its S06.08 delivery measures), `alert_cost`, `cohere_alert_entry` and `cohere_alert_share` by spend. Each
 -- holds counts, amounts and the ids of alert entries (not personal data) and never a phone number, a subscriber or recipient id or a message body.
 -- A drill is reported apart: `is_drill` is on every row and nothing is ever counted across it.
 --
 -- The small-number rule (E09) is applied here, as in `weekly_review`: a count of 1 to 4 is null with the text 'fewer than 5'; a percentage whose numerator or
 -- denominator is 1 to 4 is null; and when a total and the visible cells of its group would reveal one hidden cell, the smallest visible cell of 5 or more is
--- hidden as well. Supabase's default privileges grant every new relation to anon, authenticated and service_role, so they are taken back; the views are
+-- hidden as well; that cell is not "fewer than 5" (it may be 5 or more), so it reads 'not shown'. Supabase's default privileges grant every new relation to anon, authenticated and service_role, so they are taken back; the views are
 -- `security_invoker`, so the reader's own rights and RLS apply.
 --
 -- correction_reach: one row per correction, withdrawal or final that has texts to send, against the recipients of the original, with messaging's definitions
@@ -24,10 +24,15 @@
 -- `estimate_cents` in whole cents CAD, `counted_millicents` their sum. A cell of fewer than 5 texts has no amount (the amount would give the count away).
 -- Messages the provider billed that no estimate answers for belong to no alert, so they are in the month's report (smsMonthReport) and not here.
 --
--- cohere_alert_share: per Toronto month, the calls and billed tokens of all the vendor's usage (every `spend_event` that is not a text message) and of the part
--- made for alerts (purpose `alert`: the translation of an alert at submit), the alerts' share of the tokens, and whether every price is known. A price that is
--- not known gives no amount: the usage stays in calls and tokens, shown as unknown. The vendor's events carry no alert entry and no drill flag, so this share
--- cannot be given per alert and a drill's translations are counted with the others (open for the owner).
+-- cohere_alert_entry: per alert entry, drill flag and Toronto month, the vendor calls and billed tokens made for that entry (purpose `alert`: the translation of
+-- the alert at submit, whose `spend_event` rows carry the entry and its drill flag since 20261006110200), that entry's share of ALL the vendor's billed tokens of
+-- the month, and its cost where every price is known. A price that is not known gives no amount: the usage stays in calls and tokens, shown as unknown. A drill
+-- entry is a row of its own with `is_drill` true; nothing adds it to a real alert. Events written before the entry was recorded have none and are in the month's
+-- figures only.
+--
+-- cohere_alert_share: per Toronto month, the vendor's calls and billed tokens (every `spend_event` that is not a text message), the part made for real alerts
+-- (purpose `alert` and not a drill; an event without an entry is counted here, as it cannot be told) and the part made for drills, each with its share of the
+-- month's tokens, and whether every price is known.
 
 create view correction_reach with (security_invoker = true) as
 with
@@ -104,14 +109,14 @@ with
   ),
   everything as (
     select entry_id, is_drill, lang, texts, actual_texts, actual_millicents, estimate_cents,
-           (small or (small_cells = 1 and complement_rank = 1 and texts >= 5)) as hidden
+           (small or (small_cells = 1 and complement_rank = 1 and texts >= 5)) as hidden, small
     from ranked
     union all
-    select entry_id, is_drill, lang, texts, actual_texts, actual_millicents, estimate_cents, (texts between 1 and 4) as hidden from totals
+    select entry_id, is_drill, lang, texts, actual_texts, actual_millicents, estimate_cents, (texts between 1 and 4) as hidden, (texts between 1 and 4) as small from totals
   )
 select x.entry_id, e.alert_id, e.kind, e.approved_at, x.is_drill, x.lang,
        case when x.hidden then null else x.texts end as texts,
-       case when x.hidden then 'fewer than 5' else x.texts::text end as texts_shown,
+       case when not x.hidden then x.texts::text when x.small then 'fewer than 5' else 'not shown' end as texts_shown,
        case when x.hidden then null
             when x.actual_texts = x.texts then 'actual'
             when x.actual_texts = 0 then 'estimate'
@@ -128,20 +133,54 @@ grant select on table alert_cost to cvh_app;
 create view cohere_alert_share with (security_invoker = true) as
 select (date_trunc('month', s.at at time zone 'America/Toronto'))::date as month,
        sum(s.calls)::bigint as all_calls,
-       (coalesce(sum(s.calls) filter (where s.purpose = 'alert'), 0))::bigint as alert_calls,
+       (coalesce(sum(s.calls) filter (where s.purpose = 'alert' and s.is_drill is not true), 0))::bigint as alert_calls,
+       (coalesce(sum(s.calls) filter (where s.purpose = 'alert' and s.is_drill), 0))::bigint as drill_calls,
        sum(s.tokens)::bigint as all_tokens,
-       (coalesce(sum(s.tokens) filter (where s.purpose = 'alert'), 0))::bigint as alert_tokens,
-       case when sum(s.tokens) > 0 then floor(100.0 * coalesce(sum(s.tokens) filter (where s.purpose = 'alert'), 0) / sum(s.tokens))::integer end as alert_token_share_percent,
+       (coalesce(sum(s.tokens) filter (where s.purpose = 'alert' and s.is_drill is not true), 0))::bigint as alert_tokens,
+       (coalesce(sum(s.tokens) filter (where s.purpose = 'alert' and s.is_drill), 0))::bigint as drill_tokens,
+       case when sum(s.tokens) > 0 then floor(100.0 * coalesce(sum(s.tokens) filter (where s.purpose = 'alert' and s.is_drill is not true), 0) / sum(s.tokens))::integer end as alert_token_share_percent,
+       case when sum(s.tokens) > 0 then floor(100.0 * coalesce(sum(s.tokens) filter (where s.purpose = 'alert' and s.is_drill), 0) / sum(s.tokens))::integer end as drill_token_share_percent,
        bool_or(s.tokens_estimated) as tokens_estimated,
        bool_and(s.price_per_million_tokens_cad is not null) as price_known,
-       coalesce(bool_and(s.price_per_million_tokens_cad is not null) filter (where s.purpose = 'alert'), true) as alert_price_known,
        case when bool_and(s.price_per_million_tokens_cad is not null)
             then round(sum(s.tokens * s.price_per_million_tokens_cad) * 100 / 1000000, 3) end as all_cost_cents,
-       case when coalesce(bool_and(s.price_per_million_tokens_cad is not null) filter (where s.purpose = 'alert'), true)
-            then round(coalesce(sum(s.tokens * s.price_per_million_tokens_cad) filter (where s.purpose = 'alert'), 0) * 100 / 1000000, 3) end as alert_cost_cents
+       case when coalesce(bool_and(s.price_per_million_tokens_cad is not null) filter (where s.purpose = 'alert' and s.is_drill is not true), true)
+            then round(coalesce(sum(s.tokens * s.price_per_million_tokens_cad) filter (where s.purpose = 'alert' and s.is_drill is not true), 0) * 100 / 1000000, 3) end as alert_cost_cents,
+       case when coalesce(bool_and(s.price_per_million_tokens_cad is not null) filter (where s.purpose = 'alert' and s.is_drill), true)
+            then round(coalesce(sum(s.tokens * s.price_per_million_tokens_cad) filter (where s.purpose = 'alert' and s.is_drill), 0) * 100 / 1000000, 3) end as drill_cost_cents
 from spend_event s
 where s.kind <> 'sms'
 group by 1;
 
 revoke all on table cohere_alert_share from public, anon, authenticated, service_role;
 grant select on table cohere_alert_share to cvh_app;
+
+create view cohere_alert_entry with (security_invoker = true) as
+with
+  month_tokens as (
+    select (date_trunc('month', s.at at time zone 'America/Toronto'))::date as month, sum(s.tokens)::bigint as tokens
+    from spend_event s
+    where s.kind <> 'sms'
+    group by 1
+  ),
+  per_entry as (
+    select s.entry_id, s.is_drill, (date_trunc('month', s.at at time zone 'America/Toronto'))::date as month,
+           sum(s.calls)::bigint as calls, sum(s.tokens)::bigint as tokens,
+           bool_or(s.tokens_estimated) as tokens_estimated,
+           bool_and(s.price_per_million_tokens_cad is not null) as price_known,
+           sum(s.tokens * s.price_per_million_tokens_cad) as amount
+    from spend_event s
+    where s.kind <> 'sms' and s.purpose = 'alert' and s.entry_id is not null
+    group by s.entry_id, s.is_drill, 3
+  )
+select p.entry_id, e.alert_id, e.kind, e.approved_at, p.is_drill, p.month,
+       p.calls, p.tokens, m.tokens as month_tokens,
+       case when m.tokens > 0 then floor(100.0 * p.tokens / m.tokens)::integer end as token_share_percent,
+       p.tokens_estimated, p.price_known,
+       case when p.price_known then round(p.amount * 100 / 1000000, 3) end as cost_cents
+from per_entry p
+join alert_entry e on e.id = p.entry_id
+join month_tokens m on m.month = p.month;
+
+revoke all on table cohere_alert_entry from public, anon, authenticated, service_role;
+grant select on table cohere_alert_entry to cvh_app;

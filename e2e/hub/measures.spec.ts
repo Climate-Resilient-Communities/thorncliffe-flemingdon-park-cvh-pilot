@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
 import { mount } from "../helpers/layout-fixture";
-import { sampleView, type MeasuresSample } from "../helpers/measures-sample";
+import { sampleView, shellTextsFor, type MeasuresSample } from "../helpers/measures-sample";
 import { expectBaseline } from "./helpers";
 
 // S07.10: the Hub's pilot measures page in the Hub shell, in en: a Director's page (subscribers by measure, how far corrections, withdrawals and finals reached with a drill kept
@@ -19,7 +19,8 @@ const STATES: Record<string, MeasuresSample> = {
 
 async function open(page: Page, sample: MeasuresSample, width: number) {
   await page.setViewportSize({ width, height: HEIGHT });
-  await mount(page, "MeasuresFixture", { texts: REAL_TEXTS, brand, view: sampleView(sample), role: sample === "coordinator" ? "coordinator" : "director" }, { lang: "en" });
+  const role = sample === "coordinator" ? "coordinator" : "director";
+  await mount(page, "MeasuresFixture", { texts: shellTextsFor(REAL_TEXTS, role, { realWords: true }), brand, view: sampleView(sample), role }, { lang: "en" });
 }
 
 for (const [state, sample] of Object.entries(STATES)) {
@@ -32,6 +33,9 @@ for (const [state, sample] of Object.entries(STATES)) {
       expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
       if (sample === "not-run") await expect(page.getByTestId("measures-subscribers-lead")).toContainText("has not run yet");
       else await expect(page.getByTestId("measure-receiving_active")).toContainText("All:");
+      // The picture shows the role it is named for: its label in the top bar, and not the Admin's.
+      await expect(page.getByTestId("hub-top")).toContainText(sample === "coordinator" ? "Coordinator" : "Director");
+      await expect(page.getByTestId("hub-top")).not.toContainText("Admin");
       if (sample === "coordinator") await expect(page.getByTestId("measures-cost")).toHaveCount(0);
       else await expect(page.getByTestId("measures-cost")).toBeVisible();
       if (sample === "nothing") await expect(page.getByTestId("measures-reach-empty")).toBeVisible();

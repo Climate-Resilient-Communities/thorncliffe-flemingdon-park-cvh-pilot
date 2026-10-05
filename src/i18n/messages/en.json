@@ -3999,8 +3999,9 @@
     "measures": {
       "title": "Pilot measures",
       "lead": "Counts only. Nobody can be identified from these figures.",
-      "privacy": "A number from 1 to 4 is shown as \"Fewer than 5\", in every split. Exercises and drills are shown apart and never added to real alerts.",
+      "privacy": "A number from 1 to 4 is shown as \"Fewer than 5\", in every split. Where a total and the other figures would give away one of those numbers, one more figure is marked \"Not shown\": it may be 5 or more. Exercises and drills are shown apart and never added to real alerts.",
       "fewer": "Fewer than 5",
+      "notShown": "Not shown",
       "allLanguages": "All languages",
       "unknown": "Unknown",
       "nbhd": {
@@ -4009,7 +4010,7 @@
       },
       "subscribers": {
         "heading": "Subscribers",
-        "lead": "Counted by the daily job for {day}. People who signed up for texts, by language and neighbourhood.",
+        "lead": "Counted by the daily job for {day}. The numbers who were receiving texts or waiting to reply YES are as they stood shortly after midnight when the day ended; confirmations and deletions are those of the day. By language and neighbourhood.",
         "neverRun": "The daily count has not run yet. The first figures appear the morning after it first runs.",
         "total": "All: {n}",
         "byLanguage": "By language",
@@ -4044,7 +4045,7 @@
       },
       "cost": {
         "heading": "Cost per alert",
-        "lead": "Text message cost by language: the provider's price where it has been reported, otherwise an estimate, labelled. Only Admins and Directors see this.",
+        "lead": "Text message cost by language: the provider's price where it has been reported, otherwise an estimate, labelled. Each alert also shows its share of the translation vendor's use in the month. Only Admins and Directors see this.",
         "empty": "No alert has texts with a recorded cost yet.",
         "drillsHeading": "Drills, kept apart",
         "drillsEmpty": "No drill has texts with a recorded cost.",
@@ -4055,7 +4056,9 @@
           "mixed": "part actual, part estimate"
         },
         "amount": "{amount} CAD ({basis})",
-        "noAmount": "No amount: fewer than 5 texts",
+        "noAmount": "No amount: it would give away a small number of texts",
+        "textsNotShown": "Number of texts not shown",
+        "noTexts": "No texts were sent for this alert.",
         "kinds": {
           "ack": "Acknowledgement",
           "update": "Update",
@@ -4065,11 +4068,18 @@
         },
         "cohere": {
           "heading": "Cohere use by alerts",
-          "lead": "Alerts' share of the translation vendor's use in the month. The vendor's records do not say which alert a call was for or whether it was a drill, so this is the share of all use in the month, drills included.",
+          "lead": "The month's use of the translation vendor, real alerts and drills apart. Use recorded before calls were tied to an alert is counted with the real alerts.",
+          "entry": "Translation, {month}: {share} of the vendor's billed tokens that month ({calls} calls).",
+          "entryNoShare": "Translation, {month}: {calls} calls, no billed tokens yet.",
+          "entryCost": "Translation cost: {amount} CAD.",
+          "entryCostUnknown": "Translation cost: unknown, because a price is not set.",
+          "entryEstimated": "Some token counts are estimates.",
           "empty": "Cohere has not been used yet.",
-          "line": "{month}: alerts used {share} of the billed tokens ({alertCalls} of {allCalls} calls).",
+          "line": "{month}: real alerts used {share} of the billed tokens ({alertCalls} of {allCalls} calls).",
+          "drillLine": "{month}: drills used {share} of the billed tokens ({drillCalls} of {allCalls} calls).",
           "noShare": "{month}: no billed tokens yet ({alertCalls} of {allCalls} calls).",
-          "cost": "Cost to alerts: {amount} CAD. All use: {all} CAD.",
+          "cost": "Cost to real alerts: {amount} CAD. All use: {all} CAD.",
+          "drillCost": "Cost to drills: {amount} CAD.",
           "costUnknown": "Cost: unknown, because a price is not set.",
           "estimated": "Some token counts are estimates."
         }

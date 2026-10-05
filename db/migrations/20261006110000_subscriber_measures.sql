@@ -16,8 +16,13 @@
 --  - `subscriber_measures` (view): what the Hub shows. Per day and measure, the counts by language and by neighbourhood and the total, with the small-number
 --    rule (E09): a count of 1 to 4 is `n` null and `n_shown` 'fewer than 5'; and when a total and the visible cells of its split would reveal one hidden
 --    cell, the smallest visible cell of 5 or more is hidden as well (a split with two hidden cells reveals neither; zero is shown as 0 and is never the
---    cell hidden for this, since a reader who knows the rule would then read the hidden total as the small cell). A drill reaches the drill roster, not a
---    subscriber, so no drill is in these counts.
+--    cell hidden for this, since a reader who knows the rule would then read the hidden total as the small cell). A cell hidden only to protect another is
+--    not "fewer than 5" (it may be 5 or more): its `n_shown` is 'not shown'. A drill reaches the drill roster, not a subscriber, so no drill is in these counts.
+--
+-- A bulk deletion of subscribers (the end of the pilot) must be a DELETE, never a TRUNCATE (TRUNCATE fires no row trigger, so the deletions would not be
+-- counted), and in a stable order (`delete from subscriber where id in (select id from subscriber order by id ...)`): the trigger below holds one counter row per
+-- (day, event, language, neighbourhood) until commit, so two multi-row deleters in different orders could wait on each other, and a long one makes concurrent
+-- STOP and YES replies of the same language and neighbourhood wait for it. Batches keep that short.
 --
 -- Supabase's default privileges grant every new relation to anon, authenticated and service_role, so they are taken back. The view is `security_invoker`,
 -- as the other views are: the reader's own rights and RLS apply.
@@ -102,12 +107,13 @@ with
   shown as (
     select r.day, r.measure, r.split, r.key,
            (r.small or (r.small_cells = 1 and r.complement_rank = 1 and r.n >= 5)) as hidden,
+           r.small,
            r.n
     from ranked r
   )
 select day, measure, split, key,
        case when hidden then null else n end as n,
-       case when hidden then 'fewer than 5' else n::text end as n_shown
+       case when not hidden then n::text when small then 'fewer than 5' else 'not shown' end as n_shown
 from shown
 union all
 select day, measure, split, null::text,

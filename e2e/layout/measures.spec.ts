@@ -3,7 +3,7 @@ import type { Text } from "../../src/app/staff/measures/view";
 import { checkHubShellBoundaries, expectNoHorizontalOverflow, hubPage, type HubLanguage } from "../helpers/hub-layout-boundaries";
 import { REAL_TEXTS, hubBrand, longestTexts } from "../helpers/hub-shell";
 import { mount } from "../helpers/layout-fixture";
-import { sampleView, type MeasuresSample } from "../helpers/measures-sample";
+import { sampleView, shellTextsFor, type MeasuresSample } from "../helpers/measures-sample";
 import { longestLabels } from "../helpers/strings";
 
 // S07.10: the Hub's pilot measures page (subscribers, how far corrections reached, cost per alert), at viewports of 699 and 700 px (the shell's breakpoint) and at content
@@ -27,18 +27,20 @@ const SAMPLES: [string, MeasuresSample][] = [
   ["the page with nothing texted yet", "nothing"],
 ];
 
-const open = (page: Page, sample: MeasuresSample, lang: HubLanguage, words: Words = "longest") =>
-  mount(
+const open = (page: Page, sample: MeasuresSample, lang: HubLanguage, words: Words = "longest") => {
+  const role = sample === "coordinator" ? "coordinator" : "director";
+  return mount(
     page,
     "MeasuresFixture",
     {
-      texts: words === "longest" ? longestTexts(lang) : REAL_TEXTS,
+      texts: shellTextsFor(words === "longest" ? longestTexts(lang) : REAL_TEXTS, role, { realWords: words === "real" }),
       brand,
       view: words === "longest" ? sampleView(sample, longestText(lang)) : sampleView(sample),
-      role: sample === "coordinator" ? "coordinator" : "director",
+      role,
     },
     { lang },
   );
+};
 
 for (const [name, sample] of SAMPLES) {
   test.describe(name, () => {
@@ -80,6 +82,9 @@ test.describe("who sees the cost of an alert (AD-4)", () => {
     await expect(page.getByTestId("measure-receiving_active")).toContainText("Fewer than 5");
     await expect(page.getByTestId("measures-reach-real")).toContainText("Confirmed: Fewer than 5");
     await expect(page.getByTestId("measures-reach-drills")).toContainText("Got the original: Fewer than 5");
-    await expect(page.getByTestId("measures-cost-real")).toContainText("No amount: fewer than 5 texts");
+    await expect(page.getByTestId("measures-cost-real")).toContainText("No amount: it would give away a small number of texts");
+    // A figure hidden only to protect another is not "Fewer than 5": it reads "Not shown".
+    await expect(page.getByTestId("measure-receiving_active")).toContainText("Not shown");
+    await expect(page.getByTestId("measures-cost-real")).toContainText("Number of texts not shown");
   });
 });

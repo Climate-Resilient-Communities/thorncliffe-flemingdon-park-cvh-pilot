@@ -307,7 +307,7 @@ export const inboundLimitedCount = pgTable(
 
 /**
  * How many subscribers were made (`confirmed`) and deleted (`deleted`) on each day (Toronto) by language and neighbourhood (S07.10,
- * 20261006100000_subscriber_measures.sql). Kept by a trigger on `subscriber` that runs as the table's owner; the app only reads it. Counts only.
+ * 20261006110000_subscriber_measures.sql). Kept by a trigger on `subscriber` that runs as the table's owner; the app only reads it. Counts only.
  */
 export const subscriberEventCount = pgTable(
   "subscriber_event_count",

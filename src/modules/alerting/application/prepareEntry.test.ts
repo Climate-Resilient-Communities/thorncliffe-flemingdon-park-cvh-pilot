@@ -133,6 +133,22 @@ describe("the preparer", () => {
     expect(seen.budgets).toEqual([25_000]);
   });
 
+  it("tells the translator which entry it translates for and whether it is a drill's, so the vendor's usage is told per alert (S07.10)", async () => {
+    const seen: ({ entryId: string; isDrill: boolean } | undefined)[] = [];
+    const prepare = setup(async ({ english, entry }) => {
+      seen.push(entry);
+      return { translations: wholeSet(english) };
+    });
+
+    await prepare.prepare(contentOf(), context({ entryId: "01900000-0000-7000-8000-0000000000e9", isDrill: true }));
+    await prepare.prepare(contentOf(), context());
+
+    expect(seen).toEqual([
+      { entryId: "01900000-0000-7000-8000-0000000000e9", isDrill: true },
+      { entryId: "01900000-0000-7000-8000-0000000000e1", isDrill: false },
+    ]);
+  });
+
   it("is not changed by a progress callback that throws", async () => {
     const prepare = setup(async ({ english, onLanguage }) => {
       const set = wholeSet(english);

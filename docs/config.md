@@ -332,10 +332,10 @@ By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"202
 
 **The daily subscriber measures (S07.10, `/api/jobs/subscriber-measures`).** Once a day it stores, for the Toronto day that has just ended, receiving subscribers by state, pending sign-ups,
 confirmations and deletions by language and neighbourhood, as counts only (`subscriber_measure`; the Hub's Measures page shows them, a count of 1 to 4 as "Fewer than 5"). It reads no Twilio credential and works in every environment.
-Run it shortly after Toronto midnight (09:05 UTC is 04:05 or 05:05 in Toronto) so the figures are taken near the end of the day they are for; a second run on the same day replaces that day's figures. A day on which the job did not run has no subscriber figures. The owner runs this once in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it:
+The state figures (receiving subscribers, pending sign-ups) are taken at the run and filed under the day that has just ended, and the day's confirmations and deletions are counted up to midnight, so the job runs just after Toronto midnight: 05:05 UTC is 00:05 in winter and 01:05 in summer (pg_cron has no time zone, so one schedule cannot be exact in both; an hour is the most a state figure can be ahead of its day's events). A run that is late or retried is filed under the same day but is taken later, so the gap widens by that delay; a second run on the same day replaces that day's figures. A day on which the job did not run has no subscriber figures. The owner runs this once in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it:
 
 ```sql
-select cron.schedule('cvh-subscriber-measures', '5 9 * * *', $$
+select cron.schedule('cvh-subscriber-measures', '5 5 * * *', $$
   select net.http_post(
     url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/subscriber-measures',
     headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),

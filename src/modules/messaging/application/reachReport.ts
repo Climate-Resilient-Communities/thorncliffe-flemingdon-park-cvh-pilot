@@ -1,5 +1,5 @@
 // How far corrections, withdrawals and finals reached, for the Hub (S07.10, FR-M4): the rows of the SQL view `correction_reach`
-// (db/migrations/20261006100100_delivery_measure_views.sql), one per correction, withdrawal or final that had texts to send, against the recipients of the
+// (db/migrations/20261006110100_delivery_measure_views.sql), one per correction, withdrawal or final that had texts to send, against the recipients of the
 // original with the S06.08 definitions (src/modules/messaging/domain/deliveryMeasures.ts): attempted reach is the original's recipients whose text of the
 // entry was handed to the provider, confirmed reach those whose text is delivered. The view applies the small-number rule and holds no personal data (only
 // counts and the ids of alert entries). Drills are reported apart: the view flags them and they are returned in a list of their own.

@@ -360,7 +360,7 @@ describe("the small-number rule in what the Hub reads", () => {
       ["bn", "FP", 12],
     ]);
     // By language: ur is 4 (3 + 1) and so hidden; hi is zero; the total (56) is shown, so the smallest visible cell of 5 or more (bn, 12) is hidden with it.
-    expect(await shown("receiving_active", "language")).toEqual({ total: "56", en: "40", ur: "fewer than 5", hi: "0", bn: "fewer than 5" });
+    expect(await shown("receiving_active", "language")).toEqual({ total: "56", en: "40", ur: "fewer than 5", hi: "0", bn: "not shown" });
     const hidden = await owner`select n from subscriber_measures where day = ${PAST_DAY}::date and measure = 'receiving_active' and split = 'language' and key = 'ur'`;
     expect(hidden[0]!.n).toBeNull();
     // By neighbourhood: TP is 43 and FP 13, both shown.
@@ -373,8 +373,8 @@ describe("the small-number rule in what the Hub reads", () => {
       ["ur", "TP", 3],
       ["hi", "TP", 7],
     ]);
-    // 30 - 20 - 7 would give ur's 3: hi (7), the smallest visible cell, is hidden too. en stays.
-    expect(await shown("confirmations", "language")).toEqual({ total: "30", en: "20", ur: "fewer than 5", hi: "fewer than 5" });
+    // 30 - 20 - 7 would give ur's 3: hi (7), the smallest visible cell, is hidden too and reads "not shown", as it may be 5 or more. en stays.
+    expect(await shown("confirmations", "language")).toEqual({ total: "30", en: "20", ur: "fewer than 5", hi: "not shown" });
   });
 
   it("hides no other cell when two cells are hidden already, and hides a total of 1 to 4", async () => {
@@ -398,7 +398,7 @@ describe("the small-number rule in what the Hub reads", () => {
       ["hi", "TP", 0],
       ["bn", "TP", 0],
     ]);
-    expect(await shown("receiving_retained", "language")).toEqual({ total: "11", en: "fewer than 5", ur: "fewer than 5", hi: "0", bn: "0" });
+    expect(await shown("receiving_retained", "language")).toEqual({ total: "11", en: "not shown", ur: "fewer than 5", hi: "0", bn: "0" });
   });
 
   it("gives the Hub the latest recorded day, split and ordered, with the rule applied", async () => {
@@ -414,7 +414,7 @@ describe("the small-number rule in what the Hub reads", () => {
     expect(reading!.byLanguage.map((cell) => cell.lang)).toEqual(["en", "ur"]);
     expect(reading!.byNeighbourhood).toEqual([
       { nbhd: "FP", count: { n: null, shown: "fewer than 5" } },
-      { nbhd: "TP", count: { n: null, shown: "fewer than 5" } },
+      { nbhd: "TP", count: { n: null, shown: "not shown" } },
     ]);
     expect(await readSubscriberMeasures(app, "2026-01-06")).toMatchObject({ day: "2026-01-06", measures: [] });
   });

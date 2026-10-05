@@ -5,8 +5,8 @@
 // Drills are in sections of their own and are never added to real alerts.
 import { englishText } from "@/i18n/text";
 import type { CorrectionReachReport, CorrectionReachRow } from "@/modules/messaging";
-import type { AlertCost, AlertCostReport, AlertCostRow, CohereShare } from "@/modules/spend";
-import type { ShownCount, SubscriberMeasuresDay } from "@/modules/subscriptions";
+import type { AlertCost, AlertCostReport, AlertCostRow, CohereEntryShare, CohereShare } from "@/modules/spend";
+import { SUBSCRIBER_NOT_SHOWN, type ShownCount, type SubscriberMeasuresDay } from "@/modules/subscriptions";
 import { formatTorontoDate } from "@/platform/clock";
 import { languageLabel } from "../alerts/sending/view";
 
@@ -18,9 +18,13 @@ export type Text = (key: string, values?: Record<string, string | number>) => st
 /** The words of this page: `staff.measures.<key>` of the catalog. */
 export const measuresText: Text = (key, values) => englishText(`staff.measures.${key}`, values);
 
-/** A count as printed: the number, or "Fewer than 5" where the rule hides it. */
-export function countText(count: { n: number | null }, t: Text = measuresText): string {
-  return count.n === null ? t("fewer") : String(count.n);
+/** Whether a figure was hidden only to protect another (it may be 5 or more), rather than because it is under 5. */
+const protectsAnother = (count: { n: number | null; shown?: string }): boolean => count.n === null && count.shown === SUBSCRIBER_NOT_SHOWN;
+
+/** A count as printed: the number, "Fewer than 5" where the rule hides it, or "Not shown" where it is hidden to protect another figure. */
+export function countText(count: { n: number | null; shown?: string }, t: Text = measuresText): string {
+  if (count.n !== null) return String(count.n);
+  return protectsAnother(count) ? t("notShown") : t("fewer");
 }
 
 /** A Toronto day (YYYY-MM-DD) in words. */
@@ -153,7 +157,7 @@ export interface CostView {
 }
 
 function costLine(label: string, row: AlertCostRow, t: Text): string {
-  const texts = t("cost.texts", { n: countText(row.texts, t) });
+  const texts = protectsAnother(row.texts) ? t("cost.textsNotShown") : t("cost.texts", { n: countText(row.texts, t) });
   if (row.countedMillicents === null || row.basis === null) return `${label}: ${texts}. ${t("cost.noAmount")}`;
   return `${label}: ${texts}. ${t("cost.amount", { amount: millicentsText(row.countedMillicents), basis: t(`cost.basis.${row.basis}`) })}`;
 }
@@ -163,8 +167,22 @@ function costEntry(entry: AlertCost, t: Text): CostEntryView {
   return {
     id: entry.entryId,
     title: [kind, entry.approvedAt ? t("reach.approved", { when: formatTorontoDate(entry.approvedAt) }) : null].filter(Boolean).join(", "),
-    lines: [costLine(t("allLanguages"), entry.total, t), ...entry.languages.map((row) => costLine(languageLabel(row.lang ?? ""), row, t))],
+    lines: [
+      entry.total === null ? t("cost.noTexts") : costLine(t("allLanguages"), entry.total, t),
+      ...entry.languages.map((row) => costLine(languageLabel(row.lang ?? ""), row, t)),
+      ...entry.cohere.flatMap((month) => entryCohereLines(month, t)),
+    ],
   };
+}
+
+/** One alert entry's share of the translation vendor's use in a month (FR-M5). An unknown price is unknown, never zero. */
+function entryCohereLines(month: CohereEntryShare, t: Text): string[] {
+  const where = { month: month.month, calls: month.calls };
+  return [
+    month.tokenSharePercent === null ? t("cost.cohere.entryNoShare", where) : t("cost.cohere.entry", { ...where, share: `${month.tokenSharePercent}%` }),
+    month.costCents === null ? t("cost.cohere.entryCostUnknown") : t("cost.cohere.entryCost", { amount: centsText(month.costCents) }),
+    ...(month.tokensEstimated ? [t("cost.cohere.entryEstimated")] : []),
+  ];
 }
 
 function cohereLines(months: readonly CohereShare[], t: Text): string[] {
@@ -175,7 +193,15 @@ function cohereLines(months: readonly CohereShare[], t: Text): string[] {
       month.alertCostCents === null || month.allCostCents === null
         ? t("cost.cohere.costUnknown")
         : t("cost.cohere.cost", { amount: centsText(month.alertCostCents), all: centsText(month.allCostCents) });
-    return [share, cost, ...(month.tokensEstimated ? [t("cost.cohere.estimated")] : [])];
+    const drillWhere = { month: month.month, drillCalls: month.drillCalls, allCalls: month.allCalls };
+    const drills =
+      month.drillCalls === 0
+        ? []
+        : [
+            month.drillTokenSharePercent === null ? t("cost.cohere.noShare", { month: month.month, alertCalls: month.drillCalls, allCalls: month.allCalls }) : t("cost.cohere.drillLine", { ...drillWhere, share: `${month.drillTokenSharePercent}%` }),
+            ...(month.drillCostCents === null ? [] : [t("cost.cohere.drillCost", { amount: centsText(month.drillCostCents) })]),
+          ];
+    return [share, cost, ...drills, ...(month.tokensEstimated ? [t("cost.cohere.estimated")] : [])];
   });
 }
 
