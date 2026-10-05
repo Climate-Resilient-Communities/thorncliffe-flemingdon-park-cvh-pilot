@@ -19,6 +19,20 @@ describe("the resident texts' catalog strings (AD-9)", () => {
     }
   });
 
+  it("keep STOP, the digit 0 and {link} in S07.04's texts in every language (the router reads Western digits; the link is filled in)", () => {
+    for (const lang of LAUNCH_CODES) {
+      const welcome = residentText(lang, "welcome");
+      expect(welcome, lang).toMatch(/\bSTOP\b/u);
+      expect(welcome, lang).toContain("0");
+      // Replies 1, 2 and 3 get no answer until S07.05's menus, so the welcome does not offer them yet (S07.05 puts them back).
+      for (const digit of ["1", "2", "3"]) expect(welcome, `${lang} ${digit}`).not.toContain(digit);
+      expect(residentText(lang, "deletePrompt"), lang).toMatch(/0[^]*10|10[^]*0/u);
+      expect(residentText(lang, "signupInfo"), lang).toContain("{link}");
+      expect(residentText(lang, "signupInfo"), lang).toMatch(/\bSTOP\b/u);
+      expect(residentText(lang, "alreadySignedUp"), lang).toContain("CVH");
+    }
+  });
+
   it("has no catalog for a script variant", () => {
     expect(() => residentText("zh-Hant" as never, "confirmation")).toThrow(RangeError);
   });

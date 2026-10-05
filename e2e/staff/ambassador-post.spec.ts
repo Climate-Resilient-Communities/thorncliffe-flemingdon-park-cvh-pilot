@@ -104,7 +104,7 @@ test("an ambassador posts for their floors from their home, sees the attribution
 
   await fillPost(page, "The elevator is out on floors 1 to 3. Use the stairs with care.");
   await page.getByRole("button", { name: "Post update: floors 1 to 3" }).click();
-  await expect(page.getByTestId("post-done")).toContainText("Waiting for the Hub", { timeout: 60_000 });
+  await expect(page.getByTestId("post-done")).toContainText("Live. Not yet verified", { timeout: 60_000 });
   expect(await storage(page)).toEqual({ local: 0, session: 0, databases: 0, caches: 0 });
 
   const [entry] = await entriesBy(person.id);
@@ -142,7 +142,7 @@ test("the Hub discarding a post residents already read withdraws it: residents r
   await page.goto("/staff/ambassador/post");
   await fillPost(page, "The elevator is out on floors 1 to 3. Use the stairs with care.");
   await page.getByRole("button", { name: "Post update: floors 1 to 3" }).click();
-  await expect(page.getByTestId("post-done")).toContainText("Waiting for the Hub", { timeout: 60_000 });
+  await expect(page.getByTestId("post-done")).toContainText("Live. Not yet verified", { timeout: 60_000 });
   const [entry] = await entriesBy(person.id);
   const [{ slug }] = await sql<{ slug: string }[]>`select slug from alert where id = ${entry.alert_id}`;
   await waitForFeedToList(page.request, "en", slug);
@@ -215,7 +215,7 @@ test("without signal the post is held in the open page, says so, and is sent wit
   expect(await storage(page)).toEqual({ local: 0, session: 0, databases: 0, caches: 0 });
 
   await context.setOffline(false);
-  await expect(page.getByTestId("post-done")).toContainText("Waiting for the Hub", { timeout: 60_000 });
+  await expect(page.getByTestId("post-done")).toContainText("Live. Not yet verified", { timeout: 60_000 });
   const entries = await entriesBy(person.id);
   expect(entries).toHaveLength(1);
   expect(entries[0]).toMatchObject({ status: "pending_approval", version: 1 });

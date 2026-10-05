@@ -320,7 +320,17 @@ export type { AlertRefusal } from "./domain/refusals";
 
 // S08.01: an Ambassador's home (A-01): the open alerts about their assigned buildings, as residents read them, and their own posts with each one's state.
 // The scope (current assignments, the neighbourhood of each building) is the caller's; nothing is read for a person with none.
-export { createAmbassadorHome, type AmbassadorAlert, type AmbassadorDrill, type AmbassadorHome, type AmbassadorHomeView, type AmbassadorPost, type AmbassadorScope } from "./application/ambassadorHome";
+export {
+  createAmbassadorHome,
+  type AmbassadorAlert,
+  type AmbassadorDrill,
+  type AmbassadorHome,
+  type AmbassadorHomeView,
+  type AmbassadorPost,
+  type AmbassadorPostStatus,
+  type AmbassadorScope,
+  type PostReplacement,
+} from "./application/ambassadorHome";
 // S08.02: an ambassador's post (A-02): why an entry was discarded, and who an entry is attributed to as frozen at submit.
 export {
   DISCARD_REASONS,

@@ -89,7 +89,17 @@ export interface PostScreen {
     someFloors: string;
   };
   status: { unsent: string; unsentClose: string; sending: string };
-  done: { title: string; line: string; home: string; another: string; anotherHref: string };
+  done: {
+    title: string;
+    line: string;
+    home: string;
+    another: string;
+    anotherHref: string;
+    /** S08.04: where the post stands (A-03); null for a practice post, which has no status page. */
+    status: { href: string; label: string } | null;
+    /** S08.03/S08.04: the words when residents already read it ("Live. Not yet verified"); null for a practice post. */
+    live: { title: string; line: string } | null;
+  };
   /** The words for each refusal or failure code, and the one for anything else. */
   errors: Readonly<Record<string, string>> & { fallback: string; signedOut: string; notAssigned: string };
 }
@@ -100,6 +110,10 @@ export const AMBASSADOR_HOME = "/staff";
 /** This screen; with `?alert=` an update to that open alert. */
 export const POST_PAGE = "/staff/ambassador/post";
 export const postHref = (alertId?: string): string => (alertId ? `${POST_PAGE}?${new URLSearchParams({ alert: alertId }).toString()}` : POST_PAGE);
+
+/** Where a post stands (A-03, S08.04), for the entry named. */
+export const STATUS_PAGE = "/staff/ambassador/status";
+export const statusHref = (entryId: string): string => `${STATUS_PAGE}?${new URLSearchParams({ entry: entryId }).toString()}`;
 
 export function postScreen(data: PostData, t: Text = catalogText): PostScreen {
   const drill = data.thread?.isDrill === true;
@@ -163,6 +177,8 @@ export function postScreen(data: PostData, t: Text = catalogText): PostScreen {
       home: t("A03.toHome"),
       another: t("A03.another"),
       anotherHref: postHref(data.thread?.id),
+      status: drill ? null : { href: statusHref(data.ids.entryId), label: t("staff.ambassadorStatus.statusLink") },
+      live: drill ? null : { title: t("A03.states.live"), line: t("staff.ambassadorStatus.liveBody") },
     },
     errors: {
       fallback: errFailed,

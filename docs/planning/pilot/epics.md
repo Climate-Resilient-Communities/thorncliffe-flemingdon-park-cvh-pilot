@@ -259,7 +259,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `audit_event` (audit) | S01.04 | `subscriber`, `subscriber_place`, `subscriber_topic_optout` (subscriptions) | S07.04 |
 | `staff_account` (identity) | S01.05 | `pending_signup` (subscriptions) | S07.02 |
 | `neighbourhood`, `building`, `building_floor` (places) | S01.13 | `inbound_seen`, `inbound_reply`, `inbound_keyword_count` (subscriptions) | S07.04 |
-| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.05 |
+| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.04 (the reply-0 confirmation needs it; S07.05 adds its menu kinds) |
 | `provider`, `provider_location`, `category`, `provider_category` (directory) | S02.04 | `subscription_edit_token` (subscriptions) | S07.06 |
 | `directory_release` (directory), `ops_event` (ops) | S02.05 | `spend_cap` (spend) | S07.08 |
 | `guide`, `essential_number` (directory) | S02.09 | `checkin`, `checkin_tally` (checkins) | S08.05 |
@@ -3109,8 +3109,8 @@ So that residents without the app can join, while still confirming for themselve
 
 ### Story S07.04 — Residents confirm, get a welcome, and STOP deletes them
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-inbound-router`
+- **Size:** M · **Estimate:** 7 h · **Actual:** 26 min (started 2026-10-04 16:49 UTC, built 17:15 UTC)
+- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-confirm-stop`
 
 As a resident,
 I want my YES to start my alerts and STOP to remove me completely,
@@ -3128,7 +3128,7 @@ So that I control whether I get texts.
 
 **Given** a pending sign-up and the reply YES from that number before it expires
 **When** it is handled
-**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice
+**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice (as built: 0, STOP and the overnight notice only until S07.05 ships the menus and adds 1, 2 and 3 back; product owner, 2026-10-04)
 **And** a repeated YES is answered "You are already signed up" and changes nothing
 
 **Given** YES with no pending sign-up, or after it expired
@@ -3203,6 +3203,8 @@ So that I can keep my alerts right without a smartphone.
 **Given** reply 3
 **When** handled
 **Then** it calls `checkins`' `withdrawRequest` port (E08); until then the reply is "You have no check-in request"
+
+**Handoff from S07.04.** Until the menus answer, S07.04's welcome text (`smsTexts.welcome`) offers only reply 0 and STOP, with the overnight notice (product owner, 2026-10-04): S07.05 puts replies 1 (building or floor), 2 (language) and 3 (withdraw a check-in request) back into the welcome in all 15 languages when it ships, and implements them behind S07.04's `MenuPort` (`noMenusYet` until then).
 
 ### Story S07.06 — Residents change or delete their subscription with a one-time web link
 
@@ -3477,7 +3479,7 @@ So that I hear about a power or water problem without waiting, and know how much
 
 ### Story S08.04 — Ambassadors follow their post and mark incidents resolved
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h (started 2026-10-04 18:39 UTC, built 19:38 UTC)
 - **Traces:** FR-E2 (resolve), FR-A15, UX-DR17 (A-03) · **Depends on:** S08.03 · **Branch:** `e08-s04-post-status-resolve`
 
 As a building ambassador,

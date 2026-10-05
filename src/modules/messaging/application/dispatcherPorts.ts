@@ -193,7 +193,7 @@ export type MessagingOpsEvent =
   /** `deliveryId` when the callback named a delivery that exists. */
   | { kind: "delivery.callback_ignored"; deliveryId?: string; detail: { reason: CallbackIgnoredReason } }
   | { kind: "delivery.provider_id_mismatch"; deliveryId: string; detail: Record<string, never> }
-  | { kind: "webhook.signature_invalid"; detail: { route: "twilio_status"; reason: SignatureFailureReason } };
+  | { kind: "webhook.signature_invalid"; detail: { route: "twilio_status" | "twilio_inbound"; reason: SignatureFailureReason } };
 
 /**
  * Port: where messaging records operational events, in the caller's transaction when it has one. `messaging` may not import

@@ -1415,6 +1415,8 @@
    }
   });
   m(t, {"smsTexts": {"confirmation": "Odpovedzte YES a budete dostávať upozornenia CVH. Odpovedzte STOP a správy skončia."}});
+  /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
+  m(t, {"smsTexts": {"welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.", "alreadySignedUp": "Na upozornenia CVH ste už prihlásení.", "deletePrompt": "Pošlite znova 0 do 10 minút a odber sa vymaže. Potom už nič nepríde.", "signupInfo": "Ak chcete upozornenia CVH v SMS, prihláste sa tu: {link} Odpovedzte STOP a správy skončia."}, "smsKeywords": {"yes": "áno, ano"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
