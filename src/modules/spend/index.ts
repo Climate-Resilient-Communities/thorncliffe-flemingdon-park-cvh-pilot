@@ -39,6 +39,8 @@ export {
   type ReconciliationRow,
 } from "./application/smsSpend";
 export { stdoutSpendLog } from "./adapters/spendLog";
+// Cost per alert (S07.10, FR-M5): SMS cost by language (actual where reported, otherwise a labelled estimate) and the alerts' share of the vendor's usage.
+export { COST_BASES, readAlertCost, readCohereShare, type AlertCost, type AlertCostReport, type AlertCostRow, type CohereShare, type CostBasis } from "./application/alertCost";
 export {
   PENDING_REASONS,
   TORONTO,

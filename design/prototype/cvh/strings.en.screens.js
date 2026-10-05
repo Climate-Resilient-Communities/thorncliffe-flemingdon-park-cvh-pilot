@@ -746,6 +746,67 @@
   actionsTitle: 'Actions', actionsLead: '{open} open, {done} done. Done actions link to what they changed.',
   open: 'Open', done: 'Done', from: 'From: {lesson}', owner: 'Owner: {owner}', due: 'Due {due}', changed: 'What changed: {label}',
   newTag: 'Added in this session' } });
+  /* The Hub's pilot measures page (S07.10): subscribers, how far corrections reached, and cost per alert. The Indicators screen (P-15) is the MVP's whole page; the pilot
+     builds the three measures of the text service, in its words ("Fewer than 5", real and exercise kept apart, counts only). Not a prototype screen of its own. */
+  m(en, { hub: { nav: { measures: 'Measures' } },
+  staff: { measures: {
+    title: 'Pilot measures',
+    lead: 'Counts only. Nobody can be identified from these figures.',
+    privacy: 'A number from 1 to 4 is shown as "Fewer than 5", in every split. Exercises and drills are shown apart and never added to real alerts.',
+    fewer: 'Fewer than 5',
+    allLanguages: 'All languages',
+    unknown: 'Unknown',
+    nbhd: { TP: 'Thorncliffe Park', FP: 'Flemingdon Park' },
+    subscribers: {
+      heading: 'Subscribers',
+      lead: 'Counted by the daily job for {day}. People who signed up for texts, by language and neighbourhood.',
+      neverRun: 'The daily count has not run yet. The first figures appear the morning after it first runs.',
+      total: 'All: {n}',
+      byLanguage: 'By language',
+      byNbhd: 'By neighbourhood',
+      cell: '{name}: {n}',
+      measures: {
+        receiving_active: 'Receiving texts',
+        receiving_reconsent_pending: 'Receiving texts, asked whether to stay',
+        receiving_retained: 'Receiving texts, kept after the pilot',
+        pending_signups: 'Waiting to reply YES',
+        confirmations: 'Confirmed on the day',
+        deletions: 'Left on the day' } },
+    reach: {
+      heading: 'How far corrections, withdrawals and finals reached',
+      lead: 'Measured against the people who got the original alert. Attempted: the text was handed to the provider. Confirmed: the provider reported it delivered.',
+      empty: 'No correction, withdrawal or final has been texted yet.',
+      drillsHeading: 'Drills, kept apart',
+      drillsEmpty: 'No drill correction, withdrawal or final has been texted.',
+      kinds: { correction: 'Correction', withdrawal: 'Withdrawal', final: 'Final' },
+      approved: 'approved {when}',
+      original: 'Got the original: {n}',
+      attempted: 'Attempted: {n}',
+      confirmed: 'Confirmed: {n}',
+      percent: 'Attempted {attempted}% and confirmed {confirmed}% of those who got the original',
+      noPercent: 'No percentage: a figure is under 5' },
+    cost: {
+      heading: 'Cost per alert',
+      lead: 'Text message cost by language: the provider\'s price where it has been reported, otherwise an estimate, labelled. Only Admins and Directors see this.',
+      empty: 'No alert has texts with a recorded cost yet.',
+      drillsHeading: 'Drills, kept apart',
+      drillsEmpty: 'No drill has texts with a recorded cost.',
+      texts: '{n} texts',
+      basis: { actual: 'actual', estimate: 'estimate', mixed: 'part actual, part estimate' },
+      amount: '{amount} CAD ({basis})',
+      noAmount: 'No amount: fewer than 5 texts',
+      kinds: { ack: 'Acknowledgement', update: 'Update', correction: 'Correction', withdrawal: 'Withdrawal', final: 'Final' },
+      cohere: {
+        heading: 'Cohere use by alerts',
+        lead: 'Alerts\' share of the translation vendor\'s use in the month. The vendor\'s records do not say which alert a call was for or whether it was a drill, so this is the share of all use in the month, drills included.',
+        empty: 'Cohere has not been used yet.',
+        line: '{month}: alerts used {share} of the billed tokens ({alertCalls} of {allCalls} calls).',
+        noShare: '{month}: no billed tokens yet ({alertCalls} of {allCalls} calls).',
+        cost: 'Cost to alerts: {amount} CAD. All use: {all} CAD.',
+        costUnknown: 'Cost: unknown, because a price is not set.',
+        estimated: 'Some token counts are estimates.' } },
+    errors: {
+      unreadable: 'The Hub could not read the measures. Reload the page. If this stays, tell IT.' } } } });
   /* R01_Language.html */
   m(en, { R01: { fromPhone: 'From your phone\'s language', chooseFirst: 'Tap a language to continue.', youChose: 'Your language:',
   helperOn: 'Bigger text, fewer things is on. It stays on for them.' },

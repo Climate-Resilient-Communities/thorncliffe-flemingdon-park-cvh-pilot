@@ -50,6 +50,9 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   // Coverage (S01.14) is `coverage.view`: an Admin and a Coordinator, and a Director read-only. It sits with the
   // disruption screens because it says where a check-in round can be promised.
   if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "coverage", label: englishText("hub.nav.coverage"), href: "/staff/coverage", icon: "ready" }];
+  // The pilot measures (S07.10: subscribers, how far corrections reached, cost per alert) are counts, so they follow `coverage.view`: a Coordinator, a Director
+  // read-only and an Admin. The cost of an alert on the page is `spend.view` (no Coordinator).
+  if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "measures", label: englishText("hub.nav.measures"), href: "/staff/measures", icon: "layers" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
   // `accounts.manage`, the providers page `provider.manage` (S02.04), the directory release page `guide.publish` (S02.05),
   // the buildings page `buildings.manage` (S01.13) and the pause page `sending.pause` (S06.06), all Admin only.

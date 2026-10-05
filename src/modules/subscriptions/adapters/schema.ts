@@ -304,3 +304,54 @@ export const inboundLimitedCount = pgTable(
     pgPolicy("inbound_limited_count_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();
+
+/**
+ * How many subscribers were made (`confirmed`) and deleted (`deleted`) on each day (Toronto) by language and neighbourhood (S07.10,
+ * 20261006100000_subscriber_measures.sql). Kept by a trigger on `subscriber` that runs as the table's owner; the app only reads it. Counts only.
+ */
+export const subscriberEventCount = pgTable(
+  "subscriber_event_count",
+  {
+    day: date().notNull(),
+    event: text().notNull(),
+    lang: text().notNull(),
+    nbhd: text().notNull(),
+    n: integer().notNull().default(1),
+  },
+  (t) => [
+    primaryKey({ columns: [t.day, t.event, t.lang, t.nbhd] }),
+    check("subscriber_event_count_event_known", sql`${t.event} in ('confirmed', 'deleted')`),
+    check("subscriber_event_count_lang_known", sql`${t.lang} ~ '^[A-Za-z]{2,3}(-[A-Za-z]{4})?$'`),
+    check("subscriber_event_count_nbhd_format", sql`${t.nbhd} ~ '^[A-Za-z0-9_]{1,16}$'`),
+    check("subscriber_event_count_n_positive", sql`${t.n} > 0`),
+    pgPolicy("subscriber_event_count_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * What the daily measures job stores for a day (S07.10): receiving subscribers by state, pending sign-ups, confirmations and deletions, for every
+ * language in every neighbourhood. Counts only, no identifier. The small-number rule is the view `subscriber_measures`'s.
+ */
+export const subscriberMeasure = pgTable(
+  "subscriber_measure",
+  {
+    day: date().notNull(),
+    measure: text().notNull(),
+    lang: text().notNull(),
+    nbhd: text().notNull(),
+    n: integer().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.day, t.measure, t.lang, t.nbhd] }),
+    check(
+      "subscriber_measure_measure_known",
+      sql`${t.measure} in ('receiving_active', 'receiving_reconsent_pending', 'receiving_retained', 'pending_signups', 'confirmations', 'deletions')`,
+    ),
+    check("subscriber_measure_lang_known", sql`${t.lang} ~ '^[A-Za-z]{2,3}(-[A-Za-z]{4})?$'`),
+    check("subscriber_measure_nbhd_format", sql`${t.nbhd} ~ '^[A-Za-z0-9_]{1,16}$'`),
+    check("subscriber_measure_n_not_negative", sql`${t.n} >= 0`),
+    pgPolicy("subscriber_measure_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("subscriber_measure_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("subscriber_measure_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();

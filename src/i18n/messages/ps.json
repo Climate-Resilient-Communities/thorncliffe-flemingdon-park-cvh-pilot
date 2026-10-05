@@ -1492,6 +1492,7 @@
       "supplies": "[EN] Supplies",
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
+      "measures": "[EN] Measures",
       "people": "[EN] People",
       "buildings": "[EN] Buildings",
       "ambassadorHome": "[EN] My building",
@@ -3995,6 +3996,88 @@
     "newTag": "[EN] Added in this session"
   },
   "staff": {
+    "measures": {
+      "title": "[EN] Pilot measures",
+      "lead": "[EN] Counts only. Nobody can be identified from these figures.",
+      "privacy": "[EN] A number from 1 to 4 is shown as \"Fewer than 5\", in every split. Exercises and drills are shown apart and never added to real alerts.",
+      "fewer": "[EN] Fewer than 5",
+      "allLanguages": "[EN] All languages",
+      "unknown": "[EN] Unknown",
+      "nbhd": {
+        "TP": "[EN] Thorncliffe Park",
+        "FP": "[EN] Flemingdon Park"
+      },
+      "subscribers": {
+        "heading": "[EN] Subscribers",
+        "lead": "[EN] Counted by the daily job for {day}. People who signed up for texts, by language and neighbourhood.",
+        "neverRun": "[EN] The daily count has not run yet. The first figures appear the morning after it first runs.",
+        "total": "[EN] All: {n}",
+        "byLanguage": "[EN] By language",
+        "byNbhd": "[EN] By neighbourhood",
+        "cell": "{name}: {n}",
+        "measures": {
+          "receiving_active": "[EN] Receiving texts",
+          "receiving_reconsent_pending": "[EN] Receiving texts, asked whether to stay",
+          "receiving_retained": "[EN] Receiving texts, kept after the pilot",
+          "pending_signups": "[EN] Waiting to reply YES",
+          "confirmations": "[EN] Confirmed on the day",
+          "deletions": "[EN] Left on the day"
+        }
+      },
+      "reach": {
+        "heading": "[EN] How far corrections, withdrawals and finals reached",
+        "lead": "[EN] Measured against the people who got the original alert. Attempted: the text was handed to the provider. Confirmed: the provider reported it delivered.",
+        "empty": "[EN] No correction, withdrawal or final has been texted yet.",
+        "drillsHeading": "[EN] Drills, kept apart",
+        "drillsEmpty": "[EN] No drill correction, withdrawal or final has been texted.",
+        "kinds": {
+          "correction": "[EN] Correction",
+          "withdrawal": "[EN] Withdrawal",
+          "final": "[EN] Final"
+        },
+        "approved": "[EN] approved {when}",
+        "original": "[EN] Got the original: {n}",
+        "attempted": "[EN] Attempted: {n}",
+        "confirmed": "[EN] Confirmed: {n}",
+        "percent": "[EN] Attempted {attempted}% and confirmed {confirmed}% of those who got the original",
+        "noPercent": "[EN] No percentage: a figure is under 5"
+      },
+      "cost": {
+        "heading": "[EN] Cost per alert",
+        "lead": "[EN] Text message cost by language: the provider's price where it has been reported, otherwise an estimate, labelled. Only Admins and Directors see this.",
+        "empty": "[EN] No alert has texts with a recorded cost yet.",
+        "drillsHeading": "[EN] Drills, kept apart",
+        "drillsEmpty": "[EN] No drill has texts with a recorded cost.",
+        "texts": "[EN] {n} texts",
+        "basis": {
+          "actual": "[EN] actual",
+          "estimate": "[EN] estimate",
+          "mixed": "[EN] part actual, part estimate"
+        },
+        "amount": "[EN] {amount} CAD ({basis})",
+        "noAmount": "[EN] No amount: fewer than 5 texts",
+        "kinds": {
+          "ack": "[EN] Acknowledgement",
+          "update": "[EN] Update",
+          "correction": "[EN] Correction",
+          "withdrawal": "[EN] Withdrawal",
+          "final": "[EN] Final"
+        },
+        "cohere": {
+          "heading": "[EN] Cohere use by alerts",
+          "lead": "[EN] Alerts' share of the translation vendor's use in the month. The vendor's records do not say which alert a call was for or whether it was a drill, so this is the share of all use in the month, drills included.",
+          "empty": "[EN] Cohere has not been used yet.",
+          "line": "[EN] {month}: alerts used {share} of the billed tokens ({alertCalls} of {allCalls} calls).",
+          "noShare": "[EN] {month}: no billed tokens yet ({alertCalls} of {allCalls} calls).",
+          "cost": "[EN] Cost to alerts: {amount} CAD. All use: {all} CAD.",
+          "costUnknown": "[EN] Cost: unknown, because a price is not set.",
+          "estimated": "[EN] Some token counts are estimates."
+        }
+      },
+      "errors": {
+        "unreadable": "[EN] The Hub could not read the measures. Reload the page. If this stays, tell IT."
+      }
+    },
     "roles": {
       "ambassador": "[EN] Ambassador",
       "coordinator": "[EN] Coordinator",
