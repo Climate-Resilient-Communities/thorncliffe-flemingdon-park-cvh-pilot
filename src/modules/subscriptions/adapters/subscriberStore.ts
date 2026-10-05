@@ -88,7 +88,7 @@ export const subscriberStore = {
   },
 
   /**
-   * Whether the subscriber exists and is in a receiving state, their row locked `FOR SHARE` for the caller's transaction (no number is read). The lock is taken
+   * Whether the subscriber exists and is in a receiving state, their row locked `FOR KEY SHARE` (it conflicts only with a deletion, not an ordinary update) for the caller's transaction (no number is read). The lock is taken
    * without waiting (`SKIP LOCKED`): a row someone holds `FOR UPDATE` is being deleted (STOP, reply 0), which reads as "does not receive", so a resend never waits
    * on a deletion that is itself waiting for the delivery rows the resend holds.
    */
@@ -97,7 +97,7 @@ export const subscriberStore = {
       .select({ id: subscriber.id })
       .from(subscriber)
       .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])))
-      .for("share", { skipLocked: true });
+      .for("key share", { skipLocked: true });
     return rows.length > 0;
   },
 

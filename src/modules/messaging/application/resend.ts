@@ -217,7 +217,19 @@ export function createResend(deps: ResendDeps): Resend {
     }
 
     const notResentList = [...notResent].map(([reason, n]): NotResent => ({ reason, n })).sort((a, b) => (a.reason < b.reason ? -1 : 1));
-    if (plan.length === 0) return { kind: "resent", resent: 0, notResent: notResentList, more, costCents: 0, overrun: null, resendN: null, isDrill };
+    const notResentCount = notResentList.reduce((sum, item) => sum + item.n, 0);
+    if (plan.length === 0) {
+      // A press that made nothing is still an Admin's privileged act: it is audited with its counts (no cost, so no cap is judged).
+      await audit.record(tx, {
+        action: "delivery.resent",
+        actorStaffId: input.actorStaffId,
+        subjectType: "alert_entry",
+        subjectId: input.entryId,
+        isDrill,
+        meta: { scope: input.scope, ...(input.scope === "language" ? { lang: input.lang } : {}), resent: 0, not_resent: notResentCount },
+      });
+      return { kind: "resent", resent: 0, notResent: notResentList, more, costCents: 0, overrun: null, resendN: null, isDrill };
+    }
 
     // The spend cap is the last lock (AD-18) and is judged before the new texts are added, so their estimate is not counted twice (as the waiting texts).
     const costCents = plan.reduce((sum, item) => sum + item.root.costEstimateCents, 0);
@@ -234,7 +246,7 @@ export function createResend(deps: ResendDeps): Resend {
         scope: input.scope,
         ...(input.scope === "language" ? { lang: input.lang } : { resend_n: plan[0].n }),
         resent: plan.length,
-        not_resent: notResentList.reduce((sum, item) => sum + item.n, 0),
+        not_resent: notResentCount,
       },
     });
     if (overrun) {

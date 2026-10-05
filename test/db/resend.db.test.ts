@@ -581,6 +581,23 @@ describe("a text is not resent to a number that cannot receive texts, or to some
     expect((await rowOf(text.id)).recipient_id).toBeNull();
   });
 
+  it("is not refused by an ordinary update of the resident's row that is running (only a deletion reads as leaving)", async () => {
+    const seeded = await seed(["en"]);
+    const [text] = seeded.texts;
+    await failAll(seeded);
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const updating = appSql.begin(async (tx) => {
+      await tx`select 1 from subscriber where id = ${text.recipient} for no key update`;
+      await held;
+    });
+    await world.until(async () => (await owner`select 1 from pg_locks where locktype = 'transactionid' and granted`).length > 0, "the update's lock");
+    expect(await service.resend(one(seeded.entry.entryId, text.id, "failed"))).toMatchObject({ kind: "resent", resent: 1 });
+    release();
+    await updating;
+    expect(await resendsOf(seeded.entry.entryId)).toHaveLength(1);
+  });
+
   it("is skipped, not sent, by a STOP that comes after the resend committed (the deletion skips the waiting texts of the resident, E07)", async () => {
     const seeded = await seed(["en"]);
     const [text] = seeded.texts;
@@ -717,7 +734,11 @@ describe("an Admin resends all the failed and undelivered texts of an entry in a
     expect(resent(await service.resend(all(seeded.entry.entryId, "en"))).resent).toBe(2);
     // The latest text of each chain is queued now: nothing to resend.
     expect(resent(await service.resend(all(seeded.entry.entryId, "en")))).toMatchObject({ resent: 0, notResent: [] });
-    expect(await auditOf("delivery.resent")).toHaveLength(1);
+    // A press that made nothing is audited too, with its counts.
+    expect(await auditOf("delivery.resent")).toEqual([
+      { actor_staff_id: admin.id, subject_type: "alert_entry", subject_id: seeded.entry.entryId, outcome: "ok", meta: { scope: "language", lang: "en", resent: 2, not_resent: 0 } },
+      { actor_staff_id: admin.id, subject_type: "alert_entry", subject_id: seeded.entry.entryId, outcome: "ok", meta: { scope: "language", lang: "en", resent: 0, not_resent: 0 } },
+    ]);
 
     await failAll(seeded);
     expect(resent(await service.resend(all(seeded.entry.entryId, "en"))).resent).toBe(2);
@@ -725,6 +746,7 @@ describe("an Admin resends all the failed and undelivered texts of an entry in a
     // Both chains have two resends and the last of each failed: refused, counted, and nothing is made.
     expect(resent(await service.resend(all(seeded.entry.entryId, "en")))).toMatchObject({ resent: 0, notResent: [{ reason: "resend_limit", n: 2 }] });
     expect((await resendsOf(seeded.entry.entryId)).length).toBe(4);
+    expect((await auditOf("delivery.resent")).at(-1)).toMatchObject({ outcome: "ok", meta: { scope: "language", lang: "en", resent: 0, not_resent: 2 } });
   });
 
   it("is two Admins pressing it at once: every chain is resent once, none twice (separate connections)", async () => {

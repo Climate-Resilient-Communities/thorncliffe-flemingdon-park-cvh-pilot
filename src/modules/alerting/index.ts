@@ -79,6 +79,21 @@ export function createAlertSubmitter(wiring: AlertSubmitterWiring): AlertSubmitt
 }
 
 /**
+ * The monthly cap's check, the one an approval (S07.08) and a resend (S09.02) both make: spend's `assessApproval` (the cap row locked last) over the texts still
+ * waiting, and when the cap is passed the overrun is recorded as the ops event the health job texts the on-call Admins about. Null when no cap is set or it is not
+ * passed; it never refuses. The caller audits the overrun.
+ */
+export async function checkSpendCap(
+  tx: DbTransaction,
+  input: { entryId: string; estimateCents: number; queuedCents: () => Promise<number>; now: Date },
+): Promise<{ overCents: number; capCents: number } | null> {
+  const assessment = await assessApproval(tx, { estimateCents: input.estimateCents, queuedCents: input.queuedCents, now: input.now });
+  if (assessment.capCents === null || assessment.overCents === 0) return null;
+  await recordOpsEvent(tx, { kind: "spend.cap_overrun", subjectType: "alert_entry", subjectId: input.entryId, detail: { over_cents: assessment.overCents } });
+  return { overCents: assessment.overCents, capCents: assessment.capCents };
+}
+
+/**
  * What the outbox answers is a value; a refusal of something a correct approval never asks (an id that is not a UUID, a body the entry did not
  * freeze) is a bug, so the approval fails with it and its transaction rolls back, deliveries and all.
  */
@@ -154,16 +169,13 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     // recorded as an ops event in the same transaction (the health job texts the on-call Admins, S09.01) and the use case audits it.
     spendCap:
       wiring.spendCap ??
-      (async (tx, input) => {
-        const assessment = await assessApproval(tx, {
+      (async (tx, input) =>
+        checkSpendCap(tx, {
+          entryId: input.entryId,
           estimateCents: input.entryCostCents,
           queuedCents: () => queuedCostCents(tx, { exceptEntryId: input.entryId }),
           now: input.now,
-        });
-        if (assessment.capCents === null || assessment.overCents === 0) return null;
-        await recordOpsEvent(tx, { kind: "spend.cap_overrun", subjectType: "alert_entry", subjectId: input.entryId, detail: { over_cents: assessment.overCents } });
-        return { overCents: assessment.overCents, capCents: assessment.capCents };
-      }),
+        })),
   });
 }
 

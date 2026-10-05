@@ -180,11 +180,12 @@ describe("resending all the failed and undelivered texts of an entry in a langua
     expect(inserted.map((row) => row.key)).toEqual([`resend:${U("b")}:1`]);
   });
 
-  it("changes and audits nothing when there is nothing to resend", async () => {
+  it("changes nothing and audits the press with zero counts when there is nothing to resend", async () => {
     const { resend, inserted, audit, spendCap } = world({ a: [chainText("a", { state: "delivered" })] });
     expect(await resend.resend(all())).toEqual({ kind: "resent", resent: 0, notResent: [], more: false, costCents: 0, overrun: null, resendN: null });
     expect(inserted).toEqual([]);
-    expect(audit.record).not.toHaveBeenCalled();
+    expect(audit.record).toHaveBeenCalledTimes(1);
+    expect(audit.record).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ action: "delivery.resent", meta: expect.objectContaining({ resent: 0, not_resent: 0 }) }));
     expect(spendCap).not.toHaveBeenCalled();
   });
 

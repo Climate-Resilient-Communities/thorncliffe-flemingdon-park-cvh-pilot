@@ -2,10 +2,8 @@
 // things it may not import itself: the resident's standing (subscriptions), the entry's and thread's standing (alerting's reader, the one the sender's hand-off point
 // uses) and the monthly spend cap's check (spend, with the ops event of an overrun). Server only. A seam of its own, like ./messagingPause.ts and ./spendSeam.ts, so the
 // tests that call the staff pages and actions directly can hand them a database.
-import { alertStandingReader } from "@/modules/alerting";
+import { alertStandingReader, checkSpendCap } from "@/modules/alerting";
 import { createResend, queuedCostCents, stdoutMessagingLog, type Resend, type ResendSpendCap } from "@/modules/messaging";
-import { recordOpsEvent } from "@/modules/ops";
-import { assessApproval } from "@/modules/spend";
 import { subscriberReceives } from "@/modules/subscriptions";
 import { getDb } from "@/platform/db";
 
@@ -14,12 +12,8 @@ import { getDb } from "@/platform/db";
  * texts still waiting against the cap), with the same consequence, which is a warning and never a refusal: an overrun is recorded as the ops event the health job texts
  * the on-call Admins about, and the use case audits it.
  */
-export const resendSpendCap: ResendSpendCap = async (tx, input) => {
-  const assessment = await assessApproval(tx, { estimateCents: input.estimateCents, queuedCents: () => queuedCostCents(tx), now: input.now });
-  if (assessment.capCents === null || assessment.overCents === 0) return null;
-  await recordOpsEvent(tx, { kind: "spend.cap_overrun", subjectType: "alert_entry", subjectId: input.entryId, detail: { over_cents: assessment.overCents } });
-  return { overCents: assessment.overCents, capCents: assessment.capCents };
-};
+export const resendSpendCap: ResendSpendCap = (tx, input) =>
+  checkSpendCap(tx, { entryId: input.entryId, estimateCents: input.estimateCents, queuedCents: () => queuedCostCents(tx), now: input.now });
 
 /** The resend: the Admin's one way to send a text a second time. */
 export function resendService(): Resend {
