@@ -2,7 +2,7 @@
 // db/migrations/20261003440000_sms_spend.sql (a text message's estimate, the reconciliations, the actual prices and which actual retired
 // which estimate); the drift test compares them. The grants, the functions and the triggers live only in the migrations.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, index, integer, numeric, pgPolicy, pgRole, pgTable, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, integer, numeric, pgPolicy, pgRole, pgTable, smallint, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -162,5 +162,30 @@ export const smsEstimateRetirement = pgTable(
     unique("sms_estimate_retirement_message_sid_key").on(t.messageSid),
     pgPolicy("sms_estimate_retirement_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("sms_estimate_retirement_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/** identity's staff_account: named here only so the foreign key below can be declared (spend may not import identity's tables, AD-2). Not exported. */
+const staffAccountKey = pgTable("staff_account", { id: uuid().primaryKey() });
+
+/**
+ * The monthly cap on text message spending (S07.08, db/migrations/20261006100000_spend_cap.sql): one row, `id` 1, made by the migration. `monthlyCents`
+ * is null while no Admin has set a cap. The cap warns and never blocks (the approval records an overrun and goes on).
+ */
+export const spendCap = pgTable(
+  "spend_cap",
+  {
+    id: smallint().primaryKey(),
+    monthlyCents: integer("monthly_cents"),
+    setBy: uuid("set_by").references(() => staffAccountKey.id),
+    setAt: timestamp("set_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("spend_cap_set_by_idx").on(t.setBy),
+    check("spend_cap_single_row", sql`${t.id} = 1`),
+    check("spend_cap_amount_valid", sql`${t.monthlyCents} is null or (${t.monthlyCents} >= 1 and ${t.monthlyCents} <= 10000000)`),
+    check("spend_cap_stated", sql`(${t.monthlyCents} is null) = (${t.setBy} is null) and (${t.monthlyCents} is null) = (${t.setAt} is null)`),
+    pgPolicy("spend_cap_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("spend_cap_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

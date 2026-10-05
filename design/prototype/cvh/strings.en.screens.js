@@ -2095,6 +2095,79 @@
       aal2Required: 'An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.',
       failed: 'The roster was not changed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read the drill roster. Reload the page. If this stays, tell IT.' } } } });
+  /* Spend against the pilot budget and the monthly cap on texts (S07.08, FR-G6). Not a prototype screen: the Hub's page for Admins and Directors, in the
+     Pause texts page's words, and the sentence the approval view shows before approving. Amounts are written "CAD 1,000.00" by the page. */
+  m(en, { hub: { nav: { spend: 'Spend' } },
+  staff: {
+    approve: {
+      capNotice: 'With this alert, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still approve it: the texts are sent, the overrun is recorded and the on-call Admins are told.' },
+    spend: {
+      title: 'Spend',
+      lead: 'What texts and translation have cost against the pilot budget, and the monthly cap on texts. Texts keep going out when the cap is passed: the cap only warns.',
+      budget: {
+        heading: 'Pilot budget',
+        line: 'Budget: {budget}. Counted so far: {spent}. {left}.',
+        left: '{amount} left',
+        over: '{amount} over the budget',
+        incomplete: 'This leaves out Cohere usage whose price is unknown, so the real total is higher.' },
+      period: {
+        thisMonth: 'This month ({month})',
+        pilot: 'The pilot to date',
+        total: 'Counted: {amount}' },
+      sms: {
+        heading: 'Text messages',
+        counted: 'Counted: {amount}',
+        none: 'No texts have been counted yet.',
+        actual: 'Actual price of {n} texts the provider billed: {amount}',
+        actualOne: 'Actual price of 1 text the provider billed: {amount}',
+        unmatched: 'Unmatched actuals: {amount} for {n} billed texts that no estimate answers for (counted at their actual price, inside the line above)',
+        unmatchedOne: 'Unmatched actuals: {amount} for 1 billed text that no estimate answers for (counted at its actual price, inside the line above)',
+        unresolved: 'Unresolved estimates: {amount} for {n} texts, counted at their estimate until the provider\'s price is matched to them',
+        unresolvedOne: 'Unresolved estimates: {amount} for 1 text, counted at its estimate until the provider\'s price is matched to it',
+        pending: 'Pending reconciliation, {month}: {amount} estimated for {n} texts ({reason})',
+        pendingOne: 'Pending reconciliation, {month}: {amount} estimated for 1 text ({reason})',
+        overlap: 'An unresolved estimate and an unmatched actual can be the same text, so these two lines may count it twice.',
+        reasons: {
+          not_run: 'the month has not been reconciled yet',
+          listing_failed: 'the provider\'s list of texts could not be read',
+          cut_short: 'the provider\'s list was cut short',
+          message_without_price: 'the provider has not priced every text yet',
+          price_unusable: 'a price could not be converted',
+          message_malformed: 'a text in the provider\'s list could not be read' } },
+      cohere: {
+        heading: 'Cohere (translation and search)',
+        none: 'No Cohere usage has been recorded yet.',
+        priced: 'At a known price: {amount} for {calls} calls',
+        pricedOne: 'At a known price: {amount} for 1 call',
+        unknown: 'Price unknown: {calls} calls, {tokens} tokens',
+        unknownOne: 'Price unknown: 1 call, {tokens} tokens',
+        estimate: 'Estimate: {amount} for {calls} calls and {tokens} tokens whose price is unknown',
+        estimateOne: 'Estimate: {amount} for 1 call and {tokens} tokens whose price is unknown',
+        tokensEstimated: 'Some token counts are estimates of the provider\'s.' },
+      cap: {
+        heading: 'Monthly cap on texts',
+        none: 'No cap is set. Set one to be warned before a month\'s texts pass it.',
+        current: 'The monthly cap is {amount}. {percent}% of it is used this month.',
+        setOn: 'Last set on {when}.',
+        rule: 'The cap warns and never blocks. An alert that takes the month past it is still approved and sent, the overrun is recorded, and the on-call Admins are texted. Texts to the on-call Admins and replies to STOP are never held back.',
+        readOnly: 'Only an Admin can change the cap.',
+        label: 'Monthly cap (CAD)',
+        hint: 'A dollar amount, for example 250 or 250.50: at least $0.01 and at most $100,000.',
+        save: 'Save cap',
+        saving: 'Saving cap',
+        done: {
+          set: 'The monthly cap is now {amount}.',
+          changed: 'The monthly cap changed from {previous} to {amount}.' } },
+      errors: {
+        missing: 'Type the monthly cap in dollars.',
+        not_a_number: 'That is not an amount. Use dollars, for example 250 or 250.50.',
+        too_small: 'The cap must be at least $0.01.',
+        too_large: 'The cap can be at most $100,000.',
+        forbidden: 'Only an Admin or a Director can see spend.',
+        forbiddenCap: 'Only an Admin can change the monthly cap.',
+        aal2Required: 'An Admin must sign in with their authenticator code to change the monthly cap. Sign in again and enter the code.',
+        failed: 'The cap was not changed. Try again. If it fails again, tell IT.',
+        unreadable: 'The Hub could not read the spend. Reload the page. If this stays, tell IT.' } } } });
   /* Alerts that have ended (S05.07). R-08 is a prototype screen; these four words are not in it: the withdrawn end line (the prototype has resolved and expired only), the control for the next page of the archive and its failure, and the note on an alert read from a kept copy whose time has passed. */
   m(en, {
     R08: { withdrawn: 'Withdrawn {t}', more: 'Show older alerts', moreFailed: 'We could not load older alerts. Check that you have signal and try again.' },

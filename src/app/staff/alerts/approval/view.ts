@@ -129,6 +129,11 @@ export interface ApprovalScreen {
    */
   pauseNotice: string | null;
   /**
+   * "With this alert ... {n} over the monthly cap" when month-to-date text spending plus this entry's estimate would pass the cap (S07.08), shown before
+   * the approver decides. It informs and never changes or refuses the approval. Absent or null otherwise.
+   */
+  capNotice?: string | null;
+  /**
    * Set for a pending post that residents already read on the web, marked "Not yet verified" (D-1, S08.03): the approver is told so, its texts go out only on approval,
    * and it cannot be returned to its author (a web-published entry never returns to draft). Null for every other entry.
    */
@@ -196,6 +201,8 @@ export interface ApprovalInput {
   viewerId: string;
   /** What `pauseNoticeForApprover()` answered: the sentence while texts are paused, null otherwise (or when the switch could not be read). */
   pauseNotice?: string | null;
+  /** The sentence about the monthly spending cap when this entry would pass it (`capNoticeFor`, S07.08); null or left out when it would not. */
+  capNotice?: string | null;
   /** Whether residents are shown alerts at all (`residentAlertsEnabled()`): the launch switch. Left out, it is on. */
   residentAlertsEnabled?: boolean;
   /** The sending progress of an approved entry (`sendingBlock()`, S06.09); left out, none is shown. */
@@ -214,6 +221,27 @@ function estimatedCents(sms: EntryReview["sms"], counts: RecipientCounts, price:
   if (Object.keys(sms).length === 0) return null;
   try {
     return estimateSmsCost({ segmentsByLanguage: segmentsOf(sms), recipientsByLanguage: counts.byLanguage as Record<string, number>, pricePerSegmentCents: price, basis: "snapshot" }).cents;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What the entry's texts will be counted at in the month's spending (S07.08): each text's own estimate rounded up to a whole cent, as the outbox stores it
+ * (`alertTextsOf`) and the spend record counts it, times the number of people who get that language's text. This is the figure the spend cap is judged
+ * with, so it can be a few cents more than the cost line above (which rounds the whole group once). Null when it cannot be worked out.
+ */
+export function spendEstimateCents(sms: EntryReview["sms"], counts: RecipientCounts, price: number): number | null {
+  if (Object.keys(sms).length === 0) return null;
+  try {
+    let total = 0;
+    for (const [lang, people] of Object.entries(counts.byLanguage) as [string, number][]) {
+      if (!people) continue;
+      const body = sms[lang];
+      if (!body) return null;
+      total += people * estimateSmsCost({ segmentsByLanguage: { [lang]: body.segments }, recipientsByLanguage: { [lang]: 1 }, pricePerSegmentCents: price, basis: "snapshot" }).cents;
+    }
+    return total;
   } catch {
     return null;
   }
@@ -438,6 +466,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     // Told where it matters: to the approver deciding (an entry waiting for them), and on the confirmation (an approved entry), not on an entry that
     // was returned, discarded or is waiting for someone else, whose texts the pause does not hold.
     pauseNotice: input.pauseNotice && (!locked || entry.status === "approved") ? input.pauseNotice : null,
+    // The cap is told before the decision, to the approver deciding: not on an entry that is not waiting for them.
+    capNotice: input.capNotice && !locked && entry.status === "pending_approval" ? input.capNotice : null,
     header: {
       types: entry.content.types.map(typeName).join(", "),
       submitted: entry.submittedAt ? t("submitted", { time: formatTorontoDateTime(entry.submittedAt), version: entry.version }) : "",

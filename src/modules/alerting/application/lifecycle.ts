@@ -72,6 +72,13 @@ export interface AlertLifecycleDeps {
   /** Cents CAD per text message segment (SMS_PRICE_PER_SEGMENT_CENTS), for each queued text's cost estimate; read only when someone is to be texted. */
   pricePerSegmentCents?: () => number;
   /**
+   * The monthly spending cap's check (S07.08), called in the approval's transaction after the entry's texts are queued, only when someone is to be
+   * texted: with the entry's own estimate in cents it answers how far the month's spending would pass the cap, or null when it does not (or no cap is
+   * set). When it passes, the implementation also records the `spend.cap_overrun` ops event in this transaction; the use case audits it. It warns and
+   * never refuses. `createAlerting` wires spend's `assessApproval` and messaging's `queuedCostCents` here; left out (the use case's own tests), no cap.
+   */
+  spendCap?: (tx: DbTransaction, input: { entryId: string; entryCostCents: number; now: Date }) => Promise<{ overCents: number; capCents: number } | null>;
+  /**
    * messaging's `cancelQueued(entryIds, tx)` (S05.02): called in the transaction of every use case that supersedes an entry or closes a thread, so the texts of
    * those entries that are not yet handed to the provider stop exactly when the change commits. `createAlerting` wires `createDeliveryQueue().cancelQueued`
    * here; the default does nothing (the use case's own tests, which write no delivery).
@@ -965,12 +972,12 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
    * one. The marker that lets the database accept an alert delivery has been set by now. Nobody captured (all of E04 to E06: texting is not open):
    * nothing is written.
    */
-  async function queueSnapshot(tx: DbTransaction, entry: RecipientEntry): Promise<RecipientCounts> {
+  async function queueSnapshot(tx: DbTransaction, entry: RecipientEntry): Promise<{ counts: RecipientCounts; costCents: number }> {
     const captured = await recipients.capture(entry, tx);
     const texts = alertTextsOf({ recipients: captured, smsBodies: entry.smsBodies, pricePerSegmentCents: deps.pricePerSegmentCents });
-    if (texts.length === 0) return NO_RECIPIENTS;
+    if (texts.length === 0) return { counts: NO_RECIPIENTS, costCents: 0 };
     if (!queueAlertTexts) throw new Error("alerting: people were captured for an approval but no outbox is wired to queue their texts");
-    return countsOfTexts(await queueAlertTexts(tx, entry.entryId, texts));
+    return { counts: countsOfTexts(await queueAlertTexts(tx, entry.entryId, texts)), costCents: texts.reduce((sum, text) => sum + text.costEstimateCents, 0) };
   }
 
   /** Inserts a draft (the author its first editor): the one place an entry row is made, for a thread's first entry and for an update. The caller has judged everything. */
@@ -1803,9 +1810,25 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         await markApproval(tx, row.id);
         // The snapshot, in this transaction (AD-7): who gets the text and in which language (`captureRecipients`), their texts queued through the
         // outbox (`enqueueAlertDeliveries`), and the number of texts it returns by language. What the approver reviewed is compared with that.
-        const snapshot = await queueSnapshot(tx, await recipientEntryOf(tx, approved, thread));
+        const { counts: snapshot, costCents: entryCostCents } = await queueSnapshot(tx, await recipientEntryOf(tx, approved, thread));
         const reviewed = shown.recipients ?? NO_RECIPIENTS;
         if (!sameRecipientCounts(reviewed, snapshot)) throw new Refused("RECIPIENT_COUNT_CHANGED", { recipients: snapshot, reviewed });
+        // The monthly cap on text message spending (S07.08, AR-12) warns and never blocks: if this entry's texts take the month past it, the overrun is
+        // audited here and recorded as an ops event (the health job texts the on-call Admins), in this same transaction, and the approval goes on. The
+        // cap is the last row locked (AD-18). Nothing is asked when no one is texted.
+        if (deps.spendCap && snapshot.total > 0) {
+          const overrun = await deps.spendCap(tx, { entryId: row.id, entryCostCents, now: now() });
+          if (overrun) {
+            await audit.record(tx, {
+              action: "spend.cap_overrun",
+              actorStaffId: actor.staffId,
+              subjectType: "alert_entry",
+              subjectId: row.id,
+              isDrill: thread.isDrill,
+              meta: { over_cents: overrun.overCents, cap_cents: overrun.capCents, entry_cents: entryCostCents },
+            });
+          }
+        }
         await audit.record(tx, {
           action: "entry.approved",
           actorStaffId: actor.staffId,

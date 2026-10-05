@@ -32,6 +32,7 @@ import { createAlertSubmitter, createAlerting, createDrillThreads } from "../../
 import { createDeliveryQueue, createMessagingPause, drillResults } from "../../src/modules/messaging";
 import { createDrillRoster } from "../../src/modules/subscriptions";
 import { createOncallRoster } from "../../src/modules/ops";
+import { createSpendCap, readSpendOverview } from "../../src/modules/spend";
 import { noTranslation } from "../../src/modules/translation";
 import { createBuildingService, floorsOfBuilding } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
@@ -55,6 +56,8 @@ const wired = vi.hoisted(() => ({
   publish: null as unknown,
   pause: null as unknown,
   oncall: null as unknown,
+  spend: null as unknown,
+  spendOverview: null as null | (() => Promise<unknown>),
   drills: null as unknown,
   drillThreads: null as unknown,
   drillResults: null as unknown,
@@ -97,6 +100,13 @@ vi.mock("../../src/app/staff/messagingPause", () => ({
 }));
 // The On-call numbers page and its actions (S06.07) run the roster on the app's own connection.
 vi.mock("../../src/app/oncall", () => ({ oncallRoster: () => wired.oncall }));
+// The Spend page and its action (S07.08) run the spend module on the app's own connection.
+vi.mock("../../src/app/staff/spendSeam", () => ({
+  spendCap: () => wired.spend,
+  readOverview: async () => wired.spendOverview?.(),
+  logSpendError: () => {},
+  capNoticeFor: async () => null,
+}));
 // The Drills page, the drill roster page and their actions (S06.05) run the roster, the drill threads and their results on the app's own connection.
 vi.mock("../../src/app/drills", () => ({
   drillRoster: () => wired.drills,
@@ -160,6 +170,8 @@ async function reset() {
   await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
   // An Admin's allowed "Add number" (S06.07) names the Admin who added it: clear the roster before the accounts go.
   await owner`delete from oncall_roster`;
+  // An allowed "Save cap" (S07.08) names the Admin who set it: clear the cap before the accounts go.
+  await owner`update spend_cap set monthly_cents = null, set_by = null, set_at = null where id = 1`;
   // ... and an allowed "Add phone" (S06.05) names the Admin who added it, too.
   await owner`delete from drill_roster`;
   await owner.begin(async (tx) => {
@@ -233,6 +245,8 @@ beforeEach(async () => {
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
   });
+  wired.spend = createSpendCap({ db: app, audit: { record: (tx, event) => record(tx, event), recordRefusal: (db, event) => recordRefusal(db, event) } });
+  wired.spendOverview = () => readSpendOverview(app, { now: new Date(), budgetCents: 100_000, cohereEstimateCadPerMillionTokens: null });
   wired.drills = createDrillRoster({
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },

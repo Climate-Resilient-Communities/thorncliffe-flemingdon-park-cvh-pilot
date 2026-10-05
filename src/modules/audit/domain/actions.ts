@@ -278,6 +278,14 @@ export const AUDIT_META = {
   "oncall.added": meta({ roster_size: count.optional() }),
   "oncall.removed": meta({ roster_size: count.optional() }),
 
+  // The monthly cap on text message spending (S07.08). `spend.cap_set`: an Admin at aal2 sets or changes the cap; the subject is the one cap row
+  // (type `spend_cap`, id 1), `cap_cents` the cap afterwards and `previous_cents` the one it replaced (absent when none was set). Amounts are cents CAD.
+  // A refusal holds only its reason (`validation`: not an amount the cap can be). `spend.cap_overrun`: an approval whose estimate took the month's
+  // spending past the cap (approval is never blocked); the subject is the entry approved (type `alert_entry`), `over_cents` by how much the cap was
+  // passed, `cap_cents` the cap and `entry_cents` the entry's own estimate.
+  "spend.cap_set": meta({ cap_cents: count.optional(), previous_cents: count.optional() }),
+  "spend.cap_overrun": meta({ over_cents: count.optional(), cap_cents: count.optional(), entry_cents: count.optional() }),
+
   // The drill roster (S06.05): an Admin at aal2 adds, edits or removes a roster entry. The subject is the roster row (type `drill_roster`, its id); the
   // number, the label and the language are in no audit record, which holds only how many entries the roster has afterwards. A refusal holds only its
   // reason (`validation`: no label, a label that is too long, not a Canadian number or not a language; `duplicate`: the number is already on the roster;
@@ -312,6 +320,8 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "sending.resumed": ["waiting"],
   "oncall.added": ["roster_size"],
   "oncall.removed": ["roster_size"],
+  "spend.cap_set": ["cap_cents"],
+  "spend.cap_overrun": ["over_cents", "cap_cents", "entry_cents"],
   "drill_roster.added": ["roster_size"],
   "drill_roster.edited": ["roster_size"],
   "drill_roster.removed": ["roster_size"],
