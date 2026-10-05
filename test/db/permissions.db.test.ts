@@ -30,7 +30,7 @@ import {
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
 import { createAlertSubmitter, createAlerting, createDrillThreads } from "../../src/modules/alerting";
 import { createDeliveryQueue, createMessagingPause, createResend, drillResults } from "../../src/modules/messaging";
-import { createDrillRoster } from "../../src/modules/subscriptions";
+import { createDrillRoster, createRateLimiter, createSignup } from "../../src/modules/subscriptions";
 import { createOncallRoster } from "../../src/modules/ops";
 import { createSpendCap, readSpendOverview } from "../../src/modules/spend";
 import { noTranslation } from "../../src/modules/translation";
@@ -62,6 +62,7 @@ const wired = vi.hoisted(() => ({
   drills: null as unknown,
   drillThreads: null as unknown,
   drillResults: null as unknown,
+  signup: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -115,6 +116,13 @@ vi.mock("../../src/app/drills", () => ({
   drillRoster: () => wired.drills,
   drillThreads: () => wired.drillThreads,
   drillResultsReader: () => wired.drillResults,
+}));
+// Text sign-up (S07.03) runs the sign-up on the app's own connection, with no building to offer; no sender is started.
+vi.mock("../../src/app/signup", () => ({
+  signupService: () => wired.signup,
+  currentSignupConsentVersion: () => "2026-10-02.1",
+  signupBuildingList: async () => [],
+  startSending: () => {},
 }));
 // The assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
@@ -262,6 +270,18 @@ beforeEach(async () => {
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
   });
   wired.drillThreads = createDrillThreads({ db: app });
+  wired.signup = createSignup({
+    db: app,
+    places: { neighbourhoodIds: async () => [], floorIdsOf: async () => null },
+    subscribers: { isSubscribed: async () => false },
+    enqueue: () => {
+      throw new Error("no sign-up is written in the permission test");
+    },
+    consentVersion: () => "2026-10-02.1",
+    limiter: () => createRateLimiter({ db: app, key: "a-test-key-for-the-rate-limiter" }),
+    pricePerSegmentCents: () => 1.5,
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
+  });
   wired.drillResults = { forAlert: (alertId: string) => drillResults.forAlert(app, alertId) };
   wired.places = createBuildingService({
     db: app,

@@ -85,6 +85,16 @@
     font-weight: 700;
   }
 
+  /* Words for a resident, in the resident's language, on a staff screen (S07.03): set apart on the raised surface with a hairline, so the staff member can turn the screen to them. */
+  .hub-resident-words {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
   /*
    * Coverage of a floor or a group of floors (S01.14): always written out ("Covered: G, 1" / "Not covered: 2, 3"),
    * with a bar and a surface that only add to the words. Covered is the green bar on the plain surface; not covered

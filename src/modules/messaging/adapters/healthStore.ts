@@ -57,4 +57,10 @@ export const drizzleSenderHealth: SenderHealthReader = {
       transactionalToday: Number(today?.n ?? 0),
     };
   },
+
+  async acceptedAfter(executor, at) {
+    // No index on `submitted_at`: the scan stops at the first row, and the health job asks only while a refusal is unanswered.
+    const [row] = await executor.select({ id: delivery.id }).from(delivery).where(gt(delivery.submittedAt, sql`${at.toISOString()}::timestamptz`)).limit(1);
+    return row !== undefined;
+  },
 };

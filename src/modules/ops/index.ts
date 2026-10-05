@@ -35,21 +35,26 @@ export {
   type HealthJob,
   type HealthJobDeps,
   type HealthReport,
+  type HeartbeatReading,
 } from "./application/healthJob";
 export { ONCALL_LABEL_MAX_CHARS, ONCALL_MAX_NUMBERS, parseOncallLabel, parseOncallNumber, type OncallRefusal } from "./domain/oncall";
 export {
   ALERT_INTERVAL_MS,
   FALLBACK_WINDOW_MS,
+  HEARTBEAT_CAUSES,
   HEARTBEAT_STALE_AFTER_MS,
   JOB_FAILURE_WINDOW_MS,
+  PROVIDER_AUTH_RED_AFTER_MS,
   SENDER_CONDITIONS,
   SIGNATURE_FAILURE_LIMIT,
   SIGNATURE_WINDOW_MS,
   decide,
+  heartbeatCause,
   heartbeatFresh,
   intervalPassed,
   type ConditionState,
   type Decision,
+  type HeartbeatCause,
   type Observation,
 } from "./domain/health";
 

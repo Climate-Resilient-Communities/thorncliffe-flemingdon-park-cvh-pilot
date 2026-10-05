@@ -5,7 +5,17 @@ import type { Db, DbTransaction } from "../../../platform/db";
 import type { DeliveryView, TransactionalInput } from "../../messaging";
 import type { NewPendingSignup, PendingSignupStore } from "../adapters/pendingSignupStore";
 import type { RateLimiter } from "./rateLimit";
-import { SIGNUP_RATE_LIMIT, TWILIO_OPTED_OUT_ERROR, confirmationText, createSignup, forgetOptedOutSignup, pendingSignupNumberSource, type SignupDeps } from "./webSignup";
+import type { AuditEvent } from "../../audit";
+import {
+  ASSISTED_SIGNUP_RATE_LIMIT,
+  SIGNUP_RATE_LIMIT,
+  TWILIO_OPTED_OUT_ERROR,
+  confirmationText,
+  createSignup,
+  forgetOptedOutSignup,
+  pendingSignupNumberSource,
+  type SignupDeps,
+} from "./webSignup";
 
 // The sign-up use case with every port faked: an in-memory table with transactions and savepoints that roll back, a recording outbox, a
 // limiter and a subscriber lookup. Every number is fictional (555).
@@ -248,12 +258,12 @@ describe("the web sign-up", () => {
     expect([...closed.counted, ...changed.counted]).toEqual([]);
   });
 
-  it("records a staff-started sign-up as such (S07.03)", async () => {
+  it("records a web sign-up as started on the web", async () => {
     const fake = fakeWorld();
-    await createSignup(fake.deps).request(request(), "a", "staff");
+    await createSignup(fake.deps).request(request(), "a");
 
-    expect([...fake.world.rows.values()][0]!.startedBy).toBe("staff");
-    expect(fake.world.deliveries[0]!.nonce).toBe("staff");
+    expect([...fake.world.rows.values()][0]!.startedBy).toBe("web");
+    expect(fake.world.deliveries[0]!.nonce).toBe("web");
   });
 
   it("fails loudly, writing nothing, when the outbox refuses the text it was given (a bug, not a resident's mistake)", async () => {
@@ -317,5 +327,106 @@ describe("a confirmation refused because the number texted STOP (Twilio 21610)",
     await hook(tx, delivery({ recipientId: row!.id }), TWILIO_OPTED_OUT_ERROR);
     expect(fake.world.rows.size).toBe(0);
     expect(skipped).toEqual([`pending_signup:${row!.id}`]);
+  });
+});
+
+describe("the staff-assisted sign-up (S07.03)", () => {
+  const STAFF = "01900000-0000-7000-8000-0000000000aa";
+
+  /** The fake world with an audit trail that records what it is given, and where (in the sign-up's transaction, or after it). */
+  function assisted(options: Parameters<typeof fakeWorld>[0] = {}) {
+    const fake = fakeWorld(options);
+    const audited: { outcome: "ok" | "refused"; event: AuditEvent<"signup.assisted"> }[] = [];
+    const deps: SignupDeps = {
+      ...fake.deps,
+      audit: {
+        async record(_tx, event) {
+          fake.world.log.push("audit");
+          audited.push({ outcome: "ok", event });
+        },
+        async recordRefusal(_db, event) {
+          audited.push({ outcome: "refused", event });
+        },
+      },
+    };
+    return { ...fake, deps, audited };
+  }
+  const ok = (patch: Partial<SignupRequest> = {}) => ({ ok: true as const, value: request(patch) });
+
+  it("writes the same pending sign-up, started by staff, and queues the same one confirmation as the web form", async () => {
+    const fake = assisted();
+    expect(await createSignup(fake.deps).assist(ok(), STAFF)).toEqual({ kind: "accepted" });
+
+    const [row] = [...fake.world.rows.values()];
+    expect(row).toMatchObject({ phone: "+14165550123", lang: "ur", neighbourhoodId: "TP", consentVersion: VERSION, startedBy: "staff" });
+    expect(fake.world.deliveries).toHaveLength(1);
+    expect(fake.world.deliveries[0]).toMatchObject({ purpose: "confirmation", recipient: { kind: "pending_signup", id: row!.id }, nonce: "staff", lang: "ur", body: confirmationText("ur").body });
+  });
+
+  it("is counted per staff account under its own limit, never against a client's address", async () => {
+    const fake = assisted();
+    await createSignup(fake.deps).assist(ok(), STAFF);
+
+    expect(fake.counted).toEqual([`${ASSISTED_SIGNUP_RATE_LIMIT.scope}:staff:${STAFF}`]);
+    expect(ASSISTED_SIGNUP_RATE_LIMIT).toEqual({ scope: "signup_assisted", limit: 40, windowMs: 24 * 60 * 60_000 });
+    expect(ASSISTED_SIGNUP_RATE_LIMIT.scope).not.toBe(SIGNUP_RATE_LIMIT.scope);
+  });
+
+  it("audits an accepted sign-up inside its transaction, after the writes, with the staff id and no number, the same for a new, a pending and a subscribed number", async () => {
+    const records = [];
+    for (const subscribed of [[], ["+14165550123"]]) {
+      const fake = assisted({ subscribed });
+      await createSignup(fake.deps).assist(ok(), STAFF);
+      await createSignup(fake.deps).assist(ok(), STAFF);
+      expect(fake.world.log.at(-1)).toBe("audit");
+      records.push(...fake.audited);
+    }
+    expect(records).toHaveLength(4);
+    for (const record of records) {
+      expect(record).toEqual({ outcome: "ok", event: { action: "signup.assisted", actorStaffId: STAFF, subjectType: "pending_signup", subjectId: null, meta: {} } });
+      expect(JSON.stringify(record)).not.toContain("5550123");
+    }
+  });
+
+  it("refuses what the contract refused, audited with the reason and the code, counting nothing and storing nothing", async () => {
+    const fake = assisted();
+    const outcome = await createSignup(fake.deps).assist({ ok: false, code: "age_not_confirmed" }, STAFF);
+
+    expect(outcome).toEqual({ kind: "refused", code: "age_not_confirmed" });
+    expect(fake.audited).toEqual([
+      { outcome: "refused", event: { action: "signup.assisted", actorStaffId: STAFF, subjectType: "pending_signup", subjectId: null, meta: { reason: "validation", code: "age_not_confirmed" } } },
+    ]);
+    expect(fake.counted).toEqual([]);
+    expect(fake.world.rows.size).toBe(0);
+  });
+
+  it("refuses terms that changed and an unknown building before counting, each audited", async () => {
+    const fake = assisted();
+    const signup = createSignup(fake.deps);
+    expect(await signup.assist(ok({ consentVersion: "2026-09-01.1" }), STAFF)).toEqual({ kind: "refused", code: "terms_changed" });
+    expect(await signup.assist(ok({ places: [{ rsn: "999", floors: [] }] }), STAFF)).toEqual({ kind: "refused", code: "place_unknown" });
+
+    expect(fake.audited.map((a) => a.event.meta)).toEqual([
+      { reason: "conflict", code: "terms_changed" },
+      { reason: "validation", code: "place_unknown" },
+    ]);
+    expect(fake.counted).toEqual([]);
+  });
+
+  it("refuses the staff account's sign-up past its limit, audited as throttled, storing nothing", async () => {
+    const fake = assisted({ allowed: false });
+    expect(await createSignup(fake.deps).assist(ok(), STAFF)).toEqual({ kind: "rate_limited", retryAfterSeconds: 1200 });
+
+    expect(fake.audited).toEqual([
+      { outcome: "refused", event: { action: "signup.assisted", actorStaffId: STAFF, subjectType: "pending_signup", subjectId: null, meta: { reason: "throttled", code: "rate_limited" } } },
+    ]);
+    expect(fake.world.rows.size).toBe(0);
+    expect(fake.world.deliveries).toEqual([]);
+  });
+
+  it("will not run without the audit trail", async () => {
+    const fake = fakeWorld();
+    await expect(createSignup(fake.deps).assist(ok(), STAFF)).rejects.toThrow(/audit/);
+    expect(fake.world.rows.size).toBe(0);
   });
 });

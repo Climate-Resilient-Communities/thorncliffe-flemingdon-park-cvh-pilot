@@ -65,6 +65,13 @@ export const AUTHORITY_MATRIX = [
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {
+    // S07.03: start a resident's sign-up for texts at an event or the Hub desk (the resident still replies YES themselves). Not privileged:
+    // it changes nothing staff can see and is limited per staff account.
+    row: "Help a resident sign up for texts",
+    actions: ["signup.assist"],
+    rules: { ambassador: "yes", coordinator: "yes", director: "no", admin: "yes" },
+  },
+  {
     row: "See open check-in rows",
     actions: ["checkins.view_open"],
     rules: { ambassador: "assigned_floor_open_alert", coordinator: "no", director: "no", admin: "yes" },

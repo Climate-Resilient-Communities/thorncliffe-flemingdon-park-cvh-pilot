@@ -33,8 +33,38 @@ export function heartbeatFresh(completedAt: Date | null, now: Date): boolean {
   return completedAt !== null && now.getTime() - completedAt.getTime() < HEARTBEAT_STALE_AFTER_MS;
 }
 
-/** The conditions that mean the sender itself is not sending: the Hub shows the banner for these, since an on-call text may be stuck behind them. */
-export const SENDER_CONDITIONS = ["queue_stuck", "sender_stalled"] as const satisfies readonly HealthCondition[];
+/** `dispatch.provider_auth_failed` events are counted over this long for the on-call text's number (the condition itself has no window). */
+export const PROVIDER_AUTH_COUNT_WINDOW_MS = 24 * 60 * 60_000;
+/**
+ * The heartbeat's debounce for Twilio sign-in (S09.01 follow-up): `provider_auth` turns the heartbeat red only once the health job has found it
+ * holding for this long without a break. It clears at the first thing Twilio accepts after the last refusal (a text, or the daily Messaging
+ * Service check), and the health job's own on-call text, queued when the condition begins and claimed before every text but a fire alert, is such a try:
+ * a refusal that passes clears within a few minutes and never reaches the outside check.
+ */
+export const PROVIDER_AUTH_RED_AFTER_MS = 10 * 60_000;
+
+/**
+ * Why the heartbeat answers 503, as the short code its body carries (the outside check's email can quote it): the health job has not completed a
+ * run for 3 minutes (or never has), or Twilio has refused the CVH's sign-in for 10 minutes with nothing accepted since.
+ */
+export const HEARTBEAT_CAUSES = ["health_job_stale", "provider_auth"] as const;
+export type HeartbeatCause = (typeof HEARTBEAT_CAUSES)[number];
+
+/**
+ * What the heartbeat says, from the health job's last complete run and since when `provider_auth` has held (null: it does not). A stale job comes
+ * first: what it last remembered about Twilio is not current.
+ */
+export function heartbeatCause(facts: { completedAt: Date | null; providerAuthSince: Date | null }, now: Date): HeartbeatCause | null {
+  if (!heartbeatFresh(facts.completedAt, now)) return "health_job_stale";
+  if (facts.providerAuthSince !== null && now.getTime() - facts.providerAuthSince.getTime() >= PROVIDER_AUTH_RED_AFTER_MS) return "provider_auth";
+  return null;
+}
+
+/**
+ * The conditions that mean the sender itself is not sending: the Hub shows the banner for these to everyone, since an on-call text may be stuck
+ * behind them (or, for `provider_auth`, refused by Twilio like every other text).
+ */
+export const SENDER_CONDITIONS = ["queue_stuck", "sender_stalled", "provider_auth"] as const satisfies readonly HealthCondition[];
 
 export interface ConditionState {
   active: boolean;

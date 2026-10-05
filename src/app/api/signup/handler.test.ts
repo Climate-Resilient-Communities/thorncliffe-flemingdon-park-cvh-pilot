@@ -29,6 +29,9 @@ function deps(outcome: SignupOutcome | Error) {
       if (outcome instanceof Error) throw outcome;
       return outcome;
     },
+    async assist() {
+      throw new Error("the web route never starts a staff-assisted sign-up");
+    },
   };
   const afterAccepted = vi.fn();
   return { calls, afterAccepted, deps: { signup: () => signup, client: (headers: Headers) => headers.get("x-real-ip") ?? "unknown", afterAccepted } };

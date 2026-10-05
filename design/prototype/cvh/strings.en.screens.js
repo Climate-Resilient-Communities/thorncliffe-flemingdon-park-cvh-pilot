@@ -1817,7 +1817,7 @@
       failed: 'The list was not changed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT.' } },
   /* The health banner (S06.07, S09.01): one plain line per open condition, in the order the health job lists them. Admins and Coordinators see
-     every condition; everyone else at the Hub sees the two that mean the sender itself is failing. */
+     every condition; everyone else at the Hub sees the three that mean the sender itself is failing (a stuck queue, no sender, Twilio sign-in). */
   health: {
     banner: 'Sending is failing',
     bannerOther: 'Something is not working',
@@ -1832,6 +1832,7 @@
     transactional_ceiling: 'More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.',
     cap_overrun: 'An approval this month went over the monthly text message spending cap. Texts keep sending.',
     messaging_settings: 'The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.',
+    provider_auth: 'Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.',
     stale: 'The health check has not run for more than 3 minutes, so a new problem may not be shown here.',
     since: 'Since {when}',
     tell: 'Tell IT now.' } },
@@ -1846,7 +1847,8 @@
     publish_failed: 'CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.',
     transactional_ceiling: 'CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.',
     cap_overrun: 'CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.',
-    messaging_settings: 'CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.' } } } });
+    messaging_settings: 'CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.',
+    provider_auth: 'CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub.' } } } });
   /* Adding an update to a running alert (S05.01, O-14 "Add an update", O-13 "Promote to full alert"), the pilot's staff version. In the prototype an update
      is published at once from a template; here the author writes it on the same composer as every entry (the text, where things stand, the valid-until),
      submits it, and a second person approves it. The alert's audience, types and languages are carried over from the entry that covers it. The prototype's
@@ -2305,4 +2307,59 @@
   m(en, {
     R08: { withdrawn: 'Withdrawn {t}', more: 'Show older alerts', moreFailed: 'We could not load older alerts. Check that you have signal and try again.' },
     R07: { mayHaveEnded: 'This alert may have ended. Check again when you have signal' } });
+  /* Text sign-up (S07.03): staff help a resident sign up for texts at an event or the Hub desk. Not a prototype screen: the Hub's form pages in the
+     drill roster page's words. The staff screens are in English; what the resident reads (the terms, the age statement, what happens next) is shown in
+     the resident's language from the terms and the R-05 strings that are already translated. A number is never shown back, and no Hub screen lists
+     who signed up. */
+  m(en, { hub: { nav: { textSignup: 'Text sign-up' } },
+  staff: { textSignup: {
+    title: 'Sign up a resident for texts',
+    lead: 'For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.',
+    languageHeading: 'Which language does the resident want?',
+    languageLead: 'Their texts and the terms on the next step will be in this language.',
+    languageChosen: 'Resident\'s language: {language}',
+    changeLanguage: 'Choose another language',
+    termsHeading: 'Go through the terms with the resident',
+    termsLead: 'Read these terms to the resident in {language}, or let them read them on your screen, before you send.',
+    termsDraft: 'Draft terms, not yet published. Sign-ups here are for testing only.',
+    termsEnglish: 'Some of the terms are not translated into {language} yet. Those parts are in English, marked [EN].',
+    termsVersion: 'Terms version {version}',
+    formHeading: 'The resident\'s choices',
+    number: 'Resident\'s mobile number',
+    numberHint: 'A Canadian number, for example 416-555-0123. It is used only to send the texts and no Hub screen shows it again.',
+    neighbourhood: 'Neighbourhood',
+    required: 'Required',
+    optional: 'Optional',
+    building: 'Building',
+    buildingNone: 'No building: every alert for the neighbourhood',
+    floor: 'Floor',
+    floorNone: 'No floor: every alert for the building',
+    floorLabel: 'Floor {label}',
+    groups: 'Groups',
+    agreed: 'The resident has heard the terms in their language and agrees to them.',
+    age: 'The age statement, in the resident\'s language:',
+    ageConfirmed: 'The resident confirms the age statement.',
+    send: 'Send the confirmation text',
+    sending: 'Sending',
+    doneTitle: 'Sign-up started',
+    done: 'If this number can get texts, the confirmation text is on its way.',
+    doneYes: 'The resident must reply YES within 48 hours. Until they do, they get no alerts. The Hub cannot see whether they replied.',
+    doneShow: 'Show the resident, in their language:',
+    next: 'Sign up the next resident',
+    limit: 'Each staff account can start up to 40 sign-ups in 24 hours.',
+    noList: 'No Hub screen lists who signed up or their numbers.',
+    unavailable: 'Text sign-up is not open: the terms are not published yet.',
+    errors: {
+      forbidden: 'Only Coordinators, Ambassadors and Admins can sign up a resident for texts.',
+      invalid_request: 'Something in the form could not be read. Reload the page and try again.',
+      phone_not_canadian: 'That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.',
+      neighbourhood_missing: 'Choose the resident\'s neighbourhood.',
+      terms_not_agreed: 'Confirm that the resident heard the terms and agrees to them.',
+      age_not_confirmed: 'Confirm the age statement with the resident.',
+      terms_changed: 'The terms changed while this page was open. Reload the page and go through the terms with the resident again.',
+      place_unknown: 'That building or floor is no longer on the list. Reload the page and choose again.',
+      rate_limited: 'You have started 40 sign-ups in the last 24 hours, the most one staff account can. Ask another staff member to continue.',
+      signup_unavailable: 'Text sign-up is not available just now. Try again later.',
+      failed: 'The sign-up was not started. Try again. If it fails again, tell IT.',
+      nothingChanged: 'Nothing was sent.' } } } });
 })();

@@ -14,6 +14,8 @@ import { CapFormView } from "@/app/staff/spend/CapFormView";
 import { SpendBody } from "@/app/staff/spend/SpendBody";
 import type { SpendScreen } from "@/app/staff/spend/view";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
+import { SignupFormView } from "@/app/staff/text-signup/SignupFormView";
+import { TextSignupView, type TextSignupModel } from "@/app/staff/text-signup/TextSignupView";
 import { ProblemListBody, SendingBody } from "@/app/staff/alerts/sending/SendingBody";
 import type { ResendState } from "@/app/staff/alerts/sending/texts/control";
 import { ResendAllFormView, ResendOneFormView } from "@/app/staff/alerts/sending/texts/ResendFormView";
@@ -1274,6 +1276,30 @@ export function PeopleFixture({
             </>
           )}
         </Stack>
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The Hub shell around the Text sign-up screen (S07.03), as an Admin sees it: the real body (TextSignupView) at each step, and on the form step the
+ * real, behaviour-free form (SignupFormView) with the state a press would leave. The terms are the committed ones; every number is fictional.
+ */
+export function TextSignupFixture({
+  texts,
+  brand,
+  model,
+  form,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  model: TextSignupModel;
+  form?: ComponentProps<typeof SignupFormView>;
+}) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/text-signup">
+      <Screen surface="staff" testId="screen">
+        <TextSignupView model={model} form={form ? <SignupFormView {...form} /> : undefined} />
       </Screen>
     </AroundTheScreen>
   );

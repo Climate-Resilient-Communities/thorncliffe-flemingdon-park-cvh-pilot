@@ -55,6 +55,8 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   // The pilot measures (S07.10: subscribers, how far corrections reached, cost per alert) are counts, so they follow `coverage.view`: a Coordinator, a Director
   // read-only and an Admin. The cost of an alert on the page is `spend.view` (no Coordinator).
   if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "measures", label: englishText("hub.nav.measures"), href: "/staff/measures", icon: "layers" }];
+  // Text sign-up (S07.03) is `signup.assist`: an Ambassador, a Coordinator and an Admin start a resident's sign-up at an event or the Hub desk.
+  if (can(role, "signup.assist")) sections[0].items = [...sections[0].items, { id: "text-signup", label: englishText("hub.nav.textSignup"), href: "/staff/text-signup", icon: "phone" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
   // `accounts.manage`, the providers page `provider.manage` (S02.04), the directory release page `guide.publish` (S02.05),
   // the buildings page `buildings.manage` (S01.13) and the pause page `sending.pause` (S06.06), all Admin only.
