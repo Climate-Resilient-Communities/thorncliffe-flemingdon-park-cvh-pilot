@@ -3312,7 +3312,7 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 ### Story S07.09 — Abuse of sign-up and texting is limited
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 20 min (started 2026-10-04 19:39 UTC, built 20:59 UTC)
 - **Traces:** AR-20, NFR-N9 · **Depends on:** S07.04 · **Branch:** `e07-s09-abuse-limits`
 
 As a Hub Admin,
