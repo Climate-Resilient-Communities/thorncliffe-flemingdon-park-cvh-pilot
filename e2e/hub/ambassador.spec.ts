@@ -26,6 +26,8 @@ const FULL: AmbassadorHomeData = {
       publishedAt: new Date("2026-10-04T14:00:00.000Z"),
       validUntil: new Date("2026-10-05T14:00:00.000Z"),
       buildings: ["4154146"],
+      // S08.04: an alert about exactly one building they are assigned to offers "Mark resolved".
+      canResolve: true,
     },
     {
       alertId: "01900000-0000-7000-8000-00000000a1e8",

@@ -259,7 +259,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `audit_event` (audit) | S01.04 | `subscriber`, `subscriber_place`, `subscriber_topic_optout` (subscriptions) | S07.04 |
 | `staff_account` (identity) | S01.05 | `pending_signup` (subscriptions) | S07.02 |
 | `neighbourhood`, `building`, `building_floor` (places) | S01.13 | `inbound_seen`, `inbound_reply`, `inbound_keyword_count` (subscriptions) | S07.04 |
-| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.05 |
+| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.04 (the reply-0 confirmation needs it; S07.05 adds its menu kinds) |
 | `provider`, `provider_location`, `category`, `provider_category` (directory) | S02.04 | `subscription_edit_token` (subscriptions) | S07.06 |
 | `directory_release` (directory), `ops_event` (ops) | S02.05 | `spend_cap` (spend) | S07.08 |
 | `guide`, `essential_number` (directory) | S02.09 | `checkin`, `checkin_tally` (checkins) | S08.05 |
@@ -1324,7 +1324,7 @@ So that I have the numbers and my building's status when I need them most.
 
 ### Story S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 5 h 5 min (started 2026-10-04 13:50 UTC, built 18:55 UTC; includes one full rebuild)
 - **Traces:** NFR-N2, UX-DR18, UX-DR19 · **Depends on:** S02.12 · **Branch:** `e02-s14-basic-mode-a11y`
 
 As a resident who finds the full layout hard to use,
@@ -1357,6 +1357,28 @@ So that I can use the CVH in the way that works for me.
 **Given** basic mode on, at 320 px, in `en`, `ur` and `ta`
 **When** the touch-target test runs
 **Then** every control meets the basic-mode target size
+
+**Screen-reader run (S02.14, done by a person; the owner fills in the device and date)**
+
+Setup: the production or preview URL of the CVH, a phone with the screen reader on, Safari on iOS (VoiceOver) or Chrome on Android (TalkBack), a fresh browser profile (no saved choices), speech rate the tester's own. Do the run once in English with basic mode off, once in Urdu (right to left) with basic mode off, and once in English with basic mode on (turn it on at step 4). Note anything the screen reader skips, reads in the wrong language or announces without a name or role.
+
+1. Open the CVH address. Expected: the page loads; the screen reader reads the first screen (choose language) with a heading and the list of languages as a group.
+2. Choose language. Swipe through the languages. Each one is read in its own name and language, as a radio button with its state (selected, not selected). Select one; then Continue. The next screen is announced by its heading.
+3. Choose building. Each building is a checkbox with its address read as text, and its floors are a group. Check one building; the state is announced as checked. Continue or skip; the home screen's heading is announced.
+4. On home, move to the top. Expected order: the logo (read as "Thorncliffe Park Community Hub"), the language button (named with the word for language and the language it shows), the switch "Bigger text, fewer things" announced as a switch with its state in words ("On" or "Off"). Double-tap the switch; the state changes in words and the layout becomes larger with fewer lines. (On a page opened already in basic mode the switch reads "Off" until the page has loaded; note it if heard.)
+5. Open the directory (Find help). The heading is announced; every filter and each listing link has a name; a link to a listing says the provider's name. Open a listing; its heading is announced, and phone, email and web links say what they are.
+6. Open numbers (Be ready, then Essential numbers). Every number is a link that says it is a call; the 911 notice is read as a note. Go back to the previous screen with the screen reader's back gesture; focus returns to a sensible place.
+7. Open the map. In basic mode it opens as a list; with basic mode off use the "List" button of the map: every place is reachable as a link. Pins are not needed to reach any place.
+8. Open an alert from home (if one is open) and read its thread: status is read in words (verified or not yet verified, valid until), and in basic mode the button "Earlier updates: n" brings the older entries.
+9. Open the language button; the sheet is announced as a dialog with its title, focus stays in it, and Close returns focus to the language button.
+
+Record (one row per run):
+
+| Screen reader and version | Device and OS | Language and mode | Date | Tester | Result and anything to fix |
+| --- | --- | --- | --- | --- | --- |
+| VoiceOver | (owner to fill in) | en, basic off | (owner to fill in) | | |
+| VoiceOver | (owner to fill in) | ur, basic off | (owner to fill in) | | |
+| TalkBack | (owner to fill in) | en, basic on | (owner to fill in) | | |
 
 ### Story S02.15 — Hub counts install events and directory use without tracking anyone
 
@@ -3087,8 +3109,8 @@ So that residents without the app can join, while still confirming for themselve
 
 ### Story S07.04 — Residents confirm, get a welcome, and STOP deletes them
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-inbound-router`
+- **Size:** M · **Estimate:** 7 h · **Actual:** 26 min (started 2026-10-04 16:49 UTC, built 17:15 UTC)
+- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-confirm-stop`
 
 As a resident,
 I want my YES to start my alerts and STOP to remove me completely,
@@ -3106,7 +3128,7 @@ So that I control whether I get texts.
 
 **Given** a pending sign-up and the reply YES from that number before it expires
 **When** it is handled
-**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice
+**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice (as built: 0, STOP and the overnight notice only until S07.05 ships the menus and adds 1, 2 and 3 back; product owner, 2026-10-04)
 **And** a repeated YES is answered "You are already signed up" and changes nothing
 
 **Given** YES with no pending sign-up, or after it expired
@@ -3181,6 +3203,8 @@ So that I can keep my alerts right without a smartphone.
 **Given** reply 3
 **When** handled
 **Then** it calls `checkins`' `withdrawRequest` port (E08); until then the reply is "You have no check-in request"
+
+**Handoff from S07.04.** Until the menus answer, S07.04's welcome text (`smsTexts.welcome`) offers only reply 0 and STOP, with the overnight notice (product owner, 2026-10-04): S07.05 puts replies 1 (building or floor), 2 (language) and 3 (withdraw a check-in request) back into the welcome in all 15 languages when it ships, and implements them behind S07.04's `MenuPort` (`noMenusYet` until then).
 
 ### Story S07.06 — Residents change or delete their subscription with a one-time web link
 
@@ -3420,7 +3444,7 @@ So that the Hub and my neighbours know quickly.
 
 ### Story S08.03 — Lower-risk posts appear on the web at once as "Not yet verified"
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 10 min (started 2026-10-04 16:46 UTC, built 18:56 UTC)
 - **Traces:** FR-A15 (D-1), FR-A5, UX-DR16 (O-07), AR-8 (D-1 predicate, system withdrawal), AR-24 · **Depends on:** S08.02, S05.02, S05.06 · **Branch:** `e08-s03-d1-web-first`
 
 As a resident,
@@ -3455,7 +3479,7 @@ So that I hear about a power or water problem without waiting, and know how much
 
 ### Story S08.04 — Ambassadors follow their post and mark incidents resolved
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h (started 2026-10-04 18:39 UTC, built 19:38 UTC)
 - **Traces:** FR-E2 (resolve), FR-A15, UX-DR17 (A-03) · **Depends on:** S08.03 · **Branch:** `e08-s04-post-status-resolve`
 
 As a building ambassador,

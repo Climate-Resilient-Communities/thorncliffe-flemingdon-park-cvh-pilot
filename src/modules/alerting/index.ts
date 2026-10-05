@@ -2,7 +2,7 @@
 // lifecycle they follow. Other modules and the app use only what is exported here.
 import type { Db, DbTransaction } from "../../platform/db";
 import { readStaffStanding } from "../identity";
-import { addressesOfBuildings, createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
+import { addressesOfBuildings, createResidentBuildings, directnessOfTypes, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
 import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
@@ -38,6 +38,8 @@ export interface AlertingWiring {
   cancelQueued?: AlertLifecycleDeps["cancelQueued"];
   /** Cents CAD per text message segment, for each queued text's cost estimate (src/app/staff/alerts.ts gives `getEnv().smsPricePerSegmentCents`). */
   pricePerSegmentCents?: AlertLifecycleDeps["pricePerSegmentCents"];
+  /** The catalog's words of the system withdrawal of a discarded web-published post (S08.03; src/app/staff/alerts.ts reads `staff.discard.withdrawnText` in English). */
+  discardWithdrawalText?: AlertLifecycleDeps["discardWithdrawalText"];
   /**
    * The on-call rule of the approval (S06.07): `required()` says whether a non-drill alert needs an on-call number to be approved (the app: texting
    * is live, src/app/staff/alerts.ts); `hasNumber` defaults to ops' roster. Left out, the rule is off.
@@ -122,7 +124,7 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     audit: wiring.audit ?? { record: (tx, event) => audit.record(tx, event), recordRefusal: (db, event) => audit.recordRefusal(db, event) },
     staff: wiring.staff ?? { standing: readStaffStanding },
     // The buildings, floors and neighbourhoods an audience may name, read through the use case's own transaction.
-    places: wiring.places ?? { floorsOf: floorsOfBuilding, neighbourhoodIds, neighbourhoodsOf: neighbourhoodsOfBuildings, addressesOf: addressesOfBuildings },
+    places: wiring.places ?? { floorsOf: floorsOfBuilding, neighbourhoodIds, neighbourhoodsOf: neighbourhoodsOfBuildings, addressesOf: addressesOfBuildings, directOf: directnessOfTypes },
     now: wiring.now,
     newId: wiring.newId,
     newSlug: wiring.newSlug,
@@ -138,6 +140,7 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
       wiring.queueAlertTexts ??
       (async (tx, entryId, texts) => settled(await queue.enqueueAlertDeliveries(tx, entryId, texts), "the alert texts").map((queued) => ({ lang: queued.delivery.lang }))),
     pricePerSegmentCents: wiring.pricePerSegmentCents,
+    discardWithdrawalText: wiring.discardWithdrawalText,
     // Every use case that replaces an entry or closes a thread (S05.02: the approval of a correction or a withdrawal; S05.03 and S05.04 close) stops the texts
     // of the entries it replaces or closes in its own transaction: messaging's `cancelQueued(entryIds, tx)` on the outbox, which the dispatcher's hand-off
     // point (it locks a row and checks it is still `queued`) cannot overtake.
@@ -317,7 +320,17 @@ export type { AlertRefusal } from "./domain/refusals";
 
 // S08.01: an Ambassador's home (A-01): the open alerts about their assigned buildings, as residents read them, and their own posts with each one's state.
 // The scope (current assignments, the neighbourhood of each building) is the caller's; nothing is read for a person with none.
-export { createAmbassadorHome, type AmbassadorAlert, type AmbassadorDrill, type AmbassadorHome, type AmbassadorHomeView, type AmbassadorPost, type AmbassadorScope } from "./application/ambassadorHome";
+export {
+  createAmbassadorHome,
+  type AmbassadorAlert,
+  type AmbassadorDrill,
+  type AmbassadorHome,
+  type AmbassadorHomeView,
+  type AmbassadorPost,
+  type AmbassadorPostStatus,
+  type AmbassadorScope,
+  type PostReplacement,
+} from "./application/ambassadorHome";
 // S08.02: an ambassador's post (A-02): why an entry was discarded, and who an entry is attributed to as frozen at submit.
 export {
   DISCARD_REASONS,

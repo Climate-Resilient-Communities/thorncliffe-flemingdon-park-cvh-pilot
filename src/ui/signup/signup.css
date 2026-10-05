@@ -52,7 +52,10 @@
     font-weight: 700;
   }
 
+  /* The terms are an important link, so a target of its own (never a link inside running text). */
   .signup-link {
+    display: inline-flex;
+    align-items: center;
     color: var(--accent-text);
     font-weight: 700;
     text-decoration: underline;

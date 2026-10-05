@@ -96,6 +96,13 @@ describe("a submit that works", () => {
     expect(t.lifecycle.failSubmit).not.toHaveBeenCalled();
   });
 
+  it("says so when the freezing commit put the entry on the web (a D-1 post, S08.03), so the caller expires the feed, and says nothing otherwise", async () => {
+    const live = setup({ complete: { ok: true, value: { version: 1, webPublishedAt: new Date("2026-10-03T12:00:05Z") } } });
+    expect(await live.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null, webPublished: true });
+    const waiting = setup({ complete: { ok: true, value: { version: 1, webPublishedAt: null } } });
+    expect(await waiting.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null });
+  });
+
   it("records an ops event when a language fell back, and none when every language was translated", async () => {
     const withFallback = setup();
     await withFallback.submitter.submit(ACTOR, REF, KEY);
@@ -260,13 +267,23 @@ describe("a submit that cannot freeze anything", () => {
 
   it("reports a commit that went through as committed when the call that made it threw: no refusal audited, no failure raised, the fallback still noted", async () => {
     // The connection dropped after COMMIT was sent: completeSubmit throws, the attempt can no longer be ended (it is committed), and the stored attempt says so.
-    const t = setup({ failEnds: false, entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }) } });
+    const t = setup({ failEnds: false, entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }), entry: { webPublishedAt: null } } });
     t.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
 
     expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null });
     expect(t.lifecycle.failSubmit).toHaveBeenCalledTimes(1);
     expect(t.ops.filter((event) => event.kind === "alert.submit_failed")).toEqual([]);
     expect(t.ops).toMatchObject([{ kind: "alert.translation_fallback" }]);
+  });
+
+  it("reports a D-1 post that the lost commit web-published, so the feed's cache is expired for it", async () => {
+    const t = setup({
+      failEnds: false,
+      entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }), entry: { webPublishedAt: new Date("2026-10-05T12:00:00Z") } },
+    });
+    t.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
+
+    expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null, webPublished: true });
   });
 
   it("reports how the stored attempt ended when the freezing transaction threw and the attempt was no longer running for another reason", async () => {
@@ -278,7 +295,7 @@ describe("a submit that cannot freeze anything", () => {
   });
 
   it("does not take another key's attempt, or an unreadable state, for this one's commit: it is a failed preparation, and the browser fetches the state itself", async () => {
-    const other = setup({ failEnds: false, entryState: { attempt: attempt({ key: "0190a000-0000-7000-8000-0000000000ff", state: "committed" }) } });
+    const other = setup({ failEnds: false, entryState: { attempt: attempt({ key: "0190a000-0000-7000-8000-0000000000ff", state: "committed" }), entry: { webPublishedAt: null } } });
     other.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
     expect(await other.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "PREPARATION_FAILED" });
 

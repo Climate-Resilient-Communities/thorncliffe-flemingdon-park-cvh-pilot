@@ -7,7 +7,7 @@
 // transaction, where the places are checked again (a building removed in between):
 //
 //   1. the number is locked (an advisory lock on a hash of it), so two sign-ups for one number run one after the other;
-//   2. whether it is already subscribed is asked (`SubscriberLookup`: S07.04 creates the subscriber table and wires the real lookup);
+//   2. whether it is already subscribed is asked (`SubscriberLookup`: S07.04's `subscriberLookup`, one select on `subscriber`);
 //   3. its pending sign-up is deleted if its 48 hours have passed (a new sign-up then starts afresh);
 //   4. in a savepoint, a pending sign-up is inserted (none when the number already has one: the unique number) and its confirmation text
 //      queued (`transactional`, purpose `confirmation`, `send_by` 48 hours: the row's own `expires_at`, both from the database's clock in
@@ -53,15 +53,12 @@ export const TWILIO_OPTED_OUT_ERROR = 21_610;
 export type SignupChannel = "web" | "staff";
 
 /**
- * Port: whether a number is already subscribed. S07.04 creates `subscriber` and wires a lookup on it; until then nobody can be subscribed,
- * and the lookup answers false (it reads nothing). It runs inside the sign-up's transaction, after the number's lock.
+ * Port: whether a number is already subscribed (S07.04's `subscriberLookup` on the subscriber table, wired by the composition root). It runs
+ * inside the sign-up's transaction, after the number's lock, and does the same work whatever the answer.
  */
 export interface SubscriberLookup {
   isSubscribed(tx: DbTransaction, phone: string): Promise<boolean>;
 }
-
-/** Until S07.04: no subscriber table, so no number is subscribed. */
-export const noSubscribersYet: SubscriberLookup = { isSubscribed: async () => false };
 
 /** Port: the places the form may name (places' readers, wired by the composition root). */
 export interface SignupPlaces {

@@ -9,7 +9,7 @@ import "server-only";
 import * as audit from "@/modules/audit";
 import { createDeliveryQueue } from "@/modules/messaging";
 import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds, type ResidentBuilding } from "@/modules/places";
-import { createRateLimiter, createSignup, noSubscribersYet, rateLimitKeyFromSecret, signupConsentVersion, termsPageView, type RateLimiter, type Signup } from "@/modules/subscriptions";
+import { createRateLimiter, createSignup, rateLimitKeyFromSecret, signupConsentVersion, subscriberLookup, termsPageView, type RateLimiter, type Signup } from "@/modules/subscriptions";
 import { failClosedEnvironment, getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { kickDispatcher } from "./dispatch";
@@ -17,11 +17,15 @@ import { kickDispatcher } from "./dispatch";
 let service: Signup | undefined;
 let limiter: RateLimiter | undefined;
 
+/** The key of the per-client limiter's hashes (also the inbound router's once-a-day limit, S07.04). */
+export function rateLimitKey(): string {
+  return rateLimitKeyFromSecret(getEnv().supabaseSecretKey ?? "local-development");
+}
+
 /** The per-client limiter, salted with a key derived from the Supabase secret key (a fixed local key where there is none), as search's is. */
 function signupRateLimiter(): RateLimiter {
   if (limiter) return limiter;
-  const secret = getEnv().supabaseSecretKey ?? "local-development";
-  limiter = createRateLimiter({ db: getDb(), key: rateLimitKeyFromSecret(secret) });
+  limiter = createRateLimiter({ db: getDb(), key: rateLimitKey() });
   return limiter;
 }
 
@@ -40,8 +44,8 @@ export function signupService(): Signup {
       neighbourhoodIds: (executor) => neighbourhoodIds(executor),
       floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((floor) => floor.id) ?? null,
     },
-    // S07.04 creates the subscriber table and replaces this with its lookup.
-    subscribers: noSubscribersYet,
+    // S07.04: the subscriber table's lookup (one select, whatever the answer, so the three cases still do the same work).
+    subscribers: subscriberLookup(),
     enqueue: (tx, input) => queue.enqueueTransactional(tx, input),
     consentVersion: currentSignupConsentVersion,
     limiter: signupRateLimiter,

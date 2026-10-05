@@ -20,6 +20,7 @@ import { cohereTranslator, createQuestionTranslator, type QuestionRoute, type Qu
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { directoryStorage } from "./directoryRelease";
+import { releaseFileCache } from "./releaseFileCache";
 import { recordSearchNote } from "./searchOps";
 import { translateQuotaWatch } from "./translateQuota";
 
@@ -67,6 +68,7 @@ export function searchService(): SearchService {
   service = createSearch({
     db: getDb,
     storage: directoryStorage,
+    fileCache: releaseFileCache,
     embedder: questionEmbedder(),
     translator: questionTranslator(getEnv().search.questionFallback),
     fallbackMinBudgetMs: getEnv().search.fallbackMinBudgetMs,

@@ -57,8 +57,10 @@ export function HubShell({ user, navigation, currentPath, labels, signOut, brand
   return (
     <div className="hub-shell" data-surface="staff" data-testid="hub-shell">
       <nav className="hub-side" aria-label={labels.appName} data-testid="hub-side">
-        {logo}
-        <HubNav sections={navigation} currentPath={currentPath} />
+        <div className="hub-side__sticky">
+          {logo}
+          <HubNav sections={navigation} currentPath={currentPath} />
+        </div>
       </nav>
       <div className="hub-column">
         <header className="hub-top" data-testid="hub-top">

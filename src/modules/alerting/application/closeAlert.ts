@@ -14,7 +14,7 @@
 // approval raises it before it closes the thread) must have locked every entry of the thread before that (`approveEntry` does, for the entries it may close
 // the thread with) and says so with `feedRaised`, so `feed_version` is raised once in the transaction. The database refuses the close of a thread, with the
 // app's credentials, beside anything but the entry that closes it (db/migrations/20261004050000_alert_close.sql): `resolved` beside an approved `final`,
-// `withdrawn` beside an approved withdrawal, `expired` beside a system final (S05.04), each made in this same transaction.
+// `withdrawn` beside an approved withdrawal (or the system withdrawal of a discarded web-published post, S08.03), `expired` beside a system final (S05.04), each made in this same transaction.
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
 import { alert, alertEntry, feedVersion } from "../adapters/schema";
@@ -56,10 +56,11 @@ export interface Closed {
 }
 
 /** The kind and status the entry that closes a thread has, by the reason: the database's rule too. */
-const CLOSING_ENTRY: Record<ClosedReason, { kind: string; status: string }> = {
-  resolved: { kind: "final", status: "approved" },
-  withdrawn: { kind: "withdrawal", status: "approved" },
-  expired: { kind: "final", status: "published_system" },
+const CLOSING_ENTRY: Record<ClosedReason, { kind: string; status: readonly string[] }> = {
+  resolved: { kind: "final", status: ["approved"] },
+  // An approved withdrawal, or the system withdrawal that took the place of a web-published post that was discarded (S08.03).
+  withdrawn: { kind: "withdrawal", status: ["approved", "published_system"] },
+  expired: { kind: "final", status: ["published_system"] },
 };
 
 /** `closeAlert` bound to its seams. The staff member is the one whose use case closes the thread (the actor of the audit records). */
@@ -76,8 +77,8 @@ export function createCloseAlert(deps: CloseAlertDeps) {
     if (!input.keepEntryId) throw new Error(`closeAlert: closing as ${input.reason} always names the entry that closes the thread (keepEntryId)`);
     const kept = entries.find((entry) => entry.id === input.keepEntryId);
     if (!kept) throw new Refused("ENTRY_NOT_FOUND");
-    if (kept.kind !== CLOSING_ENTRY[input.reason].kind || kept.status !== CLOSING_ENTRY[input.reason].status) {
-      throw new Error(`closeAlert: a thread closed as ${input.reason} is closed by an ${CLOSING_ENTRY[input.reason].status} ${CLOSING_ENTRY[input.reason].kind}, not a ${kept.status} ${kept.kind}`);
+    if (kept.kind !== CLOSING_ENTRY[input.reason].kind || !CLOSING_ENTRY[input.reason].status.includes(kept.status)) {
+      throw new Error(`closeAlert: a thread closed as ${input.reason} is closed by an ${CLOSING_ENTRY[input.reason].status.join(" or ")} ${CLOSING_ENTRY[input.reason].kind}, not a ${kept.status} ${kept.kind}`);
     }
 
     // Nothing that residents have not read stays behind a closed thread: its drafts and its entries waiting for approval are discarded. (A pending entry

@@ -19,7 +19,7 @@
 //
 // Every answer carries a `Server-Timing` header: phase names and milliseconds only (src/platform/serverTiming.ts), so that a
 // slow request says where it spent its time: `boot` (first request of an instance only), `limiter`, `snapshot` (`desc=cold`
-// when the release's data came from the store), `embed`, `translate`, `rank`, `total`. Phases overlap (the limiter and the
+// when the release's data came from the store, `desc=cache` when a cold instance took it from the shared data cache), `embed`, `translate`, `rank`, `total`. Phases overlap (the limiter and the
 // snapshot run together on a cold instance), so they do not add up to `total`.
 import { SEARCH_ERROR_STATUS, parseSearchRequest, searchErrorBody, type SearchErrorCode } from "@/contracts/search";
 import { SearchV1Schema } from "@/contracts/searchTestSet";

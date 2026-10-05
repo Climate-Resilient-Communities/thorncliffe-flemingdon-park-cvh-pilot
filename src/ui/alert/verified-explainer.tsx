@@ -56,7 +56,7 @@ export function VerifiedExplainer({ view, lang, t }: { view: AlertView; lang: La
           {t("R28.body")}
         </ResidentText>
 
-        <section className="alert-section" aria-labelledby="alert-legend-title" data-testid="verified-legend">
+        <section className="alert-section hide-basic" aria-labelledby="alert-legend-title" data-testid="verified-legend">
           <ResidentText as="h2" testId="alert-legend-title">
             {t("R28.legendTitle")}
           </ResidentText>

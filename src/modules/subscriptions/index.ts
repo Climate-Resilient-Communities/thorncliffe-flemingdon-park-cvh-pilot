@@ -61,7 +61,6 @@ export {
   confirmationText,
   createSignup,
   forgetOptedOutSignup,
-  noSubscribersYet,
   pendingSignupNumberSource,
   type AssistedSignupAudit,
   type Signup,
@@ -71,6 +70,43 @@ export {
   type SignupPlaces,
   type SubscriberLookup,
 } from "./application/webSignup";
+// The inbound router (S07.04): YES confirms a pending sign-up (the subscriber and its welcome), STOP and a confirmed reply 0 delete everything
+// held for the number, the webhook's signature check, the ContactResolver's sources for subscribers and `inbound_reply` rows, and the web
+// sign-up's real "already subscribed" lookup.
+export {
+  ReplyNotQueued,
+  SIGNUP_INFO_SCOPE,
+  createInboundRouter,
+  inboundReplyNumberSource,
+  noCheckinsYet,
+  noMenusYet,
+  residentSms,
+  signupLink,
+  subscriberLookup,
+  subscriberNumberSource,
+  yesWordsFor,
+  type CheckinCleanup,
+  type Deleted,
+  type InboundDeps,
+  type InboundLog,
+  type InboundMessage,
+  type InboundOutcome,
+  type InboundRouter,
+  type MenuPort,
+} from "./application/inbound";
+export { createInboundWebhook, type InboundRequest, type InboundResult, type InboundWebhook, type InboundWebhookDeps, type SignatureRefusal } from "./application/inboundWebhook";
+export {
+  DELETE_CONFIRM_MS,
+  INBOUND_KEYWORDS,
+  INBOUND_PATH,
+  decide,
+  normaliseReply,
+  readKeyword,
+  type Decision,
+  type InboundAction,
+  type InboundKeyword,
+  type NumberState,
+} from "./domain/inbound";
 // S06.05: the drill roster, the staff phones a drill is texted on (composed in src/app/drills.ts), and the ContactResolver's source for `roster` recipients.
 export {
   createDrillRoster,

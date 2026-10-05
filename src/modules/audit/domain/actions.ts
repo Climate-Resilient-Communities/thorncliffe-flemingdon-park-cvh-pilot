@@ -197,7 +197,8 @@ export const AUDIT_META = {
   "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional(), refusal: refusalCode.optional() }),
   // S05.01: an update added to a running thread (`[*] -> draft` of a follow-up entry: its kind and the thread's types, no text).
   "entry.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional(), refusal: refusalCode.optional() }),
-  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), refusal: refusalCode.optional() }),
+  // `web_published`: the entry was a D-1 post and residents read it, as "Not yet verified", from this submit (S08.03).
+  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), web_published: z.literal(true).optional(), refusal: refusalCode.optional() }),
   "entry.returned": meta({
     entry_id: id.optional(),
     version: count.optional(),
@@ -213,6 +214,8 @@ export const AUDIT_META = {
     by_close: z.literal(true).optional(),
     // S08.02: why it was discarded: its author took it back (`by_author`), the Hub did not send it (`declined`), or its thread closed first (`by_close`).
     discard_reason: z.enum(["by_author", "declined", "by_close"]).optional(),
+    // S08.03: the entry was web-published (a D-1 post), so it was not discarded but superseded by this system withdrawal, made in the same transaction.
+    withdrawn_by: id.optional(),
     refusal: refusalCode.optional(),
   }),
   "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), recipient_count: count.optional(), reviewed_count: count.optional(), refusal: refusalCode.optional() }),
@@ -223,6 +226,8 @@ export const AUDIT_META = {
     by: id.optional(),
     by_kind: z.enum(["correction", "withdrawal"]).optional(),
     withdrawal_reason: z.enum(["wrong_place", "wrong_information", "duplicate", "other"]).optional(),
+    // S08.03: the withdrawal was the system's (a discarded web-published post), not a person's approved one.
+    system: z.literal(true).optional(),
     refusal: refusalCode.optional(),
   }),
   // S05.02: the one close path (`closeAlert`): how the thread closed, how many drafts and pending entries it discarded, and the entry whose texts were kept.

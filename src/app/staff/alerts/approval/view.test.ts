@@ -149,6 +149,17 @@ describe("the approval view of an ambassador's post (O-07)", () => {
     expect(screen.cannotEdit).toContain("return it to its author with a note");
   });
 
+  it("tells the approver when residents already read the post, marked 'Not yet verified' (D-1, S08.03): texts wait for this approval, and a discard withdraws it", () => {
+    const live = screenOf({ authorRole: "ambassador", entry: { webPublishedAt: new Date("2026-10-04T14:00:00.000Z") } });
+    expect(live.live).toEqual({ text: 'Residents already read this post on the web, marked "Not yet verified". Text messages go out only if you approve it.' });
+    expect(live.discardForm.lead).toContain('they see "Withdrawn" in its place');
+    expect(live.cannotEdit).toContain("a change is a correction");
+    expect(live.cannotEdit).not.toContain("return it to its author");
+    // Not live: nothing is said, and the words are the ones above.
+    expect(screen.live).toBeNull();
+    expect(screen.discardForm.lead).toContain("never published");
+  });
+
   it("is an alert's view for any other author, with no ambassador line", () => {
     for (const role of ["coordinator", "admin", null] as const) {
       const other = screenOf({ authorRole: role });

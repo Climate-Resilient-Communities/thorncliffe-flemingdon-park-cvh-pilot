@@ -45,6 +45,9 @@ import type { IncidentsView } from "@/app/staff/alerts/incidents/view";
 import { AmbassadorHomeBody } from "@/app/staff/ambassador/AmbassadorHomeBody";
 import { PostForm, type PostInitial } from "@/app/staff/ambassador/post/PostForm";
 import type { PostScreen } from "@/app/staff/ambassador/post/view";
+import type { FollowInitial } from "@/app/staff/ambassador/status/FollowForms";
+import { ResolveBody, StatusBody } from "@/app/staff/ambassador/status/StatusBody";
+import type { ResolveScreen, StatusScreen } from "@/app/staff/ambassador/status/view";
 import type { AmbassadorHomeView } from "@/app/staff/ambassador/view";
 import { ApprovalBody, type ApprovalActions, type ApprovalInitial } from "@/app/staff/alerts/approval/ApprovalBody";
 import type { ApprovalScreen } from "@/app/staff/alerts/approval/view";
@@ -697,6 +700,28 @@ export function AmbassadorPostFixture({ texts, brand, screen, initial }: { texts
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
       <Screen surface="staff" testId="screen">
         <PostForm screen={screen} sender={quiet} initial={initial} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/** Where an ambassador's post stands (A-03, S08.04) inside the Hub shell, on the view the app's own function built, with the forms in the state `followInitial` gives; nothing is ever sent. */
+export function AmbassadorStatusFixture({ texts, brand, screen, followInitial }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; screen: StatusScreen; followInitial?: FollowInitial }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <StatusBody screen={screen} followInitial={followInitial} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/** "Mark resolved" (S08.04) inside the Hub shell, on the view the app's own function built. */
+export function AmbassadorResolveFixture({ texts, brand, screen, followInitial }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; screen: ResolveScreen; followInitial?: FollowInitial }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <ResolveBody screen={screen} followInitial={followInitial} />
       </Screen>
     </AroundTheScreen>
   );

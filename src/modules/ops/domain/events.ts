@@ -96,8 +96,8 @@ export const HEALTH_CONDITIONS = [
 ] as const;
 export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
 
-/** The webhook routes whose signature failures are counted (S06.04; S07.04 adds `twilio_inbound`). */
-export const WEBHOOK_ROUTES = ["twilio_status"] as const;
+/** The webhook routes whose signature failures are counted together (S06.04 the status callbacks; S07.04 the inbound texts). */
+export const WEBHOOK_ROUTES = ["twilio_status", "twilio_inbound"] as const;
 
 /** Why a webhook's signature was refused (S06.04): no `X-Twilio-Signature` header, or one that is not the request's signature. */
 export const SIGNATURE_FAILURE_REASONS = ["missing_signature", "signature_mismatch"] as const;

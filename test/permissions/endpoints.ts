@@ -57,7 +57,7 @@ export interface StaffEndpoint extends EndpointBase {
   policyContext?: PolicyContext;
   /**
    * The reason the refusal is audited with for a role whose rule depends on the context (the policy's `out_of_scope`), when it is not `forbidden`: the answer is
-   * the same 403 `forbidden`. A correction or a withdrawal: an Ambassador's rule is their own pending entry (E08), which these calls never name.
+   * the same 403 `forbidden`. A correction or a withdrawal: an Ambassador's rule is their own pending entry, which these Hub pages never name (an Ambassador follows up on their own post at /api/staff/ambassador/follow, S08.04).
    */
   auditedReason?: Partial<Record<RoleCaller, "out_of_scope">>;
   expected: Record<RoleCaller, Outcome>;
@@ -257,6 +257,37 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     policyContext: { targets: ["7001"], assignments: [{ rsn: "7001", floorIds: null }] },
     auditedReason: { ambassador_out_of_scope: "out_of_scope" },
     expected: { ambassador: "allowed", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" },
+  },
+  // S08.04: following a post (A-03). The status page is the person's own post, read for them alone (`hub.open`, like the home it opens from; every other role reads
+  // "not found"). "Mark resolved" is a page and, with correcting and withdrawing, one route: policy action `alert.author` on the buildings the entry or alert is about, READ
+  // FROM THE DATABASE (never the request): the alert here does not exist, so it names none and an Ambassador is refused out of scope, whatever they are assigned to
+  // (`policyContext` has no building); a Coordinator or an Admin passes the guard and the use case refuses them (only an Ambassador follows up here), changing nothing.
+  { id: "page /staff/ambassador/status", kind: "page", file: "src/app/staff/ambassador/status/page.tsx", export: "default", route: "/staff/ambassador/status", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
+  {
+    id: "page /staff/ambassador/resolve",
+    kind: "page",
+    file: "src/app/staff/ambassador/resolve/page.tsx",
+    export: "default",
+    route: "/staff/ambassador/resolve",
+    action: "alert.author",
+    writes: "none",
+    gate: "hub",
+    policyContext: { targets: ["7001"], assignments: [{ rsn: "7001", floorIds: null }] },
+    expected: { ambassador: "allowed", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "allowed" },
+  },
+  {
+    id: "POST /api/staff/ambassador/follow",
+    kind: "route",
+    file: "src/app/api/staff/ambassador/follow/route.ts",
+    export: "POST",
+    route: "/api/staff/ambassador/follow",
+    action: "alert.author",
+    writes: "business",
+    gate: "hub",
+    body: { v: 1, action: "resolve", alert_id: NO_SUCH_ALERT, entry_id: NO_SUCH_ALERT, key: SUBMIT_KEY, text: "Power is back on all floors." },
+    policyContext: { targets: [] },
+    auditedReason: { ambassador: "out_of_scope", ambassador_out_of_scope: "out_of_scope" },
+    expected: { ambassador: "forbidden", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" },
   },
   // S04.05: Submit, "Try translation again" and the entry's state (policy action `alert.author_wide`). The entry does not exist, so a
   // Coordinator's or an Admin's call passes the guard and is refused by the use case (or, for the state, by its lookup), changing nothing.
@@ -503,7 +534,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     expected: WIDE_AUTHORS,
   },
   // S05.02: "Save draft" on a new correction or withdrawal (policy actions `alert.correct` and `alert.withdraw`, privileged: aal2). The thread does not exist, so a Coordinator's or an
-  // Admin's call passes the guard and is refused by the use case, changing nothing. An Ambassador (direct requests are refused now; their own pending entries are E08's) and a Director
+  // Admin's call passes the guard and is refused by the use case, changing nothing. An Ambassador (these Hub forms name no entry of theirs; their own screen is S08.04's follow route) and a Director
   // are refused on their role.
   ...(
     [

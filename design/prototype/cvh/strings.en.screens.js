@@ -1294,6 +1294,10 @@
     duplicate: 'This may duplicate another open alert for the same place and type.',
     duplicateLink: 'Open the other alert',
     cannotEdit: 'You cannot change this text: whoever changes it becomes an editor and cannot approve it. To change it, return it to its author with a note.',
+    /* S08.03: an ambassador's post of a lower-risk type residents already read, marked "Not yet verified" (D-1). Text messages wait for this approval. */
+    liveWeb: 'Residents already read this post on the web, marked "Not yet verified". Text messages go out only if you approve it.',
+    cannotEditLive: 'You cannot change this text: whoever changes it becomes an editor and cannot approve it. Residents already read it, so a change is a correction.',
+    discardLiveLead: 'Residents already read this post. Discarding it withdraws it: they see "Withdrawn" in its place, and no text message is sent.',
     languagesTitle: 'Other languages',
     languagesLead: 'Open a language to read its web text and its text message exactly as residents get them.',
     languageEnglish: 'English',
@@ -1816,6 +1820,9 @@
   // S05.04: the words of the system final the expire job adds when an alert runs past its valid-until (web only; shown in English until translated).
   m(en, { staff: { expire: {
     finalText: 'This alert has expired without a further update. The problem may continue. Contact the Hub for current information.' } } });
+  // S08.03: the words of the system withdrawal that takes the place of an ambassador's post residents already read when it is discarded (web only; shown in English until translated).
+  m(en, { staff: { discard: {
+    withdrawnText: 'This report was withdrawn. Contact the Hub for current information.' } } });
   m(en, { staff: { approve: {
     correctionTitle: 'Approve a correction', withdrawalTitle: 'Approve a withdrawal',
     correctionLead: 'Read exactly what residents will see in place of the entry below. You approve this version only. If it changes while you read, you review it again.',
@@ -1887,6 +1894,63 @@
     errSignedOut: 'You were signed out, so this was not sent. Sign in again, then post it again.',
     errFailed: 'This was not sent. Try again. If it keeps happening, call the Hub.' },
   A03: { states: { ended: 'Not sent: the alert ended before the Hub checked it' } } });
+  /* An ambassador follows their post (S08.04, A-03 "Post confirmation and channel status"), the pilot's version: where the post stands (live and not yet verified,
+     waiting for the Hub, approved, returned with the Hub's note, withdrawn), once approved how its texts are going, and the three things an ambassador may do:
+     correct or withdraw their own post that residents already read, and "Mark resolved" (the final message of an alert about their building). Each of the three
+     goes to the Hub for a second person's approval: nothing is replaced or closed until then. The prototype's "Saved on your phone" is not used (see A-02). */
+  m(en, { staff: { ambassadorStatus: {
+    title: 'Your update', notFound: 'This update could not be found, or it is not yours.',
+    liveBody: 'Residents can read this on the web now, marked "Not yet verified". Text messages go out only after the Hub approves it.',
+    waitingBody: 'The Hub is checking this now. Residents see nothing and get no text until it is approved.',
+    approvedTitle: 'Approved',
+    approvedBody: 'The Hub approved this {t}. Residents now read it as "Verified by the Hub", and the texts are going out.',
+    returnedTitle: 'Returned to you',
+    returnedBody: 'The Hub sent this back. Nothing was sent to residents. Read the note, then post an update again with the change.',
+    returnedNote: 'Note from the Hub: {note}',
+    withdrawnTitle: 'Withdrawn',
+    withdrawnBody: 'This update is withdrawn. Residents no longer read it as current.',
+    withdrawnNotice: 'Residents read instead: {text}',
+    correctedTitle: 'Corrected',
+    correctedBody: 'This update was replaced by a correction.',
+    correctedNotice: 'Residents read instead: {text}',
+    declinedBody: 'The Hub did not send this, and residents never read it.',
+    waitingCorrection: 'Your correction is waiting for the Hub. Residents already read it above the first words, marked "Not yet verified".',
+    waitingWithdrawal: 'Your withdrawal is waiting for the Hub. Until it is approved, residents still read this update.',
+    waitingFinal: 'A final message for this alert is waiting for the Hub. The alert closes when a second person approves it.',
+    progressTitle: 'Text messages',
+    progressNone: 'No text messages were queued for this update.',
+    progressWaiting: '{n} waiting to be sent', progressInFlight: '{n} on their way', progressDelivered: '{n} delivered', progressFailed: '{n} not delivered',
+    progressFailedHint: 'Not delivered includes numbers that could not be reached and texts whose result is unclear.',
+    yourUpdate: 'What you posted', postedAt: 'Posted {time}', untilLine: 'Until {time}', phaseLine: 'Where things stand: {phase}',
+    seeResidents: 'See what residents read', statusLink: 'Where it stands', resolveLink: 'Mark resolved',
+    actionsTitle: 'What you can do',
+    correctOpen: 'Correct this update', correctLead: 'Write the corrected words. Residents read them in place of the first ones, marked "Not yet verified" until the Hub approves.',
+    correctButton: 'Send the correction',
+    withdrawOpen: 'Withdraw this update', withdrawLead: 'Choose why. Residents read a short notice in its place. The Hub approves it before the withdrawal is final.',
+    withdrawReason: 'Why?', withdrawWords: 'Add words for residents (needed for Other)', withdrawButton: 'Withdraw this update',
+    resolveOpen: 'Mark resolved', resolveTitle: 'Mark this alert resolved',
+    resolveLead: 'Write the last message residents read about this alert. A second person at the Hub approves it, and only then does the alert close. Until then it stays open.',
+    resolveLabel: 'Final message, in English', resolveAbout: 'The alert: {headline}', resolveButton: 'Send the final message',
+    resolveUnavailable: 'This alert cannot be marked resolved by you. It may be closed already, or not be only about your building.',
+    resolveWaiting: 'A final message for this alert is already waiting for the Hub.',
+    sent: 'Sent to the Hub', sentLine: 'A second person at the Hub will approve it. Nothing is replaced or closed until then.',
+    sentLive: 'Residents read it now as "Not yet verified". The Hub still has to approve it.',
+    sentResolve: 'The alert stays open until the Hub approves your final message.',
+    backToUpdate: 'Back to your update',
+    errors: {
+      OUT_OF_SCOPE: 'You can only change an update you posted that is waiting for the Hub, for a building you are assigned to.',
+      NOT_ALLOWED: 'You cannot do this.', AUTHOR_NOT_ALLOWED: 'You are not assigned to this building now, so you cannot do this.',
+      ONE_BUILDING_ONLY: 'This alert is about more than one building, so you cannot write its final message. Call the Hub.',
+      TARGET_NOT_VALID: 'That update cannot be corrected or withdrawn.',
+      TARGET_SUPERSEDED: 'That update was already corrected or withdrawn. Open it again to read where it stands.',
+      TARGET_NOT_PUBLISHED: 'Residents have not read that update yet, so there is nothing to correct or withdraw. The Hub is still checking it.',
+      ALERT_CLOSED: 'This alert has ended, so it cannot be changed.',
+      NO_PUBLISHED_ENTRY: 'Residents cannot read anything in this alert yet, so it cannot be resolved.',
+      WITHDRAWAL_REASON_INVALID: 'Choose why you are withdrawing it.',
+      TEXT_EMPTY: 'Write the words in English.', TYPES_CHANGED: 'An update keeps the types of the alert.',
+      DRAFT_CHANGED: 'This changed while it was being prepared. Try again.',
+      SUBMIT_IN_PROGRESS: 'This is already being sent. Wait a moment.',
+      ONCALL_REQUIRED: 'This cannot be sent now. Call the Hub.' } } } });
   /* S07.02: the web sign-up for text alerts (R-05, R-06 as built) and the confirmation text. The keywords residents text (YES, STOP,
      START) and "CVH" stay in English in every language. */
   m(en, { signup: {
@@ -1914,6 +1978,16 @@
       signup_unavailable: 'Text sign-up is not available just now. Try again later.',
       network: 'We could not reach the CVH. Check your connection and try again.' } } });
   m(en, { smsTexts: { confirmation: 'Reply YES to get CVH alerts. Reply STOP to stop.' } });
+  /* S07.04: the welcome text after YES, the inbound router's replies and the words for yes. Until S07.05 ships the menus, the welcome names
+     reply 0 and STOP only (replies 1, 2 and 3 get no answer yet); S07.05 puts 1, 2 and 3 back into it. The keywords residents text (YES, STOP) and "CVH"
+     stay in English in every language. smsKeywords.yes lists, comma-separated, the words for yes a resident may reply with besides YES and Y
+     (it is read, never sent). deletePrompt is a prompt: S07.05's fixture checks it fits one text in every language. */
+  m(en, { smsTexts: {
+    welcome: 'You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 0 to stop and delete your subscription. Reply STOP to stop.',
+    alreadySignedUp: 'You are already signed up for CVH alerts.',
+    deletePrompt: 'Reply 0 again within 10 minutes to delete your subscription. You will get no more texts.',
+    signupInfo: 'To get CVH alerts by text, sign up here: {link} Reply STOP to stop.' },
+    smsKeywords: { yes: 'yes' } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

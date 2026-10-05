@@ -58,7 +58,8 @@ describe("alert detail (R-07)", () => {
     expect(html).toContain('<summary class="tap" data-testid="alert-english-toggle">');
     expect(html).toContain(`<p class="alert-text" lang="en" dir="ltr" data-testid="alert-english-body">${ENGLISH}</p>`);
     // Native disclosure: closed until the resident opens it, and it works with no script.
-    expect(html).toContain('<details class="alert-english"');
+    // Basic mode leaves it out (the prototype's showOriginal: !own && !basic), so it carries hide-basic.
+    expect(html).toContain('<details class="alert-english hide-basic"');
     expect(html).not.toContain("<details open");
   });
 
@@ -152,6 +153,21 @@ describe("alert detail (R-07)", () => {
     expect(html).toContain("Update: power is back on floors 1 to 4.");
     expect(count(html, /class="alert-tag"/g)).toBe(1);
     expect(html).toContain("alert-entry--latest");
+  });
+
+  it("marks the earlier entries and draws the button that brings them in basic mode (S02.14): every entry stays in the page, the latest is never marked", () => {
+    const html = render({
+      entries: [
+        englishEntry({ n: 1, published_at: "2026-10-01T13:00:00.000Z" }),
+        englishEntry({ n: 2, kind: "update", published_at: "2026-10-01T14:00:00.000Z" }),
+        englishEntry({ n: 3, kind: "update", published_at: "2026-10-01T14:30:00.000Z" }),
+      ],
+    });
+
+    expect(count(html, /class="alert-entry[^"]*basic-earlier__item/g)).toBe(2);
+    expect(html).toMatch(new RegExp(`alert-entry alert-entry--latest"[^>]*data-testid="alert-entry-${ID(3)}"`));
+    expect(html).toContain('class="basic-earlier__more tap"');
+    expect(html).toContain("Earlier updates: 2");
   });
 
   it("reads a thread newest first by the entries' own times, whatever order the feed lists them in (entriesNewestFirst), with the catalog's words for the thread, the kinds, the times and the valid-until", () => {
