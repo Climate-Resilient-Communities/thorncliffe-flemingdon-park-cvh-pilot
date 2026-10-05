@@ -1978,6 +1978,16 @@
       signup_unavailable: 'Text sign-up is not available just now. Try again later.',
       network: 'We could not reach the CVH. Check your connection and try again.' } } });
   m(en, { smsTexts: { confirmation: 'Reply YES to get CVH alerts. Reply STOP to stop.' } });
+  /* S07.04: the welcome text after YES, the inbound router's replies and the words for yes. Until S07.05 ships the menus, the welcome names
+     reply 0 and STOP only (replies 1, 2 and 3 get no answer yet); S07.05 puts 1, 2 and 3 back into it. The keywords residents text (YES, STOP) and "CVH"
+     stay in English in every language. smsKeywords.yes lists, comma-separated, the words for yes a resident may reply with besides YES and Y
+     (it is read, never sent). deletePrompt is a prompt: S07.05's fixture checks it fits one text in every language. */
+  m(en, { smsTexts: {
+    welcome: 'You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 0 to stop and delete your subscription. Reply STOP to stop.',
+    alreadySignedUp: 'You are already signed up for CVH alerts.',
+    deletePrompt: 'Reply 0 again within 10 minutes to delete your subscription. You will get no more texts.',
+    signupInfo: 'To get CVH alerts by text, sign up here: {link} Reply STOP to stop.' },
+    smsKeywords: { yes: 'yes' } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

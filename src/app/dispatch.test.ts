@@ -230,9 +230,11 @@ describe("messaging's operational events in ops_event", () => {
     expect([...SIGNATURE_FAILURE_REASONS].sort()).toEqual([...MESSAGING_SIGNATURE_FAILURE_REASONS].sort());
     expect([...CALLBACK_IGNORED_REASONS].sort()).toEqual([...MESSAGING_CALLBACK_IGNORED_REASONS].sort());
     expect([...UNKNOWN_RESOLVED_STATUSES].sort()).toEqual([...CALLBACK_TARGETS].sort());
-    expect([...WEBHOOK_ROUTES]).toEqual(["twilio_status"]);
-    for (const reason of MESSAGING_SIGNATURE_FAILURE_REASONS) {
-      expect(() => toOpsEventRecord({ kind: "webhook.signature_invalid", detail: { route: "twilio_status", reason } }), reason).not.toThrow();
+    expect([...WEBHOOK_ROUTES]).toEqual(["twilio_status", "twilio_inbound"]);
+    for (const route of WEBHOOK_ROUTES) {
+      for (const reason of MESSAGING_SIGNATURE_FAILURE_REASONS) {
+        expect(() => toOpsEventRecord({ kind: "webhook.signature_invalid", detail: { route, reason } }), `${route} ${reason}`).not.toThrow();
+      }
     }
     for (const reason of MESSAGING_CALLBACK_IGNORED_REASONS) {
       expect(() => toOpsEventRecord({ kind: "delivery.callback_ignored", detail: { reason } }), reason).not.toThrow();

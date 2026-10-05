@@ -5520,7 +5520,14 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."
+    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil.",
+    "welcome": "Naka-sign up ka na sa CVH alert. Sinusuri ng staff ng Hub ang bawat mensahe, kaya maaaring hindi maipadala ang alert sa gabi. Sumagot ng 0 para itigil at burahin ang iyong subscription. Sumagot ng STOP para itigil.",
+    "alreadySignedUp": "Naka-sign up ka na sa CVH alert.",
+    "deletePrompt": "Sumagot ulit ng 0 sa loob ng 10 minuto para burahin ang subscription. Wala ka nang matatanggap na text.",
+    "signupInfo": "Para makatanggap ng CVH alert sa text, mag-sign up dito: {link} Sumagot ng STOP para itigil."
+  },
+  "smsKeywords": {
+    "yes": "oo, opo, oho"
   },
   "offline": {
     "title": "Hindi naka-save sa iyong telepono ang pahinang ito",
