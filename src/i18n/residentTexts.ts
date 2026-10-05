@@ -26,7 +26,7 @@ import type { LaunchCode } from "./languages";
 export const RESIDENT_TEXT_KEYS = {
   /** S07.02: the double opt-in, "Reply YES to get CVH alerts. Reply STOP to stop." */
   confirmation: "smsTexts.confirmation",
-  /** S07.04: after YES. What replies 1, 2, 3 and 0 do, STOP, and the overnight notice (R-11). */
+  /** S07.04: after YES. Reply 0, STOP, and the overnight notice (R-11); S07.05 adds replies 1, 2 and 3 when the menus answer them. */
   welcome: "smsTexts.welcome",
   /** S07.04: YES from a number already subscribed. */
   alreadySignedUp: "smsTexts.alreadySignedUp",

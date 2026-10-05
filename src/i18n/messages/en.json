@@ -5523,7 +5523,7 @@
   },
   "smsTexts": {
     "confirmation": "Reply YES to get CVH alerts. Reply STOP to stop.",
-    "welcome": "You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 1 to change your building or floor, 2 to change your language, 3 to withdraw a check-in request, 0 to stop and delete your subscription. Reply STOP to stop.",
+    "welcome": "You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 0 to stop and delete your subscription. Reply STOP to stop.",
     "alreadySignedUp": "You are already signed up for CVH alerts.",
     "deletePrompt": "Reply 0 again within 10 minutes to delete your subscription. You will get no more texts.",
     "signupInfo": "To get CVH alerts by text, sign up here: {link} Reply STOP to stop."

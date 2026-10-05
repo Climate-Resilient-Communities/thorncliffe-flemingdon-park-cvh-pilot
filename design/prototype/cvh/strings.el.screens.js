@@ -1392,7 +1392,7 @@
   });
   m(t, {"smsTexts": {"confirmation": "Απαντήστε YES για ειδοποιήσεις CVH. Απαντήστε STOP για διακοπή."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
-  m(t, {"smsTexts": {"welcome": "Εγγραφήκατε στις ειδοποιήσεις CVH. Το προσωπικό του Hub ελέγχει κάθε μήνυμα, οπότε οι ειδοποιήσεις μπορεί να μη σταλούν τη νύχτα. Απαντήστε 1 για αλλαγή κτιρίου ή ορόφου, 2 για αλλαγή γλώσσας, 3 για ακύρωση του αιτήματος να δουν αν είστε καλά, 0 για διακοπή και διαγραφή της συνδρομής σας. Απαντήστε STOP για διακοπή.", "alreadySignedUp": "Είστε ήδη εγγεγραμμένοι στις ειδοποιήσεις CVH.", "deletePrompt": "Στείλτε ξανά 0 σε 10 λεπτά για διαγραφή. Δεν θα λάβετε άλλα μηνύματα.", "signupInfo": "Για ειδοποιήσεις CVH με μήνυμα, εγγραφείτε εδώ: {link} Απαντήστε STOP για διακοπή."}, "smsKeywords": {"yes": "ναι, nai"}});
+  m(t, {"smsTexts": {"welcome": "Εγγραφήκατε στις ειδοποιήσεις CVH. Το προσωπικό του Hub ελέγχει κάθε μήνυμα, οπότε οι ειδοποιήσεις μπορεί να μη σταλούν τη νύχτα. Απαντήστε 0 για διακοπή και διαγραφή της συνδρομής σας. Απαντήστε STOP για διακοπή.", "alreadySignedUp": "Είστε ήδη εγγεγραμμένοι στις ειδοποιήσεις CVH.", "deletePrompt": "Στείλτε ξανά 0 σε 10 λεπτά για διαγραφή. Δεν θα λάβετε άλλα μηνύματα.", "signupInfo": "Για ειδοποιήσεις CVH με μήνυμα, εγγραφείτε εδώ: {link} Απαντήστε STOP για διακοπή."}, "smsKeywords": {"yes": "ναι, nai"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {

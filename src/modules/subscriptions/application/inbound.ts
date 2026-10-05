@@ -50,7 +50,8 @@ export const noCheckinsYet: CheckinCleanup = { deleteForSubscriber: async () => 
 
 /**
  * Port: the numbered menus (S07.05): reply 1 (building or floor), 2 (language) and 3 (withdraw a check-in request) from a subscriber, in the
- * router's transaction. Until S07.05 a reply 1, 2 or 3 changes nothing and is not answered.
+ * router's transaction. Until S07.05 a reply 1, 2 or 3 changes nothing and is not answered, and the welcome does not offer them
+ * (S07.05 puts them back into `smsTexts.welcome`).
  */
 export interface MenuPort {
   start(tx: DbTransaction, subscriber: { id: string; lang: LaunchCode }, choice: "1" | "2" | "3"): Promise<void>;

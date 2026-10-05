@@ -5523,7 +5523,7 @@
   },
   "smsTexts": {
     "confirmation": "Répondez YES pour recevoir les alertes du CVH. Répondez STOP pour arrêter.",
-    "welcome": "Vous êtes inscrit aux alertes du CVH. Le personnel du Hub vérifie chaque message, donc les alertes peuvent ne pas être envoyées la nuit. Répondez 1 pour changer d'immeuble ou d'étage, 2 pour changer de langue, 3 pour retirer votre demande de prise de nouvelles, 0 pour arrêter et supprimer votre abonnement. Répondez STOP pour arrêter.",
+    "welcome": "Vous êtes inscrit aux alertes du CVH. Le personnel du Hub vérifie chaque message, donc les alertes peuvent ne pas être envoyées la nuit. Répondez 0 pour arrêter et supprimer votre abonnement. Répondez STOP pour arrêter.",
     "alreadySignedUp": "Vous êtes déjà inscrit aux alertes du CVH.",
     "deletePrompt": "Répondez 0 à nouveau d'ici 10 minutes pour supprimer votre abonnement. Vous ne recevrez plus de messages.",
     "signupInfo": "Pour recevoir les alertes du CVH par texto, inscrivez-vous ici : {link} Répondez STOP pour arrêter."

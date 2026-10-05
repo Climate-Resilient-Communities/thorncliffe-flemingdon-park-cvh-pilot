@@ -5523,7 +5523,7 @@
   },
   "smsTexts": {
     "confirmation": "Odpovedzte YES a budete dostávať upozornenia CVH. Odpovedzte STOP a správy skončia.",
-    "welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 1 na zmenu budovy alebo poschodia, 2 na zmenu jazyka, 3 na zrušenie žiadosti o kontrolu, 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.",
+    "welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.",
     "alreadySignedUp": "Na upozornenia CVH ste už prihlásení.",
     "deletePrompt": "Pošlite znova 0 do 10 minút a odber sa vymaže. Potom už nič nepríde.",
     "signupInfo": "Ak chcete upozornenia CVH v SMS, prihláste sa tu: {link} Odpovedzte STOP a správy skončia."
