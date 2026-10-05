@@ -812,7 +812,7 @@ describe("the daily ceiling at its default (S07.09 confirms 300)", () => {
 
     // More texts the same day: not alerted again.
     await world.seedTransactional(5);
-    await backdateAlert("transactional_ceiling", 120);
+    await backdateAlertWithinToday("transactional_ceiling", 120);
     expect(await reportOf("transactional_ceiling", atCeiling)).toMatchObject({ holds: true, action: "held" });
     expect(await oncallTexts()).toHaveLength(1);
   });
