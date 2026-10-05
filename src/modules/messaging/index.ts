@@ -372,3 +372,6 @@ export {
   type MeasuredRow,
   type ReachRow,
 } from "./domain/deliveryMeasures";
+
+// The subscribers an alert's entries were queued to text (S07.07): what subscriptions' recipient port adds to a correction's, a withdrawal's and a final's own audience.
+export { subscribersQueuedFor } from "./adapters/entryRecipientStore";
