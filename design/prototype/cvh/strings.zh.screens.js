@@ -1416,7 +1416,7 @@
   });
   m(t, {"smsTexts": {"confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。"}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
-  m(t, {"smsTexts": {"welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 1 更改楼宇或楼层，回复 2 更改语言，回复 3 撤回探望申请，回复 0 停止并删除订阅。回复 STOP 停止。", "alreadySignedUp": "您已订阅 CVH 警报。", "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。", "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"}, "smsKeywords": {"yes": "是, 是的, 好"}});
+  m(t, {"smsTexts": {"welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 0 停止并删除订阅。回复 STOP 停止。", "alreadySignedUp": "您已订阅 CVH 警报。", "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。", "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"}, "smsKeywords": {"yes": "是, 是的, 好"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
