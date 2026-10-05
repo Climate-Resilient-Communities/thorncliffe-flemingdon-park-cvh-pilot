@@ -146,6 +146,14 @@ const oncallTexts = () => owner`select id, kind, purpose, recipient_kind, recipi
                               from delivery where purpose = 'oncall_alert' order by created_at, id`;
 const backdateAlert = (condition: HealthCondition, minutes: number) =>
   owner.unsafe(`update health_condition set last_alerted_at = now() - interval '${minutes} minutes' where condition = '${condition}'`);
+/**
+ * Moves the last alert back, but never past midnight in Toronto: for a condition that alerts once a Toronto day, a test run just after
+ * midnight would otherwise put the alert on the day before, when alerting again is right.
+ */
+const backdateAlertWithinToday = (condition: HealthCondition, minutes: number) =>
+  owner.unsafe(`update health_condition
+                   set last_alerted_at = greatest(now() - interval '${minutes} minutes', (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto'))
+                 where condition = '${condition}'`);
 const reportOf = async (condition: HealthCondition, run: HealthJob = job()) => (await run.run()).conditions.find((row) => row.condition === condition);
 
 /** What must hold of everything the job stored: no on-call number anywhere. */
@@ -765,7 +773,7 @@ describe("the daily ceiling on non-alert texts", () => {
     expect(await owner`select count(*)::int as n from delivery where purpose <> 'oncall_alert' and state = 'queued'`).toEqual([{ n: 4 }]);
 
     // Not again that day, however long it holds; the on-call texts themselves are not counted.
-    await backdateAlert("transactional_ceiling", 120);
+    await backdateAlertWithinToday("transactional_ceiling", 120);
     expect(await reportOf("transactional_ceiling", job({ ceiling: 3 }))).toMatchObject({ holds: true, action: "held" });
     expect(await oncallTexts()).toHaveLength(2);
   });
