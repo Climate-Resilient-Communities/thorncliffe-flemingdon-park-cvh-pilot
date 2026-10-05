@@ -152,7 +152,10 @@ texts are due; Smart Encoding found on; more than 5 webhook signature failures i
 10 minutes (a failed run in `cron.job_run_details`, or a job's call in `net._http_response` that did not answer 2xx, timed out or could not connect; pg_net
 records no URL, so every failed pg_net call counts, and pg_net must be used for nothing but the jobs' calls to `/api/jobs/`); an alert
 submitted with a whole language in English in the last 24 hours; a directory publish that failed with none succeeding since; more non-alert texts today
-than `SMS_TRANSACTIONAL_DAILY_CEILING`; and a spending cap overrun this month (`spend.cap_overrun`, which S07.08 records). It records an `ops_event` (no
+than `SMS_TRANSACTIONAL_DAILY_CEILING`; a spending cap overrun this month (`spend.cap_overrun`, which S07.08 records); and (S09.01 follow-up)
+Twilio refusing the CVH's sign-in (`dispatch.provider_auth_failed`: the sender stops at a 401, or the third 403 in a row) with nothing accepted
+since, neither a text nor the daily Messaging Service check (`provider_auth`; its on-call text is itself the next try of the credentials, so a
+refusal that passes clears within a few minutes; with no on-call number and no other text, nothing tries again and it holds). It records an `ops_event` (no
 personal data) when it texts the on-call Admins and when a condition clears, and queues one text per number on the on-call roster, at most once per
 condition per 30 minutes (the daily limit once a day). Every Admin and Coordinator screen names each open condition in plain words until it clears;
 everyone else at the Hub sees only "Sending is failing". Each run that judged every condition records the time in `health_heartbeat`, which the heartbeat
@@ -173,16 +176,29 @@ $$);
 
 To stop it, `select cron.unschedule('cvh-health')`; the heartbeat then answers 503 within 3 minutes and the outside check emails the on-call Admins.
 
-**The heartbeat and the outside check (S09.01).** `GET /api/health/heartbeat` (or `HEAD`) answers 200 only if the health job judged every condition less than
-3 minutes ago, else 503, with an empty body, `Cache-Control: no-store` and no cookie; it is public and needs no secret, and says nothing else. A health
-job that does not run (pg_cron stopped, the job secret wrong, Vercel down), cannot reach the database, or keeps failing to judge a condition all make it 503;
-so does a database that does not answer in 5 seconds or an app that is down (no answer at all). Nothing in the CVH can text anyone about those, so an
-uptime monitor outside Vercel, Supabase and Twilio watches it. **IT chooses the monitor and sets it up before launch (nothing in this repository does), and
+**The heartbeat and the outside check (S09.01).** `GET /api/health/heartbeat` (or `HEAD`) answers 200 with an empty body only if the health job judged
+every condition less than 3 minutes ago and Twilio sign-in is not failing; else 503, whose plain-text body (`GET` only; `HEAD` has no body) is one
+short code naming what is failing. Always `Cache-Control: no-store` and no cookie; it is public and needs no secret, and says nothing else (no number,
+no time, no error text, no id). The codes:
+
+| Body of the 503 | What it means | What IT does first |
+| --- | --- | --- |
+| `health_job_stale` | The health job has not completed a run for 3 minutes, or never has: pg_cron stopped, the job secret wrong, Vercel down, or the job keeps failing to judge a condition. | Check `cvh-health` in pg_cron and the job's logs (`health.condition_failed`). |
+| `provider_auth` | Twilio has refused the CVH's sign-in (HTTP 401, or 403 three times in a row) and accepted nothing since, for at least 10 minutes: no text is being sent, the on-call texts included. | Check the Twilio account (suspended? auth token rotated?) and `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` in Vercel. It clears at the next text Twilio accepts. |
+| `database_unreachable` | The database failed, or did not answer in 5 seconds. | Check Supabase's status and the project. |
+
+An app that is down gives no answer at all. A Twilio refusal is debounced: it turns the heartbeat red only after the health job has found it holding
+for 10 minutes, and the health job's on-call text, queued as soon as the refusal is found and claimed before every text but a fire alert, is the
+next try of the credentials, so one refusal that passes clears within a few minutes and never reaches the monitor. Nothing in the CVH can text
+anyone about these, so an uptime monitor outside Vercel, Supabase and Twilio watches it. **IT chooses the monitor and sets it up before launch (nothing in this repository does), and
 records its name in the spine (AD-23, "As built (S09.01)"):**
 
 - a free-tier HTTP(S) uptime monitor that is not hosted on Vercel, Supabase or Twilio and does not send through the CVH;
 - it requests `https://<production host>/api/health/heartbeat` every minute (a 1-minute interval: one that only offers 3 or 5 minutes does not meet the
   5-minute promise below), with a timeout of 10 seconds, and counts any answer other than 200 (and no answer) as down;
+- if the service supports it, its alert email includes the response body, so the email names the cause above (UptimeRobot and Better Stack
+  both have keyword or response-body options; IT checks what its plan offers). A monitor that cannot include it still works: any status other
+  than 200 is down, and the Hub's banner names the cause;
 - it alerts only after **2 failed checks in a row**, and then emails every on-call Admin (the same people as the On-call numbers page; their email
   addresses are kept in the monitor, never in this repository), and emails again when the heartbeat recovers;
 - if Vercel's deployment protection covers the production URL, the monitor needs the protection bypass header (as pg_cron does), or the path is

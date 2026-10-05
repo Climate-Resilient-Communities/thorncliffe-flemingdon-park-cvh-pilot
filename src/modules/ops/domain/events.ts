@@ -79,9 +79,9 @@ export const DELIVERY_UNKNOWN_CAUSES = [
  * outside a pause; a delivery that became `unknown` (or a hand-off the sweep could not settle); no sender running while texts are due; Smart
  * Encoding found on; webhook signature failures past 5 in 10 minutes (S06.07); and, from S09.01, a scheduled job that failed (a failed pg_cron
  * run, or a job's call that did not answer 2xx); a whole language falling back to English in an alert; a directory publish that failed and has
- * not been followed by one that succeeded; the daily ceiling on non-alert texts crossed; a spending cap overrun this month; and, from S07.09, the
- * Messaging Service allowing more than Canada or having SMS pumping protection off. The same codes
- * as `health_condition.condition`, in the order the Hub's banner lists them.
+ * not been followed by one that succeeded; the daily ceiling on non-alert texts crossed; a spending cap overrun this month; from S07.09, the
+ * Messaging Service allowing more than Canada or having SMS pumping protection off; and (S09.01 follow-up) Twilio refusing the CVH's sign-in
+ * with nothing accepted since. The same codes as `health_condition.condition`, in the order the Hub's banner lists them.
  */
 export const HEALTH_CONDITIONS = [
   "queue_stuck",
@@ -95,6 +95,7 @@ export const HEALTH_CONDITIONS = [
   "transactional_ceiling",
   "cap_overrun",
   "messaging_settings",
+  "provider_auth",
 ] as const;
 export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
 

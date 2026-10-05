@@ -247,9 +247,16 @@ test("every Hub screen says 'Sending is failing' while the health job has found 
   await page.goto("/staff");
   await expect(failingBanner(page)).toContainText("No sender has run for more than 3 minutes while texts are waiting.");
 
-  // The other conditions do not mean the sender is failing: an Ambassador is not shown them.
+  // Twilio refusing the sign-in is the sender failing too (S09.01 follow-up): everyone is shown it.
   await sql`update health_condition set active = false, since = null where condition in ('queue_stuck', 'sender_stalled')`;
-  await sql`update health_condition set active = true, since = now() where condition not in ('queue_stuck', 'sender_stalled')`;
+  await sql`update health_condition set active = true, since = now() where condition = 'provider_auth'`;
+  await page.goto("/staff");
+  await expect(failingBanner(page)).toContainText("Sending is failing");
+  await expect(failingBanner(page)).toContainText("Twilio refused the CVH sign-in, so texts are not being sent.");
+
+  // The other conditions do not mean the sender is failing: an Ambassador is not shown them.
+  await sql`update health_condition set active = false, since = null where condition = 'provider_auth'`;
+  await sql`update health_condition set active = true, since = now() where condition not in ('queue_stuck', 'sender_stalled', 'provider_auth')`;
   await page.goto("/staff");
   await expect(failingBanner(page)).toHaveCount(0);
 });
@@ -290,23 +297,34 @@ test("every Admin and Coordinator screen names each open health condition in pla
   await expect(failingBanner(page)).toContainText("with a whole language in English, because its translation failed");
 });
 
-test("the heartbeat answers 200 only while the health job completed less than 3 minutes ago, else 503, with no body and no cookie (S09.01)", async ({ request }) => {
+test("the heartbeat answers 200 with no body while all is well, else 503 naming the cause, with no cookie (S09.01 and its follow-up)", async ({ request }) => {
   // The route reuses one answer for up to 10 s (HEARTBEAT_CACHE_MS), so after each change the test waits for the new answer.
-  test.setTimeout(60_000);
-  const expectBare = async (method: "get" | "head", status: number) => {
+  test.setTimeout(90_000);
+  const expectAnswer = async (method: "get" | "head", status: number, body = "") => {
     await expect.poll(async () => (await request[method]("/api/health/heartbeat")).status(), { message: method, timeout: 15_000, intervals: [500, 1000] }).toBe(status);
     const response = await request[method]("/api/health/heartbeat");
     expect(response.status(), method).toBe(status);
     expect(response.headers()["set-cookie"], method).toBeUndefined();
     expect(response.headers()["cache-control"], method).toBe("no-store");
-    expect(await response.text(), method).toBe("");
+    // HEAD has no body; GET's 503 carries the cause's code and nothing else.
+    expect(await response.text(), method).toBe(method === "head" ? "" : body);
   };
   // Never run.
-  await expectBare("get", 503);
+  await expectAnswer("get", 503, "health_job_stale");
   await sql`update health_heartbeat set completed_at = now()`;
-  await expectBare("get", 200);
-  await expectBare("head", 200);
+  await expectAnswer("get", 200);
+  await expectAnswer("head", 200);
   await sql`update health_heartbeat set completed_at = now() - interval '3 minutes 5 seconds'`;
-  await expectBare("get", 503);
-  await expectBare("head", 503);
+  await expectAnswer("get", 503, "health_job_stale");
+  await expectAnswer("head", 503);
+
+  // Twilio refusing the sign-in: not for a refusal the health job found 5 minutes ago (one that passes clears before 10), but after 10 minutes.
+  await sql`update health_heartbeat set completed_at = now()`;
+  await sql`update health_condition set active = true, since = now() - interval '5 minutes' where condition = 'provider_auth'`;
+  await expectAnswer("get", 200);
+  await sql`update health_condition set since = now() - interval '11 minutes' where condition = 'provider_auth'`;
+  await expectAnswer("get", 503, "provider_auth");
+  await expectAnswer("head", 503);
+  await sql`update health_condition set active = false, since = null where condition = 'provider_auth'`;
+  await expectAnswer("get", 200);
 });

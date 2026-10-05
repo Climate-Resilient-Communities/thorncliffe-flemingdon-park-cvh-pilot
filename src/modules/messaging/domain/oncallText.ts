@@ -17,6 +17,7 @@ export const ONCALL_TEXT_CONDITIONS = [
   "transactional_ceiling",
   "cap_overrun",
   "messaging_settings",
+  "provider_auth",
 ] as const;
 export type OncallTextCondition = (typeof ONCALL_TEXT_CONDITIONS)[number];
 

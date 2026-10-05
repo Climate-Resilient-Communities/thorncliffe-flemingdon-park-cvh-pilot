@@ -5219,6 +5219,7 @@
       "transactional_ceiling": "More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
       "cap_overrun": "An approval this month went over the monthly text message spending cap. Texts keep sending.",
       "messaging_settings": "The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.",
+      "provider_auth": "Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.",
       "stale": "The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "Since {when}",
       "tell": "Tell IT now."
@@ -5491,7 +5492,8 @@
         "publish_failed": "CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
         "transactional_ceiling": "CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
         "cap_overrun": "CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
-        "messaging_settings": "CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio."
+        "messaging_settings": "CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.",
+        "provider_auth": "CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub."
       }
     }
   },

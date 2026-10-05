@@ -59,15 +59,15 @@ export const healthStore = {
     return row?.id === null || row === undefined ? null : Number(row.id);
   },
 
-  /** The newest of the given kinds: its id and kind (the daily Smart Encoding check records "on" or "off"). */
-  async latestOfKinds(executor: DbExecutor, kinds: readonly string[]): Promise<{ id: number; kind: string } | null> {
+  /** The newest of the given kinds: its id, kind and time (the daily Smart Encoding check records "on" or "off"). */
+  async latestOfKinds(executor: DbExecutor, kinds: readonly string[]): Promise<{ id: number; kind: string; at: Date } | null> {
     const [row] = await executor
-      .select({ id: opsEvent.id, kind: opsEvent.kind })
+      .select({ id: opsEvent.id, kind: opsEvent.kind, at: opsEvent.at })
       .from(opsEvent)
       .where(inArray(opsEvent.kind, [...kinds]))
       .orderBy(desc(opsEvent.id))
       .limit(1);
-    return row ? { id: Number(row.id), kind: row.kind } : null;
+    return row ? { id: Number(row.id), kind: row.kind, at: row.at } : null;
   },
 
   /**
@@ -107,10 +107,18 @@ export const healthStore = {
     await executor.update(healthHeartbeat).set({ completedAt: sql`now()` }).where(eq(healthHeartbeat.id, 1));
   },
 
-  /** The heartbeat: when the health job last judged every condition (null: never), and the database's instant. */
-  async heartbeat(executor: DbExecutor): Promise<{ completedAt: Date | null; now: Date }> {
-    const [row] = await executor.select({ completedAt: healthHeartbeat.completedAt, now: sql<Date>`now()` }).from(healthHeartbeat).where(eq(healthHeartbeat.id, 1));
-    return { completedAt: row?.completedAt ?? null, now: new Date(row?.now ?? Date.now()) };
+  /**
+   * The heartbeat: when the health job last judged every condition (null: never), since when it has found Twilio refusing the CVH's sign-in
+   * (null: it does not), and the database's instant. One statement.
+   */
+  async heartbeat(executor: DbExecutor): Promise<{ completedAt: Date | null; providerAuthSince: Date | null; now: Date }> {
+    const providerAuthSince = sql<Date | string | null>`(select ${healthCondition.since} from ${healthCondition} where ${healthCondition.condition} = 'provider_auth' and ${healthCondition.active})`;
+    const [row] = await executor
+      .select({ completedAt: healthHeartbeat.completedAt, providerAuthSince, now: sql<Date>`now()` })
+      .from(healthHeartbeat)
+      .where(eq(healthHeartbeat.id, 1));
+    const since = row?.providerAuthSince ?? null;
+    return { completedAt: row?.completedAt ?? null, providerAuthSince: since === null ? null : new Date(since), now: new Date(row?.now ?? Date.now()) };
   },
 
   /** How many events of a kind were recorded in the last `withinMs`, by the database's clock. */
