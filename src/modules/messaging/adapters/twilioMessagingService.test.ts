@@ -201,6 +201,51 @@ describe("the Messaging Service submission", () => {
   });
 });
 
+describe("the Messaging Service's abuse protections (S07.09)", () => {
+  function reader(body: unknown, status = 200) {
+    const fetchMock = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(async () => json(body, status));
+    return { fetchMock, service: twilioMessagingServiceReader({ accountSid: ACCOUNT_SID, authToken: AUTH_TOKEN, messagingBaseUrl: "https://messaging.invalid", fetch: fetchMock as unknown as typeof fetch }) };
+  }
+
+  it("reads Canada-only geo permissions and pumping protection from the service resource, changing nothing", async () => {
+    const right = reader({ sid: SERVICE_SID, sms_pumping_protection: true, geo_permissions: ["CA"] });
+    await expect(right.service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: true, pumpingProtection: true });
+    const [url, init] = right.fetchMock.mock.calls[0];
+    expect(url).toBe(`https://messaging.invalid/v1/Services/${SERVICE_SID}`);
+    expect(init?.method).toBe("GET");
+    expect(init?.body).toBeUndefined();
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: [" ca "] }).service.readAbuseSettings(SERVICE_SID)).resolves.toMatchObject({ geoCanadaOnly: true });
+  });
+
+  it("reads both settings from one fetch of the service", async () => {
+    const both = reader({ smart_encoding: false, sms_pumping_protection: true, geo_permissions: ["CA"] });
+    await expect(both.service.readBoth(SERVICE_SID)).resolves.toEqual({
+      encoding: { kind: "read", smartEncoding: false },
+      settings: { kind: "read", geoCanadaOnly: true, pumpingProtection: true },
+    });
+    expect(both.fetchMock).toHaveBeenCalledTimes(1);
+    const failed = reader({ code: 20404 }, 404);
+    await expect(failed.service.readBoth(SERVICE_SID)).resolves.toEqual({ encoding: { kind: "unreadable", reason: "http_404" }, settings: { kind: "unreadable", reason: "http_404" } });
+  });
+
+  it("does not call geo permissions Canada-only when another country is allowed or none is listed, nor pumping protection on when it is off", async () => {
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: ["CA", "US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: true });
+    await expect(reader({ sms_pumping_protection: false, geo_permissions: ["US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: false });
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: [] }).service.readAbuseSettings(SERVICE_SID)).resolves.toMatchObject({ geoCanadaOnly: false });
+  });
+
+  it("says it could not tell when a setting is missing or not the shape expected, the request fails or the service id is not one", async () => {
+    await expect(reader({ geo_permissions: ["CA"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "pumping_setting_missing" });
+    await expect(reader({ sms_pumping_protection: "true", geo_permissions: ["CA"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "pumping_setting_missing" });
+    await expect(reader({ sms_pumping_protection: true }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "geo_setting_missing" });
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: [1] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "geo_setting_missing" });
+    await expect(reader({ code: 20404 }, 404).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "http_404" });
+    const none = reader({});
+    await expect(none.service.readAbuseSettings("nope")).resolves.toEqual({ kind: "unreadable", reason: "service_sid_invalid" });
+    expect(none.fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe("the Messaging Service's Smart Encoding setting", () => {
   function reader(respond: () => Promise<Response>) {
     const fetchMock = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(async () => respond());

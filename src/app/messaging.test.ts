@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { RECIPIENT_KINDS, RECIPIENT_OWNER, ContactSourceNotWired, type MessagingLog, type RecipientKind, type RecipientNumberSource } from "@/modules/messaging";
 import type { DbTransaction } from "@/platform/db";
-import { oncallNumberSource } from "@/modules/ops";
-import { drillNumberSource, pendingSignupNumberSource } from "@/modules/subscriptions";
-import { contactResolver, resetMessagingComposition, wireContactResolver, wireContactSources, type OwnerNumberSources } from "./messaging";
+import { contactResolver, ownerSources, resetMessagingComposition, wireContactResolver, wireContactSources, type OwnerNumberSources } from "./messaging";
 
 const tx = {} as DbTransaction;
 const DELIVERY = "01900000-0000-7000-8000-0000000b0001";
@@ -64,11 +62,9 @@ describe("the messaging composition root", () => {
     await expect(resolver.resolve(tx, { deliveryId: DELIVERY, kind: "oncall", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
   });
 
-  it("gives the dispatcher one resolver, with ops' on-call source and subscriptions' drill roster and pending sign-up sources wired and the others not yet", async () => {
+  it("gives the dispatcher one resolver, with ops' on-call source and every subscriptions source wired (S07.04 adds subscribers and inbound_reply), and staff not yet", async () => {
     expect(contactResolver()).toBe(contactResolver());
-    expect(Object.keys(wireContactSources({ ops: oncallNumberSource }))).toEqual(["oncall"]);
-    expect(Object.keys(wireContactSources({ subscriptions: { roster: drillNumberSource, pending_signup: pendingSignupNumberSource() } })).sort()).toEqual(["pending_signup", "roster"]);
-    await expect(contactResolver().resolve(tx, { deliveryId: DELIVERY, kind: "subscriber", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
-    await expect(contactResolver().resolve(tx, { deliveryId: DELIVERY, kind: "inbound_reply", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
+    expect(Object.keys(wireContactSources(ownerSources())).sort()).toEqual(["inbound_reply", "oncall", "pending_signup", "roster", "subscriber"]);
+    await expect(contactResolver().resolve(tx, { deliveryId: DELIVERY, kind: "staff", id: RECIPIENT })).rejects.toBeInstanceOf(ContactSourceNotWired);
   });
 });

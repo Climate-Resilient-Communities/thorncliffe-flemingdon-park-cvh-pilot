@@ -255,10 +255,11 @@ export type {
   MessagingServiceReader,
   OpsRecorder,
   SmartEncodingReading,
+  AbuseSettingsReading,
   StoppedState,
   SweepResult,
 } from "./application/dispatcherPorts";
-export type { MessagingServiceCheck, ServiceCheckResult } from "./application/serviceCheck";
+export type { MessagingServiceCheck, ServiceCheckFinding, ServiceCheckResult, SettingsCheckResult } from "./application/serviceCheck";
 
 // The status callbacks (S06.04).
 export { drizzleCallbackStore } from "./adapters/callbackStore";
@@ -372,3 +373,6 @@ export {
   type MeasuredRow,
   type ReachRow,
 } from "./domain/deliveryMeasures";
+
+// The subscribers an alert's entries were queued to text (S07.07): what subscriptions' recipient port adds to a correction's, a withdrawal's and a final's own audience.
+export { subscribersQueuedFor } from "./adapters/entryRecipientStore";

@@ -57,3 +57,18 @@ export {
   type HeartbeatCause,
   type Observation,
 } from "./domain/health";
+
+// S09.04: the weekly reliability review (the SQL view `weekly_review`, read by scripts/export-weekly).
+export { readWeeklyReview, weeklyReviewExport } from "./application/weeklyReview";
+export {
+  FEWER_THAN_FIVE,
+  WEEKLY_CSV_COLUMNS,
+  WEEKLY_SECTIONS,
+  csvCell,
+  isWeekStart,
+  lastFullWeek,
+  sortWeeklyRows,
+  weeklyReviewCsv,
+  type WeeklyRow,
+  type WeeklySection,
+} from "./domain/weeklyReview";

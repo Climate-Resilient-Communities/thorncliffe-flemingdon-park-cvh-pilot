@@ -1,7 +1,7 @@
 // Approving what was reviewed, on a phone (S04.07; O-05), against the production build with the identity fake and the translation fake
 // (`CVH_FAKE_TRANSLATOR=sample`, playwright.staff.config.ts: no model is called, nothing leaves this machine, no text is sent):
 // a Coordinator submits an acknowledgement; a second Coordinator finds it waiting on the Hub home, reads it at 390 px (the audience in words, the
-// channels, the number of text recipients and that texting is not open yet, the estimated cost, the languages one tap away, Approve within reach of
+// channels, the number of text recipients (texting is open), the estimated cost, the languages one tap away, Approve within reach of
 // a thumb) and approves it, and the entry is published with the feed's version raised and `entry.approved` audited with the version, the hash and
 // the count; the person who wrote it is refused the page; an approval pressed on a page that went stale (the author pulled it back) changes
 // nothing and is recorded as a refusal; an approver returns an entry with a note the author then reads, and discards another.
@@ -120,7 +120,7 @@ test("a second Coordinator reads what was submitted on a phone, approves it, and
     await expect(phone).toHaveURL(new RegExp(`/staff/alerts/approve\\?alert=${ref.alertId}&entry=${ref.entryId}$`));
     await expect(phone.getByRole("heading", { level: 1, name: "Approve an alert" })).toBeVisible();
 
-    // Above the fold at 390 x 844: who it is for in words, where it goes, the text recipients (none: texting is not open yet), the estimated cost.
+    // Above the fold at 390 x 844: who it is for in words, where it goes, the text recipients (none have signed up; texting is open since S07.07), the estimated cost.
     const fold = PHONE.height;
     for (const id of ["fact-audience", "fact-channels", "fact-recipients", "fact-cost"]) {
       const box = await phone.getByTestId(id).boundingBox();
@@ -129,9 +129,9 @@ test("a second Coordinator reads what was submitted on a phone, approves it, and
     }
     await expect(phone.getByTestId("audience-sentence")).toContainText(ADDRESS);
     await expect(phone.getByTestId("fact-channels")).toContainText("Web app");
-    await expect(phone.getByTestId("fact-channels")).not.toContainText("Text messages");
+    await expect(phone.getByTestId("fact-channels")).toContainText("Text messages");
     await expect(phone.getByTestId("recipient-count")).toHaveText("0");
-    await expect(phone.getByTestId("sms-not-open")).toHaveText("Text sign-up is not open yet.");
+    await expect(phone.getByTestId("sms-not-open")).toHaveCount(0);
     await expect(phone.getByTestId("estimated-cost")).toBeVisible();
     await expect(phone.getByTestId("english-body")).toContainText(ADDRESS);
 

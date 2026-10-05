@@ -26,6 +26,16 @@ import type { LaunchCode } from "./languages";
 export const RESIDENT_TEXT_KEYS = {
   /** S07.02: the double opt-in, "Reply YES to get CVH alerts. Reply STOP to stop." */
   confirmation: "smsTexts.confirmation",
+  /** S07.04: after YES. Reply 0, STOP, and the overnight notice (R-11); S07.05 adds replies 1, 2 and 3 when the menus answer them. */
+  welcome: "smsTexts.welcome",
+  /** S07.04: YES from a number already subscribed. */
+  alreadySignedUp: "smsTexts.alreadySignedUp",
+  /** S07.04: reply 0 outside a menu, before the deletion. */
+  deletePrompt: "smsTexts.deletePrompt",
+  /** S07.04: the sign-up link, to a number with no subscription ({link} is the sign-up page in the language). */
+  signupInfo: "smsTexts.signupInfo",
+  /** S07.04: the words for yes a resident may reply with besides YES and Y, comma-separated (not a text that is sent). */
+  yesWords: "smsKeywords.yes",
 } as const;
 
 export type ResidentTextName = keyof typeof RESIDENT_TEXT_KEYS;

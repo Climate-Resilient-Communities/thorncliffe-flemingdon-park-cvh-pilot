@@ -5218,6 +5218,7 @@
       "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
       "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
       "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "messaging_settings": "[EN] The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.",
       "provider_auth": "[EN] Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.",
       "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
@@ -5491,6 +5492,7 @@
         "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
         "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
+        "messaging_settings": "[EN] CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.",
         "provider_auth": "[EN] CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub."
       }
     }
@@ -5522,7 +5524,14 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."
+    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil.",
+    "welcome": "Naka-sign up ka na sa CVH alert. Sinusuri ng staff ng Hub ang bawat mensahe, kaya maaaring hindi maipadala ang alert sa gabi. Sumagot ng 0 para itigil at burahin ang iyong subscription. Sumagot ng STOP para itigil.",
+    "alreadySignedUp": "Naka-sign up ka na sa CVH alert.",
+    "deletePrompt": "Sumagot ulit ng 0 sa loob ng 10 minuto para burahin ang subscription. Wala ka nang matatanggap na text.",
+    "signupInfo": "Para makatanggap ng CVH alert sa text, mag-sign up dito: {link} Sumagot ng STOP para itigil."
+  },
+  "smsKeywords": {
+    "yes": "oo, opo, oho"
   },
   "offline": {
     "title": "Hindi naka-save sa iyong telepono ang pahinang ito",

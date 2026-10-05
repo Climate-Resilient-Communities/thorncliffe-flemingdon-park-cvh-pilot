@@ -21,12 +21,13 @@
 //    on-call texts not counted). Texted about once that day (S07.09: "on-call is alerted once that day"; texts keep sending); it clears at midnight.
 //  - cap_overrun: a spending cap overrun (`spend.cap_overrun`, S07.08) was recorded this month in Toronto. An event condition: each new one is
 //    texted about once; it clears when the month ends.
+//  - messaging_settings (S07.09): the daily check (S06.02) found the Messaging Service's geo permissions allowing more than Canada, or SMS pumping
+//    protection off; it clears when a later check finds both right. An event condition, like smart_encoding_on.
 //  From the S09.01 follow-up:
 //  - provider_auth: Twilio refused the CVH's credentials (`dispatch.provider_auth_failed`: the sender stops its run at a 401, or the third 403 in a
 //    row) and has accepted nothing since: no text was accepted after the newest refusal, and no daily Messaging Service check read the setting
 //    after it. A level condition, so its on-call text (rank 1, claimed before every text but a fire alert) is also the next try of the credentials:
 //    if Twilio accepts it, the next run clears the condition. The heartbeat answers 503 `provider_auth` once it has held for 10 minutes.
-//  "Messaging Service settings wrong" is smart_encoding_on (S06.02's daily check; S07.09 adds its other settings to that check).
 //
 // Each run that judged every condition records the heartbeat (`health_heartbeat`), which `/api/health/heartbeat` reads for the outside check: a
 // run in which a condition could not be judged does not, so a job that keeps failing is seen from outside like a job that does not run.
@@ -141,6 +142,11 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
         if (latest === null || latest.kind !== "messaging.smart_encoding_on") return { holds: false, count: 0, eventId: null };
         return { holds: true, count: 1, fresh: latest.id > (lastEventId ?? 0), eventId: latest.id };
       }
+      case "messaging_settings": {
+        const latest = await healthStore.latestOfKinds(tx, ["messaging.service_settings_wrong", "messaging.service_settings_ok"]);
+        if (latest === null || latest.kind !== "messaging.service_settings_wrong") return { holds: false, count: 0, eventId: null };
+        return { holds: true, count: 1, fresh: latest.id > (lastEventId ?? 0), eventId: latest.id };
+      }
       case "signature_failures": {
         const failures = await healthStore.countRecent(tx, "webhook.signature_invalid", SIGNATURE_WINDOW_MS);
         return { holds: failures > SIGNATURE_FAILURE_LIMIT, count: failures, eventId: null };
@@ -159,7 +165,8 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
         const refused = await healthStore.latestOfKinds(tx, ["dispatch.provider_auth_failed"]);
         if (refused === null) return { holds: false, count: 0, eventId: null };
         // Anything Twilio accepted after the newest refusal ends it: the daily check that read the Messaging Service, or a text it accepted.
-        const checked = await healthStore.latestOfKinds(tx, ["messaging.smart_encoding_on", "messaging.smart_encoding_off"]);
+        // (Each of these kinds is recorded only after the check read the Messaging Service; `service_settings_wrong` can mean "unreadable", so it is not one.)
+        const checked = await healthStore.latestOfKinds(tx, ["messaging.smart_encoding_on", "messaging.smart_encoding_off", "messaging.service_settings_ok"]);
         if (checked !== null && checked.id > refused.id) return { holds: false, count: 0, eventId: null };
         if (await sender.acceptedAfter(tx, refused.at)) return { holds: false, count: 0, eventId: null };
         const refusals = await healthStore.countRecent(tx, "dispatch.provider_auth_failed", PROVIDER_AUTH_COUNT_WINDOW_MS);

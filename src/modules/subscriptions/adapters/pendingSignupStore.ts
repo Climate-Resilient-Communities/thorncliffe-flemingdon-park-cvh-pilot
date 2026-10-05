@@ -1,5 +1,5 @@
 // The statements of the pending sign-up (S07.02). Every one runs in the caller's transaction; the number is selected only by `phoneOf` (the
-// ContactResolver's source, at the hand-off point). S07.04's inbound router adds its own reads by number here.
+// ContactResolver's source, at the hand-off point) and by `ofNumber` (S07.04's inbound router, under the number's lock).
 import { and, eq, gt, lte, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { pendingSignup, type PendingPlace } from "./schema";
@@ -15,6 +15,11 @@ export interface NewPendingSignup {
   topics: string[];
   consentVersion: string;
   startedBy: "web" | "staff";
+}
+
+/** A pending sign-up as the inbound router reads it (no number). */
+export interface PendingSignupRow extends Omit<NewPendingSignup, "phone"> {
+  expired: boolean;
 }
 
 // A fixed seed for the advisory lock of one number, so it never meets another module's lock on a hash of the same text.
@@ -49,6 +54,28 @@ export const pendingSignupStore = {
   async delete(tx: DbTransaction, id: string): Promise<boolean> {
     const deleted = await tx.delete(pendingSignup).where(eq(pendingSignup.id, id)).returning({ id: pendingSignup.id });
     return deleted.length > 0;
+  },
+
+  /**
+   * The inbound router's read (S07.04): the number's pending sign-up, whether or not it has expired (`expired`: its `expires_at` has passed
+   * by the database's clock, so YES no longer confirms it), or null. The number is not read back.
+   */
+  async ofNumber(tx: DbTransaction, phone: string): Promise<PendingSignupRow | null> {
+    const [row] = await tx
+      .select({
+        id: pendingSignup.id,
+        lang: pendingSignup.lang,
+        neighbourhoodId: pendingSignup.neighbourhoodId,
+        places: pendingSignup.places,
+        groups: pendingSignup.groups,
+        topics: pendingSignup.topics,
+        consentVersion: pendingSignup.consentVersion,
+        startedBy: pendingSignup.startedBy,
+        expired: sql<boolean>`${pendingSignup.expiresAt} <= now()`,
+      })
+      .from(pendingSignup)
+      .where(eq(pendingSignup.phone, phone));
+    return row ? { ...row, startedBy: row.startedBy as "web" | "staff" } : null;
   },
 
   /** The number of an unexpired pending sign-up, for the resolver's source only. Null when it is gone or its 48 hours have passed. */

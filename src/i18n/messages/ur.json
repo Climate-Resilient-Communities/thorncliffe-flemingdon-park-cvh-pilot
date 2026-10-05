@@ -5218,6 +5218,7 @@
       "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
       "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
       "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "messaging_settings": "[EN] The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.",
       "provider_auth": "[EN] Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.",
       "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
@@ -5491,6 +5492,7 @@
         "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
         "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
+        "messaging_settings": "[EN] CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.",
         "provider_auth": "[EN] CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub."
       }
     }
@@ -5522,7 +5524,14 @@
     }
   },
   "smsTexts": {
-    "confirmation": "CVH الرٹ حاصل کرنے کے لیے YES جواب دیں۔ روکنے کے لیے STOP جواب دیں۔"
+    "confirmation": "CVH الرٹ حاصل کرنے کے لیے YES جواب دیں۔ روکنے کے لیے STOP جواب دیں۔",
+    "welcome": "آپ CVH الرٹ کے لیے سائن اپ ہو گئے ہیں۔ ہب کا عملہ ہر پیغام جانچتا ہے، اس لیے الرٹ رات کو شاید نہ بھیجے جائیں۔ روکنے اور اپنی رکنیت ختم کرنے کے لیے 0 جواب دیں۔ روکنے کے لیے STOP جواب دیں۔",
+    "alreadySignedUp": "آپ پہلے ہی CVH الرٹ کے لیے سائن اپ ہیں۔",
+    "deletePrompt": "رکنیت ختم کرنے کو 10 منٹ میں پھر 0 بھیجیں۔ پھر کوئی پیغام نہیں آئے گا۔",
+    "signupInfo": "ٹیکسٹ پر CVH الرٹ حاصل کرنے کے لیے یہاں سائن اپ کریں: {link} روکنے کے لیے STOP جواب دیں۔"
+  },
+  "smsKeywords": {
+    "yes": "ہاں, جی, ہاں جی"
   },
   "offline": {
     "title": "یہ صفحہ آپ کے فون پر محفوظ نہیں",

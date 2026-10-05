@@ -144,7 +144,7 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
     await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
     await fx.cleanup();
     await owner`update dispatcher_lease set token = gen_random_uuid(), holder = 'none', expires_at = to_timestamp(0), renewed_at = to_timestamp(0), paced_until = to_timestamp(0) where id = 1`;
-    await owner`delete from ops_event where kind in ('delivery.unknown', 'dispatch.provider_auth_failed', 'messaging.smart_encoding_on', 'messaging.smart_encoding_off', 'messaging.service_check_failed',
+    await owner`delete from ops_event where kind in ('delivery.unknown', 'dispatch.provider_auth_failed', 'messaging.smart_encoding_on', 'messaging.smart_encoding_off', 'messaging.service_check_failed', 'messaging.service_settings_wrong', 'messaging.service_settings_ok',
                  'delivery.unknown_resolved', 'delivery.callback_ignored', 'delivery.provider_id_mismatch', 'webhook.signature_invalid')`;
     lines.length = 0;
     worldClock.current = fakeClock();

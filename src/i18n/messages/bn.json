@@ -5218,6 +5218,7 @@
       "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
       "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
       "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "messaging_settings": "[EN] The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.",
       "provider_auth": "[EN] Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.",
       "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
@@ -5491,6 +5492,7 @@
         "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
         "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
+        "messaging_settings": "[EN] CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.",
         "provider_auth": "[EN] CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub."
       }
     }
@@ -5522,7 +5524,14 @@
     }
   },
   "smsTexts": {
-    "confirmation": "CVH সতর্কতা পেতে YES লিখে উত্তর দিন। বন্ধ করতে STOP লিখে উত্তর দিন।"
+    "confirmation": "CVH সতর্কতা পেতে YES লিখে উত্তর দিন। বন্ধ করতে STOP লিখে উত্তর দিন।",
+    "welcome": "আপনি CVH সতর্কতার জন্য সাইন আপ করেছেন। হাবের কর্মীরা প্রতিটি বার্তা যাচাই করেন, তাই রাতে সতর্কতা হয়তো পাঠানো হবে না। বন্ধ করে আপনার সাবস্ক্রিপশন মুছতে 0 লিখে উত্তর দিন। বন্ধ করতে STOP লিখে উত্তর দিন।",
+    "alreadySignedUp": "আপনি আগেই CVH সতর্কতার জন্য সাইন আপ করেছেন।",
+    "deletePrompt": "সাবস্ক্রিপশন মুছতে 10 মিনিটে আবার 0 পাঠান। এরপর আর বার্তা আসবে না।",
+    "signupInfo": "টেক্সটে CVH সতর্কতা পেতে এখানে সাইন আপ করুন: {link} বন্ধ করতে STOP লিখে উত্তর দিন।"
+  },
+  "smsKeywords": {
+    "yes": "হ্যাঁ, হা"
   },
   "offline": {
     "title": "এই পাতাটি আপনার ফোনে সংরক্ষিত নেই",

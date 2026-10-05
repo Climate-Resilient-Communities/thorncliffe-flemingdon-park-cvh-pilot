@@ -253,6 +253,19 @@ cannot read is recorded as `messaging.service_check_failed` (warning), never tak
 (S09.03) repeat: only named Admins change the Messaging Service, texts are paused while they do, and the check is run again before texts resume
 (`curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config`).
 
+**Messaging Service: Canada-only geo permissions and SMS pumping protection (S07.09, AD-22).** The same daily check reads two more settings: the countries
+the service may text must be Canada and nothing else, and SMS pumping protection must be on. When either is not, it records
+`messaging.service_settings_wrong` (severity error; the detail says which, as two flags) and the health job's `messaging_settings` condition texts the on-call
+Admins once and shows on the Hub until a later check finds both right (`messaging.service_settings_ok`). A setting it cannot read is never taken for right and
+never quieter than wrong: it records a `messaging.service_check_failed` warning (the code, and `check: abuse_settings`) and also
+`messaging.service_settings_wrong` with `unreadable: true`, so the on-call Admins are texted and the Hub shows it until a check reads both settings as right.
+**Launch gate (IT, at the launch rehearsal):** confirm against the production Twilio account where these two settings really live. The adapter
+(`readAbuseSettings` in `src/modules/messaging/adapters/twilioMessagingService.ts`) reads the Messaging Service resource's `sms_pumping_protection`
+(boolean) and `geo_permissions` (the countries' ISO codes); those field names are an assumption, written without a Twilio account to try them against, and
+Twilio may keep geo permissions and pumping protection as account-level settings instead. If the real API names them otherwise or keeps them elsewhere, the
+check alerts on-call every day (`pumping_setting_missing` or `geo_setting_missing`) until the one function is corrected; it never passes silently. Do not
+launch until a check has read both settings as right.
+
 **Pausing texts (S06.06).** No variable, secret or schedule is involved: an Admin signed in with the authenticator (`aal2`) opens Hub, Administration,
 "Pause texts" (`/staff/texts`), gives the reason and presses "Pause all texts". From that moment the dispatcher claims nothing except texts to on-call
 numbers (so a problem with sending is still reported), a text it had already claimed goes back to the queue before it is handed to Twilio, and every Hub
@@ -358,6 +371,26 @@ By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"202
 A confirmation the provider refuses because the number texted STOP (Twilio error 21610), at once or in a later status callback, deletes
 the pending sign-up (`forgetOptedOutSignup`, the sender's and callbacks' `afterFailure` seam): R-06 tells the resident to text START and
 sign up again. Every accepted sign-up, new number or not, answers HTTP 202 `{"v":1,"status":"accepted"}` after the same statements.
+
+## Inbound texts: YES, the welcome and STOP (S07.04)
+
+Twilio forwards every text residents send to the Messaging Service to `POST /api/twilio/inbound`. It adds no environment variable; what it
+needs and fixes:
+
+| What | Where | Value |
+|---|---|---|
+| The inbound webhook | Twilio Console, the Messaging Service's Integration, "Send a webhook" | `PUBLIC_BASE_URL/api/twilio/inbound`, HTTP POST, exactly as written (the signature is checked against that URL, built from `PUBLIC_BASE_URL`). Signed with `TWILIO_AUTH_TOKEN`: without it the route answers 503 and does nothing; a wrong signature is 403 and counts toward the same on-call alert as the status callbacks'. |
+| Advanced Opt-Out | Twilio Console, the Messaging Service's Opt-Out Management | On. STOP, START and HELP are Twilio's to answer (its START and HELP replies carry the sign-up link, launch readiness). **YES must not be an opt-in (START) keyword**: a YES Twilio marks `OptOutType=START` is left to Twilio, and the sign-up is never confirmed. |
+| Replies | catalog `smsTexts.welcome`, `smsTexts.alreadySignedUp`, `smsTexts.deletePrompt`, `smsTexts.signupInfo`, all 15 languages | `welcome` (after YES; purpose `welcome`; reply 0, STOP and the overnight notice, with replies 1, 2 and 3 added by S07.05), `alreadySignedUp` and `deletePrompt` (purpose `prompt_reply`, one text in every language), `signupInfo` (the sign-up link `/{lang}/text-alerts`, purpose `signup_info`, through a 30-minute `inbound_reply` row). |
+| The words for yes | catalog `smsKeywords.yes`, comma-separated | Accepted besides YES and Y, in the number's language (for example `oui`, `sí, si`, `ہاں, جی`). Read, never sent. |
+| The sign-up link to an unknown number | `SIGNUP_INFO_SCOPE` in `src/modules/subscriptions/application/inbound.ts` | At most once in 24 hours per number (a keyed hash in `rate_limit`, scope `signup_info`). |
+| The inbound limit (S07.09) | `INBOUND_LIMIT` in `src/modules/subscriptions/domain/inbound.ts` | More than 20 messages in an hour from one number: the 21st and every later one that day (Toronto) get no reply and change nothing; only the day's count is kept (`inbound_limited_count`: messages, and numbers that reached it). Kept as keyed hashes in `rate_limit` (scopes `inbound`, `inbound_mute`). STOP, the second 0, and Twilio's STOP, START and HELP are decided before this limit and are never limited or counted. |
+| The rate-limit hashes | pg_cron job `subscriptions-purge-rate-limit` (migration `20261006060000_abuse_limits.sql`) | Every hour at :07: every `rate_limit` row older than 24 hours is deleted, whether or not any request comes in. |
+| Old message ids, reply rows and prompts | pg_cron job `subscriptions-purge-inbound` (migration `20261006010000_subscriber_inbound.sql`) | Every 15 minutes: `inbound_seen` hashes after 48 hours, `inbound_reply` rows past their 30 minutes, run-out `sms_prompt` rows. |
+
+STOP (and a second reply 0 within 10 minutes) deletes the subscriber, its places, muted topics and prompt, any pending sign-up and any
+`inbound_reply` row of the number, at once and for good; no record of the number is kept. Only the day's count of each keyword is kept of
+any inbound text.
 
 ## GitHub: environments
 
@@ -549,3 +582,6 @@ ever served under the key of a real model.
   provider must send exactly those bytes; Smart Encoding would rewrite characters after approval and change the segment
   count the estimate was made from (AD-21). It is checked daily (see "Messaging sender"), and every request also sets
   `SmartEncoded=false`.
+- Pre-launch checklist (S07.04, product owner 2026-10-04): on the Messaging Service, Advanced Opt-Out is on, its inbound webhook is
+  `PUBLIC_BASE_URL/api/twilio/inbound` (POST), and **YES is not an opt-in (START) keyword**: Twilio would mark a YES `OptOutType=START`
+  and answer it itself, and the resident's sign-up would never be confirmed. Test it on the verified number before launch.

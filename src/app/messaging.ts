@@ -19,7 +19,7 @@ import {
   type RecipientNumberSources,
 } from "@/modules/messaging";
 import { oncallNumberSource } from "@/modules/ops";
-import { drillNumberSource, pendingSignupNumberSource } from "@/modules/subscriptions";
+import { drillNumberSource, inboundReplyNumberSource, pendingSignupNumberSource, subscriberNumberSource } from "@/modules/subscriptions";
 
 /** The recipient kinds whose numbers `subscriptions` holds. */
 export type SubscriptionsRecipientKind = { [K in RecipientKind]: (typeof RECIPIENT_OWNER)[K] extends "subscriptions" ? K : never }[RecipientKind];
@@ -50,11 +50,19 @@ export function wireContactResolver(owners: OwnerNumberSources, log: MessagingLo
 }
 
 /**
- * The sources the owner modules provide today: ops' on-call roster (S06.07), subscriptions' drill roster (S06.05) and pending sign-ups (S07.02);
- * the others come with their stories (see the header).
+ * The sources the owner modules provide today: ops' on-call roster (S06.07), subscriptions' drill roster (S06.05), pending sign-ups (S07.02),
+ * subscribers and `inbound_reply` rows (S07.04); `staff` comes with its story (see the header).
  */
-function ownerSources(): OwnerNumberSources {
-  return { ops: oncallNumberSource, subscriptions: { roster: drillNumberSource, pending_signup: pendingSignupNumberSource() } };
+export function ownerSources(): OwnerNumberSources {
+  return {
+    ops: oncallNumberSource,
+    subscriptions: {
+      roster: drillNumberSource,
+      pending_signup: pendingSignupNumberSource(),
+      subscriber: subscriberNumberSource(),
+      inbound_reply: inboundReplyNumberSource(),
+    },
+  };
 }
 
 let resolver: ContactResolver | undefined;

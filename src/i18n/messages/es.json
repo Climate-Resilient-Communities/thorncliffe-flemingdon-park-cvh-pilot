@@ -5218,6 +5218,7 @@
       "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
       "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
       "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "messaging_settings": "[EN] The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.",
       "provider_auth": "[EN] Twilio refused the CVH sign-in, so texts are not being sent. Texts to the on-call Admins may not arrive either.",
       "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
@@ -5491,6 +5492,7 @@
         "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
         "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
+        "messaging_settings": "[EN] CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.",
         "provider_auth": "[EN] CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub."
       }
     }
@@ -5522,7 +5524,14 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas."
+    "confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas.",
+    "welcome": "Ya está suscrito a las alertas del CVH. El personal del Hub revisa cada mensaje, así que es posible que las alertas no se envíen de noche. Responda 0 para dejar de recibir mensajes y borrar su suscripción. Responda STOP para dejar de recibirlas.",
+    "alreadySignedUp": "Ya está suscrito a las alertas del CVH.",
+    "deletePrompt": "Envíe 0 otra vez en 10 minutos para borrarse. No recibirá más textos.",
+    "signupInfo": "Para recibir alertas del CVH por mensaje de texto, suscríbase aquí: {link} Responda STOP para dejar de recibirlas."
+  },
+  "smsKeywords": {
+    "yes": "sí, si"
   },
   "offline": {
     "title": "Esta página no está guardada en su teléfono",
