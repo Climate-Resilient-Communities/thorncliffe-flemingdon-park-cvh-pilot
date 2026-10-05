@@ -212,6 +212,12 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           {screen.pauseNotice}
         </p>
       )}
+      {/* Before the decision (S07.08): approving this would take the month's text spending past the monthly cap. It informs; Approve works as always. */}
+      {screen.capNotice && (
+        <p role="note" className="hub-flag hub-wrap" data-testid="cap-notice">
+          {screen.capNotice}
+        </p>
+      )}
       <Problem id="approval-error" message={problem} />
       {changed && (
         <section aria-labelledby="count-title" aria-live="polite" data-testid="count-changed">

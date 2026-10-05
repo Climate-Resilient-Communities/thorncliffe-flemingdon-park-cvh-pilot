@@ -4,8 +4,9 @@ import type { Db, DbTransaction } from "../../platform/db";
 import { readStaffStanding } from "../identity";
 import { addressesOfBuildings, createResidentBuildings, directnessOfTypes, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
-import { createDeliveryQueue, type DeliveryResult } from "../messaging";
+import { createDeliveryQueue, queuedCostCents, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
+import { assessApproval } from "../spend";
 import { NO_ALERTS_YET, createArchiveReader, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type ArchiveReader, type FeedReader } from "./application/feed";
 import { readArchivePage, readClosedSlugs, readClosedThread, readOpenThreads, readStatusThreads } from "./adapters/resident/readThreads";
 import { createCloseAlert } from "./application/closeAlert";
@@ -36,6 +37,8 @@ export interface AlertingWiring {
   queueAlertTexts?: AlertLifecycleDeps["queueAlertTexts"];
   /** messaging's `cancelQueued(entryIds, tx)` (S05.02); see `createAlerting`. Default: messaging's `createDeliveryQueue().cancelQueued`. */
   cancelQueued?: AlertLifecycleDeps["cancelQueued"];
+  /** The spend cap's check (S07.08); see `createAlerting`. Default: spend's `assessApproval` over messaging's `queuedCostCents`, and the ops event of an overrun. */
+  spendCap?: AlertLifecycleDeps["spendCap"];
   /** Cents CAD per text message segment, for each queued text's cost estimate (src/app/staff/alerts.ts gives `getEnv().smsPricePerSegmentCents`). */
   pricePerSegmentCents?: AlertLifecycleDeps["pricePerSegmentCents"];
   /** The catalog's words of the system withdrawal of a discarded web-published post (S08.03; src/app/staff/alerts.ts reads `staff.discard.withdrawnText` in English). */
@@ -146,6 +149,21 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     // point (it locks a row and checks it is still `queued`) cannot overtake.
     cancelQueued: wiring.cancelQueued ?? (async (tx, entryIds) => void (await queue.cancelQueued(entryIds, tx))),
     oncall: wiring.oncall && { required: wiring.oncall.required, hasNumber: wiring.oncall.hasNumber ?? hasOncallNumber },
+    // The monthly spending cap (S07.08): the approval's transaction asks spend how far the month would pass the cap with this entry's texts (the month's
+    // spending, the estimates of the texts still waiting to go, and the entry's own). It warns and never blocks: when the cap is passed the overrun is
+    // recorded as an ops event in the same transaction (the health job texts the on-call Admins, S09.01) and the use case audits it.
+    spendCap:
+      wiring.spendCap ??
+      (async (tx, input) => {
+        const assessment = await assessApproval(tx, {
+          estimateCents: input.entryCostCents,
+          queuedCents: () => queuedCostCents(tx, { exceptEntryId: input.entryId }),
+          now: input.now,
+        });
+        if (assessment.capCents === null || assessment.overCents === 0) return null;
+        await recordOpsEvent(tx, { kind: "spend.cap_overrun", subjectType: "alert_entry", subjectId: input.entryId, detail: { over_cents: assessment.overCents } });
+        return { overCents: assessment.overCents, capCents: assessment.capCents };
+      }),
   });
 }
 

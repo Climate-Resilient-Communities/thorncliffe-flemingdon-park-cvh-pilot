@@ -1500,7 +1500,8 @@
       "directory": "[EN] Directory",
       "texts": "[EN] Pause texts",
       "oncall": "[EN] On-call numbers",
-      "drills": "[EN] Drills"
+      "drills": "[EN] Drills",
+      "spend": "[EN] Spend"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -4942,7 +4943,8 @@
       "finalLead": "[EN] Read exactly what residents will read as the last word of this alert. You approve this version only. If it changes while you read, you review it again.",
       "closingTitle": "[EN] What approving does",
       "closingReach": "[EN] This goes to everyone who got any entry of this alert, on the channels they got it on, and to everyone in the audience above.",
-      "closingCloses": "[EN] Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top."
+      "closingCloses": "[EN] Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top.",
+      "capNotice": "[EN] With this alert, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still approve it: the texts are sent, the overrun is recorded and the on-call Admins are told."
     },
     "incidents": {
       "waitingTitle": "[EN] Waiting for your approval",
@@ -5506,6 +5508,82 @@
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
         "failed": "[EN] The roster was not changed. Try again. If it fails again, tell IT.",
         "unreadable": "[EN] The Hub could not read the drill roster. Reload the page. If this stays, tell IT."
+      }
+    },
+    "spend": {
+      "title": "[EN] Spend",
+      "lead": "[EN] What texts and translation have cost against the pilot budget, and the monthly cap on texts. Texts keep going out when the cap is passed: the cap only warns.",
+      "budget": {
+        "heading": "[EN] Pilot budget",
+        "line": "[EN] Budget: {budget}. Counted so far: {spent}. {left}.",
+        "left": "[EN] {amount} left",
+        "over": "[EN] {amount} over the budget",
+        "incomplete": "[EN] This leaves out Cohere usage whose price is unknown, so the real total is higher."
+      },
+      "period": {
+        "thisMonth": "[EN] This month ({month})",
+        "pilot": "[EN] The pilot to date",
+        "total": "[EN] Counted: {amount}"
+      },
+      "sms": {
+        "heading": "[EN] Text messages",
+        "counted": "[EN] Counted: {amount}",
+        "none": "[EN] No texts have been counted yet.",
+        "actual": "[EN] Actual price of {n} texts the provider billed: {amount}",
+        "actualOne": "[EN] Actual price of 1 text the provider billed: {amount}",
+        "unmatched": "[EN] Unmatched actuals: {amount} for {n} billed texts that no estimate answers for (counted at their actual price, inside the line above)",
+        "unmatchedOne": "[EN] Unmatched actuals: {amount} for 1 billed text that no estimate answers for (counted at its actual price, inside the line above)",
+        "unresolved": "[EN] Unresolved estimates: {amount} for {n} texts, counted at their estimate until the provider's price is matched to them",
+        "unresolvedOne": "[EN] Unresolved estimates: {amount} for 1 text, counted at its estimate until the provider's price is matched to it",
+        "pending": "[EN] Pending reconciliation, {month}: {amount} estimated for {n} texts ({reason})",
+        "pendingOne": "[EN] Pending reconciliation, {month}: {amount} estimated for 1 text ({reason})",
+        "overlap": "[EN] An unresolved estimate and an unmatched actual can be the same text, so these two lines may count it twice.",
+        "reasons": {
+          "not_run": "[EN] the month has not been reconciled yet",
+          "listing_failed": "[EN] the provider's list of texts could not be read",
+          "cut_short": "[EN] the provider's list was cut short",
+          "message_without_price": "[EN] the provider has not priced every text yet",
+          "price_unusable": "[EN] a price could not be converted",
+          "message_malformed": "[EN] a text in the provider's list could not be read"
+        }
+      },
+      "cohere": {
+        "heading": "[EN] Cohere (translation and search)",
+        "none": "[EN] No Cohere usage has been recorded yet.",
+        "priced": "[EN] At a known price: {amount} for {calls} calls",
+        "pricedOne": "[EN] At a known price: {amount} for 1 call",
+        "unknown": "[EN] Price unknown: {calls} calls, {tokens} tokens",
+        "unknownOne": "[EN] Price unknown: 1 call, {tokens} tokens",
+        "estimate": "[EN] Estimate: {amount} for {calls} calls and {tokens} tokens whose price is unknown",
+        "estimateOne": "[EN] Estimate: {amount} for 1 call and {tokens} tokens whose price is unknown",
+        "tokensEstimated": "[EN] Some token counts are estimates of the provider's."
+      },
+      "cap": {
+        "heading": "[EN] Monthly cap on texts",
+        "none": "[EN] No cap is set. Set one to be warned before a month's texts pass it.",
+        "current": "[EN] The monthly cap is {amount}. {percent}% of it is used this month.",
+        "setOn": "[EN] Last set on {when}.",
+        "rule": "[EN] The cap warns and never blocks. An alert that takes the month past it is still approved and sent, the overrun is recorded, and the on-call Admins are texted. Texts to the on-call Admins and replies to STOP are never held back.",
+        "readOnly": "[EN] Only an Admin can change the cap.",
+        "label": "[EN] Monthly cap (CAD)",
+        "hint": "[EN] A dollar amount, for example 250 or 250.50: at least $0.01 and at most $100,000.",
+        "save": "[EN] Save cap",
+        "saving": "[EN] Saving cap",
+        "done": {
+          "set": "[EN] The monthly cap is now {amount}.",
+          "changed": "[EN] The monthly cap changed from {previous} to {amount}."
+        }
+      },
+      "errors": {
+        "missing": "[EN] Type the monthly cap in dollars.",
+        "not_a_number": "[EN] That is not an amount. Use dollars, for example 250 or 250.50.",
+        "too_small": "[EN] The cap must be at least $0.01.",
+        "too_large": "[EN] The cap can be at most $100,000.",
+        "forbidden": "[EN] Only an Admin or a Director can see spend.",
+        "forbiddenCap": "[EN] Only an Admin can change the monthly cap.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the monthly cap. Sign in again and enter the code.",
+        "failed": "[EN] The cap was not changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the spend. Reload the page. If this stays, tell IT."
       }
     }
   },

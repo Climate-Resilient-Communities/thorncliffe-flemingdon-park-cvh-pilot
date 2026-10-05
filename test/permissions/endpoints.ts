@@ -70,6 +70,8 @@ const EVERYONE = { ambassador: "allowed", coordinator: "allowed", director: "all
  * is refused, whatever building they are assigned to.
  */
 const COVERAGE_VIEWERS = { ambassador: "forbidden", coordinator: "allowed", director: "allowed", admin: "allowed", ambassador_out_of_scope: "forbidden" } as const;
+/** The spend view (S07.08): `spend.view` is for an Admin, and a Director read-only; the cap itself is the Admin's alone. */
+const SPEND_VIEWERS = { ambassador: "forbidden", coordinator: "forbidden", director: "allowed", admin: "allowed", ambassador_out_of_scope: "forbidden" } as const;
 /**
  * Choosing who an alert is for (S04.04): `alert.author_wide`, the neighbourhood scope and the neighbourhood-only types, which a
  * Coordinator and an Admin author. An Ambassador (who authors only for assigned buildings, in E08's own screens) and a
@@ -111,6 +113,7 @@ const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
+const SPEND_ACTIONS = "src/app/staff/spend/actions.ts";
 const DRILL_ROSTER_ACTIONS = "src/app/staff/drills/roster/actions.ts";
 const DRILL_START_ACTIONS = "src/app/staff/drills/start/actions.ts";
 
@@ -173,6 +176,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/oncall", kind: "page", file: "src/app/staff/oncall/page.tsx", export: "default", route: "/staff/oncall", action: "oncall.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/spend", kind: "page", file: "src/app/staff/spend/page.tsx", export: "default", route: "/staff/spend", action: "spend.view", writes: "none", gate: "hub", expected: SPEND_VIEWERS },
   { id: "page /staff/drills", kind: "page", file: "src/app/staff/drills/page.tsx", export: "default", route: "/staff/drills", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/drills/roster", kind: "page", file: "src/app/staff/drills/roster/page.tsx", export: "default", route: "/staff/drills/roster", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/drills/start", kind: "page", file: "src/app/staff/drills/start/page.tsx", export: "default", route: "/staff/drills/start", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
@@ -653,6 +657,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { id: "01900000-0000-7000-8000-0000000000e9" },
+    expected: ADMIN_ONLY,
+  },
+  // S07.08: "Save cap" (policy action `spend.cap`, Admins at aal2). Called as an allowed Admin, the save really sets the cap (test/db/permissions.db.test.ts
+  // clears it before each call); a Director, who sees spend read-only, is refused like every other role.
+  {
+    id: `action ${SPEND_ACTIONS}#setCapAction`,
+    kind: "action",
+    file: SPEND_ACTIONS,
+    export: "setCapAction",
+    route: "/staff/spend",
+    action: "spend.cap",
+    writes: "business",
+    gate: "hub",
+    form: { cap: "250" },
     expected: ADMIN_ONLY,
   },
   // S06.05: "Add phone", "Save changes" and "Remove" of the drill roster, and "Start a drill" (policy action `drill.run`, Admins at aal2). Called as an allowed Admin,

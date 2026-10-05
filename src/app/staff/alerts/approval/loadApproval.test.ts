@@ -10,21 +10,23 @@ import type { ApprovalScreen } from "./view";
 const NOTICE = "Texts are paused; this will send when resumed";
 const query = { alert: ALERT, entry: ENTRY };
 
-function deps(options: { review?: ReviewOptions | null; paused?: () => Promise<boolean>; pauseNotice?: ApprovalLoadDeps["pauseNotice"] } = {}) {
+function deps(options: { review?: ReviewOptions | null; paused?: () => Promise<boolean>; pauseNotice?: ApprovalLoadDeps["pauseNotice"]; capNotice?: ApprovalLoadDeps["capNotice"] } = {}) {
   const logError = vi.fn();
   const review = vi.fn(async () => (options.review === null ? null : reviewOf(options.review)));
   const paused = vi.fn(options.paused ?? (async () => false));
   const pauseLog = vi.fn();
+  const capNotice = vi.fn(options.capNotice ?? (async () => null));
   const wired: ApprovalLoadDeps = {
     review,
     plans: async () => PLANS,
     pricePerSegmentCents: () => 1.5,
     residentAlertsEnabled: () => true,
     pauseNotice: options.pauseNotice ?? (() => pauseNoticeForApprover({ paused, logError: pauseLog })),
+    capNotice,
     sending: async () => null,
     logError,
   };
-  return { wired, review, paused, pauseLog, logError };
+  return { wired, review, paused, pauseLog, logError, capNotice };
 }
 
 const screen = (loaded: unknown) => loaded as ApprovalScreen;
@@ -91,5 +93,41 @@ describe("the notice that all texts are paused, on the approval view and its con
     const loaded = screen(await loadApproval(query, APPROVER, d.wired));
     expect(loaded).toMatchObject({ status: "review", pauseNotice: null });
     expect(d.logError).toHaveBeenCalledWith("approval.pause_notice_failed", { error: "RangeError" });
+  });
+});
+
+describe("the notice that the monthly cap would be passed, before the approver decides (S07.08)", () => {
+  const CAP_NOTICE = "With this alert, text spending this month would be about $12.00 CAD, which is $2.00 over the monthly cap of $10.00 CAD.";
+  const recipients = { open: true, total: 3, byLanguage: { en: 2, ur: 1 } };
+
+  it("asks with the entry's own estimate, each text rounded up to a cent as the outbox stores it (2 x 3 + 1 x 6), and shows what it answers", async () => {
+    const d = deps({ review: { recipients }, capNotice: async () => CAP_NOTICE });
+    const loaded = screen(await loadApproval(query, APPROVER, d.wired));
+    expect(d.capNotice).toHaveBeenCalledWith(12);
+    expect(loaded).toMatchObject({ status: "review", capNotice: CAP_NOTICE });
+  });
+
+  it("shows nothing when the cap would not be passed, and the view is otherwise what it is without the notice", async () => {
+    const noticed = screen(await loadApproval(query, APPROVER, deps({ review: { recipients }, capNotice: async () => CAP_NOTICE }).wired));
+    const quiet = screen(await loadApproval(query, APPROVER, deps({ review: { recipients } }).wired));
+    expect(quiet.capNotice).toBeNull();
+    expect({ ...noticed, capNotice: null }).toEqual(quiet);
+  });
+
+  it("is told only for an entry waiting for approval: not asked for an approved one", async () => {
+    const d = deps({ review: { entry: { status: "approved" }, recipients }, capNotice: async () => CAP_NOTICE });
+    expect(screen(await loadApproval(query, APPROVER, d.wired)).capNotice).toBeNull();
+    expect(d.capNotice).not.toHaveBeenCalled();
+  });
+
+  it("never keeps the view from loading: if reading the notice throws it is logged by name and the view is shown without it", async () => {
+    const d = deps({
+      review: { recipients },
+      capNotice: async () => {
+        throw new RangeError("the spend is unreadable");
+      },
+    });
+    expect(screen(await loadApproval(query, APPROVER, d.wired))).toMatchObject({ status: "review", capNotice: null });
+    expect(d.logError).toHaveBeenCalledWith("approval.cap_notice_failed", { error: "RangeError" });
   });
 });

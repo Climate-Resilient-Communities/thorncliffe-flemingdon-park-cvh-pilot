@@ -98,6 +98,9 @@ export function createDeliveryMeasures(): DeliveryMeasures {
 export function createSenderHealth(): SenderHealthReader {
   return drizzleSenderHealth;
 }
+
+/** The estimated cost of the texts waiting to be sent, in whole cents CAD (S07.08: the spend cap counts them before the provider has accepted them). */
+export { queuedCostCents } from "./adapters/queuedCost";
 export {
   LEASE_STALE_AFTER_MS,
   STUCK_QUEUE_AFTER_MS,

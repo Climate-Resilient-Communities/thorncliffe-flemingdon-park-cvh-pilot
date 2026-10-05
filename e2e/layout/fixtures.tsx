@@ -10,6 +10,9 @@ import { HealthBanner } from "@/app/staff/HealthBanner";
 import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
+import { CapFormView } from "@/app/staff/spend/CapFormView";
+import { SpendBody } from "@/app/staff/spend/SpendBody";
+import type { SpendScreen } from "@/app/staff/spend/view";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
 import { ProblemListBody, SendingBody } from "@/app/staff/alerts/sending/SendingBody";
 import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
@@ -958,6 +961,59 @@ export function OncallFixture({
       {banner ? <HealthBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <OncallView count={count} unreadable={unreadable} forms={<OncallFormsView {...form} />} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Spend screen (S07.08), as an Admin sees it (with the cap form) or a Director (read-only: the note in its place): the real body
+ * (SpendBody) on a screen built by the app's own view function (e2e/hub/spend.spec.ts), and the real, behaviour-free cap form (CapFormView) with the state a
+ * press would leave. Every figure is fictional.
+ */
+export function SpendFixture({
+  texts,
+  brand,
+  role,
+  screen,
+  unreadable,
+  form,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  role: "admin" | "director";
+  screen: SpendScreen | null;
+  unreadable?: boolean;
+  form: ComponentProps<typeof CapFormView>;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role }}
+      navigation={texts.navigation}
+      currentPath="/staff/spend"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <SpendBody
+          screen={screen}
+          unreadable={unreadable}
+          form={role === "admin" ? <CapFormView {...form} /> : <p data-testid="cap-read-only">{englishText("staff.spend.cap.readOnly")}</p>}
+        />
       </Screen>
     </HubShell>
   );

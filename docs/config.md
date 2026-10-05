@@ -25,6 +25,8 @@ are in `src/platform/config/env.ts`.
 | `SMS_TRANSACTIONAL_DAILY_CEILING` | no | the daily ceiling on non-alert (`transactional`) texts, menus and prompts included and the texts to on-call numbers not counted (AD-22, S09.01): more than this many created since midnight in Toronto raises the health job's "daily limit" condition, which texts the on-call Admins once that day and shows on the Hub until midnight; texts keep sending. A whole number of at least 1. PROVISIONAL default `300`: the owner confirms it against the sign-ups expected on the busiest day (a launch event). Any environment may set it | default |
 | `EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH` | no | `500` | 2026-10-02 |
 | `EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH` | no | `1000000` | 2026-10-02 |
+| `SPEND_PILOT_BUDGET_CENTS` | no | the pilot's budget in whole cents CAD that the Spend page (S07.08) shows spending against: a whole number of at least 1; default `100000` (CAD 1,000). It is a figure to show, not a limit: the monthly cap an Admin sets on the Hub is stored in the database (`spend_cap`). Any environment may set it | default |
+| `SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION` | no | an estimate rate, in dollars (CAD) per million tokens, for Cohere usage whose price is unknown (S07.08): a positive number with at most four decimals, at most 10000. Unset, such usage is shown on the Spend page as "price unknown" with its calls and tokens and is left out of the totals (which then say so); set, it is shown as a labelled estimate and counted. Not a `COHERE_` variable (it is no credential), so any environment may set it | not set |
 | `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | not yet |
 | `SEARCH_THRESHOLD` | no | default `0.3` (provisional until S03.07) | default |
 | `SEARCH_EMBED_MODEL` | no | default `embed-v4.0` | default |
@@ -352,6 +354,29 @@ $$);
 - *Rounding.* An estimate is rounded up to whole cents per text, so a one-segment text at 1.5 cents is estimated at 2: an estimate may overstate by less than a cent a text and never understates, until its actual replaces it.
 - *A message Twilio never prices.* A month with an outbound message that has no price keeps the whole month pending (its estimates stay counted). If Twilio leaves a failed or cancelled message unpriced for good, the owner decides whether that counts as zero.
 - *Before the first real run.* The Twilio adapter follows Twilio's documentation (the date filters `DateSent>` and `DateSent<` as GMT dates `YYYY-MM-DD`, widened by a day on each side because a date cannot say where in its day an instant is, with the exact interval applied afterwards; `next_page_uri`, `price` and `price_unit`) and has been tested only against a fake. IT checks the first real month's count and total against Twilio's usage page.
+
+## Spend against the budget, and the monthly cap (S07.08)
+
+`/staff/spend` ("Spend", Admins and Directors; a Director read-only) shows text message and Cohere spend for this month (Toronto calendar month) and for the pilot to date against
+`SPEND_PILOT_BUDGET_CENTS`. Text messages are shown the way S06.08 counts them: the actual where a month's reconciliation is complete, with the unmatched actuals and the unresolved
+estimates labelled and shown apart (they may overlap, and the page says so), and a month with no complete reconciliation labelled "pending reconciliation" with its estimates counted. Cohere
+usage with a price is shown at it; usage without one is shown as "price unknown" with its calls and tokens, or as a labelled estimate when `SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION` is set,
+and a total that leaves such usage out says so. None of it is ever shown as zero.
+
+**The monthly cap** is one row, `spend_cap`. An Admin at `aal2` types it in dollars on the Spend page (the policy action `spend.cap`); it is saved with who set it and when, and audited
+(`spend.cap_set`, with the cap afterwards and the one it replaced) in the same transaction. It **warns and never blocks**:
+
+- Before approving, the approval view says when the month's text spending plus the texts still waiting to be sent plus this entry's estimate (each text's own estimate rounded up to a cent, as the
+  outbox stores it) would pass the cap, and by how much. Reaching the cap exactly is within it.
+- The approval's own transaction judges it again, under the `spend_cap` row's lock (last in AD-18's order, so two approvals that overlap are judged one after the other). If the cap is passed the
+  approval still commits and the same transaction records the audit record `spend.cap_overrun` (subject: the entry; `over_cents`, `cap_cents`, `entry_cents`) and the `spend.cap_overrun` ops event,
+  which the health job (S09.01) turns into one `transactional` text to the on-call Admins, once for each new overrun, and a banner on the Hub until the month ends.
+- Nothing else is held back by the cap: not a text to the on-call Admins, not a reply to STOP, not an alert.
+
+**Owner decisions recorded here (S07.08).** (1) The pilot budget is CAD 1,000, set by `SPEND_PILOT_BUDGET_CENTS`, and is a figure to show; the cap is the Admin's to set and starts unset. (2) "Admins are
+notified by a `transactional` text" is met by the on-call roster the health job already texts (`oncall_roster` holds the Admins' numbers); there is no second list. (3) The cap is on text messages only; Cohere
+has its own limit on its key, and its usage is shown beside it. (4) A text counts towards the month when the provider accepts it (S06.08), so the cap also adds the estimate of texts still waiting to be sent
+(queued, or claimed and not settled), which would otherwise let several approvals each look free while the sender is paused or behind.
 
 ## Web sign-up for text alerts (S07.02)
 

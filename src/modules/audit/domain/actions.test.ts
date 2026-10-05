@@ -576,6 +576,33 @@ describe("drill_roster.added, drill_roster.edited and drill_roster.removed (S06.
   });
 });
 
+describe("spend.cap_set and spend.cap_overrun (S07.08)", () => {
+  const cap = (meta: Record<string, unknown>) => event({ action: "spend.cap_set", subjectType: "spend_cap", subjectId: "1", meta } as Partial<AuditEvent>);
+  const overrun = (meta: Record<string, unknown>) =>
+    event({ action: "spend.cap_overrun", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);
+
+  it("record a cap that was set with the cap afterwards, and the one it replaced when there was one, as amounts in cents and nothing else", () => {
+    expect(toAuditRecord(cap({ cap_cents: 25_000 }), "ok")).toMatchObject({ action: "spend.cap_set", subjectType: "spend_cap", subjectId: "1", outcome: "ok", meta: { cap_cents: 25_000 } });
+    expect(toAuditRecord(cap({ cap_cents: 30_000, previous_cents: 25_000 }), "ok").meta).toEqual({ cap_cents: 30_000, previous_cents: 25_000 });
+    expect(() => toAuditRecord(cap({}), "ok")).toThrow("meta is missing cap_cents");
+    expect(() => toAuditRecord(cap({ cap_cents: 1, note: "free text" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("record a refused cap with only its reason", () => {
+    expect(toAuditRecord(cap({ reason: "validation" }), "refused").meta).toEqual({ reason: "validation" });
+  });
+
+  it("record an overrun with by how much, the cap and the entry's own estimate, on the entry that was approved", () => {
+    expect(toAuditRecord(overrun({ over_cents: 125, cap_cents: 10_000, entry_cents: 900 }), "ok")).toMatchObject({
+      action: "spend.cap_overrun",
+      subjectType: "alert_entry",
+      meta: { over_cents: 125, cap_cents: 10_000, entry_cents: 900 },
+    });
+    expect(() => toAuditRecord(overrun({ over_cents: 125 }), "ok")).toThrow("meta is missing cap_cents");
+    expect(() => toAuditRecord(overrun({ over_cents: -1, cap_cents: 1, entry_cents: 1 }), "ok")).toThrow(AuditRecordError);
+  });
+});
+
 describe("oncall.added and oncall.removed (S06.07)", () => {
   const roster = (action: "oncall.added" | "oncall.removed", meta: Record<string, unknown>) =>
     event({ action, subjectType: "oncall_roster", subjectId: "0190c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6", meta } as Partial<AuditEvent>);
