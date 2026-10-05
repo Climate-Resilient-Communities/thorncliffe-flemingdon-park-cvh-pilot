@@ -1698,6 +1698,7 @@
     publish_failed: 'The last directory publish failed. Residents still see the previous directory.',
     transactional_ceiling: 'More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.',
     cap_overrun: 'An approval this month went over the monthly text message spending cap. Texts keep sending.',
+    messaging_settings: 'The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off. Someone could run up texting costs.',
     stale: 'The health check has not run for more than 3 minutes, so a new problem may not be shown here.',
     since: 'Since {when}',
     tell: 'Tell IT now.' } },
@@ -1711,7 +1712,8 @@
     translation_fallback: 'CVH: alerts with a whole language in English because translation failed, last 24 hours: {count}. Check the Hub.',
     publish_failed: 'CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.',
     transactional_ceiling: 'CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.',
-    cap_overrun: 'CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.' } } } });
+    cap_overrun: 'CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.',
+    messaging_settings: 'CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.' } } } });
   /* Adding an update to a running alert (S05.01, O-14 "Add an update", O-13 "Promote to full alert"), the pilot's staff version. In the prototype an update
      is published at once from a template; here the author writes it on the same composer as every entry (the text, where things stand, the valid-until),
      submits it, and a second person approves it. The alert's audience, types and languages are carried over from the entry that covers it. The prototype's

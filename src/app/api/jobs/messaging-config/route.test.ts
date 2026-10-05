@@ -43,11 +43,11 @@ describe("POST /api/jobs/messaging-config", () => {
 
   it("returns what the check found, not cacheable", async () => {
     for (const status of ["smart_encoding_off", "smart_encoding_on", "not_live"]) {
-      state.check = async () => ({ status });
+      state.check = async () => ({ status, settings: "right" });
       const response = await post(`Bearer ${SECRET}`);
       expect(response.status).toBe(200);
       expect(response.headers.get("cache-control")).toBe("no-store");
-      expect(await response.json()).toEqual({ status });
+      expect(await response.json()).toEqual({ status, settings: "right" });
     }
     state.check = async () => ({ status: "unreadable", reason: "http_404" });
     expect(await (await post(`Bearer ${SECRET}`)).json()).toEqual({ status: "unreadable", reason: "http_404" });

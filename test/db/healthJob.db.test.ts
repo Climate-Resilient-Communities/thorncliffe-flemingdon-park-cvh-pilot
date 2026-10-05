@@ -23,6 +23,7 @@ import {
   type OncallRoster,
 } from "../../src/modules/ops";
 import { loadHealthBanner } from "../../src/app/staff/healthBannerModel";
+import { DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING } from "../../src/platform/config/env";
 import { createDb, type Db } from "../../src/platform/db";
 import { dispatcherWorld, fakeProvider, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
@@ -177,7 +178,7 @@ describe("when everything is fine", () => {
     const report = await job().run();
 
     expect(report.conditions.map((row) => [row.condition, row.status, row.holds, row.action])).toEqual(HEALTH_CONDITIONS.map((condition) => [condition, "ok", false, "quiet"]));
-    expect(report.conditions).toHaveLength(10);
+    expect(report.conditions).toHaveLength(11);
     expect(report.heartbeat).toBe(true);
     expect(await oncallTexts()).toEqual([]);
     expect(await healthEvents()).toEqual([]);
@@ -791,6 +792,60 @@ describe("the daily ceiling on non-alert texts", () => {
     await owner.unsafe(`update health_condition set last_alerted_at = (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute' where condition = 'transactional_ceiling'`);
     await world.seedTransactional(3);
     expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+  });
+});
+
+describe("the daily ceiling at its default (S07.09 confirms 300)", () => {
+  it("does not alert at 300 non-alert texts since midnight in Toronto, and alerts once at 301, as an ops_event and a text to on-call, while texts keep sending", async () => {
+    expect(DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING).toBe(300);
+    await addOncall(1);
+    await world.seedTransactional(300);
+    const atCeiling = job({ ceiling: DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING });
+    expect(await reportOf("transactional_ceiling", atCeiling)).toMatchObject({ holds: false, action: "quiet" });
+    expect(await oncallTexts()).toHaveLength(0);
+
+    await world.seedTransactional(1);
+    expect(await reportOf("transactional_ceiling", atCeiling)).toMatchObject({ holds: true, action: "alerted", texts: 1 });
+    expect((await healthEvents()).at(-1)).toMatchObject({ kind: "health.condition_alerted", detail: { condition: "transactional_ceiling", count: 301, notified: 1, first: true } });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("transactional_ceiling", 301)]);
+    expect(await owner`select count(*)::int as n from delivery where purpose <> 'oncall_alert' and state = 'queued'`).toEqual([{ n: 301 }]);
+
+    // More texts the same day: not alerted again.
+    await world.seedTransactional(5);
+    await backdateAlertWithinToday("transactional_ceiling", 120);
+    expect(await reportOf("transactional_ceiling", atCeiling)).toMatchObject({ holds: true, action: "held" });
+    expect(await oncallTexts()).toHaveLength(1);
+  });
+});
+
+describe("the Messaging Service's geo permissions and SMS pumping protection found wrong (S07.09)", () => {
+  const found = (kind: "wrong" | "ok") =>
+    owner.unsafe(
+      `insert into ops_event (kind, severity, detail) values ('messaging.service_settings_${kind}', '${kind === "wrong" ? "error" : "info"}', '${kind === "wrong" ? '{"geo_not_canada_only": true, "pumping_protection_off": false}' : "{}"}')`,
+    );
+
+  it("texts the on-call Admins once, then holds until a later daily check finds both right, then records the recovery", async () => {
+    await addOncall(2);
+    await found("wrong");
+    expect(await reportOf("messaging_settings")).toMatchObject({ holds: true, action: "alerted", texts: 2 });
+    expect((await oncallTexts()).map((row) => row.body)).toEqual([oncallText("messaging_settings", 1), oncallText("messaging_settings", 1)]);
+    expect((await healthEvents()).at(-1)).toMatchObject({ detail: { condition: "messaging_settings", count: 1, notified: 2, first: true } });
+
+    await backdateAlert("messaging_settings", 300);
+    expect(await reportOf("messaging_settings")).toMatchObject({ holds: true, action: "held" });
+
+    await found("ok");
+    expect(await reportOf("messaging_settings")).toMatchObject({ holds: false, action: "recovered" });
+    expect(await reportOf("messaging_settings")).toMatchObject({ action: "quiet" });
+    expect(await oncallTexts()).toHaveLength(2);
+  });
+
+  it("is quiet when the check has only ever found both right, and the Hub's banner names it for an Admin while it holds", async () => {
+    await found("ok");
+    expect(await reportOf("messaging_settings")).toMatchObject({ holds: false, action: "quiet" });
+    await found("wrong");
+    await reportOf("messaging_settings");
+    expect((await activeHealthConditions(app)).map((row) => row.condition)).toEqual(["messaging_settings"]);
   });
 });
 

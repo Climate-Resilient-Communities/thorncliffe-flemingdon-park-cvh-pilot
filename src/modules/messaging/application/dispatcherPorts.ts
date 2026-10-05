@@ -39,9 +39,18 @@ export interface MessageSubmitter {
 /** What the Messaging Service's settings say about Smart Encoding (the one setting the daily check reads). */
 export type SmartEncodingReading = { kind: "read"; smartEncoding: boolean } | { kind: "unreadable"; reason: string };
 
-/** Port: reads the Messaging Service's Smart Encoding setting (the Twilio adapter; nothing else about the service is read or changed). */
+/**
+ * The Messaging Service's two protections against abuse (S07.09, AD-22): `geoCanadaOnly` is true when the countries the service may text are
+ * Canada and nothing else, `pumpingProtection` true when SMS pumping protection is on.
+ */
+export type AbuseSettingsReading = { kind: "read"; geoCanadaOnly: boolean; pumpingProtection: boolean } | { kind: "unreadable"; reason: string };
+
+/** Port: reads the Messaging Service's settings that the daily check judges (the Twilio adapter; nothing about the service is changed). */
 export interface MessagingServiceReader {
   readSmartEncoding(messagingServiceSid: string): Promise<SmartEncodingReading>;
+  readAbuseSettings(messagingServiceSid: string): Promise<AbuseSettingsReading>;
+  /** Both readings from one fetch of the service, so they cannot disagree and the daily check makes one call. */
+  readBoth(messagingServiceSid: string): Promise<{ encoding: SmartEncodingReading; settings: AbuseSettingsReading }>;
 }
 
 /** Where the dispatcher sends: a provider (production, with its credentials), or nowhere (`SMS_MODE=log`: no provider, no credentials). */
@@ -175,6 +184,8 @@ export const MESSAGING_OPS_EVENT_KINDS = [
   "messaging.smart_encoding_on",
   "messaging.smart_encoding_off",
   "messaging.service_check_failed",
+  "messaging.service_settings_wrong",
+  "messaging.service_settings_ok",
   // The status callbacks (S06.04).
   "delivery.unknown_resolved",
   "delivery.callback_ignored",
@@ -188,7 +199,9 @@ export type MessagingOpsEvent =
   | { kind: "dispatch.provider_auth_failed"; detail: { http_status: number } }
   | { kind: "messaging.smart_encoding_on"; detail: Record<string, never> }
   | { kind: "messaging.smart_encoding_off"; detail: Record<string, never> }
-  | { kind: "messaging.service_check_failed"; detail: { reason: string } }
+  | { kind: "messaging.service_check_failed"; detail: { reason: string; check?: "smart_encoding" | "abuse_settings" } }
+  | { kind: "messaging.service_settings_wrong"; detail: { geo_not_canada_only: boolean; pumping_protection_off: boolean; unreadable?: boolean } }
+  | { kind: "messaging.service_settings_ok"; detail: Record<string, never> }
   | { kind: "delivery.unknown_resolved"; deliveryId: string; detail: { status: CallbackTarget } }
   /** `deliveryId` when the callback named a delivery that exists. */
   | { kind: "delivery.callback_ignored"; deliveryId?: string; detail: { reason: CallbackIgnoredReason } }

@@ -285,3 +285,22 @@ export const inboundKeywordCount = pgTable(
     pgPolicy("inbound_keyword_count_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();
+
+/**
+ * Per day (Toronto), how many inbound messages were left unanswered because their number sent more than 20 in an hour, and how many numbers
+ * reached that limit (S07.09). Counts only: the limit itself is kept as keyed hashes in `rate_limit`.
+ */
+export const inboundLimitedCount = pgTable(
+  "inbound_limited_count",
+  {
+    day: date().primaryKey(),
+    messages: integer().notNull().default(0),
+    numbers: integer().notNull().default(0),
+  },
+  (t) => [
+    check("inbound_limited_count_not_negative", sql`${t.messages} >= 0 and ${t.numbers} >= 0`),
+    pgPolicy("inbound_limited_count_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("inbound_limited_count_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("inbound_limited_count_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();

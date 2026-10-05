@@ -79,7 +79,8 @@ export const DELIVERY_UNKNOWN_CAUSES = [
  * outside a pause; a delivery that became `unknown` (or a hand-off the sweep could not settle); no sender running while texts are due; Smart
  * Encoding found on; webhook signature failures past 5 in 10 minutes (S06.07); and, from S09.01, a scheduled job that failed (a failed pg_cron
  * run, or a job's call that did not answer 2xx); a whole language falling back to English in an alert; a directory publish that failed and has
- * not been followed by one that succeeded; the daily ceiling on non-alert texts crossed; and a spending cap overrun this month. The same codes
+ * not been followed by one that succeeded; the daily ceiling on non-alert texts crossed; a spending cap overrun this month; and, from S07.09, the
+ * Messaging Service allowing more than Canada or having SMS pumping protection off. The same codes
  * as `health_condition.condition`, in the order the Hub's banner lists them.
  */
 export const HEALTH_CONDITIONS = [
@@ -93,6 +94,7 @@ export const HEALTH_CONDITIONS = [
   "publish_failed",
   "transactional_ceiling",
   "cap_overrun",
+  "messaging_settings",
 ] as const;
 export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
 
@@ -178,7 +180,21 @@ export const OPS_EVENT_KINDS = {
   /** The daily check could not read the Messaging Service's setting (S06.02), so it cannot say Smart Encoding is off. A code only. */
   "messaging.service_check_failed": {
     severity: "warning",
-    detail: z.strictObject({ reason: code }),
+    detail: z.strictObject({ reason: code, check: z.enum(["smart_encoding", "abuse_settings"]).optional() }),
+  },
+  /**
+   * The daily check found the Messaging Service's geo permissions allowing more than Canada, or SMS pumping protection off (S07.09, AD-22): the
+   * on-call Admin is alerted (the health job's `messaging_settings`). The detail says which, as flags; nothing else.
+   */
+  "messaging.service_settings_wrong": {
+    severity: "error",
+    // `unreadable`: the check could not read the settings, which is never quieter than finding them wrong (S07.09).
+    detail: z.strictObject({ geo_not_canada_only: z.boolean(), pumping_protection_off: z.boolean(), unreadable: z.boolean().optional() }),
+  },
+  /** The daily check found both protections as they must be (S07.09): the health job reads it as the end of an earlier "wrong". At most one a day. */
+  "messaging.service_settings_ok": {
+    severity: "info",
+    detail: z.strictObject({}),
   },
   /**
    * The health job found a condition and texted the on-call Admins (S06.07). `count` is how many things the condition counts (stuck texts, unknown

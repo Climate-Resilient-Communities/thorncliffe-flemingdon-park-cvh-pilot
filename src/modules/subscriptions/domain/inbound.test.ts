@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LAUNCH_CODES } from "../../../i18n/languages";
 import { residentText } from "../../../i18n/residentTexts";
-import { INBOUND_KEYWORDS, decide, isMessageSid, normaliseReply, readKeyword, yesWordsOf, type InboundKeyword, type NumberState } from "./inbound";
+import { INBOUND_KEYWORDS, INBOUND_LIMIT, decide, exemptFromInboundLimit, isMessageSid, normaliseReply, readKeyword, yesWordsOf, type InboundKeyword, type NumberState } from "./inbound";
 
 const key = (body: string, optOutType: string | null = null, yesWords: readonly string[] = []) => readKeyword({ body, optOutType, yesWords });
 
@@ -115,5 +115,35 @@ describe("a Twilio MessageSid", () => {
     expect(isMessageSid(`SM${"a".repeat(32)}`)).toBe(true);
     expect(isMessageSid(`MM${"0".repeat(32)}`)).toBe(true);
     for (const bad of [null, undefined, "", "SM123", `XX${"a".repeat(32)}`, `SM${"g".repeat(32)}`]) expect(isMessageSid(bad)).toBe(false);
+  });
+});
+
+describe("the inbound limit (S07.09, E07 'Inbound order': opt-out events and deletion before rate limits)", () => {
+  const states: NumberState[] = [{ kind: "none" }, { kind: "pending" }, { kind: "active", prompt: "none" }, { kind: "active", prompt: "delete_confirm" }];
+
+  it("is 20 messages in an hour", () => {
+    expect(INBOUND_LIMIT).toEqual({ perHour: 20, windowMs: 3_600_000 });
+  });
+
+  it("never limits a deletion request (either 0) or an opt-out event, whatever the number's state", () => {
+    for (const state of states) {
+      expect(exemptFromInboundLimit("stop", decide("stop", state).action)).toBe(true);
+      expect(exemptFromInboundLimit("start", decide("start", state).action)).toBe(true);
+      expect(exemptFromInboundLimit("help", decide("help", state).action)).toBe(true);
+    }
+    // The second 0 within 10 minutes is a deletion.
+    expect(exemptFromInboundLimit("0", decide("0", { kind: "active", prompt: "delete_confirm" }).action)).toBe(true);
+    // The first 0 opens the confirmation: it is a deletion request too, so a limited subscriber can still start leaving.
+    expect(exemptFromInboundLimit("0", decide("0", { kind: "active", prompt: "none" }).action)).toBe(true);
+  });
+
+  it("limits everything else: a YES, a menu choice, any other text, from any state", () => {
+    for (const state of states) {
+      for (const keyword of ["yes", "0", "1", "2", "3", "other"] as const) {
+        const { action } = decide(keyword, state);
+        expect(exemptFromInboundLimit(keyword, action), `${keyword} in ${JSON.stringify(state)}`).toBe(action.kind === "delete" || action.kind === "ask_delete");
+      }
+    }
+    expect(exemptFromInboundLimit("0", decide("0", { kind: "none" }).action)).toBe(false);
   });
 });

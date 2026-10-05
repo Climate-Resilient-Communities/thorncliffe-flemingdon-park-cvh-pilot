@@ -1,12 +1,22 @@
 // The inbound router's own tables (S07.04): the MessageSid hashes that make a retried webhook do nothing, the daily keyword counts, the
 // short-lived `inbound_reply` rows that hold a number with no subscription until its one reply is handed off, and the once-a-day limit of
 // that reply (a keyed hash of the number in `rate_limit`, deleted after 24 hours). Every statement runs in the caller's transaction.
-import { and, eq, gt, lt, sql } from "drizzle-orm";
+import { and, count, eq, gt, lt, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
-import { inboundKeywordCount, inboundReply, inboundSeen, rateLimit } from "./schema";
+import { INBOUND_SCOPE } from "../domain/inbound";
+import { inboundKeywordCount, inboundLimitedCount, inboundReply, inboundSeen, rateLimit } from "./schema";
 
 /** The day a keyword is counted under: the date in Toronto, by the database's clock. */
 const TORONTO_DAY = sql`(now() at time zone 'America/Toronto')::date`;
+
+/** The scopes of the inbound limit's keyed hashes in `rate_limit` (S07.09): one row per counted message, and one row for a number that reached the limit. */
+export const INBOUND_MUTE_SCOPE = "inbound_mute";
+
+/** Midnight in Toronto that began today, by the database's clock. */
+const TORONTO_DAY_START = sql`(date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto')`;
+
+/** What the inbound limit decided for one message: counted and let through, the one that reached the limit, or one after it that day. */
+export type InboundLimitResult = "allowed" | "reached" | "muted";
 
 export const inboundStore = {
   /** Records the message as seen; false when it was seen before (a retry): then nothing else is done. */
@@ -21,6 +31,39 @@ export const inboundStore = {
       .insert(inboundKeywordCount)
       .values({ day: TORONTO_DAY as unknown as string, keyword, count: 1 })
       .onConflictDoUpdate({ target: [inboundKeywordCount.day, inboundKeywordCount.keyword], set: { count: sql`${inboundKeywordCount.count} + 1` } });
+  },
+
+  /**
+   * The inbound limit (S07.09), by the database's clock, for a message that is not a deletion or an opt-out event. `hash` is the number's keyed
+   * hash; the caller holds the number's lock, so two messages from one number cannot both take the last place. A number with a mute row from
+   * today (Toronto) gets `muted`. Otherwise it is counted: with fewer than `perHour` counted messages in the last hour the message is counted
+   * and `allowed`; at that many, this message is not counted, the number is muted for the rest of the day and the result is `reached`. A
+   * `reached` or `muted` message is added to the day's count of unanswered messages (counts only). Old hashes are deleted as they pass 24 hours.
+   */
+  async limitInbound(tx: DbTransaction, hash: string, limit: { perHour: number; windowMs: number }): Promise<InboundLimitResult> {
+    const mutes = await tx
+      .select({ today: sql<boolean>`${rateLimit.at} >= ${TORONTO_DAY_START}` })
+      .from(rateLimit)
+      .where(and(eq(rateLimit.scope, INBOUND_MUTE_SCOPE), eq(rateLimit.clientHash, hash)));
+    if (mutes.some((mute) => mute.today)) {
+      await countLimited(tx, false);
+      return "muted";
+    }
+    // A number muted on an earlier day starts the new day clean: its counted messages from before midnight do not count towards today's limit.
+    const windowStart = sql`now() - ${limit.windowMs / 1000} * interval '1 second'`;
+    const since = mutes.length > 0 ? sql`greatest(${windowStart}, ${TORONTO_DAY_START})` : windowStart;
+    const [row] = await tx
+      .select({ n: count() })
+      .from(rateLimit)
+      .where(and(eq(rateLimit.scope, INBOUND_SCOPE), eq(rateLimit.clientHash, hash), gt(rateLimit.at, since)));
+    if ((row?.n ?? 0) >= limit.perHour) {
+      await tx.insert(rateLimit).values({ scope: INBOUND_MUTE_SCOPE, clientHash: hash, at: sql`now()` as unknown as Date });
+      await countLimited(tx, true);
+      return "reached";
+    }
+    await tx.insert(rateLimit).values({ scope: INBOUND_SCOPE, clientHash: hash, at: sql`now()` as unknown as Date });
+    await tx.delete(rateLimit).where(lt(rateLimit.at, sql`now() - interval '24 hours'`));
+    return "allowed";
   },
 
   /** A new `inbound_reply` row for the number: its id, its `expires_at` (30 minutes on) and the database's now() it was made at. */
@@ -68,5 +111,16 @@ export const inboundStore = {
     return true;
   },
 };
+
+/** Adds one unanswered message to today's count, and one number when it is the one that reached the limit. */
+async function countLimited(tx: DbTransaction, newNumber: boolean): Promise<void> {
+  await tx
+    .insert(inboundLimitedCount)
+    .values({ day: TORONTO_DAY as unknown as string, messages: 1, numbers: newNumber ? 1 : 0 })
+    .onConflictDoUpdate({
+      target: inboundLimitedCount.day,
+      set: { messages: sql`${inboundLimitedCount.messages} + 1`, numbers: newNumber ? sql`${inboundLimitedCount.numbers} + 1` : inboundLimitedCount.numbers },
+    });
+}
 
 export type InboundStore = typeof inboundStore;

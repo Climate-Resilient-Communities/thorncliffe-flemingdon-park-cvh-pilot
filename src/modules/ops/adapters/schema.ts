@@ -80,7 +80,7 @@ export const healthCondition = pgTable(
   (t) => [
     check(
       "health_condition_known",
-      sql`${t.condition} in ('queue_stuck', 'delivery_unknown', 'sender_stalled', 'smart_encoding_on', 'signature_failures', 'job_failed', 'translation_fallback', 'publish_failed', 'transactional_ceiling', 'cap_overrun')`,
+      sql`${t.condition} in ('queue_stuck', 'delivery_unknown', 'sender_stalled', 'smart_encoding_on', 'signature_failures', 'job_failed', 'translation_fallback', 'publish_failed', 'transactional_ceiling', 'cap_overrun', 'messaging_settings')`,
     ),
     check("health_condition_since_stated", sql`${t.active} = (${t.since} is not null)`),
     pgPolicy("health_condition_app_select", { for: "select", to: cvhApp, using: sql`true` }),
