@@ -155,6 +155,14 @@ const backdateAlertWithinToday = (condition: HealthCondition, minutes: number) =
   owner.unsafe(`update health_condition
                    set last_alerted_at = greatest(now() - interval '${minutes} minutes', (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto'))
                  where condition = '${condition}'`);
+/**
+ * Moves the last alert to the day before in Toronto, and past the 30-minute text interval: a minute before midnight, or 31 minutes back
+ * when that is earlier. A test run just after midnight would otherwise put the alert inside the interval, when holding is right.
+ */
+const backdateAlertBeforeToday = (condition: HealthCondition) =>
+  owner.unsafe(`update health_condition
+                   set last_alerted_at = least(now() - interval '31 minutes', (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute')
+                 where condition = '${condition}'`);
 const reportOf = async (condition: HealthCondition, run: HealthJob = job()) => (await run.run()).conditions.find((row) => row.condition === condition);
 
 /** What must hold of everything the job stored: no on-call number anywhere. */
@@ -789,7 +797,7 @@ describe("the daily ceiling on non-alert texts", () => {
     expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: false, action: "recovered" });
 
     // The next day (the last text was before midnight in Toronto), crossed again.
-    await owner.unsafe(`update health_condition set last_alerted_at = (date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '1 minute' where condition = 'transactional_ceiling'`);
+    await backdateAlertBeforeToday("transactional_ceiling");
     await world.seedTransactional(3);
     expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: true, action: "alerted", texts: 1 });
   });
