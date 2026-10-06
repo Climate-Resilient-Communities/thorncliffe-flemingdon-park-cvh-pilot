@@ -66,6 +66,13 @@ export interface RecipientEntry {
    * correction or a withdrawal needs none (it adds `supersedesId`'s), and a missing list means exactly that. A drill never uses it.
    */
   priorEntryIds?: readonly string[];
+  /**
+   * S08.06: subscribers whose rows the capture locks `FOR SHARE` in its one id-ordered statement together with the recipients', without making them
+   * recipients: the candidate requesters of the check-in round the approval starts, which checkins' `ensureRound` then reads under those locks. All the
+   * subscriber rows of one approval are so taken in one id order (AD-18), as the end-of-pilot campaign's `lockActive` takes them: in two passes, a
+   * requester whose id is below a recipient's would be locked after it, and the two could deadlock. Never for a drill.
+   */
+  alsoLock?: readonly string[];
   /** The audience frozen with the entry (AD-7): the one value the matcher takes. */
   audience: Audience;
   types: readonly string[];
@@ -124,14 +131,15 @@ export async function countRecipients(entry: RecipientEntry, executor: DbExecuto
  * The people the approval texts, read inside the approval's transaction `tx` (the same one that marks the entry approved, raises
  * feed_version and audits it: all of it commits, or none). A drill: every member of the drill roster, locked `FOR SHARE`, with their own language
  * (the approval gives the English text where the entry has none in it) and no number. A real entry: the receiving subscribers its audience matches and the
- * earlier entries' recipients still there (see the header), locked `FOR SHARE` in id order, each once, with the language they have now. Writes nothing.
+ * earlier entries' recipients still there (see the header), locked `FOR SHARE` in id order, each once, with the language they have now, and the rows of
+ * `alsoLock` locked in that same statement (S08.06). Writes nothing.
  */
 export async function captureRecipients(entry: RecipientEntry, tx: DbTransaction): Promise<readonly AlertRecipient[]> {
   if (entry.isDrill) {
     const members = await drillRosterStore.membersForShare(tx);
     return members.map((member): AlertRecipient => ({ kind: "roster", id: member.id, lang: member.lang }));
   }
-  const reached = await recipientStore.reachedForShare(tx, entry.audience, await subscribersQueuedFor(tx, priorEntries(entry)));
+  const reached = await recipientStore.reachedForShare(tx, entry.audience, await subscribersQueuedFor(tx, priorEntries(entry)), entry.alsoLock);
   return reached.map((person): AlertRecipient => ({ kind: "subscriber", id: person.id, lang: person.lang }));
 }
 

@@ -2,7 +2,8 @@
 // identity fake (playwright.staff.config.ts): an Admin at aal2 finds Coverage in the Hub's menu, assigns an
 // Ambassador to all floors and to chosen floors (ticked, and as a range), is refused with the reason, removes an
 // assignment, and sees the floor-removal refusal list the Ambassador; a Coordinator and a Director see the coverage
-// read-only, an Ambassador sees neither the item nor the page; every change is audited.
+// read-only, an Ambassador sees neither the item nor the page; every change is audited. S08.06: an Admin changes which types start a check-in
+// round, and a Director reads them.
 import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
@@ -286,4 +287,37 @@ test("a building that is not there says so", async ({ page }) => {
   await signIn(page, "admin");
   await page.goto("/staff/coverage?building=123");
   await expect(page.locator(`p[role="alert"]`)).toHaveText("That building does not exist.");
+});
+
+// S08.06: which types of disruption start a check-in round, below the list. The round types are the whole database's, so the test puts the pilot's
+// (heat and power) back whatever happens.
+test("an Admin changes which types start a check-in round, audited with the types before and after; a Director reads them in words", async ({ page, browser }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const admin = await signIn(page, "admin");
+  try {
+    await page.goto("/staff/coverage");
+    const rounds = page.getByTestId("round-types");
+    await expect(rounds.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat, Power.");
+    await rounds.getByRole("checkbox", { name: "Power" }).uncheck();
+    await rounds.getByRole("button", { name: "Save round types" }).click();
+    await expect(rounds.getByTestId("round-types-answer")).toHaveText("Saved. Types that start a round from the next approval: Heat.");
+    await expect(rounds.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat.");
+    expect((await sql`select id from disruption_type where checkin order by id`).map((row) => row.id)).toEqual(["heat"]);
+    const [audit] = await sql`select outcome, subject_type, meta from audit_event where action = 'round_types.changed' and actor_staff_id = ${admin.id} order by id desc limit 1`;
+    expect(audit).toMatchObject({ outcome: "ok", subject_type: "disruption_type", meta: { round_types: ["heat"], previous: ["heat", "power"] } });
+    // The same again changes nothing, and says so.
+    await rounds.getByRole("button", { name: "Save round types" }).click();
+    await expect(rounds.getByTestId("round-types-error")).toHaveText("Nothing to change: those are the round types already.");
+
+    const other = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const director = await other.newPage();
+    await signIn(director, "director");
+    await director.goto("/staff/coverage");
+    await expect(director.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat.");
+    await expect(director.getByTestId("round-types-read-only")).toHaveText("Only an Admin can change which types start a round.");
+    await expect(director.getByTestId("round-types").locator("form, button, input")).toHaveCount(0);
+    await other.close();
+  } finally {
+    await sql`update disruption_type set checkin = (id in ('heat', 'power'))`;
+  }
 });

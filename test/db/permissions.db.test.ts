@@ -34,7 +34,7 @@ import { createCampaigns, createDrillRoster, createRateLimiter, createSignup } f
 import { createOncallRoster } from "../../src/modules/ops";
 import { createSpendCap, readSpendOverview } from "../../src/modules/spend";
 import { noTranslation } from "../../src/modules/translation";
-import { createBuildingService, floorsOfBuilding } from "../../src/modules/places";
+import { createBuildingService, createRoundTypes, floorsOfBuilding } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
 import { memoryDirectoryStorage } from "../../src/modules/directory";
@@ -49,6 +49,7 @@ const wired = vi.hoisted(() => ({
   sessions: null as null | (() => unknown),
   assignments: [] as unknown[],
   places: null as unknown,
+  roundTypes: null as unknown,
   assignmentService: null as unknown,
   alerting: null as unknown,
   alertSubmitter: null as unknown,
@@ -80,8 +81,8 @@ vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 // The providers screen (S02.04) reads and writes through the app's database connection.
 // "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
 vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));
-// The buildings page and its actions (S01.13) read and write through the places module on the app's own connection.
-vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }));
+// The buildings page and its actions (S01.13), and the coverage page's round types and their action (S08.06), read and write through the places module on the app's own connection.
+vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places, roundTypes: () => wired.roundTypes, logPlacesError: () => {} }));
 // The coverage page and its actions (S01.14) read and write through identity's assignments on the app's own connection.
 vi.mock("../../src/app/staff/assignments", () => ({ assignments: () => wired.assignmentService }));
 // Its count of check-in requests on uncovered floors (S08.05) reads subscriptions' requests on the same connection.
@@ -310,6 +311,11 @@ beforeEach(async () => {
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
     assignments: { onFloor: (executor, floor) => assignmentService.onFloor(executor, floor) },
+  });
+  // S08.06: the coverage page's round types and their action, on the same connection and audit trail.
+  wired.roundTypes = createRoundTypes({
+    db: app,
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
   });
   // Two usable Admins and a completed bootstrap, as the Hub runs; and the account the account actions aim at.
   const first = await account("admina", "admin", { enrolled: true });

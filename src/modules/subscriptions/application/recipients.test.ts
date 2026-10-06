@@ -19,7 +19,7 @@ const reach = vi.hoisted(() => ({ people: [] as { id: string; lang: string }[], 
 vi.mock("../adapters/recipientStore", () => ({
   recipientStore: {
     reached: async (_executor: unknown, audience: unknown, earlier: readonly string[]) => (reach.calls.push(["reached", audience, earlier]), reach.people),
-    reachedForShare: async (_tx: unknown, audience: unknown, earlier: readonly string[]) => (reach.calls.push(["reachedForShare", audience, earlier]), reach.people),
+    reachedForShare: async (_tx: unknown, audience: unknown, earlier: readonly string[], alsoLock?: readonly string[]) => (reach.calls.push(["reachedForShare", audience, earlier, alsoLock]), reach.people),
   },
 }));
 vi.mock("../../messaging", () => ({
@@ -74,6 +74,12 @@ describe("a real entry's recipients (S07.07, AD-7, AR-11)", () => {
     ]);
     expect(reach.calls.map((call) => call[0])).toEqual(["queuedFor", "reachedForShare"]);
     expect(roster.reads).toEqual([]);
+  });
+
+  it("hands a round's requesters (S08.06) to the store's one locking call, beside the recipients, who are the store's answer alone", async () => {
+    reach.people = [{ id: S2, lang: "en" }];
+    expect(await captureRecipients(entry({ alsoLock: [S1, S3] }), untouchable)).toEqual([{ kind: "subscriber", id: S2, lang: "en" }]);
+    expect(reach.calls.filter((call) => call[0] === "reachedForShare")).toEqual([["reachedForShare", audience, [], [S1, S3]]]);
   });
 
   it("adds the recipients of the entry a correction or a withdrawal replaces, and only theirs", async () => {

@@ -2590,4 +2590,24 @@
           no_campaign: 'There is no campaign yet, so sign-ups are open.',
           failed: 'Nothing changed. Try again. If it fails again, tell IT.',
           unreadable: 'The Hub could not read the campaign. Reload the page. If this stays, tell IT.' } } } });
+  /* S08.06: which types of disruption start a check-in round (E08 "Round types"), on the coverage page: every role that sees coverage reads them, and
+     an Admin changes them. Staff screens are in English. Not a prototype screen. */
+  m(en, { staff: { coverage: { rounds: {
+    heading: 'Check-in rounds',
+    lead: 'When the Hub approves an alert of one of these types, a check-in round starts: the ambassadors check on the residents who asked, on the floors they cover. A drill never starts one.',
+    current: 'Types that start a round now: {types}.',
+    none: 'No type starts a round now, so no alert starts a check-in round.',
+    legend: 'Types that start a round',
+    hint: 'A change applies from the next approval. A round already started keeps everyone in it until its alert closes.',
+    save: 'Save round types',
+    saving: 'Saving',
+    readOnly: 'Only an Admin can change which types start a round.',
+    done: 'Saved. Types that start a round from the next approval: {types}.',
+    doneNone: 'Saved. From the next approval, no alert starts a check-in round.',
+    errors: {
+      forbidden: 'Only an Admin can change which types start a round.',
+      aal2Required: 'An Admin must sign in with their authenticator code to change which types start a round. Sign in again and enter the code.',
+      unknownType: 'One of those is not a type of disruption. Reload the page and try again.',
+      noChange: 'Nothing to change: those are the round types already.',
+      failed: 'Nothing changed. Try again. If it fails again, tell IT.' } } } } });
 })();

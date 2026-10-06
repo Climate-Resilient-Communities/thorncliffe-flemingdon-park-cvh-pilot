@@ -47,6 +47,16 @@ export async function neighbourhoodsOfBuildings(executor: DbExecutor, rsns: read
 }
 
 /**
+ * The buildings of the neighbourhoods given, by rsn in rsn order (a neighbourhood that does not exist names none): the buildings a neighbourhood audience
+ * covers, where an approval looks for the check-in requests of its round (S08.06). alerting may not import the table, so it reads it here.
+ */
+export async function buildingsOfNeighbourhoods(executor: DbExecutor, neighbourhoodIds: readonly string[]): Promise<string[]> {
+  if (neighbourhoodIds.length === 0) return [];
+  const rows = await executor.select({ rsn: building.rsn }).from(building).where(inArray(building.neighbourhoodId, [...neighbourhoodIds])).orderBy(asc(building.rsn));
+  return rows.map((row) => row.rsn);
+}
+
+/**
  * The address of each building given, by rsn, read through the executor given (a building that is not there is left out): what an ambassador's post names
  * in its texts, "Building ambassador, {building}" (S08.02). alerting may not import the table, so it reads it here.
  */

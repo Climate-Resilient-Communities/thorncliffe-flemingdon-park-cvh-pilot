@@ -5,6 +5,7 @@
 import { englishText } from "@/i18n/text";
 import { floorCoverage, type AmbassadorOption, type AssignmentView } from "@/modules/identity";
 import type { BuildingFloorPlan } from "@/modules/places";
+import type { RoundTypesView } from "./rounds/roundTypes";
 
 const t = (key: string, values?: Record<string, string | number>) => englishText(`staff.coverage.${key}`, values);
 
@@ -36,6 +37,8 @@ export interface CoverageListView {
   notice?: string;
   empty?: string;
   groups: { id: string; name: string; items: CoverageItemView[] }[];
+  /** S08.06: which types of disruption start a check-in round (./roundTypes.ts), below the buildings; the page always gives it. */
+  rounds?: RoundTypesView;
 }
 
 export interface FloorStateView {
