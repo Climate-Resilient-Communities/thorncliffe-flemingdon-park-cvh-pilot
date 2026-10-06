@@ -6,7 +6,9 @@
 // only to the drill roster); the rehearsal; the start in one transaction (every active subscriber asked in their language with a prompt and one text, every
 // pending sign-up deleted, sign-ups closed, audited with counts; a retried request and a second start change nothing; a sign-up under way finishes first, a
 // YES to a pending sign-up read before it confirms nothing after it; a reply 0 under way or coming meanwhile waits on the subscriber's row, not on the
-// prompt's key); the spend cap judged with the campaign's texts counted once; YES before and after the deadline; who receives texts before and after it (the
+// prompt's key); the spend cap judged with the campaign's texts counted once; YES before and after the deadline, and with S07.05's menus (inside a
+// menu opened after the start it is the menu's, after the menu resets or closes the re-consent's; a start replaces an open menu; a lapsed subscriber gets
+// no menu); who receives texts before and after it (the
 // fan-out, the hand-off's number, a resend's check, the measures), and after the owner cancels; the sender at the hand-off; and the end job. Every number is
 // fictitious (the 555 exchange); nothing reaches Twilio.
 import { randomBytes, randomUUID } from "node:crypto";
@@ -20,12 +22,17 @@ import { createDeliveryQueue } from "../../src/modules/messaging";
 import { floorsOfBuilding, neighbourhoodIds } from "../../src/modules/places";
 import { monthSpentCents } from "../../src/modules/spend";
 import {
+  MENU_SCOPE,
   campaignStandingReader,
   createCampaigns,
   createInboundRouter,
+  createMenus,
   createRateLimiter,
   createSignup,
   createSubscriberMeasuresJob,
+  noCheckinRequestsYet,
+  noEditLinkYet,
+  placesForMenus,
   renderCampaignText,
   residentSms,
   subscriberLookup,
@@ -112,7 +119,7 @@ async function resetAll() {
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
   await owner`delete from inbound_seen`;
-  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound')`;
+  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', ${MENU_SCOPE})`;
   await owner`delete from campaign`;
   await owner`delete from subscriber_measure`;
   await owner`delete from staff_session where staff_account_id in (select id from staff_account where username like 'dl\\_%')`;
@@ -181,13 +188,20 @@ function signUp(phone = "+14165550177") {
   return signupService().request({ phone, lang: "fr", neighbourhood: "TP", places: [], groups: [], consentVersion: SIGNED_UP }, `203.0.113.${(phoneCounter % 200) + 1}`);
 }
 
-/** The inbound router as src/app/inbound.ts composes it. */
+/** The inbound router as src/app/inbound.ts composes it, with S07.05's menus. */
 function router(over: Partial<Parameters<typeof createInboundRouter>[0]> = {}) {
   return createInboundRouter({
     db: app,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
     enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+    menus: createMenus({
+      enqueue: (tx, input) => createDeliveryQueue().enqueueTransactional(tx, input),
+      pricePerSegmentCents: () => 1.5,
+      places: placesForMenus,
+      checkins: noCheckinRequestsYet,
+      editLink: noEditLinkYet,
+    }),
     numberKey: () => KEY,
     publicBaseUrl: () => BASE_URL,
     pricePerSegmentCents: () => 1.5,
@@ -321,7 +335,7 @@ describe("the campaign table", () => {
       const [any] = await owner`select has_table_privilege(${role}, 'campaign', 'select') or has_table_privilege(${role}, 'campaign', 'insert') as any`;
       expect(any!.any, role).toBe(false);
     }
-    // YES makes a subscriber `retained` under the campaign's terms version: that column, and still not the number or the language.
+    // YES makes a subscriber `retained` under the campaign's terms version: that column, and still not the number (the language is S07.05's menus').
     const [columns] = await owner`select has_column_privilege('cvh_app', 'subscriber', 'consent_version', 'update') as consent,
       has_column_privilege('cvh_app', 'subscriber', 'phone', 'update') as phone`;
     expect(columns).toEqual({ consent: true, phone: false });
@@ -703,6 +717,40 @@ describe("the start", () => {
     expect(await owner`select kind from sms_prompt where subscriber_id = ${en.id}`).toEqual([{ kind: "reconsent" }]);
   });
 
+  it("waits for a reply that is clearing an idle menu (the subscriber's row first, then its prompt), then replaces the menu the reply opened: no deadlock", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await rehearse(admin);
+    expect(await textFrom(en.phone, "2")).toMatchObject({ action: "menu" });
+    await owner`update sms_prompt set sent_at = sent_at - interval '11 minutes', expires_at = expires_at - interval '11 minutes' where subscriber_id = ${en.id}`;
+    // The router stops at the idle menu's reset notice: it has cleared the menu's prompt and will open a new menu's page next, nothing committed.
+    const pause = pausePoint();
+    const queue = createDeliveryQueue();
+    const replying = router({
+      menus: createMenus({
+        enqueue: async (tx, input) => {
+          await pause.wait();
+          return queue.enqueueTransactional(tx, input);
+        },
+        pricePerSegmentCents: () => 1.5,
+        places: placesForMenus,
+        checkins: noCheckinRequestsYet,
+        editLink: noEditLinkYet,
+      }),
+    }).handle({ messageSid: nextSid(), from: en.phone, body: "2", optOutType: null });
+    await pause.reached;
+    let settled = false;
+    const starting = start(admin).then((outcome) => ((settled = true), outcome));
+    await settleAfter(400);
+    expect(settled).toBe(false);
+    pause.release();
+    // Clearing a prompt locks the subscriber's row before the prompt, as opening one does and as the start does: the start waits, and neither is
+    // aborted as a deadlock (the start holding the row and waiting for the prompt the reply deleted, the reply waiting for the row).
+    expect(await replying).toMatchObject({ action: "menu", replied: true });
+    expect(await starting).toMatchObject({ kind: "started", asked: 1, texts: 1 });
+    expect(await owner`select kind from sms_prompt where subscriber_id = ${en.id}`).toEqual([{ kind: "reconsent" }]);
+  });
+
   it("holds a reply 0 that comes while it runs until it has committed; the router then replaces the re-consent prompt with the deletion's confirmation", async () => {
     const admin = await staff("admin");
     const en = await subscriber("en");
@@ -787,6 +835,73 @@ describe("YES from a subscriber asked to re-consent", () => {
     expect(await textFrom(en.phone, "yes")).toMatchObject({ action: "reconsent" });
     expect(await statesOf()).toEqual({ [en.id]: "retained" });
     expect(await owner`select count(*)::int as n from sms_prompt`).toEqual([{ n: 0 }]);
+  });
+
+  // S07.05's menus with the campaign: one prompt row per subscriber, and the prompt written last wins (AD-9).
+  const promptKind = async (id: string) => ((await owner`select kind from sms_prompt where subscriber_id = ${id}`)[0]?.kind as string | undefined) ?? null;
+  const menuReplies = async (id: string) => (await owner`select body from delivery where recipient_id = ${id} and purpose = 'menu_reply' order by created_at, id`).map((row) => row.body as string);
+
+  it("inside an S07.05 menu opened after the start is the menu's (the page again; the subscriber stays asked); once the menu closes it resolves to the re-consent", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await started(admin);
+    expect(await textFrom(en.phone, "2")).toMatchObject({ state: "active", action: "menu", replied: true });
+    expect(await promptKind(en.id)).toBe("menu_language");
+    const [page] = await menuReplies(en.id);
+    expect(await textFrom(en.phone, "YES")).toMatchObject({ state: "active", action: "menu_reply", replied: true });
+    expect(await menuReplies(en.id)).toEqual([page, page]);
+    expect(await statesOf()).toEqual({ [en.id]: "reconsent_pending" });
+    expect(await promptKind(en.id)).toBe("menu_language");
+    // 0 on the first page closes the menu, changing nothing; YES is then the re-consent's again.
+    expect(await textFrom(en.phone, "0")).toMatchObject({ action: "menu_reply", replied: true });
+    expect(await promptKind(en.id)).toBeNull();
+    expect(await textFrom(en.phone, "YES")).toMatchObject({ action: "reconsent", replied: true });
+    expect(await statesOf()).toEqual({ [en.id]: "retained" });
+  });
+
+  it("to an S07.05 menu idle for 10 minutes says the menu has reset and resolves to the re-consent", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await started(admin);
+    await textFrom(en.phone, "2");
+    await owner`update sms_prompt set sent_at = sent_at - interval '11 minutes', expires_at = expires_at - interval '11 minutes' where subscriber_id = ${en.id}`;
+    expect(await textFrom(en.phone, "YES")).toMatchObject({ state: "active", action: "reconsent", replied: true });
+    expect((await menuReplies(en.id)).at(-1)).toBe(residentSms("en", "menuReset").body);
+    expect(await statesOf()).toEqual({ [en.id]: "retained" });
+    expect(await promptKind(en.id)).toBeNull();
+    const [kept] = await owner`select body from delivery where recipient_id = ${en.id} and purpose = 'prompt_reply'`;
+    expect(kept!.body).toBe(residentSms("en", "reconsentKept").body);
+  });
+
+  it("after a start that replaced an open S07.05 menu with the re-consent prompt is the re-consent's: the menu is gone and a digit is read as a new keyword", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await rehearse(admin);
+    expect(await textFrom(en.phone, "2")).toMatchObject({ action: "menu" });
+    expect(await promptKind(en.id)).toBe("menu_language");
+    expect(await start(admin)).toMatchObject({ kind: "started", asked: 1 });
+    expect(await promptKind(en.id)).toBe("reconsent");
+    // "5" would pick a language inside the menu; with the re-consent prompt it is no keyword, and nothing changes.
+    expect(await textFrom(en.phone, "5")).toMatchObject({ state: "active", action: "none", replied: false });
+    expect(await owner`select lang from subscriber where id = ${en.id}`).toEqual([{ lang: "en" }]);
+    expect(await promptKind(en.id)).toBe("reconsent");
+    expect(await textFrom(en.phone, "YES")).toMatchObject({ action: "reconsent", replied: true });
+  });
+
+  it("from a lapsed subscriber gets no S07.05 menu: replies 1 to 3 and a reply inside a menu open at the deadline are not answered or counted", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    const { campaign } = await started(admin);
+    expect(await textFrom(en.phone, "2")).toMatchObject({ action: "menu", replied: true });
+    const menusStarted = async () => (await owner`select count(*)::int as n from rate_limit where scope = ${MENU_SCOPE}`)[0]!.n as number;
+    expect(await menusStarted()).toBe(1);
+    await pastDeadline(campaign.id);
+    const before = (await menuReplies(en.id)).length;
+    expect(await textFrom(en.phone, "1")).toMatchObject({ state: "lapsed", action: "none", replied: false });
+    for (const reply of ["2", "3"]) expect(await textFrom(en.phone, reply)).toMatchObject({ state: "lapsed", action: "none", replied: false });
+    expect(await menuReplies(en.id)).toHaveLength(before);
+    expect(await menusStarted()).toBe(1);
+    expect(await owner`select lang from subscriber where id = ${en.id}`).toEqual([{ lang: "en" }]);
   });
 
   it("after the deadline is answered that the pilot has ended through inbound_reply, and changes nothing; STOP still deletes", async () => {

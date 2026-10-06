@@ -22,9 +22,11 @@ describe("the inbound router's texts", () => {
     expect(residentSms("en", "signupInfo", { link: signupLink("https://cvh.example", "en") }).body).toBe("To get CVH alerts by text, sign up here: https://cvh.example/en/text-alerts Reply STOP to stop.");
   });
 
-  it("tell a new subscriber about reply 0, STOP and the overnight notice, and not yet about replies 1, 2 and 3 (S07.05 adds them)", () => {
+  it("tell a new subscriber about replies 1, 2 and 3 (S07.05's menus), reply 0, STOP and the overnight notice", () => {
     const { body } = residentSms("en", "welcome");
-    expect(body).toBe("You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 0 to stop and delete your subscription. Reply STOP to stop.");
+    expect(body).toBe(
+      "You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 1 to change your building or floor, 2 to change your language, 3 to withdraw a check-in request, 0 to stop and delete your subscription. Reply STOP to stop.",
+    );
     expect(body).toContain("Reply STOP");
     expect(body).toMatch(/Hub staff check every message, so alerts may not be sent overnight/u);
   });

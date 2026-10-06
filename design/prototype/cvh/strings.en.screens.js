@@ -2115,16 +2115,45 @@
       signup_unavailable: 'Text sign-up is not available just now. Try again later.',
       network: 'We could not reach the CVH. Check your connection and try again.' } } });
   m(en, { smsTexts: { confirmation: 'Reply YES to get CVH alerts. Reply STOP to stop.' } });
-  /* S07.04: the welcome text after YES, the inbound router's replies and the words for yes. Until S07.05 ships the menus, the welcome names
-     reply 0 and STOP only (replies 1, 2 and 3 get no answer yet); S07.05 puts 1, 2 and 3 back into it. The keywords residents text (YES, STOP) and "CVH"
-     stay in English in every language. smsKeywords.yes lists, comma-separated, the words for yes a resident may reply with besides YES and Y
-     (it is read, never sent). deletePrompt is a prompt: S07.05's fixture checks it fits one text in every language. */
+  /* S07.04: the welcome text after YES, the inbound router's replies and the words for yes. S07.05 put replies 1, 2 and 3 back into the
+     welcome when it shipped the menus. The keywords residents text (YES, STOP) and "CVH" stay in English in every language. smsKeywords.yes
+     lists, comma-separated, the words for yes a resident may reply with besides YES and Y (it is read, never sent). deletePrompt is a prompt:
+     S07.05's fixture checks it fits one text in every language. */
   m(en, { smsTexts: {
-    welcome: 'You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 0 to stop and delete your subscription. Reply STOP to stop.',
+    welcome: 'You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 1 to change your building or floor, 2 to change your language, 3 to withdraw a check-in request, 0 to stop and delete your subscription. Reply STOP to stop.',
     alreadySignedUp: 'You are already signed up for CVH alerts.',
     deletePrompt: 'Reply 0 again within 10 minutes to delete your subscription. You will get no more texts.',
     signupInfo: 'To get CVH alerts by text, sign up here: {link} Reply STOP to stop.' },
     smsKeywords: { yes: 'yes' } });
+  /* S07.05: the numbered text menus (reply 1: street, building on it, floor; reply 2: language) and their replies, and reply 3's. Every one
+     is a menu or prompt text that must fit one segment (160 GSM-7 or 70 UCS-2 characters) in its language: CI renders each, and every page
+     of the real 43 buildings, with the real encoder and fails naming the text and the language. A page is a title (menuStreet,
+     menuBuilding, menuFloor, menuLanguage), its options "1) ..." and menuNav (or menuNavMore when there is a next page). Keep the titles to a
+     word or two and the nav lines to a word per digit: in UCS-2 (every script but Latin, and the language page in every language, which
+     lists the languages in their own scripts) a page holds 70 characters, so every character spent there is an option less on a page.
+     The digits 0, 1, 8, 9 and 10, 5 and {placeholders} must stay as written. {hub} is the Hub's number, (416) 421-8997; {building} an
+     address up to 25 characters; {floor} a floor label up to 8; {n} a number. languageSaved is sent in the new language and names it.
+     menuLimit is the reply at the daily limit until the edit link exists (S07.06); menuLimitLink offers the link instead once it does
+     ("Reply 1"). checkinWithdrawn is E08's confirmation (S08.05). */
+  m(en, { smsTexts: {
+    menuStreet: 'Your street:',
+    menuBuilding: 'Your building:',
+    menuFloor: 'Your floor:',
+    menuWholeBuilding: 'Whole building',
+    menuLanguage: 'Your language:',
+    menuNav: '0 Back 9 Hub',
+    menuNavMore: '0 Back 8 More 9 Hub',
+    menuWarn: 'This replaces your {n} saved buildings. 1 Continue, 0 Back',
+    menuHub: 'Call the Hub at {hub}.',
+    menuClosed: 'Menu closed. Nothing was changed.',
+    menuReset: 'Your menu closed after 10 minutes with no reply. Nothing was changed.',
+    menuLimit: "You have used today's 5 menus. Try again tomorrow, or call the Hub at {hub}.",
+    menuLimitLink: "You have used today's 5 menus. Reply 1 for a link to make changes online, or call the Hub at {hub}.",
+    buildingSaved: 'Saved. Your building is now {building}, floor {floor}.',
+    buildingSavedWhole: 'Saved. Your building is now {building}.',
+    languageSaved: 'Saved. Your texts will now be in English.',
+    noCheckinRequest: 'You have no check-in request.',
+    checkinWithdrawn: 'Your check-in request is withdrawn.' } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {
