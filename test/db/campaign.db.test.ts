@@ -643,8 +643,9 @@ describe("the start", () => {
     expect((await owner`select state from delivery where id = ${confirmation!.id as string}`)[0]).toMatchObject({ state: "skipped" });
     expect(await signUp("+14165550179")).toEqual({ kind: "refused", code: "signups_paused" });
     expect(await auditOf("campaign.started")).toEqual([{ actor_staff_id: admin.id, subject_type: "campaign", subject_id: id, outcome: "ok", meta: { asked: 3, queued: 3, pending_deleted: 1 } }]);
-    // No number anywhere in the trail.
-    expect(JSON.stringify(await owner`select * from audit_event where id > ${auditBaseline}`)).not.toMatch(/555\d{4}/);
+    // No number anywhere in the trail: none of the numbers this test used. Not a bare "555": a random id in the trail can hold those digits.
+    const trail = JSON.stringify(await owner`select * from audit_event where id > ${auditBaseline}`);
+    for (const phone of [en.phone, ur.phone, ta.phone, "+14165550177", "+14165550179"]) expect(trail).not.toContain(phone.slice(2));
   });
 
   it("changes nothing when the request is retried, and nothing when it is started again: no second text", async () => {
