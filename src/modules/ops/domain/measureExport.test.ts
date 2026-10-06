@@ -45,6 +45,17 @@ describe("the CSV", () => {
     expect(csv).toContain(',"1 Leaside Park Dr, Unit 2",');
     expect(csv).toContain(",'=HYPERLINK(1),");
   });
+
+  it("writes an over-budget remainder as a negative number a spreadsheet reads, not as text", () => {
+    const input = sampleInput();
+    const over = { ...input, spend: input.spend && { ...input.spend, remainingCents: -1_234 } };
+    const lines = measureLines(over, { asOf: "2026-10-06", edition: "director", week: "2026-09-28", leftOut });
+    const remaining = measuresCsv(lines, { asOf: "2026-10-06", edition: "director" })
+      .split("\r\n")
+      .find((row) => row.includes(",budget_remaining,"));
+    expect(remaining).toContain(",-12.34,CAD,");
+    expect(remaining).not.toContain("'-12.34");
+  });
 });
 
 describe("the page", () => {
