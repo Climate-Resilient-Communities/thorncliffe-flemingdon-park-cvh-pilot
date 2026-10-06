@@ -5893,7 +5893,7 @@
     "rounds": {
       "title": "[EN] Check-in rounds",
       "lead": "[EN] Anyone an ambassador could not reach, or found needing help, appears here as soon as it is marked. The on-duty Admin gets a text.",
-      "refresh": "[EN] This list updates every 15 seconds.",
+      "refresh": "[EN] This page updates every 15 seconds.",
       "followUp": "[EN] To follow up",
       "noneWaiting": "[EN] None waiting. Every escalation has been handled.",
       "handledHeading": "[EN] Handled in the last 7 days",
@@ -5913,6 +5913,36 @@
       "someone": "[EN] a staff member",
       "unreadable": "[EN] The Hub could not read the escalations. Reload the page. If this stays, tell IT.",
       "forbidden": "[EN] Only the Hub's Coordinators, Directors and Admins see the check-in escalations.",
+      "progress": {
+        "heading": "[EN] Round progress by building and floor",
+        "lead": "[EN] Counts only. Each open round's check-ins as they are now, by what the ambassador marked last. A request that is withdrawn leaves these counts.",
+        "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
+        "forAlert": "[EN] Round for: {headline}",
+        "floor": "[EN] Floor {floor}",
+        "floorGone": "[EN] A floor removed since",
+        "total": "[EN] In all",
+        "count": "{label}: {n}",
+        "live": {
+          "requests": "[EN] Asked now",
+          "pending": "[EN] Still to do",
+          "done": "[EN] Done",
+          "not_reached": "[EN] Not reached",
+          "needs_help": "[EN] Needs help"
+        },
+        "closedHeading": "[EN] Rounds closed in the last 7 days",
+        "closedLead": "[EN] The final counts of each round, kept after its records are deleted. Each check-in asked for ends as one of the outcomes. Withdrawn includes a resident who moved floors or stopped texts during the round.",
+        "closedNone": "[EN] No round closed in the last 7 days.",
+        "closedTitle": "[EN] {types}: round closed {time}",
+        "tally": {
+          "requested": "[EN] Asked",
+          "done": "[EN] Done",
+          "not_reached": "[EN] Not reached",
+          "needs_help": "[EN] Needs help",
+          "withdrawn": "[EN] Withdrawn",
+          "unmarked": "[EN] Not marked"
+        },
+        "unreadable": "[EN] The Hub could not read the round counts. Reload the page. If this stays, tell IT."
+      },
       "escalation": {
         "title": "{status}: {where}",
         "back": "[EN] Back to check-in rounds",

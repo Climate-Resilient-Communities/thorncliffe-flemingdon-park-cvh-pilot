@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { progressScreen, unreadableProgress, type ClosedPlace, type ProgressSources } from "../../src/app/staff/rounds/progress";
 import { escalationScreen, roundsScreen, type DescribedEscalation, type EscalationViewer, type ResidentFacts } from "../../src/app/staff/rounds/view";
 import { englishText } from "../../src/i18n/text";
 import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
@@ -8,8 +9,10 @@ import { expectBaseline } from "./helpers";
 // S08.08: "Check-in rounds" (O-17, the pilot's version: the escalations to follow up) and an escalation's page in the Hub shell, in en: the list with an open
 // needs help, an open not reached from a late mark (call the ambassador) and one handled; the list with none waiting; an escalation as an Admin at aal2 sees it
 // (the resident's fictional number as a call link, the floor and the method, and "Mark handled"), as a Coordinator sees it (no number), a late mark's
-// (building, floor and ambassador only) and a handled one. The screens are the app's own view functions' output; the behaviour is asserted in
-// src/app/staff/rounds and test/db/escalations.db.test.ts. These pictures show what it looks like.
+// (building, floor and ambassador only) and a handled one. S08.09: below the escalations, the rounds' counts by building and floor: an open heat round's
+// live counts in two buildings and a power round closed with its tally ("list"); no round running and none closed ("none-waiting"); counts that could not
+// be read ("counts-unreadable"). The screens are the app's own view functions' output; the behaviour is asserted in src/app/staff/rounds,
+// test/db/escalations.db.test.ts and test/db/roundCounts.db.test.ts. These pictures show what it looks like.
 const brand = hubBrand();
 const HEIGHT = 844;
 const PHONE = "+14165550181";
@@ -42,9 +45,44 @@ const LINKED: ResidentFacts = { kind: "linked", phone: PHONE, method: "call" };
 const e = (key: string) => englishText(`staff.rounds.escalation.${key}`);
 const formLabels = { heading: e("markHeading"), note: e("note"), noteHint: e("noteHint"), mark: e("mark"), marking: e("marking"), noteMax: 300 };
 
+// The rounds' counts: a heat round open in two buildings (its rows by latest mark) and a power round closed the evening before, with its tally.
+const HEAT = "0199b6f2-0000-7000-8000-0000000000a1";
+const POWER = "0199b6f2-0000-7000-8000-0000000000a2";
+const TALL = { rsn: "7001", address: "85-95 Thorncliffe Park Dr", floors: ["3", "4", "7", "12"].map((label) => ({ id: `t${label}`, label })) };
+const LOW = { rsn: "7002", address: "18 Thorncliffe Park Dr", floors: ["1", "2"].map((label) => ({ id: `l${label}`, label })) };
+const live = (rsn: string, floorId: string, status: "pending" | "done" | "not_reached" | "needs_help", times = 1) =>
+  Array.from({ length: times }, () => ({ alertId: HEAT, rsn, floorId, status }));
+const closedAt = (rsn: string, floorId: string, counts: Partial<ClosedPlace["counts"]>): ClosedPlace => ({
+  alertId: POWER,
+  rsn,
+  floorId,
+  counts: { requested: 0, done: 0, not_reached: 0, needs_help: 0, withdrawn: 0, unmarked: 0, ...counts },
+});
+const COUNTS: ProgressSources = {
+  rows: [
+    ...live("7001", "t12", "needs_help"),
+    ...live("7001", "t12", "done", 2),
+    ...live("7001", "t12", "pending"),
+    ...live("7001", "t4", "not_reached"),
+    ...live("7001", "t4", "pending", 2),
+    ...live("7001", "t3", "done", 3),
+    ...live("7002", "l2", "pending"),
+    ...live("7002", "l1", "done"),
+  ],
+  headlines: new Map([[HEAT, "Extreme heat warning. Cooling centres are open until 11 p.m."]]),
+  closed: [{ alertId: POWER, types: ["power"], closedAt: at("2026-07-13T23:40:00Z") }],
+  closedPlaces: [
+    closedAt("7001", "t7", { requested: 4, done: 2, not_reached: 1, withdrawn: 1 }),
+    closedAt("7001", "t12", { requested: 3, done: 1, needs_help: 1, unmarked: 1 }),
+    closedAt("7002", "l1", { requested: 1, done: 1 }),
+  ],
+  plans: [LOW, TALL],
+};
+
 const LISTS = {
-  list: () => roundsScreen([LATE, HELP, HANDLED]),
-  "none-waiting": () => roundsScreen([HANDLED]),
+  list: () => ({ screen: roundsScreen([LATE, HELP, HANDLED]), progress: progressScreen(COUNTS) }),
+  "none-waiting": () => ({ screen: roundsScreen([HANDLED]), progress: progressScreen({ ...COUNTS, rows: [], closedPlaces: [] }) }),
+  "counts-unreadable": () => ({ screen: roundsScreen([HELP]), progress: unreadableProgress() }),
 } as const;
 
 const PAGES = {
@@ -63,7 +101,7 @@ for (const state of Object.keys(LISTS) as (keyof typeof LISTS)[]) {
   for (const width of [390, 1280]) {
     test(`check-in rounds ${state} at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: HEIGHT });
-      await mount(page, "RoundsFixture", { texts, brand, screen: LISTS[state]() }, { lang: "en" });
+      await mount(page, "RoundsFixture", { texts, brand, ...LISTS[state]() }, { lang: "en" });
 
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Check-in rounds");
       await noSidewaysScroll(page);
@@ -74,8 +112,18 @@ for (const state of Object.keys(LISTS) as (keyof typeof LISTS)[]) {
         await expect(page.getByTestId("escalations-handled")).toContainText("Handled by Priya Sharma");
         const open = page.getByTestId("escalation-open").first();
         expect((await open.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-      } else {
+        await expect(page.getByTestId("progress-open-round")).toHaveCount(1);
+        await expect(page.getByTestId("progress-open").getByTestId("progress-floor")).toHaveCount(5);
+        await expect(page.getByTestId("progress-open").getByTestId("progress-building").first()).toContainText("18 Thorncliffe Park Dr");
+        await expect(page.getByTestId("progress-closed-round")).toContainText("Power: round closed");
+        await expect(page.getByTestId("progress-closed").getByTestId("progress-total")).toContainText("Withdrawn: 1");
+      } else if (state === "none-waiting") {
         await expect(page.getByTestId("escalations-none")).toHaveText("None waiting. Every escalation has been handled.");
+        await expect(page.getByTestId("progress-none")).toContainText("No check-in round is running now.");
+        await expect(page.getByTestId("progress-closed-none")).toHaveText("No round closed in the last 7 days.");
+      } else {
+        await expect(page.getByTestId("progress-unreadable")).toContainText("The Hub could not read the round counts.");
+        await expect(page.getByTestId("escalations-open").getByTestId("escalation-item")).toHaveCount(1);
       }
       await expect(page.locator("body")).not.toContainText("555");
       await expectBaseline(page, `rounds-en-${state}-${width}.png`, { fullPage: true });

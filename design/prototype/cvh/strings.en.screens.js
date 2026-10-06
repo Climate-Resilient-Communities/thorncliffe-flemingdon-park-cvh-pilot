@@ -2646,7 +2646,7 @@
   m(en, { staff: { rounds: {
     title: 'Check-in rounds',
     lead: 'Anyone an ambassador could not reach, or found needing help, appears here as soon as it is marked. The on-duty Admin gets a text.',
-    refresh: 'This list updates every 15 seconds.',
+    refresh: 'This page updates every 15 seconds.',
     followUp: 'To follow up',
     noneWaiting: 'None waiting. Every escalation has been handled.',
     handledHeading: 'Handled in the last 7 days',
@@ -2663,6 +2663,24 @@
     someone: 'a staff member',
     unreadable: 'The Hub could not read the escalations. Reload the page. If this stays, tell IT.',
     forbidden: 'Only the Hub\'s Coordinators, Directors and Admins see the check-in escalations.',
+    /* S08.09: the counts by building and floor (the prototype's "Progress by building and floor"): an open round's from its requests as they are now, by
+       their latest mark; a closed round's from the tally kept after its records are deleted. Counts only, never anyone's details. */
+    progress: {
+      heading: 'Round progress by building and floor',
+      lead: 'Counts only. Each open round\'s check-ins as they are now, by what the ambassador marked last. A request that is withdrawn leaves these counts.',
+      none: 'No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.',
+      forAlert: 'Round for: {headline}',
+      floor: 'Floor {floor}',
+      floorGone: 'A floor removed since',
+      total: 'In all',
+      count: '{label}: {n}',
+      live: { requests: 'Asked now', pending: 'Still to do', done: 'Done', not_reached: 'Not reached', needs_help: 'Needs help' },
+      closedHeading: 'Rounds closed in the last 7 days',
+      closedLead: 'The final counts of each round, kept after its records are deleted. Each check-in asked for ends as one of the outcomes. Withdrawn includes a resident who moved floors or stopped texts during the round.',
+      closedNone: 'No round closed in the last 7 days.',
+      closedTitle: '{types}: round closed {time}',
+      tally: { requested: 'Asked', done: 'Done', not_reached: 'Not reached', needs_help: 'Needs help', withdrawn: 'Withdrawn', unmarked: 'Not marked' },
+      unreadable: 'The Hub could not read the round counts. Reload the page. If this stays, tell IT.' },
     escalation: {
       title: '{status}: {where}',
       back: 'Back to check-in rounds',

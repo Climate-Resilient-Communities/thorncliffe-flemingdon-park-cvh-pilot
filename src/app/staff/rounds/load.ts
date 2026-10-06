@@ -1,13 +1,17 @@
 // Composition of "Check-in rounds" (O-17, S08.08) and an escalation's page (AD-2): checkins' escalations, places' addresses and floor labels, identity's names
-// and, for an Admin at aal2 only, subscriptions' number of the subscriber the escalation's row still names. Read for each request; the pages are no-store and
-// the service worker never keeps a staff page (AD-1). Server only.
+// and, for an Admin at aal2 only, subscriptions' number of the subscriber the escalation's row still names. S08.09: the rounds' counts by building and floor,
+// an open round's from its live rows (as "My round" reads them) and a closed one's from checkins' tally, with alerting's threads. Read for each request; the
+// pages are no-store and the service worker never keeps a staff page (AD-1). Server only.
 import "server-only";
-import { escalationList, escalationOf, residentShown, type EscalationRow } from "@/modules/checkins";
+import { createAlerting, createAmbassadorHome } from "@/modules/alerting";
+import { countsByPlace, escalationList, escalationOf, residentShown, roundTallies, type EscalationRow } from "@/modules/checkins";
 import { readStaffName } from "@/modules/identity";
 import { stdoutMessagingLog } from "@/modules/messaging";
 import { addressesOfBuildings, floorsOfBuilding } from "@/modules/places";
 import { escalationNumberOf } from "@/modules/subscriptions";
-import { getDb, type DbExecutor } from "@/platform/db";
+import { getDb, type Db, type DbExecutor } from "@/platform/db";
+import { openRoundRows, roundPlansOf } from "../ambassador/round/load";
+import { CLOSED_ROUNDS_DAYS, progressScreen, unreadableProgress, type ProgressScreen } from "./progress";
 import { escalationScreen, missingEscalation, roundsScreen, unreadableRounds, type DescribedEscalation, type EscalationScreen, type EscalationViewer, type MissingEscalation, type ResidentFacts, type RoundsScreen } from "./view";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -56,4 +60,24 @@ export async function loadEscalation(id: unknown, viewer: EscalationViewer, exec
     facts = { kind: "linked", phone: await escalationNumberOf(executor, found.row.subscriberId), method: found.row.method };
   }
   return escalationScreen(described!, viewer, facts);
+}
+
+/**
+ * The rounds' counts by building and floor (S08.09): each open round's live rows as "My round" reads them (the open threads residents read, the requesters
+ * who still ask; never their numbers, which are not read here), and the tally of the threads closed in the last 7 days that are not drills. Counts that
+ * cannot be read say so (logged with the error's name only), and the escalations above them are shown as they are.
+ */
+export async function loadRoundProgress(db: Db = getDb(), now: Date = new Date()): Promise<ProgressScreen> {
+  try {
+    const headlines = await createAmbassadorHome(db).openHeadlines();
+    const rows = await openRoundRows(db, headlines);
+    const since = new Date(now.getTime() - CLOSED_ROUNDS_DAYS * 24 * 60 * 60 * 1000);
+    const closed = (await createAlerting({ db }).closedThreads(since)).filter((thread) => !thread.isDrill);
+    const tallies = await roundTallies(db, closed.map((thread) => thread.alertId));
+    const plans = await roundPlansOf(db, [...rows.map((row) => row.rsn), ...tallies.map((count) => count.rsn)]);
+    return progressScreen({ rows, headlines, closed, closedPlaces: countsByPlace(tallies), plans });
+  } catch (error) {
+    stdoutMessagingLog.error("rounds.progress_failed", { module: "checkins", error: error instanceof Error ? error.name : "NonError" });
+    return unreadableProgress();
+  }
 }
