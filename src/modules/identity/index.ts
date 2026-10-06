@@ -9,7 +9,7 @@ import { drizzleStaffSessionStore } from "./adapters/sessionStore";
 import { drizzleStaffStore } from "./adapters/staffStore";
 import { drizzleThrottleStore } from "./adapters/throttleStore";
 import { createAccountService, type AccountService, type AuditWriter } from "./application/accounts";
-import { createAssignmentService, type AssignmentService, type BuildingFloorsReader } from "./application/assignments";
+import { createAssignmentService, type AssignmentRounds, type AssignmentService, type BuildingFloorsReader } from "./application/assignments";
 import type { IdentityProvider } from "./application/ports";
 import { createAdminRecovery } from "./application/adminRecovery";
 import { createFactorRecovery, type FactorRecoveryService } from "./application/factorRecovery";
@@ -105,8 +105,8 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
  * `floors` is places' reader of a building's floors (identity may not import places, AD-2): the
  * composition root passes `floorsOfBuilding` as `floorsOf`.
  */
-export function createAssignments(wiring: { db: Db; floors: BuildingFloorsReader; audit?: AuditWriter; now?: () => Date }): AssignmentService {
-  return createAssignmentService({ db: wiring.db, floors: wiring.floors, audit: wiring.audit ?? audit, now: wiring.now });
+export function createAssignments(wiring: { db: Db; floors: BuildingFloorsReader; rounds?: AssignmentRounds; audit?: AuditWriter; now?: () => Date }): AssignmentService {
+  return createAssignmentService({ db: wiring.db, floors: wiring.floors, rounds: wiring.rounds, audit: wiring.audit ?? audit, now: wiring.now });
 }
 
 /**
@@ -152,6 +152,7 @@ export type {
   AmbassadorOption,
   AssignRefusal,
   AssignedAmbassador,
+  AssignmentRounds,
   AssignmentService,
   AssignmentView,
   BuildingFloor,

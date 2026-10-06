@@ -39,6 +39,14 @@ export function roundMatches(audience: Audience, place: RequestPlace & { neighbo
   return matches({ ...audience, groups: [] }, { neighbourhoodIds: [place.neighbourhoodId], places: [{ rsn: place.rsn, floors: [place.floorId] }], groups: [], mutedTopics: [] });
 }
 
+/**
+ * Whether a round's audience names this building at all (a neighbourhood audience: the building's neighbourhood; a buildings audience: the building,
+ * on any floor): the threads an assignment saved on the building may add its requesters to, each requester then matched by `roundMatches`.
+ */
+export function roundNamesBuilding(audience: Audience, rsn: string, neighbourhoodId: string): boolean {
+  return audience.scope === "neighbourhood" ? audience.neighbourhood_ids.includes(neighbourhoodId) : audience.buildings.some((building) => building.rsn === rsn);
+}
+
 /** Whether a thread of these types is a round's: one of its types is a round type (`disruption_type.checkin`). */
 export const isRoundThread = (types: readonly string[], roundTypes: readonly string[]): boolean => types.some((type) => roundTypes.includes(type));
 
