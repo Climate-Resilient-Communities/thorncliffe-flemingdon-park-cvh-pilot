@@ -39,6 +39,15 @@ beforeEach(() => {
   dir = mkdtempSync(path.join(tmpdir(), "cvh-terms-"));
   log = path.join(dir, "calls.log");
   cpSync(path.join(ROOT, "data", "catalogue", "terms.json"), path.join(dir, "terms.json"));
+  // The committed terms are published; these tests start from the same text before anyone was named or signed it.
+  editTerms((t) => {
+    t.owner = "PLACEHOLDER: owner";
+    t.privacyContact = "PLACEHOLDER: privacy contact";
+    t.englishReview = { reviewer: "PLACEHOLDER: reviewer", date: null };
+    t.counselReview = { reviewer: "PLACEHOLDER: counsel", date: null, version: null, sourceHash: null };
+    delete t.counselWaiver;
+    delete t.publishedVersions;
+  });
   writeFileSync(path.join(dir, "guides.json"), JSON.stringify({ guides: [] }));
   writeFileSync(path.join(dir, "numbers.json"), JSON.stringify({ numbers: [] }));
 });
@@ -84,7 +93,7 @@ describe("the terms in the content pipeline", () => {
     nameOwnerAndContact();
     run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
     expect(readTerms().englishReview).toMatchObject({ reviewer: "Ana Reyes", date: "2026-09-10" });
-    expect(plan().reasons).toEqual(["counsel review: no named reviewer", "counsel review: no valid date", "counsel review: covers version none, not 2026-09-10.1", "counsel review: records no source hash (the text it reviewed)"]);
+    expect(plan().reasons).toEqual(["counsel review: none is recorded"]);
 
     run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
     expect(readTerms().counselReview).toMatchObject({ reviewer: "Counsel Co.", date: "2026-09-10", version: "2026-09-10.1" });
@@ -228,5 +237,31 @@ describe("the terms in the content pipeline", () => {
     expect(counsel("Counsel Co.", "2026-09-09")).toThrow();
     expect(readTerms().englishReview?.sourceHash).toBeUndefined();
     expect(readTerms().counselReview?.sourceHash).toBeNull();
+  });
+  it("records the owner's waiver of counsel's review, and the app publishes on it until the text changes", () => {
+    nameOwnerAndContact();
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    const waive = (reviewer: string, reason: string) =>
+      run(REVIEW, ["--content", "--waive-counsel", "--reviewer", reviewer, "--reviewed-on", "2026-09-11", "--reason", reason]);
+
+    expect(() => waive("Someone Else", "Pilot.")).toThrow(); // only the owner decides it
+    expect(() => waive("Ana Reyes", "")).toThrow(); // with a reason
+    expect(plan().published).toBe(false);
+
+    waive("Ana Reyes", "Pilot: counsel review before the MVP.");
+    const terms = readTerms();
+    expect(terms.counselWaiver).toMatchObject({ decidedBy: "Ana Reyes", date: "2026-09-11", version: "2026-09-10.1" });
+    expect(terms.publishedVersions?.["2026-09-10.1"]).toBe(terms.counselWaiver?.sourceHash);
+    expect(plan().reasons).toEqual([]);
+
+    editTerms((t) => (t.title = "Terms and your privacy"));
+    expect(plan().reasons).toContain("counsel waiver: the terms changed since it was decided, so a new decision is needed");
+  });
+
+  it("refuses to waive counsel's review once one is recorded", () => {
+    nameOwnerAndContact();
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-11"]);
+    expect(() => run(REVIEW, ["--content", "--waive-counsel", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-11", "--reason", "Pilot."])).toThrow();
   });
 });
