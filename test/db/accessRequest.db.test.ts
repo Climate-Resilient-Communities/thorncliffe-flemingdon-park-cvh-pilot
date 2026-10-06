@@ -4,9 +4,9 @@
 //  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt, S07.06's edit link
 //    (never its hash); a pending sign-up; a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound
 //    limit's mute row and S07.05's menu limit included; where the resident is in a text menu (S07.05); the end of the pilot's question and its text
-//    (S09.07); S08.05's check-in request and the check-in rows that name the subscriber), in a transaction Postgres keeps read-only, and only for an open
-//    request; a column or a table added since that holds a
-//    number's records, or a prompt's step it cannot read, is reported as not read, so a request is never answered as complete without it;
+//    (S09.07), read out by where the campaign stands for them (before its deadline, past it, or cancelled by the owner); S08.05's check-in request and the
+//    check-in rows that name the subscriber), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that
+//    holds a number's records, or a prompt's step it cannot read, is reported as not read, so a request is never answered as complete without it;
 //  - the deletion on the resident's behalf is the full E07 deletion (the one STOP, the edit page and the end-of-pilot purge run) and closes the request in
 //    the same transaction, a subscriber being asked at the end of the pilot included, their check-in rows closed into stubs by checkins' real port (S08.05);
 //    a failed audit record undoes the deletion; a `checkin` table with E08's port not wired refuses it; a request is closed once, even by two runs at once;
@@ -200,6 +200,15 @@ async function campaignStarted() {
   const started = await campaigns.start({ ...input, idempotencyKey: randomUUID(), confirmed: true });
   if (started.kind !== "started") throw new Error(`start refused: ${JSON.stringify(started)}`);
   return started;
+}
+
+/** Moves a campaign's deadline into the past (its guard switched off for the owner's one update), as if 30 days had gone by (as test/db/campaign.db.test.ts). */
+async function pastDeadline(campaignId: string) {
+  await owner.begin(async (tx) => {
+    await tx.unsafe("alter table campaign disable trigger campaign_guard");
+    await tx`update campaign set deadline_date = deadline_date - 31, deadline = campaign_deadline_of(deadline_date - 31) where id = ${campaignId}`;
+    await tx.unsafe("alter table campaign enable trigger campaign_guard");
+  });
 }
 
 /** Production's environment as the script requires it (nothing connects with it: the tests give the script their own connection). */
@@ -438,6 +447,63 @@ describe("the lookup", () => {
     expect(result.value.unread).toEqual([]);
     const shown = JSON.stringify(result.value);
     for (const row of await owner`select body from delivery where recipient_id = ${subscriberId}`) expect(shown).not.toContain(row.body as string);
+  });
+
+  it("says what the end of the pilot means for the subscriber by where the campaign stands, by the database's clock: before its deadline, past it, cancelled", async () => {
+    const id = await received();
+    const subscriberId = await subscribed();
+    const started = await campaignStarted();
+    const deadlineDate = async () => ((await owner`select deadline_date::text as day from campaign where id = ${started.campaign.id}`)[0]!.day as string);
+    const look = async () => {
+      const result = await requests().lookUp({ id, number: NUMBER });
+      if (!result.ok) throw new Error(result.error);
+      return { held: result.value, lines: heldRecordLines(result.value) };
+    };
+    const asked = "  Retention state: asked at the end of the pilot whether to stay (reconsent_pending)";
+    const question = "  Open prompt: asked at the end of the pilot whether to keep getting alerts";
+
+    // Before the deadline: a YES keeps them, and without one they are deleted after it.
+    const day = await deadlineDate();
+    const open = await look();
+    expect(open.held.subscriber).toMatchObject({ retentionState: "reconsent_pending", reconsent: { kind: "open", deadlineDate: day }, prompt: { kind: "reconsent" } });
+    expect(open.lines).toContain("Subscriber (gets text alerts):");
+    expect(open.lines).toContain(`${asked}: deleted with everything held for the number after the campaign's deadline, the end of ${day}, unless they reply YES before it`);
+    expect(open.lines.find((line) => line.startsWith(question))).toMatch(/^ {2}Open prompt: asked at the end of the pilot whether to keep getting alerts \(reply YES to stay\) \(reconsent\), sent /);
+
+    // Past the deadline (the owner's update with the guard off, as if 30 days had gone by), before S09.08's purge: lapsed. A YES now changes nothing and
+    // is answered that the pilot has ended, under the once-a-day sign-up reply's keyed hash.
+    await pastDeadline(started.campaign.id);
+    const past = await deadlineDate();
+    const lapsed = await look();
+    expect(lapsed.held.subscriber).toMatchObject({ retentionState: "reconsent_pending", reconsent: { kind: "lapsed", deadlineDate: past }, prompt: { kind: "reconsent" } });
+    expect(lapsed.lines).toContain("Subscriber (no longer gets text alerts: past the end-of-pilot deadline):");
+    expect(lapsed.lines).toContain(
+      `${asked}: the campaign's deadline, the end of ${past}, has passed without a YES: they get no texts, the end-of-pilot purge deletes them with everything held for the number, and a YES no longer keeps them`,
+    );
+    expect(lapsed.lines.find((line) => line.startsWith(question))).toMatch(/\(its deadline has passed: a YES no longer keeps them\) \(reconsent\), sent /);
+    expect(lapsed.lines.join("\n")).not.toMatch(/unless they reply YES|reply YES to stay/);
+    expect(await router().handle(inbound("YES"))).toMatchObject({ state: "lapsed", action: "pilot_ended", replied: true });
+    expect(await owner`select retention_state from subscriber where id = ${subscriberId}`).toEqual([{ retention_state: "reconsent_pending" }]);
+    const answered = await look();
+    expect(answered.held.hashes.map((h) => h.scope).sort()).toEqual(["inbound", "signup_info"]);
+    expect(answered.lines.join("\n")).toContain(
+      "replies to a number with no subscription or to a YES after the end-of-pilot deadline (the sign-up link or, while the pilot ends, that sign-ups are paused or that the pilot has ended) (signup_info) 1,",
+    );
+
+    // The owner cancels it (docs/config.md "Cancelling", in the SQL editor): never lapsed, nothing deleted because of it, even past its deadline.
+    await owner`update campaign set state = 'cancelled' where not rehearsal`;
+    const cancelled = await look();
+    expect(cancelled.held.subscriber).toMatchObject({ retentionState: "reconsent_pending", reconsent: { kind: "cancelled" }, prompt: { kind: "reconsent" } });
+    expect(cancelled.lines).toContain("Subscriber (gets text alerts):");
+    expect(cancelled.lines).toContain(`${asked}, by a campaign the owner cancelled: they keep getting alerts, and nothing is deleted because of it`);
+    expect(cancelled.lines.find((line) => line.startsWith(question))).toMatch(/\(the campaign was cancelled: a YES changes nothing\) \(reconsent\), sent /);
+    expect(cancelled.lines.join("\n")).not.toMatch(/deleted with everything|purge deletes|reply YES to stay/);
+
+    // Read in the lookup's one read-only transaction; nothing printed holds the number, a text's words or a hash.
+    const shown = [open, lapsed, answered, cancelled].map((seen) => `${JSON.stringify(seen.held)}\n${seen.lines.join("\n")}`).join("\n");
+    expect(shown).not.toContain("5550131");
+    for (const row of await owner`select body from delivery`) expect(shown).not.toContain(row.body as string);
+    for (const row of await owner`select client_hash from rate_limit`) expect(shown).not.toContain(row.client_hash as string);
   });
 
   it("shows a pending sign-up, and a reply waiting for a number with no subscription", async () => {

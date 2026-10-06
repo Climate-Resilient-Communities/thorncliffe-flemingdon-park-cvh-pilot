@@ -6,12 +6,13 @@
 //   receive            records a new request (what the resident asked for); a rehearsal's is marked as a drill, so the review reports it apart.
 //   open               the requests still open, oldest first, with the days each has been open (by the database's clock, as the weekly review counts).
 //   lookUp             everything held for the number, in ONE read-only transaction (Postgres refuses any write in it), for an open request only: the
-//                      subscriber, places, groups, muted topics, consent version, retention state (S09.07's re-consent), prompt (with where the
-//                      resident is in a text menu, S07.05) and edit link (S07.06, never its hash); a pending sign-up; waiting replies; the texts held for
-//                      those records (never their words); the keyed hashes of the number in `rate_limit`; S08.05's check-in request, on the subscriber
-//                      and on the pending sign-up; check-in records (through a port: checkins' rows that still name the subscriber, `checkinRowRecords`);
-//                      and what holds the number's records that it cannot read yet (a column or a table added since, a prompt's step it does not know).
-//                      Nothing is recorded or changed.
+//                      subscriber, places, groups, muted topics, consent version, retention state (S09.07's re-consent, with where the campaign stands
+//                      for them: asked before its deadline, past it, or cancelled by the owner), prompt (with where the resident is in a text menu,
+//                      S07.05) and edit link (S07.06, never its hash); a pending sign-up; waiting replies; the texts held for those records (never their
+//                      words); the keyed hashes of the number in `rate_limit`; S08.05's check-in request, on the subscriber and on the pending sign-up;
+//                      check-in records (through a port: checkins' rows that still name the subscriber, `checkinRowRecords`); and what holds the
+//                      number's records that it cannot read yet (a column or a table added since, a prompt's step it does not know). Nothing is
+//                      recorded or changed.
 //   deleteForResident  after verified control, the one E07 deletion (deletion.ts, the steps STOP, S07.06's edit page and S09.08's purge run) and the
 //                      request's `closed` record (`deleted`), in one transaction: both commit or neither does. Refused while a `checkin` table exists and
 //                      E08's deletion port is not wired here (scripts/access-request wires checkins' real one, S08.05).
@@ -29,6 +30,7 @@ import { englishText } from "../../../i18n/text";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { accessRequestStore, type AccessRequestStore, type HeldCheckinRequestRow } from "../adapters/accessRequestStore";
+import { campaignStore } from "../adapters/campaignStore";
 import { hashScopeOf } from "../adapters/inboundStore";
 import {
   CLOSING_OUTCOMES,
@@ -43,6 +45,7 @@ import {
   type HeldCheckins,
   type HeldPlace,
   type HeldPrompt,
+  type HeldReconsent,
   type HeldRecord,
   type OpenRequest,
   type RequestRecord,
@@ -206,6 +209,19 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     return { prompt: { kind: row.kind, since: row.since, until: row.until, step: menuStepWords(menu, (id) => addresses.get(id) ?? null) }, unreadStep: false };
   }
 
+  /**
+   * Where a `reconsent_pending` subscriber stands in the end-of-pilot campaign (S09.07), by the database's clock and in the lookup's own read-only
+   * transaction: asked before the deadline, past it, or asked by a campaign the owner cancelled; with the deadline's Toronto day. Null for any other state.
+   */
+  async function reconsentOf(tx: DbTransaction, subscriber: { id: string; retentionState: string }): Promise<HeldReconsent | null> {
+    if (subscriber.retentionState !== "reconsent_pending") return null;
+    const standing = await campaignStore.reconsentOf(tx, subscriber.id);
+    if (standing === "cancelled") return { kind: "cancelled" };
+    if (standing === null) return null;
+    const campaign = await campaignStore.real(tx);
+    return campaign === null ? null : { kind: standing, deadlineDate: campaign.deadlineDate };
+  }
+
   async function read(tx: DbTransaction, phone: string): Promise<HeldRecord> {
     const sub = await store.subscriberOf(tx, phone);
     const pending = await store.pendingOf(tx, phone);
@@ -233,6 +249,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
             consentVersion: sub.consentVersion,
             startedBy: sub.startedBy,
             retentionState: sub.retentionState,
+            reconsent: await reconsentOf(tx, sub),
             places: await placesOf(tx, await store.placesOf(tx, sub.id)),
             mutedTopics: await store.mutedTopicsOf(tx, sub.id),
             prompt: prompt.prompt,
