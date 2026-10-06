@@ -65,3 +65,21 @@ export async function directnessOfTypes(executor: DbExecutor, types: readonly st
   const rows = await executor.select({ id: disruptionType.id, direct: disruptionType.direct }).from(disruptionType).where(inArray(disruptionType.id, [...types]));
   return new Map(rows.map((row) => [row.id, row.direct]));
 }
+
+/** A building as the SMS building menu lists it (S07.05): its rsn, address and neighbourhood. */
+export interface BuildingRecord {
+  rsn: string;
+  address: string;
+  neighbourhoodId: string;
+}
+
+/**
+ * Every pilot building, by address then rsn, read through the executor given: what the SMS building menu lists by street (S07.05).
+ * subscriptions may not import the table, so it reads it here. A building flagged `not_in_register_since` is listed, as on R-35.
+ */
+export async function listBuildings(executor: DbExecutor): Promise<BuildingRecord[]> {
+  return executor
+    .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId })
+    .from(building)
+    .orderBy(asc(building.address), asc(building.rsn));
+}

@@ -5817,10 +5817,28 @@
   },
   "smsTexts": {
     "confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas.",
-    "welcome": "Ya está suscrito a las alertas del CVH. El personal del Hub revisa cada mensaje, así que es posible que las alertas no se envíen de noche. Responda 0 para dejar de recibir mensajes y borrar su suscripción. Responda STOP para dejar de recibirlas.",
+    "welcome": "Ya está suscrito a las alertas del CVH. El personal del Hub revisa cada mensaje, así que es posible que las alertas no se envíen de noche. Responda 1 para cambiar su edificio o piso, 2 para cambiar su idioma, 3 para retirar su pedido de chequeo de bienestar y 0 para dejar de recibir mensajes y borrar su suscripción. Responda STOP para dejar de recibirlas.",
     "alreadySignedUp": "Ya está suscrito a las alertas del CVH.",
     "deletePrompt": "Envíe 0 otra vez en 10 minutos para borrarse. No recibirá más textos.",
-    "signupInfo": "Para recibir alertas del CVH por mensaje de texto, suscríbase aquí: {link} Responda STOP para dejar de recibirlas."
+    "signupInfo": "Para recibir alertas del CVH por mensaje de texto, suscríbase aquí: {link} Responda STOP para dejar de recibirlas.",
+    "menuStreet": "Calle:",
+    "menuBuilding": "Edificio:",
+    "menuFloor": "Piso:",
+    "menuWholeBuilding": "Todo el edificio",
+    "menuLanguage": "Idioma:",
+    "menuNav": "0 Volver 9 Hub",
+    "menuNavMore": "0 Volver 8 Siguiente 9 Hub",
+    "menuWarn": "Esto reemplaza sus {n} edificios guardados. 1 Continuar, 0 Volver",
+    "menuHub": "Llame al Hub al {hub}.",
+    "menuClosed": "Menú cerrado. No se cambió nada.",
+    "menuReset": "Su menú se cerró tras 10 minutos sin respuesta. No se cambió nada.",
+    "menuLimit": "Usó los 5 menús de hoy. Intente mañana o llame al Hub: {hub}",
+    "menuLimitLink": "Usó los 5 menús de hoy. Envíe 1 para un enlace. Hub: {hub}",
+    "buildingSaved": "Guardado. Su edificio es {building}, piso {floor}.",
+    "buildingSavedWhole": "Guardado. Su edificio es {building}.",
+    "languageSaved": "Guardado. Recibirá los mensajes en español.",
+    "noCheckinRequest": "No tiene ningún pedido de chequeo de bienestar.",
+    "checkinWithdrawn": "Se retiró su pedido de chequeo de bienestar."
   },
   "smsKeywords": {
     "yes": "sí, si"

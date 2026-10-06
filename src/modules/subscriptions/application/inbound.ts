@@ -8,7 +8,8 @@
 //   4. the keyword, from the body normalised (digits in any script read as 0-9, `toAsciiDigits`) and Twilio's `OptOutType`; the body is then
 //      dropped, and only the day's count of the keyword is kept (once per MessageSid, because step 1 stops a retry first);
 //   5. the decision table (domain/inbound.ts) and its action. Opt-out events and deletion requests are decided before anything else, and
-//      before any rate limit (S07.09 adds the inbound limits after them).
+//      before any rate limit (S07.09 adds the inbound limits after them). Replies 1, 2 and 3, and every reply inside an open menu, go to
+//      the menus (S07.05, `MenuPort`, application/menus.ts), which keep their page in the subscriber's `sms_prompt`.
 //
 // Deletion (`deleteNumber`): STOP, or a second 0 within 10 minutes, hard-deletes everything held for the number in this transaction, with
 // nothing kept: the subscriber (its places, muted topics and prompt go with it), any pending sign-up and any `inbound_reply` rows; each
@@ -29,6 +30,7 @@ import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { pendingSignupStore, type PendingSignupRow, type PendingSignupStore } from "../adapters/pendingSignupStore";
 import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type SubscriberStore } from "../adapters/subscriberStore";
 import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
+import { MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
 import { clientHash } from "./rateLimit";
 import type { SignupPlaces, SubscriberLookup } from "./webSignup";
 
@@ -48,16 +50,50 @@ export interface CheckinCleanup {
 /** Until E08: there are no check-in rows to remove. */
 export const noCheckinsYet: CheckinCleanup = { deleteForSubscriber: async () => undefined };
 
+/** What a withdrawal of a check-in request did: it withdrew one, or there was none. */
+export type CheckinWithdrawal = "withdrawn" | "none";
+
 /**
- * Port: the numbered menus (S07.05): reply 1 (building or floor), 2 (language) and 3 (withdraw a check-in request) from a subscriber, in the
- * router's transaction. Until S07.05 a reply 1, 2 or 3 changes nothing and is not answered, and the welcome does not offer them
- * (S07.05 puts them back into `smsTexts.welcome`).
+ * Port: `checkins`' check-in request (E07 handoffs; E08 definitions "Check-in request", "Changed location"), beside `deleteForSubscriber`
+ * and implemented with it by E08 (S08.05), in the router's transaction under the number's lock:
+ *  - `withdrawRequest(subscriberId, tx)`: reply 3 (S07.05). E08 withdraws the subscriber's request (`removeRequester`: its open rows tallied
+ *    and closed, `checkin_method` cleared, in the request lock order it owns) and says whether there was one; the reply is "You have no
+ *    check-in request" or the withdrawal's confirmation;
+ *  - `locationChanging(subscriberId, place, tx)`: menu 1 is about to replace every saved place with `place` (called after the subscriber's
+ *    row is locked and before its places are deleted, so the "where I live" place can still be read). E08 withdraws the request when that
+ *    place's building or floor changes ("Changed location") and says so; the confirmation is then followed by the withdrawal's text.
  */
-export interface MenuPort {
-  start(tx: DbTransaction, subscriber: { id: string; lang: LaunchCode }, choice: "1" | "2" | "3"): Promise<void>;
+export interface CheckinRequests {
+  withdrawRequest(subscriberId: string, tx: DbTransaction): Promise<CheckinWithdrawal>;
+  locationChanging(subscriberId: string, place: { rsn: string; floorId: string | null }, tx: DbTransaction): Promise<CheckinWithdrawal>;
 }
 
-export const noMenusYet: MenuPort = { start: async () => undefined };
+/** Until E08: nobody has a check-in request, so reply 3 is answered "You have no check-in request" and a move withdraws nothing. */
+export const noCheckinRequestsYet: CheckinRequests = { withdrawRequest: async () => "none", locationChanging: async () => "none" };
+
+/** The subscriber a menu acts for: its id and language, and the keyed hash of its number (the daily menu limit is per number). */
+export interface MenuSubscriber {
+  id: string;
+  lang: LaunchCode;
+  numberHash: string;
+}
+
+/**
+ * Port: the numbered menus (S07.05, `createMenus`), in the router's transaction under the number's lock: reply 1 (building or floor), 2
+ * (language) or 3 (withdraw a check-in request) from a subscriber with no menu open (`start`); a reply inside an open menu (`answer`, with
+ * the prompt row and the reply's digit 0-9, or null when it is not one digit: the body itself is not passed on); the notice that an idle
+ * menu has reset (`reset`, before the reply is read as a new keyword); and 1 to the edit link's offer (`sendEditLink`, S07.06). Each says
+ * whether it queued a reply.
+ */
+export interface MenuPort {
+  start(tx: DbTransaction, subscriber: MenuSubscriber, choice: "1" | "2" | "3"): Promise<boolean>;
+  answer(tx: DbTransaction, subscriber: MenuSubscriber, prompt: { kind: string; step: unknown }, digit: number | null): Promise<boolean>;
+  reset(tx: DbTransaction, subscriber: MenuSubscriber): Promise<boolean>;
+  sendEditLink(tx: DbTransaction, subscriber: MenuSubscriber): Promise<boolean>;
+}
+
+/** No menus: replies 1, 2 and 3 change nothing and are not answered (for tests of the router that are not about menus). */
+export const noMenus: MenuPort = { start: async () => false, answer: async () => false, reset: async () => false, sendEditLink: async () => false };
 
 /** Where the router reports what it did: the keyword, the state and the action, never a number, a body or an id. */
 export interface InboundLog {
@@ -145,7 +181,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
   const subscribers = deps.stores?.subscribers ?? subscriberStore;
   const inbound = deps.stores?.inbound ?? inboundStore;
   const checkins = deps.checkins ?? noCheckinsYet;
-  const menus = deps.menus ?? noMenusYet;
+  const menus = deps.menus ?? noMenus;
   const newId = deps.newId ?? (() => uuidv7());
 
   async function queue(
@@ -256,12 +292,14 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
         // A number that is not Canadian: nothing is held for it and nothing can be sent to it.
         if (phone === null) return { kind: "handled", keyword, state: "none", action: "none", replied: false };
 
+        // S07.05: the prompt row with its step (a menu's page) and whether it is idle (a menu 10 minutes old has reset).
+        const promptRow = subscriber ? await subscribers.promptOf(tx, subscriber.id, MENU_IDLE_MS) : null;
         const state: NumberState = subscriber
-          ? { kind: "active", prompt: (await subscribers.openPrompt(tx, subscriber.id)) === "delete_confirm" ? "delete_confirm" : "none" }
+          ? { kind: "active", prompt: openPromptOf(promptRow) }
           : pendingRow && !pendingRow.expired
             ? { kind: "pending" }
             : { kind: "none" };
-        const { action, cancelPrompt } = decide(keyword, state);
+        const { action, cancelPrompt, menuReset } = decide(keyword, state);
         // The inbound limit (step 4), after deletions and opt-out events and before anything else is done: a number that sent more than 20 an
         // hour gets no reply, changes nothing (not even a YES) and is only counted for the rest of the day (S07.09). The number is hashed, never kept.
         if (!exemptFromInboundLimit(keyword, action)) {
@@ -271,6 +309,10 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
         if (cancelPrompt && subscriber) await subscribers.clearPrompt(tx, subscriber.id);
 
         let replied = false;
+        // S07.05: the menus act for the subscriber with its number's keyed hash (the daily menu limit is per number); an idle menu's reset
+        // is said before the reply is handled as a new keyword.
+        const menuSubscriber = (): MenuSubscriber => ({ id: subscriber!.id, lang: subscriber!.lang as LaunchCode, numberHash: clientHash(deps.numberKey(), MENU_SCOPE, phone) });
+        if (menuReset && subscriber) replied = await menus.reset(tx, menuSubscriber());
         switch (action.kind) {
           case "delete":
             await deleteNumber(tx, phone, { subscriber, pending: pendingRow });
@@ -289,7 +331,14 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
             replied = true;
             break;
           case "menu":
-            await menus.start(tx, { id: subscriber!.id, lang: subscriber!.lang as LaunchCode }, action.choice);
+            replied = (await menus.start(tx, menuSubscriber(), action.choice)) || replied;
+            break;
+          case "menu_reply":
+            // The reply's digit is all a menu reads of the body.
+            replied = await menus.answer(tx, menuSubscriber(), promptRow!, menuDigit(message.body));
+            break;
+          case "edit_link":
+            replied = await menus.sendEditLink(tx, menuSubscriber());
             break;
           case "signup_info":
             // An expired pending sign-up is gone now (the purge would delete it); its language is the reply's.

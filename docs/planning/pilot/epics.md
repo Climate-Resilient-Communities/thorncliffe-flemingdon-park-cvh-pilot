@@ -3169,7 +3169,7 @@ So that I control whether I get texts.
 
 ### Story S07.05 — Residents change building, floor or language by numbered text menus
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 40 min (started 2026-10-06 01:32 UTC, built 02:12 UTC)
 - **Traces:** FR-D-6, AR-13, AR-19 (one-segment menus), AR-20 · **Depends on:** S07.04 · **Branch:** `e07-s05-sms-menus`
 
 As a resident with a basic phone,

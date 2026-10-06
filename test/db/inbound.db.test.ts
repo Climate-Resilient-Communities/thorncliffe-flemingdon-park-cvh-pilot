@@ -177,10 +177,11 @@ describe("the subscriber tables", () => {
       }
       expect(granted.join(","), table).toBe(expected);
     }
-    // The deletion's row lock needs an update right on one column: only retention_state (E09's), never the number or the language.
+    // The deletion's row lock needs an update right on one column: retention_state (E09's); S07.05's menus change the language and the
+    // neighbourhood. Never the number.
     const [columns] = await owner`select has_column_privilege('cvh_app', 'subscriber', 'retention_state', 'update') as state,
                                          has_column_privilege('cvh_app', 'subscriber', 'phone', 'update') as phone, has_column_privilege('cvh_app', 'subscriber', 'lang', 'update') as lang`;
-    expect(columns).toEqual({ state: true, phone: false, lang: false });
+    expect(columns).toEqual({ state: true, phone: false, lang: true });
   });
 
   it("refuse what a subscriber cannot be", async () => {
@@ -192,7 +193,8 @@ describe("the subscriber tables", () => {
     expect(await refusal(() => insert({ phone: "4165550123" }))).toMatch(/subscriber_phone_format/);
     expect(await refusal(() => insert({ phone: "+16475550198", lang: "zh-Hant" }))).toMatch(/subscriber_lang_known/);
     expect(await refusal(() => insert({ phone: "+16475550197", retention_state: "gone" }))).toMatch(/subscriber_retention_state_known/);
-    expect(await refusal(() => appSql`update subscriber set lang = 'fr'`)).toMatch(/permission denied/);
+    expect(await refusal(() => appSql`update subscriber set phone = '+16475550196'`)).toMatch(/permission denied/);
+    expect(await refusal(() => appSql`update subscriber set lang = 'zh-Hant'`)).toMatch(/subscriber_lang_known/);
     expect(await refusal(() => appSql`insert into inbound_reply (id, phone, expires_at) values (${crypto.randomUUID()}, ${OTHER}, now() + interval '2 hours')`)).toMatch(/inbound_reply_expires_after_30_minutes/);
   });
 });

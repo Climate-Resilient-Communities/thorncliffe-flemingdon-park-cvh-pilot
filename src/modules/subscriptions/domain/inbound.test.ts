@@ -87,6 +87,29 @@ describe("the decision table (E07 'Decision table': a test for every keyword, st
     other: { none: ["signup_info", false], pending: ["none", false], "active, no prompt": ["none", false], "active, delete prompt open": ["none", true] },
   };
 
+  // S07.05's prompts: a menu open (every reply but STOP, START and HELP is the menu's, 0 being Back), a menu idle for 10 minutes (it has
+  // reset: the reply says so and is read as a new keyword with no prompt), and the edit link's offer (1 asks for the link).
+  states.push(
+    { name: "active, menu open", state: { kind: "active", prompt: "menu" } },
+    { name: "active, menu idle 10 minutes", state: { kind: "active", prompt: "menu_idle" } },
+    { name: "active, edit link offered", state: { kind: "active", prompt: "edit_link_offer" } },
+  );
+  const menuRows: Record<InboundKeyword, [[string, boolean], [string, boolean], [string, boolean]]> = {
+    stop: [["delete", false], ["delete", false], ["delete", false]],
+    start: [["none", false], ["none", false], ["none", false]],
+    help: [["none", false], ["none", false], ["none", false]],
+    yes: [["menu_reply", false], ["already_signed_up", true], ["already_signed_up", true]],
+    "0": [["menu_reply", false], ["ask_delete", true], ["ask_delete", true]],
+    "1": [["menu_reply", false], ["menu", true], ["edit_link", true]],
+    "2": [["menu_reply", false], ["menu", true], ["menu", true]],
+    "3": [["menu_reply", false], ["menu", true], ["menu", true]],
+    other: [["menu_reply", false], ["none", true], ["none", true]],
+  };
+  for (const keyword of INBOUND_KEYWORDS) {
+    const [open, idle, offer] = menuRows[keyword];
+    Object.assign(table[keyword], { "active, menu open": open, "active, menu idle 10 minutes": idle, "active, edit link offered": offer });
+  }
+
   for (const keyword of INBOUND_KEYWORDS) {
     for (const { name, state } of states) {
       it(`${keyword} from a number that is ${name}: ${table[keyword][name]![0]}${table[keyword][name]![1] ? ", and the prompt is cancelled" : ""}`, () => {
@@ -95,9 +118,21 @@ describe("the decision table (E07 'Decision table': a test for every keyword, st
         expect(decision.action.kind).toBe(action);
         expect(decision.cancelPrompt).toBe(cancelled);
         if (action === "menu") expect(decision.action).toEqual({ kind: "menu", choice: keyword });
+        // The reset is said exactly when an idle menu gets a reply the router answers (not STOP, START or HELP: Twilio's).
+        const resets = state.kind === "active" && state.prompt === "menu_idle" && !["stop", "start", "help"].includes(keyword);
+        expect(decision.menuReset ?? false).toBe(resets);
       });
     }
   }
+
+  it("reads 0 inside a menu as Back (a menu reply), never as a deletion, so it is limited like any other menu reply", () => {
+    const menu: NumberState = { kind: "active", prompt: "menu" };
+    for (const zero of ["0", "۰", "০", "૦"]) {
+      const { action } = decide(key(zero), menu);
+      expect(action, zero).toEqual({ kind: "menu_reply" });
+      expect(exemptFromInboundLimit("0", action)).toBe(false);
+    }
+  });
 
   it("decides the same for a 0 typed in Urdu, Bengali or Gujarati digits as for 0", () => {
     const active: NumberState = { kind: "active", prompt: "none" };
