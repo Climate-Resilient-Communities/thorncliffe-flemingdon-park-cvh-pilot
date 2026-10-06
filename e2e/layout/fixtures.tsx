@@ -28,6 +28,7 @@ import { TextsView } from "@/app/staff/texts/TextsView";
 import type { PausedView } from "@/app/staff/texts/view";
 import { MeasuresView } from "@/app/staff/measures/MeasuresView";
 import type { MeasuresView as MeasuresModel } from "@/app/staff/measures/view";
+import { procedureLink } from "@/app/staff/procedures";
 import { CampaignView } from "@/app/staff/campaign/CampaignView";
 import { CampaignAnswerView, RehearseFormView, ReopenFormView, StartFormView, type CampaignFormLabels } from "@/app/staff/campaign/CampaignFormsView";
 import type { CampaignState } from "@/app/staff/campaign/control";
@@ -39,6 +40,7 @@ import { SignInForm } from "@/app/staff/sign-in/SignInForm";
 import { ChoosePasswordForm } from "@/app/staff/setup/password/ChoosePasswordForm";
 import { EnrolAuthenticator } from "@/app/staff/setup/authenticator/EnrolAuthenticator";
 import { AddPersonForm, type AddPersonLabels } from "@/app/staff/people/AddPersonForm";
+import { PeopleHeading } from "@/app/staff/people/PeopleHeading";
 import { ReissueForm } from "@/app/staff/people/ReissueForm";
 import { ResetAuthenticatorForm } from "@/app/staff/people/ResetAuthenticatorForm";
 import { ResetPasswordForm } from "@/app/staff/people/ResetPasswordForm";
@@ -1261,12 +1263,7 @@ export function PeopleFixture({
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/people">
       <Screen surface="staff" testId="screen">
         <Stack gap="section-hub">
-          <Stack gap="related">
-            <h1>{texts.heading}</h1>
-            {texts.paragraphs.map((text) => (
-              <p key={text}>{text}</p>
-            ))}
-          </Stack>
+          <PeopleHeading />
           {refusal ? (
             <p role="alert" className="hub-error">
               {englishText(`staff.people.errors.${refusal}`)}
@@ -1337,6 +1334,7 @@ export function CampaignFixture({
       <Screen surface="staff" testId="screen">
         <CampaignView
           text={text}
+          procedure={procedureLink("end-of-pilot")}
           screen={screen}
           unreadable={unreadable}
           answer={<CampaignAnswerView answer={answer} />}

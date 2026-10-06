@@ -125,6 +125,41 @@ export {
   type InboundKeyword,
   type NumberState,
 } from "./domain/inbound";
+// S09.03: a resident's access request (scripts/access-request): kept as two audit records without the number; the lookup of what is held for a number, in
+// one read-only transaction; and the deletion on the resident's behalf, which is the one E07 deletion STOP runs (deletion.ts).
+export {
+  ACCESS_REQUEST_SUBJECT,
+  checkinRowRecords,
+  checkinTableCheck,
+  createAccessRequests,
+  type AccessRequestDeps,
+  type AccessRequests,
+  type AdminRefusal,
+  type CheckinRecords,
+  type CheckinRefusal,
+  type NumberRefusal,
+  type OpenAccessRequest,
+  type RequestRefusal,
+} from "./application/accessRequest";
+export { createNumberDeletion, type NumberDeletion, type NumberDeletionDeps } from "./application/deletion";
+export {
+  ACCESS_REQUEST_FLAG_DAYS,
+  ACCESS_REQUEST_LIMIT_DAYS,
+  CLOSING_OUTCOMES,
+  deletionSummary,
+  heldRecordLines,
+  nothingHeld,
+  openRequests,
+  standingOf,
+  torontoTime,
+  type AccessRequestKind,
+  type AccessRequestOutcome,
+  type ClosingOutcome,
+  type HeldCheckins,
+  type HeldPrompt,
+  type HeldRecord,
+  type OpenRequest,
+} from "./domain/accessRequest";
 // S06.05: the drill roster, the staff phones a drill is texted on (composed in src/app/drills.ts), and the ContactResolver's source for `roster` recipients.
 export {
   createDrillRoster,

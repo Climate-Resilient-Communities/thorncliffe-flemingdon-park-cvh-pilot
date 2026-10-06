@@ -33,6 +33,9 @@ test.describe("R-33, Ask for a check-in", () => {
     await expect(page.locator("main h1")).toHaveText(catalogText("en", "R33.title"));
     await expect(page.getByTestId("checkin-page-what")).toContainText(catalogText("en", "R33.what"));
     await expect(page.getByTestId("checkin-page-what")).toContainText(catalogText("en", "R33.notEmergency"));
+    // Each section is a region named by its heading.
+    await expect(page.getByRole("region", { name: catalogText("en", "R33.whatTitle") })).toHaveAttribute("data-testid", "checkin-page-what");
+    await expect(page.getByRole("region", { name: catalogText("en", "checkin.howTitle") })).toHaveAttribute("data-testid", "checkin-page-how");
     await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
     await expect(page.getByTestId("checkin-page-sees")).toHaveText(catalogText("en", "checkin.sees"));
     await expect(page.getByTestId("checkin-page-coverage")).toContainText(HUB);

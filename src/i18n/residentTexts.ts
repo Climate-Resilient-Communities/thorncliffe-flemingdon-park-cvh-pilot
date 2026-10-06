@@ -71,7 +71,7 @@ export const RESIDENT_TEXT_KEYS = {
   buildingSavedWhole: "smsTexts.buildingSavedWhole",
   /** Menu 2's confirmation, in the new language, naming it. */
   languageSaved: "smsTexts.languageSaved",
-  /** Reply 3: no check-in request to withdraw (checkins' port says none: always, until E08), or the request withdrawn (S08.05). */
+  /** Reply 3: no check-in request to withdraw (checkins' port says none), or the request withdrawn (S08.05). */
   noCheckinRequest: "smsTexts.noCheckinRequest",
   checkinWithdrawn: "smsTexts.checkinWithdrawn",
   /** S08.05: menu 1 moved the resident, so the request was withdrawn; "Reply 1" for the edit link to ask again for the new floor. */

@@ -261,8 +261,9 @@ export function signupLink(publicBaseUrl: string, lang: LaunchCode): string {
 /**
  * S09.08: the E07 deletion (`deleteNumber` in the router, the very steps STOP runs) for the end-of-pilot purge, in the purge's transaction, which holds the
  * number's lock and has locked the subscriber's row after checking again that the purge deletes them. Everything held for the number goes: the subscriber, a
- * pending sign-up of the number if one exists, and its `inbound_reply` rows. The number comes from the purge and never leaves this call. (Once the deletion is
- * its own `createNumberDeletion`, S09.03 and S07.06, the purge calls that instead.)
+ * pending sign-up of the number if one exists, and its `inbound_reply` rows. The number comes from the purge and never leaves this call. (`deleteNumber` is
+ * `createNumberDeletion`'s `deleteFound`, deletion.ts, the one deletion S09.03's access request and S07.06's edit page run too; the purge reaches it through
+ * the router so that it deletes with the webhook's own check-ins port.)
  */
 export interface SubscriberDeletion {
   /** `roundsLocked`: the purge took checkins' `lockRounds` itself, first (S08.05), so the deletion does not take it again after the row. */
@@ -389,7 +390,10 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
           const limited = await inbound.limitInbound(tx, clientHash(deps.numberKey(), INBOUND_SCOPE, phone), INBOUND_LIMIT);
           if (limited !== "allowed") return { kind: "handled", keyword, state: state.kind, action: "rate_limited", replied: false };
         }
-        if (cancelPrompt && subscriber) await subscribers.clearPrompt(tx, subscriber.id);
+        // S08.05: reply 3 asks checkins first, which locks the round threads before the subscriber's row (E08 "Request lock order"); the prompt
+        // it cancels is cleared after that, never before, so an approval holding a thread and then the row FOR SHARE cannot deadlock with it.
+        const withdrawFirst = action.kind === "menu" && action.choice === "3";
+        if (cancelPrompt && subscriber && !withdrawFirst) await subscribers.clearPrompt(tx, subscriber.id);
 
         let replied = false;
         // S07.05: the menus act for the subscriber with its number's keyed hash (the daily menu limit is per number); an idle menu's reset
@@ -429,6 +433,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
             break;
           case "menu":
             replied = (await menus.start(tx, menuSubscriber(), action.choice)) || replied;
+            if (cancelPrompt && withdrawFirst) await subscribers.clearPrompt(tx, subscriber!.id);
             break;
           case "menu_reply":
             // The reply's digit is all a menu reads of the body.

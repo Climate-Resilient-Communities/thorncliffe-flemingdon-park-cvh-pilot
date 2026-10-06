@@ -92,6 +92,7 @@ describe("choosing the entry to correct (O-15)", () => {
 
   it("lists the entries residents can read, newest first, each a link that chooses it, and makes nothing yet", () => {
     expect(screen).toMatchObject({ mode: "correct", from: "correct", status: "new", title: "Correct an alert", ref: { alertId: ALERT, entryId: NEW_ENTRY } });
+    expect(screen.procedure).toMatchObject({ id: "correct-or-withdraw", text: "Procedure: correcting or withdrawing an entry (opens in a new tab)" });
     expect(screen.targets?.title).toBe("1. Which entry needs correcting?");
     expect(screen.targets?.items.map((item) => [item.key, item.heading, item.text, item.selected, item.href])).toEqual([
       [UPDATE, expect.stringMatching(/^Update, /), "Power is back on floors 1 to 4.", false, `/staff/alerts/correct?alert=${ALERT}&target=${UPDATE}`],

@@ -21,8 +21,8 @@ export function endOfPilotPurge(db: Db = getDb()): EndOfPilotPurge {
   return createEndOfPilotPurge({
     db,
     // The one deletion, as STOP runs it: the webhook's own router (so both delete with the same check-ins port), which `createInboundRouter` makes with its
-    // `SubscriberDeletion`; `inboundRouter` declares only the webhook's half. (S09.03 and S07.06 make the deletion `createNumberDeletion`: this call site then
-    // composes that instead.)
+    // `SubscriberDeletion`; `inboundRouter` declares only the webhook's half. (That deletion is `createNumberDeletion`, which S09.03's access request and
+    // S07.06's edit page run too; going through the router keeps the purge on the webhook's own check-ins port when E08 wires it.)
     deletion: inboundRouter({ db }) as ReturnType<typeof createInboundRouter>,
     // S08.05: the subscriber's round threads locked first, the deletion's first step (the router's deletion has the same port and is told not to repeat it).
     checkins: checkinRequests(),

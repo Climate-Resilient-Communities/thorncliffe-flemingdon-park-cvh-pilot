@@ -12,4 +12,7 @@ export {
   type RequestPlaces,
 } from "./application/requests";
 export type { CoversFloor, RequestStore, RoundThread, RoundThreads } from "./application/ports";
+// S09.03's access request reads the rows that still name a subscriber (subscriptions' lookup, in its read-only transaction).
+export { type SubscriberCheckinRow } from "./adapters/checkinStore";
+export { subscriberCheckinRows } from "./application/requests";
 export { isRoundThread, lockOrder, placeKept, planRequestChange, roundMatches, type CheckinRequest, type RequestPlace, type SavedPlace, type WantedRequest } from "./domain/requests";

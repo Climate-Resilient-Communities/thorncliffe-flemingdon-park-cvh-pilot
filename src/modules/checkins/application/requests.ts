@@ -30,7 +30,7 @@ import type { CheckinAnswer } from "../../../contracts/checkin";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { neighbourhoodsOfBuildings, roundTypes } from "../../places";
-import { checkinStore, type CheckinStore } from "../adapters/checkinStore";
+import { checkinStore, type CheckinStore, type SubscriberCheckinRow } from "../adapters/checkinStore";
 import {
   isRoundThread,
   lockOrder,
@@ -92,6 +92,11 @@ export interface CheckinRequests {
   lockRounds(subscriberId: string, tx: DbTransaction): Promise<void>;
   deleteForSubscriber(subscriberId: string, tx: DbTransaction): Promise<void>;
   ensureRound(tx: DbTransaction, thread: RoundThread, requesterIds: readonly string[]): Promise<number>;
+}
+
+/** The check-in rows that still name the subscriber (live, or kept for the Hub's follow-up), for a resident's access request (S09.03). */
+export function subscriberCheckinRows(executor: DbExecutor, subscriberId: string, store: CheckinStore = checkinStore): Promise<SubscriberCheckinRow[]> {
+  return store.subscriberRows(executor, subscriberId);
 }
 
 export function createCheckinRequests(deps: CheckinRequestsDeps): CheckinRequests {

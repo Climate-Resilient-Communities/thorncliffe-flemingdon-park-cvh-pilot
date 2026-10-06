@@ -31,6 +31,14 @@ export const SYSTEM_ACTOR = null;
  */
 export const FACTOR_RESET_REASONS = ["lost_device", "device_broken", "all_admins_lost_access"] as const;
 
+/**
+ * A resident's access request (S09.03, E09 "Access request"; the pilot has no screen for it, scripts/access-request records it): what the resident asked for, and
+ * how the request ended. `deleted` is written only by the deletion on the resident's behalf, in the deletion's own transaction; `not_verified` is a request
+ * from someone who could not show control of the number (nothing revealed, nothing deleted).
+ */
+export const ACCESS_REQUEST_KINDS = ["access", "correction", "deletion"] as const;
+export const ACCESS_REQUEST_OUTCOMES = ["answered", "deleted", "not_verified", "withdrawn"] as const;
+
 /** Why an action was refused or failed: a code, never a message or an input. */
 export const REFUSAL_REASONS = [
   "wrong_password",
@@ -343,6 +351,12 @@ export const AUDIT_META = {
   // reason (`validation`, `conflict` for terms that changed, `throttled` for the staff account's 40 in 24 hours, `not_available`) and the sign-up's own
   // refusal code.
   "signup.assisted": meta({ code: z.enum(SIGNUP_ERROR_CODES).optional() }),
+
+  // A resident's access request (S09.03): IT records it with scripts/access-request on an Admin's behalf; the actor is that Admin. The subject is the request
+  // (type `access_request`, a uuid made when it was received, which ties `closed` to its `received`). Never the number, a name or what was held: `request` is
+  // what the resident asked for and `outcome` how it ended. The weekly review (S09.04's `weekly_review`) flags a request open for more than 25 days.
+  "access_request.received": meta({ request: z.enum(ACCESS_REQUEST_KINDS).optional() }),
+  "access_request.closed": meta({ outcome: z.enum(ACCESS_REQUEST_OUTCOMES).optional() }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type AuditAction = keyof typeof AUDIT_META;
@@ -380,6 +394,8 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "drill_roster.added": ["roster_size"],
   "drill_roster.edited": ["roster_size"],
   "drill_roster.removed": ["roster_size"],
+  "access_request.received": ["request"],
+  "access_request.closed": ["outcome"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];

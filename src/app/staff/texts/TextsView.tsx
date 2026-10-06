@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
+import { ProcedureLink } from "../ProcedureLink";
+import { procedureLink } from "../procedures";
 import type { PausedView } from "./view";
 
 const t = (key: string) => englishText(`staff.texts.${key}`);
@@ -18,6 +20,7 @@ export function TextsView({ paused, unreadable = false, form }: { paused: Paused
       <Stack gap="related">
         <h1>{t("title")}</h1>
         <p>{t("lead")}</p>
+        <ProcedureLink link={procedureLink("pause-and-resume-texts")} />
       </Stack>
       {unreadable ? (
         <p role="alert" className="hub-error" data-testid="texts-unreadable">

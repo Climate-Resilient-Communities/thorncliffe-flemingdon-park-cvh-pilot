@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ProcedureLinkView } from "../procedures";
 import type { CampaignPageText, CampaignScreen } from "./view";
 import { reopenSignupsAction, rehearseCampaignAction, startCampaignAction } from "./actions";
 import type { CampaignState } from "./control";
@@ -16,12 +17,14 @@ const IDLE: CampaignState = { status: "idle" };
  */
 export function CampaignForms({
   text,
+  procedure,
   screen,
   labels,
   rehearseKey,
   startKey,
 }: {
   text: CampaignPageText;
+  procedure: ProcedureLinkView;
   screen: CampaignScreen;
   labels: CampaignFormLabels;
   rehearseKey: string;
@@ -34,6 +37,7 @@ export function CampaignForms({
   return (
     <CampaignView
       text={text}
+      procedure={procedure}
       screen={screen}
       answer={<CampaignAnswerView answer={latestAnswer(rehearseState, startState, reopenState)} />}
       forms={{

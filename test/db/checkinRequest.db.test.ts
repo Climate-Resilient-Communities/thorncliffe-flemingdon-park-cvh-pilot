@@ -4,8 +4,9 @@
 // number), at YES (activated only if still covered, joining the open matching rounds in the same transaction, or the welcome followed by "No
 // ambassador covers your floor now"), on the edit page (asked with consent, its method changed, withdrawn, refused without consent, uncovered,
 // withdrawn by a change of where the resident lives) and by text (reply 3, menu 1's move with the link's offer); E07's deletion closing the
-// rows; the coverage counts; and a withdrawal or a deletion racing an approval that creates a round, in both orders: never a live row left
-// for a withdrawn request or a deleted subscriber. Every number is fictional (555-01xx) and nothing reaches Twilio.
+// rows; the closed stubs' purge job; the coverage counts; and a withdrawal or a deletion racing an approval that creates a round, in both
+// orders, and reply 3 with a prompt it cancels open while an approval holds the thread: never a deadlock, and never a live row left for a
+// withdrawn request or a deleted subscriber. Every number is fictional (555-01xx) and nothing reaches Twilio.
 import { randomBytes } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -230,13 +231,22 @@ async function untilWaiting(): Promise<void> {
   throw new Error("no session waited for a lock");
 }
 
-/** An approval that makes or adds to the round (S08.06 calls `ensureRound` so): the thread's lock first, then the requesters'; `hold` keeps it open. */
-function approvalRound(alertId: string, requesterIds: string[], gate?: { reached: () => void; hold: Promise<void> }) {
+/**
+ * An approval that makes or adds to the round (S08.06 calls `ensureRound` so): the thread's lock first, then the requesters'; `hold` keeps it
+ * open, after the round, or with `early` between the thread's lock and the round (the requesters' rows not yet locked).
+ */
+function approvalRound(alertId: string, requesterIds: string[], gate?: { reached: () => void; hold: Promise<void>; early?: boolean }) {
   return app.transaction(async (tx) => {
     const [locked] = await roundThreads.lock(tx, [alertId]);
+    if (gate?.early) {
+      gate.reached();
+      await gate.hold;
+    }
     const added = await checkinsOn().ensureRound(tx, locked!, requesterIds);
-    gate?.reached();
-    await gate?.hold;
+    if (!gate?.early) {
+      gate?.reached();
+      await gate?.hold;
+    }
     return added;
   });
 }
@@ -474,6 +484,36 @@ describe("E07's deletion (checkins' deleteForSubscriber port)", () => {
   });
 });
 
+describe("the closed stubs' purge (E08 'Closed stub')", () => {
+  it("deletes a stub 2 hours after it was closed by its own pg_cron job, and keeps a newer stub, a live row, a kept row and the tally", async () => {
+    const [job] = await owner`select schedule, command from cron.job where jobname = 'checkins-purge-stubs'`;
+    expect(job!.schedule).toBe("*/15 * * * *");
+    const [old, recent, kept, live] = [
+      await subscriber({ request: ON_31_1 }),
+      await subscriber({ phone: OTHER, request: ON_31_1 }),
+      await subscriber({ phone: "+14165550183", request: ON_31_1 }),
+      await subscriber({ phone: "+14165550184", request: ON_31_1 }),
+    ];
+    const heat = await thread();
+    expect(await approvalRound(heat, [old, recent, kept, live])).toBe(4);
+    const close = (id: string, hoursAgo: number) =>
+      owner`update checkin set outcome = 'withdrawn', tallied_at = now(), subscriber_id = null, method = null, closed_at = now() - ${hoursAgo} * interval '1 hour' where subscriber_id = ${id}`;
+    await close(old, 2.05);
+    await close(recent, 1.9);
+    // Kept after a close for the Hub's follow-up (S08.08): tallied, not closed.
+    await owner`update checkin set status = 'not_reached', outcome = 'not_reached', tallied_at = now() where subscriber_id = ${kept}`;
+    const tally = await tallyOf(heat);
+    expect(tally).toEqual({ requested: 4, withdrawn: 2, not_reached: 1 });
+
+    await owner.unsafe(job!.command as string);
+    const left = await owner`select subscriber_id, closed_at is not null as closed, closed_at > now() - interval '2 hours' as recent from checkin where alert_id = ${heat}`;
+    expect(left).toHaveLength(3);
+    expect(left.filter((row) => row.closed)).toEqual([{ subscriber_id: null, closed: true, recent: true }]);
+    expect(left.filter((row) => !row.closed).map((row) => row.subscriber_id).sort()).toEqual([kept, live].sort());
+    expect(await tallyOf(heat)).toEqual(tally);
+  });
+});
+
 describe("the coverage view's counts", () => {
   it("counts the requests on each building and floor, with no one named", async () => {
     await subscriber({ request: ON_31_1 });
@@ -499,6 +539,51 @@ describe("a withdrawal or a deletion racing an approval that creates a round (E0
     expect(await liveRowsOf(id)).toHaveLength(0);
     expect(await rowsOf(heat)).toMatchObject([{ subscriber_id: null, outcome: "withdrawn", closed: true }]);
     expect(await tallyOf(heat)).toEqual({ requested: 1, withdrawn: 1 });
+  });
+
+  // A prompt that reply 3 cancels: the withdrawal still locks the thread before the subscriber's row, and the prompt is cleared after it.
+  const prompts: [string, (id: string) => Promise<unknown>, string][] = [
+    ["a deletion's confirmation (0)", () => send("0"), "delete_confirm"],
+    [
+      "the edit link's offer (a menu closed by 0)",
+      async () => {
+        await send("1");
+        await send("0");
+      },
+      "edit_link_offer",
+    ],
+    [
+      "a menu gone idle",
+      async (id) => {
+        await send("1");
+        await owner`update sms_prompt set sent_at = sent_at - interval '11 minutes', expires_at = expires_at - interval '11 minutes' where subscriber_id = ${id}`;
+      },
+      "menu_building",
+    ],
+  ];
+  it.each(prompts)("reply 3 with %s open, the approval holding the thread: both commit, and no live row or prompt is left", async (_, open, kind) => {
+    const id = await subscriber({ request: ON_31_1 });
+    const heat = await thread();
+    await approvalRound(heat, [id]);
+    await open(id);
+    expect((await owner`select kind from sms_prompt where subscriber_id = ${id}`)[0]).toEqual({ kind });
+    const hold = deferred();
+    const reached = deferred();
+    // The approval holds the thread; once reply 3 waits for it, the approval locks the requester's row FOR SHARE (`ensureRound`).
+    const approval = approvalRound(heat, [id], { reached: reached.resolve, hold: hold.promise, early: true });
+    await reached.promise;
+    const withdrawal = send("3");
+    await untilWaiting();
+    hold.resolve();
+    expect(await Promise.allSettled([approval, withdrawal])).toMatchObject([
+      { status: "fulfilled", value: 0 },
+      { status: "fulfilled", value: { action: "menu", replied: true } },
+    ]);
+    expect(await liveRowsOf(id)).toHaveLength(0);
+    expect(await rowsOf(heat)).toMatchObject([{ subscriber_id: null, outcome: "withdrawn", closed: true }]);
+    expect((await requestOf(id))!.checkin_method).toBeNull();
+    expect(await owner`select 1 from sms_prompt where subscriber_id = ${id}`).toHaveLength(0);
+    expect((await textsTo(id)).map((text) => text.body)).toContain("Your check-in request is withdrawn.");
   });
 
   it("the withdrawal first: the approval waits for the subscriber's row, then makes no row", async () => {

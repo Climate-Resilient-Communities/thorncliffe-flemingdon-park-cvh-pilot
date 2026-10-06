@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import type { DbExecutor } from "../../../platform/db";
+import { normaliseUsername } from "../domain/newAccount";
 import type { PolicyAssignment } from "../domain/policy";
 import type { StaffStatus } from "../domain/staffAccount";
 import { readAssignments } from "./assignmentRead";
@@ -38,4 +39,17 @@ export async function readStaffStanding(executor: DbExecutor, staffId: string): 
 export async function readStaffName(executor: DbExecutor, staffId: string): Promise<string | null> {
   const [row] = await executor.select({ firstName: staffAccount.firstName, lastName: staffAccount.lastName }).from(staffAccount).where(eq(staffAccount.id, staffId));
   return row ? `${row.firstName} ${row.lastName}` : null;
+}
+
+/**
+ * A staff member found by username, for a script IT runs on an Admin's behalf (S09.03, scripts/access-request: the Admin who handled a resident's access request
+ * is the actor of its audit records): their id, role, status and name. Null when there is no such account. The username is matched as sign-in matches it, in
+ * lower case ("JDoe" is "jdoe").
+ */
+export async function readStaffByUsername(executor: DbExecutor, username: string): Promise<{ id: string; role: StaffRole; status: StaffStatus; name: string } | null> {
+  const [row] = await executor
+    .select({ id: staffAccount.id, role: staffAccount.role, status: staffAccount.status, firstName: staffAccount.firstName, lastName: staffAccount.lastName })
+    .from(staffAccount)
+    .where(eq(staffAccount.username, normaliseUsername(username)));
+  return row ? { id: row.id, role: row.role, status: row.status, name: `${row.firstName} ${row.lastName}` } : null;
 }

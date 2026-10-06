@@ -19,7 +19,15 @@ export const record = recorder.record;
  */
 export const recordRefusal = recorder.recordRefusal;
 
+/**
+ * `readAuditRecords(executor, { subjectType, actions, subjectId? })`: the records of a subject type, oldest first (S09.03: a resident's access request is kept
+ * only as its audit records). Reading never changes the trail.
+ */
+export { readAuditRecords, type AuditRow } from "./adapters/auditRead";
+
 export {
+  ACCESS_REQUEST_KINDS,
+  ACCESS_REQUEST_OUTCOMES,
   AUDIT_ACTIONS,
   AuditRecordError,
   FACTOR_RESET_REASONS,
@@ -29,4 +37,5 @@ export {
   type AuditAction,
   type AuditEvent,
   type AuditMeta,
+  type AuditOutcome,
 } from "./domain/actions";
