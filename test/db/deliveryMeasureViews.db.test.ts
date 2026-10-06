@@ -351,11 +351,28 @@ describe("what an alert cost", () => {
     // That cell is not "fewer than 5" (it is 6): it reads "not shown".
     expect(languageRow(cost, "en")).toMatchObject({ texts: { n: null, shown: "not shown" }, countedMillicents: null });
     expect(languageRow(cost, "ur")).toMatchObject({ texts: { n: 6, shown: "6" }, countedMillicents: 24_000 });
-    expect(cost?.total).toMatchObject({ texts: { n: 15, shown: "15" }, countedMillicents: (12 + 24 + 6) * 1000 });
+    // With a language cell hidden, the total is hidden too (review fix 20261007030000): its count and cost less the visible cells would give the hidden ones away.
+    expect(cost?.total).toMatchObject({ texts: { n: null, shown: "not shown" }, basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null });
     // A whole entry of fewer than 5 texts has no total amount either.
     const tiny = await seedEntry();
     await texts(tiny, "en", 3, 2);
     expect((await entryCost(tiny))?.total).toMatchObject({ texts: { n: null, shown: "fewer than 5" }, countedMillicents: null, basis: null });
+  });
+
+  it("hides the entry's total when two language cells are hidden, so its count and cost cannot be solved for each (en 50, sk 3, pa 20)", async () => {
+    const entryId = await seedEntry();
+    await texts(entryId, "en", 50, 2);
+    await texts(entryId, "sk", 3, 6, { segments: 3 });
+    await texts(entryId, "pa", 20, 4, { segments: 2 });
+    const cost = await entryCost(entryId);
+    expect(languageRow(cost, "en")).toMatchObject({ texts: { n: 50, shown: "50" }, basis: "estimate", countedMillicents: 100_000 });
+    expect(languageRow(cost, "sk")).toMatchObject({ texts: { n: null, shown: "fewer than 5" }, basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null });
+    expect(languageRow(cost, "pa")).toMatchObject({ texts: { n: null, shown: "not shown" }, basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null });
+    // Were the total 73 texts at 198 cents, less en's 50 at 100: 23 texts at 98 cents, so 6 sk + 4 pa = 98 and sk + pa = 23 give sk 3 and pa 20.
+    expect(cost?.total).toMatchObject({ lang: null, texts: { n: null, shown: "not shown" }, basis: null, countedMillicents: null, actualMillicents: null, estimateCents: null });
+    // Nothing the view returns for the entry holds the hidden counts or amounts.
+    const rows = await appSql`select lang, texts, estimate_cents, counted_millicents from alert_cost where entry_id = ${entryId} and texts is not null`;
+    expect(rows.map((row) => ({ ...row, counted_millicents: Number(row.counted_millicents) }))).toEqual([{ lang: "en", texts: 50, estimate_cents: 100, counted_millicents: 100_000 }]);
   });
 
   it("reports a drill's texts apart from real ones", async () => {
