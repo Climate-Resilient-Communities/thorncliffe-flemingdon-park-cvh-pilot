@@ -65,6 +65,9 @@ const DEADLINE_PASSED = sql`exists (select 1 from campaign c where not c.rehears
 /** The real campaign is asking (started or ended, not cancelled): a `reconsent_pending` subscriber's YES is a re-consent until the deadline. */
 const ASKING = sql`exists (select 1 from campaign c where not c.rehearsal and c.state <> 'cancelled')`;
 
+/** The owner cancelled the real campaign (docs/config.md "Cancelling"): it asks nobody any more and deletes nobody. */
+const CANCELLED = sql`exists (select 1 from campaign c where not c.rehearsal and c.state = 'cancelled')`;
+
 /**
  * The one rule of who receives texts (E09 "Receiving subscriber"), for a subscriber whose retention state is `state`: `active` and `retained` always;
  * `reconsent_pending` until the real campaign's deadline has passed (by the database's clock), and never after it, even before S09.08's purge deletes them
@@ -224,13 +227,16 @@ export const campaignStore = {
 
   /**
    * Where a subscriber stands in the campaign, by the database's clock: `open` (asked, before the deadline: a YES keeps them), `lapsed` (asked, the
-   * deadline passed: they receive nothing until the purge deletes them), or null (not asked, they said YES, or the owner cancelled the campaign).
+   * deadline passed: they receive nothing until the purge deletes them), `cancelled` (asked by a campaign the owner cancelled: they stay
+   * `reconsent_pending`, keep receiving, are never lapsed nor purged, and their YES is answered as any subscriber's), or null (not asked, or they said YES).
+   * The inbound router treats `cancelled` as null; the access request's lookup (S09.03) reads it out.
    */
-  async reconsentOf(tx: DbTransaction, subscriberId: string): Promise<"open" | "lapsed" | null> {
-    const [row] = await tx.execute<{ standing: "open" | "lapsed" | null }>(sql`
+  async reconsentOf(tx: DbTransaction, subscriberId: string): Promise<"open" | "lapsed" | "cancelled" | null> {
+    const [row] = await tx.execute<{ standing: "open" | "lapsed" | "cancelled" | null }>(sql`
       select case when s.retention_state <> 'reconsent_pending' then null
                   when ${lapsedSql(sql`s.retention_state`)} then 'lapsed'
                   when ${ASKING} then 'open'
+                  when ${CANCELLED} then 'cancelled'
                   else null end as standing
       from subscriber s where s.id = ${subscriberId}`);
     return row?.standing ?? null;

@@ -73,6 +73,7 @@ describe("heldRecordLines", () => {
         consentVersion: "2026-10-02.1",
         startedBy: "staff",
         retentionState: "active",
+        reconsent: null,
         places: [
           { rsn: "9100011", address: "11 Sample Road", floor: "2" },
           { rsn: "9100099", address: null, floor: null },
@@ -123,6 +124,7 @@ describe("heldRecordLines", () => {
       consentVersion: "2026-10-02.1",
       startedBy: "web",
       retentionState: "active",
+      reconsent: null,
       places: [],
       mutedTopics: [],
       prompt: null,
@@ -145,6 +147,7 @@ describe("heldRecordLines", () => {
       consentVersion: "2026-10-02.1",
       startedBy: "web",
       retentionState: "reconsent_pending",
+      reconsent: { kind: "open", deadlineDate: "2026-12-05" },
       places: [],
       mutedTopics: [],
       prompt: { kind: "reconsent", since: new Date("2026-11-05T15:00:00Z"), until: new Date("2026-12-06T05:00:00Z"), step: null },
@@ -153,22 +156,75 @@ describe("heldRecordLines", () => {
     };
 
     const asked = heldRecordLines({ ...NOTHING, subscriber });
+    expect(asked).toContain("Subscriber (gets text alerts):");
     expect(asked).toContain(
-      "  Retention state: asked at the end of the pilot whether to stay (reconsent_pending): deleted with everything held for the number after the campaign's deadline unless they reply YES",
+      "  Retention state: asked at the end of the pilot whether to stay (reconsent_pending): deleted with everything held for the number after the campaign's deadline, the end of 2026-12-05, unless they reply YES before it",
     );
     expect(asked).toContain(
       "  Open prompt: asked at the end of the pilot whether to keep getting alerts (reply YES to stay) (reconsent), sent 2026-11-05 10:00, kept until 2026-12-06 00:00",
     );
-    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "retained", prompt: null } })).toContain(
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "retained", reconsent: null, prompt: null } })).toContain(
       "  Retention state: replied YES at the end of the pilot and stays (retained)",
     );
 
     const menu = { kind: "menu_building", since: new Date("2026-10-06T13:30:00Z"), until: new Date("2026-10-06T14:30:00Z"), step: "choosing a building on Sample Road" };
-    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "active", prompt: menu } })).toContain(
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "active", reconsent: null, prompt: menu } })).toContain(
       "  Open prompt: the building menu (reply 1) (menu_building), sent 2026-10-06 09:30, kept until 2026-10-06 10:30; choosing a building on Sample Road",
     );
-    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "someday", prompt: { ...menu, kind: "a_new_kind", step: null } } })).toEqual(
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "someday", reconsent: null, prompt: { ...menu, kind: "a_new_kind", step: null } } })).toEqual(
       expect.arrayContaining(["  Retention state: someday", "  Open prompt: a_new_kind, sent 2026-10-06 09:30, kept until 2026-10-06 10:30"]),
+    );
+  });
+
+  it("says what the end of the pilot means for an asked subscriber by where the campaign stands: before its deadline, past it, or cancelled", () => {
+    const subscriber: NonNullable<HeldRecord["subscriber"]> = {
+      since: new Date("2026-10-01T14:00:00Z"),
+      lang: "en",
+      neighbourhood: "Flemingdon Park (FP)",
+      groups: [],
+      consentVersion: "2026-10-02.1",
+      startedBy: "web",
+      retentionState: "reconsent_pending",
+      reconsent: { kind: "lapsed", deadlineDate: "2026-12-05" },
+      places: [],
+      mutedTopics: [],
+      prompt: { kind: "reconsent", since: new Date("2026-11-05T15:00:00Z"), until: new Date("2026-12-06T05:00:00Z"), step: null },
+      editLink: null,
+      checkinRequest: null,
+    };
+
+    // Past the deadline (lapsed): they get nothing, the purge deletes them, and a YES is answered "The CVH pilot has ended" and changes nothing.
+    const lapsed = heldRecordLines({ ...NOTHING, subscriber });
+    expect(lapsed).toContain("Subscriber (no longer gets text alerts: past the end-of-pilot deadline):");
+    expect(lapsed).toContain(
+      "  Retention state: asked at the end of the pilot whether to stay (reconsent_pending): the campaign's deadline, the end of 2026-12-05, has passed without a YES: they get no texts, the end-of-pilot purge deletes them with everything held for the number, and a YES no longer keeps them",
+    );
+    expect(lapsed).toContain(
+      "  Open prompt: asked at the end of the pilot whether to keep getting alerts (its deadline has passed: a YES no longer keeps them) (reconsent), sent 2026-11-05 10:00, kept until 2026-12-06 00:00",
+    );
+    expect(lapsed.join("\n")).not.toMatch(/unless they reply YES|reply YES to stay/);
+
+    // Cancelled by the owner (docs/config.md "Cancelling"): they stay reconsent_pending, keep receiving, are never lapsed nor purged.
+    const cancelled = heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, reconsent: { kind: "cancelled" } } });
+    expect(cancelled).toContain("Subscriber (gets text alerts):");
+    expect(cancelled).toContain(
+      "  Retention state: asked at the end of the pilot whether to stay (reconsent_pending), by a campaign the owner cancelled: they keep getting alerts, and nothing is deleted because of it",
+    );
+    expect(cancelled).toContain(
+      "  Open prompt: asked at the end of the pilot whether to keep getting alerts (the campaign was cancelled: a YES changes nothing) (reconsent), sent 2026-11-05 10:00, kept until 2026-12-06 00:00",
+    );
+    expect(cancelled.join("\n")).not.toMatch(/deleted with everything|purge deletes|reply YES to stay/);
+
+    // With no campaign to read, nothing is said of what happens next.
+    const unknown = heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, reconsent: null } });
+    expect(unknown).toContain("  Retention state: asked at the end of the pilot whether to stay (reconsent_pending)");
+    expect(unknown).toContain("  Open prompt: asked at the end of the pilot whether to keep getting alerts (reconsent), sent 2026-11-05 10:00, kept until 2026-12-06 00:00");
+  });
+
+  it("says what the once-a-day sign-up reply's keyed hash counts: every reply to a number with no subscription, not only the sign-up link", () => {
+    const lines = heldRecordLines({ ...NOTHING, hashes: [{ scope: "signup_info", count: 1, latest: new Date("2026-10-06T13:00:00Z") }] });
+    expect(lines).toContain(
+      "Keyed hashes of the number (rate limits, each deleted after 24 hours): replies to a number with no subscription or to a YES after the end-of-pilot deadline (the sign-up link or, while the pilot ends, that sign-ups are paused or that the pilot has ended) (signup_info) 1, latest 2026-10-06 09:00",
     );
   });
 
@@ -267,6 +323,7 @@ describe("deletionSummary", () => {
         consentVersion: "2026-10-02.1",
         startedBy: "web",
         retentionState: "active",
+        reconsent: null,
         places: [],
         mutedTopics: [],
         prompt: null,
