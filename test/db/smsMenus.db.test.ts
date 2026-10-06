@@ -142,7 +142,8 @@ describe("the grants the menus need", () => {
                                         has_column_privilege('cvh_app', 'subscriber', 'groups', 'update') as groups,
                                         has_column_privilege('cvh_app', 'subscriber', 'consent_version', 'update') as consent,
                                         has_column_privilege('cvh_app', 'subscriber', 'started_by', 'update') as started`;
-    expect(rights).toEqual({ lang: true, neighbourhood: true, retention: true, phone: false, groups: false, consent: false, started: false });
+    // S07.06's edit page changes the groups too (20261006150000_subscription_edit_token.sql).
+    expect(rights).toEqual({ lang: true, neighbourhood: true, retention: true, phone: false, groups: true, consent: false, started: false });
     for (const role of ["anon", "authenticated"]) {
       const [any] = await owner`select has_column_privilege(${role}, 'subscriber', 'lang', 'update') as lang`;
       expect(any!.lang, role).toBe(false);
@@ -265,17 +266,17 @@ describe("reply 1: building or floor", () => {
 
   it("asks checkins first ('Changed location', E08), before the places are replaced, and adds the withdrawal to the confirmation", async () => {
     const id = await subscriber("en");
-    const calls: { subscriberId: string; place: unknown; placesThen: unknown }[] = [];
+    const calls: { subscriberId: string; places: unknown; placesThen: unknown }[] = [];
     const checkins: CheckinRequests = {
       withdrawRequest: async () => "none",
-      locationChanging: async (subscriberId, place, tx) => {
+      locationChanging: async (subscriberId, places, tx) => {
         const placesThen = await tx.execute(`select rsn from subscriber_place where subscriber_id = '${subscriberId}'`);
-        calls.push({ subscriberId, place, placesThen: [...placesThen].map((r) => (r as { rsn: string }).rsn) });
+        calls.push({ subscriberId, places, placesThen: [...placesThen].map((r) => (r as { rsn: string }).rsn) });
         return "withdrawn";
       },
     };
     for (const reply of ["1", "1", "1", "2"]) await send(reply, { checkins });
-    expect(calls).toEqual([{ subscriberId: id, place: { rsn: RSN_12, floorId: FLOOR_G }, placesThen: [RSN_12] }]);
+    expect(calls).toEqual([{ subscriberId: id, places: [{ rsn: RSN_12, floorId: FLOOR_G }], placesThen: [RSN_12] }]);
     const sent = await replies();
     expect(sent.at(-2)!.body).toBe("Saved. Your building is now 12 Menu Street, floor G.");
     expect(sent.at(-1)!.body).toBe("Your check-in request is withdrawn.");

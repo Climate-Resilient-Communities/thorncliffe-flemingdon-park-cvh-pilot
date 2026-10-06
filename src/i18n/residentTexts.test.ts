@@ -51,6 +51,17 @@ describe("the resident texts' catalog strings (AD-9)", () => {
     }
   });
 
+  it("keep the digit, the 30 minutes and the {placeholders} of S07.06's edit link texts in every language", () => {
+    for (const lang of LAUNCH_CODES) {
+      expect(residentText(lang, "menuClosedLink"), lang).toContain("1");
+      expect(residentText(lang, "editLink"), lang).toContain("{link}");
+      expect(residentText(lang, "editLink"), lang).toContain("30");
+      expect(residentText(lang, "editSaved"), lang).toContain("{hub}");
+      // The link is filled in whole: nothing in the text runs into it (a space or the start before it, a space or the end after it).
+      expect(residentText(lang, "editLink"), lang).toMatch(/(?:^|\s)\{link\}(?:\s|$)/u);
+    }
+  });
+
   it("has no catalog for a script variant", () => {
     expect(() => residentText("zh-Hant" as never, "confirmation")).toThrow(RangeError);
   });

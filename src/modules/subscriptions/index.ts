@@ -103,6 +103,12 @@ export {
 // request), with the edit link's port (S07.06) and the rules of their pages.
 export { createMenus, fitsOneText, noEditLinkYet, placesForMenus, type EditLinkPort, type MenuDeps, type MenuPlaces } from "./application/menus";
 export { HUB_NUMBER, MENUS_PER_DAY, MENU_IDLE_MS, MENU_SCOPE, MenuPageTooLong, menuDigit, paginate } from "./domain/menus";
+// The one-time web link (S07.06): the menus' EditLinkPort, the page's view, change and deletion, and the log of its routes (tokens and numbers
+// never written). The deletion is E07's one (deletion.ts), which S09.03's deletion on a resident's behalf runs too.
+export { createEditLink, editTokenHash, newEditToken, type EditChangeOutcome, type EditDeleteOutcome, type EditLink, type EditLinkDeps, type EditPlaces } from "./application/editLink";
+export { EDIT_LINK_PURPOSE, editLinkUrl, redactEditTokens } from "./domain/editLink";
+export { stdoutSubscriptionsLog, type SubscriptionsLog } from "./adapters/subscriptionsLog";
+export { createNumberDeletion, type NumberDeletion, type NumberDeletionDeps } from "./application/deletion";
 export { createInboundWebhook, type InboundRequest, type InboundResult, type InboundWebhook, type InboundWebhookDeps, type SignatureRefusal } from "./application/inboundWebhook";
 export {
   DELETE_CONFIRM_MS,

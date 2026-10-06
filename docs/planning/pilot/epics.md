@@ -3208,7 +3208,7 @@ So that I can keep my alerts right without a smartphone.
 
 ### Story S07.06 — Residents change or delete their subscription with a one-time web link
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 52 min (started 2026-10-06 03:08 UTC, built 04:00 UTC)
 - **Traces:** FR-A2, AR-13, AR-17 · **Depends on:** S07.05 · **Branch:** `e07-s06-edit-link`
 
 As a resident with a smartphone,

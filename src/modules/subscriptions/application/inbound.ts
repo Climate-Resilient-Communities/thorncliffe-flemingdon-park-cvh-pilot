@@ -31,6 +31,7 @@ import { pendingSignupStore, type PendingSignupRow, type PendingSignupStore } fr
 import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type SubscriberStore } from "../adapters/subscriberStore";
 import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
 import { MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
+import { createNumberDeletion } from "./deletion";
 import { clientHash } from "./rateLimit";
 import type { SignupPlaces, SubscriberLookup } from "./webSignup";
 
@@ -59,13 +60,14 @@ export type CheckinWithdrawal = "withdrawn" | "none";
  *  - `withdrawRequest(subscriberId, tx)`: reply 3 (S07.05). E08 withdraws the subscriber's request (`removeRequester`: its open rows tallied
  *    and closed, `checkin_method` cleared, in the request lock order it owns) and says whether there was one; the reply is "You have no
  *    check-in request" or the withdrawal's confirmation;
- *  - `locationChanging(subscriberId, place, tx)`: menu 1 is about to replace every saved place with `place` (called after the subscriber's
- *    row is locked and before its places are deleted, so the "where I live" place can still be read). E08 withdraws the request when that
- *    place's building or floor changes ("Changed location") and says so; the confirmation is then followed by the withdrawal's text.
+ *  - `locationChanging(subscriberId, places, tx)`: every saved place is about to be replaced with `places` (menu 1: the one building and
+ *    floor chosen; S07.06's edit page: the places left on it, one row per building and floor, a null floor for none), called after the
+ *    subscriber's row is locked and before its places are deleted, so the "where I live" place can still be read. E08 withdraws the request
+ *    when that place's building or floor changes ("Changed location") and says so; the confirmation is then followed by the withdrawal's text.
  */
 export interface CheckinRequests {
   withdrawRequest(subscriberId: string, tx: DbTransaction): Promise<CheckinWithdrawal>;
-  locationChanging(subscriberId: string, place: { rsn: string; floorId: string | null }, tx: DbTransaction): Promise<CheckinWithdrawal>;
+  locationChanging(subscriberId: string, places: readonly { rsn: string; floorId: string | null }[], tx: DbTransaction): Promise<CheckinWithdrawal>;
 }
 
 /** Until E08: nobody has a check-in request, so reply 3 is answered "You have no check-in request" and a move withdraws nothing. */
@@ -141,13 +143,7 @@ export interface InboundRouter {
   handle(message: InboundMessage): Promise<InboundOutcome>;
 }
 
-/** What a deletion removed: counts only. */
-export interface Deleted {
-  subscriber: boolean;
-  pendingSignup: boolean;
-  inboundReplies: number;
-  skippedTexts: number;
-}
+export type { Deleted } from "./deletion";
 
 /** A reply could not be queued: the delivery table refused what this file built, which is a bug, never a resident's mistake. */
 export class ReplyNotQueued extends Error {
@@ -212,31 +208,8 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
   /** Skips the recipient's waiting texts; returns how many. */
   const skip = async (tx: DbTransaction, kind: RecipientKind, id: string) => (await deps.skipRecipientDeliveries(tx, { kind, id })).skipped;
 
-  async function deleteNumber(tx: DbTransaction, phone: string, found: { subscriber: SubscriberRow | null; pending: PendingSignupRow | null }): Promise<Deleted> {
-    let skippedTexts = 0;
-    let deletedSubscriber = false;
-    if (found.subscriber) {
-      const id = found.subscriber.id;
-      skippedTexts += await skip(tx, "subscriber", id);
-      if (await subscribers.lock(tx, id)) {
-        // Again under the row's lock: a text an approval committed while this waited for the lock is stopped too.
-        skippedTexts += await skip(tx, "subscriber", id);
-        await checkins.deleteForSubscriber(id, tx);
-        deletedSubscriber = await subscribers.delete(tx, id);
-      }
-    }
-    let deletedPending = false;
-    if (found.pending) {
-      skippedTexts += await skip(tx, "pending_signup", found.pending.id);
-      deletedPending = await pending.delete(tx, found.pending.id);
-    }
-    const replies = await inbound.replyIdsOf(tx, phone);
-    for (const id of replies) {
-      skippedTexts += await skip(tx, "inbound_reply", id);
-      await inbound.deleteReply(tx, id);
-    }
-    return { subscriber: deletedSubscriber, pendingSignup: deletedPending, inboundReplies: replies.length, skippedTexts };
-  }
+  // The one deletion (deletion.ts): a deletion on a resident's behalf after verified control (S09.03) runs the same steps.
+  const { deleteFound: deleteNumber } = createNumberDeletion({ skipRecipientDeliveries: deps.skipRecipientDeliveries, checkins, stores: { pending, subscribers, inbound } });
 
   /** YES to an unexpired pending sign-up: the subscriber is made from it, the pending row is deleted, and the welcome is queued. */
   async function confirm(tx: DbTransaction, phone: string, row: PendingSignupRow): Promise<void> {

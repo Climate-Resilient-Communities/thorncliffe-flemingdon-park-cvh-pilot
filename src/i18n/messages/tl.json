@@ -5838,10 +5838,45 @@
     "buildingSavedWhole": "Na-save. Ang iyong gusali ay {building}.",
     "languageSaved": "Na-save. Tagalog na ang iyong mga text.",
     "noCheckinRequest": "Wala kang hiling na pangungumusta.",
-    "checkinWithdrawn": "Nabawi na ang iyong hiling na pangungumusta."
+    "checkinWithdrawn": "Nabawi na ang iyong hiling na pangungumusta.",
+    "menuClosedLink": "Sarado na ang menu. Walang binago. Sumagot ng 1 para sa link para magbago online.",
+    "editLink": "Baguhin o burahin ang iyong CVH text alert dito: {link} Gumagana ang link nang isang beses, sa loob ng 30 minuto.",
+    "editSaved": "Binago sa web page ang iyong mga pinili sa CVH alert. Hindi ikaw? Tawagan ang Hub sa {hub}."
   },
   "smsKeywords": {
     "yes": "oo, opo, oho"
+  },
+  "subscriptionEdit": {
+    "title": "Baguhin ang iyong text alert",
+    "loading": "Binubuksan ang iyong mga pinili...",
+    "forNumber": "Para sa numero ng telepono na nagtatapos sa {digits}.",
+    "lead": "Baguhin ang anumang pinili, saka i-save. Para itigil ang lahat ng text, burahin ang iyong subscription sa dulo ng page na ito.",
+    "topicsTitle": "Mga paksang ayaw mong ma-text",
+    "topicsLead": "Lagyan ng tsek ang isang paksa para itigil ang mga alert nito. Laging dumarating ang mga alert tungkol sa sunog o paglikas.",
+    "save": "I-save ang mga binago ko",
+    "saving": "Sine-save...",
+    "savedTitle": "Na-save ang iyong mga binago",
+    "savedBody": "May darating na text para kumpirmahin ito. Nagamit na ang link na ito: para magbago ng iba pa, humingi ng bagong link sa text.",
+    "deleteTitle": "Burahin ang subscription ko",
+    "deleteLead": "Wala ka nang matatanggap na text mula sa CVH, at mabubura ang lahat ng itinatago tungkol sa iyong numero. Hindi na ito maibabalik.",
+    "deleteSure": "Burahin na ang iyong subscription? Wala ka nang matatanggap na text mula sa CVH.",
+    "deleteYes": "Oo, burahin",
+    "deleteNo": "Hindi, panatilihin",
+    "deleting": "Binubura...",
+    "deletedTitle": "Nabura na ang iyong subscription",
+    "deletedBody": "Wala ka nang matatanggap na text mula sa CVH, at walang itinatago tungkol sa iyong numero. Walang text na ipapadala para kumpirmahin ito.",
+    "signUpAgain": "Mag-sign up ulit",
+    "expiredTitle": "Nag-expire na ang link na ito",
+    "expiredBody": "Gumagana ang link nang isang beses, sa loob ng 30 minuto mula nang ipadala.",
+    "expiredHow": "Para makakuha ng bagong link sa text, sumagot ng 1 sa isang text mula sa CVH. Kung menu ang sagot, magpadala ng 0 para isara ito. Kapag nag-alok ng link ang sagot, magpadala ng 1.",
+    "callHub": "O tawagan ang Hub sa {hub}.",
+    "error": {
+      "invalid_request": "May bahagi ng form na hindi mabasa. I-reload ang pahina at subukan ulit.",
+      "neighbourhood_missing": "Piliin ang inyong kapitbahayan.",
+      "place_unknown": "Wala na sa listahan ang isa sa inyong mga gusali o palapag. Tingnan ang inyong mga gusali at subukan ulit.",
+      "edit_unavailable": "Hindi pa puwedeng gumawa ng pagbabago ngayon. Subukan ulit mamaya.",
+      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit."
+    }
   },
   "offline": {
     "title": "Hindi naka-save sa iyong telepono ang pahinang ito",
