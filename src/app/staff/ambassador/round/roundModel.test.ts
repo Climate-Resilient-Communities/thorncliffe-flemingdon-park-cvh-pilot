@@ -31,6 +31,8 @@ const ROUND: RoundResponse = {
 };
 
 type Answer = { status: number; body?: unknown } | "no_answer";
+/** What a captive portal or a proxy answers: a page, not JSON (the harness's `json()` then throws, as the browser's does). */
+const HTML_PAGE = Symbol("html");
 
 /** The browser, played by the test: signal, the clock, the timers it never runs by itself, and the server's answers, one request at a time. */
 function harness(options: { online?: boolean } = {}) {
@@ -47,7 +49,13 @@ function harness(options: { online?: boolean } = {}) {
         requests.push({
           url,
           body: JSON.parse(init.body) as Record<string, unknown>,
-          answer: (answer) => (answer === "no_answer" ? reject(new Error("network")) : resolve({ status: answer.status, json: async () => answer.body ?? null })),
+          answer: (answer) => (answer === "no_answer" ? reject(new Error("network")) : resolve({
+                  status: answer.status,
+                  json: async () => {
+                    if (answer.body === HTML_PAGE) throw new SyntaxError("Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON");
+                    return answer.body ?? null;
+                  },
+                })),
         });
       }),
     isOnline: () => online,
@@ -163,6 +171,41 @@ describe("one tap with signal", () => {
     const marks = h.requests.filter((request) => request.url === MARK_ROUTE).map((request) => request.body.mark_id);
     expect(marks).toEqual(["0f0e0d0c-0b0a-4908-8706-000000000001", "0f0e0d0c-0b0a-4908-8706-000000000001", "0f0e0d0c-0b0a-4908-8706-000000000001"]);
     expect(h.state().waiting).toEqual([]);
+  });
+
+  it("keeps a mark waiting, with its id, on an answer that is not the server's word: a captive portal's page, a 404, a 4xx in another body", async () => {
+    const h = await loaded();
+    const retry = async () => {
+      h.timers.filter((timer) => timer.ms === UNSENT_RETRY_MS && !timer.cancelled).at(-1)!.run();
+      await h.settle();
+    };
+    h.model.mark(REF_A, "needs_help");
+    // A Wi-Fi sign-in page answers 200 with its HTML: not the mark's answer.
+    await h.answer({ status: 200, body: HTML_PAGE });
+    expect(h.state().waiting).toHaveLength(1);
+    expect(h.state().notes).toEqual({});
+    expect(statusOf(h.state(), REF_A)).toBe("needs_help");
+    await retry();
+    await h.answer({ status: 404, body: HTML_PAGE });
+    expect(h.state().waiting).toHaveLength(1);
+    await retry();
+    await h.answer({ status: 400, body: { message: "Bad gateway request" } });
+    expect(h.state().waiting).toHaveLength(1);
+    await retry();
+    await h.answer({ status: 200, body: { outcome: "marked" } });
+    expect(h.state().waiting).toEqual([]);
+    expect(h.state().notes).toEqual({});
+    const marks = h.requests.filter((request) => request.url === MARK_ROUTE).map((request) => request.body.mark_id);
+    expect(new Set(marks)).toEqual(new Set(["0f0e0d0c-0b0a-4908-8706-000000000001"]));
+    expect(marks).toHaveLength(4);
+  });
+
+  it("drops a mark the server refused in its own error body, and says it could not be saved", async () => {
+    const h = await loaded();
+    h.model.mark(REF_A, "done");
+    await h.answer({ status: 400, body: { error: "bad_request" } });
+    expect(h.state().waiting).toEqual([]);
+    expect(h.state().notes).toEqual({ [REF_A]: "mark_failed" });
   });
 
   it("says what a late mark was answered, and that the round has ended when a mark is refused", async () => {
