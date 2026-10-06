@@ -19,6 +19,11 @@
 //    FOR SHARE lock, so a withdrawal or a deletion running at the same time either comes first (no row) or comes after (the row is closed).
 //    The approval has already taken those locks, with its recipients', in its capture's one id-ordered statement (AD-18); here they are
 //    taken again, and nothing waits.
+//  - `joinBuildingRounds` (an Admin's assignment saved on a building, src/app/staff/assignments.ts, in the assignment's transaction): a requester
+//    whose floor nobody covered when a round started has no row in it; once an assignment covers her floor, the building's requesters join its
+//    open round threads (`ensureRound` on each, under each thread's lock taken in id order, then the requesters' FOR SHARE). A drill or a closed
+//    thread is never among them, nor a thread whose types are no longer a round type; a requester already in the round keeps her row as it is
+//    (`ON CONFLICT DO NOTHING`), so saving the assignment again adds nothing.
 //
 // The request lock order (AD-18): every use case that changes a request first reads the candidate round threads (those of the subscriber's
 // open rows, and the open round threads that match the place asked for), locks their `alert` rows in id order, then (a deletion: the
@@ -39,6 +44,7 @@ import {
   placeKept,
   planRequestChange,
   roundMatches,
+  roundNamesBuilding,
   type CheckinRequest,
   type RequestPlace,
   type SavedPlace,
@@ -94,6 +100,8 @@ export interface CheckinRequests {
   lockRounds(subscriberId: string, tx: DbTransaction): Promise<void>;
   deleteForSubscriber(subscriberId: string, tx: DbTransaction): Promise<void>;
   ensureRound(tx: DbTransaction, thread: RoundThread, requesterIds: readonly string[]): Promise<number>;
+  /** An assignment saved on `rsn`: these requesters (the building's, read without a lock) join its open rounds on a now covered floor. Rows added. */
+  joinBuildingRounds(tx: DbTransaction, rsn: string, requesterIds: readonly string[]): Promise<number>;
 }
 
 /** The check-in rows that still name the subscriber (live, or kept for the Hub's follow-up), for a resident's access request (S09.03). */
@@ -151,6 +159,20 @@ export function createCheckinRequests(deps: CheckinRequestsDeps): CheckinRequest
     return "withdrawn";
   }
 
+  /** `ensureRound`: see the header; the caller holds the thread's lock. */
+  async function ensureRound(tx: DbTransaction, thread: RoundThread, requesterIds: readonly string[]): Promise<number> {
+    if (!isRoundThread(thread.types, await places.roundTypes(tx))) return 0;
+    const requests = await deps.requests.lockRequesters(tx, lockOrder(requesterIds));
+    const rows = [];
+    for (const [subscriberId, request] of requests) {
+      const neighbourhoodId = await places.neighbourhoodOf(tx, request.rsn);
+      if (neighbourhoodId === null || !roundMatches(thread.audience, { rsn: request.rsn, floorId: request.floorId, neighbourhoodId })) continue;
+      if (!(await deps.coversFloor(request.rsn, request.floorId, tx))) continue;
+      rows.push({ id: newId(), alertId: thread.alertId, subscriberId, rsn: request.rsn, floorId: request.floorId, method: request.method });
+    }
+    return store.insertRows(tx, rows);
+  }
+
   return {
     withdrawRequest: (subscriberId, tx) => withdrawWhen(tx, subscriberId, () => true),
 
@@ -206,17 +228,19 @@ export function createCheckinRequests(deps: CheckinRequestsDeps): CheckinRequest
       await store.leaveRounds(tx, subscriberId, { withKept: true });
     },
 
-    async ensureRound(tx, thread, requesterIds) {
-      if (!isRoundThread(thread.types, await places.roundTypes(tx))) return 0;
-      const requests = await deps.requests.lockRequesters(tx, lockOrder(requesterIds));
-      const rows = [];
-      for (const [subscriberId, request] of requests) {
-        const neighbourhoodId = await places.neighbourhoodOf(tx, request.rsn);
-        if (neighbourhoodId === null || !roundMatches(thread.audience, { rsn: request.rsn, floorId: request.floorId, neighbourhoodId })) continue;
-        if (!(await deps.coversFloor(request.rsn, request.floorId, tx))) continue;
-        rows.push({ id: newId(), alertId: thread.alertId, subscriberId, rsn: request.rsn, floorId: request.floorId, method: request.method });
-      }
-      return store.insertRows(tx, rows);
+    ensureRound,
+
+    async joinBuildingRounds(tx, rsn, requesterIds) {
+      if (requesterIds.length === 0) return 0;
+      const [types, neighbourhoodId] = [await places.roundTypes(tx), await places.neighbourhoodOf(tx, rsn)];
+      if (neighbourhoodId === null) return 0;
+      const candidates = (await deps.threads.open(tx)).filter((thread) => isRoundThread(thread.types, types) && roundNamesBuilding(thread.audience, rsn, neighbourhoodId));
+      if (candidates.length === 0) return 0;
+      // The request lock order: the threads' rows in id order (read again under the lock: a thread closed or no longer a round is not among
+      // them), then each round's requesters FOR SHARE in `ensureRound`.
+      let added = 0;
+      for (const thread of await deps.threads.lock(tx, lockOrder(candidates.map((one) => one.alertId)))) added += await ensureRound(tx, thread, requesterIds);
+      return added;
     },
   };
 }

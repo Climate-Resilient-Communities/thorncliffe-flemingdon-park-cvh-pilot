@@ -7,6 +7,13 @@
 // composition root (src/app/staff/assignments.ts) wires to places. The change locks the building row
 // through that port, as places' own floor edits do, so assigning a floor and removing it run one
 // after the other; the database refuses the rest (ambassador_assignment_floor's foreign key).
+//
+// A saved assignment may cover a floor whose residents asked for a check-in while nobody covered it:
+// the `rounds` port (checkins, wired by the composition root) adds them to the building's open rounds
+// in the same transaction. That takes the round threads' locks, which an approval holds while it
+// share-locks the buildings of its audience, and which a resident's edit takes after share-locking
+// hers; so an assignment share-locks its building (a floor edit's FOR UPDATE still waits for it) and
+// two assignments of one building run one after the other on an advisory lock taken first.
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
@@ -28,7 +35,7 @@ export interface BuildingFloor extends FloorRef {
  * the building's row is locked until the transaction ends (places' own floor edits take the same lock).
  */
 export interface BuildingFloorsReader {
-  floorsOf(executor: DbExecutor, rsn: string, options?: { lock?: boolean }): Promise<readonly BuildingFloor[] | null>;
+  floorsOf(executor: DbExecutor, rsn: string, options?: { lock?: boolean | "share" }): Promise<readonly BuildingFloor[] | null>;
 }
 
 export type AssignRefusal =
@@ -106,9 +113,18 @@ export interface AssignedAmbassador {
   name: string;
 }
 
+/**
+ * Port (checkins, wired by the composition root): an assignment was saved on this building, in this
+ * transaction; the building's check-in requesters on floors it now covers join its open rounds.
+ */
+export interface AssignmentRounds {
+  assignmentSaved(tx: DbTransaction, rsn: string): Promise<void>;
+}
+
 export interface AssignmentDeps {
   db: Db;
   floors: BuildingFloorsReader;
+  rounds?: AssignmentRounds;
   audit: AuditWriter;
   now?: () => Date;
 }
@@ -202,7 +218,9 @@ export function createAssignmentService(deps: AssignmentDeps) {
         const saved = await db.transaction(async (tx: Tx) => {
           await requireAdmin(tx, actorStaffId);
           if (!RSN.test(input.rsn)) throw new Refused("building_not_found");
-          const floors = await floorReader.floorsOf(tx, input.rsn, { lock: true });
+          // Two assignments of one building one after the other; the building share-locked (see the header).
+          await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`assignment:${input.rsn}`}, 0))`);
+          const floors = await floorReader.floorsOf(tx, input.rsn, { lock: "share" });
           if (floors === null) throw new Refused("building_not_found");
           if (!isUuid(input.staffId)) throw new Refused("account_not_found");
           const [person] = await tx.select().from(staffAccount).where(eq(staffAccount.id, input.staffId)).for("share");
@@ -243,6 +261,7 @@ export function createAssignmentService(deps: AssignmentDeps) {
           if (chosen !== null) {
             await tx.insert(ambassadorAssignmentFloor).values(chosen.map((floorId) => ({ staffId: person.id, rsn: input.rsn, floorId })));
           }
+          await deps.rounds?.assignmentSaved(tx, input.rsn);
           await audit.record(tx, {
             action: "assignment.saved",
             actorStaffId,

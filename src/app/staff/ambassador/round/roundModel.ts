@@ -6,7 +6,8 @@
 // cookie; the service worker never answers or keeps the page or its API). A tap is a mark with an id made at once; it is shown on its row and sent at once
 // with signal. Without signal (or when a request gets no answer) the marks wait in this page's memory, in the order they were made, and are sent one at a
 // time, in that order, when signal returns while the page is open (the `online` event, and a retry every 20 s in case it never comes); a mark sent again
-// keeps its id, so the server applies it once.
+// keeps its id, so the server applies it once. A mark leaves the queue only on the server's word: a 200 with its answer, or a refusal (a 403, or another
+// 4xx in the staff API's error body); any other answer (a 5xx, a 404, a captive portal's page) keeps it waiting.
 //
 // Background (the page cannot trust a timer: browsers suspend them): when the page is hidden the time is recorded; when it is visible again, or restored by
 // back navigation or the browser's page cache (`pageshow`), the page compares that time with now before anything is drawn, and after 10 minutes or more it
@@ -14,6 +15,8 @@
 // the page cache fires `visibilitychange` before `pageshow`, and the `pageshow` after a page cleared for its time away reads nothing. `pagehide` clears the
 // round's numbers at once; the unsent marks (a `round_ref` and a mark each, nothing about the resident) stay so that a page restored within 10 minutes
 // still sends them, and the round is read again.
+import { z } from "zod";
+import { STAFF_API_ERRORS } from "@/contracts/staffAuth";
 import { MARK_ROUTE, MarkResultSchema, ROUND_ROUTE, RoundResponseSchema, type MarkOutcome, type MarkStatus, type RoundResponse, type RowStatus } from "@/contracts/checkinRound";
 
 /** How long the page may stay in the background before it clears everything (AD-1, E08). */
@@ -104,6 +107,9 @@ function withStatuses(round: RoundResponse, statuses: ReadonlyMap<string, RowSta
     })),
   };
 }
+
+/** The staff API's own error body (`{ error: code, message? }`): a refusal the server made, not a page some network in between answered. */
+const StaffErrorBodySchema = z.object({ error: z.enum(STAFF_API_ERRORS), message: z.string().optional() });
 
 const hasRow = (round: RoundResponse, roundRef: string) =>
   round.rounds.some((thread) => thread.buildings.some((building) => building.floors.some((floor) => floor.kind === "contacts" && floor.requests.some((request) => request.round_ref === roundRef))));
@@ -202,18 +208,24 @@ export function createRoundModel(env: RoundEnv, onChange: (state: RoundState) =>
       clearWaits();
       return changed();
     }
-    if (response.status >= 500) {
-      // The server may have taken it: it waits, with its id, and goes again later.
+    // What the server said: a parsed 200 (how the mark was taken), or an explicit refusal (a 403, or another 4xx in the staff API's own error body,
+    // which sending again cannot change). Anything else (a 5xx, a 404 or 4xx in some other body, a 200 that is not the answer: a captive portal's
+    // page, a proxy's error) may not be the server's word at all: the mark waits, with its id, and goes again later (the server applies an id
+    // once, so a mark it did take answers `already`).
+    let outcome: MarkOutcome | null = null;
+    let refused = response.status === 403;
+    if (response.status === 200) {
+      const parsed = MarkResultSchema.safeParse(await response.json().catch(() => null));
+      outcome = parsed.success ? parsed.data.outcome : null;
+    } else if (!refused && response.status >= 400 && response.status < 500) {
+      refused = StaffErrorBodySchema.safeParse(await response.json().catch(() => null)).success;
+    }
+    if (started !== generation) return;
+    if (outcome === null && !refused) {
       changed();
       return waitForSignal();
     }
     queue.shift();
-    let outcome: MarkOutcome | null = null;
-    if (response.status === 200) {
-      const parsed = MarkResultSchema.safeParse(await response.json().catch(() => null));
-      outcome = parsed.success ? parsed.data.outcome : null;
-    }
-    if (started !== generation) return;
     const note: RowNote | null =
       response.status === 403 ? "round_ended" : outcome === "hub_told" ? "hub_told" : outcome === "request_ended" ? "request_ended" : outcome === null ? "mark_failed" : null;
     if (note === null) delete notes[mark.roundRef];

@@ -10,7 +10,9 @@
 //  - a withdrawal or a deletion racing the approval that creates the round, in both orders: never a live row for a withdrawn requester or a deleted
 //    subscriber; a request activated while that approval runs, in both orders, ends in the round; and the end-of-pilot campaign's start, which locks
 //    every active subscriber in id order, waits for the approval (its requesters are locked with its recipients, in one id order) and never deadlocks;
-//  - a requester who no longer receives texts (the campaign's deadline passed without her YES) gets no row.
+//  - a requester who no longer receives texts (the campaign's deadline passed without her YES) gets no row;
+//  - an Admin's assignment that covers a requester's floor once a round is running adds her to the building's open rounds in the assignment's
+//    transaction (never a drill's, a closed thread's or one whose type is no longer a round type), and saving it again adds nothing.
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -36,7 +38,7 @@ import { createCheckinRequests, type CheckinRequests, type RequestStore } from "
 import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { createRoundTypes, floorsOfBuilding } from "../../src/modules/places";
-import { checkinRequestStore, createNumberDeletion } from "../../src/modules/subscriptions";
+import { checkinRequestStore, checkinRequestersIn, createNumberDeletion } from "../../src/modules/subscriptions";
 import { campaignStore } from "../../src/modules/subscriptions/adapters/campaignStore";
 import { createDb, type Db } from "../../src/platform/db";
 import { submitSeams } from "./alertSubmitSeams";
@@ -505,6 +507,137 @@ describe("a later approval in the same thread", () => {
     expect(rows.find((row) => row.subscriber_id === onA1)).toEqual(before);
     // `requested` counts each row once, when it was made.
     expect(await tallyOf(ack.alertId)).toEqual({ [`${RSN_A}/${A1}/requested`]: 2, [`${RSN_A}/${A2}/requested`]: 1, [`${RSN_A}/${A3}/requested`]: 1, [`${RSN_B}/${B1}/requested`]: 1 });
+  });
+});
+
+// --- an assignment saved later --------------------------------------------------------------------------------------------------------------------
+
+describe("an assignment saved while a round runs adds the requesters on the floors it now covers (review fix)", () => {
+  /** The assignments as src/app/staff/assignments.ts composes them: a saved assignment calls checkins' `joinBuildingRounds` with the building's requesters. */
+  const assigning = () =>
+    createAssignments({
+      db: app,
+      floors: { floorsOf: floorsOfBuilding },
+      audit,
+      rounds: {
+        assignmentSaved: async (tx, rsn) => {
+          await checkinsOn().joinBuildingRounds(tx, rsn, await checkinRequestersIn(tx, [rsn]));
+        },
+      },
+    });
+  const assignB = () => assigning().assign(admin.id, { staffId: ambassador.id, rsn: RSN_B, floorIds: [B1, B2] });
+
+  it("joins the open heat round, never a drill's, a closed thread's or a type no longer a round type; saving again changes nothing", async () => {
+    const onB1 = await subscriber({ request: { rsn: RSN_B, floor: B1 } });
+    // Floor 2 of 3 Round Street is not covered (beforeEach): she asked while it was (her request stays), and nobody covers it now.
+    const onB2 = await subscriber({ request: { rsn: RSN_B, floor: B2, method: "text" } });
+    const onA1 = await subscriber({ request: { rsn: RSN_A, floor: A1 } });
+
+    const heat = await pendingAck(neighbourhood(["heat"]));
+    await approve(heat);
+    expect(await subscribersIn(heat.alertId)).toEqual(sorted([onB1, onA1]));
+    const drill = await pendingAck(neighbourhood(["heat"]), true);
+    await approve(drill);
+    // A round of Flemingdon Park only: 3 Round Street's requesters are never in it.
+    const elsewhere = await pendingAck(neighbourhood(["heat"], ["FP"]));
+    await approve(elsewhere);
+    // A heat round that has closed (its final approved): its rows are stubs, and nobody joins it.
+    const closed = await pendingAck(neighbourhood(["heat"]));
+    await approve(closed);
+    const made = await alerting.startFinal(actor(author), { alertId: closed.alertId }, { entryId: randomUUID(), text: "The heat warning is over." });
+    if (!made.ok) throw new Error(`startFinal refused: ${made.error}`);
+    await freeze({ alertId: closed.alertId, entryId: made.value.entry.id }, "final", null);
+    await approve({ alertId: closed.alertId, entryId: made.value.entry.id });
+    // A power round started while power was a round type; the Admin then made heat the only one.
+    const power = await pendingAck(neighbourhood(["power"]));
+    await approve(power);
+    expect(await createRoundTypes({ db: app, audit }).set(admin.id, ["heat"])).toMatchObject({ ok: true });
+
+    const heatBefore = await rowsOf(heat.alertId);
+    const untouched = { drill: await rowsOf(drill.alertId), elsewhere: await rowsOf(elsewhere.alertId), closed: await rowsOf(closed.alertId), power: await rowsOf(power.alertId) };
+    expect(untouched.drill).toEqual([]);
+
+    expect(await assignB()).toEqual({ ok: true, value: { staffId: ambassador.id, rsn: RSN_B, floorIds: [B1, B2] } });
+    const heatAfter = await rowsOf(heat.alertId);
+    expect(sorted(heatAfter.map((row) => row.subscriber_id!))).toEqual(sorted([onB1, onB2, onA1]));
+    // The rows already there are as they were; hers is a live row on her floor with her method.
+    expect(heatAfter.filter((row) => row.subscriber_id !== onB2)).toEqual(heatBefore);
+    expect(heatAfter.find((row) => row.subscriber_id === onB2)).toMatchObject({ rsn: RSN_B, floor_id: B2, method: "text", status: "pending", closed: false, tallied: false });
+    expect({ drill: await rowsOf(drill.alertId), elsewhere: await rowsOf(elsewhere.alertId), closed: await rowsOf(closed.alertId), power: await rowsOf(power.alertId) }).toEqual(untouched);
+    expect(await liveRowsOf(onB2)).toHaveLength(1);
+
+    // The same assignment saved again: nothing changes.
+    expect(await assignB()).toMatchObject({ ok: true });
+    expect(await rowsOf(heat.alertId)).toEqual(heatAfter);
+    expect(await liveRowsOf(onB2)).toHaveLength(1);
+  });
+
+  // The lock order (AD-18): an approval holds its thread FOR UPDATE and share-locks the audience's buildings; an assignment share-locks its building,
+  // then the threads. Neither waits for the other in a cycle, whichever comes first.
+  it("the approval first: the assignment waits for the thread, then adds her; no deadlock", async () => {
+    const onB2 = await subscriber({ request: { rsn: RSN_B, floor: B2 } });
+    const ref = await pendingAck(neighbourhood(["heat"]));
+    const reached = deferred();
+    const hold = deferred();
+    const real = checkinsOn();
+    const held = alertingWith({
+      checkins: {
+        ensureRound: async (tx, thread, ids) => {
+          const added = await real.ensureRound(tx, thread, ids);
+          reached.resolve();
+          await hold.promise;
+          return added;
+        },
+      },
+    });
+    const approval = approve(ref, held);
+    await reached.promise;
+    const assignment = assignB();
+    await untilWaiting();
+    hold.resolve();
+    await approval;
+    expect(await assignment).toMatchObject({ ok: true });
+    expect(await subscribersIn(ref.alertId)).toEqual([onB2]);
+  });
+
+  it("the assignment first: the approval of a new round waits for the building, then includes her; no deadlock", async () => {
+    const onB2 = await subscriber({ request: { rsn: RSN_B, floor: B2 } });
+    const ref = await pendingAck(neighbourhood(["heat"]));
+    const reached = deferred();
+    const hold = deferred();
+    const assigningHeld = createAssignments({
+      db: app,
+      floors: { floorsOf: floorsOfBuilding },
+      audit,
+      rounds: {
+        assignmentSaved: async (tx, rsn) => {
+          await checkinsOn().joinBuildingRounds(tx, rsn, await checkinRequestersIn(tx, [rsn]));
+          reached.resolve();
+          await hold.promise;
+        },
+      },
+    });
+    const assignment = assigningHeld.assign(admin.id, { staffId: ambassador.id, rsn: RSN_B, floorIds: [B1, B2] });
+    await reached.promise;
+    const approval = approve(ref);
+    await untilWaiting();
+    hold.resolve();
+    expect(await assignment).toMatchObject({ ok: true });
+    await approval;
+    expect(await subscribersIn(ref.alertId)).toEqual([onB2]);
+  });
+
+  it("adds nobody when the assignment covers no floor a requester is on, and nobody without an open round", async () => {
+    const onB2 = await subscriber({ request: { rsn: RSN_B, floor: B2 } });
+    expect(await assignB()).toMatchObject({ ok: true });
+    expect(await liveRowsOf(onB2)).toHaveLength(0);
+    await owner`delete from ambassador_assignment where rsn = ${RSN_B}`;
+    const heat = await pendingAck(neighbourhood(["heat"]));
+    await approve(heat);
+    expect(await subscribersIn(heat.alertId)).toEqual([]);
+    // Only floor 1 again: floor 2 stays uncovered and she stays out.
+    expect(await assigning().assign(admin.id, { staffId: ambassador.id, rsn: RSN_B, floorIds: [B1] })).toMatchObject({ ok: true });
+    expect(await subscribersIn(heat.alertId)).toEqual([]);
   });
 });
 

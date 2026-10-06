@@ -167,9 +167,23 @@ const suspend = (staffId: string) =>
     await tx`update staff_account set status = 'suspended' where id = ${staffId}`;
   });
 
+/** The purge job as it was before this file switched it off. */
+let purgeJob: { jobid: string; active: boolean } | undefined;
+
 beforeAll(async () => {
   owner = connect(serverUrl());
   await migrate({ sql: owner, log: () => {} });
+  // The real pg_cron job `checkins-purge-stubs` runs every 15 minutes in the test server too: this file runs its command by hand, so the job is
+  // switched off for the file (and back as it was in afterAll), and a run already under way is waited for, so no test races it.
+  [purgeJob] = await owner<{ jobid: string; active: boolean }[]>`select jobid, active from cron.job where jobname = 'checkins-purge-stubs'`;
+  if (purgeJob) {
+    await owner`select cron.alter_job(job_id => ${purgeJob.jobid}::bigint, active => false)`;
+    for (let i = 0; i < 100; i += 1) {
+      const running = await owner`select 1 from cron.job_run_details where jobid = ${purgeJob.jobid}::bigint and status in ('starting', 'running') and start_time > now() - interval '5 minutes'`;
+      if (running.length === 0) break;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
   const password = randomBytes(18).toString("hex");
   await owner.unsafe(`alter role cvh_app_login password '${password}'`);
   const url = new URL(serverUrl());
@@ -213,6 +227,7 @@ async function resetAll() {
 beforeEach(resetAll);
 
 afterAll(async () => {
+  if (purgeJob) await owner`select cron.alter_job(job_id => ${purgeJob.jobid}::bigint, active => ${purgeJob.active})`;
   await resetAll();
   // The files after this one read every ops event (statusCallbacks' `allEvents()`): the reset leaves none of this file's behind.
   const leftOps = await owner`select kind from ops_event where id > ${opsBaseline} order by id`;

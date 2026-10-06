@@ -43,12 +43,16 @@ const signedIn = (role: StaffRole, aal: "aal1" | "aal2", gate: StaffSession["gat
   gate,
   aal,
 });
-const typesForm = (...types: string[]) => {
+const typesForm = (types: string[], confirmed: boolean) => {
   const form = new FormData();
   for (const type of types) form.append("type", type);
+  if (confirmed) form.append("confirmResidentTexts", "yes");
   return form;
 };
-const press = (...types: string[]) => setRoundTypesAction({ status: "idle" }, typesForm(...types));
+/** A press with the confirmation box ticked (the residents' texts name heat and power: leaving one unticked needs it). */
+const press = (...types: string[]) => setRoundTypesAction({ status: "idle" }, typesForm(types, true));
+const pressUnconfirmed = (...types: string[]) => setRoundTypesAction({ status: "idle" }, typesForm(types, false));
+const CONFIRM_NEEDED = "Nothing changed. Heat or Power is unticked, so the residents' check-in texts would be inaccurate. Tick the box to confirm, then save again.";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -75,6 +79,17 @@ describe("an Admin at aal2", () => {
     world.set.mockResolvedValue({ ok: true, value: { roundTypes: [], previous: ["heat"] } });
     expect(await press()).toMatchObject({ status: "done", line: "Saved. From the next approval, no alert starts a check-in round." });
     expect(world.set).toHaveBeenCalledWith(STAFF, []);
+  });
+
+  it.each([[["heat"]], [["power", "water"]], [[]]])("is refused, nothing changed and nothing asked, when %j leaves Heat or Power unticked without the confirmation", async (types) => {
+    expect(await pressUnconfirmed(...types)).toMatchObject({ status: "refused", message: CONFIRM_NEEDED });
+    expect(world.set).not.toHaveBeenCalled();
+  });
+
+  it("needs no confirmation while Heat and Power both stay ticked", async () => {
+    world.set.mockResolvedValue({ ok: true, value: { roundTypes: ["heat", "power", "water"], previous: ["heat", "power"] } });
+    expect(await pressUnconfirmed("heat", "power", "water")).toMatchObject({ status: "done", line: "Saved. Types that start a round from the next approval: Heat, Power, Water." });
+    expect(world.set).toHaveBeenCalledWith(STAFF, ["heat", "power", "water"]);
   });
 
   it.each([

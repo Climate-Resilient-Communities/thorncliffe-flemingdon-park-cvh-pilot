@@ -4633,6 +4633,8 @@
         "save": "[EN] Save round types",
         "saving": "[EN] Saving",
         "readOnly": "[EN] Only an Admin can change which types start a round.",
+        "residentTexts": "[EN] Residents are told, in every language, that check-ins are for heat warnings and power outages (the check-in page, sign-up, Get ready and the round page). Untick Heat or Power and those texts are inaccurate until they are changed: see \"Changing which types start a round\" in docs/config.md.",
+        "confirm": "[EN] I understand: the residents' texts still name heat warnings and power outages until they are changed.",
         "done": "[EN] Saved. Types that start a round from the next approval: {types}.",
         "doneNone": "[EN] Saved. From the next approval, no alert starts a check-in round.",
         "errors": {
@@ -4640,6 +4642,7 @@
           "aal2Required": "[EN] An Admin must sign in with their authenticator code to change which types start a round. Sign in again and enter the code.",
           "unknownType": "[EN] One of those is not a type of disruption. Reload the page and try again.",
           "noChange": "[EN] Nothing to change: those are the round types already.",
+          "confirmNeeded": "[EN] Nothing changed. Heat or Power is unticked, so the residents' check-in texts would be inaccurate. Tick the box to confirm, then save again.",
           "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT."
         }
       }
