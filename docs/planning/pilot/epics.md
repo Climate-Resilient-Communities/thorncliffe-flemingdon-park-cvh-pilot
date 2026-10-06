@@ -1785,7 +1785,7 @@ So that we launch search knowing how well it works in every language.
 
 ### Story S03.09 — The test set guards every search change
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Size:** S · **Estimate:** 3 h · **Actual:** — (started 2026-10-06 23:20 UTC)
 - **Traces:** AR-24, FR-D2-Q · **Depends on:** S03.08 · **Branch:** `e03-s09-test-set-guard`
 
 As a Hub Director,
