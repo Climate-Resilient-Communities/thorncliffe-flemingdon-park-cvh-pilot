@@ -46,11 +46,11 @@ export function sampleInput(): MeasuresInput {
       { weekStart: "2026-09-21", evt: "map_view", lang: "en", nbhd: "", n: 2 },
     ],
     search: [
-      { weekStart: "2026-09-28", lang: null, searches: 24, noClearMatch: 6, failed: 0, medianMs: 850 },
-      { weekStart: "2026-09-28", lang: "en", searches: 20, noClearMatch: 5, failed: 0, medianMs: 800 },
+      { weekStart: "2026-09-28", lang: null, searches: 24, noClearMatch: 7, failed: 0, medianMs: 850 },
+      { weekStart: "2026-09-28", lang: "en", searches: 20, noClearMatch: 6, failed: 0, medianMs: 800 },
       { weekStart: "2026-09-28", lang: "ur", searches: 4, noClearMatch: 1, failed: 0, medianMs: 1200 },
-      { weekStart: null, lang: null, searches: 24, noClearMatch: 6, failed: 0, medianMs: 850 },
-      { weekStart: null, lang: "en", searches: 20, noClearMatch: 5, failed: 0, medianMs: 800 },
+      { weekStart: null, lang: null, searches: 24, noClearMatch: 7, failed: 0, medianMs: 850 },
+      { weekStart: null, lang: "en", searches: 20, noClearMatch: 6, failed: 0, medianMs: 800 },
       { weekStart: null, lang: "ur", searches: 4, noClearMatch: 1, failed: 0, medianMs: 1200 },
     ],
     approvals,
@@ -61,9 +61,9 @@ export function sampleInput(): MeasuresInput {
       { entryId: DRILL_ENTRY, alertId: DRILL, isDrill: true, handedOff: 3, delivered: 3, firstHandOffSeconds: 2, ninetyPercentSeconds: 30 },
     ],
     languageTimings: [
-      { entryId: REAL_ENTRY, lang: "en", isDrill: false, ninetyPercentSeconds: 90, status: "reached" },
-      { entryId: REAL_ENTRY, lang: "ur", isDrill: false, ninetyPercentSeconds: null, status: null },
-      { entryId: REHEARSAL_ENTRY, lang: "fr", isDrill: false, ninetyPercentSeconds: 50, status: "reached" },
+      { entryId: REAL_ENTRY, lang: "en", isDrill: false, handedOff: 37, ninetyPercentSeconds: 90 },
+      { entryId: REAL_ENTRY, lang: "ur", isDrill: false, handedOff: 3, ninetyPercentSeconds: 40 },
+      { entryId: REHEARSAL_ENTRY, lang: "fr", isDrill: false, handedOff: 6, ninetyPercentSeconds: 50 },
     ],
     checkins: [
       { alertId: REAL, closedAt: at("2026-10-05T20:00:00Z"), rsn: "1000001", nbhd: "TP", address: "1 Leaside Park Dr", floorId: "f1", floorLabel: "3", floorOrder: 3, status: "requested", n: 6 },

@@ -2,8 +2,10 @@
 // earlier measure views, read as the app's own role (cvh_app_login) in one read-only snapshot, and scripts/export-measures's two files.
 //  - every Section 9 measure is in the export: subscribers and installs, times, check-ins, directory, map and search use, translation fallbacks and the survey,
 //    corrections and their reach, drills apart, cost per alert and total spend (the Admin and Director edition only), coverage;
-//  - the small-number rule on counts and percentages (no count of 1 to 4 written anywhere but the Hub's own work), drills on lines of their own after every
-//    real line and in a section of their own on the page;
+//  - the small-number rule on counts and percentages (no count of 1 to 4 written anywhere but the Hub's own work, and none that the other figures give
+//    away: the check-ins' outcomes are not given where the requests less the other outcomes would be one), drills on lines of their own after every real line
+//    and in a section of their own on the page;
+//  - a text resent after it failed (S09.02) counts once, with its original, in the delivery times;
 //  - the alerts listed in the rehearsal log are left out of every measure about alerts, and the export says how many;
 //  - the Coordinator edition has no spend and no cost per alert; spend is against the CAD 1,000 budget with an unknown price shown as unknown;
 //  - no phone number, subscriber id, message body or staff name in either file, and the export changes nothing (a read-only transaction);
@@ -31,7 +33,7 @@ const made: { neighbourhoods: string[]; searchFrom: number } = { neighbourhoods:
 const WEEK = lastFullWeek(new Date());
 const RSN_A = "9105501";
 const RSN_B = "9105502";
-const FLOORS = { a1: randomUUID(), a2: randomUUID(), a3: randomUUID(), b1: randomUUID() };
+const FLOORS = { a1: randomUUID(), a2: randomUUID(), a3: randomUUID(), a4: randomUUID(), a5: randomUUID(), a6: randomUUID(), b1: randomUUID() };
 const BODY = "Power is out at 12 Sample Road. Verified by the Hub. Reply STOP";
 const SUBSCRIBER = randomUUID();
 const SUBSCRIBER_PHONE = "+14165550199";
@@ -157,9 +159,10 @@ beforeAll(async () => {
   [{ max: made.searchFrom }] = await owner`select coalesce(max(id), 0)::int as max from search_log`;
   await clearOwn();
 
-  // Places and coverage: building A (3 floors, an active ambassador on all of them), building B (1 floor, nobody).
+  // Places and coverage: building A (6 floors, an active ambassador on all of them), building B (1 floor, nobody).
   await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at) values (${RSN_A}, 'TP', '12 Sample Road', 43.7, -79.34, now()), (${RSN_B}, 'FP', '40 Sample Drive', 43.71, -79.33, now())`;
-  await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOORS.a1}, ${RSN_A}, '1', 1, true), (${FLOORS.a2}, ${RSN_A}, '2', 2, true), (${FLOORS.a3}, ${RSN_A}, '3', 3, true), (${FLOORS.b1}, ${RSN_B}, '1', 1, true)`;
+  await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOORS.a1}, ${RSN_A}, '1', 1, true), (${FLOORS.a2}, ${RSN_A}, '2', 2, true), (${FLOORS.a3}, ${RSN_A}, '3', 3, true),
+              (${FLOORS.a4}, ${RSN_A}, '4', 4, true), (${FLOORS.a5}, ${RSN_A}, '5', 5, true), (${FLOORS.a6}, ${RSN_A}, '6', 6, true), (${FLOORS.b1}, ${RSN_B}, '1', 1, true)`;
   ambassador = await fx.staff("ambassador");
   const admin = await fx.staff("admin");
   await owner`insert into ambassador_assignment (staff_id, rsn, all_floors, assigned_by) values (${ambassador.id}, ${RSN_A}, true, ${admin.id})`;
@@ -292,7 +295,22 @@ describe("scripts/export-measures", () => {
       `floor:${RSN_A} 1=not shown`,
       `floor:${RSN_A} 2=fewer than 5`,
     ]);
-    expect(where(rows, { measure: "needs_help", split: "thread" })[0].value).toBe("fewer than 5");
+    // How the requests ended is given for the pilot to date only.
+    expect(rows.filter((row) => row.measure !== "requested")).toEqual([]);
+  });
+
+  it("gives no check-in count that the requests less the other outcomes would give away", () => {
+    // 8 asked, 6 checked on, 2 need help: shown as they are, the 2 would be 8 - 6 - 0 - 0 - 0.
+    const rows = where(rowsOf(csv("director")), { section: "checkins", period: "pilot to date", split: "total" });
+    expect(rows.map((row) => `${row.measure}=${row.value}`)).toEqual([
+      "requested=8",
+      "done=not shown",
+      "not_reached=0",
+      "needs_help=fewer than 5",
+      "withdrawn=0",
+      "unmarked=0",
+      "rounds_closed=1",
+    ]);
   });
 
   it("applies the small-number rule to every count and percentage it writes", () => {
@@ -302,8 +320,10 @@ describe("scripts/export-measures", () => {
       }
     }
     const rows = rowsOf(csv("director"));
-    // Urdu: 1 entry translated (fewer than 5) and it fell back: no rate is given.
-    expect(where(rows, { section: "translation", measure: "fallback_percent", key: "ur", is_drill: "false" })[0].value).toBe("not shown");
+    // 2 entries' languages translated (Urdu, which fell back, and French): fewer than 5 in all, so no language is listed and no rate is given.
+    expect(where(rows, { section: "translation", measure: "entries_translated", split: "total", is_drill: "false" })[0].value).toBe("fewer than 5");
+    expect(where(rows, { section: "translation", measure: "fallback_percent", split: "total", is_drill: "false" })[0].value).toBe("not shown");
+    expect(where(rows, { section: "translation", measure: "entries_translated", split: "language", is_drill: "false" })).toEqual([]);
     expect(where(rows, { section: "translation", measure: "survey_understood_percent", key: "fr" })[0].value).toBe("not shown");
   });
 
@@ -329,7 +349,8 @@ describe("scripts/export-measures", () => {
     expect(where(rows, { section: "about", measure: "rehearsal_alerts_left_out" })[0].value).toBe("1");
     expect(where(rows, { section: "about", measure: "rehearsal_entries_not_found" })[0].value).toBe("1");
     // The rehearsal's round of 7 in Flemingdon Park and its French texts are nowhere.
-    expect(where(rows, { section: "checkins", period: "pilot to date", key: "FP" })).toEqual([]);
+    expect(where(rows, { section: "checkins", measure: "requested", period: "pilot to date" })[0].value).toBe("8");
+    expect(where(rows, { section: "checkins", key: RSN_B })).toEqual([]);
     expect(where(rows, { section: "cost_per_alert", key: "fr" })).toEqual([]);
     expect(where(rows, { section: "timing", split: "entry", entry_id: real.entryId }).length).toBeGreaterThan(0);
   });
@@ -361,6 +382,36 @@ describe("scripts/export-measures", () => {
   });
 });
 
+describe("the delivery times", () => {
+  it("count a text resent after it failed once, with its original: the resends add no text and do not move the time to 90% delivered", async () => {
+    // 20 texts: 18 delivered 60 to 77 seconds after the approval, 2 failed; then both resent and delivered an hour later.
+    const approvedAt = await at(4, 10);
+    const entry = await approvedEntry(approvedAt);
+    await delivered(entry, approvedAt, 18, "en");
+    const roots = [randomUUID(), randomUUID()];
+    const insert = (id: string, state: string, offsetSeconds: number, resendOf: string | null) =>
+      owner.begin(async (tx) => {
+        await tx.unsafe("set local session_replication_role = replica");
+        const handedOff = new Date(approvedAt.getTime() + offsetSeconds * 1000);
+        const completed = new Date(handedOff.getTime() + 60_000);
+        await tx`insert into delivery (id, kind, recipient_kind, recipient_id, entry_id, created_by_module, purpose, lang, body, segments, cost_estimate_cents, idempotency_key,
+                                       state, attempts, claimed_at, claimed_by, handed_off_at, submitted_at, provider_message_id, completed_at, created_at, updated_at, due_at,
+                                       resend_of, resend_n)
+                 values (${id}, 'alert', 'subscriber', ${randomUUID()}, ${entry.entryId}, 'alerting', null, 'en', ${BODY}, 1, 2,
+                         ${resendOf === null ? `alert:${entry.entryId}:${id}` : `resend:${resendOf}:1`}, ${state}, 1, ${handedOff}, 'worker-1', ${handedOff}, ${handedOff},
+                         ${`SM${randomBytes(16).toString("hex")}`}, ${completed}, ${handedOff}, ${completed}, ${handedOff}, ${resendOf}, ${resendOf === null ? null : 1})`;
+      });
+    for (const root of roots) await insert(root, "failed", 3, null);
+    const read = async () =>
+      (await appSql`select lang, handed_off, delivered, ninety_percent_seconds::int as ninety from alert_delivery_timing where entry_id = ${entry.entryId} order by lang nulls first`).map(
+        (row) => `${row.lang ?? "all"}: ${row.handed_off} handed off, ${row.delivered} delivered, 90% at ${row.ninety ?? "not reached"}`,
+      );
+    expect(await read()).toEqual(["all: 20 handed off, 18 delivered, 90% at 77", "en: 20 handed off, 18 delivered, 90% at 77"]);
+    for (const root of roots) await insert(randomUUID(), "delivered", 3_600, root);
+    expect(await read()).toEqual(["all: 20 handed off, 20 delivered, 90% at 77", "en: 20 handed off, 20 delivered, 90% at 77"]);
+  });
+});
+
 describe("the measures snapshot", () => {
   it("is read in a read-only transaction: a port that tries to write is refused", async () => {
     const ports = measurePorts(app, { spendPilotBudgetCents: 100_000, spendTokenEstimateCadPerMillion: null });
@@ -374,11 +425,11 @@ describe("the measures snapshot", () => {
   it("counts coverage by identity's rule: an active ambassador covers every floor of the building, a suspended one nothing", async () => {
     const coverage = async () => (await coverageByNeighbourhood(app, app)).filter((row) => row.nbhd === "TP" || row.nbhd === "FP");
     const tp = (await coverage()).find((row) => row.nbhd === "TP");
-    expect(tp?.floorsCovered).toBeGreaterThanOrEqual(3);
+    expect(tp?.floorsCovered).toBeGreaterThanOrEqual(6);
     const before = tp?.floorsCovered ?? 0;
     await owner`update staff_account set status = 'suspended' where id = ${ambassador.id}`;
     try {
-      expect((await coverage()).find((row) => row.nbhd === "TP")?.floorsCovered).toBe(before - 3);
+      expect((await coverage()).find((row) => row.nbhd === "TP")?.floorsCovered).toBe(before - 6);
     } finally {
       await owner`update staff_account set status = 'active' where id = ${ambassador.id}`;
     }

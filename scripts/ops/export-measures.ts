@@ -1,13 +1,14 @@
 // scripts/export-measures (S09.05, FR-M1 to FR-M5, D-8, NFR-N9, AD-4): an Admin writes the pilot measures for the week-8 go / no-go review, daily and for the
 // review itself, as a CSV and a printable HTML page. Run it through the launcher scripts/export-measures, which bundles it with esbuild:
 //
-//   node --env-file=.env.production.local scripts/export-measures --edition director [--week 2026-09-28] [--out-dir <folder>]
-//   node --env-file=.env.production.local scripts/export-measures --edition coordinator
+//   node --env-file=.env.production.local scripts/export-measures --edition director --out-dir <folder> [--week 2026-09-28]
+//   node --env-file=.env.production.local scripts/export-measures --edition coordinator --out-dir <folder>
 //
 // `--edition` is required: `director` is the Admin and Director edition (with spend and cost per alert), `coordinator` the Coordinator edition (without them),
 // as the role policy says who sees spend (AD-4, `spend.view`: the script refuses an edition the policy no longer matches). `--week` is the Monday (Toronto) of
-// the week read for installs, directory, map and search use (default: the last complete week). `--out-dir` is where the two files go (default: the current
-// folder): `pilot-measures-{day}-{edition}.csv` and `.html`, the day being today in Toronto. `--rehearsals` and `--survey` name the two files it reads
+// the week read for installs, directory, map and search use (default: the last complete week). `--out-dir` is where the two files go, and is required too,
+// so the Admin and Director edition never lands in the repository's working tree by a run that forgot it: `pilot-measures-{day}-{edition}.csv` and `.html`,
+// the day being today in Toronto. `--rehearsals` and `--survey` name the two files it reads
 // (default: docs/procedures/rehearsals.md and docs/procedures/survey-results.csv in this repository): the alerts sent for a rehearsal, left out of the
 // measures, and the translation-understood survey.
 //
@@ -59,7 +60,7 @@ export interface CliDeps {
 }
 
 const USAGE =
-  "Usage: node --env-file=<production env file> scripts/export-measures --edition director|coordinator [--week <Monday, YYYY-MM-DD>] [--out-dir <folder>]\n" +
+  "Usage: node --env-file=<production env file> scripts/export-measures --edition director|coordinator --out-dir <folder> [--week <Monday, YYYY-MM-DD>]\n" +
   "       [--rehearsals <rehearsals.md>] [--survey <survey-results.csv>]\n\n" +
   "Writes the pilot measures (PRD section 9) as of today in Toronto, as pilot-measures-{day}-{edition}.csv and .html. director: the Admin and Director\n" +
   "edition, with spend and cost per alert; coordinator: without them. The small-number rule is applied (a count of 1 to 4 reads \"fewer than 5\"), drills\n" +
@@ -141,6 +142,11 @@ export async function runExportMeasures(argv: string[], deps: CliDeps): Promise<
     deps.error(`--edition is required: director (the Admin and Director edition, with spend) or coordinator (without spend)\n${USAGE}`);
     return 2;
   }
+  const outDir = typeof values["out-dir"] === "string" ? values["out-dir"].trim() : "";
+  if (outDir === "") {
+    deps.error(`--out-dir is required: the folder the two files go to (for the director edition, one only Admins and Directors can open)\n${USAGE}`);
+    return 2;
+  }
   if (!editionMatchesPolicy(edition)) {
     deps.error(`Refusing to run: the role policy no longer matches the ${edition} edition (who sees counts and spend, AD-4). The script must change with it.`);
     return 1;
@@ -187,7 +193,6 @@ export async function runExportMeasures(argv: string[], deps: CliDeps): Promise<
   try {
     const now = deps.now();
     const files = await pilotMeasuresExport(connection.db, { now, edition, week, rehearsalEntryIds, survey }, measurePorts(connection.db, env));
-    const outDir = typeof values["out-dir"] === "string" && values["out-dir"] !== "" ? values["out-dir"] : ".";
     const base = path.join(outDir, `pilot-measures-${files.asOf}-${edition}`);
     const write =
       deps.write ??

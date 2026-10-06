@@ -5,8 +5,10 @@
 --
 -- The measures that exist already are read where they are: subscribers (S07.10's `subscriber_measures`), correction reach (`correction_reach` and S09.08's
 -- `correction_reach_kept`), cost per alert (`alert_cost`, `cohere_alert_entry`, `cohere_alert_share`), total spend (S07.08's spend view, spend's
--- readSpendOverview), the approval timings (S04.07's `alert_approval_timing`) and the delivery times by language (S09.04's `weekly_review`, section
--- `entry_timing`). Coverage is identity's rule (`coversFloor`, the only coverage test, AD-12), read by the export through identity and places, not copied here.
+-- readSpendOverview) and the approval timings (S04.07's `alert_approval_timing`). Coverage is identity's rule (`coversFloor`, the only coverage test, AD-12),
+-- read by the export through identity and places, not copied here. The delivery times are this file's own (`alert_delivery_timing`), not S09.04's
+-- `weekly_review` section `entry_timing` nor messaging's entryTimings (S06.08): those count a text resent by S09.02 as one more text, which the measure must
+-- not (a follow-up for them).
 --
 -- These views give the counts by language and neighbourhood (and building and floor) as they are; the export applies the small-number rule (E09) to every
 -- count and percentage it writes (src/modules/ops/domain/smallNumbers.ts), because some measures are added up only after the alerts sent for a rehearsal
@@ -18,9 +20,12 @@
 --                             day is a Toronto date), event, page language and neighbourhood ('' for a page about neither).
 --   search_measure            S03.04's search log by week (null: the pilot to date) and page language (null: every language): searches, those with no
 --                             clear match, those that failed (unavailable or an error), and the median time of an answered search (ok or no clear match).
---   alert_delivery_timing     per approved alert entry, every language together: texts handed off (never cancelled, skipped or skipped_env), delivered, the
---                             seconds from approval to the first hand-off and to the moment delivered texts reach 90% of those handed off (null: not reached),
---                             the rules of messaging's entryTimings (S06.08) and of weekly_review's entry_timing, which has the same by language.
+--   alert_delivery_timing     per approved alert entry, every language together (`lang` null) and by language: texts handed off (never cancelled, skipped
+--                             or skipped_env), delivered, the seconds from approval to the first hand-off and to the moment delivered texts reach 90% of
+--                             those handed off (null: not reached), the rules of messaging's entryTimings (S06.08), with one difference: a text resent by
+--                             S09.02 and its original are one text (their chain, `coalesce(resend_of, id)`), handed off when the first of them was and
+--                             delivered when the first of them was delivered. A resend is a second try at reaching the same person, not another person: so
+--                             it neither adds to the texts handed off nor, delivered an hour later, moves the time by which 90% of recipients had it.
 --   alert_translation_outcome per approved alert entry and translated language (S04.02): whether the language fell back to English.
 --   checkin_round_count       S08.05's round tally (`checkin_tally`) of closed, non-drill threads, by building and floor, with the building's neighbourhood and
 --                             address and the floor's label (null when the floor was removed since). After a close, for each place, `requested` is the sum
@@ -58,20 +63,27 @@ grant select on table search_measure to cvh_app;
 create view alert_delivery_timing with (security_invoker = true) as
 with
   sent as (
-    select d.entry_id, d.handed_off_at, d.completed_at, d.state, (d.recipient_kind = 'roster') as roster
+    select coalesce(d.resend_of, d.id) as chain, d.entry_id, d.lang, d.handed_off_at, d.completed_at, d.state, (d.recipient_kind = 'roster') as roster
     from delivery d
     where d.kind = 'alert' and d.entry_id is not null and d.handed_off_at is not null and d.state not in ('cancelled', 'skipped', 'skipped_env')
   ),
-  per_entry as (
-    select s.entry_id, bool_or(s.roster) as roster,
-           count(*)::integer as handed_off,
-           (count(*) filter (where s.state = 'delivered' and s.completed_at is not null))::integer as delivered,
-           min(s.handed_off_at) as first_hand_off,
-           (array_agg(s.completed_at order by s.completed_at) filter (where s.state = 'delivered' and s.completed_at is not null)) as delivered_at
+  -- One per recipient's text: the chain of a text and its resends (which keep its entry and language), handed off and delivered when its first text was.
+  per_chain as (
+    select s.chain, s.entry_id, s.lang, bool_or(s.roster) as roster, min(s.handed_off_at) as handed_off_at,
+           min(s.completed_at) filter (where s.state = 'delivered' and s.completed_at is not null) as delivered_at
     from sent s
-    group by s.entry_id
+    group by s.chain, s.entry_id, s.lang
+  ),
+  per_entry as (
+    select c.entry_id, c.lang, bool_or(c.roster) as roster,
+           count(*)::integer as handed_off,
+           count(c.delivered_at)::integer as delivered,
+           min(c.handed_off_at) as first_hand_off,
+           (array_agg(c.delivered_at order by c.delivered_at) filter (where c.delivered_at is not null)) as delivered_at
+    from per_chain c
+    group by grouping sets ((c.entry_id), (c.entry_id, c.lang))
   )
-select p.entry_id, e.alert_id, e.kind, (p.roster or a.is_drill) as is_drill, e.approved_at,
+select p.entry_id, e.alert_id, e.kind, (p.roster or a.is_drill) as is_drill, e.approved_at, p.lang,
        p.handed_off, p.delivered,
        extract(epoch from (p.first_hand_off - e.approved_at))::bigint as first_hand_off_seconds,
        case when p.delivered >= ceil(0.9 * p.handed_off)

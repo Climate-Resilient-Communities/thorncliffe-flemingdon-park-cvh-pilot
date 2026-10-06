@@ -45,6 +45,10 @@ describe("the alerts sent for a rehearsal", () => {
 
   it("refuses a first cell that is not an entry id, with its line, and a log without the section or its table", () => {
     expect(() => parseRehearsalAlerts(log(["| the resend one | 2026-10-10 | resend |"]))).toThrow(/line 9: "the resend one" is not an alert entry id/);
+    // A rehearsal recorded without its id would leave its alert in the measures: refused, not skipped as the blank row is.
+    expect(() => parseRehearsalAlerts(log(["| | 2026-10-10 | resend |"]))).toThrow(/line 9: a rehearsal is recorded without its alert entry id/);
+    expect(() => parseRehearsalAlerts(log(["|  |  | resend"]))).toThrow(/line 9: a rehearsal is recorded without its alert entry id/);
+    expect(parseRehearsalAlerts(log(["|  |  |  |", "| | | |"]))).toEqual([]);
     expect(() => parseRehearsalAlerts("# Rehearsal log\n\n## Log\n")).toThrow(MeasureFileError);
     expect(() => parseRehearsalAlerts("## Alerts sent for a rehearsal\n\nNo table.\n## Log\n")).toThrow(/has no table/);
   });

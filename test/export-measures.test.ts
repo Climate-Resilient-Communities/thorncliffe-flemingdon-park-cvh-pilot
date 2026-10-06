@@ -9,6 +9,7 @@ import type { Db } from "../src/platform/db";
 
 const ROOT = path.join(__dirname, "..");
 const ENV = { DATABASE_URL: "postgres://unused", SMS_MODE: "log", PUBLIC_BASE_URL: "http://localhost:3000" };
+const OUT = ["--out-dir", "out"];
 const LOG = "## Alerts sent for a rehearsal\n\n| Alert entry id | Date | Rehearsal |\n| --- | --- | --- |\n| | | |\n";
 
 async function run(argv: string[], options: { env?: Record<string, string>; files?: Record<string, string> } = {}) {
@@ -36,16 +37,25 @@ async function run(argv: string[], options: { env?: Record<string, string>; file
 describe("export-measures", () => {
   it("needs an edition, director or coordinator, and refuses anything else before connecting", async () => {
     for (const argv of [[], ["--edition", "ambassador"], ["--edition", "admin"], ["--edition"], ["--bogus"], ["director"]]) {
-      const result = await run(argv);
+      const result = await run([...argv, ...OUT]);
       expect(result.code, argv.join(" ")).toBe(2);
       expect(result.error).toContain("Usage");
       expect(result.connect).not.toHaveBeenCalled();
     }
   });
 
+  it("needs the folder to write to, so the files never land where it happens to run (the repository's working tree)", async () => {
+    for (const argv of [["--edition", "director"], ["--edition", "coordinator", "--out-dir", ""], ["--edition", "director", "--out-dir", "  "]]) {
+      const result = await run(argv);
+      expect(result.code, argv.join(" ")).toBe(2);
+      expect(result.error).toContain("--out-dir is required");
+      expect(result.connect).not.toHaveBeenCalled();
+    }
+  });
+
   it("refuses a week that is not a Monday, before connecting", async () => {
     for (const week of ["2026-10-06", "2026-02-30", "soon"]) {
-      const result = await run(["--edition", "coordinator", "--week", week]);
+      const result = await run(["--edition", "coordinator", "--week", week, ...OUT]);
       expect(result.code).toBe(2);
       expect(result.error).toContain("--week must be a Monday");
       expect(result.connect).not.toHaveBeenCalled();
@@ -58,10 +68,10 @@ describe("export-measures", () => {
   });
 
   it("refuses an environment it cannot use, naming what is wrong, before connecting", async () => {
-    const missing = await run(["--edition", "director"], { env: { SMS_MODE: "log", PUBLIC_BASE_URL: "http://localhost:3000" } });
+    const missing = await run(["--edition", "director", ...OUT], { env: { SMS_MODE: "log", PUBLIC_BASE_URL: "http://localhost:3000" } });
     expect(missing.code).toBe(1);
     expect(missing.error).toContain("DATABASE_URL is not set");
-    const invalid = await run(["--edition", "director"], { env: { ...ENV, SPEND_PILOT_BUDGET_CENTS: "a lot" } });
+    const invalid = await run(["--edition", "director", ...OUT], { env: { ...ENV, SPEND_PILOT_BUDGET_CENTS: "a lot" } });
     expect(invalid.code).toBe(1);
     expect(invalid.error).toContain("SPEND_PILOT_BUDGET_CENTS");
     expect(missing.connect).not.toHaveBeenCalled();
@@ -69,13 +79,13 @@ describe("export-measures", () => {
   });
 
   it("refuses a rehearsal log or a survey file with a mistake, naming the file and the line, before connecting", async () => {
-    const badLog = await run(["--edition", "director"], { files: { rehearsals: `${LOG}| not-an-id | 2026-10-01 | resend |\n`, survey: `${SURVEY_HEADER}\n` } });
+    const badLog = await run(["--edition", "director", ...OUT], { files: { rehearsals: `${LOG}| not-an-id | 2026-10-01 | resend |\n`, survey: `${SURVEY_HEADER}\n` } });
     expect(badLog.code).toBe(1);
     expect(badLog.error).toMatch(/docs\/procedures\/rehearsals\.md, line 6: "not-an-id" is not an alert entry id/);
-    const badSurvey = await run(["--edition", "coordinator"], { files: { rehearsals: LOG, survey: `${SURVEY_HEADER}\n2026-10-01,ur,5,6\n` } });
+    const badSurvey = await run(["--edition", "coordinator", ...OUT], { files: { rehearsals: LOG, survey: `${SURVEY_HEADER}\n2026-10-01,ur,5,6\n` } });
     expect(badSurvey.code).toBe(1);
     expect(badSurvey.error).toMatch(/docs\/procedures\/survey-results\.csv, line 2: understood cannot be more than asked/);
-    const noSurvey = await run(["--edition", "coordinator"], { files: { rehearsals: LOG } });
+    const noSurvey = await run(["--edition", "coordinator", ...OUT], { files: { rehearsals: LOG } });
     expect(noSurvey.code).toBe(1);
     expect(noSurvey.error).toContain("cannot read");
     for (const result of [badLog, badSurvey, noSurvey]) expect(result.connect).not.toHaveBeenCalled();
@@ -83,7 +93,7 @@ describe("export-measures", () => {
 
   it("reads the two files from the repository by default, and from the paths given", async () => {
     const read = vi.fn((file: string) => (file.endsWith(".md") ? LOG : "nope"));
-    const code = await runExportMeasures(["--edition", "director", "--rehearsals", "elsewhere/log.md", "--survey", "elsewhere/survey.csv"], {
+    const code = await runExportMeasures(["--edition", "director", ...OUT, "--rehearsals", "elsewhere/log.md", "--survey", "elsewhere/survey.csv"], {
       env: ENV,
       now: () => new Date(),
       out: () => {},
@@ -97,7 +107,7 @@ describe("export-measures", () => {
     expect(code).toBe(1);
     expect(read.mock.calls.map(([file]) => file)).toEqual(["elsewhere/log.md", "elsewhere/survey.csv"]);
     const defaults = vi.fn((file: string) => (file.endsWith(".md") ? LOG : "nope"));
-    await runExportMeasures(["--edition", "director"], { env: ENV, now: () => new Date(), out: () => {}, error: () => {}, root: ROOT, read: defaults });
+    await runExportMeasures(["--edition", "director", ...OUT], { env: ENV, now: () => new Date(), out: () => {}, error: () => {}, root: ROOT, read: defaults });
     expect(defaults.mock.calls.map(([file]) => path.relative(ROOT, file))).toEqual([path.join("docs", "procedures", "rehearsals.md"), path.join("docs", "procedures", "survey-results.csv")]);
   });
 });

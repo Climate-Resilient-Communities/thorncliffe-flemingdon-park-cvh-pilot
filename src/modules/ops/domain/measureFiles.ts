@@ -2,8 +2,9 @@
 // quietly. Pure: the script reads the files and hands their text here.
 //
 //  - docs/procedures/rehearsals.md, its table "Alerts sent for a rehearsal" (S09.03's seam): the alert entry ids of real (non-drill) alerts sent only to
-//    rehearse, such as the resend rehearsal's before launch. The measures leave the alerts (threads) of those entries out. A row whose first cell is empty is
-//    the table's blank row; any other first cell must be an entry id, or the export refuses.
+//    rehearse, such as the resend rehearsal's before launch. The measures leave the alerts (threads) of those entries out. A row whose cells are all empty
+//    is the table's blank row; any other row must start with an entry id, or the export refuses (a rehearsal recorded without its id would otherwise stay
+//    in the measures unnoticed).
 //  - docs/procedures/survey-results.csv, the translation-understood survey: one line per batch a Coordinator recorded, `date,lang,asked,understood` (a Toronto
 //    date, a language code, how many residents or ambassadors were asked and how many understood the alert in that language). Counts only: a file with any
 //    other column, a name or a free word anywhere is refused, so nothing about a person can reach the export through it.
@@ -47,8 +48,11 @@ export function parseRehearsalAlerts(markdown: string): string[] {
     rows += 1;
     // The table's header and its separator.
     if (rows <= 2) continue;
-    const first = line.split("|")[1]?.trim().replaceAll("`", "") ?? "";
-    if (first === "") continue;
+    const cells = line.split("|").slice(1);
+    if (line.endsWith("|")) cells.pop();
+    if (cells.every((cell) => cell.trim() === "")) continue;
+    const first = (cells[0] ?? "").trim().replaceAll("`", "");
+    if (first === "") throw new MeasureFileError("rehearsals", index + 1, "a rehearsal is recorded without its alert entry id: write the id in the first column");
     if (!UUID.test(first)) throw new MeasureFileError("rehearsals", index + 1, `"${first.slice(0, 40)}" is not an alert entry id (a uuid)`);
     const id = first.toLowerCase();
     if (!ids.includes(id)) ids.push(id);

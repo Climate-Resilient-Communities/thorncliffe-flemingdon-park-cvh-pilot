@@ -10,7 +10,7 @@ The export writes two files for the day (Toronto): `pilot-measures-{day}-{editio
 - **director**: the Admin and Director edition, with spend and cost per alert. Share it only with Admins and Directors.
 - **coordinator**: the Coordinator edition, without spend and cost per alert.
 
-Counts only: a count of 1 to 4 reads "fewer than 5", a percentage made from one reads "not shown", and one more figure reads "not shown" where the total would give a hidden one away. Drills are at the end, apart. The files hold no phone number, name, subscriber id or message text.
+Counts only: a count of 1 to 4 reads "fewer than 5", a percentage made from one reads "not shown", more figures read "not shown" where the totals and the other figures would give a hidden one away, and a total of fewer than 5 is not broken down. Check-ins are given for the pilot to date (asked for, and how each request ended) and per closed round (asked for, by building and floor). Drills are at the end, apart. The files hold no phone number, name, subscriber id or message text.
 
 ## Each day (Admin, with IT)
 
@@ -31,7 +31,7 @@ If the script refuses to run, it says why: a file it reads has a mistake (it nam
 
 ## Alerts sent for a rehearsal
 
-1. A real (non-drill) alert sent only to rehearse, such as the resend rehearsal before launch ([resending texts that failed](resend-failed-texts.md)), is listed by its alert entry id in [the rehearsal log](rehearsals.md), "Alerts sent for a rehearsal", the day it is sent.
+1. A real (non-drill) alert sent only to rehearse, such as the resend rehearsal before launch ([resending texts that failed](resend-failed-texts.md)), is listed by its alert entry id in [the rehearsal log](rehearsals.md), "Alerts sent for a rehearsal", the day it is sent. The export refuses a row without the entry id, so a rehearsal is never counted by mistake.
 2. The export leaves every alert listed there out of every measure about alerts (times, check-ins, translation, corrections and their reach, cost per alert) and says how many. The money it cost stays in the total spend, because it was spent.
 
 ## Recording the translation survey (Coordinator)

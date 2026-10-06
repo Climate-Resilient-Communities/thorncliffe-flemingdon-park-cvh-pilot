@@ -4102,7 +4102,7 @@
         "coordinator": "[EN] Coordinator edition: spend and cost per alert are left out."
       },
       "noSpend": "[EN] Spend and cost per alert are in the Admin and Director edition only.",
-      "rule": "[EN] Counts only: nobody can be identified from these figures. A count of 1 to 4 reads \"fewer than 5\", and a percentage made from such a count reads \"not shown\". Where a total and the other figures would give one of those away, one more figure reads \"not shown\": it may be 5 or more. Zero is shown as 0. Drills are at the end, apart, and never added to real alerts.",
+      "rule": "[EN] Counts only: nobody can be identified from these figures. A count of 1 to 4 reads \"fewer than 5\", and a percentage made from such a count reads \"not shown\". Where the totals and the other figures would give one of those away, more figures read \"not shown\": each of them is 5 or more. A total of fewer than 5 is not broken down. Zero is shown as 0. Drills are at the end, apart, and never added to real alerts.",
       "leftOut": "[EN] Alerts sent for a rehearsal are left out of every measure about alerts, but not of the total spend. Alerts left out: {alerts}. Entries listed in docs/procedures/rehearsals.md: {listed}, of which not found: {notFound}.",
       "week": "[EN] Installs, directory and map use and search are given for the week that starts on Monday {monday} and for the pilot to date.",
       "empty": "[EN] Nothing to show yet.",
@@ -4164,11 +4164,11 @@
         },
         "timing": {
           "title": "[EN] Acknowledgement, approval and delivery times",
-          "lead": "[EN] Per alert entry: from the first report to the first approved acknowledgement, from the first save to approval, and from approval to the first text handed off and to 90% of its texts delivered. Then the medians over the alerts, and the time to 90% delivered by language."
+          "lead": "[EN] Per alert entry: from the first report to the first approved acknowledgement, from the first save to approval, and from approval to the first text handed off and to 90% of its texts delivered. Then the medians over the alerts, and the time to 90% delivered by language. A text resent after it failed counts once, with the text it replaced, delivered when the first of them was."
         },
         "checkins": {
           "title": "[EN] Check-ins",
-          "lead": "[EN] Each closed check-in round: what was asked for and how each request ended, by building and floor. Then the pilot to date by neighbourhood."
+          "lead": "[EN] The pilot to date: check-ins asked for in the closed rounds and how each request ended, and the number of rounds. Then each closed round: check-ins asked for, by building and floor. How the requests ended is not given by round, building or floor, because with the requests there it could give a hidden count away."
         },
         "directory_use": {
           "title": "[EN] Directory and map use",
@@ -4237,6 +4237,7 @@
         "needs_help": "[EN] Needs help",
         "withdrawn": "[EN] Withdrawn",
         "unmarked": "[EN] Not marked",
+        "untallied": "[EN] Not tallied yet",
         "rounds_closed": "[EN] Rounds closed",
         "directory_view": "[EN] Directory views",
         "listing_view": "[EN] Listing views",

@@ -2,9 +2,9 @@ import { sql } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
 import type { ApprovalTimingRow, CheckinRow, DeliveryTimingRow, DrillRow, LanguageTimingRow, SearchRow, TranslationRow, UsageRow } from "../domain/measureLines";
 
-// Reads the SQL views of the pilot measures (S09.05, db/migrations/20261006200000_pilot_measures.sql) and the earlier ones they sit beside (S04.07's
-// `alert_approval_timing`, S09.04's `weekly_review`). Every view holds counts, times, codes, places and the ids of alerts and entries: nothing personal is
-// selected, because nothing personal is there. Read-only; the caller gives one read-only snapshot.
+// Reads the SQL views of the pilot measures (S09.05, db/migrations/20261006200000_pilot_measures.sql) and the earlier one they sit beside (S04.07's
+// `alert_approval_timing`). Every view holds counts, times, codes, places and the ids of alerts and entries: nothing personal is selected, because nothing
+// personal is there. Read-only; the caller gives one read-only snapshot.
 
 const date = (value: string | Date) => new Date(value);
 const num = (value: string | number | null) => (value === null ? null : Number(value));
@@ -58,7 +58,7 @@ export const measuresStore = {
     }));
   },
 
-  /** Each approved entry's texts, every language together. */
+  /** Each approved entry's texts, every language together (a resent text counted once, with its original). */
   async deliveries(executor: DbExecutor): Promise<DeliveryTimingRow[]> {
     const rows = await executor.execute<{
       entry_id: string;
@@ -69,7 +69,7 @@ export const measuresStore = {
       first_hand_off_seconds: string | number | null;
       ninety_percent_seconds: string | number | null;
     }>(sql`
-      select entry_id, alert_id, is_drill, handed_off, delivered, first_hand_off_seconds, ninety_percent_seconds from alert_delivery_timing`);
+      select entry_id, alert_id, is_drill, handed_off, delivered, first_hand_off_seconds, ninety_percent_seconds from alert_delivery_timing where lang is null`);
     return rows.map((row) => ({
       entryId: row.entry_id,
       alertId: row.alert_id,
@@ -81,11 +81,11 @@ export const measuresStore = {
     }));
   },
 
-  /** S09.04's delivery times per entry and language (every week), as the weekly review judged them. */
+  /** The same per entry and language. */
   async languageTimings(executor: DbExecutor): Promise<LanguageTimingRow[]> {
-    const rows = await executor.execute<{ entry_id: string; lang: string; is_drill: boolean; ninety_percent_seconds: string | number | null; ninety_percent_status: string | null }>(sql`
-      select entry_id, lang, is_drill, ninety_percent_seconds, ninety_percent_status from weekly_review where section = 'entry_timing'`);
-    return rows.map((row) => ({ entryId: row.entry_id, lang: row.lang, isDrill: row.is_drill, ninetyPercentSeconds: num(row.ninety_percent_seconds), status: row.ninety_percent_status }));
+    const rows = await executor.execute<{ entry_id: string; lang: string; is_drill: boolean; handed_off: number; ninety_percent_seconds: string | number | null }>(sql`
+      select entry_id, lang, is_drill, handed_off, ninety_percent_seconds from alert_delivery_timing where lang is not null`);
+    return rows.map((row) => ({ entryId: row.entry_id, lang: row.lang, isDrill: row.is_drill, handedOff: Number(row.handed_off), ninetyPercentSeconds: num(row.ninety_percent_seconds) }));
   },
 
   /** The round tally of every closed, non-drill thread, by building and floor. */

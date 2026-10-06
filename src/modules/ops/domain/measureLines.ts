@@ -3,7 +3,7 @@
 //
 // What this file guarantees, whatever it is given:
 //  - the small-number rule (E09) on every count of people or of what they did and on every percentage made from one (./smallNumbers.ts): the figures that
-//    arrive already judged by a view (S07.10's subscribers, correction reach and cost per alert; S09.04's delivery times by language) pass through as shown;
+//    arrive already judged by a view (S07.10's subscribers, correction reach and cost per alert) pass through as shown;
 //  - drills apart: every line says whether it is about a drill, nothing is ever added across, and the page shows them in a section of their own;
 //  - the alerts sent for a rehearsal (docs/procedures/rehearsals.md, S09.03's seam) left out of every measure about alerts (times, check-ins, translation
 //    fallbacks, corrections and their reach, cost per alert); the money they cost stays in the total spend, since it was spent;
@@ -13,8 +13,10 @@
 // The rule protects people: it applies to counts of residents, subscribers, texts, installs, page views, searches, check-ins and survey answers, to alert
 // entries counted by language (as S09.04's weekly review does), and to coverage counted by neighbourhood (a count "for a neighbourhood"). Counts of the Hub's
 // own work that are not split that way (drills run, entries approved, corrections sent: each one is listed anyway) are written as they are.
+// Every table the rule judges here is laid out as a tree of totals (a total, its splits, and splits of their parts), because the rule's working out of what a
+// reader could recover is exact for a tree (smallNumbers' shownTable): the check-ins are the one table that had to be laid out for it (checkinLines).
 import { englishText } from "../../../i18n/text";
-import { isSmall, shownCount, shownPercent, shownSplit, NOT_SHOWN, type Shown } from "./smallNumbers";
+import { isSmall, shownCount, shownPercent, shownSplit, shownSplits, shownTable, NOT_SHOWN, type Shown, type TableSplit } from "./smallNumbers";
 import type { Survey } from "./measureFiles";
 
 /** The sections, in the order the page reads them. `about` is the export's own lines (the date, the edition, what was left out). */
@@ -108,26 +110,28 @@ export interface ApprovalTimingRow {
   reportedToFirstAckMs: number | null;
 }
 
-/** `alert_delivery_timing`: one per approved entry with texts handed off, every language together. */
+/** `alert_delivery_timing`: one per approved entry with texts handed off, every language together. A text resent (S09.02) is counted once, with its original. */
 export interface DeliveryTimingRow {
   entryId: string;
   alertId: string;
   isDrill: boolean;
+  /** The recipients whose text was handed off (a resend chain counts once). */
   handedOff: number;
+  /** Those whose text, or a resend of it, was delivered. */
   delivered: number;
   firstHandOffSeconds: number | null;
   /** Null when delivered texts never reached 90% of those handed off. */
   ninetyPercentSeconds: number | null;
 }
 
-/** S09.04's `weekly_review` section `entry_timing`: per entry and language, the 90% time already judged by the view (hidden for 1 to 4 texts). */
+/** `alert_delivery_timing` per entry and language: the same reading for one language's texts. */
 export interface LanguageTimingRow {
   entryId: string;
   lang: string;
   isDrill: boolean;
+  handedOff: number;
+  /** Null when delivered texts never reached 90% of those handed off. */
   ninetyPercentSeconds: number | null;
-  /** `reached`, `not reached`, or null where the view hid it. */
-  status: string | null;
 }
 
 /** `checkin_round_count`: a closed thread's round tally at one place and status. */
@@ -346,14 +350,8 @@ const line = (input: LineInput): MeasureLine => ({
 const countLine = (base: Omit<LineInput, "value" | "unit">, count: Shown): MeasureLine => line({ ...base, value: count.shown, unit: "count" });
 const percentLine = (base: Omit<LineInput, "value" | "unit">, percent: number | null): MeasureLine => line({ ...base, value: percent === null ? NOT_SHOWN : String(percent), unit: "percent" });
 
-/** A total and its split as lines: the total, then one line per cell, each judged by the rule. */
-function splitLines(base: Omit<LineInput, "value" | "unit">, split: MeasureSplit, cells: readonly { key: string; label: string; n: number }[]): MeasureLine[] {
-  const judged = shownSplit(cells.map((cell) => ({ key: cell, n: cell.n })));
-  return [
-    countLine(base, judged.total),
-    ...judged.cells.map(({ key, count }) => countLine({ ...base, split, key: key.key, label: key.label }, count)),
-  ];
-}
+/** A cell of a split as a line, or none where the rule leaves it out (its total is 1 to 4). */
+const cellLine = (base: Omit<LineInput, "value" | "unit">, count: Shown | null): MeasureLine[] => (count === null ? [] : [countLine(base, count)]);
 
 /** Adds up rows by a key, in first-seen order. */
 function sumBy<T>(rows: readonly T[], keyOf: (row: T) => string, value: (row: T) => number): Map<string, number> {
@@ -390,16 +388,17 @@ function subscriberLines(day: SubscriberDayInput | null): MeasureLine[] {
 export const INSTALL_EVENTS = ["install"] as const;
 export const DIRECTORY_EVENTS = ["directory_view", "listing_view", "map_view", "guide_view", "numbers_view"] as const;
 
-/** One usage event over a period: the total, by page language and by neighbourhood. */
+/** One usage event over a period: the total, by page language and by neighbourhood, the two splits of one total judged together. */
 function usageLines(section: MeasureSection, evt: string, period: string, rows: readonly UsageRow[]): MeasureLine[] {
   const mine = rows.filter((row) => row.evt === evt);
   const base = { section, measure: evt, period };
   const langs = sumBy(mine, (row) => row.lang, (row) => row.n);
   const nbhds = sumBy(mine, (row) => row.nbhd, (row) => row.n);
-  return [
-    ...splitLines(base, "language", [...langs.keys()].sort(byLang).map((lang) => ({ key: lang, label: languageName(lang), n: langs.get(lang) ?? 0 }))),
-    ...splitLines(base, "neighbourhood", [...nbhds.keys()].sort().map((nbhd) => ({ key: nbhd, label: neighbourhoodName(nbhd), n: nbhds.get(nbhd) ?? 0 }))).slice(1),
-  ];
+  const judged = shownSplits([
+    [...langs.keys()].sort(byLang).map((lang) => ({ key: { split: "language" as MeasureSplit, key: lang, label: languageName(lang) }, n: langs.get(lang) ?? 0 })),
+    [...nbhds.keys()].sort().map((nbhd) => ({ key: { split: "neighbourhood" as MeasureSplit, key: nbhd, label: neighbourhoodName(nbhd) }, n: nbhds.get(nbhd) ?? 0 })),
+  ]);
+  return [countLine(base, judged.total), ...judged.splits.flat().flatMap(({ key, count }) => cellLine({ ...base, ...key }, count))];
 }
 
 function usageSection(section: MeasureSection, events: readonly string[], rows: readonly UsageRow[], week: string): MeasureLine[] {
@@ -424,18 +423,26 @@ function searchLines(rows: readonly SearchRow[], week: string): MeasureLine[] {
     const searches = counted("searches", (row) => row.searches);
     const noMatch = counted("no_clear_match", (row) => row.noClearMatch);
     const failed = counted("failed", (row) => row.failed);
+    // A language is listed only where its searches are: when they are left out (fewer than 5 searches in all), so is every line naming a language, since
+    // how many languages are named could give their counts away.
+    const listed = (index: number) => searches.cells[index].count !== null;
+    const byLanguage = (measure: string, index: number) => ({ ...base, measure, split: "language" as const, key: langs[index].lang, label: languageName(langs[index].lang ?? "") });
     const lines: MeasureLine[] = [];
     for (const counts of [searches, noMatch, failed]) {
       lines.push(countLine({ ...base, measure: counts.measure }, counts.total));
-      for (const cell of counts.cells) lines.push(countLine({ ...base, measure: counts.measure, split: "language", key: cell.key, label: languageName(cell.key) }, cell.count));
+      counts.cells.forEach((cell, index) => {
+        if (listed(index)) lines.push(...cellLine(byLanguage(counts.measure, index), cell.count));
+      });
     }
     lines.push(percentLine({ ...base, measure: "no_clear_match_percent" }, shownPercent(noMatch.total, searches.total)));
-    noMatch.cells.forEach((cell, index) =>
-      lines.push(percentLine({ ...base, measure: "no_clear_match_percent", split: "language", key: cell.key, label: languageName(cell.key) }, shownPercent(cell.count, searches.cells[index].count))),
-    );
+    noMatch.cells.forEach((cell, index) => {
+      if (listed(index)) lines.push(percentLine(byLanguage("no_clear_match_percent", index), shownPercent(cell.count, searches.cells[index].count)));
+    });
     const time = (row: SearchRow | undefined) => (row?.medianMs === null || row?.medianMs === undefined ? englishText("staff.measuresExport.values.none") : String(row.medianMs));
     lines.push(line({ ...base, measure: "median_answer_ms", value: time(total), unit: "milliseconds" }));
-    for (const row of langs) lines.push(line({ ...base, measure: "median_answer_ms", split: "language", key: row.lang, label: languageName(row.lang ?? ""), value: time(row), unit: "milliseconds" }));
+    langs.forEach((row, index) => {
+      if (listed(index)) lines.push(line({ ...byLanguage("median_answer_ms", index), value: time(row), unit: "milliseconds" }));
+    });
     return lines;
   });
 }
@@ -493,12 +500,13 @@ function timingLines(input: MeasuresInput, isLeftOut: (alertId: string) => boole
     lines.push(...medianLine("approval_to_first_hand_off_seconds", toHandOff));
     lines.push(...medianLine("approval_to_90_percent_delivered_seconds", toNinety));
     lines.push(line({ ...base, measure: "ninety_percent_not_reached_entries", value: String(notReached), unit: "count", basis: null }));
-    // By language: S09.04's per-language readings (already judged), their median over the entries where the 90% time is shown.
+    // By language: the median over the entries whose texts in that language reached 90% delivered, leaving out a language's reading made from 1 to 4 texts
+    // (a share of them, as S09.04's weekly review does).
     const byLanguage = new Map<string, number[]>();
     for (const row of input.languageTimings) {
       if (row.isDrill !== drill || leftOutEntry(row.entryId)) continue;
       const list = byLanguage.get(row.lang) ?? [];
-      if (row.status === "reached" && row.ninetyPercentSeconds !== null) list.push(row.ninetyPercentSeconds);
+      if (!isSmall(row.handedOff) && row.ninetyPercentSeconds !== null) list.push(row.ninetyPercentSeconds);
       byLanguage.set(row.lang, list);
     }
     for (const lang of [...byLanguage.keys()].sort(byLang)) {
@@ -522,40 +530,70 @@ function timingLines(input: MeasuresInput, isLeftOut: (alertId: string) => boole
 /** The round statuses, in the order the page lists them: what was asked for, then the outcomes (E08 "Round tally"). */
 export const CHECKIN_STATUSES = ["requested", "done", "not_reached", "needs_help", "withdrawn", "unmarked"] as const;
 
-/** Check-in counts (E3, FR-M4's "data apart from drills"): per closed thread by building and floor, and the pilot's by neighbourhood. No drill has a round. */
+/**
+ * Check-in counts (E3, FR-M4's "data apart from drills"), as one table of totals the rule judges together: the pilot's check-ins asked for, split into how
+ * they ended and into the closed rounds; each round's split into its buildings, and each building's into its floors. No drill has a round.
+ *
+ * After a close, at every place, `requested` is the sum of the outcomes (E08 "Round tally"). So outcomes by round, building or floor would add up two ways,
+ * to their place's requests and to the outcome's total over the places: a table with two paths between its figures, where a reader could work out a hidden
+ * count (a floor's "fewer than 5" who need help, as its requests less its other outcomes) that the rule cannot follow. The outcomes are therefore given for
+ * the pilot to date, their one split, and each round by where its requests were; `checkin_round_count` still holds every round's outcomes by building and
+ * floor for the Hub (S08.09). A request a close has not tallied yet (a round closed before its rows were tallied) is the outcome "not tallied", so the
+ * outcomes always add up to the requests.
+ */
 function checkinLines(rows: readonly CheckinRow[]): MeasureLine[] {
-  const lines: MeasureLine[] = [];
-  const threads = [...new Map(rows.map((row) => [row.alertId, row.closedAt])).entries()].sort((a, b) => a[1].getTime() - b[1].getTime() || a[0].localeCompare(b[0]));
+  const requested = rows.filter((row) => row.status === "requested");
+  const threads = [...new Map(requested.map((row) => [row.alertId, row.closedAt])).entries()].sort((a, b) => a[1].getTime() - b[1].getTime() || a[0].localeCompare(b[0]));
   const floorKey = (row: CheckinRow) => `${row.rsn} ${row.floorLabel ?? row.floorId}`;
+  const total = (list: readonly CheckinRow[]) => list.reduce((sum, row) => sum + row.n, 0);
+  const outcomes = new Map<string, number>(CHECKIN_STATUSES.slice(1).map((status) => [status, total(rows.filter((row) => row.status === status))]));
+  const untallied = total(requested) - [...outcomes.values()].reduce((sum, n) => sum + n, 0);
+  if (untallied < 0) throw new Error("check-in counts: the closed rounds' outcomes are more than their requests (E08's round tally does not hold)");
+  if (untallied > 0) outcomes.set("untallied", untallied);
+
+  // The table: every figure by its key, in the order the lines list them, with the line each one is written as.
+  const values = new Map<string, number>();
+  const bases = new Map<string, Omit<LineInput, "value" | "unit">>();
+  const splits: TableSplit[] = [];
+  const figure = (key: string, n: number, base: Omit<LineInput, "value" | "unit">) => {
+    values.set(key, n);
+    bases.set(key, base);
+  };
+  const pilot = { section: "checkins" as const, period: PILOT };
+  figure("pilot", total(requested), { ...pilot, measure: "requested" });
+  for (const [status, n] of outcomes) figure(`pilot ${status}`, n, { ...pilot, measure: status });
+  splits.push({ total: "pilot", parts: [...outcomes.keys()].map((status) => `pilot ${status}`) });
+  splits.push({ total: "pilot", parts: threads.map(([alertId]) => `round ${alertId}`) });
   for (const [alertId, closedAt] of threads) {
-    const mine = rows.filter((row) => row.alertId === alertId);
-    for (const status of CHECKIN_STATUSES) {
-      const ofStatus = mine.filter((row) => row.status === status);
-      const base = { section: "checkins" as const, measure: status, period: torontoDay(closedAt), alertId };
-      const buildings = sumBy(ofStatus, (row) => row.rsn, (row) => row.n);
-      const addresses = new Map(mine.map((row) => [row.rsn, row.address]));
-      const allBuildings = [...new Set(mine.map((row) => row.rsn))].sort();
-      const byBuilding = splitLines({ ...base }, "building", allBuildings.map((rsn) => ({ key: rsn, label: addresses.get(rsn) ?? rsn, n: buildings.get(rsn) ?? 0 })));
-      byBuilding[0] = { ...byBuilding[0], split: "thread" };
-      const floors = sumBy(ofStatus, floorKey, (row) => row.n);
-      const places = [...new Map(mine.map((row) => [floorKey(row), row])).values()].sort(
-        (a, b) => a.rsn.localeCompare(b.rsn) || (a.floorOrder ?? Number.MAX_SAFE_INTEGER) - (b.floorOrder ?? Number.MAX_SAFE_INTEGER) || floorKey(a).localeCompare(floorKey(b)),
+    const mine = requested.filter((row) => row.alertId === alertId);
+    const base = { section: "checkins" as const, measure: "requested", period: torontoDay(closedAt), alertId };
+    figure(`round ${alertId}`, total(mine), { ...base, split: "thread" });
+    const buildings = [...new Set(mine.map((row) => row.rsn))].sort();
+    splits.push({ total: `round ${alertId}`, parts: buildings.map((rsn) => `building ${alertId} ${rsn}`) });
+    for (const rsn of buildings) {
+      const of = mine.filter((row) => row.rsn === rsn);
+      const floors = sumBy(of, floorKey, (row) => row.n);
+      const places = [...new Map(of.map((row) => [floorKey(row), row])).values()].sort(
+        (a, b) => (a.floorOrder ?? Number.MAX_SAFE_INTEGER) - (b.floorOrder ?? Number.MAX_SAFE_INTEGER) || floorKey(a).localeCompare(floorKey(b)),
       );
-      const floorLabel = (row: CheckinRow) =>
-        `${row.address}, ${row.floorLabel === null ? englishText("staff.measuresExport.floorGone") : englishText("staff.measuresExport.floor", { floor: row.floorLabel })}`;
-      const byFloor = splitLines({ ...base }, "floor", places.map((row) => ({ key: floorKey(row), label: floorLabel(row), n: floors.get(floorKey(row)) ?? 0 }))).slice(1);
-      lines.push(...byBuilding, ...byFloor);
+      figure(`building ${alertId} ${rsn}`, total(of), { ...base, split: "building", key: rsn, label: of[0].address });
+      splits.push({ total: `building ${alertId} ${rsn}`, parts: places.map((row) => `floor ${alertId} ${floorKey(row)}`) });
+      for (const row of places) {
+        const label = `${row.address}, ${row.floorLabel === null ? englishText("staff.measuresExport.floorGone") : englishText("staff.measuresExport.floor", { floor: row.floorLabel })}`;
+        figure(`floor ${alertId} ${floorKey(row)}`, floors.get(floorKey(row)) ?? 0, { ...base, split: "floor", key: floorKey(row), label });
+      }
     }
   }
-  // The pilot to date: every closed thread, by neighbourhood.
-  for (const status of CHECKIN_STATUSES) {
-    const ofStatus = rows.filter((row) => row.status === status);
-    const nbhds = sumBy(ofStatus, (row) => row.nbhd, (row) => row.n);
-    const all = [...new Set(rows.map((row) => row.nbhd))].sort();
-    lines.push(...splitLines({ section: "checkins", measure: status, period: PILOT }, "neighbourhood", all.map((nbhd) => ({ key: nbhd, label: neighbourhoodName(nbhd), n: nbhds.get(nbhd) ?? 0 }))));
-  }
-  lines.push(line({ section: "checkins", measure: "rounds_closed", period: PILOT, value: String(threads.length), unit: "count" }));
-  return lines;
+  const judged = shownTable(values, splits);
+  const linesOf = (keys: readonly string[]) => keys.flatMap((key) => cellLine(bases.get(key)!, judged.get(key) ?? null));
+  const keys = [...values.keys()];
+  // The rounds are left out with the pilot's total when it is 1 to 4; so is their number then (each round had a request, so it is 1 to 4 too).
+  const roundsClosed = isSmall(total(requested)) ? shownCount(threads.length).shown : String(threads.length);
+  return [
+    ...linesOf(keys.filter((key) => key.startsWith("pilot"))),
+    line({ ...pilot, measure: "rounds_closed", value: roundsClosed, unit: "count" }),
+    ...linesOf(keys.filter((key) => !key.startsWith("pilot"))),
+  ];
 }
 
 /** Translation (FR-M2's machine translation measure): the fallback rate by language (drills apart), and the survey of who understood. */
@@ -571,11 +609,14 @@ function translationLines(rows: readonly TranslationRow[], survey: Survey): Meas
     lines.push(countLine({ ...base, measure: "entries_translated" }, translated.total));
     lines.push(countLine({ ...base, measure: "fell_back" }, fellBack.total));
     lines.push(percentLine({ ...base, measure: "fallback_percent" }, shownPercent(fellBack.total, translated.total)));
+    // A language is listed only where its entries translated are (not when there are fewer than 5 in all: see searchLines).
     langs.forEach((lang, index) => {
+      const entries = translated.cells[index].count;
+      if (entries === null) return;
       const where = { ...base, split: "language" as const, key: lang, label: languageName(lang) };
-      lines.push(countLine({ ...where, measure: "entries_translated" }, translated.cells[index].count));
-      lines.push(countLine({ ...where, measure: "fell_back" }, fellBack.cells[index].count));
-      lines.push(percentLine({ ...where, measure: "fallback_percent" }, shownPercent(fellBack.cells[index].count, translated.cells[index].count)));
+      lines.push(countLine({ ...where, measure: "entries_translated" }, entries));
+      lines.push(...cellLine({ ...where, measure: "fell_back" }, fellBack.cells[index].count));
+      lines.push(percentLine({ ...where, measure: "fallback_percent" }, shownPercent(fellBack.cells[index].count, entries)));
     });
   }
   const period = survey.from === null ? PILOT : survey.from === survey.to ? survey.from : `${survey.from} to ${survey.to}`;
@@ -590,10 +631,12 @@ function translationLines(rows: readonly TranslationRow[], survey: Survey): Meas
   lines.push(countLine({ ...base, measure: "survey_understood" }, understood.total));
   lines.push(percentLine({ ...base, measure: "survey_understood_percent" }, shownPercent(understood.total, asked.total)));
   survey.byLanguage.forEach((row, index) => {
+    const people = asked.cells[index].count;
+    if (people === null) return;
     const where = { ...base, split: "language" as const, key: row.lang, label: languageName(row.lang) };
-    lines.push(countLine({ ...where, measure: "survey_asked" }, asked.cells[index].count));
-    lines.push(countLine({ ...where, measure: "survey_understood" }, understood.cells[index].count));
-    lines.push(percentLine({ ...where, measure: "survey_understood_percent" }, shownPercent(understood.cells[index].count, asked.cells[index].count)));
+    lines.push(countLine({ ...where, measure: "survey_asked" }, people));
+    lines.push(...cellLine({ ...where, measure: "survey_understood" }, understood.cells[index].count));
+    lines.push(percentLine({ ...where, measure: "survey_understood_percent" }, shownPercent(understood.cells[index].count, people)));
   });
   return lines;
 }
@@ -637,7 +680,7 @@ function drillLines(rows: readonly DrillRow[]): MeasureLine[] {
       { key: "in_flight", n: inFlight },
     ]);
     lines.push(countLine({ ...base, measure: "texts_handed_off" }, outcomes.total));
-    for (const cell of outcomes.cells) lines.push(countLine({ ...base, measure: `texts_${cell.key}` }, cell.count));
+    for (const cell of outcomes.cells) lines.push(...cellLine({ ...base, measure: `texts_${cell.key}` }, cell.count));
     lines.push(countLine({ ...base, measure: "texts_not_sent" }, shownCount(row.notSent)));
   }
   return lines;
@@ -758,14 +801,15 @@ function coverageLines(rows: readonly CoverageInput[]): MeasureLine[] {
     const split = shownSplit(sorted.map((row) => ({ key: row.nbhd, n: value(row) })));
     splits.set(measure, split);
     lines.push(countLine({ ...base, measure }, split.total));
-    split.cells.forEach((cell, index) => lines.push(countLine({ ...base, measure, split: "neighbourhood", key: cell.key, label: neighbourhoodName(cell.key, sorted[index].name) }, cell.count)));
+    split.cells.forEach((cell, index) => lines.push(...cellLine({ ...base, measure, split: "neighbourhood", key: cell.key, label: neighbourhoodName(cell.key, sorted[index].name) }, cell.count)));
   }
   const floors = splits.get("floors")!;
   const covered = splits.get("floors_covered")!;
   lines.push(percentLine({ ...base, measure: "floors_covered_percent" }, shownPercent(covered.total, floors.total)));
-  sorted.forEach((row, index) =>
-    lines.push(percentLine({ ...base, measure: "floors_covered_percent", split: "neighbourhood", key: row.nbhd, label: neighbourhoodName(row.nbhd, row.name) }, shownPercent(covered.cells[index].count, floors.cells[index].count))),
-  );
+  sorted.forEach((row, index) => {
+    if (floors.cells[index].count === null) return;
+    lines.push(percentLine({ ...base, measure: "floors_covered_percent", split: "neighbourhood", key: row.nbhd, label: neighbourhoodName(row.nbhd, row.name) }, shownPercent(covered.cells[index].count, floors.cells[index].count)));
+  });
   return lines;
 }
 
