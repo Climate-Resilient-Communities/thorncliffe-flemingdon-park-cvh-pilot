@@ -2154,6 +2154,45 @@
     languageSaved: 'Saved. Your texts will now be in English.',
     noCheckinRequest: 'You have no check-in request.',
     checkinWithdrawn: 'Your check-in request is withdrawn.' } });
+  /* S07.06: the one-time web link. menuClosedLink replaces menuClosed once the link exists: a menu closed with nothing changed offers the
+     link ("Reply 1"); it is a menu text, so it must fit one segment in its language (the menus' fixture checks it). editLink is the text
+     that carries the link ({link}: the page's address, with nothing written next to it) and must say it works once, for 30 minutes;
+     editSaved confirms a change made on the page ({hub} is the Hub's number). The page (subscriptionEdit) is not a prototype screen: it is
+     R-05's form for changing what was chosen, opened only from the link. "This link has expired" is the story's own wording. */
+  m(en, { smsTexts: {
+    menuClosedLink: 'Menu closed. Nothing was changed. Reply 1 for a link to make changes online.',
+    editLink: 'Change or delete your CVH text alerts here: {link} The link works once, for 30 minutes.',
+    editSaved: 'Your CVH alert choices were changed on the web page. Not you? Call the Hub at {hub}.' },
+  subscriptionEdit: {
+    title: 'Change your text alerts',
+    loading: 'Opening your choices...',
+    forNumber: 'For the phone number ending in {digits}.',
+    lead: 'Change any choice, then save. To stop all texts, delete your subscription at the end of this page.',
+    topicsTitle: 'Topics you do not want texts about',
+    topicsLead: 'Tick a topic to stop its alerts. Alerts about a fire or an evacuation always come.',
+    save: 'Save my changes',
+    saving: 'Saving...',
+    savedTitle: 'Your changes are saved',
+    savedBody: 'A text is on its way to confirm them. This link has now been used: to change something else, ask for a new link by text.',
+    deleteTitle: 'Delete my subscription',
+    deleteLead: 'You will get no more texts from the CVH, and everything kept about your number is deleted. This cannot be undone.',
+    deleteSure: 'Delete your subscription now? You will get no more texts from the CVH.',
+    deleteYes: 'Yes, delete it',
+    deleteNo: 'No, keep it',
+    deleting: 'Deleting...',
+    deletedTitle: 'Your subscription is deleted',
+    deletedBody: 'You will get no more texts from the CVH, and nothing about your number is kept. No text is sent to confirm this.',
+    signUpAgain: 'Sign up again',
+    expiredTitle: 'This link has expired',
+    expiredBody: 'A link works once, for 30 minutes after it is sent.',
+    expiredHow: 'To get a new link by text, reply 1 to a text from the CVH. If the reply is a menu, reply 0 to close it. When a reply offers a link, reply 1.',
+    callHub: 'Or call the Hub at {hub}.',
+    error: {
+      invalid_request: 'Something in the form could not be read. Reload the page and try again.',
+      neighbourhood_missing: 'Choose your neighbourhood.',
+      place_unknown: 'One of your buildings or floors is no longer on the list. Check your buildings and try again.',
+      edit_unavailable: 'Changes cannot be made just now. Try again later.',
+      network: 'We could not reach the CVH. Check your connection and try again.' } } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

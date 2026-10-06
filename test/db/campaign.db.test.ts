@@ -8,8 +8,8 @@
 // YES to a pending sign-up read before it confirms nothing after it; a reply 0 under way or coming meanwhile waits on the subscriber's row, not on the
 // prompt's key); the spend cap judged with the campaign's texts counted once; YES before and after the deadline, and with S07.05's menus (inside a
 // menu opened after the start it is the menu's, after the menu resets or closes the re-consent's; a start replaces an open menu; a lapsed subscriber gets
-// no menu); who receives texts before and after it (the
-// fan-out, the hand-off's number, a resend's check, the measures), and after the owner cancels; the sender at the hand-off; and the end job. Every number is
+// no menu; with S07.06's link, YES to the offer a closed menu makes is the re-consent's); who receives texts before and after it (the fan-out, the hand-off's
+// number, a resend's check, the measures, S07.06's edit link), and after the owner cancels; the sender at the hand-off; and the end job. Every number is
 // fictitious (the 555 exchange); nothing reaches Twilio.
 import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
@@ -25,6 +25,7 @@ import {
   MENU_SCOPE,
   campaignStandingReader,
   createCampaigns,
+  createEditLink,
   createInboundRouter,
   createMenus,
   createRateLimiter,
@@ -122,6 +123,7 @@ async function resetAll() {
   await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', ${MENU_SCOPE})`;
   await owner`delete from campaign`;
   await owner`delete from subscriber_measure`;
+  madeTokens.length = 0;
   await owner`delete from staff_session where staff_account_id in (select id from staff_account where username like 'dl\\_%')`;
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
@@ -210,6 +212,40 @@ function router(over: Partial<Parameters<typeof createInboundRouter>[0]> = {}) {
 }
 const nextSid = () => `SM${(++sid).toString(16).padStart(32, "0")}`;
 const textFrom = (phone: string, body: string): Promise<InboundOutcome> => router().handle({ messageSid: nextSid(), from: phone, body, optOutType: null });
+
+/** S07.06's edit link as src/app/subscriptionEdit.ts composes it (places' real readers), each token it makes recorded in `madeTokens`. */
+const madeTokens: string[] = [];
+function editLink() {
+  const queue = createDeliveryQueue();
+  return createEditLink({
+    db: app,
+    enqueue: (tx, input) => queue.enqueueTransactional(tx, input),
+    skipRecipientDeliveries: (tx, recipient) => queue.skipRecipientDeliveries(tx, recipient),
+    places: {
+      neighbourhoodIds: (executor) => neighbourhoodIds(executor),
+      floorIdsOf: async (tx, rsn, options) => (await floorsOfBuilding(tx, rsn, options))?.map((floor) => floor.id) ?? null,
+    },
+    publicBaseUrl: () => BASE_URL,
+    pricePerSegmentCents: () => 1.5,
+    newToken: () => {
+      const token = randomBytes(32).toString("base64url");
+      madeTokens.push(token);
+      return token;
+    },
+  });
+}
+
+/** A text through the router as src/app/inbound.ts composes it since S07.06: the menus offer and send the edit link. */
+const textWithLinkFrom = (phone: string, body: string): Promise<InboundOutcome> =>
+  router({
+    menus: createMenus({
+      enqueue: (tx, input) => createDeliveryQueue().enqueueTransactional(tx, input),
+      pricePerSegmentCents: () => 1.5,
+      places: placesForMenus,
+      checkins: noCheckinRequestsYet,
+      editLink: editLink().port,
+    }),
+  }).handle({ messageSid: nextSid(), from: phone, body, optOutType: null });
 
 const deadlineNow = async (): Promise<string> => (await owner`select ((now() at time zone 'America/Toronto')::date + 30)::text as day`)[0]!.day as string;
 
@@ -859,6 +895,28 @@ describe("YES from a subscriber asked to re-consent", () => {
     expect(await statesOf()).toEqual({ [en.id]: "retained" });
   });
 
+  it("to the edit link's offer a menu closed with nothing changed makes (S07.06, the prompt written last) is the re-consent's; 1 to the offer is the link's", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await started(admin);
+    expect(await textWithLinkFrom(en.phone, "2")).toMatchObject({ state: "active", action: "menu", replied: true });
+    expect(await textWithLinkFrom(en.phone, "0")).toMatchObject({ action: "menu_reply", replied: true });
+    expect((await menuReplies(en.id)).at(-1)).toBe(residentSms("en", "menuClosedLink").body);
+    expect(await promptKind(en.id)).toBe("edit_link_offer");
+    // YES cancels the offer, as any reply but 1 does, and resolves to the re-consent.
+    expect(await textWithLinkFrom(en.phone, "YES")).toMatchObject({ state: "active", action: "reconsent", replied: true });
+    expect(await statesOf()).toEqual({ [en.id]: "retained" });
+    expect(await promptKind(en.id)).toBeNull();
+    expect(madeTokens).toEqual([]);
+    // Asked again by a subscriber who stayed, 1 to the offer is the link's.
+    await textWithLinkFrom(en.phone, "2");
+    await textWithLinkFrom(en.phone, "0");
+    expect(await textWithLinkFrom(en.phone, "1")).toMatchObject({ state: "active", action: "edit_link", replied: true });
+    expect(madeTokens).toHaveLength(1);
+    const [link] = await owner`select body from delivery where recipient_id = ${en.id} and purpose = 'edit_link'`;
+    expect(link!.body).toContain(`/en/subscription/${madeTokens[0]!}`);
+  });
+
   it("to an S07.05 menu idle for 10 minutes says the menu has reset and resolves to the re-consent", async () => {
     const admin = await staff("admin");
     const en = await subscriber("en");
@@ -962,6 +1020,27 @@ describe("receiving subscribers", () => {
       (await owner`select measure, sum(n)::int as n from subscriber_measure where measure like 'receiving_%' group by measure`).map((row) => [row.measure as string, row.n as number]),
     );
     expect(measured).toEqual({ receiving_active: 1, receiving_reconsent_pending: 0, receiving_retained: 1 });
+  });
+
+  it("S07.06's edit link of an asked subscriber works until the deadline; after it the link answers expired in view, change and delete, using and changing nothing", async () => {
+    const admin = await staff("admin");
+    const asked = await subscriber("en");
+    const { campaign } = await started(admin);
+    const link = editLink();
+    await app.transaction((tx) => link.port.send(tx, { id: asked.id, lang: "en" }));
+    const token = madeTokens.at(-1)!;
+    const change = { token, lang: "fr" as const, neighbourhood: "FP", places: [], groups: [], mutedTopics: [] };
+    expect(await link.view(token)).toMatchObject({ v: 1, status: "ok", subscription: { lang: "en", neighbourhood: "TP" } });
+
+    await pastDeadline(campaign.id);
+    // The view reads without a lock (`subscriberStore.receives`), the change and the deletion find no number (`phoneOf`): one condition, `receivingSql`.
+    expect(await link.view(token)).toEqual({ v: 1, status: "expired" });
+    expect(await link.change(change)).toEqual({ kind: "expired" });
+    expect(await link.delete(token)).toEqual({ kind: "expired" });
+    expect(await owner`select lang, neighbourhood_id, retention_state from subscriber where id = ${asked.id}`).toEqual([{ lang: "en", neighbourhood_id: "TP", retention_state: "reconsent_pending" }]);
+    expect(await owner`select used_at from subscription_edit_token where subscriber_id = ${asked.id}`).toEqual([{ used_at: null }]);
+    // No confirmation was queued: the link's own text is the only one of its purpose.
+    expect(await owner`select count(*)::int as n from delivery where recipient_id = ${asked.id} and purpose = 'edit_link'`).toEqual([{ n: 1 }]);
   });
 
   it("after the owner cancels the campaign, the asked keep receiving before and after its deadline: never lapsed (not S09.08's to delete), and YES is answered as any subscriber's", async () => {

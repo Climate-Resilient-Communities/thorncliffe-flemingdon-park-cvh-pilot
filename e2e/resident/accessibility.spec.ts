@@ -70,6 +70,17 @@ const PAGES: PageCase[] = [
   { name: "welcome groups", path: (l) => `/${l}/welcome/groups`, firstRun: true },
   { name: "welcome place", path: (l) => `/${l}/welcome/place`, firstRun: true, stub: stubBuildingList },
   { name: "text alerts", path: (l) => `/${l}/text-alerts`, stub: stubBuildingList },
+  {
+    // S07.06: the one-time web link's page, with its choices (the server here has no database, so the view is answered here).
+    name: "change text alerts",
+    path: (l) => `/${l}/subscription/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE`,
+    stub: async (page) => {
+      await stubBuildingList(page);
+      const view = { v: 1, status: "ok", subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: SIGNED_BUILDING, floors: [] }], groups: ["seniors"], muted_topics: [], phone_last2: "23" } };
+      await page.route("**/api/subscription/view", (route) => route.fulfill({ json: view, headers: { "Cache-Control": "no-store" } }));
+    },
+    settle: (page) => expect(page.getByTestId("subscription-form")).toBeVisible(),
+  },
   { name: "terms", path: (l) => `/${l}/terms` },
   {
     name: "archive",

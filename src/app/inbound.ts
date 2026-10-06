@@ -5,8 +5,8 @@
 // Server only. Where there is no Twilio account (every environment but production) nothing can be validated and the route does nothing.
 //
 // S07.05: the numbered menus (replies 1, 2 and 3) on the same outbox, with places' buildings and floors. checkins' ports are E08's: until
-// then no subscriber has check-in rows or a check-in request. The edit link is S07.06's: until it is wired, the reply at the daily menu
-// limit gives the Hub's number only.
+// then no subscriber has check-in rows or a check-in request. S07.06: the menus offer the one-time web link (at the daily menu limit, and
+// when a menu is closed with nothing changed) and send it through the edit link's port (src/app/subscriptionEdit.ts).
 //
 // After a message that queued a text, the dispatcher is started (after the response), so a welcome or a reply goes out within seconds.
 import "server-only";
@@ -18,7 +18,6 @@ import {
   createMenus,
   noCheckinRequestsYet,
   noCheckinsYet,
-  noEditLinkYet,
   placesForMenus,
   type InboundLog,
   type InboundRouter,
@@ -28,6 +27,7 @@ import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
 import { kickDispatcher, opsRecorder } from "./dispatch";
 import { rateLimitKey } from "./signup";
+import { editLink } from "./subscriptionEdit";
 
 /** The router's log: one JSON line per message, with its keyword, state and action only. */
 const stdoutInboundLog: InboundLog = { info: (evt, fields) => stdoutMessagingLog.info(evt, fields) };
@@ -41,21 +41,22 @@ export interface InboundParts {
 /** The router on the real database (S07.04), with the menus (S07.05). */
 export function inboundRouter(parts: Pick<InboundParts, "env" | "db"> = {}): InboundRouter {
   const env = parts.env ?? getEnv();
+  const db = parts.db ?? getDb();
   const pricePerSegmentCents = () => env.smsPricePerSegmentCents;
   return createInboundRouter({
-    db: parts.db ?? getDb(),
+    db,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((floor) => floor.id) ?? null },
     // The queue checks a given send_by (signup_info's inbound_reply expiry) against the database's clock of the row that set it.
     enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
-    // E08 implements checkins' deleteForSubscriber, withdrawRequest and locationChanging; S07.06 the edit link.
+    // E08 implements checkins' deleteForSubscriber, withdrawRequest and locationChanging.
     checkins: noCheckinsYet,
     menus: createMenus({
       enqueue: (tx, input) => createDeliveryQueue().enqueueTransactional(tx, input),
       pricePerSegmentCents,
       places: placesForMenus,
       checkins: noCheckinRequestsYet,
-      editLink: noEditLinkYet,
+      editLink: editLink({ env, db }).port,
     }),
     numberKey: rateLimitKey,
     publicBaseUrl: () => env.publicBaseUrl,

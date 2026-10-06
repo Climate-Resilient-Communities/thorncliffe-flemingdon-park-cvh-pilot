@@ -168,6 +168,32 @@ test("the usage endpoint sets no cookie and is not cacheable, for a valid event,
   expect(get.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
 });
 
+// S07.06: the one-time web link's page (in every language) and its three POSTs set no cookie, are never cacheable and send no referrer,
+// whatever they answer: a refused body, and (this server has no database) a request that cannot be answered. A GET of the API is refused.
+test("the edit link's page and API set no cookie, are not cacheable and send no referrer, whatever they answer", async ({ request }) => {
+  const token = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
+  const checks = async (response: Awaited<ReturnType<typeof request.get>>, what: string) => {
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), what).toEqual([]);
+    expect(response.headers()["cache-control"], what).toBe("no-store");
+    expect(response.headers()["referrer-policy"], what).toBe("no-referrer");
+  };
+  for (const { code } of LANGUAGES) {
+    const response = await request.get(`/${code}/subscription/${token}`, { maxRedirects: 0 });
+    expect(response.status(), code).toBe(200);
+    await checks(response, code);
+  }
+  for (const route of ["view", "change", "delete"]) {
+    for (const data of [{}, { v: 1, token }]) {
+      const response = await request.post(`/api/subscription/${route}`, { data, maxRedirects: 0 });
+      expect([400, 503], `${route} ${JSON.stringify(data)}`).toContain(response.status());
+      await checks(response, route);
+    }
+    const get = await request.get(`/api/subscription/${route}`, { maxRedirects: 0 });
+    expect(get.status()).toBe(405);
+    await checks(get, `GET ${route}`);
+  }
+});
+
 // S07.02: the sign-up POST carries a number and places (AD-3's exception) and still sets no cookie, whatever it answers: a refusal of the
 // form, and (this server has no database) a sign-up that cannot be made. Never cacheable; a GET is refused.
 test("the sign-up endpoint sets no cookie and is not cacheable, whether it refuses or cannot answer", async ({ request }) => {

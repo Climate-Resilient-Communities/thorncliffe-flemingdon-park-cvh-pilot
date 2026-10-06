@@ -17,6 +17,10 @@ const APP = path.join(__dirname, "..", "src", "app");
 const allRules = (await nextConfig.headers?.()) ?? [];
 /** The rules of the staff surface; the resident building page has its own (S02.08), checked below. */
 const rules = allRules.filter((rule) => /staff/.test(rule.source));
+/** S07.06: the rules of the subscription edit page and its API (no-store and no referrer), checked on their own below. */
+const subscriptionRules = allRules.filter((rule) => /subscription/.test(rule.source));
+/** The public resident pages that a shared cache may keep. */
+const publicRules = allRules.filter((rule) => !rules.includes(rule) && !subscriptionRules.includes(rule));
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -56,13 +60,13 @@ describe("next.config.ts headers", () => {
   });
 
   it("give the public resident pages (the building page, Be ready, the guides and the numbers, and only them) a shared-cache lifetime of 5 minutes plus 1 minute stale, never no-store", () => {
-    const others = allRules.filter((rule) => !rules.includes(rule));
+    const others = publicRules;
     expect(others.map((rule) => rule.source)).toEqual([`/:lang(${LAUNCH_CODES.join("|")})/buildings/:rsn`, `/:lang(${LAUNCH_CODES.join("|")})/ready/:guide(numbers|${SHARED_CACHE_GUIDES.join("|")})?`]);
     for (const rule of others) expect(rule.headers, rule.source).toEqual([{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }]);
   });
 
   it("let no rule that is not a staff rule match any /staff or /api path, so the public cache header never reaches the staff surface or an API", () => {
-    const others = allRules.filter((rule) => !rules.includes(rule));
+    const others = publicRules;
     const onDisk = [...routeFiles(path.join(APP, "staff")), ...routeFiles(path.join(APP, "api"))].map(urlOf);
     const lookalikes = [
       "/staff",
@@ -90,7 +94,7 @@ describe("next.config.ts headers", () => {
   });
 
   it("pin each public rule to the pages it is for, in every launch language", () => {
-    const [building, ready] = allRules.filter((rule) => !rules.includes(rule));
+    const [building, ready] = publicRules;
     for (const code of LAUNCH_CODES) {
       expect(pathToRegexp(building.source).test(`/${code}/buildings/4154146`), code).toBe(true);
       for (const page of ["ready", "ready/power", "ready/numbers"]) expect(pathToRegexp(ready.source).test(`/${code}/${page}`), `${code} ${page}`).toBe(true);
@@ -98,7 +102,7 @@ describe("next.config.ts headers", () => {
   });
 
   it("keep a shared cache from holding the 404 of a guide that does not exist, and know the same six guides the directory does", () => {
-    const [, ready] = allRules.filter((rule) => !rules.includes(rule));
+    const [, ready] = publicRules;
     const matches = pathToRegexp(ready.source);
 
     expect([...SHARED_CACHE_GUIDES]).toEqual([...GUIDE_ORDER]);
@@ -122,5 +126,26 @@ describe("next.config.ts headers", () => {
     const underStaffDirs = [...routeFiles(path.join(APP, "staff")), ...routeFiles(path.join(APP, "api", "staff"))].map(urlOf);
 
     expect(staffPaths.sort()).toEqual(underStaffDirs.sort());
+  });
+
+  it("give the subscription edit page and API (S07.06) Cache-Control: no-store and Referrer-Policy: no-referrer, and nothing else", () => {
+    expect(subscriptionRules.map((rule) => rule.source)).toEqual([`/:lang(${LAUNCH_CODES.join("|")})/subscription/:path*`, "/api/subscription/:path*"]);
+    for (const rule of subscriptionRules) {
+      expect(rule.headers, rule.source).toEqual([
+        { key: "Cache-Control", value: "no-store" },
+        { key: "Referrer-Policy", value: "no-referrer" },
+      ]);
+    }
+  });
+
+  it("cover the edit page in every launch language and every subscription route on disk, and no other page or API", () => {
+    const [page, api] = subscriptionRules.map((rule) => pathToRegexp(rule.source));
+    const covers = (url: string) => page.test(url) || api.test(url);
+    const token = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
+    for (const code of LAUNCH_CODES) expect(covers(`/${code}/subscription/${token}`), code).toBe(true);
+    const routes = [...routeFiles(path.join(APP, "api", "subscription")), ...routeFiles(path.join(APP, "[lang]", "subscription"))].map((file) => urlOf(file).replace("[lang]", "ur").replace("[token]", token));
+    expect(routes.length).toBe(4);
+    for (const route of routes) expect(covers(route), route).toBe(true);
+    for (const url of ["/en", "/en/text-alerts", "/en/terms", "/api/signup", "/api/feed", "/staff/subscription", "/api/staff/subscription", "/xx/subscription/abc", "/en/subscriptions"]) expect(covers(url), url).toBe(false);
   });
 });

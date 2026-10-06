@@ -496,9 +496,22 @@ Replies 1 (building or floor) and 2 (language) start a menu; reply 3 withdraws a
 |---|---|---|
 | Menu texts | catalog `smsTexts.menu*`, `buildingSaved`, `buildingSavedWhole`, `languageSaved`, `noCheckinRequest`, `checkinWithdrawn`, all 15 languages (AI-generated, not yet checked by native readers) | Every one fits one segment in its language; `src/modules/subscriptions/application/menuTexts.test.ts` fails CI naming the text and the language otherwise, and renders every page of the 43 register buildings. A page holds as many options as fit, at most 7, so a translation that grows means more pages, never a second segment. |
 | Idle reset | `MENU_IDLE_MS` (10 minutes) and `MENU_KEPT_MS` (1 hour) in `src/modules/subscriptions/domain/menus.ts` | A menu is open for 10 minutes after its last message; a reply after that, until an hour after the last message, is told the menu reset and is read as a new keyword; the purge job deletes the row after the hour, and a later reply is read as a new keyword with no notice (as built, for the product owner to confirm: S07.05's story). |
-| Daily menu limit | `MENUS_PER_DAY` (5) in the same file | Menus started per number per day in Toronto, kept as keyed hashes in `rate_limit` (scope `sms_menu`, deleted after 24 hours by `subscriptions-purge-rate-limit`). The 6th reply 1 or 2 gets the Hub's number, and the edit link's offer once S07.06 wires it. Known edge, as with the inbound limit's mute: the day the clocks go back is 25 hours long, so the menus started in its first hour are deleted in its last hour, and a number that used its 5 in that first hour can start a 6th in the last. |
+| Daily menu limit | `MENUS_PER_DAY` (5) in the same file | Menus started per number per day in Toronto, kept as keyed hashes in `rate_limit` (scope `sms_menu`, deleted after 24 hours by `subscriptions-purge-rate-limit`). The 6th reply 1 or 2 gets the Hub's number and the edit link's offer (S07.06). Known edge, as with the inbound limit's mute: the day the clocks go back is 25 hours long, so the menus started in its first hour are deleted in its last hour, and a number that used its 5 in that first hour can start a 6th in the last. |
 | The Hub's number | `data/catalogue/numbers.json` (id `hub`), generated into `src/contracts/hubNumber.generated.ts` | What reply 9 and the limit reply give, as `(416) 421-8997`. |
 | Check-in requests | `checkins`' ports, wired in `src/app/inbound.ts` | Until E08 (S08.05) nobody has a check-in request: reply 3 is answered "You have no check-in request", and a move by menu 1 withdraws nothing. |
+
+### The one-time web link (S07.06)
+
+A subscriber asks for the link by text (reply 1 to the offer at the daily menu limit, or after closing a menu with nothing changed) and
+gets `PUBLIC_BASE_URL/{lang}/subscription/{token}`. It adds no environment variable:
+
+| What | Where | Value |
+|---|---|---|
+| The link's life | `EDIT_LINK_TTL_MS` in `src/contracts/subscriptionEdit.ts`; migration `20261006150000_subscription_edit_token.sql` | 30 minutes, used once (a change or the deletion); a new link replaces the subscriber's earlier one. Only the token's sha256 is stored. |
+| Texts | catalog `smsTexts.menuClosedLink`, `smsTexts.editLink`, `smsTexts.editSaved`, all 15 languages (AI-generated, not yet checked by native readers) | `menuClosedLink` fits one segment (the menus' fixture); `editLink` carries the link (purpose `edit_link`, `send_by` the link's expiry); `editSaved` confirms a change in the new language. A deletion sends nothing. |
+| The page and its API | `/{lang}/subscription/{token}`, `POST /api/subscription/view`, `/change`, `/delete` | `Cache-Control: no-store`, `Referrer-Policy: no-referrer`, no cookie, never kept by the service worker, no usage event. The page's HTML is the same for every link; the choices come only from `view`. |
+| Expired links | pg_cron job `subscriptions-purge-edit-tokens` (the same migration) | Every 15 minutes: links past their 30 minutes, used or not. |
+| Logs | `stdoutSubscriptionsLog` in `src/modules/subscriptions/adapters/subscriptionsLog.ts` | One JSON line per request with its outcome; any token and any phone number is taken out of every field. |
 
 ## GitHub: environments
 
