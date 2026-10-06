@@ -10,7 +10,8 @@ import { expectBaseline } from "./helpers";
 // S08.07: "My round" (A-04) inside the Hub shell at 390 px, the width it is made for, and at 1280 px: an Ambassador's round with requests on the floors they
 // cover (a call and a text, unmarked and marked) and a floor they see as counts only; marks waiting without signal ("Keep this page open until marks are
 // sent"); what late marks are told ("The Hub has been told", "This round has ended" with the Hub's number); the round cleared after 10 minutes in the
-// background ("Reload your round with signal"); no round open; and the counts a Coordinator or a Director sees. The screen is the app's own (RoundPage.tsx,
+// background ("Reload your round with signal"), and with what a mark waiting then was answered; loading, signed out and a round that could not be read;
+// no round open; and the counts a Coordinator or a Director sees. The screen is the app's own (RoundPage.tsx,
 // view.ts) drawn in each state once: nothing is read or sent. The behaviour is asserted in roundModel.test.ts, roundPage.test.tsx,
 // test/db/roundPage.db.test.ts and e2e/staff/ambassador-round.spec.ts; these pictures show what it looks like. The staff screens are English in the pilot.
 const brand = hubBrand();
@@ -46,6 +47,26 @@ test("A-04 what late marks are told at 390px", async ({ page }) => {
 test("A-04 cleared after 10 minutes in the background at 390px", async ({ page }) => {
   await open(page, { phase: "cleared" });
   await expectBaseline(page, "ambassador-round-cleared-390.png", { fullPage: true });
+});
+
+test("A-04 cleared, with what a waiting mark was answered (the round has ended), at 390px", async ({ page }) => {
+  await open(page, { phase: "cleared", notes: { [REF_C]: "round_ended" } });
+  await expectBaseline(page, "ambassador-round-cleared-ended-390.png", { fullPage: true });
+});
+
+test("A-04 loading at 390px", async ({ page }) => {
+  await open(page, { phase: "loading" });
+  await expectBaseline(page, "ambassador-round-loading-390.png", { fullPage: true });
+});
+
+test("A-04 signed out, marks waiting, at 390px", async ({ page }) => {
+  await open(page, { phase: "signed_out", waiting: [{ id: "0f0e0d0c-0b0a-4908-8706-000000000001", roundRef: REF_A, status: "needs_help" }] });
+  await expectBaseline(page, "ambassador-round-signed-out-390.png", { fullPage: true });
+});
+
+test("A-04 the round could not be read at 390px", async ({ page }) => {
+  await open(page, { phase: "failed" });
+  await expectBaseline(page, "ambassador-round-failed-390.png", { fullPage: true });
 });
 
 test("A-04 no round right now at 390px", async ({ page }) => {

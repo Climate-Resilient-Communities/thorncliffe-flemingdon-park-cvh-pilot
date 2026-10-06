@@ -290,6 +290,19 @@ export const subscriberStore = {
   },
 
   /**
+   * S08.07: which of these subscribers still ask for a check-in and receive texts (`receivingSql`), by id, with no number: the rows "My round" lists and
+   * counts. A subscriber lapsed at the re-consent deadline keeps a live round row until S09.08's purge, and is neither listed nor counted.
+   */
+  async checkinAskersAmong(executor: DbExecutor, ids: readonly string[]): Promise<Set<string>> {
+    if (ids.length === 0) return new Set();
+    const rows = await executor
+      .select({ id: subscriber.id })
+      .from(subscriber)
+      .where(and(inArray(subscriber.id, [...ids]), isNotNull(subscriber.checkinMethod), receivingSql(subscriber.retentionState)));
+    return new Set(rows.map((row) => row.id));
+  },
+
+  /**
    * S08.07: the numbers of these subscribers for "My round" (A-04), by id: only those that still ask for a check-in and receive texts (`receivingSql`), so
    * a request withdrawn or a subscriber lapsed is never shown. Read without a lock; the app composes the round from it and sends it no-store. The one
    * reader of numbers for staff eyes.

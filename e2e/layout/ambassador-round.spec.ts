@@ -19,6 +19,9 @@ const STATES: { name: string; initial: Partial<RoundState>; role?: "ambassador" 
   { name: "what late marks are told", initial: { phase: "ready", round: ROUND, notes: { [REF_A]: "hub_told", [REF_C]: "round_ended" } } },
   { name: "the round cleared", initial: { phase: "cleared" } },
   { name: "counts only", initial: { phase: "ready", round: COUNTS_ONLY }, role: "coordinator" },
+  { name: "cleared, with what a waiting mark was answered", initial: { phase: "cleared", notes: { [REF_C]: "round_ended" } } },
+  { name: "signed out", initial: { phase: "signed_out", waiting: [{ id: "0f0e0d0c-0b0a-4908-8706-000000000001", roundRef: REF_A, status: "needs_help" }] } },
+  { name: "the round could not be read", initial: { phase: "failed" } },
 ];
 
 const open = (page: Page, state: (typeof STATES)[number], lang: "en" | "ur" = "en", longest = false) =>
@@ -79,5 +82,22 @@ test.describe("what the round says, with the app's own English words at 390 px",
     await expect(page.getByTestId("round-cleared")).toContainText("Reload your round with signal");
     await expect(page.getByRole("button", { name: "Reload my round" })).toBeVisible();
     await expect(page.locator("[data-round-ref]")).toHaveCount(0);
+  });
+
+  test("says what a waiting mark was answered when its row is not shown, with the Hub's number as a tel: link", async ({ page }) => {
+    await open(page, STATES[5]);
+    const ended = page.getByTestId("round-note-loose");
+    await expect(ended).toHaveText("This round has ended. If someone needs help, call the Hub at (416) 421-8997");
+    await expect(ended.getByRole("link")).toHaveAttribute("href", "tel:+14164218997");
+    await expect(page.getByTestId("round-cleared")).toContainText("Reload your round with signal");
+  });
+
+  test("says when the session ended with marks waiting, and when the round could not be read", async ({ page }) => {
+    await open(page, STATES[6]);
+    await expect(page.getByTestId("round-signed-out")).toHaveText("You were signed out, so marks are not being sent. Sign in again with signal, then open your round again.");
+    await expect(page.getByTestId("round-waiting")).toContainText("1 mark is waiting to be sent.");
+    await open(page, STATES[7]);
+    await expect(page.getByTestId("round-failed")).toHaveText("Your round could not be loaded. Try again with signal.");
+    await expect(page.getByRole("button", { name: "Reload my round" })).toBeVisible();
   });
 });

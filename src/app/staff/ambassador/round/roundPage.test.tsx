@@ -94,6 +94,19 @@ describe("the round as drawn", () => {
     expect(draw({ phase: "ready", round: ROUND, notes: { [REF_A]: "request_ended" } })).toContain("This request has ended");
   });
 
+  it("says what a waiting mark was answered above the round when its row is not shown (cleared, or read again without it), once per answer", () => {
+    const REF_GONE = "5d2d0ab1-8c73-4e30-9f4c-2d8a3e4f5061";
+    const cleared = draw({ phase: "cleared", notes: { [REF_A]: "round_ended", [REF_B]: "round_ended" } });
+    expect(cleared).toContain('data-testid="round-note-loose" data-tap-exempt="inline-text">This round has ended. If someone needs help, call the Hub at <a class="hub-link" href="tel:+14164218997">(416) 421-8997</a>');
+    expect(cleared.match(/round-note-loose/g)).toHaveLength(1);
+    expect(cleared).toContain("Reload your round with signal");
+    const ready = draw({ phase: "ready", round: ROUND, notes: { [REF_A]: "request_ended", [REF_GONE]: "hub_told" } });
+    expect(ready).toContain('data-testid="round-note-loose" data-tap-exempt="inline-text">The Hub has been told; call the Hub if you can</p>');
+    // A note for a row on the screen is said on that row only.
+    expect(ready).toContain('data-testid="round-note" data-tap-exempt="inline-text">This request has ended</p>');
+    expect(ready.match(/round-note-loose/g)).toHaveLength(1);
+  });
+
   it("says to reload with signal once cleared, that no round is open, and that the session ended", () => {
     const cleared = draw({ phase: "cleared" });
     expect(cleared).toContain("Reload your round with signal");
@@ -101,6 +114,7 @@ describe("the round as drawn", () => {
     expect(cleared).not.toContain("tel:+1416555");
     expect(draw({ phase: "ready", round: { rounds: [] } })).toContain("There is no check-in round right now.");
     expect(draw({ phase: "signed_out" })).toContain("You were signed out");
+    expect(draw({ phase: "failed" })).toContain("Your round could not be loaded. Try again with signal.");
     expect(draw({ phase: "loading" })).toContain("Loading your round.");
   });
 });

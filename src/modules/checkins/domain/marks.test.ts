@@ -17,6 +17,12 @@ describe("decideMark (E08 'Marks', 'Late mark')", () => {
     for (const target of [live, stub, expired]) expect(decideMark({ ...target, markIds: [OTHER, ID] }, { id: ID, status: "needs_help" })).toBe("already");
   });
 
+  it("knows a mark id sent again in upper case (a uuid's case is not part of it)", () => {
+    const upper = "0190ABCD-0000-4000-8000-00000000000A";
+    expect(decideMark({ ...live, markIds: [upper.toLowerCase()] }, { id: upper, status: "done" })).toBe("already");
+    expect(decideMark({ ...stub, markIds: [upper.toLowerCase()] }, { id: upper, status: "needs_help" })).toBe("already");
+  });
+
   it("escalates a late not reached or needs help on a row that left its round and has not expired; a late done has ended", () => {
     expect(decideMark(stub, { id: ID, status: "not_reached" })).toBe("escalate");
     expect(decideMark(stub, { id: ID, status: "needs_help" })).toBe("escalate");

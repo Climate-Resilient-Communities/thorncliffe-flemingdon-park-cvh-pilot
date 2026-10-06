@@ -271,6 +271,73 @@ describe("the page in the background (never a timer: the time hidden is compared
     expect(h.state()).toMatchObject({ phase: "cleared", round: null, waiting: [], notes: {} });
   });
 
+  it("on a real restore from the page cache (visibilitychange visible, then pageshow): back at 9 minutes the round is read again and the marks go on", async () => {
+    const h = await loaded();
+    h.model.mark(REF_A, "done");
+    // Leaving, in the browser's order: pagehide, then hidden. The mark's request gets no answer before the page is frozen.
+    h.model.pagehide();
+    h.model.hidden();
+    h.advance(9 * 60 * 1000);
+    h.model.visible();
+    h.model.pageshow(true);
+    await h.settle();
+    expect(h.state().waiting).toHaveLength(1);
+    // After the request made before the page left: the mark again, with its id, and the round.
+    const after = h.pending().slice(1);
+    expect(after.map((request) => request.url).sort()).toEqual([MARK_ROUTE, ROUND_ROUTE].sort());
+    expect(after.find((request) => request.url === MARK_ROUTE)!.body.mark_id).toBe(h.requests[1]!.body.mark_id);
+  });
+
+  it("on a real restore from the page cache (visibilitychange visible, then pageshow) at 10 minutes: cleared, nothing read again until the person reloads", async () => {
+    const h = await loaded();
+    h.model.mark(REF_A, "done");
+    h.model.pagehide();
+    h.model.hidden();
+    h.advance(BACKGROUND_LIMIT_MS);
+    const asked = h.requests.length;
+    h.model.visible();
+    h.model.pageshow(true);
+    await h.settle();
+    expect(h.state()).toMatchObject({ phase: "cleared", round: null, waiting: [], notes: {} });
+    expect(h.requests, "neither the round nor the cleared mark is asked for again").toHaveLength(asked);
+    // The answer to the mark sent before the page left changes nothing, and signal coming back sends nothing.
+    await h.answer({ status: 200, body: { outcome: "marked" } });
+    await h.signal(true);
+    expect(h.state()).toMatchObject({ phase: "cleared", round: null, waiting: [] });
+    expect(h.requests).toHaveLength(asked);
+    // A later restore within 10 minutes keeps it cleared: only "Reload my round" reads it again.
+    h.model.pagehide();
+    h.model.hidden();
+    h.advance(60_000);
+    h.model.visible();
+    h.model.pageshow(true);
+    await h.settle();
+    expect(h.state().phase).toBe("cleared");
+    expect(h.requests).toHaveLength(asked);
+    h.model.load();
+    await h.settle();
+    await h.answer({ status: 200, body: ROUND });
+    expect(h.state()).toMatchObject({ phase: "ready", round: ROUND });
+  });
+
+  it("keeps the answer to a waiting mark refused while nothing of the round is shown (restored without signal), so the page can say it", async () => {
+    const h = await loaded();
+    await h.signal(false);
+    h.model.mark(REF_B, "needs_help");
+    h.model.pagehide();
+    h.model.hidden();
+    h.advance(5 * 60 * 1000);
+    h.model.visible();
+    h.model.pageshow(true);
+    await h.settle();
+    expect(h.state()).toMatchObject({ phase: "cleared", round: null });
+    expect(h.state().waiting).toHaveLength(1);
+    await h.signal(true);
+    expect(h.pending().map((request) => request.url)).toEqual([MARK_ROUTE]);
+    await h.answer({ status: 403, body: { error: "forbidden" } });
+    expect(h.state()).toMatchObject({ phase: "cleared", round: null, waiting: [], notes: { [REF_B]: "round_ended" } });
+  });
+
   it("does nothing on a pageshow that is not a restore", async () => {
     const h = await loaded();
     h.model.pageshow(false);

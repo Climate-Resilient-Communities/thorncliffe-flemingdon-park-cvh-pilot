@@ -7,8 +7,10 @@
 //    the method and its latest mark, under its building and floor; never a name, a reason or a row id (the subscriber's id stays on the server);
 //  - any other floor of a building an Ambassador is assigned to, and every floor for a Coordinator or a Director (`coverage.view`), is counts only;
 //  - an Ambassador sees nothing of a building they are not assigned to.
-// A row whose thread is not an open thread residents read (a closed one, before S08.08's close tallies its rows) is not shown; a request whose number is
-// not read back (withdrawn or lapsed since the rows were read) is left out.
+// A floor is covered as identity's `coversFloor` says: only while it is one of its building's floors (places'). A request on a floor an Admin removed
+// since it was made counts as one on an uncovered floor (S08.05): counts for an Ambassador of the building, its number for an Admin only.
+// A row whose thread is not an open thread residents read (a closed one, before S08.08's close tallies its rows) is not shown; the app hands it only the
+// rows whose requester still asks and receives texts (load.ts), and a request whose number is not read back (withdrawn or lapsed since) is left out.
 import type { RoundCounts, RoundFloor, RoundResponse, RowStatus } from "@/contracts/checkinRound";
 import type { StaffRole } from "@/contracts/staffRoles";
 import type { LiveRoundRow } from "@/modules/checkins";
@@ -39,7 +41,13 @@ export interface RoundSources {
 /** How a person sees a row: with its number, as a count, or not at all. */
 export type RowSight = "contact" | "count" | "none";
 
-export function sightOf(viewer: RoundViewer, row: { rsn: string; floorId: string }): RowSight {
+/** The row's floor while it is one of its building's floors, else null (removed since: an uncovered floor). */
+export function listedFloor(plans: ReadonlyMap<string, RoundPlan>, row: { rsn: string; floorId: string }): string | null {
+  return plans.get(row.rsn)?.floors.some((floor) => floor.id === row.floorId) ? row.floorId : null;
+}
+
+/** How this person sees a row on this floor (null: not a floor of the building any more, which nobody covers). */
+export function sightOf(viewer: RoundViewer, row: { rsn: string; floorId: string | null }): RowSight {
   if (can(viewer.role, "checkins.view_open", { assignments: viewer.assignments, target: { rsn: row.rsn, floorId: row.floorId }, alertOpen: true })) return "contact";
   if (can(viewer.role, "coverage.view") || viewer.assignments.some((assignment) => assignment.rsn === row.rsn)) return "count";
   return "none";
@@ -49,12 +57,19 @@ const emptyCounts = (): RoundCounts => ({ pending: 0, done: 0, not_reached: 0, n
 
 /** The round as the person may see it: every open round (thread) with a row they see, oldest first, by building and floor in their own order. */
 export async function composeRound(viewer: RoundViewer, sources: RoundSources): Promise<RoundResponse> {
-  const seen = sources.rows.filter((row) => sources.headlines.has(row.alertId)).map((row) => ({ row, sight: sightOf(viewer, row) })).filter((item) => item.sight !== "none");
+  const plans = new Map(sources.plans.map((plan) => [plan.rsn, plan]));
+  const seen = sources.rows
+    .filter((row) => sources.headlines.has(row.alertId))
+    .map((row) => ({ row, sight: sightOf(viewer, { rsn: row.rsn, floorId: listedFloor(plans, row) }) }))
+    .filter((item) => item.sight !== "none");
   const contactIds = [...new Set(seen.filter((item) => item.sight === "contact").map((item) => item.row.subscriberId))];
   const contacts = contactIds.length === 0 ? new Map<string, string>() : await sources.contactsOf(contactIds);
-  const plans = new Map(sources.plans.map((plan) => [plan.rsn, plan]));
   const buildingOrder = new Map(sources.plans.map((plan, index) => [plan.rsn, index]));
-  const floorOrder = (rsn: string, floorId: string) => plans.get(rsn)?.floors.findIndex((floor) => floor.id === floorId) ?? -1;
+  // A floor removed from its building since (no label any more) comes after the building's own floors.
+  const floorOrder = (rsn: string, floorId: string) => {
+    const index = plans.get(rsn)?.floors.findIndex((floor) => floor.id === floorId) ?? -1;
+    return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+  };
 
   // Thread, then building, then floor; each floor is the person's requests on it, or its counts.
   const threads = new Map<string, Map<string, Map<string, { contacts: RoundFloor & { kind: "contacts" }; counts: RoundCounts; sight: RowSight }>>>();

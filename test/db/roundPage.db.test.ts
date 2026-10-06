@@ -9,15 +9,16 @@
 //    row's escalation once per status; only from an Ambassador who covers the floor now, or an Admin; an unknown `round_ref` refused and recorded;
 //  - a late mark on an unexpired stub: not reached or needs help make one escalation per status with the stub's building and floor and the ambassador only,
 //    whatever the mark id; a late done changes nothing; a stub older than 2 hours, or purged, is refused and nothing is recorded against the round;
-//  - the tally: the latest mark is the outcome when the row leaves the round (S08.05's trigger), and a mark waiting behind a withdrawal becomes a late mark.
+//  - the tally: the latest mark is the outcome when the row leaves the round (S08.05's trigger), and a mark waiting behind a withdrawal becomes a late mark;
+//  - the round's route (POST /api/staff/ambassador/round) called as each role, through its real guard: the answer each gets, no-store.
 import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { CHECKIN_CONSENT_VERSION } from "../../src/contracts/checkin";
 import { createRoundReads } from "../../src/app/staff/ambassador/round/load";
 import { roundThreads } from "../../src/modules/alerting";
-import { createCheckinRequests, createMarks, type CheckinRequests, type Marks } from "../../src/modules/checkins";
+import { createCheckinRequests, createMarks, roundRowPlace, type CheckinRequests, type Marks } from "../../src/modules/checkins";
 import { createAssignments as identityAssignments } from "../../src/modules/identity";
 import { floorsOfBuilding } from "../../src/modules/places";
 import { checkinRequestStore } from "../../src/modules/subscriptions";
@@ -25,6 +26,24 @@ import { createDb, type Db } from "../../src/platform/db";
 import { deliveryFixtures } from "./deliveryFixtures";
 import { deferred } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
+
+/** The staff surface's session lookup and database, for the route's test: the session is the one the test gives (its guard and policy are the real ones). */
+const wired = vi.hoisted(() => ({ db: null as unknown, session: null as unknown }));
+vi.mock("../../src/app/staff/identity", () => ({
+  identityConfigured: () => true,
+  requestAuthSessions: async () => ({}),
+  staffAuth: () => ({ currentSession: async () => wired.session }),
+  identity: () => ({}),
+}));
+vi.mock("../../src/app/staff/scope", async () => {
+  const { createAssignments: assignmentsOn } = await import("../../src/modules/identity");
+  const { floorsOfBuilding: floorsOf } = await import("../../src/modules/places");
+  return { assignmentsOf: (session: { staffId: string }) => assignmentsOn({ db: wired.db as Db, floors: { floorsOf } }).assignmentsOf(session.staffId) };
+});
+vi.mock("../../src/app/staff/ambassador/round/load", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../src/app/staff/ambassador/round/load")>();
+  return { ...real, roundReads: () => real.createRoundReads(wired.db as Db) };
+});
 
 // Mark Street (Thorncliffe Park) has 1, with floors 1 to 3, and 3, with floor 1.
 const RSN_A = "9807001";
@@ -100,6 +119,35 @@ const markRecords = () => owner`select actor_staff_id, outcome, subject_type, su
 const mark = (who: Person, roundRef: string, status: "done" | "not_reached" | "needs_help", markId: string = randomUUID()) => marks.mark({ staffId: who.staffId }, { markId, roundRef, status });
 const withdraw = (subscriberId: string) => app.transaction((tx) => requests.withdrawRequest(subscriberId, tx));
 
+/**
+ * The end-of-pilot campaign's deadline has passed (the owner's insert with its guard off, as if 30 days had gone by) and this subscriber never answered:
+ * lapsed (E09), receiving nothing, until S09.08's purge deletes them. Their round row stays live until then.
+ */
+async function lapse(subscriberId: string) {
+  if ((await owner`select 1 from campaign where not rehearsal`).length === 0) {
+    const starter = await person("admin");
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table campaign disable trigger campaign_guard");
+      await tx`insert into campaign (id, rehearsal, deadline_date, deadline, terms_version, texts, started_by, started_session, started_aal, idempotency_key)
+               values (${randomUUID()}, false, '2026-09-01', now() - interval '1 day', ${VERSION}, '{}'::jsonb, ${starter.staffId}, ${randomBytes(32).toString("hex")}, 'aal2', ${randomUUID()})`;
+      await tx.unsafe("alter table campaign enable trigger campaign_guard");
+    });
+  }
+  await owner`update subscriber set retention_state = 'reconsent_pending' where id = ${subscriberId}`;
+}
+
+/** An Admin removes a floor from its building (S01.13) while a round is open; every test starts with the floors back. */
+async function removeFloor(floor: string) {
+  await owner`delete from building_floor where id = ${floor}`;
+}
+async function restoreFloors() {
+  for (const [rsn, floors] of [[RSN_A, 3], [RSN_B, 1]] as const) {
+    for (let index = 1; index <= floors; index += 1) {
+      await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${floorId(rsn, index)}, ${rsn}, ${String(index)}, ${index}, true) on conflict do nothing`;
+    }
+  }
+}
+
 beforeAll(async () => {
   owner = connect(serverUrl());
   await migrate({ sql: owner, log: () => {} });
@@ -110,6 +158,7 @@ beforeAll(async () => {
   url.password = password;
   appSql = postgres(url.href, { max: 6, onnotice: () => {} });
   app = createDb(url.href);
+  wired.db = app;
   fixtures = deliveryFixtures(owner);
   marks = createMarks({ db: app });
   const coverage = createAssignments(app);
@@ -119,15 +168,14 @@ beforeAll(async () => {
     await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H')`;
     madeNeighbourhoods.push("TP");
   }
-  for (const [rsn, address, floors] of [[RSN_A, "1 Mark Street", 3], [RSN_B, "3 Mark Street", 1]] as const) {
+  for (const [rsn, address] of [[RSN_A, "1 Mark Street"], [RSN_B, "3 Mark Street"]] as const) {
     await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at) values (${rsn}, 'TP', ${address}, 43.7, -79.34, now()) on conflict do nothing`;
-    for (let index = 1; index <= floors; index += 1) {
-      await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${floorId(rsn, index)}, ${rsn}, ${String(index)}, ${index}, true) on conflict do nothing`;
-    }
   }
+  await restoreFloors();
 });
 
 async function resetAll() {
+  await restoreFloors();
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where id > ${auditBaseline}`;
@@ -136,6 +184,7 @@ async function resetAll() {
   await owner`delete from checkin_escalation`;
   await owner.unsafe("truncate checkin_tally, checkin");
   await owner`delete from subscriber`;
+  await owner`delete from campaign`;
   await owner`delete from ambassador_assignment where rsn in ${owner(RSNS)}`;
   for (const id of staffIds.splice(0)) await owner`delete from staff_account where id = ${id}`;
   await fixtures.cleanup();
@@ -252,6 +301,45 @@ describe("the round as each person sees it (direct requests)", () => {
     expect(await reads().load(admin)).toEqual({ rounds: [] });
   });
 
+  it("neither lists nor counts the request of a subscriber lapsed at the end of the pilot: the contacts, the counts and the home's count agree", async () => {
+    const [onA1, lapsedOnA1, onA3, lapsedOnA3] = [await requester(RSN_A, A1), await requester(RSN_A, A1), await requester(RSN_A, A3), await requester(RSN_A, A3)];
+    const { refs } = await round([onA1, lapsedOnA1, onA3, lapsedOnA3]);
+    await lapse(lapsedOnA1.id);
+    await lapse(lapsedOnA3.id);
+    const coverage = createAssignments(app);
+    const rashid = await person("ambassador", [{ rsn: RSN_A, floors: [A1] }]);
+    expect((await reads().load(rashid)).rounds[0]!.buildings[0]!.floors).toEqual([
+      { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: onA1.phone, method: "call", status: "pending" }] },
+      { kind: "counts", label: "3", counts: { pending: 1, done: 0, not_reached: 0, needs_help: 0 } },
+    ]);
+    expect(await reads().summary.openFor(await coverage.assignmentsOf(rashid.staffId))).toEqual({ requests: 1 });
+    const coordinator = await reads().load(await person("coordinator"));
+    expect(coordinator.rounds[0]!.buildings[0]!.floors.map((floor) => (floor.kind === "counts" ? [floor.label, floor.counts.pending] : null))).toEqual([
+      ["1", 1],
+      ["3", 1],
+    ]);
+    const admin = await reads().load(await person("admin"));
+    expect(admin.rounds[0]!.buildings[0]!.floors.flatMap((floor) => (floor.kind === "contacts" ? floor.requests.map((request) => request.round_ref) : []))).toEqual([refs[0], refs[2]]);
+  });
+
+  it("counts a request on a floor removed from its building since as one on an uncovered floor: counts for an Ambassador of the whole building, the number for an Admin", async () => {
+    const { refs, people } = await setUp();
+    const whole = await person("ambassador", [{ rsn: RSN_A, floors: null }]);
+    const coverage = createAssignments(app);
+    expect(await reads().summary.openFor(await coverage.assignmentsOf(whole.staffId))).toEqual({ requests: 3 });
+    await removeFloor(A3);
+    const seen = await reads().load(whole);
+    expect(seen.rounds[0]!.buildings[0]!.floors).toEqual([
+      { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: people[0]!.phone, method: "call", status: "pending" }] },
+      { kind: "contacts", label: "2", requests: [{ round_ref: refs[1], phone: people[1]!.phone, method: "text", status: "pending" }] },
+      { kind: "counts", label: "", counts: { pending: 1, done: 0, not_reached: 0, needs_help: 0 } },
+    ]);
+    expect(JSON.stringify(seen)).not.toContain(people[2]!.phone);
+    expect(await reads().summary.openFor(await coverage.assignmentsOf(whole.staffId))).toEqual({ requests: 2 });
+    const admin = await reads().load(await person("admin"));
+    expect(admin.rounds[0]!.buildings[0]!.floors.flatMap((floor) => (floor.kind === "contacts" ? floor.requests.map((request) => request.round_ref) : []))).toEqual([refs[0], refs[1], refs[2]]);
+  });
+
   it("counts the requests on an Ambassador's floors for their home (A-01), and none once nothing is open there", async () => {
     await setUp();
     const coverage = createAssignments(app);
@@ -295,6 +383,36 @@ describe("a mark on a live row", () => {
     ]);
     expect(records.every((record) => record.subject_type === "alert" && record.subject_id === alertId && record.actor_staff_id === rashid.staffId)).toBe(true);
     expect(JSON.stringify(records)).not.toContain(refs[0]!);
+  });
+
+  it("knows a mark id sent again in upper case: nothing changes, and a later mark is not undone", async () => {
+    const { alertId, refs } = await round([await requester(RSN_A, A1)]);
+    const rashid = await person("ambassador", [{ rsn: RSN_A, floors: [A1] }]);
+    const first = randomUUID();
+    expect(await mark(rashid, refs[0]!, "not_reached", first)).toEqual({ ok: true, outcome: "marked" });
+    const second = randomUUID();
+    expect(await mark(rashid, refs[0]!, "done", second.toUpperCase())).toEqual({ ok: true, outcome: "marked" });
+    expect(await mark(rashid, refs[0]!, "not_reached", first.toUpperCase())).toEqual({ ok: true, outcome: "already" });
+    expect(await mark(rashid, refs[0]!, "done", second)).toEqual({ ok: true, outcome: "already" });
+    expect(await rowOf(refs[0]!)).toMatchObject({ status: "done", mark_ids: [first, second] });
+    expect((await markRecords()).map((record) => record.meta)).toEqual([
+      { status: "not_reached", late: false, escalated: true },
+      { status: "done", late: false, escalated: false },
+    ]);
+    expect(await escalations()).toEqual([{ round_ref: refs[0], status: "not_reached", alert_id: alertId, rsn: RSN_A, floor_id: A1, raised_by: rashid.staffId, late: false }]);
+  });
+
+  it("on a floor removed from its building since the request: nobody covers it, so an Ambassador of the whole building is refused and an Admin may mark it", async () => {
+    const { refs } = await round([await requester(RSN_A, A3)]);
+    const whole = await person("ambassador", [{ rsn: RSN_A, floors: null }]);
+    expect(await roundRowPlace(app, refs[0]!)).toEqual({ rsn: RSN_A, floorId: A3 });
+    await removeFloor(A3);
+    // The guard's facts: no floor, which the policy's `assigned_floor` never covers.
+    expect(await roundRowPlace(app, refs[0]!)).toEqual({ rsn: RSN_A, floorId: null });
+    expect(await mark(whole, refs[0]!, "needs_help")).toEqual({ ok: false, refusal: "out_of_scope" });
+    expect(await rowOf(refs[0]!)).toMatchObject({ status: "pending", mark_ids: [] });
+    expect(await escalations()).toEqual([]);
+    expect(await mark(await person("admin"), refs[0]!, "needs_help")).toEqual({ ok: true, outcome: "marked" });
   });
 
   it("keeps the latest 50 mark ids", async () => {
@@ -445,5 +563,44 @@ describe("the tally (S08.05's trigger) with marks", () => {
     expect(await marking).toEqual({ ok: true, outcome: "hub_told" });
     expect(await tallyOf(alertId)).toEqual({ requested: 1, withdrawn: 1 });
     expect(await escalations()).toMatchObject([{ status: "needs_help", late: true }]);
+  });
+});
+
+describe("the round's route called as each person (POST /api/staff/ambassador/round, direct requests through its guard)", () => {
+  /** The route answered for this person's session (at the Hub, at aal2 as an Admin and a Coordinator are there). */
+  async function ask(who: Person) {
+    wired.session = { staffId: who.staffId, username: "caller", firstName: "Rashid", lastName: who.role, role: who.role, gate: "hub", sessionId: randomUUID(), aal: "aal2" };
+    const { POST } = await import("../../src/app/api/staff/ambassador/round/route");
+    const response = await POST(
+      new Request("http://localhost/api/staff/ambassador/round", { method: "POST", headers: { "content-type": "application/json", host: "localhost" }, body: JSON.stringify({ v: 1 }) }),
+    );
+    const body = (await response.json()) as { rounds: { buildings: { floors: { kind: string; requests?: { round_ref: string }[] }[] }[] }[] };
+    return { status: response.status, cacheControl: response.headers.get("cache-control"), body };
+  }
+  const floorsOf = (body: Awaited<ReturnType<typeof ask>>["body"]) => body.rounds.flatMap((thread) => thread.buildings.flatMap((building) => building.floors));
+
+  it("answers a Coordinator and a Director counts only, an Admin every request and an Ambassador their floors' requests, each no-store", async () => {
+    const people = [await requester(RSN_A, A1), await requester(RSN_A, A2, "text"), await requester(RSN_A, A3), await requester(RSN_B, B1)];
+    const { refs } = await round(people);
+    for (const role of ["coordinator", "director"] as const) {
+      const answer = await ask(await person(role));
+      expect(answer.status, role).toBe(200);
+      expect(answer.cacheControl, role).toContain("no-store");
+      expect(floorsOf(answer.body).map((floor) => floor.kind), role).toEqual(["counts", "counts", "counts", "counts"]);
+      const sent = JSON.stringify(answer.body);
+      for (const subscriber of people) expect(sent, role).not.toContain(subscriber.phone);
+      for (const roundRef of refs) expect(sent, role).not.toContain(roundRef);
+    }
+    const admin = await ask(await person("admin"));
+    expect(admin).toMatchObject({ status: 200, cacheControl: expect.stringContaining("no-store") });
+    expect(floorsOf(admin.body).map((floor) => floor.kind)).toEqual(["contacts", "contacts", "contacts", "contacts"]);
+    expect(floorsOf(admin.body).flatMap((floor) => (floor.requests ?? []).map((request) => request.round_ref))).toEqual(refs);
+    for (const subscriber of people) expect(JSON.stringify(admin.body)).toContain(subscriber.phone);
+    const rashid = await ask(await person("ambassador", [{ rsn: RSN_A, floors: [A1] }]));
+    expect(floorsOf(rashid.body).map((floor) => [floor.kind, (floor.requests ?? []).map((request) => request.round_ref)])).toEqual([
+      ["contacts", [refs[0]]],
+      ["counts", []],
+      ["counts", []],
+    ]);
   });
 });
