@@ -20,8 +20,9 @@ export interface MarkTarget {
 /**
  * What a mark does:
  *  - `already`: its id was applied before: nothing changes (a mark sent again after a lost answer, even once the row has left its round);
- *  - `mark`: a live row takes it as its latest mark (and, for `not_reached` or `needs_help`, an escalation unless one exists for that status);
- *  - `escalate`: a late `not_reached` or `needs_help` on a row that has left its round and not expired: one escalation per status, nothing else;
+ *  - `mark`: a live row takes it as its latest mark (and, for `not_reached` or `needs_help`, an escalation unless one is open for that status);
+ *  - `escalate`: a late `not_reached` or `needs_help` on a row that has left its round and not expired: an escalation unless one is open for that
+ *    status (or this mark made one before), nothing else;
  *  - `ended`: a late `done`: "This request has ended", nothing changes;
  *  - `round_ended`: no such row (never was, or purged), or a stub that expired: refused, nothing recorded against the round.
  */

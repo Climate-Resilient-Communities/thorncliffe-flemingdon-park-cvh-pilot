@@ -1,7 +1,10 @@
 // The rules of an escalation after it is made (S08.08, AD-12; E08 definitions "Escalation", "Closed stub", "Round tally"). Pure: no I/O, no clock (the
-// database judges the times: a row is kept for KEPT_ROW_HOURS after the close, by the purge job).
+// database judges the times: a row is kept for at most KEPT_ROW_HOURS after the close, by the purge job).
 
-/** How long a row kept for the Hub's follow-up keeps its subscriber after the close: then the purge job makes it a stub (E08 "Closed stub"). */
+/**
+ * How long, at most, a row kept for the Hub's follow-up keeps its subscriber after the close (E08 "Closed stub", the terms' "up to 24 hours"): the purge job,
+ * which runs every 15 minutes, makes it a stub once 23 hours 45 minutes have passed, so no run comes after the 24 hours.
+ */
 export const KEPT_ROW_HOURS = 24;
 /** The longest note an Admin writes when they mark an escalation handled, in characters (the table's check says the same). */
 export const HANDLED_NOTE_MAX_CHARS = 300;

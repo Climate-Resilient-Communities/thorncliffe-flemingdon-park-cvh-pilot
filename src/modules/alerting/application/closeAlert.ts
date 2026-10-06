@@ -19,7 +19,9 @@
 //
 // S08.08: the thread's check-in round ends with it, in the same transaction, after the delivery rows (AD-18: `checkin`, then `checkin_tally`): checkins'
 // `closeRound` tallies every row of the round; `pending` and `done` rows become closed stubs, and a `not_reached` or `needs_help` row the Hub has not handled
-// keeps its subscriber for the follow-up (E08 "Closed stub"). A drill thread has no round (S08.05's insert guard), so it finds nothing.
+// keeps its subscriber for the follow-up (E08 "Closed stub"). A drill thread has no round (S08.05's insert guard), so it finds nothing. A final's approval
+// closes the thread before it captures the final's recipients, so it ends the round itself after the capture (`roundEndedByCaller`): AD-18's order is the
+// recipient rows, then `checkin`.
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
 import { closeRound, type RoundClosed } from "../../checkins";
@@ -42,6 +44,11 @@ export interface CloseAlertInput {
   keepEntryId: string;
   /** The caller raised `feed_version` in this transaction already (an approval does, before it closes): closing then does not raise it again. */
   feedRaised?: boolean;
+  /**
+   * S08.08: the caller ends the thread's round itself, later in this transaction, with checkins' `closeRound`: a final's approval, which closes the thread
+   * before it captures the final's recipients, does it after the capture (AD-18 takes the recipient rows before `checkin`). Otherwise the close ends it.
+   */
+  roundEndedByCaller?: boolean;
 }
 
 export interface CloseAlertDeps {
@@ -61,8 +68,8 @@ export interface Closed {
   cancelled: string[];
   /** The feed version after this close raised it; null for a drill (it raises nothing the web shows) or when the caller had raised it (`feedRaised`). */
   feedVersion: number | null;
-  /** S08.08: the round's rows the close tallied, and how many of them it kept for the Hub's follow-up. */
-  round: RoundClosed;
+  /** S08.08: the round's rows the close tallied, and how many of them it kept for the Hub's follow-up; null when the caller ends the round itself. */
+  round: RoundClosed | null;
 }
 
 /** The kind and status the entry that closes a thread has, by the reason: the database's rule too. */
@@ -139,8 +146,8 @@ export function createCloseAlert(deps: CloseAlertDeps) {
     const cancelled = entries.map((entry) => entry.id).filter((id) => id !== input.keepEntryId);
     await deps.cancelQueued(tx, cancelled);
 
-    // The round ends with the thread (S08.08): its rows after the delivery rows, in AD-18's order.
-    const round = await endRound(tx, thread.id);
+    // The round ends with the thread (S08.08): its rows after the delivery rows, in AD-18's order (unless the caller ends it after its own capture).
+    const round = input.roundEndedByCaller === true ? null : await endRound(tx, thread.id);
 
     await tx
       .update(alert)
