@@ -43,6 +43,12 @@ describe("loadMeasures", () => {
     expect(calls).toEqual({ cost: 0, cohere: 0, reach: 1, subscribers: 1 });
   });
 
+  it.each(["coordinator", "director", "admin"] as const)("tells a %s where the full set of measures is and links the export's procedure (S09.05)", async (role) => {
+    const view = await loadMeasures(role);
+    expect(view.exportNote).toMatch(/^This page shows some of the pilot measures\. The full set for the week-8 review is a file an Admin writes each day/);
+    expect(view.procedure).toMatchObject({ id: "export-measures", text: "Procedure: exporting the pilot measures (opens in a new tab)" });
+  });
+
   it.each(["director", "admin"] as const)("gives a %s the counts and the cost of alerts", async (role) => {
     const view = await loadMeasures(role);
     expect(view.cost).not.toBeNull();

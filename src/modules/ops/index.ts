@@ -88,3 +88,32 @@ export {
   type WeeklyRow,
   type WeeklySection,
 } from "./domain/weeklyReview";
+
+// S09.05: the pilot measures export (every Section 9 measure for the week-8 review, read by scripts/export-measures): the lines, the small-number rule the
+// export applies, the CSV and the printable page, the two files it reads (the rehearsal alerts and the translation survey), and the ports for the measures of
+// modules ops may not import, which the script wires.
+export { pilotMeasuresExport, readPilotMeasures, type MeasurePorts, type PilotMeasures, type PilotMeasuresFiles, type PilotMeasuresRequest } from "./application/pilotMeasures";
+export {
+  CHECKIN_STATUSES,
+  DIRECTORY_EVENTS,
+  INSTALL_EVENTS,
+  MEASURE_EDITIONS,
+  MEASURE_SECTIONS,
+  SPEND_SECTIONS,
+  UNPROTECTED_COUNTS,
+  editionHasSpend,
+  measureLines,
+  torontoDay,
+  type AlertCostInput,
+  type CoverageInput,
+  type LeftOut,
+  type MeasureEdition,
+  type MeasureLine,
+  type MeasureSection,
+  type MeasuresInput,
+  type SpendInput,
+  type SubscriberDayInput,
+} from "./domain/measureLines";
+export { MEASURE_CSV_COLUMNS, SmallNumberLeak, assertSmallNumbersHidden, escapeHtml, measuresCsv, measuresHtml } from "./domain/measureExport";
+export { MeasureFileError, REHEARSAL_ALERTS_HEADING, SURVEY_HEADER, SURVEY_LANGS, parseRehearsalAlerts, parseSurvey, type Survey, type SurveyCounts } from "./domain/measureFiles";
+export { NOT_SHOWN, isSmall, shownCount, shownPercent, shownSplit, type Shown } from "./domain/smallNumbers";
