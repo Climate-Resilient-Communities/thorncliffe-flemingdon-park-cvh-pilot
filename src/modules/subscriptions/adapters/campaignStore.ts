@@ -69,7 +69,8 @@ const ASKING = sql`exists (select 1 from campaign c where not c.rehearsal and c.
  * The one rule of who receives texts (E09 "Receiving subscriber"), for a subscriber whose retention state is `state`: `active` and `retained` always;
  * `reconsent_pending` until the real campaign's deadline has passed (by the database's clock), and never after it, even before S09.08's purge deletes them
  * (unless the owner cancelled the campaign: see `DEADLINE_PASSED`). Every query that selects receiving subscribers (the alert fan-out, the hand-off's number
- * source, a resend's check, the measures) builds its condition here. One uncorrelated read of `campaign`, which Postgres runs once per statement.
+ * source, a resend's check, the measures, S07.06's edit link) builds its condition here. One uncorrelated read of `campaign`, which Postgres runs once per
+ * statement.
  */
 export function receivingSql(state: unknown) {
   return sql`(${state} in ('active', 'retained') or (${state} = 'reconsent_pending' and not ${DEADLINE_PASSED}))`;

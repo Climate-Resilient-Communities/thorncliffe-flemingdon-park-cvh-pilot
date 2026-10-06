@@ -1,10 +1,12 @@
+import { isSubscriptionPath } from "@/contracts/subscriptionEdit";
 import { UsageEventSchema, USAGE_PATH, type UsageEvent } from "@/contracts/usage";
 
 // Sending a usage event (S02.15, AR-26): one small POST of exactly `{evt, lang, nbhd?}`. Nothing is added to it and nothing
 // that identifies the phone goes with it: no cookie, no credentials, no referrer (the address of the page could name a
 // building), and the body is rebuilt from the three allowed fields so a caller cannot slip another one in. It is never
 // queued: without signal the event is dropped (counts are approximate by design), and a failure is not retried. It never
-// throws and never makes the page wait.
+// throws and never makes the page wait. Nothing at all is sent from the one-time web link's page (S07.06, /{lang}/subscription/...): its
+// address holds a token, and a visit there is not a use to count.
 
 export interface SendDeps {
   fetcher?: typeof fetch;
@@ -14,9 +16,12 @@ export interface SendDeps {
   timeoutMs?: number;
   /** Let the request outlive the page (one small request only, used for the install event). */
   keepalive?: boolean;
+  /** The path of the page the event would be sent from (the browser's by default). */
+  page?: () => string;
 }
 
 const phoneOnline = (): boolean => typeof navigator === "undefined" || navigator.onLine !== false;
+const pagePath = (): string => (typeof location === "undefined" ? "" : location.pathname);
 
 /** The event as it goes out: the three allowed fields, `nbhd` only when there is one. */
 export function usageBody(event: UsageEvent): string {
@@ -27,7 +32,7 @@ export function usageBody(event: UsageEvent): string {
 /** Sends the event. Resolves to true when the server counted it, false when it was dropped or failed. */
 export async function sendUsage(event: UsageEvent, deps: SendDeps = {}): Promise<boolean> {
   const online = deps.online ?? phoneOnline;
-  if (!online()) return false;
+  if (!online() || isSubscriptionPath((deps.page ?? pagePath)())) return false;
   try {
     const body = usageBody(event);
     const response = await (deps.fetcher ?? fetch)(USAGE_PATH, {

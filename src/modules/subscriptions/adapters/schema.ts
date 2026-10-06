@@ -235,6 +235,39 @@ export const smsPrompt = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * A subscriber's one-time web link (S07.06, 20261006150000_subscription_edit_token.sql): the sha256 of the token only, valid 30 minutes,
+ * used once (`used_at`, set only while null and before `expires_at`; a guard trigger keeps the rest of the row as written). One per
+ * subscriber: a new link replaces the one before. Deleted with the subscriber and by the purge job once run out.
+ */
+export const subscriptionEditToken = pgTable(
+  "subscription_edit_token",
+  {
+    id: uuid().primaryKey(),
+    subscriberId: uuid("subscriber_id")
+      .notNull()
+      .references(() => subscriber.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now() + interval '30 minutes'`),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("subscription_edit_token_hash_idx").on(t.tokenHash),
+    uniqueIndex("subscription_edit_token_subscriber_id_idx").on(t.subscriberId),
+    index("subscription_edit_token_expires_at_idx").on(t.expiresAt),
+    check("subscription_edit_token_hash_format", sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
+    check("subscription_edit_token_expires_after_30_minutes", sql`${t.expiresAt} = ${t.createdAt} + interval '30 minutes'`),
+    check("subscription_edit_token_used_in_time", sql`${t.usedAt} is null or (${t.usedAt} >= ${t.createdAt} and ${t.usedAt} < ${t.expiresAt})`),
+    pgPolicy("subscription_edit_token_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("subscription_edit_token_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("subscription_edit_token_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+    pgPolicy("subscription_edit_token_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
 /** The sha256 of each inbound MessageSid, kept 48 hours, so a retried webhook changes nothing. */
 export const inboundSeen = pgTable(
   "inbound_seen",
@@ -361,7 +394,7 @@ export const subscriberMeasure = pgTable(
 ).enableRLS();
 
 /**
- * The end-of-pilot re-consent campaign (S09.07, 20261006140000_reconsent_campaign.sql): the real one (at most one) and its rehearsals on the drill roster. It freezes
+ * The end-of-pilot re-consent campaign (S09.07, 20261006155000_reconsent_campaign.sql): the real one (at most one) and its rehearsals on the drill roster. It freezes
  * the campaign text in each language (`texts`: `{lang: {body, segments}}`, the deadline filled in), the terms version, the deadline (the Toronto day 30 days after the
  * start, `deadlineDate`, and the end of that day, `deadline`), who started it from which session and at which level (`startedAal`, read by the database from the
  * session), and the Admin's idempotency key. `campaign_guard()` (a trigger in the migration) refuses everything else; the app inserts rows and changes only `state`

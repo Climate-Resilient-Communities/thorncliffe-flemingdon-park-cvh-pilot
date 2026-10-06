@@ -1,7 +1,8 @@
 // The statements of subscribers and their prompts (S07.04; S07.05's menus change the language, the places and the neighbourhood, and keep
 // their page in the prompt's step). Every one runs in the caller's transaction. The number is selected only by
-// `phoneOf` (the ContactResolver's source, at the hand-off point); the router and the web sign-up find a subscriber by number and read back
-// its id, language and prompt, never the number.
+// `phoneOf` (the ContactResolver's source, at the hand-off point, and S07.06's deletion, which deletes by number); the router and the web
+// sign-up find a subscriber by number and read back its id, language and prompt, never the number; S07.06's edit page reads its last two
+// digits only.
 import { and, countDistinct, eq, gt, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { receivingSql } from "./campaignStore";
@@ -62,7 +63,7 @@ export const subscriberStore = {
   },
 
   /**
-   * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus); false when it is gone. It waits for an approval that holds
+   * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus, S07.06's page); false when it is gone. It waits for an approval that holds
    * the row FOR SHARE while capturing recipients (S07.07), but not for a resend's FOR KEY SHARE (`receivesShared`), which only a deletion's
    * FOR UPDATE stops: a resident changing their building is still receiving. It is the lock the campaign's start takes on every `active`
    * subscriber (`campaignStore.lockActive`, S09.07) and `openNewPrompt` takes before it writes a prompt, so these wait for one another.
@@ -117,6 +118,19 @@ export const subscriberStore = {
       .from(subscriber)
       .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)))
       .for("key share", { skipLocked: true });
+    return rows.length > 0;
+  },
+
+  /**
+   * Whether the subscriber exists and is in a receiving state (`phoneOf`'s and `receivesShared`'s predicate, `receivingSql`: a `reconsent_pending`
+   * subscriber past the campaign's deadline does not receive, S09.07), read without a lock: S07.06's read-only view, which takes no lock and waits
+   * for none, so a row someone holds for an edit (a menu's save, a change from another tab, the campaign's start) is read as it was. No number is read.
+   */
+  async receives(executor: DbExecutor, id: string): Promise<boolean> {
+    const rows = await executor
+      .select({ id: subscriber.id })
+      .from(subscriber)
+      .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)));
     return rows.length > 0;
   },
 
@@ -184,6 +198,43 @@ export const subscriberStore = {
     await lockForEdit(tx, subscriberId);
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
   },
+
+  /**
+   * S07.06: what the edit page shows of a subscriber: its language, neighbourhood, groups, places (one row per building and floor, a null
+   * floor for none recorded there) and muted topics, and the last two digits of its number (cut in the database: the whole number is
+   * never read). Null when the subscriber is gone.
+   */
+  async editView(tx: DbTransaction, id: string): Promise<SubscriberEditView | null> {
+    const [row] = await tx
+      .select({ lang: subscriber.lang, neighbourhoodId: subscriber.neighbourhoodId, groups: subscriber.groups, phoneLast2: sql<string>`right(${subscriber.phone}, 2)` })
+      .from(subscriber)
+      .where(eq(subscriber.id, id));
+    if (!row) return null;
+    const places = await tx.select({ rsn: subscriberPlace.rsn, floorId: subscriberPlace.floorId }).from(subscriberPlace).where(eq(subscriberPlace.subscriberId, id));
+    const topics = await tx.select({ topic: subscriberTopicOptout.topic }).from(subscriberTopicOptout).where(eq(subscriberTopicOptout.subscriberId, id));
+    return { ...row, places, mutedTopics: topics.map((topic) => topic.topic) };
+  },
+
+  /** Sets the subscriber's groups (S07.06's page); the caller holds the subscriber's row lock (`lockForEdit`). */
+  async setGroups(tx: DbTransaction, subscriberId: string, groups: readonly string[]): Promise<void> {
+    await tx.update(subscriber).set({ groups: [...groups] }).where(eq(subscriber.id, subscriberId));
+  },
+
+  /** Replaces the subscriber's muted topics with these (S07.06's page); the caller holds the subscriber's row lock (`lockForEdit`). */
+  async replaceTopics(tx: DbTransaction, subscriberId: string, topics: readonly string[]): Promise<void> {
+    await tx.delete(subscriberTopicOptout).where(eq(subscriberTopicOptout.subscriberId, subscriberId));
+    if (topics.length > 0) await tx.insert(subscriberTopicOptout).values(topics.map((topic) => ({ subscriberId, topic })));
+  },
 };
+
+/** A subscriber as the edit page shows it (S07.06): no number but its last two digits. */
+export interface SubscriberEditView {
+  lang: string;
+  neighbourhoodId: string;
+  groups: string[];
+  phoneLast2: string;
+  places: { rsn: string; floorId: string | null }[];
+  mutedTopics: string[];
+}
 
 export type SubscriberStore = typeof subscriberStore;

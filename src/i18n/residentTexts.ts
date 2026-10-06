@@ -74,6 +74,11 @@ export const RESIDENT_TEXT_KEYS = {
   /** Reply 3: no check-in request to withdraw (checkins' port says none: always, until E08), or the request withdrawn (S08.05). */
   noCheckinRequest: "smsTexts.noCheckinRequest",
   checkinWithdrawn: "smsTexts.checkinWithdrawn",
+  // S07.06: the one-time web link. A menu closed with nothing changed offers it (one segment, as every menu text); the link's text
+  // ({link} is `/{lang}/subscription/{token}` on the public origin) and the confirmation of a change made with it ({hub}, the Hub's number).
+  menuClosedLink: "smsTexts.menuClosedLink",
+  editLink: "smsTexts.editLink",
+  editSaved: "smsTexts.editSaved",
 } as const;
 
 export type ResidentTextName = keyof typeof RESIDENT_TEXT_KEYS;

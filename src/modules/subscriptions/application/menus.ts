@@ -5,7 +5,8 @@
 //  - Reply 1 or 2 starts a menu when the number has started fewer than 5 today (a keyed hash of the number per start in `rate_limit`, scope
 //    `sms_menu`, Toronto's day). At the limit the reply says so and gives the Hub's number; once the edit link exists (S07.06 wires an
 //    `EditLinkPort` that is `available`) it offers the link too ("Reply 1 for a link"), with the `edit_link_offer` prompt open for 10
-//    minutes, and a 1 in that time calls the port's `send`.
+//    minutes, and a 1 in that time calls the port's `send`. With the link, a menu closed by 0 at its first step offers it the same way
+//    ("Menu closed. Nothing was changed. Reply 1 for a link", S07.06): the step every resident can reach to ask for a link.
 //  - A page is sent (purpose `menu_reply`) and kept as the subscriber's `sms_prompt`: `kind` the menu, `step` the page and its options,
 //    kept an hour and open for 10 minutes after it was sent. The building whose floors a reply may need is read with places' share lock,
 //    so an Admin's floor edit waits until the reply is handled and the floor chosen is still there when it is saved.
@@ -51,7 +52,8 @@ import { noCheckinRequestsYet, queueReply, smsOf, type CheckinRequests, type Men
  * none (`available` false) and the reply at the daily menu limit gives the Hub's number only (`smsTexts.menuLimit`). S07.06 wires one that
  * is available: that reply then offers the link as well ("Reply 1 for a link", `smsTexts.menuLimitLink`) with the `edit_link_offer` prompt
  * open for 10 minutes, and a 1 in that time calls `send`, which makes the link and queues its text (purpose `edit_link`) in the router's
- * transaction.
+ * transaction. A menu closed with nothing changed then offers it too (`smsTexts.menuClosedLink`, the same prompt). S07.06's
+ * `createEditLink(...).port` is the one the app wires.
  */
 export interface EditLinkPort {
   readonly available: boolean;
@@ -120,7 +122,7 @@ export function createMenus(deps: MenuDeps): MenuPort {
     const building = world.buildings.find((candidate) => candidate.rsn === move.rsn)!;
     const floor = move.floorId === null ? null : world.floors.get(move.rsn)!.find((candidate) => candidate.id === move.floorId)!;
     // E08 first, before the subscriber's row is locked here: it locks the round threads' `alert` rows before that row (its lock order).
-    const withdrawal = await checkins.locationChanging(subscriber.id, { rsn: move.rsn, floorId: move.floorId }, tx);
+    const withdrawal = await checkins.locationChanging(subscriber.id, [{ rsn: move.rsn, floorId: move.floorId }], tx);
     // Deleted meanwhile cannot happen under the number's lock (only this number's STOP deletes it); if it did, nothing is left to tell.
     if (!(await subscribers.lockForEdit(tx, subscriber.id))) return false;
     await subscribers.replacePlaces(tx, subscriber.id, [{ id: newId(), rsn: move.rsn, floorId: move.floorId }]);
@@ -150,6 +152,12 @@ export function createMenus(deps: MenuDeps): MenuPort {
         if (current) await subscribers.openNewPrompt(tx, subscriber.id, current.kind, MENU_KEPT_MS, current.step as Record<string, unknown>);
         return sayText(tx, subscriber, "menuHub", { hub: HUB_NUMBER });
       case "close":
+        // S07.06: once the link exists, a menu closed with nothing changed offers it ("Reply 1 for a link"), with the same prompt as the
+        // daily limit's offer: the menu step every resident can reach to ask for a link by text.
+        if (editLink.available) {
+          await subscribers.openNewPrompt(tx, subscriber.id, EDIT_LINK_OFFER_KIND, EDIT_LINK_OFFER_MS);
+          return sayText(tx, subscriber, "menuClosedLink");
+        }
         await subscribers.clearPrompt(tx, subscriber.id);
         return sayText(tx, subscriber, "menuClosed");
       case "save_building":
