@@ -2,7 +2,7 @@
 // their page in the prompt's step). Every one runs in the caller's transaction. The number is selected only by
 // `phoneOf` (the ContactResolver's source, at the hand-off point, and S07.06's deletion, which deletes by number); the router and the web
 // sign-up find a subscriber by number and read back its id, language and prompt, never the number; S07.06's edit page reads its last two
-// digits only.
+// digits only; S08.07's round page reads the numbers of the requesters in a round (`checkinContactsOf`).
 import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { receivingSql } from "./campaignStore";
@@ -280,6 +280,33 @@ export const subscriberStore = {
       .where(and(isNotNull(subscriber.checkinMethod), inArray(subscriber.whereILiveRsn, [...rsns]), receivingSql(subscriber.retentionState)))
       .orderBy(asc(subscriber.id));
     return rows.map((row) => row.id);
+  },
+
+  /**
+   * S08.07: which of these subscribers still ask for a check-in and receive texts (`receivingSql`), by id, with no number: the rows "My round" lists and
+   * counts. A subscriber lapsed at the re-consent deadline keeps a live round row until S09.08's purge, and is neither listed nor counted.
+   */
+  async checkinAskersAmong(executor: DbExecutor, ids: readonly string[]): Promise<Set<string>> {
+    if (ids.length === 0) return new Set();
+    const rows = await executor
+      .select({ id: subscriber.id })
+      .from(subscriber)
+      .where(and(inArray(subscriber.id, [...ids]), isNotNull(subscriber.checkinMethod), receivingSql(subscriber.retentionState)));
+    return new Set(rows.map((row) => row.id));
+  },
+
+  /**
+   * S08.07: the numbers of these subscribers for "My round" (A-04), by id: only those that still ask for a check-in and receive texts (`receivingSql`), so
+   * a request withdrawn or a subscriber lapsed is never shown. Read without a lock; the app composes the round from it and sends it no-store. The one
+   * reader of numbers for staff eyes.
+   */
+  async checkinContactsOf(executor: DbExecutor, ids: readonly string[]): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+    const rows = await executor
+      .select({ id: subscriber.id, phone: subscriber.phone })
+      .from(subscriber)
+      .where(and(inArray(subscriber.id, [...ids]), isNotNull(subscriber.checkinMethod), receivingSql(subscriber.retentionState)));
+    return new Map(rows.map((row) => [row.id, row.phone]));
   },
 
   /** S08.05: writes the request, or clears it (null); the caller holds the subscriber's row lock. */

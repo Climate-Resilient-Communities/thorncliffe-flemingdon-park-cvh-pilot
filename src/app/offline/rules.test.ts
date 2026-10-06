@@ -3,7 +3,7 @@ import { LAUNCH_CODES } from "@/i18n/languages";
 import { TILE_CACHE_NAME } from "@/ui/map/tile-cache";
 import { DATA_CACHE } from "@/ui/offline/protocol";
 import { isSubscriptionPath } from "@/contracts/subscriptionEdit";
-import { buildIdOf, cachesToDelete, classify, directoryFilesToDelete, mayStore, pagesCache, releaseOf, shouldKeepFeed, staticCache, titleOf, type RequestFacts } from "./rules";
+import { buildIdOf, cachesToDelete, classify, directoryFilesToDelete, isRoundPath, mayStore, pagesCache, releaseOf, shouldKeepFeed, staticCache, titleOf, type RequestFacts } from "./rules";
 
 const ORIGIN = "https://cvh.example";
 
@@ -53,6 +53,20 @@ describe("which requests the service worker answers (S02.12, AD-1)", () => {
     }
     // A name that only starts like it is not the staff surface.
     expect(kind(page("/staffroom"))).toBe("pass");
+  });
+
+  it("S08.07: never answers the check-in round page, its read or a mark, whatever the request looks like, and they may never be stored", () => {
+    for (const path of ["/staff/ambassador/round", "/staff/ambassador/round?x=1", "/api/staff/ambassador/round", "/api/staff/ambassador/marks"]) {
+      expect(isRoundPath(new URL(path, ORIGIN).pathname), path).toBe(true);
+      expect(classify(page(path), ORIGIN), path).toEqual({ kind: "pass", reason: "round" });
+      expect(classify(req(path), ORIGIN), path).toEqual({ kind: "pass", reason: "round" });
+      expect(classify(req(path, { headers: { rsc: "1" } }), ORIGIN), path).toEqual({ kind: "pass", reason: "round" });
+      expect(classify(req(path, { method: "POST" }), ORIGIN), path).toEqual({ kind: "pass", reason: "method" });
+      expect(mayStore(`${ORIGIN}${path}`, ORIGIN), path).toBe(false);
+    }
+    // The Ambassador's other pages are staff pages like any other; a name that only starts like the round is not it.
+    expect(isRoundPath("/staff/ambassador/roundup")).toBe(false);
+    expect(classify(page("/staff/ambassador/post"), ORIGIN)).toEqual({ kind: "pass", reason: "staff" });
   });
 
   it("never answers a subscription page or API (network only)", () => {

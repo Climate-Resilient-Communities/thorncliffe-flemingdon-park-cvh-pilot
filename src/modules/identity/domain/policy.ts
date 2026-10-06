@@ -20,9 +20,10 @@ import { STAFF_ROLES } from "../../../contracts/staffRoles";
  *  - `own_pending_entry`: the entry is the actor's own and still pending approval;
  *  - `not_editor`: the actor never edited the entry (AD-5: no self-approval through editing);
  *  - `assigned_floor_open_alert`: the target floor is covered by the actor's assignments and its alert is open;
+ *  - `assigned_floor`: the target floor is covered by the actor's assignments (S08.07: a mark, which a closed stub still takes for 2 hours);
  *  - `read_only`: yes, for an action that only shows (the matrix's "yes (read-only)").
  */
-export const POLICY_RULES = ["yes", "no", "assigned_building", "own_pending_entry", "not_editor", "assigned_floor_open_alert", "read_only"] as const;
+export const POLICY_RULES = ["yes", "no", "assigned_building", "own_pending_entry", "not_editor", "assigned_floor_open_alert", "assigned_floor", "read_only"] as const;
 export type PolicyRule = (typeof POLICY_RULES)[number];
 
 export interface MatrixRow {
@@ -77,6 +78,14 @@ export const AUTHORITY_MATRIX = [
     row: "See open check-in rows",
     actions: ["checkins.view_open"],
     rules: { ambassador: "assigned_floor_open_alert", coordinator: "no", director: "no", admin: "yes" },
+  },
+  {
+    // S08.07: a mark on a check-in row (done, not reached, needs help) from "My round" (A-04). AD-12: "a late mark is accepted only against an
+    // unexpired stub, from a signed-in, active Ambassador who covers that floor (or an Admin)": the row's floor, judged on the person's current
+    // assignments, whether the row is still in its open round or has left it (its thread closed, the request withdrawn) and not yet expired.
+    row: "Mark check-ins, and late marks on unexpired stubs",
+    actions: ["checkins.mark"],
+    rules: { ambassador: "assigned_floor", coordinator: "no", director: "no", admin: "yes" },
   },
   {
     row: "See counts and coverage",
@@ -162,6 +171,13 @@ function buildingsOf(target: PolicyContext["target"], targets: PolicyContext["ta
   return [...(targets ?? []), ...(target ? [target.rsn] : [])];
 }
 
+/** The target floor is one the assignments cover: its building as a whole, or that floor by id. No floor given covers nothing. */
+function coversTarget(assignments: readonly PolicyAssignment[], target: PolicyContext["target"]): boolean {
+  if (target === undefined || typeof target.floorId !== "string") return false;
+  const floorId = target.floorId;
+  return assignments.some((assignment) => assignment.rsn === target.rsn && (assignment.floorIds === null || assignment.floorIds.includes(floorId)));
+}
+
 function holds(rule: PolicyRule, context: PolicyContext): boolean {
   const { actorId, assignments = [], target, targets, entry } = context;
   const buildings = buildingsOf(target, targets);
@@ -174,12 +190,9 @@ function holds(rule: PolicyRule, context: PolicyContext): boolean {
     case "assigned_building":
       return buildings.length > 0 && buildings.every((rsn) => assignments.some((assignment) => assignment.rsn === rsn));
     case "assigned_floor_open_alert":
-      return (
-        context.alertOpen === true &&
-        target !== undefined &&
-        typeof target.floorId === "string" &&
-        assignments.some((assignment) => assignment.rsn === target.rsn && (assignment.floorIds === null || assignment.floorIds.includes(target.floorId as string)))
-      );
+      return context.alertOpen === true && coversTarget(assignments, target);
+    case "assigned_floor":
+      return coversTarget(assignments, target);
     case "own_pending_entry":
       return actorId !== undefined && entry !== undefined && entry.authorId === actorId && entry.status === "pending_approval";
     case "not_editor":

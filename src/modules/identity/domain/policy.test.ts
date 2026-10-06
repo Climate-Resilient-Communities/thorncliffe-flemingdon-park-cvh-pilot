@@ -44,6 +44,8 @@ function rulesForCell(row: string, cell: string): PolicyRule[] {
       return ["own_pending_entry"];
     case "assigned floors, open alerts":
       return ["assigned_floor_open_alert"];
+    case "assigned floors":
+      return ["assigned_floor"];
     case "yes":
       return ["yes", ...(row.includes("of an assigned building") ? (["assigned_building"] as const) : []), ...(row.includes("never an editor") ? (["not_editor"] as const) : [])];
     default:
@@ -135,6 +137,13 @@ const CASES: { actions: readonly string[]; situation: string; context: PolicyCon
   { actions: ["checkins.view_open"], situation: "an unassigned floor of an assigned building", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-9" }, alertOpen: true }, expected: roles(false, false, false, true) },
   { actions: ["checkins.view_open"], situation: "an assigned floor of a closed alert", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-3" }, alertOpen: false }, expected: roles(false, false, false, true) },
   { actions: ["checkins.view_open"], situation: "another building", context: { assignments: [ASSIGNED], target: { rsn: "7002", floorId: "floor-3" }, alertOpen: true }, expected: roles(false, false, false, true) },
+  // Mark check-ins, and late marks on unexpired stubs (S08.07): assigned floors | no | no | yes. Whether the row still takes a mark is the use case's.
+  { actions: ["checkins.mark"], situation: "an assigned floor", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-3" } }, expected: roles(true, false, false, true) },
+  { actions: ["checkins.mark"], situation: "an assigned floor of a closed alert (a late mark)", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-3" }, alertOpen: false }, expected: roles(true, false, false, true) },
+  { actions: ["checkins.mark"], situation: "a floor of a whole-building assignment", context: { assignments: [{ rsn: "7001", floorIds: null }], target: { rsn: "7001", floorId: "floor-9" } }, expected: roles(true, false, false, true) },
+  { actions: ["checkins.mark"], situation: "an unassigned floor of an assigned building", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-9" } }, expected: roles(false, false, false, true) },
+  { actions: ["checkins.mark"], situation: "a building and no floor", context: { assignments: [{ rsn: "7001", floorIds: null }], target: { rsn: "7001" } }, expected: roles(false, false, false, true) },
+  { actions: ["checkins.mark"], situation: "no row found (no target)", context: { assignments: [ASSIGNED] }, expected: roles(false, false, false, true) },
   // See counts and coverage: no | yes | yes (read-only) | yes.
   { actions: ["coverage.view"], situation: "any context", context: {}, expected: roles(false, true, true, true) },
   // See spend: no | no | yes (read-only) | yes.

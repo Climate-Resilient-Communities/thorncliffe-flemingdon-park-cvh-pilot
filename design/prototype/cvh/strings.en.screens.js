@@ -2610,4 +2610,32 @@
       unknownType: 'One of those is not a type of disruption. Reload the page and try again.',
       noChange: 'Nothing to change: those are the round types already.',
       failed: 'Nothing changed. Try again. If it fails again, tell IT.' } } } } });
+  /* S08.07: "My round" (A-04), the pilot's version: the check-ins asked for on the floors an ambassador covers, each with its number, floor and method
+     as a call or text link, marked in one tap; counts only for anyone else (an Admin sees every request). The round lives in the open page only: marks
+     made without signal wait there and are sent in order when signal returns, and the page clears itself after 10 minutes in the background. The
+     prototype's "Saved on your phone" is not used (see A-02), nor its "Add a door" and "Connect to a service" (not in the pilot). Staff screens are in
+     English. */
+  m(en, { staff: { round: {
+    lead: 'The check-ins asked for on the floors you cover. Call or text each person, then tap what happened. Nothing about them is kept on your phone.',
+    leadAdmin: 'Every check-in asked for in every open round. Ambassadors see only the floors they cover.',
+    leadCounts: 'Counts only. The numbers are shown to the ambassadors who cover these floors, and to Admins.',
+    countsNote: 'Counts only: you do not cover this floor.',
+    loading: 'Loading your round.',
+    offline: 'No signal. Your marks wait on this page and are sent, in order, when you have signal.',
+    waitingOne: '1 mark is waiting to be sent.',
+    waitingMany: '{n} marks are waiting to be sent.',
+    keepOpen: 'Keep this page open until marks are sent',
+    notSent: 'Not sent yet.',
+    call: 'Call {phone}',
+    text: 'Text {phone}',
+    marked: 'Marked: {mark}',
+    marksFor: 'What happened with {phone}',
+    hubTold: 'The Hub has been told; call the Hub if you can',
+    requestEnded: 'This request has ended',
+    roundEnded: 'This round has ended. If someone needs help, call the Hub at {number}',
+    markFailed: 'This mark was not taken. Reload your round and mark it again.',
+    reload: 'Reload your round with signal',
+    reloadButton: 'Reload my round',
+    signedOut: 'You were signed out, so marks are not being sent. Sign in again with signal, then open your round again.',
+    loadFailed: 'Your round could not be loaded. Try again with signal.' } } });
 })();

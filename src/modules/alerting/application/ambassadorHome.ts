@@ -83,6 +83,14 @@ export function createAmbassadorHome(db: Db) {
     status: (scope: AmbassadorScope, entryId: string) => readPostStatus(db, scope, entryId),
     /** The alert "Mark resolved" is for (S08.04): its covering words and whether a final message already waits; null when it is not theirs to resolve. */
     resolvable: (scope: AmbassadorScope, alertId: string) => readResolvable(db, scope, alertId),
+    /**
+     * S08.07: the open threads residents read, each with the English text of the entry that covers it, by thread id: "My round" (A-04) names each open
+     * round by these words and lists the rows of open threads only. Drills are never among them (AD-6), and have no round.
+     */
+    async openHeadlines(): Promise<Map<string, string>> {
+      const threads = await readOpenThreads(db, "en");
+      return new Map(threads.map((thread) => [thread.id, coveringFeedEntry(thread.entries).original.body]));
+    },
     /** The home of a person with this scope. Nobody assigned: nothing is read (fail closed). */
     async read(scope: AmbassadorScope): Promise<AmbassadorHomeView> {
       const assigned = new Set(scope.assignedRsns);

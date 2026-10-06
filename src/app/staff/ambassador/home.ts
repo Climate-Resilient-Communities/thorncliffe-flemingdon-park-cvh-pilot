@@ -1,20 +1,23 @@
 // Composition root of the Ambassador's home for the staff surface (AD-2, S08.01): the person's current assignments (identity), the buildings' addresses, floors and
-// neighbourhoods (places), the alerts about their buildings and their own posts (alerting) and their open round (check-ins). Read on every request: nothing here
+// neighbourhoods (places), the alerts about their buildings and their own posts (alerting) and their open round (check-ins, S08.07). Read on every request: nothing here
 // is cached, so a removed assignment takes its building off the home with the next one. Server only.
 import { createAmbassadorHome, type AmbassadorHome, type AmbassadorPostStatus, type AmbassadorScope } from "@/modules/alerting";
-import { NO_OPEN_ROUNDS, type RoundSummaryReader } from "@/modules/checkins";
+import type { RoundSummaryReader } from "@/modules/checkins";
 import type { PolicyAssignment } from "@/modules/identity";
 import { getDb } from "@/platform/db";
 import { assignments } from "../assignments";
 import { buildings } from "../places";
 import type { StaffSession } from "../session";
+import { roundReads } from "./round/load";
 import type { AmbassadorHomeData, AssignedBuilding } from "./view";
 
 let alertsAndPosts: AmbassadorHome | undefined;
 
-/** The open round for the person's floors. No round exists until E08's round stories; they replace this with the check-ins module's reader.
- * TODO(E08 round stories): wire the real reader here and add a DB test of the count with an open round; until then this home always says "No check-in round right now". */
-export const rounds: RoundSummaryReader = NO_OPEN_ROUNDS;
+/**
+ * The open round for the person's floors (S08.07): the requests of the open rounds on the floors their current assignments cover, from the round page's own
+ * reads (./round/load.ts; test/db/roundPage.db.test.ts counts them with an open round). Made on first use, on the app's database.
+ */
+export const rounds: RoundSummaryReader = { openFor: (assignments) => roundReads().summary.openFor(assignments) };
 
 const reader = (): AmbassadorHome => (alertsAndPosts ??= createAmbassadorHome(getDb()));
 

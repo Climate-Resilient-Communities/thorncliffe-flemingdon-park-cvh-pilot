@@ -10,11 +10,15 @@
 //   /a/{slug}?l={lang}            (the share link's landing, S05.08) not answered and never kept: it is the network's, and
 //                                 its content follows `?l=`, which the kept pages' key leaves out. The alert page it
 //                                 moves to and the share screen /{lang}/alerts/{slug}/share are pages like any other
+//   /staff/ambassador/round, /api/staff/ambassador/round and /marks  (S08.07, the open check-in round page, AD-1's one exception: the page
+//                                 keeps the round in its own memory only) never answered and never kept, whatever the request looks like; named
+//                                 on their own, before the staff rule below, so no change to that rule can reach them
 //   everything else               not answered by the worker at all: the browser goes to the network as if there were no
 //                                 worker. That is every /staff/** and /api/staff/** request, every subscription page and API,
 //                                 search, the building list, Next's own data requests (RSC), any request that is not a GET,
 //                                 and every request to another origin, which includes every map tile: the map page keeps its
 //                                 tiles itself (cvh-map-tiles-v1, S02.07), so they are not kept twice.
+import { MARK_ROUTE, ROUND_PAGE, ROUND_ROUTE } from "@/contracts/roundPaths";
 import { LAUNCH_CODES, type LaunchCode } from "@/i18n/languages";
 import { TILE_CACHE_NAME } from "@/ui/map/tile-cache";
 import { DATA_CACHE, PAGES_CACHE_PREFIX, STATIC_CACHE_PREFIX } from "@/ui/offline/protocol";
@@ -27,7 +31,7 @@ export type Handling =
   | { kind: "static" }
   | { kind: "pass"; reason: PassReason };
 
-export type PassReason = "method" | "cross-origin" | "staff" | "subscription" | "next-data" | "worker" | "not-listed";
+export type PassReason = "method" | "cross-origin" | "round" | "staff" | "subscription" | "next-data" | "worker" | "not-listed";
 
 /** The parts of a request the rules read, so a test can pass a plain object. */
 export interface RequestFacts {
@@ -42,6 +46,12 @@ const LANGS = new Set<string>(LAUNCH_CODES);
 const DIRECTORY_FILE = /^\/api\/directory\/(\d+)\/[A-Za-z-]+\.json$/;
 
 const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
+
+/**
+ * S08.07: the open check-in round page, its read and its marks (AD-1: "once loaded, its data lives only in that page's memory"): never answered, never
+ * stored, whatever the request looks like. They are staff paths as well; this rule names them on their own.
+ */
+export const isRoundPath = (path: string) => under(path, ROUND_PAGE) || under(path, ROUND_ROUTE) || under(path, MARK_ROUTE);
 
 /** The staff surface and its API (AD-1): never answered, never stored. */
 export const isStaffPath = (path: string) => under(path, "/staff") || under(path, "/api/staff");
@@ -70,6 +80,7 @@ export function classify(request: RequestFacts, origin: string): Handling {
   const url = new URL(request.url);
   if (url.origin !== origin) return { kind: "pass", reason: "cross-origin" };
   const path = url.pathname;
+  if (isRoundPath(path)) return { kind: "pass", reason: "round" };
   if (isStaffPath(path)) return { kind: "pass", reason: "staff" };
   if (isSubscriptionPath(path)) return { kind: "pass", reason: "subscription" };
   if (under(path, "/serwist")) return { kind: "pass", reason: "worker" };
@@ -92,7 +103,7 @@ export function classify(request: RequestFacts, origin: string): Handling {
 /**
  * Whether a response for `url` may ever be written to a cache. Every write the worker makes goes through this (a second
  * line behind `classify`): only this origin, only the resident pages, the feed, the directory files and static files.
- * Never `/staff/**`, `/api/staff/**`, subscription pages or API, or another origin (map tiles).
+ * Never the check-in round page or its API (S08.07), `/staff/**`, `/api/staff/**`, subscription pages or API, or another origin (map tiles).
  */
 export function mayStore(url: string, origin: string): boolean {
   let parsed: URL;
@@ -103,7 +114,7 @@ export function mayStore(url: string, origin: string): boolean {
   }
   if (parsed.origin !== origin) return false;
   const path = parsed.pathname;
-  if (isStaffPath(path) || isSubscriptionPath(path)) return false;
+  if (isRoundPath(path) || isStaffPath(path) || isSubscriptionPath(path)) return false;
   if (isStaticPath(path) || path === "/api/feed" || path === "/api/directory/manifest" || DIRECTORY_FILE.test(path)) return true;
   return langOf(path) !== null && !/\.[A-Za-z0-9]+$/.test(path);
 }
