@@ -3039,6 +3039,8 @@ So that I can decide whether to sign up.
 **When** the terms are changed after it
 **Then** the new version is not published until the review is recorded
 
+- **Owner decision (2026-10-06):** for the pilot (a proof of concept), the terms are published without counsel review. Helena Yu (Sprout Climate Association) is the owner and privacy contact (`helena.yu@sprout-climate.org`). She reviewed the English on 2026-10-06 and recorded the decision as `counselWaiver` in `data/catalogue/terms.json`, using `scripts/review_translations.py --waive-counsel`. The waiver covers only version 2026-10-02.1 and its exact text and contact, and lapses on any change, just as a counsel review does. Counsel review is required before the MVP.
+
 ### Story S07.02 — Resident signs up for texts on the web
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 47 min (started 2026-10-04 01:36 UTC, built 03:23 UTC)

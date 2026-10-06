@@ -27,7 +27,7 @@ const read = (file: string) => readFileSync(path.join(DIR, file), "utf8");
 describe("docs/procedures", () => {
   it("has a page for each procedure, and no procedure page the index and the rehearsal log do not know", () => {
     for (const id of PAGES) expect(existsSync(path.join(DIR, `${id}.md`)), id).toBe(true);
-    const onDisk = readdirSync(DIR).filter((file) => file.endsWith(".md") && file !== "README.md" && file !== "rehearsals.md");
+    const onDisk = readdirSync(DIR).filter((file) => file.endsWith(".md") && file !== "README.md" && file !== "rehearsals.md" && file !== "launch-checklist.md");
     expect(onDisk.map((file) => file.replace(/\.md$/, "")).sort()).toEqual([...PAGES].sort());
   });
 
@@ -49,6 +49,7 @@ describe("docs/procedures", () => {
       expect(log, id).toContain(`(${id}.md)`);
     }
     expect(index).toContain("(rehearsals.md)");
+    expect(index).toContain("(launch-checklist.md)");
     expect(index).toContain("(weekly-notes/README.md)");
   });
 

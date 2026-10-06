@@ -2,9 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { ALERTS_URL, RESIDENT_DATA_DELETED_ON } from "./alerts-server";
 import { HEIGHTS, LANGUAGES, WIDTHS, expectBaseline, openResident } from "./helpers";
 
-// S07.01: /{lang}/terms inside the resident shell. Run against a local build (not production), so the terms, which are
-// still a draft (owner, privacy contact and counsel's review are placeholders), are shown under the draft banner
-// instead of being a 404; the 404 in production is covered by the unit tests of termsPageMode.
+// S07.01: /{lang}/terms inside the resident shell. The committed terms are published: the owner reviewed the English and,
+// for the pilot, waived counsel's review (data/catalogue/terms.json counselWaiver). The draft banner and the 404 of unpublished
+// terms in production are covered by the unit tests of termsPageMode and termsRefusals.
 
 /** Grows the viewport to the whole page, so a baseline shows every line and not only the first screen. */
 async function showWholePage(page: Page, width: number) {
@@ -53,31 +53,20 @@ test("/en/terms states in plain words everything the terms must say, with versio
   await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
 
   await expect(page.getByTestId("terms-version")).toHaveText("2026-10-02.1");
-  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-02");
-  await expect(page.getByTestId("terms-owner")).toContainText("PLACEHOLDER");
-  await expect(page.getByTestId("terms-contact")).toContainText("PLACEHOLDER");
+  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-06");
+  await expect(page.getByTestId("terms-owner")).toContainText("Helena Yu, Sprout Climate Association");
+  await expect(page.getByTestId("terms-contact")).toContainText("helena.yu@sprout-climate.org");
   // No end-of-pilot purge has completed for this server: the page says nothing about deleted data (S09.08).
   await expect(page.getByTestId("terms-deleted")).toHaveCount(0);
   await expect(page.getByTestId("terms-deleted-note")).toHaveCount(0);
 });
 
-test("terms that are not published are never shown as final: the page is marked as a draft, and kept from search", async ({ page }) => {
+test("published terms are shown as final: no draft banner, and open to search", async ({ page }) => {
   await openResident(page, "/en/terms", 390);
 
-  const banner = page.getByTestId("terms-draft");
-  await expect(banner).toBeVisible();
-  await expect(banner).toContainText("Draft: not yet published");
-  await expect(banner).toContainText("not the final terms");
-  // The banner comes first, before the title, and says why.
-  const order = await page.evaluate(() => {
-    const banner = document.querySelector('[data-testid="terms-draft"]')!.getBoundingClientRect();
-    const title = document.querySelector("main h1")!.getBoundingClientRect();
-    return banner.top < title.top;
-  });
-  expect(order).toBe(true);
-  await expect(banner.locator("li").filter({ hasText: "the owner is still a placeholder" })).toHaveCount(1);
-  await expect(banner.locator("li").filter({ hasText: "counsel review" }).first()).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await expect(page.locator("main h1")).toHaveText("Terms and privacy");
+  await expect(page.getByTestId("terms-draft")).toHaveCount(0);
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
 });
 
 for (const language of LANGUAGES) {

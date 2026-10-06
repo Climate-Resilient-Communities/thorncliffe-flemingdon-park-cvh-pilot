@@ -9,7 +9,15 @@ import { createTermsService, signupConsentVersion, termsPageMode } from "./terms
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
 function service(change: Partial<TermsSource> = {}, reviewed = true, afterReview: (t: TermsSource) => void = () => {}) {
-  const terms: TermsSource = { ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource), owner: "Ana Reyes", privacyContact: "privacy@example.org", ...change };
+  const terms: TermsSource = {
+    ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource),
+    owner: "Ana Reyes",
+    privacyContact: "privacy@example.org",
+    lastUpdated: "2026-10-02",
+    counselWaiver: null,
+    publishedVersions: null,
+    ...change,
+  };
   const hash = termsReviewHash(terms, sha);
   if (reviewed) {
     terms.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: hash };
@@ -49,13 +57,17 @@ describe("the terms seam for the page and the web sign-up", () => {
     expect(service({ privacyContact: "PLACEHOLDER: later" }).currentPublishedTerms("en")).toBeNull();
   });
 
-  it("is the committed draft today: not published, with every reason listed", () => {
-    expect(currentPublishedTerms("en")).toBeNull();
-    expect(currentConsentVersion()).toBeNull();
-    const view = termsPageView("en");
-    expect(view.status).toBe("draft");
-    expect(view.consentVersion).toBe("2026-10-02.1");
-    expect(bundledTermsInput().terms.consentVersion).toBe("2026-10-02.1");
+  it("publishes the committed terms: the owner reviewed the English and waived counsel's review for the pilot", () => {
+    expect(currentConsentVersion()).toBe("2026-10-02.1");
+    expect(currentPublishedTerms("en")).toMatchObject({
+      status: "published",
+      consentVersion: "2026-10-02.1",
+      owner: "Helena Yu, Sprout Climate Association",
+      lastUpdated: "2026-10-06",
+      privacyContact: "helena.yu@sprout-climate.org",
+    });
+    expect(termsPageView("en").status).toBe("published");
+    expect(bundledTermsInput().terms.counselWaiver).toMatchObject({ decidedBy: "Helena Yu, Sprout Climate Association", version: "2026-10-02.1" });
   });
 
   it("names no new version until counsel has reviewed it, so an earlier version stays the one in force", () => {
