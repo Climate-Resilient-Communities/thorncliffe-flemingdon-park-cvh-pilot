@@ -14,7 +14,7 @@ These four are done in production and must have a row marked "worked" before lau
 3. A resend ([resending texts that failed](resend-failed-texts.md)): S09.02 does not resend a drill's texts, so this uses a real alert sent before launch to staff phones signed up for texts, while residents' alerts are still off. Write its alert's entry id under "Alerts sent for a rehearsal" below: the pilot measures (S09.05) leave those alerts out.
 4. The access-request process ([a resident access request](access-request.md)), with a staff phone signed up as the "resident": receive (with `--rehearsal`), call back, show, delete, close.
 
-The outside monitor's rehearsal (stopping the health job and confirming the email) is in `docs/config.md` and the launch checklist.
+The outside monitor's rehearsal (stopping the health job and confirming the email) is in `docs/config.md` and the [launch checklist](launch-checklist.md).
 
 ## Alerts sent for a rehearsal
 

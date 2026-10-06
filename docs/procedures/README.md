@@ -25,6 +25,7 @@ The pages hold no secret value, phone number or name: they name roles and where 
 
 Also here:
 
+- [Launch checklist](launch-checklist.md): everything that must be true in production before residents rely on the CVH (settings, scheduled jobs, Twilio, the outside monitor, the launch rehearsals), ticked with date and name.
 - [Rehearsal log](rehearsals.md): who rehearsed which procedure, when and with what outcome. The launch rehearsals (a production drill, a pause and resume, a resend, the access-request process) are recorded there before launch.
 - [Weekly reliability notes](weekly-notes/README.md): one file per week, from `scripts/export-weekly`.
 - [Translation survey results](survey-results.csv): the counts of the translation-understood survey, one line per language and round, recorded by Coordinators and read by `scripts/export-measures` ([exporting the pilot measures](export-measures.md)).

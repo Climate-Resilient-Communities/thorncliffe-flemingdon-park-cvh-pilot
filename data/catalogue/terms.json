@@ -1,14 +1,15 @@
 {
  "meta": {
   "source": "S07.01, the acceptance criteria in docs/planning/pilot/epics.md, and the spine (AD-9, AD-12, AD-15, P9, N5).",
-  "note": "English source of the terms and privacy page (/{lang}/terms). It is published only when src/modules/subscriptions/domain/terms.ts accepts it: a named owner, a last-updated date, an English review by that owner, a privacy contact, a consent version and a counsel review of exactly this English and version. Values starting with PLACEHOLDER are refused. Any change to the text, the contact or the version needs a new counsel review: python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer NAME --reviewed-on DATE. Translations: data/catalogue/translations/content/<lang>.json, keys terms.*."
+  "note": "English source of the terms and privacy page (/{lang}/terms). It is published only when src/modules/subscriptions/domain/terms.ts accepts it: a named owner, a last-updated date, an English review by that owner, a privacy contact, a consent version and a counsel review of exactly this English and version, or, for the pilot only, the owner's recorded waiver of it (counselWaiver, held to the same rules). Values starting with PLACEHOLDER are refused. Any change to the text, the contact or the version needs a new counsel review (python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer NAME --reviewed-on DATE) or a new decision by the owner (--waive-counsel --reviewer OWNER --reviewed-on DATE --reason TEXT). Translations: data/catalogue/translations/content/<lang>.json, keys terms.*."
  },
  "consentVersion": "2026-10-02.1",
- "owner": "PLACEHOLDER: Hub Coordinator responsible for the terms, to be named by the Hub",
- "lastUpdated": "2026-10-02",
+ "owner": "Helena Yu, Sprout Climate Association",
+ "lastUpdated": "2026-10-06",
  "englishReview": {
-  "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-  "date": null
+  "reviewer": "Helena Yu, Sprout Climate Association",
+  "date": "2026-10-06",
+  "sourceHash": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269"
  },
  "counselReview": {
   "reviewer": "PLACEHOLDER: counsel to be named when the launch-readiness review is done",
@@ -16,7 +17,7 @@
   "version": null,
   "sourceHash": null
  },
- "privacyContact": "PLACEHOLDER: the privacy contact (an email address or a phone number) to be named by the Hub",
+ "privacyContact": "helena.yu@sprout-climate.org",
  "title": "Terms and privacy",
  "sections": [
   {
@@ -86,5 +87,15 @@
     "Hub staff will call your number back to check that it is yours. Then they will tell you what we hold. If something is wrong, they will fix it."
    ]
   }
- ]
+ ],
+ "counselWaiver": {
+  "decidedBy": "Helena Yu, Sprout Climate Association",
+  "date": "2026-10-06",
+  "reason": "Pilot / proof of concept: the owner approved publishing without counsel review on 2026-10-06; counsel review is required before the MVP.",
+  "version": "2026-10-02.1",
+  "sourceHash": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269"
+ },
+ "publishedVersions": {
+  "2026-10-02.1": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269"
+ }
 }
