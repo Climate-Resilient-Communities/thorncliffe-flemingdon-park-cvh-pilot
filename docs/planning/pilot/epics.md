@@ -3901,7 +3901,7 @@ So that we only keep people who chose to stay.
 
 ### Story S09.08 — The pilot's resident data is deleted on schedule
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 34 min (started 2026-10-06 03:54 UTC, built 06:28 UTC; includes the first review round)
+- **Size:** S · **Estimate:** 4 h · **Actual:** 3 h 3 min (started 2026-10-06 03:54 UTC, built 06:57 UTC; includes two review rounds)
 - **Traces:** FR-D-7, NFR-N5, AR-13 · **Depends on:** S09.07, S09.03 · **Branch:** `e09-s08-end-of-pilot-purge`
 
 As a Hub Director,
