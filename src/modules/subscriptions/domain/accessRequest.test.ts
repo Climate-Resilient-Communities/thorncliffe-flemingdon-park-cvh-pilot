@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { heldRecordLines, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
+import { deletionSummary, heldRecordLines, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
 
 const DAY = 86_400_000;
 const NOW = new Date("2026-10-30T16:00:00Z");
@@ -59,7 +59,7 @@ describe("wholeDays and torontoTime", () => {
   });
 });
 
-const NOTHING: HeldRecord = { maskedNumber: "+1 ••• ••• 0123", subscriber: null, pending: null, replies: [], texts: [], hashes: [], checkins: { kind: "not_built" } };
+const NOTHING: HeldRecord = { maskedNumber: "+1 ••• ••• 0123", subscriber: null, pending: null, replies: [], texts: [], hashes: [], checkins: { kind: "not_built" }, unread: [] };
 
 describe("heldRecordLines", () => {
   it("reads out everything held for a subscriber: places, groups, muted topics, terms, retention state, prompt, texts, hashes", () => {
@@ -137,5 +137,39 @@ describe("heldRecordLines", () => {
     expect(heldRecordLines(unreadable).join("\n")).toMatch(/A CHECK-IN TABLE EXISTS THAT THIS SCRIPT CANNOT READ YET\. Do not answer the request as complete/);
     expect(nothingHeld({ ...NOTHING, checkins: { kind: "rows", rows: [] } })).toBe(true);
     expect(nothingHeld({ ...NOTHING, hashes: [{ scope: "signup_info", count: 1, latest: NOW }] })).toBe(false);
+  });
+
+  it("says loudly what is held that it cannot read yet, and never calls that nothing", () => {
+    const unread: HeldRecord = { ...NOTHING, unread: ["subscriber.checkin_method", "the table checkin_request (it refers to subscriber)"] };
+
+    expect(nothingHeld(unread)).toBe(false);
+    expect(heldRecordLines(unread).join("\n")).toContain(
+      "NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (subscriber.checkin_method; the table checkin_request (it refers to subscriber)). Do not answer the request as complete",
+    );
+    expect(heldRecordLines(NOTHING).join("\n")).not.toContain("NOT SHOWN");
+  });
+});
+
+describe("deletionSummary", () => {
+  it("names the masked number and what a deletion would remove, so a mistyped number is noticed first", () => {
+    expect(deletionSummary(NOTHING)).toBe("For +1 ••• ••• 0123 the CVH holds no subscriber, no pending sign-up, 0 waiting replies and 0 texts on record.");
+    const held: HeldRecord = {
+      ...NOTHING,
+      subscriber: {
+        since: new Date("2026-10-01T14:00:00Z"),
+        lang: "ur",
+        neighbourhood: "Thorncliffe Park (TP)",
+        groups: [],
+        consentVersion: "2026-10-02.1",
+        startedBy: "web",
+        retentionState: "active",
+        places: [],
+        mutedTopics: [],
+        prompt: null,
+      },
+      replies: [{ since: NOW, expiresAt: NOW }],
+      texts: [{ createdAt: NOW, kind: "transactional", purpose: "welcome", lang: "ur", state: "delivered", segments: 1, resendN: null, providerErrorCode: null }],
+    };
+    expect(deletionSummary(held)).toBe("For +1 ••• ••• 0123 the CVH holds a subscriber since 2026-10-01 10:00, no pending sign-up, 1 waiting reply and 1 text on record.");
   });
 });

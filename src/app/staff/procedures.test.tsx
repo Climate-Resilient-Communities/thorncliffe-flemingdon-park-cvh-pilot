@@ -9,6 +9,7 @@ import { ProcedureLink } from "./ProcedureLink";
 import { DrillsView } from "./drills/DrillsView";
 import { drillsView } from "./drills/view";
 import { RosterView } from "./drills/roster/RosterView";
+import { PeopleHeading } from "./people/PeopleHeading";
 import { PROCEDURES_BASE_URL, SCREEN_PROCEDURES, approvalProcedure, composerProcedure, procedureLink } from "./procedures";
 import { SpendBody } from "./spend/SpendBody";
 import { TextsView } from "./texts/TextsView";
@@ -95,6 +96,7 @@ describe("the link to a procedure", () => {
       () => <DrillsView view={drillsView({ rosterSize: 2, drills: [] })} />,
       "run-a-drill",
     ],
+    ["People (someone leaving)", () => <PeopleHeading />, "rotate-secrets"],
   ] as const)("is drawn on %s", (_, draw, id) => {
     const out = renderToStaticMarkup(draw());
     expect(out.match(/data-testid="procedure-link"/g)).toHaveLength(1);

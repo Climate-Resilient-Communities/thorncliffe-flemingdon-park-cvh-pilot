@@ -4,13 +4,13 @@
 // that was held. The weekly review (S09.04's `weekly_review`) reads them to flag a request open longer than 25 days.
 //
 //   receive            records a new request (what the resident asked for); a rehearsal's is marked as a drill, so the review reports it apart.
-//   open               the requests still open, oldest first, with the days each has been open.
+//   open               the requests still open, oldest first, with the days each has been open (by the database's clock, as the weekly review counts).
 //   lookUp             everything held for the number, in ONE read-only transaction (Postgres refuses any write in it), for an open request only: the
 //                      subscriber, places, groups, muted topics, consent version, retention state and prompt; a pending sign-up; waiting replies; the texts
 //                      held for those records (never their words); the keyed hashes of the number in `rate_limit`; check-in records (E08's, through a
-//                      port). Nothing is recorded and nothing is changed.
+//                      port); and what holds the number's records that it cannot read yet (a column or a table added since). Nothing is recorded or changed.
 //   deleteForResident  after verified control, the one E07 deletion (deletion.ts, the steps STOP runs) and the request's `closed` record (`deleted`), in one
-//                      transaction: both commit or neither does.
+//                      transaction: both commit or neither does. Refused while a `checkin` table exists and E08's deletion port is not wired here.
 //   close              the request's `closed` record with how it ended (answered, not verified, withdrawn).
 //
 // Verified control is the Admin's call back to the number (or the resident's one-time phrase texted from it, procedures/access-request.md): the script makes
@@ -24,6 +24,7 @@ import { englishText } from "../../../i18n/text";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { accessRequestStore, type AccessRequestStore } from "../adapters/accessRequestStore";
+import { hashScopeOf } from "../adapters/inboundStore";
 import {
   CLOSING_OUTCOMES,
   openRequests,
@@ -61,6 +62,8 @@ export type AdminRefusal = "no_such_admin" | "not_admin" | "admin_not_active";
 export type RequestRefusal = "not_found" | "closed";
 /** A number that is not Canadian: nothing can be held for it (sign-up accepts only Canadian numbers). */
 export type NumberRefusal = "not_canadian";
+/** A `checkin` table exists and E08's deletion port is not wired into this use case: the deletion would leave the resident's check-in rows behind. */
+export type CheckinRefusal = "checkins_not_wired";
 
 type Result<T, E extends string> = { ok: true; value: T } | { ok: false; error: E };
 
@@ -70,7 +73,7 @@ export interface AccessRequests {
   receive(input: { admin: string; request: AccessRequestKind; rehearsal?: boolean }): Promise<Result<{ id: string }, AdminRefusal>>;
   open(): Promise<OpenAccessRequest[]>;
   lookUp(input: { id: string; number: string }): Promise<Result<HeldRecord, RequestRefusal | NumberRefusal>>;
-  deleteForResident(input: { id: string; number: string; admin: string }): Promise<Result<Deleted & { daysOpen: number }, AdminRefusal | RequestRefusal | NumberRefusal>>;
+  deleteForResident(input: { id: string; number: string; admin: string }): Promise<Result<Deleted & { daysOpen: number }, AdminRefusal | RequestRefusal | NumberRefusal | CheckinRefusal>>;
   close(input: { id: string; admin: string; outcome: ClosingOutcome }): Promise<Result<{ daysOpen: number }, AdminRefusal | RequestRefusal>>;
 }
 
@@ -80,7 +83,10 @@ export interface AccessRequestDeps {
   numberKey: () => string;
   /** messaging's `skipRecipientDeliveries` (default: the outbox's own). */
   skipRecipientDeliveries?: (tx: DbTransaction, recipient: { kind: RecipientKind; id: string }) => Promise<SkippedForRecipient>;
-  /** `checkins`' deletion port (E07 handoffs; a no-op until E08), as the inbound router is given it. */
+  /**
+   * `checkins`' deletion port (E07 handoffs), as the inbound router is given it. Until E08 wires it (left out, or `noCheckinsYet`), a deletion is refused
+   * while a `checkin` table exists, as the lookup reports such a table unreadable.
+   */
   checkins?: CheckinCleanup;
   /** `checkins`' reader of a subscriber's records (until E08: `checkinTableCheck`). */
   checkinRecords?: CheckinRecords;
@@ -88,7 +94,6 @@ export interface AccessRequestDeps {
   audit?: { record: <A extends RequestAction>(tx: DbTransaction, event: AuditEvent<A>) => Promise<void> };
   store?: AccessRequestStore;
   newId?: () => string;
-  now?: () => Date;
 }
 
 /** Until E08: a `checkin` table that exists is one this lookup cannot read yet. */
@@ -108,8 +113,8 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
   const store = deps.store ?? accessRequestStore;
   const audit = deps.audit ?? { record: auditRecord };
   const newId = deps.newId ?? (() => uuidv7());
-  const now = deps.now ?? (() => new Date());
   const checkinRecords = deps.checkinRecords ?? checkinTableCheck(store);
+  const checkinsWired = deps.checkins !== undefined && deps.checkins !== noCheckinsYet;
   const deletion = createNumberDeletion({
     skipRecipientDeliveries: deps.skipRecipientDeliveries ?? ((tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient)),
     checkins: deps.checkins ?? noCheckinsYet,
@@ -166,6 +171,9 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     ];
     const key = deps.numberKey();
     const scopes = await store.hashScopes(tx);
+    // A column or a table added since this lookup was written holds part of a record only where that record exists for the number.
+    const owners = { subscriber: sub !== null, pending_signup: pending !== null, inbound_reply: replies.length > 0 };
+    const unread = (await store.unreadHoldings(tx)).filter((holding) => owners[holding.owner]).map((holding) => holding.what);
     return {
       maskedNumber: maskNumber(phone),
       subscriber: sub
@@ -204,9 +212,11 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
         : null,
       replies: replies.map((reply) => ({ since: reply.since, expiresAt: reply.expiresAt })),
       texts: await textsToRecipients(tx, recipients),
-      hashes: await store.hashTraces(tx, scopes.map((scope) => ({ scope, hash: clientHash(key, scope, phone) }))),
+      // Each hash as its writer made it: the inbound limit's mute row holds the hash made under `inbound` (hashScopeOf).
+      hashes: await store.hashTraces(tx, scopes.map((scope) => ({ scope, hash: clientHash(key, hashScopeOf(scope), phone) }))),
       // Check-in records belong to a subscriber (E08 keeps no number on them), so a number with no subscriber has none.
       checkins: sub ? await checkinRecords.recordsOf(tx, sub.id) : { kind: "rows", rows: [] },
+      unread,
     };
   }
 
@@ -223,7 +233,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     },
 
     async open() {
-      const open = openRequests(await recordsOf(deps.db), now());
+      const open = openRequests(await recordsOf(deps.db), await store.now(deps.db));
       const names = new Map<string, string | null>();
       for (const request of open) {
         if (request.receivedBy !== null && !names.has(request.receivedBy)) names.set(request.receivedBy, await readStaffName(deps.db, request.receivedBy));
@@ -248,14 +258,16 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     async deleteForResident({ id, number, admin }) {
       const phone = canadianNumber(number);
       if (phone === null) return { ok: false, error: "not_canadian" };
-      return deps.db.transaction(async (tx): Promise<Result<Deleted & { daysOpen: number }, AdminRefusal | RequestRefusal>> => {
+      return deps.db.transaction(async (tx): Promise<Result<Deleted & { daysOpen: number }, AdminRefusal | RequestRefusal | CheckinRefusal>> => {
         const actor = await adminOf(tx, admin);
         if (!actor.ok) return actor;
         const open = await lockOpen(tx, id);
         if (!open.ok) return open;
+        // As the lookup reports a `checkin` table it cannot read: a deletion that cannot reach the resident's check-in rows is not done at all.
+        if (!checkinsWired && (await store.tableExists(tx, "checkin"))) return { ok: false, error: "checkins_not_wired" };
         const deleted = await deletion.deleteNumber(tx, phone);
         await audit.record(tx, { action: "access_request.closed", actorStaffId: actor.value.id, subjectType: ACCESS_REQUEST_SUBJECT, subjectId: id, isDrill: open.value.isDrill, meta: { outcome: "deleted" } });
-        return { ok: true, value: { ...deleted, daysOpen: wholeDays(open.value.receivedAt, now()) } };
+        return { ok: true, value: { ...deleted, daysOpen: wholeDays(open.value.receivedAt, await store.now(tx)) } };
       });
     },
 
@@ -268,7 +280,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
         const open = await lockOpen(tx, id);
         if (!open.ok) return open;
         await audit.record(tx, { action: "access_request.closed", actorStaffId: actor.value.id, subjectType: ACCESS_REQUEST_SUBJECT, subjectId: id, isDrill: open.value.isDrill, meta: { outcome } });
-        return { ok: true, value: { daysOpen: wholeDays(open.value.receivedAt, now()) } };
+        return { ok: true, value: { daysOpen: wholeDays(open.value.receivedAt, await store.now(tx)) } };
       });
     },
   };

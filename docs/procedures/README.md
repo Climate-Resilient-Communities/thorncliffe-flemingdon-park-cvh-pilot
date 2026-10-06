@@ -3,7 +3,7 @@
 **Owner:** Hub Admin lead (keeps this index and the review dates current)
 **Last reviewed:** 2026-10-06
 
-Short procedures for the Hub to follow under pressure, so sending, correcting and recovering are done the same way every time (S09.03, NFR-N6). Each page is in plain steps with the Hub's own screen names, names its owner (a role) and the date it was last reviewed. Each Hub screen that starts one of these tasks shows a link under its heading, "Procedure: ... (opens in a new tab)", which opens the page here on GitHub.
+Short procedures for the Hub to follow under pressure, so sending, correcting and recovering are done the same way every time (S09.03, NFR-N6). Each page is in plain steps with the Hub's own screen names, names its owner (a role) and the date it was last reviewed. Each Hub screen that starts one of these tasks shows a link, "Procedure: ... (opens in a new tab)", which opens the page here on GitHub: under the screen's heading and lead, except on an approval, where it comes last, after everything the approver should know about the entry.
 
 The pages hold no secret value, phone number or name: they name roles and where things are kept. Change a page in a pull request and update its **Last reviewed** date; a step that did not work in a rehearsal is fixed here before launch.
 

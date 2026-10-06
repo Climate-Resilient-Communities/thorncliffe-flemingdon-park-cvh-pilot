@@ -139,6 +139,11 @@ export interface HeldRecord {
   /** Keyed hashes of the number in `rate_limit`, by scope (deleted after 24 hours). */
   hashes: readonly { scope: string; count: number; latest: Date }[];
   checkins: HeldCheckins;
+  /**
+   * What holds this number's records and the lookup cannot read yet: a column or a table added after it was written (E08's check-in request, for example).
+   * Empty until a story adds one; while it is not, the request is never answered as complete.
+   */
+  unread: readonly string[];
 }
 
 /** Whether nothing at all is held for the number (a check-in table that cannot be read is never "nothing"). */
@@ -149,6 +154,7 @@ export function nothingHeld(record: HeldRecord): boolean {
     record.replies.length === 0 &&
     record.texts.length === 0 &&
     record.hashes.length === 0 &&
+    record.unread.length === 0 &&
     (record.checkins.kind === "not_built" || (record.checkins.kind === "rows" && record.checkins.rows.length === 0))
   );
 }
@@ -235,6 +241,23 @@ export function heldRecordLines(record: HeldRecord): string[] {
       lines.push(...record.checkins.rows.map((row) => `  ${torontoTime(row.at)}  ${row.description}`));
       break;
   }
+  if (record.unread.length > 0) {
+    lines.push(
+      `NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (${record.unread.join("; ")}). Do not answer the request as complete: ask IT to add it to scripts/access-request.`,
+    );
+  }
   if (nothingHeld(record)) lines.push("", "Nothing is held for this number.");
   return lines;
+}
+
+/**
+ * What a deletion on the resident's behalf would remove, in one line IT checks before typing DELETE: the masked number (its last four digits) and what is held
+ * for it, so a mistyped number is noticed before anything is deleted.
+ */
+export function deletionSummary(record: HeldRecord): string {
+  const subscriber = record.subscriber ? `a subscriber since ${torontoTime(record.subscriber.since)}` : "no subscriber";
+  const pending = record.pending ? `a pending sign-up since ${torontoTime(record.pending.since)}` : "no pending sign-up";
+  const replies = `${record.replies.length} waiting repl${record.replies.length === 1 ? "y" : "ies"}`;
+  const texts = `${record.texts.length} text${record.texts.length === 1 ? "" : "s"} on record`;
+  return `For ${record.maskedNumber} the CVH holds ${subscriber}, ${pending}, ${replies} and ${texts}.`;
 }

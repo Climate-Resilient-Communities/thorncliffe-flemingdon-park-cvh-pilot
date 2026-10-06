@@ -1,10 +1,11 @@
 // scripts/access-request without a database: its commands and arguments, its production-only guard, that the number is asked at a prompt and never taken as an
-// argument, that `show` refuses to print into a file or a pipe, the deletion's confirmation, and what it prints. The runs against the tables, the audit trail
-// and the weekly review are in test/db/accessRequest.db.test.ts.
+// argument, that `show` and `delete` refuse to run unless all three streams are a terminal, the deletion's check of the number and its confirmation, that an
+// error is printed without its text (which can quote the number), and what it prints. The runs against the tables, the audit trail and the weekly review are
+// in test/db/accessRequest.db.test.ts.
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { runAccessRequest, type Connection } from "../scripts/subscriptions/access-request";
+import { onTerminal, runAccessRequest, type Connection } from "../scripts/subscriptions/access-request";
 import type { AccessRequests, HeldRecord } from "../src/modules/subscriptions";
 
 const ROOT = path.join(__dirname, "..");
@@ -39,6 +40,7 @@ const HELD: HeldRecord = {
   texts: [{ createdAt: new Date("2026-10-01T14:01:00Z"), kind: "transactional", purpose: "welcome", lang: "ur", state: "delivered", segments: 2, resendN: null, providerErrorCode: null }],
   hashes: [],
   checkins: { kind: "not_built" },
+  unread: [],
 };
 
 function service(over: Partial<AccessRequests> = {}): AccessRequests {
@@ -56,7 +58,8 @@ async function run(argv: string[], options: { env?: Record<string, string>; requ
   const out: string[] = [];
   const error: string[] = [];
   const questions: string[] = [];
-  const answers = [...(options.answers ?? ["+1 416 555 0123", "DELETE"])];
+  // `show` asks for the number; `delete` for the number, the number again and DELETE.
+  const answers = [...(options.answers ?? ["+1 416 555 0123", "+1 416 555 0123", "DELETE"])];
   const requests = options.requests ?? service();
   const close = vi.fn(async () => {});
   const connect = vi.fn((): Connection => ({ requests, close }));
@@ -133,7 +136,9 @@ describe("access-request", () => {
 
     expect(error).toMatch(/docs\/procedures\/access-request\.md/);
     expect(error).toMatch(/read-only transaction, saves nothing and refuses to\s+print into a file or a pipe/);
-    expect(error).toMatch(/cannot be\s+undone \(the pilot keeps no backups\)/);
+    expect(error).toMatch(/cannot be\s+undone \(the pilot keeps no\s+backups\)/);
+    expect(error).toMatch(/asks for the number again and for DELETE/);
+    expect(error).toMatch(/show and delete run on a terminal only,\s+with nothing redirected or piped/);
     expect(error).toMatch(/never given as an argument, so it is not kept in the shell's history/);
     expect(error).toMatch(/with its dates, its outcome and the Admin, never the number/);
   });
@@ -175,27 +180,64 @@ describe("access-request", () => {
     expect(result.out).not.toMatch(/555.?0123/);
   });
 
-  it("refuses to print what is held into a file or a pipe, before asking for the number or connecting", async () => {
-    const result = await run(["show", "--id", ID, "--verified-control"], { terminal: false });
+  it.each([
+    ["show", ["show", "--id", ID, "--verified-control"]],
+    ["delete", ["delete", "--id", ID, "--admin", "jdoe", "--verified-control"]],
+  ])("refuses to %s off a terminal (a file or a pipe on any stream), before asking for the number or connecting", async (command, argv) => {
+    const result = await run(argv, { terminal: false });
 
     expect(result.code).toBe(1);
-    expect(result.error).toMatch(/must be read on screen, not saved/);
+    expect(result.error).toBe(
+      `Refusing to run: ${command} asks for a resident's number and prints what is held for it, which must be typed and read on screen, never saved. Run it in a terminal, without redirecting or piping its input, its output or its errors.`,
+    );
     expect(result.questions).toEqual([]);
     expect(result.connect).not.toHaveBeenCalled();
   });
 
-  it("deletes only after DELETE is typed, and reports counts and the closed request", async () => {
-    const no = await run(["delete", "--id", ID, "--admin", "jdoe", "--verified-control"], { answers: ["4165550123", "yes"] });
+  it("counts as a terminal only when what is typed, what is printed and the prompts with their echo all are one", () => {
+    const tty = { isTTY: true };
+    expect(onTerminal({ stdin: tty, stdout: tty, stderr: tty })).toBe(true);
+    // `show ... 2>file`: readline echoes the typed number to stderr, so a redirected stderr would save it.
+    expect(onTerminal({ stdin: tty, stdout: tty, stderr: { isTTY: false } })).toBe(false);
+    expect(onTerminal({ stdin: tty, stdout: {}, stderr: tty })).toBe(false);
+    expect(onTerminal({ stdin: { isTTY: undefined }, stdout: tty, stderr: tty })).toBe(false);
+  });
+
+  it("deletes only after showing what is held for the masked number, the number typed again and DELETE, and reports counts and the closed request", async () => {
+    const argv = ["delete", "--id", ID, "--admin", "jdoe", "--verified-control"];
+    const no = await run(argv, { answers: ["4165550123", "(416) 555-0123", "yes"] });
     expect(no.code).toBe(1);
     expect(no.error).toMatch(/Not confirmed: nothing was deleted and the request is still open/);
     expect(no.requests.deleteForResident).not.toHaveBeenCalled();
 
-    const yes = await run(["delete", "--id", ID, "--admin", "jdoe", "--verified-control"], { answers: ["4165550123", "DELETE"] });
+    const yes = await run(argv, { answers: ["4165550123", "416 555 0123", "DELETE"] });
     expect(yes.code).toBe(0);
+    expect(yes.questions).toEqual([
+      "The resident's number (it is not saved): ",
+      "Check the last four digits against the number the Admin verified, then type the number again: ",
+      "This deletes everything held for that number and cannot be undone. Type DELETE to go on: ",
+    ]);
+    expect(yes.requests.lookUp).toHaveBeenCalledWith({ id: ID, number: "4165550123" });
+    expect(yes.out).toMatch(/^For \+1 ••• ••• 0123 the CVH holds a subscriber since 2026-10-01 10:00, no pending sign-up, 0 waiting replies and 1 text on record\./);
     expect(yes.requests.deleteForResident).toHaveBeenCalledWith({ id: ID, number: "4165550123", admin: "jdoe" });
     expect(yes.out).toMatch(/subscriber deleted, pending sign-up none, waiting replies 0, waiting texts stopped 1/);
     expect(yes.out).toMatch(/closed as deleted, 3 days after it was received, with jdoe as the Admin/);
-    expect(yes.out).not.toContain("4165550123");
+    expect(yes.out).not.toMatch(/555.?0123/);
+  });
+
+  it("deletes nothing when the number typed again differs, or the lookup before it is refused", async () => {
+    const argv = ["delete", "--id", ID, "--admin", "jdoe", "--verified-control"];
+    const typo = await run(argv, { answers: ["4165550123", "4165550132", "DELETE"] });
+    expect(typo.code).toBe(1);
+    expect(typo.error).toBe("The two numbers differ: nothing was deleted and the request is still open.");
+    expect(typo.questions).toHaveLength(2);
+    expect(typo.requests.deleteForResident).not.toHaveBeenCalled();
+
+    const closed = await run(argv, { requests: service({ lookUp: vi.fn(async () => ({ ok: false as const, error: "closed" as const })) }) });
+    expect(closed.code).toBe(1);
+    expect(closed.error).toBe("Refused: that access request is already closed (closed). Nothing was deleted and nothing was recorded.");
+    expect(closed.questions).toHaveLength(1);
+    expect(closed.requests.deleteForResident).not.toHaveBeenCalled();
   });
 
   it("closes a request with its outcome", async () => {
@@ -211,23 +253,43 @@ describe("access-request", () => {
     ["show", ["show", "--id", ID, "--verified-control"], { lookUp: vi.fn(async () => ({ ok: false as const, error: "closed" as const })) }, /^Refused: that access request is already closed \(closed\)\. Nothing was shown\./],
     ["show", ["show", "--id", ID, "--verified-control"], { lookUp: vi.fn(async () => ({ ok: false as const, error: "not_canadian" as const })) }, /^Refused: that is not a Canadian number/],
     ["delete", ["delete", "--id", ID, "--admin", "jdoe", "--verified-control"], { deleteForResident: vi.fn(async () => ({ ok: false as const, error: "not_found" as const })) }, /^Refused: no access request has that id.*Nothing was deleted and nothing was recorded\./],
+    [
+      "delete",
+      ["delete", "--id", ID, "--admin", "jdoe", "--verified-control"],
+      { deleteForResident: vi.fn(async () => ({ ok: false as const, error: "checkins_not_wired" as const })) },
+      /^Refused: check-ins exist \(a checkin table\) and this script cannot delete them yet: ask IT to wire E08's check-in deletion into scripts\/access-request \(checkins_not_wired\)\. Nothing was deleted/,
+    ],
     ["close", ["close", "--id", ID, "--admin", "gone", "--outcome", "answered"], { close: vi.fn(async () => ({ ok: false as const, error: "admin_not_active" as const })) }, /^Refused: that Admin's account is suspended or removed/],
-  ] as [string, string[], Partial<AccessRequests>, RegExp][])("refuses %s with the reason and exit 1", async (_, argv, over, message) => {
+  ] as [string, string[], Partial<AccessRequests>, RegExp][])("refuses %s with the reason and exit 1", async (command, argv, over, message) => {
     const result = await run(argv, { requests: service(over) });
 
     expect(result.code).toBe(1);
-    expect(result.out).toBe("");
+    // A deletion shows what it would delete (the masked number) before it is refused.
+    expect(result.out).toBe(command === "delete" ? "For +1 ••• ••• 0123 the CVH holds a subscriber since 2026-10-01 10:00, no pending sign-up, 0 waiting replies and 1 text on record." : "");
     expect(result.error).toMatch(message);
     expect(result.close).toHaveBeenCalledTimes(1);
   });
 
-  it("closes its connection even when a command throws", async () => {
-    const close = vi.fn(async () => {});
-    const requests = service({ open: async () => Promise.reject(new Error("database down")) });
-    const deps = { env: PRODUCTION, out: () => {}, error: () => {}, prompt: async () => "", isTerminal: () => true, connect: () => ({ requests, close }) };
+  it("prints an error by its kind and SQLSTATE only, never its text, which can quote the number, and closes its connection", async () => {
+    // As Drizzle reports a failed statement: its parameters, the number among them, in the message, and the driver's error as the cause.
+    class DrizzleQueryError extends Error {
+      override name = "DrizzleQueryError";
+    }
+    const failure = new DrizzleQueryError("Failed query: select pg_advisory_xact_lock(hashtextextended($1, $2))\nparams: pending_signup:+14165550123,7302118449", {
+      cause: Object.assign(new Error("canceling statement due to lock timeout"), { code: "55P03" }),
+    });
+    for (const [argv, over] of [
+      [["delete", "--id", ID, "--admin", "jdoe", "--verified-control"], { deleteForResident: async () => Promise.reject(failure) }],
+      [["show", "--id", ID, "--verified-control"], { lookUp: async () => Promise.reject(failure) }],
+      [["list"], { open: async () => Promise.reject(new Error("connect ECONNREFUSED")) }],
+    ] as [string[], Partial<AccessRequests>][]) {
+      const result = await run(argv, { requests: service(over) });
 
-    await expect(runAccessRequest(["list"], deps)).rejects.toThrow("database down");
-    expect(close).toHaveBeenCalledTimes(1);
+      expect(result.code, argv[0]).toBe(1);
+      expect(result.error, argv[0]).toMatch(/^Failed: (DrizzleQueryError \(SQLSTATE 55P03\)|Error)\. Its text is not printed, since it can hold the number\. Run `list` to see where the request stands\.$/);
+      expect(`${result.out}\n${result.error}`).not.toMatch(/555.?0123|params|ECONNREFUSED/);
+      expect(result.close).toHaveBeenCalledTimes(1);
+    }
   });
 
   it("runs through its launcher, which bundles the script", () => {

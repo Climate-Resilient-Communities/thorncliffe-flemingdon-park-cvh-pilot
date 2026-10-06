@@ -28,4 +28,4 @@ A resend sends the same words once more, to the same person, in its usual place 
 
 ## Rehearsal before launch
 
-S09.02 refuses to resend a drill's texts, so the launch rehearsal of a resend uses a real alert sent in production before launch, while residents' alerts are still off and only staff phones are signed up for texts: one staff phone is switched off (or out of service) so its text ends undelivered or failed, and an Admin resends it following this page. Record the alert in the [rehearsal log](rehearsals.md) so the week-8 measures leave it out.
+S09.02 refuses to resend a drill's texts, so the launch rehearsal of a resend uses a real alert sent in production before launch, while residents' alerts are still off and only staff phones are signed up for texts: one staff phone is switched off (or out of service) so its text ends undelivered or failed, and an Admin resends it following this page. Record the alert's entry id in the [rehearsal log](rehearsals.md): the pilot measures (S09.05) leave out the alerts listed there.

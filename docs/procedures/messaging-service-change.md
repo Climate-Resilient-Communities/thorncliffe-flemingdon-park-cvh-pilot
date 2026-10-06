@@ -19,7 +19,11 @@ Every text goes through one Twilio Messaging Service on the verified toll-free n
 1. Agree the change and a time with the Hub Admin on call. Write down which setting changes, from what to what, and why.
 2. The Admin pauses texts with the reason "Messaging Service change" ([pausing and resuming](pause-and-resume-texts.md), steps 1 to 4).
 3. IT signs in to the Twilio Console (production subaccount), opens Messaging, Services, the CVH service, and makes the change. Change nothing else.
-4. IT runs the service check: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config` (the secret from Vercel's production environment, typed, never pasted into a chat or a file in the repository).
+4. IT runs the service check, typing `JOB_SECRET` (from Vercel's production environment) at a prompt so it stays out of the shell's history and the process list, never into a chat or a file in the repository:
+
+   ```sh
+   read -rs JOB_SECRET && printf 'Authorization: Bearer %s\n' "$JOB_SECRET" | curl -sS -X POST -H @- <production URL>/api/jobs/messaging-config; unset JOB_SECRET
+   ```
 5. Check the answer and the Hub: the health banner shows no "Smart Encoding is on" or "allows texts to countries other than Canada" line within a few minutes. If the check could not read a setting, it is never taken as right: fix it before resuming.
 6. If the inbound webhook or opt-out settings changed, IT texts HELP and then YES from a staff phone that is on no list and checks the answers.
 7. The Admin resumes texts and checks **See sending progress** of anything that was waiting.

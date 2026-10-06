@@ -121,7 +121,7 @@ export interface ApprovalScreen {
   here: string;
   title: string;
   lead: string;
-  /** The written procedure this approval belongs to (S09.03), linked under the heading. */
+  /** The written procedure this approval belongs to (S09.03), linked last in the view, after everything the approver should know about the entry. */
   procedure: ProcedureLinkView;
   status: "review" | "locked";
   /** Why the entry is not waiting for this person (a locked screen), and the note sent with a return. */

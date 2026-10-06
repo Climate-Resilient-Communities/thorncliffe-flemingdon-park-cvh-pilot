@@ -9,11 +9,11 @@ The script, for IT (`node --env-file=.env.production.local scripts/access-reques
 
 - `receive --admin <username> --request access|correction|deletion` records a request and prints its id;
 - `list` shows the open requests and the days each has been open;
-- `show --id <id> --verified-control` asks for the number at a prompt and shows what is held, on screen only (read-only, nothing saved, it refuses to print into a file or a pipe);
-- `delete --id <id> --admin <username> --verified-control` asks for the number and then for `DELETE`, and deletes everything held for it (the same deletion as a STOP), closing the request;
+- `show --id <id> --verified-control` asks for the number at a prompt and shows what is held, on screen only (read-only, nothing saved);
+- `delete --id <id> --admin <username> --verified-control` asks for the number, shows what is held for it (its last four digits, the subscriber, the pending sign-up), asks for the number again and for `DELETE`, and deletes everything held for it (the same deletion as a STOP), closing the request;
 - `close --id <id> --admin <username> --outcome answered|not_verified|withdrawn` closes it.
 
-The number is always typed at the prompt, never on the command line (it would stay in the shell's history). Delete the environment file after use.
+The number is always typed at the prompt, never on the command line (it would stay in the shell's history). `show` and `delete` run only in a terminal with nothing redirected or piped (not `> file`, not `2> file`, not `| less`), and an error is printed by its code only, since a database error's text can quote the number. Delete the environment file after use.
 
 ## 1. Receive the request (Admin, the day it arrives)
 
@@ -30,9 +30,9 @@ The number is always typed at the prompt, never on the command line (it would st
 
 1. IT runs `show --id <id> --verified-control` on a screen only IT and the Admin can see, and types the number at the prompt.
 2. The Admin reads it to the resident on a call back to the number: whether they are subscribed, since when and how, the language, the neighbourhood, the buildings and floors, the groups, the muted topics, the terms version they accepted, the retention state, any open prompt; any pending sign-up; texts held for them (dates, kinds, languages, outcomes: never their words, which the Hub cannot read back); keyed traces of the number kept for at most 24 hours; check-in records. IT clears the screen afterwards; nothing is copied.
-3. If the output says a check-in table exists that the script cannot read yet, stop: do not answer the request as complete until IT has added check-ins to the script.
+3. If the output says a check-in table exists that the script cannot read yet, or that the CVH holds more for the number than the script can read yet ("NOT SHOWN"), stop: do not answer the request as complete until IT has added it to the script.
 4. **A correction**: the Hub cannot edit a subscription. Tell the resident how: reply **1** (building or floor) or **2** (language) to the CVH number once the text menus are live, or text **STOP** and sign up again on the web or with a staff member's help (**Text sign-up**, `/staff/text-signup`).
-5. **A deletion**: IT runs `delete --id <id> --admin <your username> --verified-control`, types the number and then `DELETE`. Everything held for the number goes, at once and for good (the pilot keeps no backups); texts already sent keep no link to it; nothing more is sent to it. Tell the resident on the call that it is done. The request is closed as `deleted`.
+5. **A deletion**: IT runs `delete --id <id> --admin <your username> --verified-control` and types the number. The script shows the number's last four digits and what is held for it: the Admin checks the four digits against the number they called back, then IT types the number again and `DELETE`. Everything held for the number goes, at once and for good (the pilot keeps no backups); texts already sent keep no link to it; nothing more is sent to it. Tell the resident on the call that it is done. The request is closed as `deleted`. If the script refuses because check-ins exist that it cannot delete yet, nothing was deleted: ask IT to add them first.
 6. Otherwise IT closes it: `close --id <id> --admin <your username> --outcome answered` (or `withdrawn` if the resident withdrew it).
 7. Delete your note of the number and contact once the request is closed.
 

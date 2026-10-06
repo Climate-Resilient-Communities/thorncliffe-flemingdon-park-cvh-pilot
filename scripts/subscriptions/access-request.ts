@@ -13,10 +13,12 @@
 // that can read the residents' tables: Supabase's service_role has no grant on them) and the Supabase secret key (SUPABASE_SECRET_KEY), from which the keyed
 // hashes of the number in `rate_limit` are found. The procedure is docs/procedures/access-request.md.
 //
-// What it guarantees: `show` reads in one read-only transaction (Postgres refuses any write in it), prints to the terminal only (it refuses to print into a
-// file or a pipe) and saves nothing; the number is typed at a prompt, never given as an argument, so it is not kept in the shell's history; nothing it records
-// holds the number. `delete` runs the one E07 deletion (the steps STOP runs) and closes the request in the same transaction. Every request is in the audit trail
-// as `access_request.received` and `access_request.closed`, with the Admin as the actor, and the weekly review flags one open longer than 25 days.
+// What it guarantees: `show` reads in one read-only transaction (Postgres refuses any write in it) and saves nothing; `show` and `delete` run on a terminal
+// only (what is typed, what is printed and the prompts with their echo: none may go into a file or a pipe); the number is typed at a prompt, never given as an
+// argument, so it is not kept in the shell's history; an error is printed by its SQLSTATE only, since a database error's text can quote the number; nothing it
+// records holds the number. `delete` first shows what it would delete for the masked number, asks for the number again and for DELETE, then runs the one E07
+// deletion (the steps STOP runs) and closes the request in the same transaction. Every request is in the audit trail as `access_request.received` and
+// `access_request.closed`, with the Admin as the actor, and the weekly review flags one open longer than 25 days.
 import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
 import {
@@ -24,16 +26,19 @@ import {
   ACCESS_REQUEST_LIMIT_DAYS,
   CLOSING_OUTCOMES,
   createAccessRequests,
+  deletionSummary,
   heldRecordLines,
   rateLimitKeyFromSecret,
   torontoTime,
   type AccessRequestKind,
   type AccessRequests,
   type AdminRefusal,
+  type CheckinRefusal,
   type ClosingOutcome,
   type NumberRefusal,
   type RequestRefusal,
 } from "../../src/modules/subscriptions";
+import { canadianNumber } from "../../src/contracts/signup";
 import type { Env } from "../../src/platform/config/env";
 import { createDb } from "../../src/platform/db";
 import { productionEnvironment } from "../identity/create-first-admin";
@@ -49,7 +54,7 @@ export interface CliDeps {
   error: (line: string) => void;
   /** Asks one question on the terminal and returns the answer (the number, the deletion's confirmation). */
   prompt: (question: string) => Promise<string>;
-  /** Whether what is printed goes to a terminal (not a file or a pipe). */
+  /** Whether the script runs on a terminal: what is typed, what is printed and the prompts with their echo (stdin, stdout, stderr), none a file or a pipe. */
   isTerminal: () => boolean;
   /** Test seam: the use cases on a production environment (a test database in tests). */
   connect?: (env: Env) => Connection;
@@ -73,13 +78,15 @@ const USAGE =
   "      at a prompt and shows what the CVH holds for it, on this screen only: it reads in a read-only transaction, saves nothing and refuses to\n" +
   "      print into a file or a pipe. Message words are never shown.\n" +
   "  delete --id <request id> --admin <username> --verified-control\n" +
-  "      Only after verified control. Asks for the number, then for DELETE, and deletes everything held for it: the deletion a STOP from the\n" +
-  "      number runs (subscriber, places, muted topics, prompts, pending sign-up, waiting replies; waiting texts are stopped). It cannot be\n" +
-  "      undone (the pilot keeps no backups). The request is closed as deleted in the same transaction.\n" +
+  "      Only after verified control. Asks for the number, shows what is held for it (its last four digits, the subscriber, the pending sign-up),\n" +
+  "      asks for the number again and for DELETE, and deletes everything held for it: the deletion a STOP from the number runs (subscriber,\n" +
+  "      places, muted topics, prompts, pending sign-up, waiting replies; waiting texts are stopped). It cannot be undone (the pilot keeps no\n" +
+  "      backups). The request is closed as deleted in the same transaction.\n" +
   `  close --id <request id> --admin <username> --outcome <${CLOSING_OUTCOMES.join("|")}>\n` +
   "      answered: what is held was read back (and a correction explained); not_verified: control of the number could not be shown, so nothing\n" +
   "      was revealed or deleted; withdrawn: the resident withdrew the request.\n\n" +
-  "The number is typed at a prompt, never given as an argument, so it is not kept in the shell's history. The audit trail records each request\n" +
+  "The number is typed at a prompt, never given as an argument, so it is not kept in the shell's history; show and delete run on a terminal only,\n" +
+  "with nothing redirected or piped. The audit trail records each request\n" +
   "(`access_request.received`, `access_request.closed`) with its dates, its outcome and the Admin, never the number.";
 
 const ADMIN_REFUSALS: Record<AdminRefusal, string> = {
@@ -94,7 +101,11 @@ const REQUEST_REFUSALS: Record<RequestRefusal, string> = {
 const NUMBER_REFUSALS: Record<NumberRefusal, string> = {
   not_canadian: "that is not a Canadian number, and the CVH holds nothing for any other (sign-up accepts only Canadian numbers)",
 };
-const REFUSALS: Record<AdminRefusal | RequestRefusal | NumberRefusal, string> = { ...ADMIN_REFUSALS, ...REQUEST_REFUSALS, ...NUMBER_REFUSALS };
+const CHECKIN_REFUSALS: Record<CheckinRefusal, string> = {
+  checkins_not_wired: "check-ins exist (a checkin table) and this script cannot delete them yet: ask IT to wire E08's check-in deletion into scripts/access-request",
+};
+type Refusal = AdminRefusal | RequestRefusal | NumberRefusal | CheckinRefusal;
+const REFUSALS: Record<Refusal, string> = { ...ADMIN_REFUSALS, ...REQUEST_REFUSALS, ...NUMBER_REFUSALS, ...CHECKIN_REFUSALS };
 
 function connectToProduction(env: Env): Connection {
   // parseEnv requires both in production.
@@ -172,8 +183,10 @@ export async function runAccessRequest(argv: string[], deps: CliDeps): Promise<n
     deps.error(`--id must be a request id as receive printed it (run \`list\` to see the open ones)\n${USAGE}`);
     return 2;
   }
-  if (command === "show" && !deps.isTerminal()) {
-    deps.error("Refusing to run: show prints what is held for a number, and its output must be read on screen, not saved. Run it in a terminal, without redirecting or piping it.");
+  if ((command === "show" || command === "delete") && !deps.isTerminal()) {
+    deps.error(
+      `Refusing to run: ${command} asks for a resident's number and prints what is held for it, which must be typed and read on screen, never saved. Run it in a terminal, without redirecting or piping its input, its output or its errors.`,
+    );
     return 1;
   }
 
@@ -185,81 +198,122 @@ export async function runAccessRequest(argv: string[], deps: CliDeps): Promise<n
 
   const connection = (deps.connect ?? connectToProduction)(environment.env);
   try {
-    const admin = String(values.admin ?? "");
-    switch (command) {
-      case "receive": {
-        const result = await connection.requests.receive({ admin, request: request as AccessRequestKind, rehearsal: values.rehearsal === true });
-        if (!result.ok) return refused(deps, result.error, "Nothing was recorded.");
-        deps.out(
-          [
-            `Recorded access request ${result.value.id} (${request}${values.rehearsal === true ? ", a rehearsal" : ""}), handled by ${admin}.`,
-            `Answer it within ${ACCESS_REQUEST_LIMIT_DAYS} days; the weekly review flags it after ${ACCESS_REQUEST_FLAG_DAYS}.`,
-            "Keep this id with the resident's contact where the request came in (never in the repository or the weekly notes): it is the only link between them and the audit trail, which holds no number.",
-            "Next: the Admin calls the number back to verify control (docs/procedures/access-request.md).",
-          ].join("\n"),
-        );
-        return 0;
-      }
-      case "list": {
-        const open = await connection.requests.open();
-        if (open.length === 0) {
-          deps.out("No access request is open.");
-          return 0;
-        }
-        const lines = [`Open access requests (${open.length}), oldest first:`];
-        for (const r of open) {
-          const flag = r.flagged ? `  FLAGGED: open more than ${ACCESS_REQUEST_FLAG_DAYS} days, answer by ${torontoTime(r.dueBy)}` : `  answer by ${torontoTime(r.dueBy)}`;
-          lines.push(`  ${r.id}  ${r.request ?? "?"}${r.rehearsal ? " (rehearsal)" : ""}  received ${torontoTime(r.receivedAt)} by ${r.receivedByName ?? "an Admin"}, open ${days(r.daysOpen)}${flag}`);
-        }
-        deps.out(lines.join("\n"));
-        return 0;
-      }
-      case "show": {
-        const number = await deps.prompt("The resident's number (it is not saved): ");
-        const result = await connection.requests.lookUp({ id, number });
-        if (!result.ok) return refused(deps, result.error, "Nothing was shown.");
-        deps.out(
-          [
-            ...heldRecordLines(result.value),
-            "",
-            "Shown on this screen only; nothing was saved or changed. Read it to the resident on the call, then clear the screen. Do not copy it anywhere.",
-            `Then close the request: scripts/access-request close --id ${id} --admin <username> --outcome answered (or delete, if they ask).`,
-          ].join("\n"),
-        );
-        return 0;
-      }
-      case "delete": {
-        const number = await deps.prompt("The resident's number (it is not saved): ");
-        const confirm = await deps.prompt("This deletes everything held for that number and cannot be undone. Type DELETE to go on: ");
-        if (confirm.trim() !== "DELETE") {
-          deps.error("Not confirmed: nothing was deleted and the request is still open.");
-          return 1;
-        }
-        const result = await connection.requests.deleteForResident({ id, number, admin });
-        if (!result.ok) return refused(deps, result.error, "Nothing was deleted and nothing was recorded.");
-        const d = result.value;
-        deps.out(
-          [
-            `Deleted everything held for the number: subscriber ${d.subscriber ? "deleted" : "none"}, pending sign-up ${d.pendingSignup ? "deleted" : "none"}, waiting replies ${d.inboundReplies}, waiting texts stopped ${d.skippedTexts}.`,
-            "Texts already sent keep no link to the number. The keyed hashes of the number in rate_limit are deleted within 24 hours.",
-            `The request is closed as deleted, ${days(d.daysOpen)} after it was received, with ${admin} as the Admin. Nothing more is sent to the number.`,
-          ].join("\n"),
-        );
-        return 0;
-      }
-      case "close": {
-        const result = await connection.requests.close({ id, admin, outcome: outcome as ClosingOutcome });
-        if (!result.ok) return refused(deps, result.error, "Nothing was recorded.");
-        deps.out(`Request ${id} closed as ${outcome}, ${days(result.value.daysOpen)} after it was received, with ${admin} as the Admin.`);
-        return 0;
-      }
-    }
+    return await runCommand(command, { id, request, outcome, admin: String(values.admin ?? ""), rehearsal: values.rehearsal === true }, connection.requests, deps);
+  } catch (error) {
+    // A database error's text can quote the statement's parameters, the number among them (Drizzle's "Failed query: ... params: ..."): only its kind and its
+    // SQLSTATE are printed. Every command runs in one transaction, so a command that failed changed nothing unless its commit was cut off.
+    const code = sqlState(error);
+    deps.error(
+      `Failed: ${error instanceof Error ? error.name : "an error"}${code ? ` (SQLSTATE ${code})` : ""}. Its text is not printed, since it can hold the number. Run \`list\` to see where the request stands.`,
+    );
+    return 1;
   } finally {
     await connection.close();
   }
 }
 
-function refused(deps: CliDeps, error: AdminRefusal | RequestRefusal | NumberRefusal, nothing: string): number {
+/** The SQLSTATE of a database error (Drizzle wraps the driver's error as its `cause`), or null. */
+function sqlState(error: unknown): string | null {
+  for (let at: unknown = error, depth = 0; at !== null && typeof at === "object" && depth < 5; at = (at as { cause?: unknown }).cause, depth++) {
+    const code = (at as { code?: unknown }).code;
+    if (typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)) return code;
+  }
+  return null;
+}
+
+/** Whether the two numbers typed are the same number (as sign-up reads them), so one mistyped digit is caught before a deletion. */
+function sameNumber(first: string, second: string): boolean {
+  const a = canadianNumber(first);
+  return a !== null && a === canadianNumber(second);
+}
+
+async function runCommand(
+  command: Command,
+  options: { id: string; request: string; outcome: string; admin: string; rehearsal: boolean },
+  requests: AccessRequests,
+  deps: CliDeps,
+): Promise<number> {
+  const { id, request, outcome, admin } = options;
+  switch (command) {
+    case "receive": {
+      const result = await requests.receive({ admin, request: request as AccessRequestKind, rehearsal: options.rehearsal });
+      if (!result.ok) return refused(deps, result.error, "Nothing was recorded.");
+      deps.out(
+        [
+          `Recorded access request ${result.value.id} (${request}${options.rehearsal ? ", a rehearsal" : ""}), handled by ${admin}.`,
+          `Answer it within ${ACCESS_REQUEST_LIMIT_DAYS} days; the weekly review flags it after ${ACCESS_REQUEST_FLAG_DAYS}.`,
+          "Keep this id with the resident's contact where the request came in (never in the repository or the weekly notes): it is the only link between them and the audit trail, which holds no number.",
+          "Next: the Admin calls the number back to verify control (docs/procedures/access-request.md).",
+        ].join("\n"),
+      );
+      return 0;
+    }
+    case "list": {
+      const open = await requests.open();
+      if (open.length === 0) {
+        deps.out("No access request is open.");
+        return 0;
+      }
+      const lines = [`Open access requests (${open.length}), oldest first:`];
+      for (const r of open) {
+        const flag = r.flagged ? `  FLAGGED: open more than ${ACCESS_REQUEST_FLAG_DAYS} days, answer by ${torontoTime(r.dueBy)}` : `  answer by ${torontoTime(r.dueBy)}`;
+        lines.push(`  ${r.id}  ${r.request ?? "?"}${r.rehearsal ? " (rehearsal)" : ""}  received ${torontoTime(r.receivedAt)} by ${r.receivedByName ?? "an Admin"}, open ${days(r.daysOpen)}${flag}`);
+      }
+      deps.out(lines.join("\n"));
+      return 0;
+    }
+    case "show": {
+      const number = await deps.prompt("The resident's number (it is not saved): ");
+      const result = await requests.lookUp({ id, number });
+      if (!result.ok) return refused(deps, result.error, "Nothing was shown.");
+      deps.out(
+        [
+          ...heldRecordLines(result.value),
+          "",
+          "Shown on this screen only; nothing was saved or changed. Read it to the resident on the call, then clear the screen. Do not copy it anywhere.",
+          `Then close the request: scripts/access-request close --id ${id} --admin <username> --outcome answered (or delete, if they ask).`,
+        ].join("\n"),
+      );
+      return 0;
+    }
+    case "delete": {
+      const number = await deps.prompt("The resident's number (it is not saved): ");
+      // What would be deleted, read first (read-only), so the operator checks it is the number the Admin verified before anything is deleted.
+      const held = await requests.lookUp({ id, number });
+      if (!held.ok) return refused(deps, held.error, "Nothing was deleted and nothing was recorded.");
+      deps.out(deletionSummary(held.value));
+      const again = await deps.prompt("Check the last four digits against the number the Admin verified, then type the number again: ");
+      if (!sameNumber(number, again)) {
+        deps.error("The two numbers differ: nothing was deleted and the request is still open.");
+        return 1;
+      }
+      const confirm = await deps.prompt("This deletes everything held for that number and cannot be undone. Type DELETE to go on: ");
+      if (confirm.trim() !== "DELETE") {
+        deps.error("Not confirmed: nothing was deleted and the request is still open.");
+        return 1;
+      }
+      const result = await requests.deleteForResident({ id, number, admin });
+      if (!result.ok) return refused(deps, result.error, "Nothing was deleted and nothing was recorded.");
+      const d = result.value;
+      deps.out(
+        [
+          `Deleted everything held for the number: subscriber ${d.subscriber ? "deleted" : "none"}, pending sign-up ${d.pendingSignup ? "deleted" : "none"}, waiting replies ${d.inboundReplies}, waiting texts stopped ${d.skippedTexts}.`,
+          "Texts already sent keep no link to the number. The keyed hashes of the number in rate_limit are deleted within 24 hours.",
+          `The request is closed as deleted, ${days(d.daysOpen)} after it was received, with ${admin} as the Admin. Nothing more is sent to the number.`,
+        ].join("\n"),
+      );
+      return 0;
+    }
+    case "close": {
+      const result = await requests.close({ id, admin, outcome: outcome as ClosingOutcome });
+      if (!result.ok) return refused(deps, result.error, "Nothing was recorded.");
+      deps.out(`Request ${id} closed as ${outcome}, ${days(result.value.daysOpen)} after it was received, with ${admin} as the Admin.`);
+      return 0;
+    }
+  }
+}
+
+function refused(deps: CliDeps, error: Refusal, nothing: string): number {
   deps.error(`Refused: ${REFUSALS[error]} (${error}). ${nothing}`);
   return 1;
 }
@@ -274,6 +328,11 @@ async function ask(question: string): Promise<string> {
   }
 }
 
+/** Whether all three streams are a terminal: the number is typed on stdin, the record printed on stdout, and the prompts and their echo go to stderr. */
+export function onTerminal(streams: Record<"stdin" | "stdout" | "stderr", { isTTY?: boolean }>): boolean {
+  return streams.stdin.isTTY === true && streams.stdout.isTTY === true && streams.stderr.isTTY === true;
+}
+
 /** Entry point used by the launcher, scripts/access-request. */
 export function main(argv: string[]): Promise<number> {
   return runAccessRequest(argv, {
@@ -281,6 +340,6 @@ export function main(argv: string[]): Promise<number> {
     out: (line) => console.log(line),
     error: (line) => console.error(line),
     prompt: ask,
-    isTerminal: () => process.stdout.isTTY === true,
+    isTerminal: () => onTerminal(process),
   });
 }

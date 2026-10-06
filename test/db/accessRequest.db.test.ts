@@ -2,17 +2,18 @@
 // scripts/access-request connects as:
 //  - a request is two audit records with the Admin as the actor and the request as the subject, holding no number; only an active Admin can be named;
 //  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt; a pending sign-up;
-//    a waiting reply; the texts, never their words; the keyed hashes of the number; check-in records), in a transaction Postgres keeps read-only, and only
-//    for an open request;
+//    a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound limit's mute row included; check-in
+//    records), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that holds a number's records is
+//    reported as not read, so a request is never answered as complete without it;
 //  - the deletion on the resident's behalf is the full E07 deletion (the one STOP runs) and closes the request in the same transaction; a failed audit record
-//    undoes the deletion; a request is closed once, even by two runs at once;
+//    undoes the deletion; a `checkin` table with E08's port not wired refuses it; a request is closed once, even by two runs at once;
 //  - the weekly review (S09.04's `weekly_review`, and scripts/export-weekly's CSV) flags a request open longer than 25 days, a rehearsal's apart, and the
 //    script's own output and the audit trail never hold the number.
 // Every number is fictional (555-01xx). Nothing reaches Twilio: no text is sent.
 import { randomBytes, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import postgres from "postgres";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { runAccessRequest } from "../../scripts/subscriptions/access-request";
 import { runExportWeekly } from "../../scripts/ops/export-weekly";
 import { migrate } from "../../scripts/db/migrate.mjs";
@@ -24,11 +25,13 @@ import {
   createInboundRouter,
   createRateLimiter,
   createSignup,
+  noCheckinsYet,
   subscriberLookup,
   type AccessRequestDeps,
   type InboundMessage,
 } from "../../src/modules/subscriptions";
 import { accessRequestStore } from "../../src/modules/subscriptions/adapters/accessRequestStore";
+import { INBOUND_LIMIT } from "../../src/modules/subscriptions/domain/inbound";
 import { createDb, type Db } from "../../src/platform/db";
 import { BASE_URL, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
@@ -92,6 +95,8 @@ async function resetAll() {
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
   });
   await owner`drop table if exists checkin`;
+  await owner`drop table if exists checkin_request`;
+  await owner`alter table subscriber drop column if exists checkin_method`;
   checkinCalls.length = 0;
 }
 
@@ -124,6 +129,17 @@ function router() {
     pricePerSegmentCents: () => 1.5,
   });
 }
+
+/** Production's environment as the script requires it (nothing connects with it: the tests give the script their own connection). */
+const PRODUCTION_ENV = {
+  VERCEL_ENV: "production",
+  SMS_MODE: "live",
+  PUBLIC_BASE_URL: "https://project-6qcs4.vercel.app",
+  DATABASE_URL: "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres",
+  SUPABASE_SECRET_KEY: "sb_secret_test_only",
+  NEXT_PUBLIC_SUPABASE_URL: "https://example-project.supabase.co",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test_only",
+};
 
 const inbound = (body: string, from = NUMBER): InboundMessage => ({ messageSid: `SM${(++sid).toString(16).padStart(32, "0")}`, from, body, optOutType: null });
 
@@ -170,6 +186,25 @@ describe("a request in the audit trail", () => {
     expect(await auditRows()).toEqual([
       { action: "access_request.received", actor_staff_id: staff.admin.id, subject_type: "access_request", subject_id: id, outcome: "ok", is_drill: false, meta: { request: "deletion" } },
     ]);
+  });
+
+  it("finds the Admin by username as sign-in does, in any case", async () => {
+    const result = await requests().receive({ admin: ` ${staff.admin.username.toUpperCase()} `, request: "access" });
+
+    expect(result.ok).toBe(true);
+    expect((await auditRows()).map((row) => row.actor_staff_id)).toEqual([staff.admin.id]);
+  });
+
+  it("counts the days open by the database's clock, not the clock of the computer IT runs it on", async () => {
+    const id = await received();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(Date.now() + 40 * 86_400_000);
+      expect((await requests().open()).map((r) => [r.id, r.daysOpen, r.flagged])).toEqual([[id, 0, false]]);
+      expect(await requests().close({ id, admin: staff.admin.username, outcome: "answered" })).toEqual({ ok: true, value: { daysOpen: 0 } });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("is handled by an active Admin only, and a refusal records nothing", async () => {
@@ -252,6 +287,8 @@ describe("the lookup", () => {
     ]);
     expect(held.hashes.map((h) => [h.scope, h.count])).toEqual([["inbound", 1]]);
     expect(held.checkins).toEqual({ kind: "not_built" });
+    // Every column and table that holds a subscriber's records is read: a story that adds one adds it to the lookup (accessRequestStore's LOOKUP_COLUMNS).
+    expect(held.unread).toEqual([]);
     // The confirmation went to the pending sign-up, which YES deleted: its text forgot it (AD-8), so it is not the subscriber's.
     const bodies = (await owner`select body from delivery`).map((row) => row.body as string);
     expect(bodies.length).toBeGreaterThan(0);
@@ -276,6 +313,52 @@ describe("the lookup", () => {
       expect(other.value.texts.map((t) => t.purpose)).toEqual(["signup_info"]);
       expect(other.value.hashes.map((h) => h.scope).sort()).toEqual(["inbound", "signup_info"]);
     }
+  });
+
+  it("finds the inbound limit's mute row, which holds the hash of the counted messages, as well as the counted messages", async () => {
+    const id = await received();
+    // More than 20 texts in an hour from a number with no subscription: the 21st mutes it for the rest of the day.
+    for (let n = 0; n <= INBOUND_LIMIT.perHour; n++) await router().handle(inbound("hello", OTHER));
+    expect(await owner`select 1 from rate_limit where scope = 'inbound_mute'`).toHaveLength(1);
+
+    const result = await requests().lookUp({ id, number: OTHER });
+    if (!result.ok) throw new Error(result.error);
+    expect(result.value.hashes.map((h) => [h.scope, h.count]).sort()).toEqual([
+      ["inbound", INBOUND_LIMIT.perHour],
+      ["inbound_mute", 1],
+      ["signup_info", 1],
+    ]);
+    // Another number's lookup finds none of them.
+    const other = await requests().lookUp({ id, number: NUMBER });
+    expect(other).toMatchObject({ ok: true, value: { hashes: [] } });
+  });
+
+  it("reports a column or a table added since that holds a number's records, and never calls the record complete or empty", async () => {
+    const id = await received();
+    await subscribed();
+    await signUp(OTHER);
+    // As E08 might add them: the check-in method on the subscriber, and a table of requests that refers to the subscriber.
+    await owner`alter table subscriber add column checkin_method text`;
+    await owner`create table checkin_request (id uuid primary key, subscriber_id uuid not null references subscriber (id) on delete cascade)`;
+
+    const result = await requests().lookUp({ id, number: NUMBER });
+    if (!result.ok) throw new Error(result.error);
+    expect(result.value.unread).toEqual(["subscriber.checkin_method", "the table checkin_request (it refers to subscriber)"]);
+    // A number with only a pending sign-up holds nothing in either.
+    expect(await requests().lookUp({ id, number: OTHER })).toMatchObject({ ok: true, value: { unread: [] } });
+
+    // The script says so on screen.
+    const out: string[] = [];
+    const code = await runAccessRequest(["show", "--id", id, "--verified-control"], {
+      env: PRODUCTION_ENV,
+      out: (line) => out.push(line),
+      error: (line) => out.push(line),
+      prompt: async () => TYPED,
+      isTerminal: () => true,
+      connect: () => ({ requests: requests(), close: async () => {} }),
+    });
+    expect(code).toBe(0);
+    expect(out.join("\n")).toContain("NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (subscriber.checkin_method; the table checkin_request (it refers to subscriber))");
   });
 
   it("finds nothing for a number the CVH does not hold, and refuses a closed or unknown request and a number that is not Canadian", async () => {
@@ -360,6 +443,23 @@ describe("the deletion on the resident's behalf", () => {
     expect(await owner`select 1 from inbound_reply`).toHaveLength(0);
   });
 
+  it("is refused while a check-in table exists and E08's deletion port is not wired, before deleting or recording anything", async () => {
+    const id = await received("deletion");
+    await subscribed();
+    await owner`create table checkin (id uuid primary key, subscriber_id uuid)`;
+    const before = (await auditRows()).length;
+
+    expect(await requests({ checkins: undefined }).deleteForResident({ id, number: NUMBER, admin: staff.admin.username })).toEqual({ ok: false, error: "checkins_not_wired" });
+    expect(await requests({ checkins: noCheckinsYet }).deleteForResident({ id, number: NUMBER, admin: staff.admin.username })).toEqual({ ok: false, error: "checkins_not_wired" });
+    expect(await owner`select 1 from subscriber`).toHaveLength(1);
+    expect((await auditRows()).length).toBe(before);
+    expect((await requests().open()).map((r) => r.id)).toEqual([id]);
+
+    // With the port wired (as E08 will), it runs.
+    expect(await requests().deleteForResident({ id, number: NUMBER, admin: staff.admin.username })).toMatchObject({ ok: true, value: { subscriber: true } });
+    expect(checkinCalls).toHaveLength(1);
+  });
+
   it("is undone when the request cannot be closed, and refuses a Coordinator, before deleting anything", async () => {
     const id = await received("deletion");
     await subscribed();
@@ -420,18 +520,11 @@ describe("the weekly review and the script", () => {
   it("runs receive, show, delete and list through the script against the database, printing and recording no number", async () => {
     await subscribed();
     const out: string[] = [];
-    const answers = [TYPED, TYPED, "DELETE"];
+    // show: the number; delete: the number, the number again, DELETE.
+    const answers = [TYPED, TYPED, NUMBER, "DELETE"];
     const cli = (argv: string[]) =>
       runAccessRequest(argv, {
-        env: {
-          VERCEL_ENV: "production",
-          SMS_MODE: "live",
-          PUBLIC_BASE_URL: "https://project-6qcs4.vercel.app",
-          DATABASE_URL: "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres",
-          SUPABASE_SECRET_KEY: "sb_secret_test_only",
-          NEXT_PUBLIC_SUPABASE_URL: "https://example-project.supabase.co",
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test_only",
-        },
+        env: PRODUCTION_ENV,
         out: (line) => out.push(line),
         error: (line) => out.push(line),
         prompt: async () => answers.shift() ?? "",
@@ -447,6 +540,7 @@ describe("the weekly review and the script", () => {
     expect(await cli(["list"])).toBe(0);
 
     const printed = out.join("\n");
+    expect(printed).toContain("For +1 ••• ••• 0131 the CVH holds a subscriber since");
     expect(printed).toContain("subscriber deleted");
     expect(printed).toContain("No access request is open.");
     expect(printed).not.toMatch(/555.?0131/);

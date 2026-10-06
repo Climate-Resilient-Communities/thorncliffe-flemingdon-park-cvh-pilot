@@ -1,7 +1,8 @@
-// The written procedures (S09.03, NFR-N6): one page each in docs/procedures, and the link a Hub screen that starts one of them shows under its lead. The link
-// points at the page on GitHub's main branch (the repository is public), opened in a new tab so a half-written alert is not lost: the pages are reviewed in
-// pull requests like the code, carry their owner and last-reviewed date, and are never a second copy the Hub would have to keep in step. Nothing is fetched
-// or rendered by the app (no route, no markdown renderer); the page is a plain link, so no stylesheet, script or connection is added.
+// The written procedures (S09.03, NFR-N6): one page each in docs/procedures, and the link a Hub screen that starts one of them shows under its lead (an
+// approval shows it last, after what the approver should know). The link points at the page on GitHub's main branch (the repository is public), opened in a
+// new tab so a half-written alert is not lost: the pages are reviewed in pull requests like the code, carry their owner and last-reviewed date, and are never
+// a second copy the Hub would have to keep in step. Nothing is fetched or rendered by the app (no route, no markdown renderer); the page is a plain link, so
+// no stylesheet, script or connection is added.
 import { englishText } from "@/i18n/text";
 
 /** The procedures a Hub screen starts, by the name of their page in docs/procedures (without `.md`). */

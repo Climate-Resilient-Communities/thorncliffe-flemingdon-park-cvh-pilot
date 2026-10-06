@@ -35,6 +35,7 @@ import { SignInForm } from "@/app/staff/sign-in/SignInForm";
 import { ChoosePasswordForm } from "@/app/staff/setup/password/ChoosePasswordForm";
 import { EnrolAuthenticator } from "@/app/staff/setup/authenticator/EnrolAuthenticator";
 import { AddPersonForm, type AddPersonLabels } from "@/app/staff/people/AddPersonForm";
+import { PeopleHeading } from "@/app/staff/people/PeopleHeading";
 import { ReissueForm } from "@/app/staff/people/ReissueForm";
 import { ResetAuthenticatorForm } from "@/app/staff/people/ResetAuthenticatorForm";
 import { ResetPasswordForm } from "@/app/staff/people/ResetPasswordForm";
@@ -1257,12 +1258,7 @@ export function PeopleFixture({
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/people">
       <Screen surface="staff" testId="screen">
         <Stack gap="section-hub">
-          <Stack gap="related">
-            <h1>{texts.heading}</h1>
-            {texts.paragraphs.map((text) => (
-              <p key={text}>{text}</p>
-            ))}
-          </Stack>
+          <PeopleHeading />
           {refusal ? (
             <p role="alert" className="hub-error">
               {englishText(`staff.people.errors.${refusal}`)}
