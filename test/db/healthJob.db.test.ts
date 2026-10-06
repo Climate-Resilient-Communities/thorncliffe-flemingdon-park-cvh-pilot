@@ -787,6 +787,19 @@ describe("the daily ceiling on non-alert texts", () => {
     expect(await oncallTexts()).toHaveLength(2);
   });
 
+  it("does not count the replies to the end-of-pilot campaign's YES (S09.07): a busy reply day is the campaign working, not misuse", async () => {
+    await addOncall(1);
+    await world.seedTransactional(2);
+    // Many subscribers kept on one day: each is answered once, with purpose reconsent_kept.
+    await world.seedTransactional(10, { purpose: "reconsent_kept" });
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: false });
+    expect(await oncallTexts()).toEqual([]);
+    // Any other reply still counts.
+    await world.seedTransactional(1, { purpose: "prompt_reply" });
+    expect(await reportOf("transactional_ceiling", job({ ceiling: 2 }))).toMatchObject({ holds: true, action: "alerted" });
+    expect((await healthEvents()).at(-1)).toMatchObject({ detail: { condition: "transactional_ceiling", count: 3 } });
+  });
+
   it("clears when the day ends in Toronto, and texts again on a later day it is crossed", async () => {
     await addOncall(1);
     const ids = await world.seedTransactional(3);

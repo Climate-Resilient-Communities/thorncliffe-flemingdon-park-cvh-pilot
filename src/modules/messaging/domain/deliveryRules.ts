@@ -93,9 +93,18 @@ export const TRANSACTIONAL_PURPOSES: readonly TransactionalPurpose[] = [
   { module: "subscriptions", purpose: "prompt_reply", recipientKinds: ["subscriber"], windowMs: 30 * MINUTE_MS },
   { module: "subscriptions", purpose: "edit_link", recipientKinds: ["subscriber"], windowMs: 30 * MINUTE_MS },
   { module: "subscriptions", purpose: "signup_info", recipientKinds: ["inbound_reply"], windowMs: 30 * MINUTE_MS, sendByIsRecipientExpiry: true },
+  // S09.07: the reply to a campaign YES ("You will keep getting CVH alerts"), its own purpose so the daily ceiling leaves it out (below).
+  { module: "subscriptions", purpose: "reconsent_kept", recipientKinds: ["subscriber"], windowMs: 30 * MINUTE_MS },
   { module: "checkins", purpose: "escalation", recipientKinds: ["oncall"], windowMs: 60 * MINUTE_MS },
   { module: "ops", purpose: "oncall_alert", recipientKinds: ["oncall"], windowMs: 30 * MINUTE_MS },
 ];
+
+/**
+ * The transactional purposes the health job's daily ceiling (SMS_TRANSACTIONAL_DAILY_CEILING, `transactional_ceiling`, S09.01) does not count, besides
+ * every text to an on-call number: the replies to the end-of-pilot campaign's YES (S09.07). Many subscribers replying on one day is the campaign working,
+ * not someone misusing the sign-up form, and each subscriber is answered once (their YES makes them `retained`; a second YES is an ordinary reply).
+ */
+export const CEILING_EXEMPT_PURPOSES = ["reconsent_kept"] as const;
 
 /** The purpose's rule when the module may create it; undefined when it is not on that module's allow-list. */
 export function purposeRule(module: string, purpose: string): TransactionalPurpose | undefined {

@@ -9,6 +9,15 @@ import { SUBSCRIPTION_SEGMENT } from "../../../contracts/subscriptionEdit";
 /** The `transactional` purpose of the link's text and of a change's confirmation (E06's allow-list: "edit links", 30 minutes). */
 export const EDIT_LINK_PURPOSE = "edit_link";
 
+/**
+ * How many links one number may be sent by text in a Toronto day, and the scope of the keyed hashes that count them in `rate_limit` (deleted after 24
+ * hours, as every other). Each link is a text the CVH pays for and the limit of the inbound router does not see (its offer can be reopened by closing a
+ * menu, which counts as a menu reply, not a menu start); a fourth request that day is answered with the Hub's number (`smsTexts.menuHub`) and no link.
+ * The hash is the menu limit's (`MENU_SCOPE`, the one the router gives the menus): `hashScopeOf` says so for a reader that looks a number's hashes up.
+ */
+export const EDIT_LINKS_PER_DAY = 3;
+export const EDIT_LINK_SCOPE = "sms_edit_link";
+
 /** The link texted to the subscriber: the page in its language on the public origin. */
 export function editLinkUrl(publicBaseUrl: string, lang: string, token: string): string {
   return `${publicBaseUrl.replace(/\/+$/, "")}/${lang}/${SUBSCRIPTION_SEGMENT}/${token}`;

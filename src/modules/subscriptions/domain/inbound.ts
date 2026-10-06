@@ -171,11 +171,13 @@ export const INBOUND_LIMIT = { perHour: 20, windowMs: 60 * 60_000 } as const;
 
 /**
  * Whether the message is decided before the inbound limit: a deletion request (the first 0, which opens the confirmation, and the second, which
- * deletes) or an opt-out event (STOP, START, HELP). The first 0 sends one prompt reply and a second one within 10 minutes deletes the number, so
- * exempting it is bounded and a limited subscriber can still leave.
+ * deletes), an opt-out event (STOP, START, HELP), or a YES to the end-of-pilot campaign (S09.07: `reconsent`, a subscriber asked and not yet kept).
+ * The first 0 sends one prompt reply and a second one within 10 minutes deletes the number, so exempting it is bounded and a limited subscriber can
+ * still leave. A campaign YES is answered once (it makes the subscriber `retained`; a second YES is then an ordinary reply, limited as any), so a
+ * subscriber who texted too much that hour is still kept rather than deleted by the purge for a YES the limit dropped.
  */
 export function exemptFromInboundLimit(keyword: InboundKeyword, action: InboundAction): boolean {
-  return action.kind === "delete" || action.kind === "ask_delete" || keyword === "stop" || keyword === "start" || keyword === "help";
+  return action.kind === "delete" || action.kind === "ask_delete" || action.kind === "reconsent" || keyword === "stop" || keyword === "start" || keyword === "help";
 }
 
 /** How long the deletion's confirmation stays open: "Reply 0 again within 10 minutes". */

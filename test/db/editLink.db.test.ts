@@ -103,7 +103,7 @@ async function resetAll() {
   await owner`delete from inbound_reply`;
   await owner`delete from inbound_seen`;
   await owner`delete from inbound_keyword_count`;
-  await owner`delete from rate_limit where scope in ('inbound', 'inbound_mute', ${MENU_SCOPE})`;
+  await owner`delete from rate_limit where scope in ('inbound', 'inbound_mute', ${MENU_SCOPE}, 'sms_edit_link')`;
   await owner`delete from inbound_limited_count`;
   await world.reset();
   made.length = 0;
@@ -362,6 +362,29 @@ describe("asking for the link by text", () => {
     expect((await owner`select kind from sms_prompt`)[0]!.kind).toBe("menu_language");
   });
 
+  it("sends a number at most 3 links a Toronto day: the 4th request gets the Hub's number, and no link is made", async () => {
+    await subscriber();
+    // Each request: open menu 1, close it at its first page (which offers the link), reply 1. Four menus, under the 5 a day.
+    for (let n = 1; n <= 3; n += 1) {
+      await send("1");
+      await send("0");
+      expect(await send("1"), `link ${n}`).toMatchObject({ action: "edit_link", replied: true });
+      expect((await texts()).at(-1)!.body, `link ${n}`).toContain(`/en/subscription/${made.at(-1)!}`);
+    }
+    expect(made).toHaveLength(3);
+    await send("1");
+    await send("0");
+    expect(await send("1")).toMatchObject({ action: "edit_link", replied: true });
+    expect(made).toHaveLength(3);
+    expect((await texts()).at(-1)!).toMatchObject({ purpose: "menu_reply", body: "Call the Hub at (416) 421-8997." });
+    // Counted as keyed hashes of the number, the one the menus are given (so an access request finds them under their scope), never the number.
+    const counted = await owner`select client_hash from rate_limit where scope = 'sms_edit_link'`;
+    expect(counted).toHaveLength(3);
+    const menuHashes = new Set((await owner`select client_hash from rate_limit where scope = ${MENU_SCOPE}`).map((row) => row.client_hash as string));
+    for (const row of counted) expect(menuHashes.has(row.client_hash as string)).toBe(true);
+    expect(JSON.stringify(counted)).not.toContain(NUMBER.slice(2));
+  });
+
   it("replaces the subscriber's earlier link: only the newest works", async () => {
     const id = await subscriber();
     const first = await linkFor(id);
@@ -443,6 +466,23 @@ describe("a change", () => {
     expect(confirmation.body).toContain("(416) 421-8997");
     // checkins was told before the places changed, with the places left on the page.
     expect(located).toEqual([{ subscriberId: id, places: [{ rsn: RSN_21, floorId: FLOOR_2 }, { rsn: RSN_23, floorId: null }] }]);
+  });
+
+  it("closes a menu, the link's offer or the deletion's confirmation open by text, and keeps the end-of-pilot campaign's prompt", async () => {
+    const id = await subscriber();
+    const token = await linkFor(id);
+    expect(await send("1")).toMatchObject({ action: "menu", replied: true });
+    expect((await owner`select kind from sms_prompt where subscriber_id = ${id}`)[0]).toEqual({ kind: "menu_building" });
+    expect(await editLinkOn().change(change(token))).toEqual({ kind: "changed" });
+    expect(await owner`select kind from sms_prompt where subscriber_id = ${id}`).toEqual([]);
+    // A reply to the menu that was open is now a new message: 1 starts a new menu from the choices just saved, never the old page's.
+    expect(await send("1")).toMatchObject({ action: "menu", replied: true });
+
+    // The campaign's re-consent prompt (S09.07) is the campaign's: a change keeps it.
+    await owner`delete from sms_prompt where subscriber_id = ${id}`;
+    await owner`insert into sms_prompt (subscriber_id, kind, step, expires_at) values (${id}, 'reconsent', '{}', now() + interval '20 days')`;
+    expect(await editLinkOn().change(change(await linkFor(id)))).toEqual({ kind: "changed" });
+    expect(await owner`select kind from sms_prompt where subscriber_id = ${id}`).toEqual([{ kind: "reconsent" }]);
   });
 
   it("asks checkins nothing when the places stay as they were, and adds the request's withdrawal to the confirmation when checkins reports one", async () => {

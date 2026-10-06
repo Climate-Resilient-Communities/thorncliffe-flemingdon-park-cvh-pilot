@@ -72,3 +72,19 @@ export function migrationsDir(files: Record<string, string>) {
 export function inDays(days: number): Date {
   return new Date(Date.now() + days * 24 * 3600 * 1000);
 }
+
+/**
+ * The Toronto day `days` after today by the database's clock (`YYYY-MM-DD`), read at least `marginMs` before midnight in Toronto: inside that
+ * margin it waits for the day to turn and reads again. A use case that compares a day the test read a moment before with its own reading (S09.07's
+ * rehearsal and start check the deadline the Admin saw) then sees the same day at whatever time the tests run, midnight included.
+ */
+export async function torontoDayFromToday(sql: postgres.Sql, days: number, marginMs = 15_000): Promise<string> {
+  for (;;) {
+    const [row] = await sql`
+      select ((now() at time zone 'America/Toronto')::date + ${days}::int)::text as day,
+             extract(epoch from (date_trunc('day', now() at time zone 'America/Toronto') + interval '1 day' - (now() at time zone 'America/Toronto'))) * 1000 as left_ms`;
+    const left = Number(row!.left_ms);
+    if (left >= marginMs) return row!.day as string;
+    await new Promise((resolve) => setTimeout(resolve, left + 500));
+  }
+}

@@ -41,7 +41,8 @@
     "Twilio sends the text messages. It handles your phone number and our messages to you. It may do this outside Canada.",
     "Cohere translates alerts and helps match questions you type in search. It never gets your phone number. It may work outside Canada.",
     "Vercel runs the website. Its servers are in Montreal. If there is an outage, it may use servers in the United States.",
-    "Supabase keeps the database that holds your number, language, neighbourhood and choices. The database is in Canada."
+    "Supabase keeps the database that holds your number, language, neighbourhood and choices. The database is in Canada.",
+    "Twilio keeps a copy of each text, with your phone number. This includes your replies. The Hub deletes these copies from Twilio after the pilot ends."
    ]
   },
   {
@@ -57,7 +58,8 @@
    "lines": [
     "Reply STOP to any text from the Hub. Or reply 0, then reply 0 again to confirm.",
     "When you stop, we delete your subscription. That means we delete your phone number and your choices. We cannot get them back.",
-    "After that, we send you nothing."
+    "After that, we send you nothing.",
+    "Twilio's copies of the texts we sent you and of your replies stay until the Hub deletes them from Twilio after the pilot ends."
    ]
   },
   {

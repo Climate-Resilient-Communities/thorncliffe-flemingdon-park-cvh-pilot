@@ -6342,7 +6342,7 @@
     "editSaved": "Binago sa web page ang iyong mga pinili sa CVH alert. Hindi ikaw? Tawagan ang Hub sa {hub}.",
     "checkinMoved": "Nabawi ang iyong hiling na pangungumusta dahil nagbago ang palapag mo. Sumagot ng 1 para sa link.",
     "checkinUncoveredNow": "Walang ambassador sa iyong palapag ngayon. Tawagan ang Hub sa {hub}.",
-    "reconsent": "Matatapos na ang pilot ng CVH. I-reply ang YES para patuloy na makatanggap ng alerto. Kung walang sagot bago ang {date}, buburahin ang numero mo.",
+    "reconsent": "Matatapos na ang pilot ng CVH. I-reply ang YES para patuloy na makatanggap ng alerto. Kung walang sagot hanggang {date}, buburahin ang numero mo.",
     "reconsentKept": "Salamat. Patuloy kang makakatanggap ng mga alerto ng CVH.",
     "pilotEnded": "Tapos na ang pilot ng CVH; hindi itinago ang numero mo.",
     "signupsPaused": "Nakahinto ang pag-sign up sa text ng CVH habang nagtatapos ang pilot."

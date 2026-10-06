@@ -4,8 +4,9 @@
 // sign-up find a subscriber by number and read back its id, language and prompt, never the number; S07.06's edit page reads its last two
 // digits only; S08.07's round page reads the numbers of the requesters in a round (`checkinContactsOf`); S08.08's escalation page reads the number of
 // the subscriber an escalation's row still names, for an Admin (`escalationNumberOf`).
-import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
+import { RECONSENT_PROMPT_KIND } from "../domain/campaign";
 import { receivingSql } from "./campaignStore";
 import { smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout } from "./schema";
 
@@ -224,6 +225,16 @@ export const subscriberStore = {
   async clearPrompt(tx: DbTransaction, subscriberId: string): Promise<void> {
     await lockForEdit(tx, subscriberId);
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
+  },
+
+  /**
+   * S07.06: a change on the web page closes what the subscriber has open by text (a menu page, the edit link's offer, the deletion's confirmation), so
+   * a later reply is not read against choices the page has replaced. The end-of-pilot campaign's re-consent prompt stays: it is the campaign's, not a
+   * reply's (S09.07).
+   */
+  async clearTextPrompt(tx: DbTransaction, subscriberId: string): Promise<void> {
+    await lockForEdit(tx, subscriberId);
+    await tx.delete(smsPrompt).where(and(eq(smsPrompt.subscriberId, subscriberId), ne(smsPrompt.kind, RECONSENT_PROMPT_KIND)));
   },
 
   /**

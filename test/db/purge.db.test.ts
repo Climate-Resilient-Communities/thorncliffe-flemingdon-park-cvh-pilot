@@ -36,7 +36,7 @@ import { campaignStore } from "../../src/modules/subscriptions/adapters/campaign
 import { purgeStore } from "../../src/modules/subscriptions/adapters/purgeStore";
 import { createDb, type Db, type DbTransaction } from "../../src/platform/db";
 import { BASE_URL, deferred, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
-import { connect, serverUrl } from "./helpers";
+import { connect, serverUrl, torontoDayFromToday } from "./helpers";
 
 type Row = Record<string, unknown>;
 
@@ -200,7 +200,8 @@ async function subscriber(lang = "en", state: "active" | "reconsent_pending" | "
 const nextSid = () => `SM${(++sid).toString(16).padStart(32, "0")}`;
 const textFrom = (phone: string, body: string, via = router()): Promise<InboundOutcome> => via.handle({ messageSid: nextSid(), from: phone, body, optOutType: null });
 
-const deadlineNow = async (): Promise<string> => (await owner`select ((now() at time zone 'America/Toronto')::date + 30)::text as day`)[0]!.day as string;
+/** The deadline a campaign started now would have (the Toronto day 30 days on), never read in the last seconds before midnight in Toronto. */
+const deadlineNow = (): Promise<string> => torontoDayFromToday(owner, 30);
 
 /** The real campaign, started after a rehearsal on the drill roster by an Admin at aal2 (S09.07): every active subscriber is asked. */
 async function started(): Promise<string> {
@@ -341,7 +342,7 @@ describe("the purge job", () => {
     expect(await owner`select count(*)::int as n from inbound_reply`).toEqual([{ n: 0 }]);
     expect(await deliveriesOf(kept.id)).toEqual([
       { purpose: "reconsent", state: "queued" },
-      { purpose: "prompt_reply", state: "queued" },
+      { purpose: "reconsent_kept", state: "queued" },
     ]);
     // One aggregate event: counts, no subject, no id, no number; the same counts as the end's audit.
     expect(await purgeEvents()).toEqual([{ severity: "info", subject_type: null, subject_id: null, detail: { deleted: 2, retained: 1 } }]);
@@ -352,9 +353,10 @@ describe("the purge job", () => {
       { lang: "en", nbhd: "TP", n: 1 },
       { lang: "ur", nbhd: "FP", n: 1 },
     ]);
-    // The terms page's day: the Toronto day it completed.
-    const [{ today }] = await owner`select to_char(now() at time zone 'America/Toronto', 'YYYY-MM-DD') as today`;
-    expect(await residentDataDeletedOn(app)).toBe(today);
+    // The terms page's day: the Toronto day it completed (read from the completion itself, so a run across midnight in Toronto still agrees).
+    const [{ completedOn }] = await owner`select to_char(completed_at at time zone 'America/Toronto', 'YYYY-MM-DD') as "completedOn" from campaign_purge`;
+    expect(completedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(await residentDataDeletedOn(app)).toBe(completedOn);
 
     // Again: nothing more, no second event.
     expect(await purge().run()).toEqual({ due: true, deleted: 0, skipped: 0, failed: 0, more: false, completed: true, completedNow: false });
@@ -446,10 +448,31 @@ describe("a YES racing the purge at the deadline", () => {
     // Nothing the purge began for them was kept: their campaign text and the confirmation of their YES are still waiting.
     expect(await deliveriesOf(yes.id)).toEqual([
       { purpose: "reconsent", state: "queued" },
-      { purpose: "prompt_reply", state: "queued" },
+      { purpose: "reconsent_kept", state: "queued" },
     ]);
     expect(await purgeEvents()).toEqual([expect.objectContaining({ detail: { deleted: 1, retained: 1 } })]);
     expect(await deliveriesOf(silent.id)).toEqual([]);
+  });
+
+  it("leaves no words of a purged subscriber's own texts: their replies lose their body, while the campaign text and the alert, which everyone got, keep theirs", async () => {
+    const asked = await subscriber("en");
+    const campaignId = await started();
+    // A text of their own, before the deadline: reply 0 asks them to confirm the deletion.
+    expect(await textFrom(asked.phone, "0")).toMatchObject({ action: "ask_delete", replied: true });
+    const alert = await world.seedAlert({ recipients: [asked.id] });
+    const before = await owner`select id, kind, purpose, body from delivery where recipient_id = ${asked.id} order by kind`;
+    expect(before.map((row) => row.kind)).toEqual(["alert", "campaign", "transactional"]);
+    await pastDeadline(campaignId);
+    await endJob();
+    expect(await purge().run()).toMatchObject({ due: true, deleted: 1, failed: 0, completed: true });
+
+    const after = await owner`select id, kind, purpose, body, recipient_id from delivery where id in ${owner(before.map((row) => row.id as string))} order by kind`;
+    expect(after).toEqual([
+      { id: alert.ids[0], kind: "alert", purpose: null, body: before[0]!.body, recipient_id: null },
+      { id: before[1]!.id, kind: "campaign", purpose: "reconsent", body: before[1]!.body, recipient_id: null },
+      { id: before[2]!.id, kind: "transactional", purpose: "prompt_reply", body: "[deleted]", recipient_id: null },
+    ]);
+    expect(before[2]!.body).toContain("10 minutes");
   });
 
   it("meets the YES at the subscriber's row lock and re-checks under it: a YES that updated the row first, before the deadline, keeps them", async () => {

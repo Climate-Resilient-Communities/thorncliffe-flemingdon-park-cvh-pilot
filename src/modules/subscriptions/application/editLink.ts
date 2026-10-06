@@ -196,6 +196,9 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
           await subscribers.setLang(tx, id, change.lang);
           await subscribers.setGroups(tx, id, groupsAfterChange(before.groups, change.groups));
           await subscribers.replaceTopics(tx, id, change.mutedTopics);
+          // A menu, the link's offer or the deletion's confirmation open by text is closed with the change: a reply to it would act on choices
+          // the page just replaced (the campaign's re-consent prompt stays).
+          await subscribers.clearTextPrompt(tx, id);
           // The confirmation in the language the texts now come in (as menu 2's), then the request's withdrawal (as menu 1's).
           await text(tx, id, change.lang, `${link.id}.saved`, "editSaved", { hub: HUB_NUMBER });
           if (withdrawal === "withdrawn") await text(tx, id, change.lang, `${link.id}.checkin`, "checkinWithdrawn");

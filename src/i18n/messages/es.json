@@ -6342,7 +6342,7 @@
     "editSaved": "Sus opciones de alertas del CVH se cambiaron en la página web. ¿No fue usted? Llame al Hub al {hub}.",
     "checkinMoved": "Su piso cambió: pedido de chequeo retirado. Envíe 1 para un enlace.",
     "checkinUncoveredNow": "Ahora ningún embajador cubre su piso. Llame al Hub: {hub}",
-    "reconsent": "El proyecto piloto CVH termina. Responda YES para seguir recibiendo alertas. Si no responde antes del {date}, borraremos sus datos.",
+    "reconsent": "El proyecto piloto CVH termina. Responda YES para seguir recibiendo alertas. Si no responde hasta el final del {date}, borraremos sus datos.",
     "reconsentKept": "Gracias. Seguirá recibiendo las alertas de CVH.",
     "pilotEnded": "El proyecto piloto CVH terminó; no se guardó su número.",
     "signupsPaused": "Las inscripciones a CVH están en pausa mientras termina el piloto."

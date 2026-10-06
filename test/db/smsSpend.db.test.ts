@@ -742,6 +742,38 @@ describe("a reconciliation (S06.08)", () => {
   });
 });
 
+describe("a deleted resident's texts (AD-13, the review of S09.08)", () => {
+  it("lose their words but keep their provider id, so the month's reconciliation still retires their estimates; an alert's text keeps its body", async () => {
+    // A recipient table with the trigger every recipient table carries (as `subscriber` has it), so deleting the row forgets the recipient.
+    const table = `scratch_resident_${randomBytes(4).toString("hex")}`;
+    await owner.unsafe(`create table ${table} (id uuid primary key)`);
+    await owner.unsafe(`create trigger ${table}_forget_deliveries after delete on ${table} for each row execute function delivery_forget_recipient('subscriber')`);
+    try {
+      const resident = randomUUID();
+      await owner.unsafe(`insert into ${table} (id) values ('${resident}')`);
+      const reply = await sendOne({ recipient_id: resident, body: "Saved. Your building is now 10 Example Road, floor 7." }, accepted(sidOf(1)));
+      const alert = await world.seedAlert({ recipients: [resident] });
+      world.provider.answer(accepted(sidOf(2)));
+      await dispatcher().run();
+      const alertBody = (await world.rowOf(alert.ids[0]!)).body;
+      expect(await estimateOf(reply)).toHaveLength(1);
+      expect(await estimateOf(alert.ids[0]!)).toHaveLength(1);
+
+      await owner.unsafe(`delete from ${table} where id = '${resident}'`);
+      expect(await world.rowOf(reply)).toMatchObject({ recipient_id: null, body: "[deleted]", provider_message_id: sidOf(1), state: "submitted", segments: 1 });
+      expect(await world.rowOf(alert.ids[0]!)).toMatchObject({ recipient_id: null, body: alertBody, provider_message_id: sidOf(2), state: "submitted" });
+
+      // The month's reconciliation matches both texts with Twilio's prices: nothing is left as an unmatched actual or an unresolved estimate.
+      const result = await reconciler(fakeTwilio([message(sidOf(1)), message(sidOf(2))])).reconcile(OCT);
+      expect(result).toMatchObject({ status: "complete", messages: 2, imported: 2, retired: 2 });
+      expect(await retiredBy(reply)).toBe(sidOf(1));
+      expect(await retiredBy(alert.ids[0]!)).toBe(sidOf(2));
+    } finally {
+      await owner.unsafe(`drop table if exists ${table}`);
+    }
+  });
+});
+
 describe("what a daily run does (S06.08)", () => {
   it("runs the matching rule even when every month is complete: a late provider id whose own matching failed is recovered by the next run, not by the next month's reconciliation", async () => {
     // An ambiguous send: unknown, no provider id. Twilio billed it, and October's reconciliation imported the actual as an unmatched one.

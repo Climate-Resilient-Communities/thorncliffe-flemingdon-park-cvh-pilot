@@ -28,7 +28,7 @@ describe("the allow-list of transactional purposes", () => {
   it("names, per module, the purposes of the definitions", () => {
     const byModule = (module: string) => TRANSACTIONAL_PURPOSES.filter((p) => p.module === module).map((p) => p.purpose);
     expect(byModule("alerting")).toEqual(["approver_notice"]);
-    expect(byModule("subscriptions")).toEqual(["confirmation", "welcome", "menu_reply", "prompt_reply", "edit_link", "signup_info"]);
+    expect(byModule("subscriptions")).toEqual(["confirmation", "welcome", "menu_reply", "prompt_reply", "edit_link", "signup_info", "reconsent_kept"]);
     expect(byModule("checkins")).toEqual(["escalation"]);
     expect(byModule("ops")).toEqual(["oncall_alert"]);
     for (const { module } of TRANSACTIONAL_PURPOSES) expect(CREATING_MODULES).toContain(module);

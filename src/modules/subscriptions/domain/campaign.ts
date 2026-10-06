@@ -13,6 +13,8 @@ export const RECONSENT_DAYS = 30;
 /** The purpose of a campaign text (the outbox's key `campaign:{campaign}:reconsent:{recipient}`) and the kind of its prompt (`sms_prompt.kind`). */
 export const RECONSENT_PURPOSE = "reconsent";
 export const RECONSENT_PROMPT_KIND = "reconsent";
+/** The purpose of the reply to a YES that kept the subscriber (`smsTexts.reconsentKept`): its own, so the health job's daily ceiling leaves it out. */
+export const RECONSENT_KEPT_PURPOSE = "reconsent_kept";
 
 /** The day a campaign started today would end (`YYYY-MM-DD`), in Toronto: today there plus RECONSENT_DAYS. */
 export function deadlineDateOf(now: Date): string {

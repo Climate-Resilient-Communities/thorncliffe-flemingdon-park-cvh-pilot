@@ -6,7 +6,8 @@
 //    `sms_menu`, Toronto's day). At the limit the reply says so and gives the Hub's number; once the edit link exists (S07.06 wires an
 //    `EditLinkPort` that is `available`) it offers the link too ("Reply 1 for a link"), with the `edit_link_offer` prompt open for 10
 //    minutes, and a 1 in that time calls the port's `send`. With the link, a menu closed by 0 at its first step offers it the same way
-//    ("Menu closed. Nothing was changed. Reply 1 for a link", S07.06): the step every resident can reach to ask for a link.
+//    ("Menu closed. Nothing was changed. Reply 1 for a link", S07.06): the step every resident can reach to ask for a link. A number is sent at
+//    most 3 links a Toronto day (`EDIT_LINKS_PER_DAY`, scope `sms_edit_link`, the menus' hash); the next request gets the Hub's number instead.
 //  - A page is sent (purpose `menu_reply`) and kept as the subscriber's `sms_prompt`: `kind` the menu, `step` the page and its options,
 //    kept an hour and open for 10 minutes after it was sent. The building whose floors a reply may need is read with places' share lock,
 //    so an Admin's floor edit waits until the reply is handled and the floor chosen is still there when it is saved.
@@ -30,6 +31,7 @@ import type { DeliveryResult, Enqueued, TransactionalInput } from "../../messagi
 import { floorsOfBuilding, listBuildings, streetOf } from "../../places";
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { subscriberStore, type SubscriberStore } from "../adapters/subscriberStore";
+import { EDIT_LINKS_PER_DAY, EDIT_LINK_SCOPE } from "../domain/editLink";
 import {
   EDIT_LINK_OFFER_KIND,
   EDIT_LINK_OFFER_MS,
@@ -209,6 +211,8 @@ export function createMenus(deps: MenuDeps): MenuPort {
 
     async sendEditLink(tx, subscriber) {
       if (!editLink.available) return false;
+      // At most EDIT_LINKS_PER_DAY links a Toronto day per number; past it the reply is the Hub's number, and no link is made.
+      if ((await inbound.startMenu(tx, EDIT_LINK_SCOPE, subscriber.numberHash, EDIT_LINKS_PER_DAY)) === "limit") return sayText(tx, subscriber, "menuHub", { hub: HUB_NUMBER });
       await editLink.send(tx, { id: subscriber.id, lang: subscriber.lang });
       return true;
     },

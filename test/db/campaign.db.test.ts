@@ -47,7 +47,7 @@ import { recipientStore } from "../../src/modules/subscriptions/adapters/recipie
 import { campaignTexts } from "../../src/modules/subscriptions/domain/campaign";
 import { createDb, type Db } from "../../src/platform/db";
 import { BASE_URL, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
-import { connect, serverUrl } from "./helpers";
+import { connect, serverUrl, torontoDayFromToday } from "./helpers";
 
 type Row = Record<string, unknown>;
 
@@ -120,7 +120,7 @@ async function resetAll() {
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
   await owner`delete from inbound_seen`;
-  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', ${MENU_SCOPE})`;
+  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', 'inbound_mute', ${MENU_SCOPE}, 'sms_edit_link')`;
   await owner`delete from campaign`;
   await owner`delete from subscriber_measure`;
   madeTokens.length = 0;
@@ -247,7 +247,8 @@ const textWithLinkFrom = (phone: string, body: string): Promise<InboundOutcome> 
     }),
   }).handle({ messageSid: nextSid(), from: phone, body, optOutType: null });
 
-const deadlineNow = async (): Promise<string> => (await owner`select ((now() at time zone 'America/Toronto')::date + 30)::text as day`)[0]!.day as string;
+/** The deadline a campaign started now would have (the Toronto day 30 days on), never read in the last seconds before midnight in Toronto. */
+const deadlineNow = (): Promise<string> => torontoDayFromToday(owner, 30);
 
 async function rehearse(admin: { id: string; session: string }, key = randomUUID()) {
   // A rehearsal needs a phone on the drill roster to reach.
@@ -857,10 +858,24 @@ describe("YES from a subscriber asked to re-consent", () => {
     const [row] = await owner`select retention_state, consent_version from subscriber where id = ${ur.id}`;
     expect(row).toEqual({ retention_state: "retained", consent_version: TERMS });
     expect(await owner`select count(*)::int as n from sms_prompt where subscriber_id = ${ur.id}`).toEqual([{ n: 0 }]);
-    const [kept] = await owner`select recipient_kind, recipient_id, purpose, lang, body from delivery where purpose = 'prompt_reply'`;
-    expect(kept).toEqual({ recipient_kind: "subscriber", recipient_id: ur.id, purpose: "prompt_reply", lang: "ur", body: residentSms("ur", "reconsentKept").body });
+    const [kept] = await owner`select recipient_kind, recipient_id, purpose, lang, body from delivery where purpose = 'reconsent_kept'`;
+    expect(kept).toEqual({ recipient_kind: "subscriber", recipient_id: ur.id, purpose: "reconsent_kept", lang: "ur", body: residentSms("ur", "reconsentKept").body });
     // Once kept, YES is what it always was.
     expect(await textFrom(ur.phone, "YES")).toMatchObject({ action: "already_signed_up" });
+  });
+
+  it("is never dropped by the inbound limit: a subscriber muted for texting too much is still kept by their YES, once", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await started(admin);
+    // 20 messages an hour are let through; the 21st reaches the limit and the number is muted for the rest of the day.
+    for (let n = 0; n < 20; n += 1) expect(await textFrom(en.phone, "hello")).toMatchObject({ action: "none" });
+    expect(await textFrom(en.phone, "hello")).toMatchObject({ action: "rate_limited", replied: false });
+    expect(await textFrom(en.phone, "YES")).toMatchObject({ state: "active", action: "reconsent", replied: true });
+    expect(await statesOf()).toEqual({ [en.id]: "retained" });
+    expect(await owner`select count(*)::int as n from delivery where purpose = 'reconsent_kept' and recipient_id = ${en.id}`).toEqual([{ n: 1 }]);
+    // Once kept, a YES is an ordinary reply again, and the limit holds it.
+    expect(await textFrom(en.phone, "YES")).toMatchObject({ action: "rate_limited", replied: false });
   });
 
   it("resolves to it even when a later prompt (the deletion's confirmation) took its row: YES cancels that prompt and keeps the subscriber", async () => {
@@ -928,7 +943,7 @@ describe("YES from a subscriber asked to re-consent", () => {
     expect((await menuReplies(en.id)).at(-1)).toBe(residentSms("en", "menuReset").body);
     expect(await statesOf()).toEqual({ [en.id]: "retained" });
     expect(await promptKind(en.id)).toBeNull();
-    const [kept] = await owner`select body from delivery where recipient_id = ${en.id} and purpose = 'prompt_reply'`;
+    const [kept] = await owner`select body from delivery where recipient_id = ${en.id} and purpose = 'reconsent_kept'`;
     expect(kept!.body).toBe(residentSms("en", "reconsentKept").body);
   });
 
