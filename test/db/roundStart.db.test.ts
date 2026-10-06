@@ -34,8 +34,7 @@ import { createCheckinRequests, type CheckinRequests, type RequestStore } from "
 import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { createRoundTypes, floorsOfBuilding } from "../../src/modules/places";
-import { checkinRequestStore } from "../../src/modules/subscriptions";
-import { createNumberDeletion } from "../../src/modules/subscriptions/application/deletion";
+import { checkinRequestStore, createNumberDeletion } from "../../src/modules/subscriptions";
 import { createDb, type Db } from "../../src/platform/db";
 import { submitSeams } from "./alertSubmitSeams";
 import { deliveryFixtures } from "./deliveryFixtures";

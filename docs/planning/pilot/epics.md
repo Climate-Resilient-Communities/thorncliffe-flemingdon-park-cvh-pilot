@@ -3565,7 +3565,7 @@ So that someone notices if I need help.
 
 ### Story S08.06 — Heat and power alerts start a check-in round
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** 1 h 3 min (started 2026-10-06 08:28 UTC, built 09:31 UTC)
 - **Traces:** FR-C7, FR-E1, AR-16, AR-9 (lock order), AR-10 (no drill check-ins) · **Depends on:** S08.05, S06.05 · **Branch:** `e08-s06-round-start`
 
 As a Hub Coordinator,
