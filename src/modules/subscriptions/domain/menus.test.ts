@@ -95,6 +95,16 @@ describe("pages", () => {
     expect(() => paginate([1], () => "too long", () => false)).toThrow(MenuPageTooLong);
     expect(paginate([], () => "", () => true)).toEqual([]);
   });
+
+  it("name the catalog strings and the language of a page that cannot fit one option (the fixture's failure names them)", () => {
+    const none = world({ lang: "ur", fits: () => false, floors: new Map([["102", FLOORS]]) });
+    expect(() => startLanguageMenu(none)).toThrow(/^menuLanguage \+ menuNav\/menuNavMore in ur cannot fit even one option/);
+    expect(() => startBuildingMenu(none, 1)).toThrow(/^menuStreet \+ menuNav\/menuNavMore in ur /);
+    const onStreet = shown(startBuildingMenu(world({ lang: "ur" }), 1)).menu;
+    expect(() => answerMenu(onStreet, 1, none)).toThrow(/^menuBuilding \+ menuNav\/menuNavMore in ur /);
+    const onBuildings = shown(answerMenu(onStreet, 1, world({ lang: "ur" }))).menu;
+    expect(() => answerMenu(onBuildings, 2, none)).toThrow(/^menuFloor \+ menuNav\/menuNavMore \+ menuWholeBuilding in ur /);
+  });
 });
 
 describe("menu 1 (building or floor)", () => {

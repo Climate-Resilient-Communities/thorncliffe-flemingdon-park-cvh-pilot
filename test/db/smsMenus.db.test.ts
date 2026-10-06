@@ -3,7 +3,8 @@
 // neighbourhood set only at the last step, with a confirmation), reply 2 (the language changed, confirmed in the new language), 0, 8 and 9
 // on the pages, a menu idle for 10 minutes (the reply says it has reset and is read as a new keyword), the daily limit of 5 menus (the Hub's
 // number; the edit link's offer once S07.06 wires it), reply 3 (checkins' withdrawRequest port: "You have no check-in request" until E08),
-// E08's "Changed location" seam, a Twilio retry, digits in other scripts, and the grants the menus need. Every number is fictional
+// E08's "Changed location" seam (called before the menu locks the subscriber's row), the edit's row lock (an approval's capture waits for
+// it, a resend does not), a Twilio retry, digits in other scripts, and the grants the menus need. Every number is fictional
 // (555-01xx) and nothing reaches Twilio.
 import { randomBytes } from "node:crypto";
 import postgres from "postgres";
@@ -17,6 +18,7 @@ import {
   clientHash,
   createInboundRouter,
   createMenus,
+  subscriberReceives,
   type CheckinRequests,
   type EditLinkPort,
   type InboundMessage,
@@ -98,15 +100,27 @@ const places: MenuPlaces = {
   floorsOf: (tx, rsn, options) => floorsOfBuilding(tx, rsn, options),
 };
 
-/** The router as src/app/inbound.ts composes it, with the menus on the real tables; checkins' and the edit link's ports can be faked. */
-function routerOn(ports: { checkins?: CheckinRequests; editLink?: EditLinkPort } = {}): InboundRouter {
+/**
+ * The router as src/app/inbound.ts composes it, with the menus on the real tables; checkins' and the edit link's ports can be faked, and
+ * `onMenuReply` is called with each menu reply's body before it is queued, inside the menu's transaction (what other sessions see then).
+ */
+function routerOn(ports: { checkins?: CheckinRequests; editLink?: EditLinkPort; onMenuReply?: (body: string) => Promise<void> } = {}): InboundRouter {
   const queue = createDeliveryQueue();
+  const { onMenuReply, ...menuPorts } = ports;
   return createInboundRouter({
     db: app,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
     enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
     skipRecipientDeliveries: (tx, recipient) => queue.skipRecipientDeliveries(tx, recipient),
-    menus: createMenus({ enqueue: (tx, input) => queue.enqueueTransactional(tx, input), pricePerSegmentCents: () => 1.5, places, ...ports }),
+    menus: createMenus({
+      enqueue: async (tx, input) => {
+        await onMenuReply?.(input.body);
+        return queue.enqueueTransactional(tx, input);
+      },
+      pricePerSegmentCents: () => 1.5,
+      places,
+      ...menuPorts,
+    }),
     numberKey: () => KEY,
     publicBaseUrl: () => BASE_URL,
     pricePerSegmentCents: () => 1.5,
@@ -130,6 +144,20 @@ const lastReply = async () => (await replies()).at(-1)!;
 const prompt = async () => (await owner`select kind, step, sent_at, expires_at from sms_prompt`)[0] ?? null;
 const placesOf = async (id: string) => (await owner`select rsn, floor_id from subscriber_place where subscriber_id = ${id} order by rsn`).map((row) => ({ rsn: row.rsn as string, floorId: row.floor_id as string | null }));
 const row = async (id: string) => (await owner`select lang, neighbourhood_id, groups from subscriber where id = ${id}`)[0]!;
+/**
+ * How the subscriber's row is locked, as another session finds it at once (NOWAIT): "free" when nothing holds it; "edit" when it is held
+ * FOR NO KEY UPDATE (an approval's FOR SHARE capture would wait, a resend's FOR KEY SHARE would not); "delete" when it is held FOR UPDATE.
+ */
+async function rowLock(id: string): Promise<"free" | "edit" | "delete"> {
+  const takes = (strength: string) =>
+    owner.unsafe(`select id from subscriber where id = $1 for ${strength} nowait`, [id]).then(
+      () => true,
+      (error: { code?: string }) => (error.code === "55P03" ? false : Promise.reject(error as Error)),
+    );
+  if (await takes("share")) return "free";
+  return (await takes("key share")) ? "edit" : "delete";
+}
+
 /** Moves the open prompt's message back in time, as if the resident had not replied for `minutes`. */
 const idle = (minutes: number) => owner`update sms_prompt set sent_at = sent_at - ${minutes} * interval '1 minute', expires_at = expires_at - ${minutes} * interval '1 minute'`;
 
@@ -263,22 +291,50 @@ describe("reply 1: building or floor", () => {
     expect((await replies()).some((reply) => reply.body.includes("within 10 minutes"))).toBe(false);
   });
 
-  it("asks checkins first ('Changed location', E08), before the places are replaced, and adds the withdrawal to the confirmation", async () => {
+  it("asks checkins first ('Changed location', E08), before the subscriber's row is locked and the places replaced, and adds the withdrawal to the confirmation", async () => {
     const id = await subscriber("en");
-    const calls: { subscriberId: string; place: unknown; placesThen: unknown }[] = [];
+    const calls: { subscriberId: string; place: unknown; placesThen: unknown; rowThen: string }[] = [];
     const checkins: CheckinRequests = {
       withdrawRequest: async () => "none",
       locationChanging: async (subscriberId, place, tx) => {
         const placesThen = await tx.execute(`select rsn from subscriber_place where subscriber_id = '${subscriberId}'`);
-        calls.push({ subscriberId, place, placesThen: [...placesThen].map((r) => (r as { rsn: string }).rsn) });
+        // E08's request lock order puts the round threads' `alert` rows before the subscriber row: the menu has not locked it yet.
+        calls.push({ subscriberId, place, placesThen: [...placesThen].map((r) => (r as { rsn: string }).rsn), rowThen: await rowLock(subscriberId) });
         return "withdrawn";
       },
     };
     for (const reply of ["1", "1", "1", "2"]) await send(reply, { checkins });
-    expect(calls).toEqual([{ subscriberId: id, place: { rsn: RSN_12, floorId: FLOOR_G }, placesThen: [RSN_12] }]);
+    expect(calls).toEqual([{ subscriberId: id, place: { rsn: RSN_12, floorId: FLOOR_G }, placesThen: [RSN_12], rowThen: "free" }]);
     const sent = await replies();
     expect(sent.at(-2)!.body).toBe("Saved. Your building is now 12 Menu Street, floor G.");
     expect(sent.at(-1)!.body).toBe("Your check-in request is withdrawn.");
+  });
+
+  it("saves under an edit's row lock: an approval's capture waits for it, and a resend still finds the resident receiving (menus 1 and 2)", async () => {
+    const id = await subscriber("en");
+    const seen: { reply: string; row: string; receives: boolean }[] = [];
+    const onMenuReply = async (body: string) => {
+      if (!body.startsWith("Saved.") && !body.startsWith("Enregistré.")) return;
+      // Another session, while the menu's transaction holds the row: the resend's check (FOR KEY SHARE SKIP LOCKED), and the lock itself.
+      const receives = await app.transaction((other) => subscriberReceives(other, id));
+      seen.push({ reply: body.split(" ")[0]!, row: await rowLock(id), receives });
+    };
+    for (const reply of ["1", "1", "1", "2"]) await send(reply, { onMenuReply });
+    await send("2", { onMenuReply });
+    let options = ((await prompt())!.step as { options: string[] }).options;
+    while (!options.includes("fr")) {
+      await send("8", { onMenuReply });
+      options = ((await prompt())!.step as { options: string[] }).options;
+    }
+    await send(String(options.indexOf("fr") + 1), { onMenuReply });
+    expect(seen).toEqual([
+      { reply: "Saved.", row: "edit", receives: true },
+      { reply: "Enregistré.", row: "edit", receives: true },
+    ]);
+    expect(await placesOf(id)).toEqual([{ rsn: RSN_12, floorId: FLOOR_G }]);
+    expect((await row(id)).lang).toBe("fr");
+    // Nothing holds the row once the menu's transaction is over.
+    expect(await rowLock(id)).toBe("free");
   });
 
   it("does not save a floor an Admin removed after the page was sent: the page comes again as it now is", async () => {

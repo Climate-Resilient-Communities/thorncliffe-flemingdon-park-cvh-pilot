@@ -3169,7 +3169,7 @@ So that I control whether I get texts.
 
 ### Story S07.05 — Residents change building, floor or language by numbered text menus
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** 40 min (started 2026-10-06 01:32 UTC, built 02:12 UTC)
+- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 25 min (started 2026-10-06 01:32 UTC, built 04:57 UTC)
 - **Traces:** FR-D-6, AR-13, AR-19 (one-segment menus), AR-20 · **Depends on:** S07.04 · **Branch:** `e07-s05-sms-menus`
 
 As a resident with a basic phone,
@@ -3194,11 +3194,11 @@ So that I can keep my alerts right without a smartphone.
 
 **Given** a menu idle for 10 minutes
 **When** the resident replies after that
-**Then** the menu has reset, the reply says so, and the number is treated as a new keyword
+**Then** the menu has reset, the reply says so, and the number is treated as a new keyword (as built: the notice is sent to a reply up to an hour after the menu's last message, the longest an `sms_prompt` row is kept; a later reply is treated as a new keyword with no notice; for the product owner to confirm)
 
 **Given** a number that has started 5 menus today
 **When** it sends 1 or 2 again
-**Then** the reply says the daily limit is reached and offers the edit link and the Hub's number
+**Then** the reply says the daily limit is reached and offers the edit link and the Hub's number (as built: the Hub's number only until S07.06 wires an `EditLinkPort` that is `available`; the link's offer, `menuLimitLink` with the `edit_link_offer` prompt, is built and tested behind that port)
 
 **Given** reply 3
 **When** handled
@@ -3238,6 +3238,8 @@ So that I don't have to step through text menus.
 **Given** an expired or used token
 **When** opened
 **Then** the page says "This link has expired" (a success body with `status: expired`) and explains how to get a new one by text
+
+**Handoff from S07.05.** The menus offer the link through `EditLinkPort` (`src/modules/subscriptions/application/menus.ts`), which `src/app/inbound.ts` wires as `noEditLinkYet` (`available: false`) until this story: the reply at the daily menu limit then gives the Hub's number only (`smsTexts.menuLimit`). This story wires a port that is `available`; the limit reply then becomes `smsTexts.menuLimitLink` ("Reply 1 for a link to make changes online, or call the Hub at {hub}") with an `edit_link_offer` prompt open for 10 minutes, and a 1 in that time calls the port's `send(tx, {id, lang})` in the router's transaction (decision-table row `edit_link`), which makes the token and queues its text. An edit of the subscriber locks its row with `subscriberStore.lockForEdit` (`FOR NO KEY UPDATE`, as the menus do; `FOR UPDATE` is the deletion's), so a resend still reads the resident as receiving.
 
 ### Story S07.07 — Approved alerts reach exactly the matching subscribers
 
@@ -3547,6 +3549,8 @@ So that someone notices if I need help.
 **Given** a covered request whose floor later loses its ambassador
 **When** the Admin opens the coverage view
 **Then** it shows the number of requests on uncovered floors per building (count only), so the Hub can assign someone or contact them
+
+**Handoff from S07.05.** E07's `CheckinRequests` port (`src/modules/subscriptions/application/inbound.ts`, beside `deleteForSubscriber`) is wired as `noCheckinRequestsYet` in `src/app/inbound.ts`: this story implements it and wires the real one there. `withdrawRequest(subscriberId, tx)` is reply 3: it answers `withdrawn` or `none`, and the menu replies `smsTexts.checkinWithdrawn` or `smsTexts.noCheckinRequest`. `locationChanging(subscriberId, place, tx)` is menu 1's "Changed location": it is called before the menu locks the subscriber's row and while the old places are still there, so it takes the request lock order itself (the round threads' `alert` rows, then the subscriber row, then `checkin` and `checkin_tally`); when it answers `withdrawn`, `checkinWithdrawn` follows the building's confirmation. "Changed location" says that SMS confirmation also offers the edit link: refine `checkinWithdrawn` (or add a text for a move) to offer it, keeping it one segment in every language (`menuTexts.test.ts`).
 
 ### Story S08.06 — Heat and power alerts start a check-in round
 

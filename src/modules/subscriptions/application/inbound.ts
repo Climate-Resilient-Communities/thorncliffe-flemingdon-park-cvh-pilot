@@ -59,9 +59,11 @@ export type CheckinWithdrawal = "withdrawn" | "none";
  *  - `withdrawRequest(subscriberId, tx)`: reply 3 (S07.05). E08 withdraws the subscriber's request (`removeRequester`: its open rows tallied
  *    and closed, `checkin_method` cleared, in the request lock order it owns) and says whether there was one; the reply is "You have no
  *    check-in request" or the withdrawal's confirmation;
- *  - `locationChanging(subscriberId, place, tx)`: menu 1 is about to replace every saved place with `place` (called after the subscriber's
- *    row is locked and before its places are deleted, so the "where I live" place can still be read). E08 withdraws the request when that
- *    place's building or floor changes ("Changed location") and says so; the confirmation is then followed by the withdrawal's text.
+ *  - `locationChanging(subscriberId, place, tx)`: menu 1 is about to replace every saved place with `place`. It is called before the menu
+ *    locks the subscriber's row and before its places are deleted, so that E08 takes its own "Request lock order" (the candidate round
+ *    threads' `alert` rows, then the subscriber row, then `checkin` and `checkin_tally`) and can still read the "where I live" place; the
+ *    menu's row lock (`lockForEdit`) comes after it, a re-lock when E08 already holds the row. E08 withdraws the request when that place's
+ *    building or floor changes ("Changed location") and says so; the confirmation is then followed by the withdrawal's text.
  */
 export interface CheckinRequests {
   withdrawRequest(subscriberId: string, tx: DbTransaction): Promise<CheckinWithdrawal>;
@@ -157,11 +159,55 @@ export class ReplyNotQueued extends Error {
   }
 }
 
-/** A resident text from the catalog in a language, with `{name}` values filled in, normalised and counted as every outbound text is (AD-21). */
-export function residentSms(lang: LaunchCode, name: ResidentTextName, values: Record<string, string> = {}): { body: string; segments: number } {
-  const text = residentText(lang, name).replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
+/** A text as it is sent: normalised and counted as every outbound text is (AD-21). */
+export function smsOf(text: string): { body: string; segments: number } {
   const body = normaliseSms(text);
   return { body, segments: countSms(body).segments };
+}
+
+/** A resident text from the catalog in a language, with `{name}` values filled in, as it is sent. */
+export function residentSms(lang: LaunchCode, name: ResidentTextName, values: Record<string, string> = {}): { body: string; segments: number } {
+  return smsOf(residentText(lang, name, values));
+}
+
+/** A reply `subscriptions` queues to a resident: what it is for, to whom, its key's nonce, its language and its words. */
+export interface ResidentReply {
+  purpose: string;
+  recipient: { kind: RecipientKind; id: string };
+  nonce: string;
+  lang: LaunchCode;
+  text: string;
+}
+
+/**
+ * Queues a reply in the caller's transaction through messaging's `enqueueTransactional` (the router's and the menus'), as it is sent
+ * (`smsOf`) with its cost estimate; `sendBy` is a recipient row's limit and the database's clock when that row was made. A refusal is a
+ * bug, never a resident's mistake: ReplyNotQueued.
+ */
+export async function queueReply(
+  deps: Pick<InboundDeps, "enqueue" | "pricePerSegmentCents">,
+  tx: DbTransaction,
+  reply: ResidentReply,
+  sendBy?: { at: Date; now: Date },
+): Promise<void> {
+  const { body, segments } = smsOf(reply.text);
+  const queued = await deps.enqueue(
+    tx,
+    {
+      module: "subscriptions",
+      purpose: reply.purpose,
+      recipient: reply.recipient,
+      subject: reply.recipient.id,
+      nonce: reply.nonce,
+      lang: reply.lang,
+      body,
+      segments,
+      costEstimateCents: Math.ceil(segments * deps.pricePerSegmentCents()),
+      ...(sendBy ? { sendBy: sendBy.at } : {}),
+    },
+    sendBy?.now,
+  );
+  if (!queued.ok) throw new ReplyNotQueued(queued.error);
 }
 
 /** The words that mean yes in a language: the catalog's `smsKeywords.yes` (English YES and Y are always accepted besides). */
@@ -189,24 +235,8 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
     text: { purpose: "welcome" | "prompt_reply" | "signup_info"; recipient: { kind: RecipientKind; id: string }; nonce: string; lang: LaunchCode; name: ResidentTextName; values?: Record<string, string> },
     sendBy?: { at: Date; now: Date },
   ): Promise<void> {
-    const { body, segments } = residentSms(text.lang, text.name, text.values);
-    const queued = await deps.enqueue(
-      tx,
-      {
-        module: "subscriptions",
-        purpose: text.purpose,
-        recipient: text.recipient,
-        subject: text.recipient.id,
-        nonce: text.nonce,
-        lang: text.lang,
-        body,
-        segments,
-        costEstimateCents: Math.ceil(segments * deps.pricePerSegmentCents()),
-        ...(sendBy ? { sendBy: sendBy.at } : {}),
-      },
-      sendBy?.now,
-    );
-    if (!queued.ok) throw new ReplyNotQueued(queued.error);
+    const { name, values, ...reply } = text;
+    await queueReply(deps, tx, { ...reply, text: residentText(text.lang, name, values) }, sendBy);
   }
 
   /** Skips the recipient's waiting texts; returns how many. */

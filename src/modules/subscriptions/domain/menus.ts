@@ -176,32 +176,33 @@ const languageItems = (): Item<LaunchCode>[] => LAUNCH_LANGUAGES.map((language) 
 // Texts and pages
 // ---------------------------------------------------------------------------------------------------------
 
-/** A catalog text in a language with its `{name}` values filled in (an unknown name is left as written). */
-export function catalogText(lang: LaunchCode, name: ResidentTextName, values: Record<string, string> = {}): string {
-  return residentText(lang, name).replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
-}
+/** The catalog strings a page is made of, and its language, as a failure names them: "menuStreet + menuNav/menuNavMore in ur". */
+export const pageName = (title: ResidentTextName, lang: LaunchCode): string => `${title} + menuNav/menuNavMore${title === "menuFloor" ? " + menuWholeBuilding" : ""} in ${lang}`;
 
 /** A page: its title, its options numbered from 1, each on its own line ("1) Deauville Lane"), and the reserved replies. */
 export function pageText(lang: LaunchCode, title: ResidentTextName, labels: readonly string[], more: boolean): string {
   return [residentText(lang, title), ...labels.map((label, index) => `${index + 1}) ${label}`), residentText(lang, more ? "menuNavMore" : "menuNav")].join("\n");
 }
 
-/** A list cannot be shown because not even one of its options fits a text with the page's title and replies: a catalog string is too long. */
+/**
+ * A list cannot be shown because not even one of its options fits a text with the page's title and replies: a catalog string is too long.
+ * The message names the page (`pageName`: its catalog strings and the language) and the text that did not fit.
+ */
 export class MenuPageTooLong extends Error {
   override name = "MenuPageTooLong";
 }
 
 /**
  * The pages of a list: from the first option on, each page takes as many as fit one text (`fits` of `render`), at most 7; a page that is
- * not the last also offers 8 (More), which `render` is told. Throws MenuPageTooLong when one option alone does not fit.
+ * not the last also offers 8 (More), which `render` is told. Throws MenuPageTooLong, naming `what`, when one option alone does not fit.
  */
-export function paginate<T>(items: readonly T[], render: (page: readonly T[], more: boolean) => string, fits: (text: string) => boolean): T[][] {
+export function paginate<T>(items: readonly T[], render: (page: readonly T[], more: boolean) => string, fits: (text: string) => boolean, what = "A menu page"): T[][] {
   const pages: T[][] = [];
   let start = 0;
   while (start < items.length) {
     let size = Math.min(OPTIONS_PER_PAGE, items.length - start);
     while (size > 0 && !fits(render(items.slice(start, start + size), start + size < items.length))) size -= 1;
-    if (size === 0) throw new MenuPageTooLong(`A menu page cannot fit even one option: ${JSON.stringify(render(items.slice(start, start + 1), start + 1 < items.length))}`);
+    if (size === 0) throw new MenuPageTooLong(`${what} cannot fit even one option in one text: ${JSON.stringify(render(items.slice(start, start + 1), start + 1 < items.length))}`);
     pages.push(items.slice(start, start + size));
     start += size;
   }
@@ -229,7 +230,7 @@ export type MenuMove =
 
 /** A list's page `page` (the last when it has fewer), or `close` for an empty list. */
 function showList<T>(world: MenuWorld, items: readonly Item<T>[], title: ResidentTextName, page: number, menuOf: (page: number, options: T[]) => Menu): MenuMove {
-  const pages = paginate(items, (slice, more) => pageText(world.lang, title, slice.map((item) => item.label), more), world.fits);
+  const pages = paginate(items, (slice, more) => pageText(world.lang, title, slice.map((item) => item.label), more), world.fits, pageName(title, world.lang));
   if (pages.length === 0) return { kind: "close" };
   const shown = Math.min(Math.max(page, 0), pages.length - 1);
   const slice = pages[shown]!;
@@ -237,7 +238,7 @@ function showList<T>(world: MenuWorld, items: readonly Item<T>[], title: Residen
 }
 
 function warnPage(world: MenuWorld, saved: number): MenuMove {
-  return { kind: "show", menu: { kind: "menu_building", step: { stage: "warn", saved } }, text: catalogText(world.lang, "menuWarn", { n: String(saved) }) };
+  return { kind: "show", menu: { kind: "menu_building", step: { stage: "warn", saved } }, text: residentText(world.lang, "menuWarn", { n: String(saved) }) };
 }
 
 function streetPage(world: MenuWorld, saved: number, page: number): MenuMove {

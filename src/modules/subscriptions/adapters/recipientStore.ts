@@ -78,8 +78,8 @@ export const recipientStore = {
 
   /**
    * The same, read inside the approval's transaction with every one of them locked `FOR SHARE`, in id order (AD-18's lock order). Three statements, so a change
-   * that was committed while the approval waited for a row is seen: (1) the candidates, (2) their rows locked (a delete, or a change that locks the subscriber
-   * `FOR UPDATE`, waits here for the approval to commit, and one that committed first has its row gone or new), (3) the rule applied again to the locked rows,
+   * that was committed while the approval waited for a row is seen: (1) the candidates, (2) their rows locked (a delete, which locks the subscriber `FOR UPDATE`,
+   * or an edit, `FOR NO KEY UPDATE`, waits here for the approval to commit, and one that committed first has its row gone or new), (3) the rule applied again to the locked rows,
    * which is the answer. A subscriber who signs up, changes places or unsubscribes meanwhile is then wholly in or wholly out, never half of each.
    */
   async reachedForShare(tx: DbTransaction, audience: Audience, earlierIds: readonly string[] = []): Promise<RecipientRow[]> {

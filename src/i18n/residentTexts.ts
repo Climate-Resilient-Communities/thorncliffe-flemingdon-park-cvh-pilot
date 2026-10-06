@@ -77,14 +77,15 @@ function lookup(catalog: unknown, key: string): unknown {
 }
 
 /**
- * One resident text in one launch language, as the catalog has it. Throws for a language that has no catalog (zh-Hant is a web script
- * variant, not a language a text is sent in) and for a key that is not a non-blank string.
+ * One resident text in one launch language, as the catalog has it, with its `{name}` placeholders filled from `values` (a name with no
+ * value is left as written). Throws for a language that has no catalog (zh-Hant is a web script variant, not a language a text is sent in)
+ * and for a key that is not a non-blank string.
  */
-export function residentText(lang: LaunchCode, name: ResidentTextName): string {
+export function residentText(lang: LaunchCode, name: ResidentTextName, values: Readonly<Record<string, string>> = {}): string {
   const catalog = Object.prototype.hasOwnProperty.call(CATALOGS, lang) ? CATALOGS[lang] : undefined;
   if (catalog === undefined) throw new RangeError(`No text message catalog for language "${String(lang)}"`);
   const key = RESIDENT_TEXT_KEYS[name];
   const value = lookup(catalog, key);
   if (typeof value !== "string" || value.trim() === "") throw new Error(`Catalog string "${key}" is missing or blank in "${lang}"`);
-  return value;
+  return value.replace(/\{(\w+)\}/g, (whole, placeholder: string) => (Object.hasOwn(values, placeholder) ? values[placeholder]! : whole));
 }
