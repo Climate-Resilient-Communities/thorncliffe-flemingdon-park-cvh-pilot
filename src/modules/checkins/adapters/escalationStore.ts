@@ -55,9 +55,12 @@ const columns = {
 // The table's check allows only these two.
 const rowOf = (row: Omit<EscalationRow, "status"> & { status: string }): EscalationRow => ({ ...row, status: row.status === "needs_help" ? "needs_help" : "not_reached" });
 
-/** An escalation the Hub has not handled, for the row's `round_ref` (any status). */
+/** An escalation the Hub has not handled, for the row's `round_ref` (any status). A handled one names its row in `handled_ref` (the guard moves it). */
 const openEscalationOf = (roundRef: typeof checkin.roundRef) =>
   sql`exists (select 1 from ${checkinEscalation} e where e.round_ref = ${roundRef} and e.handled_at is null)`;
+
+/** The escalation is about this row, open (`round_ref`) or handled (`handled_ref`): the two are never both set (`checkin_escalation_ref_while_open`). */
+const aboutRow = (roundRef: typeof checkin.roundRef) => or(eq(checkinEscalation.roundRef, roundRef), eq(checkinEscalation.handledRef, roundRef));
 
 export const escalationStore = {
   /**
@@ -102,9 +105,12 @@ export const escalationStore = {
     return row ? rowOf(row) : null;
   },
 
-  /** The `round_ref` of an escalation, read without a lock (to lock its row first); null when there is none. */
+  /** The `round_ref` of the row an escalation is about, read without a lock (to lock its row first); null when there is no such escalation. */
   async roundRefOf(executor: DbExecutor, id: string): Promise<string | null> {
-    const [row] = await executor.select({ roundRef: checkinEscalation.roundRef }).from(checkinEscalation).where(eq(checkinEscalation.id, id));
+    const [row] = await executor
+      .select({ roundRef: sql<string>`coalesce(${checkinEscalation.roundRef}, ${checkinEscalation.handledRef})` })
+      .from(checkinEscalation)
+      .where(eq(checkinEscalation.id, id));
     return row?.roundRef ?? null;
   },
 
@@ -113,7 +119,7 @@ export const escalationStore = {
     const [row] = await executor
       .select({ subscriberId: checkin.subscriberId, method: checkin.method, talliedAt: checkin.talliedAt })
       .from(checkin)
-      .innerJoin(checkinEscalation, eq(checkinEscalation.roundRef, checkin.roundRef))
+      .innerJoin(checkinEscalation, aboutRow(checkin.roundRef))
       .where(eq(checkinEscalation.id, id));
     if (!row || row.subscriberId === null || row.method === null) return { linked: false };
     return { linked: true, subscriberId: row.subscriberId, method: row.method === "text" ? "text" : "call", kept: row.talliedAt !== null };
@@ -164,9 +170,9 @@ export const escalationStore = {
    */
   async ofSubscriberRows(executor: DbExecutor, subscriberId: string): Promise<Map<string, Pick<EscalationRow, "status" | "createdAt" | "handledAt" | "handledNote">[]>> {
     const rows = await executor
-      .select({ roundRef: checkinEscalation.roundRef, status: checkinEscalation.status, createdAt: checkinEscalation.createdAt, handledAt: checkinEscalation.handledAt, handledNote: checkinEscalation.handledNote })
+      .select({ roundRef: checkin.roundRef, status: checkinEscalation.status, createdAt: checkinEscalation.createdAt, handledAt: checkinEscalation.handledAt, handledNote: checkinEscalation.handledNote })
       .from(checkinEscalation)
-      .innerJoin(checkin, eq(checkin.roundRef, checkinEscalation.roundRef))
+      .innerJoin(checkin, aboutRow(checkin.roundRef))
       .where(and(eq(checkin.subscriberId, subscriberId), isNull(checkin.closedAt)))
       .orderBy(asc(checkinEscalation.createdAt), asc(checkinEscalation.id));
     const byRef = new Map<string, Pick<EscalationRow, "status" | "createdAt" | "handledAt" | "handledNote">[]>();

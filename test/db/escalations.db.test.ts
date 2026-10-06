@@ -2,19 +2,25 @@
 // stub", "Round tally"), as the app's own role (cvh_app_login), composed as the app composes it: the marks with src/app/escalations.ts' text, the close
 // through alerting's expire job (`closeAlert`), the handling, the Hub's list and an escalation's page (src/app/staff/rounds/load.ts), the on-duty roster
 // (ops, with identity's check), the approval view's warning and the purge job's own SQL. Every number is fictional (555-01xx) and nothing reaches Twilio.
-//  - the tables: an escalation is handled once with a one-line note and nothing else of it changes; an on-duty entry is an active Admin's with an
-//    authenticator, one at a time, and nothing but an entry's role and account changes;
+//  - the tables: an escalation is handled once with a one-line note and nothing else of it changes; at most one is open per row and status (the handling
+//    moves its row out of the unique key, and S08.07's insert still finds its arbiter); an on-duty entry is an active Admin's with an authenticator, one at
+//    a time, and nothing but an entry's role and account changes;
 //  - a not reached or needs help mark puts the escalation on the Hub's list and queues, in the same transaction, one text to the on-duty Admin (every
 //    on-call number when none is set, or the one set can no longer be), with the building, floor and staff link and never the resident's number; the text
-//    goes during a pause, after a fire alert; a repeated mark texts no one again; an outbox that refuses rolls the mark back;
+//    goes during a pause, after a fire alert; a repeated mark texts no one again while its escalation is open, and a mark after the Hub handled it is a new
+//    escalation with its own text (live, or late on a stub; a late mark sent again is still the one mark); an outbox that refuses rolls the mark back;
 //  - a close tallies every row: pending and done rows become stubs, a not reached or needs help row the Hub has not handled is kept with its subscriber,
 //    which a late mark escalates; a mark waiting behind a close becomes a late mark;
 //  - handling: an Admin's, once, audited without the note or the number; a kept row whose every escalation is handled becomes a stub;
-//  - the purge job: a kept row becomes a stub 24 hours after the close, without being counted again, and is deleted 2 hours after that;
-//  - who sees the resident's number (direct requests): an Admin at aal2 only, while the row names her and the escalation is not a late mark's.
+//  - the purge job: a kept row becomes a stub within 24 hours of the close, without being counted again, and is deleted 2 hours after that; rows a close
+//    of the previous release left live are tallied as of the close, and a row someone holds waits for the next run;
+//  - who sees the resident's number (direct requests): an Admin at aal2 only, while the row names her and the escalation is not a late mark's; the page
+//    itself rendered through its guard as each role.
 import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { escalationLink, escalationTexts } from "../../src/app/escalations";
 import { onDutyNoticeFor } from "../../src/app/staff/onDutyNotice";
@@ -32,6 +38,27 @@ import { roundTypes } from "../../src/modules/places";
 import { createDb, type Db } from "../../src/platform/db";
 import { deferred, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
+
+/**
+ * The staff surface's session lookup and the page's database, for an escalation's page called through its guard: the session is the one the test gives (the
+ * guard, the role policy and the page's own choice of who sees the number are the real ones).
+ */
+const wired = vi.hoisted(() => ({ db: null as unknown, session: null as unknown }));
+vi.mock("../../src/app/staff/identity", () => ({
+  identityConfigured: () => true,
+  requestAuthSessions: async () => ({}),
+  staffAuth: () => ({ currentSession: async () => wired.session }),
+  identity: () => ({}),
+}));
+vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => [] }));
+vi.mock("../../src/app/staff/rounds/load", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../src/app/staff/rounds/load")>();
+  return {
+    ...real,
+    loadEscalation: (id: unknown, viewer: Parameters<typeof real.loadEscalation>[1], executor?: Parameters<typeof real.loadEscalation>[2]) =>
+      real.loadEscalation(id, viewer, executor ?? (wired.db as Db)),
+  };
+});
 
 // Escalation Street (Thorncliffe Park) has 1, with floors 1 to 3.
 const RSN = "9808001";
@@ -146,6 +173,7 @@ beforeAll(async () => {
   url.password = password;
   appSql = postgres(url.href, { max: 6, onnotice: () => {} });
   app = createDb(url.href);
+  wired.db = app;
   world = dispatcherWorld(owner, appSql, app);
   marks = createMarks({ db: app, escalations: escalationTexts(ENV) });
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
@@ -203,6 +231,32 @@ describe("the tables (20261006210000_escalations.sql)", () => {
     await expect(appSql`update checkin_escalation set late = true where id = ${id}`).rejects.toThrow(/permission denied/);
     await expect(owner`update checkin_escalation set status = 'not_reached' where id = ${id}`).rejects.toThrow(/never changes/);
     await expect(appSql`delete from checkin_escalation`).rejects.toThrow(/permission denied/);
+  });
+
+  it("keep one open escalation per row and status: the handling moves its row out of the key, and S08.07's insert still finds its arbiter", async () => {
+    const admin = await person("admin");
+    const { alertId, refs } = await round([await requester(F1)]);
+    // The statement of the release in production when the migration applies (S08.07's markStore), word for word: ON CONFLICT names the two columns only.
+    const previousRelease = (id: string) =>
+      appSql`insert into checkin_escalation (id, round_ref, status, alert_id, rsn, floor_id, raised_by, late) values (${id}, ${refs[0]!}, 'needs_help', ${alertId}, ${RSN}, ${F1}, ${admin.staffId}, false) on conflict (round_ref, status) do nothing returning id`;
+    const [first, second, third] = [randomUUID(), randomUUID(), randomUUID()];
+    expect(await previousRelease(first)).toHaveLength(1);
+    expect(await previousRelease(second)).toHaveLength(0);
+
+    await appSql`update checkin_escalation set handled_at = now(), handled_by = ${admin.staffId}, handled_note = 'Called her.' where id = ${first}`;
+    expect(await owner`select round_ref, handled_ref from checkin_escalation where id = ${first}`).toEqual([{ round_ref: null, handled_ref: refs[0]! }]);
+    expect(await previousRelease(third)).toHaveLength(1);
+    expect(await previousRelease(randomUUID())).toHaveLength(0);
+    expect((await escalationRows()).map((row) => [row.id, row.round_ref, row.handled])).toEqual([
+      [first, null, true],
+      [third, refs[0]!, false],
+    ]);
+    // Where an escalation's row is named is the guard's alone; the check refuses an open escalation that names none.
+    await expect(owner`update checkin_escalation set handled_ref = ${refs[0]!} where id = ${third}`).rejects.toThrow(/never changes/);
+    await expect(owner`update checkin_escalation set mark_id = ${randomUUID()} where id = ${third}`).rejects.toThrow(/never changes/);
+    await expect(
+      appSql`insert into checkin_escalation (id, status, alert_id, rsn, floor_id, raised_by, late) values (${randomUUID()}, 'not_reached', ${alertId}, ${RSN}, ${F1}, ${admin.staffId}, false)`,
+    ).rejects.toThrow(/checkin_escalation_ref_while_open/);
   });
 
   it("make an on-duty entry only for an active Admin with an authenticator, one at a time, and change nothing else of an entry", async () => {
@@ -287,6 +341,76 @@ describe("an escalation texts the on-duty Admin, in the mark's transaction (E08 
     await mark(ambassador, refs[1]!, "done");
     await mark(ambassador, refs[1]!, "not_reached");
     expect(await escalationTexts_()).toHaveLength(1);
+  });
+
+  it("after the Hub handled one, the next mark of that status on the row is a new escalation with its own text, which keeps the row at the close", async () => {
+    const [ambassador, admin] = [await person("ambassador"), await person("admin")];
+    const onDuty = await oncallEntry("On duty", { onDutyFor: admin.staffId });
+    const [her, him] = [await requester(F1), await requester(F2)];
+    const { alertId, refs } = await round([her, him], { overdue: true });
+    await mark(ambassador, refs[0]!, "needs_help");
+    await mark(ambassador, refs[1]!, "not_reached");
+    const [help, reached] = await escalationRows();
+    expect(await handling().handle({ actorStaffId: admin.staffId, escalationId: help!.id, note: "Called her, she is fine." })).toEqual({ kind: "handled", rowClosed: false });
+    expect(await handling().handle({ actorStaffId: admin.staffId, escalationId: reached!.id, note: "Asked the ambassador to try again." })).toEqual({ kind: "handled", rowClosed: false });
+    expect((await escalationList(app, new Date())).filter((row) => row.handledAt === null)).toEqual([]);
+
+    // She needs help again later in the round; he still cannot be reached.
+    await mark(ambassador, refs[0]!, "done");
+    expect(await mark(ambassador, refs[0]!, "needs_help")).toEqual({ ok: true, outcome: "marked" });
+    expect(await mark(ambassador, refs[1]!, "not_reached")).toEqual({ ok: true, outcome: "marked" });
+
+    const rows = await escalationRows();
+    expect(rows.map((row) => [row.status, row.handled])).toEqual([
+      ["needs_help", true],
+      ["not_reached", true],
+      ["needs_help", false],
+      ["not_reached", false],
+    ]);
+    expect((await escalationList(app, new Date())).filter((row) => row.handledAt === null).map((row) => row.id).sort()).toEqual([rows[2]!.id, rows[3]!.id].sort());
+    expect((await escalationTexts_()).map((text) => text.idempotency_key)).toEqual(rows.map((row) => `transactional:${row.id}:escalation:${onDuty}`));
+    expect((await auditOf("checkin.marked")).filter((record) => record.meta.status !== "done").map((record) => record.meta)).toEqual([
+      { status: "needs_help", late: false, escalated: true },
+      { status: "not_reached", late: false, escalated: true },
+      { status: "needs_help", late: false, escalated: true },
+      { status: "not_reached", late: false, escalated: true },
+    ]);
+    // The handled escalation's page still finds its row (named by `handled_ref` now), live in its round.
+    expect(((await loadEscalation(help!.id, { followUp: true, aal2: true }, app)) as EscalationScreen).resident).toMatchObject({ kind: "shown", phone: her.phone });
+
+    // The open escalations keep both rows, with their numbers, for the follow-up after the close.
+    await expire();
+    expect(await rowOf(refs[0]!)).toMatchObject({ subscriber_id: her.id, outcome: "needs_help", tallied: true, closed: false });
+    expect(await rowOf(refs[1]!)).toMatchObject({ subscriber_id: him.id, outcome: "not_reached", tallied: true, closed: false });
+    expect(await tallyOf(alertId)).toEqual({ requested: 2, needs_help: 1, not_reached: 1 });
+  });
+
+  it("after the Hub handled a kept row's escalation, a late mark of that status on its stub is a new escalation with its own text; the same late mark sent again is not", async () => {
+    const [ambassador, admin] = [await person("ambassador"), await person("admin")];
+    await oncallEntry("On duty", { onDutyFor: admin.staffId });
+    const { refs } = await round([await requester(F3)], { overdue: true });
+    await mark(ambassador, refs[0]!, "needs_help");
+    await expire();
+    const [kept] = await escalationRows();
+    expect(await handling().handle({ actorStaffId: admin.staffId, escalationId: kept!.id, note: "Her son is with her." })).toEqual({ kind: "handled", rowClosed: true });
+
+    // Half an hour later the ambassador finds her in distress again.
+    const lateMark = randomUUID();
+    expect(await mark(ambassador, refs[0]!, "needs_help", lateMark)).toEqual({ ok: true, outcome: "hub_told" });
+    const [, late] = await escalationRows();
+    expect(late).toMatchObject({ status: "needs_help", late: true, handled: false });
+    expect(await escalationTexts_()).toHaveLength(2);
+    expect((await auditOf("checkin.marked")).map((record) => record.meta)).toEqual([
+      { status: "needs_help", late: false, escalated: true },
+      { status: "needs_help", late: true, escalated: true },
+    ]);
+
+    // The Hub handles it; the same late mark, sent again after its answer was lost, is still the one mark: nothing new, nobody texted again.
+    expect(await handling().handle({ actorStaffId: admin.staffId, escalationId: late!.id, note: "Called the ambassador." })).toEqual({ kind: "handled", rowClosed: false });
+    expect(await mark(ambassador, refs[0]!, "needs_help", lateMark.toUpperCase())).toEqual({ ok: true, outcome: "hub_told" });
+    expect(await escalationRows()).toHaveLength(2);
+    expect(await escalationTexts_()).toHaveLength(2);
+    expect(await auditOf("checkin.marked")).toHaveLength(2);
   });
 
   it("rolls the mark back with its escalation when the outbox refuses the text", async () => {
@@ -445,7 +569,7 @@ describe("an Admin marks an escalation handled", () => {
 });
 
 describe("the purge job (E08 'Closed stub')", () => {
-  it("makes a kept row a stub 24 hours after the close without counting it again, and deletes it 2 hours after that", async () => {
+  it("makes a kept row a stub within 24 hours of the close (the run after 23 hours 45 minutes) without counting it again, and deletes it 2 hours after that", async () => {
     const ambassador = await person("ambassador");
     const people = [await requester(F1), await requester(F2)];
     const { alertId, refs } = await round(people, { overdue: true });
@@ -453,9 +577,11 @@ describe("the purge job (E08 'Closed stub')", () => {
     await mark(ambassador, refs[1]!, "needs_help");
     await expire();
     const tally = await tallyOf(alertId);
-    await backdate(refs[0]!, "tallied_at", "25 hours");
-    await backdate(refs[1]!, "tallied_at", "23 hours");
+    // The job runs every 15 minutes: a row 23 hours 50 minutes after its close must go now, or the next run would come after the 24 hours.
+    await backdate(refs[0]!, "tallied_at", "23 hours 50 minutes");
+    await backdate(refs[1]!, "tallied_at", "23 hours 40 minutes");
     const [job] = await owner`select command from cron.job where jobname = 'checkins-purge-stubs'`;
+    expect(await owner`select schedule from cron.job where jobname = 'checkins-purge-stubs'`).toEqual([{ schedule: "*/15 * * * *" }]);
 
     await owner.unsafe(job!.command as string);
 
@@ -473,9 +599,99 @@ describe("the purge job (E08 'Closed stub')", () => {
     expect(await rowOf(refs[0]!)).toBeNull();
     expect(await tallyOf(alertId)).toEqual(tally);
   });
+
+  it("tallies the rows a close of the previous release left live (a rollback, S08.06's rounds) as a close would, as of the thread's close; a row someone holds waits for the next run", async () => {
+    const [ambassador, admin] = [await person("ambassador"), await person("admin")];
+    const people = [await requester(F1), await requester(F1), await requester(F2), await requester(F3)];
+    const recent = await round(people);
+    const old = await round([await requester(F2)]);
+    await mark(ambassador, recent.refs[1]!, "done");
+    await mark(ambassador, recent.refs[2]!, "not_reached");
+    await mark(ambassador, recent.refs[3]!, "needs_help");
+    await mark(ambassador, old.refs[0]!, "not_reached");
+    const help = (await escalationRows()).find((row) => row.status === "needs_help")!;
+    await handling().handle({ actorStaffId: admin.staffId, escalationId: help.id, note: "An ambulance came." });
+    // The threads close as the previous release closes them, with no tally: one 2 hours ago, one 30 hours ago.
+    const closeUntallied = (alertId: string, ago: string) =>
+      owner.begin(async (tx) => {
+        await tx.unsafe("alter table alert disable trigger alert_guard");
+        await tx.unsafe(`update alert set status = 'closed', closed_reason = 'expired', closed_at = now() - interval '${ago}' where id = '${alertId}'`);
+        await tx.unsafe("alter table alert enable trigger alert_guard");
+      });
+    await closeUntallied(recent.alertId, "2 hours");
+    await closeUntallied(old.alertId, "30 hours");
+    const [job] = await owner`select command from cron.job where jobname = 'checkins-purge-stubs'`;
+
+    // A mark holds the first row while the job runs: the job does not wait for it.
+    const hold = deferred();
+    const held = deferred();
+    const holding = appSql.begin(async (tx) => {
+      await tx`select 1 from checkin where round_ref = ${recent.refs[0]!} for update`;
+      held.resolve();
+      await hold.promise;
+    });
+    await held.promise;
+    await owner.unsafe(job!.command as string);
+    expect(await rowOf(recent.refs[0]!)).toMatchObject({ subscriber_id: people[0]!.id, tallied: false, closed: false });
+    hold.resolve();
+    await holding;
+    await owner.unsafe(job!.command as string);
+
+    expect(await rowOf(recent.refs[0]!)).toMatchObject({ subscriber_id: null, method: null, outcome: "unmarked", closed: true });
+    expect(await rowOf(recent.refs[1]!)).toMatchObject({ subscriber_id: null, outcome: "done", closed: true });
+    expect(await rowOf(recent.refs[2]!)).toMatchObject({ subscriber_id: people[2]!.id, method: "call", outcome: "not_reached", tallied: true, closed: false });
+    expect(await rowOf(recent.refs[3]!)).toMatchObject({ subscriber_id: null, outcome: "needs_help", closed: true });
+    expect(await owner`select c.tallied_at = a.closed_at as as_of_close from checkin c join alert a on a.id = c.alert_id where c.round_ref = ${recent.refs[2]!}`).toEqual([{ as_of_close: true }]);
+    expect(await tallyOf(recent.alertId)).toEqual({ requested: 4, unmarked: 1, done: 1, not_reached: 1, needs_help: 1 });
+    // Closed 30 hours ago: its 24 hours have passed, so the number goes at once, though the Hub has not handled the escalation.
+    expect(await rowOf(old.refs[0]!)).toMatchObject({ subscriber_id: null, method: null, outcome: "not_reached", closed: true });
+    expect(await tallyOf(old.alertId)).toEqual({ requested: 1, not_reached: 1 });
+  });
 });
 
 describe("who sees what on the Hub's list and an escalation's page (direct requests)", () => {
+  /** The escalation's page (`/staff/rounds/escalation?id=`) as this session gets it through its real guard: the markup, or where it sends the person. */
+  async function openPage(session: { role: Role; gate: "hub" | "authenticator_code"; aal: "aal1" | "aal2"; staffId: string }, id: string) {
+    wired.session = { ...session, username: "caller", firstName: "Rashid", lastName: session.role, sessionId: randomUUID() };
+    const { default: page } = await import("../../src/app/staff/rounds/escalation/page");
+    try {
+      return { html: renderToStaticMarkup((await page({ searchParams: Promise.resolve({ id }) })) as ReactNode) };
+    } catch (error) {
+      const digest = (error as { digest?: unknown }).digest;
+      if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT;")) return { redirect: digest.split(";")[2] };
+      throw error;
+    }
+  }
+
+  it("renders the page, through its guard, with the resident's number for an Admin at aal2 only: never for a Coordinator, a Director, an Admin below aal2 or an Ambassador", async () => {
+    const [ambassador, coordinator, director, admin] = [await person("ambassador"), await person("coordinator"), await person("director"), await person("admin")];
+    const her = await requester(F2, "text");
+    const { refs } = await round([her]);
+    await mark(ambassador, refs[0]!, "not_reached");
+    const [escalation] = await escalationRows();
+    const digits = her.phone.slice(2);
+
+    const shown = await openPage({ ...admin, gate: "hub", aal: "aal2" }, escalation!.id);
+    expect(shown.html).toContain(`href="tel:${her.phone}"`);
+    expect(shown.html).toContain(digits);
+
+    for (const [who, session] of [
+      ["a Coordinator", { ...coordinator, gate: "hub", aal: "aal2" }],
+      ["a Director", { ...director, gate: "hub", aal: "aal1" }],
+      // An Admin's session below aal2 is at the code page (the guard sends it there); one at the Hub below aal2 is not shown the number either.
+      ["an Admin below aal2", { ...admin, gate: "hub", aal: "aal1" }],
+    ] as const) {
+      const answer = await openPage(session, escalation!.id);
+      expect(answer.html, who).toContain("1 Escalation Street, floor 2");
+      expect(answer.html, who).not.toContain(digits);
+      expect(answer.html, who).not.toContain("tel:");
+    }
+    expect(await openPage({ ...admin, gate: "authenticator_code", aal: "aal1" }, escalation!.id)).toEqual({ redirect: "/staff/sign-in/code" });
+    const refused = await openPage({ ...ambassador, gate: "hub", aal: "aal1" }, escalation!.id);
+    expect(refused.html).not.toContain(digits);
+    expect(refused.html).not.toContain("1 Escalation Street");
+  });
+
   it("shows an Admin at aal2 the resident's number, floor and method; an Admin below aal2, a Coordinator and a Director see no number", async () => {
     const [ambassador] = [await person("ambassador")];
     const her = await requester(F3, "text");

@@ -2,7 +2,7 @@
 // round's contacts are composed by the app from subscriptions). A mark changes one `checkin` row, under that row's lock and no other: it never waits for
 // a thread or a subscriber while holding it, so it cannot deadlock with an approval, a withdrawal, a deletion or a close (which lock the thread first and
 // the row later). The tally is not touched: the row's latest mark becomes its outcome when it leaves the round (S08.05's trigger).
-import { and, asc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import type { MarkStatus, RowStatus } from "../../../contracts/checkinRound";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { MARK_IDS_KEPT, STUB_LIFETIME_HOURS, type MarkTarget } from "../domain/marks";
@@ -36,6 +36,8 @@ export interface NewEscalation {
   floorId: string;
   raisedBy: string;
   late: boolean;
+  /** The mark that raised it (S08.08: a late mark sent again is known by it). */
+  markId: string;
 }
 
 export const markStore = {
@@ -98,10 +100,24 @@ export const markStore = {
       .where(and(eq(checkin.roundRef, roundRef), isNull(checkin.talliedAt), isNull(checkin.closedAt)));
   },
 
-  /** An escalation, unless one exists for that `round_ref` and status (unique): whether this one was made. */
+  /**
+   * An escalation, unless an open one exists for that `round_ref` and status: whether this one was made. The unique index is on (`round_ref`, status)
+   * and a handled escalation has left it (S08.08: its guard moves `round_ref` to `handled_ref`), so a mark after the Hub handled the earlier one makes a
+   * new one. (S08.07's release names the same arbiter, which is why the index stays a whole one.)
+   */
   async raiseEscalation(tx: DbTransaction, escalation: NewEscalation): Promise<boolean> {
     const made = await tx.insert(checkinEscalation).values(escalation).onConflictDoNothing({ target: [checkinEscalation.roundRef, checkinEscalation.status] }).returning({ id: checkinEscalation.id });
     return made.length > 0;
+  },
+
+  /** Whether this mark already raised an escalation of the row, open or handled (S08.08: a late mark sent again after its answer was lost). */
+  async escalatedBy(tx: DbTransaction, roundRef: string, markId: string): Promise<boolean> {
+    const [found] = await tx
+      .select({ id: checkinEscalation.id })
+      .from(checkinEscalation)
+      .where(and(or(eq(checkinEscalation.roundRef, roundRef), eq(checkinEscalation.handledRef, roundRef)), eq(checkinEscalation.markId, markId)))
+      .limit(1);
+    return found !== undefined;
   },
 };
 

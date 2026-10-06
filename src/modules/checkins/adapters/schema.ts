@@ -94,17 +94,19 @@ export const checkinTally = pgTable(
 ).enableRLS();
 
 /**
- * An escalation (E08 "Escalation", S08.07): one per `round_ref` and status (`not_reached`, `needs_help`), made in the mark's transaction, from a
- * mark on a live row or a late mark on a stub that has not expired: the thread, building and floor, who marked and whether the mark was late;
- * never the subscriber, the method or a phone number. No foreign key to `alert` or `checkin`: it outlives the stub. S08.08: the Hub's list
- * (O-17) reads them, the mark's transaction texts the on-duty Admin, and an Admin marks one handled with a note (the app may set those three
- * columns, once; the migration's guard keeps the rest as written). The app reads and adds them.
+ * An escalation (E08 "Escalation", S08.07): at most one open per `round_ref` and status (`not_reached`, `needs_help`), made in the mark's
+ * transaction, from a mark on a live row or a late mark on a stub that has not expired: the thread, building and floor, who marked and whether the
+ * mark was late; never the subscriber, the method or a phone number. No foreign key to `alert` or `checkin`: it outlives the stub. S08.08: the
+ * Hub's list (O-17) reads them, the mark's transaction texts the on-duty Admin, and an Admin marks one handled with a note (the app may set those
+ * three columns, once; the migration's guard keeps the rest as written, and moves `round_ref` to `handled_ref` then, so the next mark of that
+ * status makes a new one). The app reads and adds them.
  */
 export const checkinEscalation = pgTable(
   "checkin_escalation",
   {
     id: uuid().primaryKey(),
-    roundRef: uuid("round_ref").notNull(),
+    /** The row it is about while it is open (the unique index's key); null once handled, when the row is `handledRef` (S08.08). */
+    roundRef: uuid("round_ref"),
     status: text().notNull(),
     alertId: uuid("alert_id").notNull(),
     rsn: text()
@@ -120,6 +122,10 @@ export const checkinEscalation = pgTable(
     handledAt: timestamp("handled_at", { withTimezone: true }),
     handledBy: uuid("handled_by").references(() => staffKey.id),
     handledNote: text("handled_note"),
+    /** S08.08: the row it is about once it is handled (set by the guard, from `round_ref`). */
+    handledRef: uuid("handled_ref"),
+    /** S08.08: the mark that raised it (a late mark sent again is known by it). Null for one S08.07's release made. */
+    markId: uuid("mark_id"),
   },
   (t) => [
     uniqueIndex("checkin_escalation_round_ref_status_idx").on(t.roundRef, t.status),
@@ -127,6 +133,7 @@ export const checkinEscalation = pgTable(
     index("checkin_escalation_raised_by_idx").on(t.raisedBy),
     index("checkin_escalation_rsn_idx").on(t.rsn),
     index("checkin_escalation_handled_by_idx").on(t.handledBy),
+    index("checkin_escalation_handled_ref_idx").on(t.handledRef),
     index("checkin_escalation_open_idx").on(t.createdAt).where(sql`${t.handledAt} is null`),
     check("checkin_escalation_status_known", sql`${t.status} in ('not_reached', 'needs_help')`),
     check("checkin_escalation_handled_whole", sql`(${t.handledAt} is null) = (${t.handledBy} is null) and (${t.handledAt} is null) = (${t.handledNote} is null)`),
@@ -134,6 +141,7 @@ export const checkinEscalation = pgTable(
       "checkin_escalation_note_format",
       sql`${t.handledNote} is null or (btrim(${t.handledNote}) <> '' and char_length(${t.handledNote}) <= 300 and ${t.handledNote} !~ '[[:cntrl:]]')`,
     ),
+    check("checkin_escalation_ref_while_open", sql`(${t.handledAt} is null) = (${t.roundRef} is not null) and (${t.handledAt} is null) = (${t.handledRef} is null)`),
     pgPolicy("checkin_escalation_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("checkin_escalation_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("checkin_escalation_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
