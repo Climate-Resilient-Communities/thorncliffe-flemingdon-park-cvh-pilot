@@ -1,19 +1,20 @@
-// Drizzle tables of the checkins module (AD-2), written by hand to match db/migrations (20261006170000_checkin_request.sql); the drift test
-// compares them. The grants (the app reads and adds rows and changes only what a round changes; the tally is its trigger's alone), the
-// guards and the tally's trigger live only in the migration.
+// Drizzle tables of the checkins module (AD-2), written by hand to match db/migrations (20261006170000_checkin_request.sql, and S08.07's
+// 20261006190000_checkin_marks.sql); the drift test compares them. The grants (the app reads and adds rows and changes only what a round
+// changes; the tally is its trigger's alone), the guards and the tally's trigger live only in the migrations.
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
 
 /**
- * alerting's alert, subscriptions' subscriber and places' building, named here only so the foreign keys below can be declared: Drizzle needs a
- * table object, and checkins may not import those modules' schemas (AD-2). Not exported.
+ * alerting's alert, subscriptions' subscriber, places' building and identity's staff_account, named here only so the foreign keys below can be
+ * declared: Drizzle needs a table object, and checkins may not import those modules' schemas (AD-2). Not exported.
  */
 const alertKey = pgTable("alert", { id: uuid().primaryKey() });
 const subscriberKey = pgTable("subscriber", { id: uuid().primaryKey() });
 const buildingKey = pgTable("building", { rsn: text().primaryKey() });
+const staffKey = pgTable("staff_account", { id: uuid().primaryKey() });
 
 /**
  * One requester in one round (E08 "Round"): a live row names its subscriber, the place and the method, never a phone number; `round_ref` is
@@ -39,6 +40,8 @@ export const checkin = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     talliedAt: timestamp("tallied_at", { withTimezone: true }),
     closedAt: timestamp("closed_at", { withTimezone: true }),
+    /** S08.07: the ids of the marks applied to the row (the latest 50), so a mark sent again changes nothing. */
+    markIds: uuid("mark_ids").array().notNull().default(sql`'{}'`),
   },
   (t) => [
     uniqueIndex("checkin_round_ref_idx").on(t.roundRef),
@@ -59,6 +62,7 @@ export const checkin = pgTable(
       "checkin_live_or_stub",
       sql`(${t.closedAt} is null and ${t.subscriberId} is not null and ${t.method} is not null) or (${t.closedAt} is not null and ${t.subscriberId} is null and ${t.method} is null and ${t.talliedAt} is not null)`,
     ),
+    check("checkin_mark_ids_bounded", sql`cardinality(${t.markIds}) <= 50`),
     pgPolicy("checkin_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("checkin_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("checkin_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
@@ -85,5 +89,39 @@ export const checkinTally = pgTable(
     check("checkin_tally_status_known", sql`${t.status} in ('requested', 'done', 'not_reached', 'needs_help', 'withdrawn', 'unmarked')`),
     check("checkin_tally_n_positive", sql`${t.n} > 0`),
     pgPolicy("checkin_tally_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * An escalation (E08 "Escalation", S08.07): one per `round_ref` and status (`not_reached`, `needs_help`), made in the mark's transaction, from a
+ * mark on a live row or a late mark on a stub that has not expired: the thread, building and floor, who marked and whether the mark was late;
+ * never the subscriber, the method or a phone number. No foreign key to `alert` or `checkin`: it outlives the stub. The Hub's list, the
+ * on-duty text and the handling are S08.08's. The app reads and adds them.
+ */
+export const checkinEscalation = pgTable(
+  "checkin_escalation",
+  {
+    id: uuid().primaryKey(),
+    roundRef: uuid("round_ref").notNull(),
+    status: text().notNull(),
+    alertId: uuid("alert_id").notNull(),
+    rsn: text()
+      .notNull()
+      .references(() => buildingKey.rsn),
+    floorId: uuid("floor_id").notNull(),
+    raisedBy: uuid("raised_by")
+      .notNull()
+      .references(() => staffKey.id),
+    late: boolean().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("checkin_escalation_round_ref_status_idx").on(t.roundRef, t.status),
+    index("checkin_escalation_alert_id_idx").on(t.alertId),
+    index("checkin_escalation_raised_by_idx").on(t.raisedBy),
+    index("checkin_escalation_rsn_idx").on(t.rsn),
+    check("checkin_escalation_status_known", sql`${t.status} in ('not_reached', 'needs_help')`),
+    pgPolicy("checkin_escalation_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("checkin_escalation_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
   ],
 ).enableRLS();

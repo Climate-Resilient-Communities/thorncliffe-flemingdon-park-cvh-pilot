@@ -147,6 +147,13 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
             </p>
           )}
           {view.round.none !== null && <p className="hub-wrap">{view.round.none}</p>}
+          {view.round.link !== null && (
+            <p>
+              <a className="tap hub-link" href={view.round.link.href} data-testid="amb-round-link">
+                {view.round.link.label}
+              </a>
+            </p>
+          )}
         </Stack>
       </section>
     </Stack>

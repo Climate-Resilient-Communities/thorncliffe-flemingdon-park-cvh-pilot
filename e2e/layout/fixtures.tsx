@@ -62,6 +62,9 @@ import type { FollowInitial } from "@/app/staff/ambassador/status/FollowForms";
 import { ResolveBody, StatusBody } from "@/app/staff/ambassador/status/StatusBody";
 import type { ResolveScreen, StatusScreen } from "@/app/staff/ambassador/status/view";
 import type { AmbassadorHomeView } from "@/app/staff/ambassador/view";
+import { RoundPage } from "@/app/staff/ambassador/round/RoundPage";
+import type { RoundState } from "@/app/staff/ambassador/round/roundModel";
+import type { RoundScreen } from "@/app/staff/ambassador/round/view";
 import { ApprovalBody, type ApprovalActions, type ApprovalInitial } from "@/app/staff/alerts/approval/ApprovalBody";
 import type { ApprovalScreen } from "@/app/staff/alerts/approval/view";
 import { ComposerBody, type ComposerActions, type ComposerInitial } from "@/app/staff/alerts/composer/ComposerBody";
@@ -724,6 +727,17 @@ export function AmbassadorStatusFixture({ texts, brand, screen, followInitial }:
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
       <Screen surface="staff" testId="screen">
         <StatusBody screen={screen} followInitial={followInitial} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/** "My round" (A-04, S08.07) inside the Hub shell, on the screen the app's own function built, in the state `initial` gives (drawn once: nothing is read or sent). */
+export function AmbassadorRoundFixture({ texts, brand, screen, initial }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; screen: RoundScreen; initial: Partial<RoundState> }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <RoundPage screen={screen} initial={initial} />
       </Screen>
     </AroundTheScreen>
   );

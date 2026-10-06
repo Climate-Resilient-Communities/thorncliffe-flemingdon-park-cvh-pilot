@@ -130,9 +130,11 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(page.getByTestId("amb-post-note")).toHaveText("Note from the Hub: Which floors is it on?");
   });
 
-  test("shows their round with the number of requests, and no link to the round yet", async ({ page }) => {
+  test("shows their round with the number of requests, and a link to it (S08.07)", async ({ page }) => {
     await expect(page.getByTestId("amb-round-count")).toHaveText("12 check-in requests on your floors");
-    await expect(page.getByTestId("amb-round").locator("a[href]")).toHaveCount(0);
+    await expect(page.getByTestId("amb-round").locator("a[href]")).toHaveCount(1);
+    await expect(page.getByTestId("amb-round-link")).toHaveAttribute("href", "/staff/ambassador/round");
+    await expect(page.getByTestId("amb-round-link")).toHaveText("Open my round");
     await expect(hubPage(page).getByRole("button")).toHaveCount(0);
   });
 
@@ -141,8 +143,9 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(page.getByTestId("amb-post-link")).toHaveText("Post a building update");
     await expect(page.getByTestId("amb-alert-post")).toHaveCount(2);
     await expect(page.getByTestId("amb-alert-post").nth(1)).toHaveAttribute("href", `/staff/ambassador/post?alert=${ALERT}`);
-    // The home's links: posting, for each alert what residents read and an update about it, and (S08.04) for each of their four posts where it stands.
-    await expect(hubPage(page).locator("a[href]")).toHaveCount(9);
+    // The home's links: posting, for each alert what residents read and an update about it, (S08.04) for each of their four posts where it stands,
+    // and (S08.07) their open round.
+    await expect(hubPage(page).locator("a[href]")).toHaveCount(10);
     await expect(page.getByTestId("amb-post-link-status")).toHaveCount(4);
     await expect(page.getByTestId("amb-post-link-status").first()).toHaveText("Where it stands");
   });

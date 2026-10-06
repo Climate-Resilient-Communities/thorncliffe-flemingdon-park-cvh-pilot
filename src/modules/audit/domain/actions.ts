@@ -87,6 +87,8 @@ export const REFUSAL_REASONS = [
   "not_sendable",
   /** S09.07: the end-of-pilot campaign starts only after a rehearsal on the drill roster. */
   "rehearsal_needed",
+  /** S08.07: a mark naming a check-in round that has ended: an unknown or purged `round_ref`, or a stub closed more than 2 hours ago. */
+  "round_ended",
 ] as const;
 
 /** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */
@@ -314,6 +316,14 @@ export const AUDIT_META = {
   // empty). A refusal holds only its reason (`validation`: not a type of disruption; `conflict`: those are the round types already).
   "round_types.changed": meta({ round_types: z.array(code).max(20).optional(), previous: z.array(code).max(20).optional() }),
 
+  // A mark on a check-in round (S08.07, E08 "Marks", "Late mark"): an Ambassador who covers the row's floor, or an Admin, marks it from "My round" (A-04).
+  // The subject is the round's thread (type `alert`, its id): `status` is the mark, `late` whether the row had already left its round (a closed stub that
+  // has not expired: then nothing but an escalation is made) and `escalated` whether this mark made the escalation for its status. Never the
+  // `round_ref`, the subscriber, the floor's resident or a number. A mark sent again (an id already applied) and a late `done` change nothing and are not
+  // recorded. A refusal (type `checkin`, no id) holds only its reason (`round_ended`: an unknown or purged `round_ref`, or an expired stub;
+  // `out_of_scope`: the floor is not the person's now).
+  "checkin.marked": meta({ status: z.enum(["done", "not_reached", "needs_help"]).optional(), late: flag.optional(), escalated: flag.optional() }),
+
   // A resend (S09.02): an Admin at aal2 resends one text, or all the failed and undelivered texts of an entry in one language. The subject is the alert entry
   // (type `alert_entry`); `scope` is `one` or `language`, `lang` the language of a "resend all", `resent` how many new texts were made, `not_resent` how many
   // chains a "resend all" left out (a number that cannot receive texts, two resends already), `resend_n` which resend of its chain a single one is. Counts only:
@@ -387,6 +397,7 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "spend.cap_set": ["cap_cents"],
   "spend.cap_overrun": ["over_cents", "cap_cents", "entry_cents"],
   "round_types.changed": ["round_types", "previous"],
+  "checkin.marked": ["status", "late", "escalated"],
   "delivery.resent": ["scope", "resent"],
   "campaign.rehearsed": ["queued"],
   "campaign.started": ["asked", "queued", "pending_deleted"],

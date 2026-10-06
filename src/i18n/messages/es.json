@@ -6051,6 +6051,30 @@
         "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT.",
         "unreadable": "[EN] The Hub could not read the campaign. Reload the page. If this stays, tell IT."
       }
+    },
+    "round": {
+      "lead": "[EN] The check-ins asked for on the floors you cover. Call or text each person, then tap what happened. Nothing about them is kept on your phone.",
+      "leadAdmin": "[EN] Every check-in asked for in every open round. Ambassadors see only the floors they cover.",
+      "leadCounts": "[EN] Counts only. The numbers are shown to the ambassadors who cover these floors, and to Admins.",
+      "countsNote": "[EN] Counts only: you do not cover this floor.",
+      "loading": "[EN] Loading your round.",
+      "offline": "[EN] No signal. Your marks wait on this page and are sent, in order, when you have signal.",
+      "waitingOne": "[EN] 1 mark is waiting to be sent.",
+      "waitingMany": "[EN] {n} marks are waiting to be sent.",
+      "keepOpen": "[EN] Keep this page open until marks are sent",
+      "notSent": "[EN] Not sent yet.",
+      "call": "[EN] Call {phone}",
+      "text": "[EN] Text {phone}",
+      "marked": "[EN] Marked: {mark}",
+      "marksFor": "[EN] What happened with {phone}",
+      "hubTold": "[EN] The Hub has been told; call the Hub if you can",
+      "requestEnded": "[EN] This request has ended",
+      "roundEnded": "[EN] This round has ended. If someone needs help, call the Hub at {number}",
+      "markFailed": "[EN] This mark was not taken. Reload your round and mark it again.",
+      "reload": "[EN] Reload your round with signal",
+      "reloadButton": "[EN] Reload my round",
+      "signedOut": "[EN] You were signed out, so marks are not being sent. Sign in again with signal, then open your round again.",
+      "loadFailed": "[EN] Your round could not be loaded. Try again with signal."
     }
   },
   "building": {
