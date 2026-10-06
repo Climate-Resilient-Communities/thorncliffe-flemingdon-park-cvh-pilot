@@ -295,6 +295,12 @@ describe("Coverage: the round types (S08.06)", () => {
     expect(out).toContain("A change applies from the next approval. A round already started keeps everyone in it until its alert closes.");
     expect(out).toContain(">Save round types</button>");
     expect(out).not.toContain("round-types-read-only");
+    // The residents' texts name heat and power: said beside the boxes, with the box that confirms leaving one unticked.
+    expect(out).toContain('aria-describedby="round-types-hint round-types-resident-texts"');
+    expect(out).toContain(
+      '<p id="round-types-resident-texts" role="note" class="hub-flag" data-testid="round-types-resident-texts">Residents are told, in every language, that check-ins are for heat warnings and power outages',
+    );
+    expect(out).toContain('<input type="checkbox" data-testid="round-types-confirm" name="confirmResidentTexts" value="yes"/>');
   });
 
   it("shows a Coordinator or a Director the types in words only, and who can change them", () => {
@@ -316,7 +322,7 @@ describe("Coverage: the round types (S08.06)", () => {
     expect(done).toContain('<div aria-live="polite" data-testid="round-types-answer"><p>Saved. Types that start a round from the next approval: Heat.</p></div>');
     const refused = list(roundTypesView(CHOICES, { editable: true }), { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } });
     expect(refused).toContain('<p id="round-types-error" role="alert" class="hub-error" data-testid="round-types-error">Nothing to change: those are the round types already.</p>');
-    expect(refused).toContain('aria-describedby="round-types-hint round-types-error"');
+    expect(refused).toContain('aria-describedby="round-types-hint round-types-resident-texts round-types-error"');
   });
 
   it("is not on one building's page", () => {

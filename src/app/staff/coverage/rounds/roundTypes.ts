@@ -2,6 +2,10 @@
 // coverage reads them, and the form an Admin changes them with. The view model has every text already resolved from the English catalog; the
 // control turns the form into places' use case (`roundTypes().set`), whose refusals it words. The guard has already refused anyone but an
 // Admin at aal2 (policy action `checkins.round_types`).
+//
+// The residents' texts about check-ins (R33.what, groups.checkin.line, R24.checkin, A04.noRound, in every language) name heat warnings and
+// power outages. The form says so beside the boxes, and a save that leaves Heat or Power unticked needs the confirmation box ticked too: the
+// control refuses it otherwise, before the use case is asked (docs/config.md, "Changing which types start a round", says how the texts are then changed).
 import { englishText } from "@/i18n/text";
 import type { RoundTypeChoice, RoundTypesRefusal, RoundTypesService } from "@/modules/places";
 import { typeName } from "../../alerts/typeNames";
@@ -9,9 +13,18 @@ import type { StaffSession } from "../../session";
 
 const t = (key: string, values?: Record<string, string | number>) => englishText(`staff.coverage.rounds.${key}`, values);
 
+/** The round types the residents' check-in texts name: unticking one of them needs the confirmation (`CONFIRM_FIELD`). */
+export const RESIDENT_NAMED_ROUND_TYPES: readonly string[] = ["heat", "power"];
+/** The confirmation box's field: "yes" when ticked. */
+export const CONFIRM_FIELD = "confirmResidentTexts";
+
 export interface RoundTypesFormView {
   legend: string;
   hint: string;
+  /** That the residents' texts name heat and power, and what unticking one does to them. */
+  residentTexts: string;
+  /** The confirmation box's label. */
+  confirm: string;
   save: string;
   saving: string;
   /** Every type of disruption by its name, ticked when it starts a round now. */
@@ -38,7 +51,7 @@ export function roundTypesView(choices: readonly RoundTypeChoice[], options: { e
     lead: t("lead"),
     current: round.length > 0 ? t("current", { types: namesOf(round) }) : t("none"),
     ...(options.editable
-      ? { form: { legend: t("legend"), hint: t("hint"), save: t("save"), saving: t("saving"), choices: choices.map((choice) => ({ id: choice.id, label: typeName(choice.id), checked: choice.round })) } }
+      ? { form: { legend: t("legend"), hint: t("hint"), residentTexts: t("residentTexts"), confirm: t("confirm"), save: t("save"), saving: t("saving"), choices: choices.map((choice) => ({ id: choice.id, label: typeName(choice.id), checked: choice.round })) } }
       : { readOnly: t("readOnly") }),
   };
 }
@@ -59,11 +72,14 @@ const MESSAGE_KEYS: Record<RoundTypesRefusal, string> = { unknown_type: "errors.
 
 /**
  * "Save round types" for the Admin the guard let through: the ticked types (`type`, one per tick; none ticked is none) become the round types, as the
- * Admin of the session. A failure changes nothing and says so in as many words.
+ * Admin of the session. With Heat or Power unticked, only when the confirmation box is ticked as well (else refused, nothing changed). A failure
+ * changes nothing and says so in as many words.
  */
 export async function setRoundTypesFromForm(deps: RoundTypesDeps, session: Pick<StaffSession, "staffId">, form: FormData): Promise<RoundTypesAnswer> {
+  const ticked = form.getAll("type");
+  if (RESIDENT_NAMED_ROUND_TYPES.some((type) => !ticked.includes(type)) && form.get(CONFIRM_FIELD) !== "yes") return { status: "refused", message: t("errors.confirmNeeded") };
   try {
-    const result = await deps.roundTypes().set(session.staffId, form.getAll("type"));
+    const result = await deps.roundTypes().set(session.staffId, ticked);
     if (!result.ok) return { status: "refused", message: t(MESSAGE_KEYS[result.error]) };
     const types = result.value.roundTypes;
     return { status: "done", line: types.length > 0 ? t("done", { types: namesOf(types) }) : t("doneNone") };

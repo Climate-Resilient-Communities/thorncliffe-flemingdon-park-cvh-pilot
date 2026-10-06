@@ -175,11 +175,11 @@ test("the round types as a Director reads them at 390px: words only, no form", a
 
 test("the round types after an Admin saved them, and after a refusal, at 390px", async ({ page }) => {
   const screen = listWithRounds(coverageListView(PLANS.slice(0, 1), ASSIGNMENTS));
-  await open(page, 390, { screen, initial: { roundTypes: { status: "done", line: "Saved. Types that start a round from the next approval: Heat, Power.", at: 1 } } }, 1150);
+  await open(page, 390, { screen, initial: { roundTypes: { status: "done", line: "Saved. Types that start a round from the next approval: Heat, Power.", at: 1 } } }, 1450);
   await expect(page.getByTestId("round-types-answer")).toHaveText("Saved. Types that start a round from the next approval: Heat, Power.");
   await expectBaseline(page, "coverage-rounds-saved-390.png");
 
-  await open(page, 390, { screen, initial: { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } } }, 1150);
+  await open(page, 390, { screen, initial: { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } } }, 1450);
   await expect(page.getByTestId("round-types-error")).toHaveText("Nothing to change: those are the round types already.");
   await expectBaseline(page, "coverage-rounds-refused-390.png");
 });

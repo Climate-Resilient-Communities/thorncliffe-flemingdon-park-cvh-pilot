@@ -527,6 +527,25 @@ edit page, after reading `/{lang}/ready/check-in` (R-33). It adds no environment
 | Personalised answers | `POST /api/signup`, the staff sign-up's action, `POST /api/subscription/view` and `/change` | The only place a request's outcome is said: POST only, `Cache-Control: no-store`, never kept by the service worker, no usage event. R-33 itself is public and cacheable. |
 | Closed stubs | pg_cron job `checkins-purge-stubs` (the same migration; S08.08 reschedules it by name in `20261006210000_escalations.sql`) | Every 15 minutes, as the table's owner: a row still live in a closed thread (left by a close of the previous release) is tallied as a close tallies it, as of the thread's close, skipping rows someone holds; a row kept for the Hub's follow-up (tallied at the close, not closed) becomes a stub 23 hours 45 minutes after it was tallied, so within 24 hours of the close, without being counted again; then `checkin` rows closed into stubs more than 2 hours ago are deleted. Live rows of open threads stay; the tally changes only for the rows it tallies. |
 
+#### Changing which types start a round (runbook)
+
+The residents' texts about check-ins name heat warnings and power outages, in all 15 languages: `R33.what` (the check-in page), `groups.checkin.line`
+(the sign-up choice), `R24.checkin` (the Get ready page) and `A04.noRound` (the round page). They do not follow the round types. So unticking Heat or Power on the coverage
+page makes them inaccurate: residents keep being promised a check-in that no alert of that type now starts. The control says so beside the boxes, and
+"Save round types" refuses ("Nothing changed. Heat or Power is unticked, ...") unless the Admin also ticks "I understand: the residents' texts still name
+heat warnings and power outages until they are changed". Ticking another type (Water, say) needs no confirmation, but those texts will not mention it.
+
+1. Before unticking Heat or Power (or adding a type residents should be told about), agree the new wording with the product owner.
+2. Change the English source of those four keys (`design/prototype/cvh/strings.en.screens.js` or `strings.en.js`) and have each language translated
+   the way the catalog's other resident texts are (machine translation labelled as such is accepted for the pilot; these are not safety-critical),
+   then `node scripts/gen-strings.cjs` and a pull request. Until it is deployed the texts are inaccurate.
+3. On `/staff/coverage`, change the boxes, tick the confirmation and press "Save round types". The change applies from the next approval; rounds
+   already running keep their rows until their alerts close.
+4. Put the change, and when the texts were (or will be) corrected, in this week's notes (`docs/procedures/weekly-notes/`).
+
+An assignment saved on the coverage page adds that building's requesters on floors it now covers to the building's open rounds at once (never a
+drill's, a closed thread's or one whose types are no longer round types), so assigning an Ambassador during a heat round needs no new approval.
+
 ## GitHub: environments
 
 | Environment | Secrets and variables | Rules |
