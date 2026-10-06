@@ -12,7 +12,10 @@
    "draftTitle": "مسوده: لا نه ده خپره شوې",
    "draftBody": "دا متن لا نه دی منل شوی. دا وروستي شرطونه نه دي. د دې متن پر بنسټ نوم مه لیکئ.",
    "draftWhy": "ځکه نه دی خپور شوی:",
-   "translationNote": "د دې پاڼې ځینې برخې لا {lang} ته نه دي ژباړل شوې. هغه برخې په انګلیسي ښودل کېږي."
+   "translationNote": "د دې پاڼې ځینې برخې لا {lang} ته نه دي ژباړل شوې. هغه برخې په انګلیسي ښودل کېږي.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "د اوسېدونکو معلومات حذف شول",
+   "dataDeletedNote": "د CVH پیلوټ پای ته ورسېد. په دې نېټه مو د هغو ټولو کسانو د تلیفون شمېره او انتخابونه حذف کړل چې د خبرتیاوو د ترلاسه کولو لپاره یې YES ځواب نه و ورکړی."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

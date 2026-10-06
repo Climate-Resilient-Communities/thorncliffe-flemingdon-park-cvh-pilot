@@ -412,3 +412,31 @@ export const campaign = pgTable(
     pgPolicy("campaign_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();
+
+/**
+ * The end-of-pilot purge's record (S09.08, 20261006160000_end_of_pilot_purge.sql): one row for the real campaign, made when the purge begins after its deadline.
+ * `deleted` counts the subscribers the purge deleted (raised in each deletion's transaction, so a resumed purge counts each once); `completedAt` is when no
+ * subscriber was left to delete (the date the terms page states) and `retained` how many had said YES then, both set by the database. `campaign_purge_guard()`
+ * (a trigger in the migration) refuses a rehearsal, a cancelled campaign, a start before the deadline, a count that goes down, an early completion and any change
+ * after it.
+ */
+export const campaignPurge = pgTable(
+  "campaign_purge",
+  {
+    campaignId: uuid("campaign_id")
+      .primaryKey()
+      .references(() => campaign.id),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    deleted: integer().notNull().default(0),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    retained: integer(),
+  },
+  (t) => [
+    check("campaign_purge_deleted_not_negative", sql`${t.deleted} >= 0`),
+    check("campaign_purge_retained_not_negative", sql`${t.retained} is null or ${t.retained} >= 0`),
+    check("campaign_purge_completed_shape", sql`(${t.completedAt} is null) = (${t.retained} is null)`),
+    pgPolicy("campaign_purge_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("campaign_purge_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("campaign_purge_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();

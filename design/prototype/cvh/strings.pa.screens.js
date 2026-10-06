@@ -12,7 +12,10 @@
    "draftTitle": "ਖਰੜਾ: ਅਜੇ ਛਪਿਆ ਨਹੀਂ",
    "draftBody": "ਇਸ ਲਿਖਤ ਨੂੰ ਅਜੇ ਮਨਜ਼ੂਰੀ ਨਹੀਂ ਮਿਲੀ। ਇਹ ਆਖ਼ਰੀ ਸ਼ਰਤਾਂ ਨਹੀਂ ਹਨ। ਇਸ ਦੇ ਭਰੋਸੇ ਸਾਈਨ ਅੱਪ ਨਾ ਕਰੋ।",
    "draftWhy": "ਇਸ ਕਾਰਨ ਛਪਿਆ ਨਹੀਂ:",
-   "translationNote": "ਇਸ ਪੰਨੇ ਦੇ ਕੁਝ ਹਿੱਸਿਆਂ ਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ। ਉਹ ਹਿੱਸੇ ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ ਦਿਸਦੇ ਹਨ।"
+   "translationNote": "ਇਸ ਪੰਨੇ ਦੇ ਕੁਝ ਹਿੱਸਿਆਂ ਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ। ਉਹ ਹਿੱਸੇ ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ ਦਿਸਦੇ ਹਨ।",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "ਵਸਨੀਕਾਂ ਦਾ ਡਾਟਾ ਹਟਾਇਆ ਗਿਆ",
+   "dataDeletedNote": "CVH ਪਾਇਲਟ ਖਤਮ ਹੋ ਗਿਆ ਹੈ। ਉਸ ਤਾਰੀਖ ਨੂੰ ਅਸੀਂ ਉਹਨਾਂ ਸਭ ਲੋਕਾਂ ਦਾ ਫ਼ੋਨ ਨੰਬਰ ਅਤੇ ਚੋਣਾਂ ਹਟਾ ਦਿੱਤੀਆਂ ਜਿਨ੍ਹਾਂ ਨੇ ਅਲਰਟ ਮਿਲਦੇ ਰਹਿਣ ਲਈ YES ਜਵਾਬ ਨਹੀਂ ਦਿੱਤਾ।"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

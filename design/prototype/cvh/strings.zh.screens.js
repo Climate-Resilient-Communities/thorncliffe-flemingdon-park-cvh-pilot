@@ -12,7 +12,10 @@
    "draftTitle": "草稿：尚未发布",
    "draftBody": "此文本尚未获批准，不是最终条款。请不要依据它来注册。",
    "draftWhy": "尚未发布，原因是：",
-   "translationNote": "本页部分内容尚未翻译成{lang}。这些部分以英文显示。"
+   "translationNote": "本页部分内容尚未翻译成{lang}。这些部分以英文显示。",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "居民数据删除日期",
+   "dataDeletedNote": "CVH试点已结束。我们在该日期删除了所有未回复YES以继续接收提醒的人的电话号码和选择。"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

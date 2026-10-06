@@ -12,7 +12,10 @@
    "draftTitle": "مسودہ: ابھی شائع نہیں ہوا",
    "draftBody": "یہ متن ابھی منظور نہیں ہوا۔ یہ حتمی شرائط نہیں ہیں۔ اس کی بنیاد پر سائن اپ نہ کریں۔",
    "draftWhy": "شائع نہیں ہوا کیونکہ:",
-   "translationNote": "اس صفحے کے کچھ حصوں کا ابھی {lang} میں ترجمہ نہیں ہوا۔ وہ حصے انگریزی میں دکھائی دیتے ہیں۔"
+   "translationNote": "اس صفحے کے کچھ حصوں کا ابھی {lang} میں ترجمہ نہیں ہوا۔ وہ حصے انگریزی میں دکھائی دیتے ہیں۔",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "رہائشیوں کا ڈیٹا حذف ہوا",
+   "dataDeletedNote": "CVH پائلٹ ختم ہو گیا ہے۔ اس تاریخ کو ہم نے ان سب لوگوں کا فون نمبر اور انتخاب حذف کر دیے جنہوں نے الرٹ ملتے رہنے کے لیے YES کا جواب نہیں دیا۔"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

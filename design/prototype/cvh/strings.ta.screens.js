@@ -12,7 +12,10 @@
    "draftTitle": "வரைவு: இன்னும் வெளியிடப்படவில்லை",
    "draftBody": "இந்த உரை இன்னும் அங்கீகரிக்கப்படவில்லை. இது இறுதி விதிமுறைகள் அல்ல. இதை நம்பிப் பதிவு செய்ய வேண்டாம்.",
    "draftWhy": "வெளியிடப்படாததற்குக் காரணம்:",
-   "translationNote": "இந்தப் பக்கத்தின் சில பகுதிகள் இன்னும் {lang} மொழியில் மொழிபெயர்க்கப்படவில்லை. அந்தப் பகுதிகள் ஆங்கிலத்தில் தெரியும்."
+   "translationNote": "இந்தப் பக்கத்தின் சில பகுதிகள் இன்னும் {lang} மொழியில் மொழிபெயர்க்கப்படவில்லை. அந்தப் பகுதிகள் ஆங்கிலத்தில் தெரியும்.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "குடியிருப்பாளர் தரவு நீக்கப்பட்டது",
+   "dataDeletedNote": "CVH சோதனை முடிந்தது. எச்சரிக்கைகளைத் தொடர்ந்து பெற YES என்று பதில் அனுப்பாத அனைவரின் தொலைபேசி எண்ணையும் தேர்வுகளையும் அந்தத் தேதியில் நீக்கினோம்."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

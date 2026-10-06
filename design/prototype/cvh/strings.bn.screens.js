@@ -12,7 +12,10 @@
    "draftTitle": "খসড়া: এখনও প্রকাশিত হয়নি",
    "draftBody": "এই লেখা এখনও অনুমোদিত হয়নি। এটি চূড়ান্ত শর্তাবলি নয়। এর ভরসায় নাম লেখাবেন না।",
    "draftWhy": "যে কারণে প্রকাশ করা হয়নি:",
-   "translationNote": "এই পাতার কিছু অংশ এখনও {lang}-এ অনুবাদ হয়নি। সেই অংশগুলো ইংরেজিতে দেখায়।"
+   "translationNote": "এই পাতার কিছু অংশ এখনও {lang}-এ অনুবাদ হয়নি। সেই অংশগুলো ইংরেজিতে দেখায়।",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "বাসিন্দাদের তথ্য মুছে ফেলা হয়েছে",
+   "dataDeletedNote": "CVH পাইলট শেষ হয়েছে। সতর্কতা পেতে থাকার জন্য যাঁরা YES উত্তর দেননি, সেই তারিখে আমরা তাঁদের সবার ফোন নম্বর ও পছন্দগুলো মুছে ফেলেছি।"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

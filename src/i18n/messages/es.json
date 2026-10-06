@@ -38,7 +38,9 @@
     "draftTitle": "Borrador: aún no publicado",
     "draftBody": "Este texto aún no se ha aprobado. No son los términos finales. No se inscriba basándose en él.",
     "draftWhy": "No se publicó porque:",
-    "translationNote": "Parte de esta página aún no se ha traducido al {lang}. Esas partes se muestran en inglés."
+    "translationNote": "Parte de esta página aún no se ha traducido al {lang}. Esas partes se muestran en inglés.",
+    "dataDeleted": "Datos de residentes borrados",
+    "dataDeletedNote": "El proyecto piloto CVH terminó. En esa fecha borramos el número de teléfono y las opciones de todas las personas que no respondieron YES para seguir recibiendo alertas."
   },
   "shell": {
     "cvhName": "Centro Virtual Comunitario",

@@ -12,7 +12,10 @@
    "draftTitle": "Borrador: aún no publicado",
    "draftBody": "Este texto aún no se ha aprobado. No son los términos finales. No se inscriba basándose en él.",
    "draftWhy": "No se publicó porque:",
-   "translationNote": "Parte de esta página aún no se ha traducido al {lang}. Esas partes se muestran en inglés."
+   "translationNote": "Parte de esta página aún no se ha traducido al {lang}. Esas partes se muestran en inglés.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Datos de residentes borrados",
+   "dataDeletedNote": "El proyecto piloto CVH terminó. En esa fecha borramos el número de teléfono y las opciones de todas las personas que no respondieron YES para seguir recibiendo alertas."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
