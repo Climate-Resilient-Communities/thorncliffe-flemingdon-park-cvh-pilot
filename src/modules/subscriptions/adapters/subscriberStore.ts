@@ -103,6 +103,19 @@ export const subscriberStore = {
     return rows.length > 0;
   },
 
+  /**
+   * Whether the subscriber exists and is in a receiving state (`phoneOf`'s and `receivesShared`'s predicate), read without a lock: S07.06's
+   * read-only view, which a row someone holds `FOR UPDATE` for an ordinary edit (a menu's save, a change from another tab) must not turn
+   * into "does not receive". No number is read.
+   */
+  async receives(executor: DbExecutor, id: string): Promise<boolean> {
+    const rows = await executor
+      .select({ id: subscriber.id })
+      .from(subscriber)
+      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])));
+    return rows.length > 0;
+  },
+
   /** The subscriber's open prompt that has not run out (by the database's clock), or null. */
   async openPrompt(tx: DbTransaction, subscriberId: string): Promise<string | null> {
     const [row] = await tx

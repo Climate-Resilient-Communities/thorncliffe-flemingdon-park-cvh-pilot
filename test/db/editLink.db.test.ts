@@ -1,13 +1,20 @@
 // The one-time web link against a real database (S07.06), as src/app/subscriptionEdit.ts and src/app/inbound.ts compose it: asked for from the
 // menus' offers (the daily limit's, and a menu closed with nothing changed), made as a hashed token valid 30 minutes and texted as
 // `/{lang}/subscription/{token}`; the page's view (reads only), its change (the link used in the same transaction, a confirmation queued) and
-// its deletion (E07's one deletion, nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; two submissions
-// of one link at once make exactly one change; the grants and the guard. Every number is fictional (555-01xx) and nothing reaches Twilio.
+// its deletion (E07's one deletion, nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; a link
+// preview's GET of the page (the page module as the server renders it) and two submissions of one link at once through the change route make
+// exactly one change; the grants and the guard. Every number is fictional (555-01xx) and nothing reaches Twilio.
 import { randomBytes } from "node:crypto";
+import { createTranslator, type AbstractIntlMessages } from "next-intl";
 import postgres from "postgres";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import type { ReactElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
+import SubscriptionEditPage from "../../src/app/[lang]/subscription/[token]/page";
+import { subscriptionChangeResponse, subscriptionViewResponse, type SubscriptionRouteDeps } from "../../src/app/api/subscription/handler";
 import { EDIT_LINK_TTL_MS, type EditChange } from "../../src/contracts/subscriptionEdit";
+import en from "../../src/i18n/messages/en.json";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { floorsOfBuilding, listBuildings, neighbourhoodIds } from "../../src/modules/places";
 import {
@@ -25,6 +32,16 @@ import {
 import { createDb, type Db } from "../../src/platform/db";
 import { BASE_URL, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
+
+// The page's server render outside Next: next-intl's request-scoped readers give the English catalog, and the address's params are the
+// link's, as Next gives them to the page's client part.
+const address = vi.hoisted(() => ({ params: {} as Record<string, string> }));
+vi.mock("next-intl/server", () => ({
+  setRequestLocale: () => undefined,
+  getMessages: async () => en,
+  getTranslations: async ({ locale, namespace }: { locale: string; namespace?: string }) => createTranslator({ locale, messages: en as unknown as AbstractIntlMessages, namespace } as never),
+}));
+vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useParams: () => address.params }));
 
 let owner: ReturnType<typeof connect>;
 let appSql: postgres.Sql;
@@ -128,6 +145,18 @@ function editLinkOn(): EditLink {
       return token;
     },
   });
+}
+
+/** GET /{lang}/subscription/{token}: the page module's HTML, as the server renders it for a link preview. */
+async function pageGet(lang: string, token: string): Promise<string> {
+  address.params = { lang, token };
+  return renderToStaticMarkup((await SubscriptionEditPage({ params: Promise.resolve({ lang, token }) } as never)) as ReactElement);
+}
+
+/** A POST to one of the page's routes, answered by its handler as the route file composes it, with this file's edit link. */
+function postTo(handler: (deps: SubscriptionRouteDeps, request: Request) => Promise<Response>, body: unknown): Promise<Response> {
+  const request = new Request(`${BASE_URL}/api/subscription/x`, { method: "POST", body: JSON.stringify(body) });
+  return handler({ edit: editLinkOn, log: { info: () => {}, error: () => {} } }, request);
 }
 
 /** places' real readers for the menus, the list kept to this file's buildings. */
@@ -261,8 +290,12 @@ describe("asking for the link by text", () => {
     expect(link.body).toContain(`${BASE_URL}/ur/subscription/${token} `);
     // The text is due by the moment its link runs out: one still queued then is skipped at the hand-off, never sent late.
     expect(link.send_by.getTime()).toBe(row!.expires_at.getTime());
-    // The token is in the text and nowhere else: the link's row holds its sha256 only.
+    // The token is stored in its own text's body only (the outbox keeps every body as queued, and there it works for the link's 30 minutes
+    // and once): the link's row holds its sha256, and no other row of the outbox, no audit record and no ops event names it.
     expect(JSON.stringify(await tokenRows())).not.toContain(token);
+    expect(await owner`select purpose from delivery d where strpos(row_to_json(d)::text, ${token}) > 0`).toEqual([{ purpose: "edit_link" }]);
+    expect(await owner`select 1 from audit_event a where strpos(row_to_json(a)::text, ${token}) > 0`).toHaveLength(0);
+    expect(await owner`select 1 from ops_event o where strpos(row_to_json(o)::text, ${token}) > 0`).toHaveLength(0);
   });
 
   it("from any menu closed with nothing changed: '... Reply 1 for a link', with the offer open 10 minutes; any other reply cancels it", async () => {
@@ -317,6 +350,16 @@ describe("the page's view", () => {
     // Opened again: still usable.
     expect(await editLinkOn().view(token)).toMatchObject({ status: "ok" });
     expect((await tokenRows())[0]!.used_at).toBeNull();
+  });
+
+  it("is not turned to expired while another transaction holds the subscriber's row for an ordinary edit (a menu's save, another tab)", async () => {
+    const id = await subscriber();
+    const token = await linkFor(id);
+    const view = await owner.begin(async (sql) => {
+      await sql`select id from subscriber where id = ${id} for update`;
+      return editLinkOn().view(token);
+    });
+    expect(view).toMatchObject({ v: 1, status: "ok", subscription: { lang: "en", phone_last2: "71" } });
   });
 
   it("answers expired for a token never made, a used link and one past its 30 minutes", async () => {
@@ -397,21 +440,37 @@ describe("a change", () => {
 
 describe("two submissions of one link at once, after a link preview", () => {
   it("make exactly one change; the other is expired; the preview changed and used nothing", async () => {
-    const id = await subscriber();
+    const id = await subscriber({ places: [{ rsn: RSN_FAR, floorId: FLOOR_FAR }] });
     const token = await linkFor(id);
-    // A link preview fetches the page, which reads no database and holds nothing about anyone (e2e/resident/subscription.spec.ts); the most a
-    // preview that runs the page's script can do is the view, which uses nothing.
-    expect(await editLinkOn().view(token)).toMatchObject({ status: "ok" });
-    expect((await tokenRows())[0]!.used_at).toBeNull();
-    expect(await subscriberRow(id)).toEqual({ lang: "en", neighbourhood_id: "TP", groups: ["seniors"] });
+    const before = { links: await tokenRows(), subscriber: await subscriberRow(id), places: await placesOf(id) };
 
-    const outcomes = await Promise.all([
-      editLinkOn().change(change(token, { lang: "ur", groups: ["families"] })),
-      editLinkOn().change(change(token, { lang: "es", groups: ["seniors", "newcomers"] })),
+    // A link preview GETs the page: the page module as the server renders it, with this database holding a live link. It is the generic
+    // shell (still loading), with nothing about anyone in it; the token row and the subscriber are as they were.
+    const html = await pageGet("en", token);
+    expect(html).toContain('data-testid="subscription-loading"');
+    for (const held of [token, RSN_FAR, FLOOR_FAR, "phone_last2"]) expect(html, held).not.toContain(held);
+    // A preview that runs the page's script gets as far as the view, which uses nothing either.
+    expect(await (await postTo(subscriptionViewResponse, { v: 1, token })).json()).toMatchObject({ v: 1, status: "ok" });
+    expect(await tokenRows()).toEqual(before.links);
+    expect(await subscriberRow(id)).toEqual(before.subscriber);
+    expect(await placesOf(id)).toEqual(before.places);
+
+    // Two submissions at once through POST /api/subscription/change, as its route answers them.
+    const bodies = [
+      { v: 1, token, lang: "ur", neighbourhood: "TP", places: [{ rsn: RSN_21, floors: [FLOOR_2] }], groups: ["families"], muted_topics: [] },
+      { v: 1, token, lang: "es", neighbourhood: "TP", places: [{ rsn: RSN_23, floors: [] }], groups: ["seniors", "newcomers"], muted_topics: ["water"] },
+    ];
+    const responses = await Promise.all(bodies.map((body) => postTo(subscriptionChangeResponse, body)));
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    const answers = (await Promise.all(responses.map((response) => response.json()))) as { v: number; status: string }[];
+    expect([...answers].sort((a, b) => a.status.localeCompare(b.status))).toEqual([
+      { v: 1, status: "changed" },
+      { v: 1, status: "expired" },
     ]);
-    expect(outcomes.map((outcome) => outcome.kind).sort()).toEqual(["changed", "expired"]);
-    const winner = outcomes[0]!.kind === "changed" ? { lang: "ur", groups: ["families"] } : { lang: "es", groups: ["seniors", "newcomers"] };
+    const winner = answers[0]!.status === "changed" ? { lang: "ur", groups: ["families"] } : { lang: "es", groups: ["seniors", "newcomers"] };
     expect(await subscriberRow(id)).toEqual({ ...winner, neighbourhood_id: "TP" });
+    expect(await placesOf(id)).toEqual(winner.lang === "ur" ? [{ rsn: RSN_21, floorId: FLOOR_2 }] : [{ rsn: RSN_23, floorId: null }]);
+    expect((await tokenRows())[0]!.used_at).not.toBeNull();
     expect((await texts()).filter((text) => text.purpose === "edit_link" && text.lang === winner.lang && !text.body.includes("/subscription/"))).toHaveLength(1);
   });
 

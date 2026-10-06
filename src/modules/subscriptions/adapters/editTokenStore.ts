@@ -1,5 +1,5 @@
 // The statements of the one-time web links (S07.06, `subscription_edit_token`). Every one runs in the caller's transaction and names a link
-// by the sha256 of its token, never the token: the token is in the text and the resident's browser only.
+// by the sha256 of its token, never the token: the token is in the text (and so in that text's `delivery.body`) and the resident's browser.
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
 import { subscriptionEditToken } from "./schema";

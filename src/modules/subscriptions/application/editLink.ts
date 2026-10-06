@@ -5,8 +5,8 @@
 //    sha256 is stored (`subscription_edit_token`, replacing the subscriber's earlier link), valid 30 minutes from the database's now(); the
 //    text (`smsTexts.editLink`, purpose `edit_link`) carries `/{lang}/subscription/{token}` on PUBLIC_BASE_URL, and its `send_by` is the
 //    purpose's 30 minutes from the same now(), so a text still queued when its link runs out is skipped at the hand-off, never sent late.
-//  - `view(token)`: what the page shows, read only (nothing is used, nothing written). Unknown, used or run-out links, and a subscriber
-//    who no longer receives texts (E09 "Receiving subscriber", subscriberStore's predicate), all answer `expired`.
+//  - `view(token)`: what the page shows, read only (nothing is used, nothing written, nothing locked). Unknown, used or run-out links, and a
+//    subscriber who no longer receives texts (E09 "Receiving subscriber", subscriberStore's predicate), all answer `expired`.
 //  - `change(...)`: one transaction. The number's lock (the router's and the sign-up's), so a STOP, a menu or a second submission of the
 //    link waits; the neighbourhood and every building and floor checked against places (buildings share-locked as the menus read them), and
 //    a refusal changes and uses nothing; the subscriber's row locked FOR UPDATE (S07.07: every edit of a subscriber); then the link is used
@@ -17,7 +17,8 @@
 //  - `delete(token)`: the same lock, the link used, then E07's one deletion (`createNumberDeletion`, the one STOP runs) of everything held
 //    for the number in the same transaction; the link goes with the subscriber. Nothing is texted: the page alone confirms it.
 //
-// Nothing here logs, audits or returns the number or the token; the page gets the number's last two digits, cut in the database.
+// Nothing here logs, audits or returns the number or the token; the page gets the number's last two digits, cut in the database. The token
+// is stored only in the link's own text (`delivery.body`, as the outbox keeps every text), where it works for its 30 minutes and once.
 import { randomBytes } from "node:crypto";
 import { SIGNUP_GROUPS } from "../../../contracts/signup";
 import { EDIT_EXPIRED, isMutableTopic, type EditChange, type EditExpiredBody, type EditViewBody, type SubscriptionEditErrorCode } from "../../../contracts/subscriptionEdit";
@@ -142,7 +143,8 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
     async view(token) {
       return deps.db.transaction(async (tx): Promise<EditViewBody | EditExpiredBody> => {
         const link = await tokens.find(tx, editTokenHash(token));
-        if (!link?.usable || !(await subscribers.receivesShared(tx, link.subscriberId))) return EDIT_EXPIRED;
+        // A plain read: a subscriber row held for a menu's save or another tab's change is read as it was, never as "expired".
+        if (!link?.usable || !(await subscribers.receives(tx, link.subscriberId))) return EDIT_EXPIRED;
         const row = await subscribers.editView(tx, link.subscriberId);
         if (row === null || !isLaunchCode(row.lang)) return EDIT_EXPIRED;
         return {

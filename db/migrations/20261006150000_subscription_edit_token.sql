@@ -2,14 +2,15 @@
 -- the subscriptions module (AD-2).
 --
 --  - `subscription_edit_token`: one link of a subscriber, asked for by text (the menus' offer, S07.05) and texted as
---    `/{lang}/subscription/{token}`. Only the sha256 of the token is kept (`token_hash`): the token itself is in the text and the resident's
---    browser, never in the database, a log, an audit record or an `ops_event`. A link is valid for 30 minutes (`expires_at` = `created_at` +
---    30 minutes, the same now() as the text's `send_by`, so a text still queued when its link expires is skipped at the hand-off) and is used
---    once: the change or the deletion sets `used_at` in its own transaction, only while it is null and before `expires_at`
---    (`update ... where used_at is null and expires_at > now()`), so two submissions of one link make one change. A subscriber has at most
---    one link (unique `subscriber_id`): a new one replaces the one before. Personal data (spine: the tables that hold it): it names the
---    subscriber. Deleted with the subscriber (ON DELETE CASCADE: STOP, a confirmed reply 0, or "Delete my subscription" on the page itself),
---    and by the purge job once it has run out.
+--    `/{lang}/subscription/{token}`. Only the sha256 of the token is kept here (`token_hash`). The token itself is in the text, so also in
+--    that text's `delivery.body` (the outbox keeps every body as queued; there it works for the link's 30 minutes and once, like the text
+--    on the phone), and in the resident's browser; never in a log, an audit record or an `ops_event`. A link is valid for 30 minutes
+--    (`expires_at` = `created_at` + 30 minutes, the same now() as the text's `send_by`, so a text still queued when its link expires is
+--    skipped at the hand-off) and is used once: the change or the deletion sets `used_at` in its own transaction, only while it is null and
+--    before `expires_at` (`update ... where used_at is null and expires_at > now()`), so two submissions of one link make one change. A
+--    subscriber has at most one link (unique `subscriber_id`): a new one replaces the one before. Personal data (spine: the tables that hold
+--    it): it names the subscriber. Deleted with the subscriber (ON DELETE CASCADE: STOP, a confirmed reply 0, or "Delete my subscription"
+--    on the page itself), and by the purge job once it has run out.
 --  - `subscriber`: the app may now update `groups` (the page changes them), besides `lang` and `neighbourhood_id` (S07.05) and
 --    `retention_state` (S07.04). The number, `consent_version` and `started_by` stay unchangeable by the app.
 --
