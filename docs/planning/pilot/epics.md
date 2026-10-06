@@ -3606,7 +3606,7 @@ So that ambassadors can start checking on people without anyone forgetting a ste
 
 ### Story S08.07 — The round works without signal and leaves nothing on the phone
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h (started 2026-10-06 09:51 UTC, built 10:51 UTC)
 - **Traces:** FR-C3, FR-C7, AR-3 (round page exception), AR-16, UX-DR17 (A-04) · **Depends on:** S08.06 · **Branch:** `e08-s07-round-page`
 
 As a building ambassador,
