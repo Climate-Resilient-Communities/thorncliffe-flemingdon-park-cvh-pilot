@@ -66,3 +66,30 @@ export function residentText(lang: LaunchCode, name: ResidentTextName): string {
   if (typeof value !== "string" || value.trim() === "") throw new Error(`Catalog string "${key}" is missing or blank in "${lang}"`);
   return value;
 }
+
+/**
+ * How a text message writes a day of the month in a language (S09.07: the campaign's deadline), from the catalog's `smsDate`: the twelve month names,
+ * the order of the day and the month (`dayMonth`, with `{day}` and `{month}`) and the numerals 0 to 9 the day is written with. Fixed in the catalog,
+ * not asked of the runtime's `Intl` (whose data differ between Node versions), so the frozen text is the one reviewed on every runtime.
+ */
+export interface SmsDateWords {
+  months: readonly string[];
+  dayMonth: string;
+  digits: readonly string[];
+}
+
+/** The date words of a launch language. Throws, as `residentText` does, for a language with no catalog and for words that are missing or malformed. */
+export function smsDateWords(lang: LaunchCode): SmsDateWords {
+  const catalog = Object.prototype.hasOwnProperty.call(CATALOGS, lang) ? CATALOGS[lang] : undefined;
+  if (catalog === undefined) throw new RangeError(`No text message catalog for language "${String(lang)}"`);
+  const months = lookup(catalog, "smsDate.months");
+  const dayMonth = lookup(catalog, "smsDate.dayMonth");
+  const digits = lookup(catalog, "smsDate.digits");
+  const once = (text: string, part: string) => text.split(part).length === 2;
+  if (!Array.isArray(months) || months.length !== 12 || !months.every((month) => typeof month === "string" && month.trim() !== "" && !month.startsWith("[EN] "))) {
+    throw new Error(`Catalog list "smsDate.months" is not twelve month names in "${lang}"`);
+  }
+  if (typeof dayMonth !== "string" || !once(dayMonth, "{day}") || !once(dayMonth, "{month}")) throw new Error(`Catalog string "smsDate.dayMonth" is malformed in "${lang}"`);
+  if (typeof digits !== "string" || [...digits].length !== 10) throw new Error(`Catalog string "smsDate.digits" is not ten numerals in "${lang}"`);
+  return { months: months as string[], dayMonth, digits: [...digits] };
+}

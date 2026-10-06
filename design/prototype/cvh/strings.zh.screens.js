@@ -1530,6 +1530,8 @@
   });
   /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
      while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
-     with the longest date. AI-generated (Claude), not yet checked by native readers: the campaign text is reviewed before the pilot ends. */
-  m(t, {"smsTexts": {"reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}前未回复，您的号码将被删除。", "reconsentKept": "谢谢。您将继续收到CVH提醒。", "pilotEnded": "CVH试点已结束；您的号码未被保留。", "signupsPaused": "试点结束期间，CVH短信登记已暂停。"}, "signup": {"error": {"signups_paused": "试点结束期间，登记已暂停。"}}});
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["1","2","3","4","5","6","7","8","9","10","11","12"],"dayMonth":"{month}月{day}日","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}前未回复，您的号码将被删除。", "reconsentKept": "谢谢。您将继续收到CVH提醒。", "pilotEnded": "CVH试点已结束；您的号码未被保留。", "signupsPaused": "试点结束期间，CVH短信登记已暂停。"}, "signup": {"error": {"signups_paused": "试点结束期间，登记已暂停。"}}});
 })();

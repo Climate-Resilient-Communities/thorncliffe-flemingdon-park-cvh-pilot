@@ -114,8 +114,13 @@ export const subscriberStore = {
     return row?.kind ?? null;
   },
 
-  /** Opens a prompt, replacing any other, open for `ms` from the database's now(). */
+  /**
+   * Opens a prompt, replacing any other, open for `ms` from the database's now(). The subscriber's row is locked first (`FOR NO KEY UPDATE`, AD-18: the
+   * subscriber row before what hangs on it), so this waits for a campaign's start that holds it and then replaces the re-consent prompt the start
+   * committed, and a start waits for this and then replaces this prompt: neither finds the other's uncommitted row in `sms_prompt`'s primary key (S09.07).
+   */
   async openNewPrompt(tx: DbTransaction, subscriberId: string, kind: string, ms: number): Promise<void> {
+    await tx.select({ id: subscriber.id }).from(subscriber).where(eq(subscriber.id, subscriberId)).for("no key update");
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
     await tx.insert(smsPrompt).values({ subscriberId, kind, expiresAt: sql`now() + ${`${Math.trunc(ms)} milliseconds`}::interval` });
   },

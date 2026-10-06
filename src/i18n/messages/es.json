@@ -5920,5 +5920,23 @@
     "body": "Todavía no se ha abierto en este teléfono con señal, así que necesita señal. Los números siempre están guardados en su teléfono.",
     "available": "Puede leer esto sin señal",
     "none": "Todavía no hay nada más guardado en este teléfono. Las páginas que abre con señal se guardan para después."
+  },
+  "smsDate": {
+    "months": [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre"
+    ],
+    "dayMonth": "{day} de {month}",
+    "digits": "0123456789"
   }
 }

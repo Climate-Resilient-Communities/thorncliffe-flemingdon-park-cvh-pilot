@@ -5920,5 +5920,23 @@
     "body": "It has not been opened on this phone with signal yet, so it needs signal. The numbers are always saved on your phone.",
     "available": "You can read these without signal",
     "none": "Nothing else is saved on this phone yet. Pages you open with signal are saved for later."
+  },
+  "smsDate": {
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "dayMonth": "{month} {day}",
+    "digits": "0123456789"
   }
 }

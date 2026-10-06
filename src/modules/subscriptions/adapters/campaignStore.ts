@@ -33,7 +33,7 @@ export interface NewCampaign {
   idempotencyKey: string;
 }
 
-// A fixed seed for the advisory lock that keeps sign-ups and the campaign's start apart (see `lockSignupsShared`).
+// A fixed seed for the advisory locks that keep sign-ups and the campaign's start apart (see `lockSignupsShared`) and a request from itself (`lockKey`).
 const SIGNUP_GATE_SEED = 7_302_118_450;
 const SIGNUP_GATE = sql`hashtextextended('subscriptions:signup_gate', ${SIGNUP_GATE_SEED})`;
 
@@ -56,19 +56,28 @@ const columns = {
 const rowOf = (row: Omit<CampaignRow, "state"> & { state: string }): CampaignRow => ({ ...row, state: row.state as CampaignState });
 
 /**
+ * The real campaign's deadline has passed, by the database's clock, and the campaign was not cancelled. A campaign the owner cancelled (docs/config.md)
+ * asks nobody any more: the subscribers it had moved to `reconsent_pending` keep receiving, are never lapsed (S09.08's purge does not name them) and their
+ * YES is answered as any subscriber's, until the owner decides what to do with them.
+ */
+const DEADLINE_PASSED = sql`exists (select 1 from campaign c where not c.rehearsal and c.state <> 'cancelled' and c.deadline <= now())`;
+
+/** The real campaign is asking (started or ended, not cancelled): a `reconsent_pending` subscriber's YES is a re-consent until the deadline. */
+const ASKING = sql`exists (select 1 from campaign c where not c.rehearsal and c.state <> 'cancelled')`;
+
+/**
  * The one rule of who receives texts (E09 "Receiving subscriber"), for a subscriber whose retention state is `state`: `active` and `retained` always;
- * `reconsent_pending` until the real campaign's deadline has passed (by the database's clock), and never after it, even before S09.08's purge deletes them.
- * Every query that selects receiving subscribers (the alert fan-out, the hand-off's number source, a resend's check, the measures) builds its condition here.
- * One uncorrelated read of `campaign`, which Postgres runs once per statement.
+ * `reconsent_pending` until the real campaign's deadline has passed (by the database's clock), and never after it, even before S09.08's purge deletes them
+ * (unless the owner cancelled the campaign: see `DEADLINE_PASSED`). Every query that selects receiving subscribers (the alert fan-out, the hand-off's number
+ * source, a resend's check, the measures) builds its condition here. One uncorrelated read of `campaign`, which Postgres runs once per statement.
  */
 export function receivingSql(state: unknown) {
-  return sql`(${state} in ('active', 'retained') or (${state} = 'reconsent_pending' and not exists (
-    select 1 from campaign c where not c.rehearsal and c.deadline <= now())))`;
+  return sql`(${state} in ('active', 'retained') or (${state} = 'reconsent_pending' and not ${DEADLINE_PASSED}))`;
 }
 
-/** A `reconsent_pending` subscriber whose campaign's deadline has passed: they receive nothing, and S09.08's purge deletes them. */
+/** A `reconsent_pending` subscriber whose campaign's deadline has passed (a campaign not cancelled): they receive nothing, and S09.08's purge deletes them. */
 export function lapsedSql(state: unknown) {
-  return sql`(${state} = 'reconsent_pending' and exists (select 1 from campaign c where not c.rehearsal and c.deadline <= now()))`;
+  return sql`(${state} = 'reconsent_pending' and ${DEADLINE_PASSED})`;
 }
 
 /** Sign-ups are closed from the real campaign's start until an Admin reopens them (a cancelled campaign closes nothing). */
@@ -94,14 +103,22 @@ export const campaignStore = {
     await tx.execute(sql`select pg_advisory_xact_lock(${SIGNUP_GATE})`);
   },
 
+  /**
+   * One request's lock, on its idempotency key: a rehearsal sent twice at once (a double submit before the page's script has loaded) runs one after the
+   * other, so the second finds the first's row by its key instead of failing on `campaign_idempotency_key_unique`. (The start holds the sign-up gate.)
+   */
+  async lockKey(tx: DbTransaction, key: string): Promise<void> {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`subscriptions:campaign_key:${key}`}, ${SIGNUP_GATE_SEED}))`);
+  },
+
   async signupsClosed(executor: DbExecutor): Promise<boolean> {
     const [row] = await executor.execute<{ closed: boolean }>(sql`select ${SIGNUPS_CLOSED} as closed`);
     return row!.closed;
   },
 
-  /** Whether the real campaign's deadline has passed, by the database's clock (false while there is none). */
+  /** Whether the real campaign's deadline has passed, by the database's clock (false while there is none, and for a cancelled one). */
   async pastDeadline(executor: DbExecutor): Promise<boolean> {
-    const [row] = await executor.execute<{ past: boolean }>(sql`select exists (select 1 from campaign c where not c.rehearsal and c.deadline <= now()) as past`);
+    const [row] = await executor.execute<{ past: boolean }>(sql`select ${DEADLINE_PASSED} as past`);
     return row!.past;
   },
 
@@ -166,7 +183,11 @@ export const campaignStore = {
     return moved.map((row) => row.id);
   },
 
-  /** Each subscriber's re-consent prompt, open until the deadline; it replaces any prompt they had open (one per subscriber, latest `sent_at`). */
+  /**
+   * Each subscriber's re-consent prompt, open until the deadline; it replaces any prompt they had open (one per subscriber, latest `sent_at`). The rows are
+   * locked (`lockActive`), and the inbound router locks the row before it writes a prompt (`subscriberStore.openNewPrompt`), so a prompt opened meanwhile has
+   * committed before the delete reads, and none is inserted until this transaction ends.
+   */
   async openReconsentPrompts(tx: DbTransaction, ids: readonly string[], deadline: Date): Promise<void> {
     if (ids.length === 0) return;
     await tx.delete(smsPrompt).where(inArray(smsPrompt.subscriberId, [...ids]));
@@ -202,13 +223,14 @@ export const campaignStore = {
 
   /**
    * Where a subscriber stands in the campaign, by the database's clock: `open` (asked, before the deadline: a YES keeps them), `lapsed` (asked, the
-   * deadline passed: they receive nothing until the purge deletes them), or null (not asked, or they said YES).
+   * deadline passed: they receive nothing until the purge deletes them), or null (not asked, they said YES, or the owner cancelled the campaign).
    */
   async reconsentOf(tx: DbTransaction, subscriberId: string): Promise<"open" | "lapsed" | null> {
     const [row] = await tx.execute<{ standing: "open" | "lapsed" | null }>(sql`
       select case when s.retention_state <> 'reconsent_pending' then null
                   when ${lapsedSql(sql`s.retention_state`)} then 'lapsed'
-                  else 'open' end as standing
+                  when ${ASKING} then 'open'
+                  else null end as standing
       from subscriber s where s.id = ${subscriberId}`);
     return row?.standing ?? null;
   },
