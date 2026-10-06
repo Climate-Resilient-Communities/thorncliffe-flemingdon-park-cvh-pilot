@@ -12,7 +12,10 @@
    "draftTitle": "Návrh: zatiaľ nezverejnené",
    "draftBody": "Tento text ešte nebol schválený. Nie sú to konečné podmienky. Neprihlasujte sa na základe tohto textu.",
    "draftWhy": "Nezverejnené, pretože:",
-   "translationNote": "Časť tejto stránky ešte nie je preložená do jazyka {lang}. Tieto časti sa zobrazujú po anglicky."
+   "translationNote": "Časť tejto stránky ešte nie je preložená do jazyka {lang}. Tieto časti sa zobrazujú po anglicky.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Údaje obyvateľov vymazané",
+   "dataDeletedNote": "Pilot CVH sa skončil. V ten deň sme vymazali telefónne číslo a voľby všetkých, ktorí neodpovedali YES, aby dostávali upozornenia aj naďalej."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1535,4 +1538,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["januára","februára","marca","apríla","mája","júna","júla","augusta","septembra","októbra","novembra","decembra"],"dayMonth":"{day}. {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "Pilot CVH končí. Pre správy YES do {date}, inak číslo zmažeme.", "reconsentKept": "Ďakujeme. Upozornenia CVH budete dostávať aj naďalej.", "pilotEnded": "Pilot CVH sa skončil; vaše číslo sme neuchovali.", "signupsPaused": "Prihlasovanie na SMS CVH je do konca pilotu pozastavené."}, "signup": {"error": {"signups_paused": "Prihlasovanie je do konca pilotu pozastavené."}}});
 })();

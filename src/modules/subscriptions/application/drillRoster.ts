@@ -163,10 +163,11 @@ export function createDrillRoster(deps: DrillRosterDeps): DrillRoster {
 /**
  * The ContactResolver's source for `roster` recipients (S06.01's `RecipientNumberSource`), wired by the composition root. It answers with the member's
  * number inside the hand-off transaction and keeps nothing; null for a member who was removed meanwhile, so the text is skipped, and for anything but an
- * alert text (a roster member is only ever texted a drill alert).
+ * alert text (a drill) or a campaign text (S09.07: the rehearsal of the end-of-pilot campaign, which the database allows only for a rehearsal).
  */
 export const drillNumberSource: RecipientNumberSource = {
-  numberOf: async (tx, recipientId, options) => (options.deliveryKind === "alert" ? drillRosterStore.phoneOf(tx, recipientId) : null),
+  numberOf: async (tx, recipientId, options) =>
+    options.deliveryKind === "alert" || (options.deliveryKind === "campaign" && options.purpose === "reconsent") ? drillRosterStore.phoneOf(tx, recipientId) : null,
 };
 
 /** The members a drill is texted, with their languages and no number (the approval's count and capture read this). */

@@ -28,8 +28,12 @@ export type Channel = (typeof CHANNELS)[number];
 /** An alert goes to a subscriber, or, for a drill, to a member of the drill roster (S06.05 adds the drill rule). */
 export const ALERT_RECIPIENT_KINDS = ["subscriber", "roster"] as const satisfies readonly RecipientKind[];
 
-/** A campaign text goes to a subscriber (still in the campaign's target state, D-7) and to no other kind of recipient. */
-export const CAMPAIGN_RECIPIENT_KINDS = ["subscriber"] as const satisfies readonly RecipientKind[];
+/**
+ * A campaign text goes to a subscriber (still in the campaign's target state, D-7), or, for the campaign's rehearsal (S09.07), to a member of the drill
+ * roster; to no other kind of recipient. Which one is the database's to say (`delivery_insert_guard()`: a rehearsal only to the roster, the real campaign
+ * only to a subscriber it asks).
+ */
+export const CAMPAIGN_RECIPIENT_KINDS = ["subscriber", "roster"] as const satisfies readonly RecipientKind[];
 
 /** Twilio refuses a body of more than 1600 characters. */
 export const BODY_MAX_CHARS = 1600;
@@ -188,8 +192,8 @@ export function transactionalRefusal(input: { module: string; purpose: string; r
 }
 
 /**
- * The refusal for a campaign delivery's purpose (a code, as for `spend_event`) and recipient (a subscriber). That its campaign
- * was started by an Admin at aal2 is the trigger's to say: until S09.07 creates campaigns it refuses every campaign row.
+ * The refusal for a campaign delivery's purpose (a code, as for `spend_event`) and recipient (a subscriber, or a drill-roster member for a rehearsal). That
+ * its campaign was started by an Admin at aal2, still runs and is a rehearsal or not is the trigger's to say (S09.07).
  */
 export function campaignRefusal(input: { purpose: string; recipient: { kind: string; id: string }; campaignId: string }): DeliveryRefusal | null {
   if (!PURPOSE_CODE.test(input.purpose)) return "CAMPAIGN_PURPOSE_INVALID";

@@ -12,7 +12,10 @@
    "draftTitle": "ड्राफ़्ट: अभी प्रकाशित नहीं",
    "draftBody": "यह पाठ अभी मंज़ूर नहीं हुआ है। ये अंतिम शर्तें नहीं हैं। इसके भरोसे साइन अप न करें।",
    "draftWhy": "प्रकाशित नहीं हुआ, क्योंकि:",
-   "translationNote": "इस पेज का कुछ हिस्सा अभी {lang} में अनुवाद नहीं हुआ है। वे हिस्से अंग्रेज़ी में दिखते हैं।"
+   "translationNote": "इस पेज का कुछ हिस्सा अभी {lang} में अनुवाद नहीं हुआ है। वे हिस्से अंग्रेज़ी में दिखते हैं।",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "निवासियों का डेटा हटाया गया",
+   "dataDeletedNote": "CVH पायलट खत्म हो गया है। उस तारीख को हमने उन सभी लोगों का फ़ोन नंबर और चुनाव हटा दिए जिन्होंने अलर्ट मिलते रहने के लिए YES जवाब नहीं दिया।"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1535,4 +1538,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["जनवरी","फ़रवरी","मार्च","अप्रैल","मई","जून","जुलाई","अगस्त","सितंबर","अक्टूबर","नवंबर","दिसंबर"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH पायलट खत्म: अलर्ट के लिए {date} तक YES भेजें, वरना नंबर हटेगा।", "reconsentKept": "धन्यवाद। आपको CVH अलर्ट मिलते रहेंगे।", "pilotEnded": "CVH पायलट खत्म हो गया; आपका नंबर नहीं रखा गया।", "signupsPaused": "पायलट खत्म होने तक CVH टेक्स्ट साइन अप बंद हैं।"}, "signup": {"error": {"signups_paused": "पायलट खत्म होने तक साइन अप बंद हैं।"}}});
 })();

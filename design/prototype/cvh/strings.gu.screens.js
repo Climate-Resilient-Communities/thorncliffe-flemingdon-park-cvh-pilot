@@ -12,7 +12,10 @@
    "draftTitle": "ડ્રાફ્ટ: હજી પ્રકાશિત નથી",
    "draftBody": "આ લખાણ હજી મંજૂર થયું નથી. આ અંતિમ શરતો નથી. તેના આધારે નોંધણી ન કરો.",
    "draftWhy": "પ્રકાશિત નથી કારણ કે:",
-   "translationNote": "આ પેજનો કેટલોક ભાગ હજી {lang} માં અનુવાદ થયો નથી. તે ભાગ અંગ્રેજીમાં દેખાય છે."
+   "translationNote": "આ પેજનો કેટલોક ભાગ હજી {lang} માં અનુવાદ થયો નથી. તે ભાગ અંગ્રેજીમાં દેખાય છે.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "રહેવાસીઓનો ડેટા રદ કર્યો",
+   "dataDeletedNote": "CVH પાયલટ પૂરો થયો છે. તે તારીખે, ચેતવણીઓ મેળવતા રહેવા માટે YES જવાબ ન આપનાર દરેકનો ફોન નંબર અને પસંદગીઓ અમે રદ કરી."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1535,4 +1538,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["જાન્યુ","ફેબ્રુ","માર્ચ","એપ્રિલ","મે","જૂન","જુલાઈ","ઑગસ્ટ","સપ્ટે","ઑક્ટો","નવે","ડિસે"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH પાયલટ પૂરો. ચેતવણી માટે {date} સુધી YES મોકલો, નહીં તો નંબર રદ.", "reconsentKept": "આભાર. તમને CVH ચેતવણીઓ મળતી રહેશે.", "pilotEnded": "CVH પાયલટ પૂરો થયો; તમારો નંબર રાખવામાં આવ્યો નથી.", "signupsPaused": "પાયલટ પૂરો થાય ત્યાં સુધી CVH ટેક્સ્ટ સાઇન અપ બંધ છે."}, "signup": {"error": {"signups_paused": "પાયલટ પૂરો થાય ત્યાં સુધી સાઇન અપ બંધ છે."}}});
 })();

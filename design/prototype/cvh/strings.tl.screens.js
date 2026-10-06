@@ -12,7 +12,10 @@
    "draftTitle": "Draft: hindi pa nailalathala",
    "draftBody": "Hindi pa naaaprubahan ang tekstong ito. Hindi pa ito ang huling mga tuntunin. Huwag mag-sign up dahil lang dito.",
    "draftWhy": "Hindi nailathala dahil:",
-   "translationNote": "May ilang bahagi ng pahinang ito na hindi pa naisasalin sa {lang}. Sa English lumalabas ang mga bahaging iyon."
+   "translationNote": "May ilang bahagi ng pahinang ito na hindi pa naisasalin sa {lang}. Sa English lumalabas ang mga bahaging iyon.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Binura ang datos ng mga residente",
+   "dataDeletedNote": "Tapos na ang pilot ng CVH. Sa petsang iyon, binura namin ang numero ng telepono at mga pinili ng lahat ng hindi nag-reply ng YES para patuloy na makatanggap ng alerto."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1524,4 +1527,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["Enero","Pebrero","Marso","Abril","Mayo","Hunyo","Hulyo","Agosto","Setyembre","Oktubre","Nobyembre","Disyembre"],"dayMonth":"{month} {day}","digits":"0123456789"}, "smsTexts": {"reconsent": "Matatapos na ang pilot ng CVH. I-reply ang YES para patuloy na makatanggap ng alerto. Kung walang sagot bago ang {date}, buburahin ang numero mo.", "reconsentKept": "Salamat. Patuloy kang makakatanggap ng mga alerto ng CVH.", "pilotEnded": "Tapos na ang pilot ng CVH; hindi itinago ang numero mo.", "signupsPaused": "Nakahinto ang pag-sign up sa text ng CVH habang nagtatapos ang pilot."}, "signup": {"error": {"signups_paused": "Nakahinto ang pag-sign up habang nagtatapos ang pilot."}}});
 })();

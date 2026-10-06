@@ -36,6 +36,14 @@ export const RESIDENT_TEXT_KEYS = {
   signupInfo: "smsTexts.signupInfo",
   /** S07.04: the words for yes a resident may reply with besides YES and Y, comma-separated (not a text that is sent). */
   yesWords: "smsKeywords.yes",
+  /** S09.07: the end-of-pilot campaign text ({date} is the deadline), frozen in the campaign when it starts. */
+  reconsent: "smsTexts.reconsent",
+  /** S09.07: YES to the campaign before the deadline: the subscriber stays. */
+  reconsentKept: "smsTexts.reconsentKept",
+  /** S09.07: YES after the deadline, through `inbound_reply`: "The CVH pilot has ended; your number was not kept." */
+  pilotEnded: "smsTexts.pilotEnded",
+  /** S09.07: what a number with no subscription is told, through `inbound_reply`, while sign-ups are paused (instead of the sign-up link). */
+  signupsPaused: "smsTexts.signupsPaused",
   // S07.05: the numbered menus. A page is a title, its options "1) ..." and the reserved replies (menuNav, or menuNavMore when a next page
   // exists); every one of these texts fits one segment in its language (subscriptions' menu fixture checks each, and every real page).
   /** Menu 1's page titles, the whole building's option, and menu 2's title. */
@@ -97,4 +105,31 @@ export function residentText(lang: LaunchCode, name: ResidentTextName, values: R
   const value = lookup(catalog, key);
   if (typeof value !== "string" || value.trim() === "") throw new Error(`Catalog string "${key}" is missing or blank in "${lang}"`);
   return value.replace(/\{(\w+)\}/g, (whole, placeholder: string) => (Object.hasOwn(values, placeholder) ? values[placeholder]! : whole));
+}
+
+/**
+ * How a text message writes a day of the month in a language (S09.07: the campaign's deadline), from the catalog's `smsDate`: the twelve month names,
+ * the order of the day and the month (`dayMonth`, with `{day}` and `{month}`) and the numerals 0 to 9 the day is written with. Fixed in the catalog,
+ * not asked of the runtime's `Intl` (whose data differ between Node versions), so the frozen text is the one reviewed on every runtime.
+ */
+export interface SmsDateWords {
+  months: readonly string[];
+  dayMonth: string;
+  digits: readonly string[];
+}
+
+/** The date words of a launch language. Throws, as `residentText` does, for a language with no catalog and for words that are missing or malformed. */
+export function smsDateWords(lang: LaunchCode): SmsDateWords {
+  const catalog = Object.prototype.hasOwnProperty.call(CATALOGS, lang) ? CATALOGS[lang] : undefined;
+  if (catalog === undefined) throw new RangeError(`No text message catalog for language "${String(lang)}"`);
+  const months = lookup(catalog, "smsDate.months");
+  const dayMonth = lookup(catalog, "smsDate.dayMonth");
+  const digits = lookup(catalog, "smsDate.digits");
+  const once = (text: string, part: string) => text.split(part).length === 2;
+  if (!Array.isArray(months) || months.length !== 12 || !months.every((month) => typeof month === "string" && month.trim() !== "" && !month.startsWith("[EN] "))) {
+    throw new Error(`Catalog list "smsDate.months" is not twelve month names in "${lang}"`);
+  }
+  if (typeof dayMonth !== "string" || !once(dayMonth, "{day}") || !once(dayMonth, "{month}")) throw new Error(`Catalog string "smsDate.dayMonth" is malformed in "${lang}"`);
+  if (typeof digits !== "string" || [...digits].length !== 10) throw new Error(`Catalog string "smsDate.digits" is not ten numerals in "${lang}"`);
+  return { months: months as string[], dayMonth, digits: [...digits] };
 }

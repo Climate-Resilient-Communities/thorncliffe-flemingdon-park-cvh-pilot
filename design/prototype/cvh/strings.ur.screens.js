@@ -12,7 +12,10 @@
    "draftTitle": "مسودہ: ابھی شائع نہیں ہوا",
    "draftBody": "یہ متن ابھی منظور نہیں ہوا۔ یہ حتمی شرائط نہیں ہیں۔ اس کی بنیاد پر سائن اپ نہ کریں۔",
    "draftWhy": "شائع نہیں ہوا کیونکہ:",
-   "translationNote": "اس صفحے کے کچھ حصوں کا ابھی {lang} میں ترجمہ نہیں ہوا۔ وہ حصے انگریزی میں دکھائی دیتے ہیں۔"
+   "translationNote": "اس صفحے کے کچھ حصوں کا ابھی {lang} میں ترجمہ نہیں ہوا۔ وہ حصے انگریزی میں دکھائی دیتے ہیں۔",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "رہائشیوں کا ڈیٹا حذف ہوا",
+   "dataDeletedNote": "CVH پائلٹ ختم ہو گیا ہے۔ اس تاریخ کو ہم نے ان سب لوگوں کا فون نمبر اور انتخاب حذف کر دیے جنہوں نے الرٹ ملتے رہنے کے لیے YES کا جواب نہیں دیا۔"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1511,4 +1514,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH پائلٹ ختم۔ الرٹ کے لیے {date} تک YES بھیجیں ورنہ نمبر حذف ہوگا۔", "reconsentKept": "شکریہ۔ آپ کو CVH الرٹ ملتے رہیں گے۔", "pilotEnded": "CVH پائلٹ ختم ہو گیا ہے؛ آپ کا نمبر نہیں رکھا گیا۔", "signupsPaused": "پائلٹ کے اختتام تک CVH ٹیکسٹ سائن اپ بند ہیں۔"}, "signup": {"error": {"signups_paused": "پائلٹ کے اختتام تک سائن اپ بند ہیں۔"}}});
 })();

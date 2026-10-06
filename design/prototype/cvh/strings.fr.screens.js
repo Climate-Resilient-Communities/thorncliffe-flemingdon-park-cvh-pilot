@@ -12,7 +12,10 @@
    "draftTitle": "Ébauche : pas encore publiée",
    "draftBody": "Ce texte n'a pas encore été approuvé. Ce ne sont pas les conditions finales. Ne vous inscrivez pas en vous fiant à ce texte.",
    "draftWhy": "Pas publié parce que :",
-   "translationNote": "Une partie de cette page n'a pas encore été traduite en {lang}. Ces parties s'affichent en anglais."
+   "translationNote": "Une partie de cette page n'a pas encore été traduite en {lang}. Ces parties s'affichent en anglais.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Données des résidents supprimées",
+   "dataDeletedNote": "Le projet pilote CVH est terminé. À cette date, nous avons supprimé le numéro de téléphone et les choix de toutes les personnes qui n'ont pas répondu YES pour continuer à recevoir les alertes."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1535,4 +1538,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["janvier","février","mars","avril","mai","juin","juillet","aout","septembre","octobre","novembre","décembre"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "Le projet pilote CVH se termine. Répondez YES pour continuer à recevoir les alertes. Sans réponse d'ici le {date}, votre numéro sera supprimé.", "reconsentKept": "Merci. Vous continuerez à recevoir les alertes CVH.", "pilotEnded": "Le projet pilote CVH est terminé; votre numéro n'a pas été conservé.", "signupsPaused": "Les inscriptions aux textos CVH sont suspendues pendant la fin du projet pilote."}, "signup": {"error": {"signups_paused": "Les inscriptions sont suspendues pendant la fin du projet pilote."}}});
 })();

@@ -5,9 +5,13 @@
 // digits only.
 import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
+import { receivingSql } from "./campaignStore";
 import { smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout } from "./schema";
 
-/** The retention states that receive texts (E07 "Matching subscribers"; E09 adds the re-consent deadline to `reconsent_pending`). */
+/**
+ * The retention states that can receive texts (E07 "Matching subscribers"). Which of them do now is `receivingSql` (campaignStore.ts, S09.07): a
+ * `reconsent_pending` subscriber receives only until the campaign's deadline. Every query that selects receiving subscribers uses that one condition.
+ */
 export const RECEIVING_STATES = ["active", "reconsent_pending", "retained"] as const;
 
 /** A subscriber as the router reads it: no number. */
@@ -53,6 +57,12 @@ export interface NewSubscriberPlace {
   floorId: string | null;
 }
 
+/** The subscriber's row locked FOR NO KEY UPDATE, an edit's lock (`subscriberStore.lockForEdit`); false when it is gone. */
+async function lockForEdit(tx: DbTransaction, id: string): Promise<boolean> {
+  const rows = await tx.select({ id: subscriber.id }).from(subscriber).where(eq(subscriber.id, id)).for("no key update");
+  return rows.length > 0;
+}
+
 export const subscriberStore = {
   /** Whether the number is subscribed (the web sign-up's lookup): one select, whatever the answer. */
   async isSubscribed(executor: DbExecutor, phone: string): Promise<boolean> {
@@ -75,12 +85,10 @@ export const subscriberStore = {
   /**
    * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus, S07.06's page); false when it is gone. It waits for an approval that holds
    * the row FOR SHARE while capturing recipients (S07.07), but not for a resend's FOR KEY SHARE (`receivesShared`), which only a deletion's
-   * FOR UPDATE stops: a resident changing their building is still receiving.
+   * FOR UPDATE stops: a resident changing their building is still receiving. It is the lock the campaign's start takes on every `active`
+   * subscriber (`campaignStore.lockActive`, S09.07) and `openNewPrompt` takes before it writes a prompt, so these wait for one another.
    */
-  async lockForEdit(tx: DbTransaction, id: string): Promise<boolean> {
-    const rows = await tx.select({ id: subscriber.id }).from(subscriber).where(eq(subscriber.id, id)).for("no key update");
-    return rows.length > 0;
-  },
+  lockForEdit,
 
   async insert(tx: DbTransaction, row: NewSubscriber): Promise<void> {
     await tx.insert(subscriber).values(row);
@@ -115,7 +123,7 @@ export const subscriberStore = {
     const [row] = await tx
       .select({ phone: subscriber.phone })
       .from(subscriber)
-      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])));
+      .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)));
     return row?.phone ?? null;
   },
 
@@ -128,21 +136,21 @@ export const subscriberStore = {
     const rows = await tx
       .select({ id: subscriber.id })
       .from(subscriber)
-      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])))
+      .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)))
       .for("key share", { skipLocked: true });
     return rows.length > 0;
   },
 
   /**
-   * Whether the subscriber exists and is in a receiving state (`phoneOf`'s and `receivesShared`'s predicate), read without a lock: S07.06's
-   * read-only view, which takes no lock and waits for none, so a row someone holds for an edit (a menu's save, a change from another tab)
-   * is read as it was. No number is read.
+   * Whether the subscriber exists and is in a receiving state (`phoneOf`'s and `receivesShared`'s predicate, `receivingSql`: a `reconsent_pending`
+   * subscriber past the campaign's deadline does not receive, S09.07), read without a lock: S07.06's read-only view, which takes no lock and waits
+   * for none, so a row someone holds for an edit (a menu's save, a change from another tab, the campaign's start) is read as it was. No number is read.
    */
   async receives(executor: DbExecutor, id: string): Promise<boolean> {
     const rows = await executor
       .select({ id: subscriber.id })
       .from(subscriber)
-      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])));
+      .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)));
     return rows.length > 0;
   },
 
@@ -167,8 +175,15 @@ export const subscriberStore = {
     return row ?? null;
   },
 
-  /** Opens a prompt, replacing any other, open for `ms` from the database's now(), with its own state (`step`, S07.05's menu page). */
+  /**
+   * Opens a prompt, replacing any other, open for `ms` from the database's now(), with its own state (`step`, S07.05's menu page). The subscriber's row
+   * is locked first with an edit's lock (`FOR NO KEY UPDATE`, `lockForEdit`; AD-18: the subscriber row before what hangs on it), so this waits for a
+   * campaign's start that holds it and then replaces the re-consent prompt the start committed, and a start waits for this and then replaces this
+   * prompt: neither finds the other's uncommitted row in `sms_prompt`'s primary key (S09.07). Every writer of a prompt (the router's deletion
+   * confirmation, S07.05's menu pages and the edit link's offer) opens it here, and `clearPrompt` closes one in the same order.
+   */
   async openNewPrompt(tx: DbTransaction, subscriberId: string, kind: string, ms: number, step: Record<string, unknown> = {}): Promise<void> {
+    await lockForEdit(tx, subscriberId);
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
     await tx.insert(smsPrompt).values({ subscriberId, kind, step, expiresAt: sql`now() + ${`${Math.trunc(ms)} milliseconds`}::interval` });
   },
@@ -194,7 +209,13 @@ export const subscriberStore = {
     await tx.update(subscriber).set({ neighbourhoodId }).where(eq(subscriber.id, subscriberId));
   },
 
+  /**
+   * Closes the subscriber's prompt. Like `openNewPrompt`, it locks the subscriber's row first (`lockForEdit`; AD-18): the router clears an idle menu
+   * and then opens a new menu's page, and a campaign's start that took the row between the two would otherwise wait for this prompt while this
+   * waits for the row (a deadlock, S09.07).
+   */
   async clearPrompt(tx: DbTransaction, subscriberId: string): Promise<void> {
+    await lockForEdit(tx, subscriberId);
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
   },
 
@@ -237,7 +258,7 @@ export const subscriberStore = {
     const rows = await tx
       .select({ id: subscriber.id, ...requestColumns })
       .from(subscriber)
-      .where(and(inArray(subscriber.id, [...ids]), inArray(subscriber.retentionState, [...RECEIVING_STATES]), isNotNull(subscriber.checkinMethod)))
+      .where(and(inArray(subscriber.id, [...ids]), receivingSql(subscriber.retentionState), isNotNull(subscriber.checkinMethod)))
       .orderBy(asc(subscriber.id))
       .for("share");
     for (const row of rows) {
@@ -267,7 +288,7 @@ export const subscriberStore = {
     const rows = await executor
       .select({ rsn: subscriber.whereILiveRsn, floorId: subscriber.whereILiveFloorId, requests: count() })
       .from(subscriber)
-      .where(and(isNotNull(subscriber.checkinMethod), inArray(subscriber.retentionState, [...RECEIVING_STATES])))
+      .where(and(isNotNull(subscriber.checkinMethod), receivingSql(subscriber.retentionState)))
       .groupBy(subscriber.whereILiveRsn, subscriber.whereILiveFloorId);
     return rows.flatMap((row) => (row.rsn !== null && row.floorId !== null ? [{ rsn: row.rsn, floorId: row.floorId, requests: row.requests }] : []));
   },

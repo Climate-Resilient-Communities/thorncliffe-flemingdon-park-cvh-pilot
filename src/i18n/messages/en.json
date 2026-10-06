@@ -38,7 +38,9 @@
     "draftTitle": "Draft: not yet published",
     "draftBody": "This text has not been approved yet. It is not the final terms. Do not sign up on the strength of it.",
     "draftWhy": "Not published because:",
-    "translationNote": "Some of this page has not been translated into {lang} yet. Those parts show in English."
+    "translationNote": "Some of this page has not been translated into {lang} yet. Those parts show in English.",
+    "dataDeleted": "Resident data deleted",
+    "dataDeletedNote": "The CVH pilot has ended. On that date we deleted the phone number and choices of everyone who did not reply YES to keep getting alerts."
   },
   "shell": {
     "cvhName": "Community Virtual Hub",
@@ -5507,7 +5509,8 @@
         "rate_limited": "You have started 40 sign-ups in the last 24 hours, the most one staff account can. Ask another staff member to continue.",
         "signup_unavailable": "Text sign-up is not available just now. Try again later.",
         "failed": "The sign-up was not started. Try again. If it fails again, tell IT.",
-        "nothingChanged": "Nothing was sent."
+        "nothingChanged": "Nothing was sent.",
+        "signups_paused": "Sign-ups are paused while the pilot ends."
       },
       "title": "Sign up a resident for texts",
       "lead": "For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -5720,6 +5723,88 @@
         "failed": "The cap was not changed. Try again. If it fails again, tell IT.",
         "unreadable": "The Hub could not read the spend. Reload the page. If this stays, tell IT."
       }
+    },
+    "campaign": {
+      "title": "End of the pilot",
+      "lead": "Ask every subscriber whether to keep getting texts after the pilot. Subscribers who do not reply YES by the deadline are deleted after it.",
+      "rehearsal": {
+        "heading": "Rehearse on the drill roster",
+        "lead": "Send the campaign text, exactly as subscribers will get it, to the staff phones on the drill roster. Check that it arrives in each language before the campaign starts.",
+        "roster": "Phones on the drill roster: {n}",
+        "rosterOne": "Phones on the drill roster: 1",
+        "emptyRoster": "The drill roster is empty, so a rehearsal reaches nobody. Add the staff phones on the drill roster first.",
+        "none": "No rehearsal yet.",
+        "last": "Last rehearsal: {when}, by {name}.",
+        "texts": "Its texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.",
+        "button": "Rehearse on the drill roster",
+        "sending": "Sending"
+      },
+      "start": {
+        "heading": "Start the campaign",
+        "needsRehearsal": "Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "deadline": "Deadline: {date}, end of day in Toronto.",
+        "deadlineHint": "Subscribers who have not replied YES by then receive nothing more and are deleted.",
+        "asked": "Subscribers who will be asked: {n}",
+        "languagesHeading": "Subscribers by language",
+        "noSubscribers": "There are no subscribers to ask.",
+        "cost": "Estimated cost: {cost} for {n} texts.",
+        "capNotice": "With this campaign, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still start it: the texts are sent, the overrun is recorded and the on-call Admins are told.",
+        "what": "Starting the campaign does all of this at once: every subscriber is asked to reply YES and gets the text in their language; every pending sign-up is deleted; new sign-ups are paused until an Admin reopens them after the campaign.",
+        "textHeading": "The text, in English:",
+        "confirm": "I have checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "button": "Start the campaign",
+        "starting": "Starting"
+      },
+      "running": {
+        "heading": "The campaign is running",
+        "started": "Started {when} by {name}.",
+        "deadline": "Deadline: {date}, end of day in Toronto.",
+        "asked": "Asked and not yet replied: {n}",
+        "kept": "Replied YES and stay: {n}",
+        "texts": "Campaign texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome."
+      },
+      "ended": {
+        "heading": "The campaign has ended",
+        "when": "Ended {when}; the deadline was {date}.",
+        "kept": "Replied YES and stay: {n}",
+        "lapsed": "Did not reply, to be deleted: {n}",
+        "purge": "Subscribers who did not reply receive nothing and are deleted by the end-of-pilot purge."
+      },
+      "signups": {
+        "heading": "Sign-ups",
+        "open": "Sign-ups are open.",
+        "paused": "Sign-ups are paused while the pilot ends: the web form, the staff sign-up and replies by text all say so.",
+        "reopenHint": "Reopen them when the MVP is ready to take new subscribers.",
+        "reopened": "Sign-ups were reopened {when} by {name}.",
+        "button": "Reopen sign-ups for the MVP",
+        "reopening": "Reopening"
+      },
+      "someone": "an Admin",
+      "done": {
+        "rehearsed": "The rehearsal text is queued for {n} staff phones.",
+        "rehearsedOne": "The rehearsal text is queued for 1 staff phone.",
+        "rehearsedNone": "The rehearsal is recorded, but the drill roster is empty: no text was queued.",
+        "rehearsedAlready": "This rehearsal was already sent. Nothing changed.",
+        "started": "The campaign has started: {asked} subscribers are asked, {texts} texts are queued and {deleted} pending sign-ups were deleted. Sign-ups are paused.",
+        "alreadyStarted": "The campaign had already started. Nothing changed.",
+        "reopened": "Sign-ups are open again."
+      },
+      "errors": {
+        "forbidden": "Only an Admin can run the end of the pilot.",
+        "aal2Required": "An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.",
+        "key_invalid": "This page is out of date. Reload it and try again.",
+        "deadline_changed": "The deadline has changed since this page was opened: it is now {date}. Check it, then start again.",
+        "terms_unavailable": "The terms are not published, so there is nothing to re-consent to. Publish the terms first.",
+        "rehearsal_needed": "Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "roster_empty": "The drill roster is empty, so a rehearsal would reach nobody. Add the staff phones on the drill roster first.",
+        "already_started": "The campaign has already started. Nothing changed.",
+        "not_confirmed": "Tick the box to confirm you checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "not_ended": "Sign-ups can be reopened only after the campaign has ended.",
+        "already_reopened": "Sign-ups are already open.",
+        "no_campaign": "There is no campaign yet, so sign-ups are open.",
+        "failed": "Nothing changed. Try again. If it fails again, tell IT.",
+        "unreadable": "The Hub could not read the campaign. Reload the page. If this stays, tell IT."
+      }
     }
   },
   "building": {
@@ -5826,7 +5911,8 @@
       "rate_limited": "Too many sign-ups came from this connection. Try again in an hour.",
       "signup_unavailable": "Text sign-up is not available just now. Try again later.",
       "network": "We could not reach the CVH. Check your connection and try again.",
-      "checkin_consent_missing": "To ask for a check-in, tick the box to agree."
+      "checkin_consent_missing": "To ask for a check-in, tick the box to agree.",
+      "signups_paused": "Sign-ups are paused while the pilot ends."
     }
   },
   "smsTexts": {
@@ -5857,7 +5943,11 @@
     "editLink": "Change or delete your CVH text alerts here: {link} The link works once, for 30 minutes.",
     "editSaved": "Your CVH alert choices were changed on the web page. Not you? Call the Hub at {hub}.",
     "checkinMoved": "Your check-in request was withdrawn because your floor changed. Reply 1 for a link to ask again.",
-    "checkinUncoveredNow": "No ambassador covers your floor now. Call the Hub at {hub}."
+    "checkinUncoveredNow": "No ambassador covers your floor now. Call the Hub at {hub}.",
+    "reconsent": "The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted.",
+    "reconsentKept": "Thank you. You will keep getting CVH alerts.",
+    "pilotEnded": "The CVH pilot has ended; your number was not kept.",
+    "signupsPaused": "CVH text sign-ups are paused while the pilot ends."
   },
   "smsKeywords": {
     "yes": "yes"
@@ -5920,5 +6010,23 @@
     "body": "It has not been opened on this phone with signal yet, so it needs signal. The numbers are always saved on your phone.",
     "available": "You can read these without signal",
     "none": "Nothing else is saved on this phone yet. Pages you open with signal are saved for later."
+  },
+  "smsDate": {
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "dayMonth": "{month} {day}",
+    "digits": "0123456789"
   }
 }

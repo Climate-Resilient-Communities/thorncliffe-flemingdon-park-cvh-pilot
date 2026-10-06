@@ -12,7 +12,10 @@
    "draftTitle": "مسوده: لا نه ده خپره شوې",
    "draftBody": "دا متن لا نه دی منل شوی. دا وروستي شرطونه نه دي. د دې متن پر بنسټ نوم مه لیکئ.",
    "draftWhy": "ځکه نه دی خپور شوی:",
-   "translationNote": "د دې پاڼې ځینې برخې لا {lang} ته نه دي ژباړل شوې. هغه برخې په انګلیسي ښودل کېږي."
+   "translationNote": "د دې پاڼې ځینې برخې لا {lang} ته نه دي ژباړل شوې. هغه برخې په انګلیسي ښودل کېږي.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "د اوسېدونکو معلومات حذف شول",
+   "dataDeletedNote": "د CVH پیلوټ پای ته ورسېد. په دې نېټه مو د هغو ټولو کسانو د تلیفون شمېره او انتخابونه حذف کړل چې د خبرتیاوو د ترلاسه کولو لپاره یې YES ځواب نه و ورکړی."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1524,4 +1527,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["جنوري","فبروري","مارچ","اپریل","مۍ","جون","جولای","اګست","سېپتمبر","اکتوبر","نومبر","دسمبر"],"dayMonth":"{month} {day}","digits":"۰۱۲۳۴۵۶۷۸۹"}, "smsTexts": {"reconsent": "CVH پیلوټ ختمېږي. خبرتیا ته تر {date} YES ولېږئ، کنه شمېره حذف.", "reconsentKept": "مننه. تاسو به د CVH خبرتیاوې ترلاسه کوئ.", "pilotEnded": "د CVH پیلوټ پای ته ورسېد؛ ستاسو شمېره نه ده ساتل شوې.", "signupsPaused": "د پیلوټ تر پایه د CVH ټکسټ نوم لیکنه بنده ده."}, "signup": {"error": {"signups_paused": "د پیلوټ تر پایه نوم لیکنه بنده ده."}}});
 })();

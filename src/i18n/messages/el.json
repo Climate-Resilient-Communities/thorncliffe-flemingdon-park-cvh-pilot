@@ -38,7 +38,9 @@
     "draftTitle": "Προσχέδιο: δεν έχει δημοσιευτεί ακόμη",
     "draftBody": "Αυτό το κείμενο δεν έχει εγκριθεί ακόμη. Δεν είναι οι τελικοί όροι. Μην εγγραφείτε με βάση αυτό.",
     "draftWhy": "Δεν δημοσιεύτηκε επειδή:",
-    "translationNote": "Κάποια μέρη αυτής της σελίδας δεν έχουν μεταφραστεί ακόμη στα {lang}. Αυτά τα μέρη εμφανίζονται στα αγγλικά."
+    "translationNote": "Κάποια μέρη αυτής της σελίδας δεν έχουν μεταφραστεί ακόμη στα {lang}. Αυτά τα μέρη εμφανίζονται στα αγγλικά.",
+    "dataDeleted": "Διαγραφή δεδομένων κατοίκων",
+    "dataDeletedNote": "Το πιλοτικό CVH έληξε. Εκείνη την ημερομηνία διαγράψαμε τον αριθμό τηλεφώνου και τις επιλογές όλων όσων δεν απάντησαν YES για να συνεχίσουν να λαμβάνουν ειδοποιήσεις."
   },
   "shell": {
     "cvhName": "Κοινοτικός Εικονικός Κόμβος",
@@ -5507,7 +5509,8 @@
         "rate_limited": "[EN] You have started 40 sign-ups in the last 24 hours, the most one staff account can. Ask another staff member to continue.",
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
-        "nothingChanged": "[EN] Nothing was sent."
+        "nothingChanged": "[EN] Nothing was sent.",
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -5720,6 +5723,88 @@
         "failed": "[EN] The cap was not changed. Try again. If it fails again, tell IT.",
         "unreadable": "[EN] The Hub could not read the spend. Reload the page. If this stays, tell IT."
       }
+    },
+    "campaign": {
+      "title": "[EN] End of the pilot",
+      "lead": "[EN] Ask every subscriber whether to keep getting texts after the pilot. Subscribers who do not reply YES by the deadline are deleted after it.",
+      "rehearsal": {
+        "heading": "[EN] Rehearse on the drill roster",
+        "lead": "[EN] Send the campaign text, exactly as subscribers will get it, to the staff phones on the drill roster. Check that it arrives in each language before the campaign starts.",
+        "roster": "[EN] Phones on the drill roster: {n}",
+        "rosterOne": "[EN] Phones on the drill roster: 1",
+        "emptyRoster": "[EN] The drill roster is empty, so a rehearsal reaches nobody. Add the staff phones on the drill roster first.",
+        "none": "[EN] No rehearsal yet.",
+        "last": "[EN] Last rehearsal: {when}, by {name}.",
+        "texts": "[EN] Its texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.",
+        "button": "[EN] Rehearse on the drill roster",
+        "sending": "[EN] Sending"
+      },
+      "start": {
+        "heading": "[EN] Start the campaign",
+        "needsRehearsal": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "deadlineHint": "[EN] Subscribers who have not replied YES by then receive nothing more and are deleted.",
+        "asked": "[EN] Subscribers who will be asked: {n}",
+        "languagesHeading": "[EN] Subscribers by language",
+        "noSubscribers": "[EN] There are no subscribers to ask.",
+        "cost": "[EN] Estimated cost: {cost} for {n} texts.",
+        "capNotice": "[EN] With this campaign, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still start it: the texts are sent, the overrun is recorded and the on-call Admins are told.",
+        "what": "[EN] Starting the campaign does all of this at once: every subscriber is asked to reply YES and gets the text in their language; every pending sign-up is deleted; new sign-ups are paused until an Admin reopens them after the campaign.",
+        "textHeading": "[EN] The text, in English:",
+        "confirm": "[EN] I have checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "button": "[EN] Start the campaign",
+        "starting": "[EN] Starting"
+      },
+      "running": {
+        "heading": "[EN] The campaign is running",
+        "started": "[EN] Started {when} by {name}.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "asked": "[EN] Asked and not yet replied: {n}",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "texts": "[EN] Campaign texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome."
+      },
+      "ended": {
+        "heading": "[EN] The campaign has ended",
+        "when": "[EN] Ended {when}; the deadline was {date}.",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "lapsed": "[EN] Did not reply, to be deleted: {n}",
+        "purge": "[EN] Subscribers who did not reply receive nothing and are deleted by the end-of-pilot purge."
+      },
+      "signups": {
+        "heading": "[EN] Sign-ups",
+        "open": "[EN] Sign-ups are open.",
+        "paused": "[EN] Sign-ups are paused while the pilot ends: the web form, the staff sign-up and replies by text all say so.",
+        "reopenHint": "[EN] Reopen them when the MVP is ready to take new subscribers.",
+        "reopened": "[EN] Sign-ups were reopened {when} by {name}.",
+        "button": "[EN] Reopen sign-ups for the MVP",
+        "reopening": "[EN] Reopening"
+      },
+      "someone": "[EN] an Admin",
+      "done": {
+        "rehearsed": "[EN] The rehearsal text is queued for {n} staff phones.",
+        "rehearsedOne": "[EN] The rehearsal text is queued for 1 staff phone.",
+        "rehearsedNone": "[EN] The rehearsal is recorded, but the drill roster is empty: no text was queued.",
+        "rehearsedAlready": "[EN] This rehearsal was already sent. Nothing changed.",
+        "started": "[EN] The campaign has started: {asked} subscribers are asked, {texts} texts are queued and {deleted} pending sign-ups were deleted. Sign-ups are paused.",
+        "alreadyStarted": "[EN] The campaign had already started. Nothing changed.",
+        "reopened": "[EN] Sign-ups are open again."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can run the end of the pilot.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.",
+        "key_invalid": "[EN] This page is out of date. Reload it and try again.",
+        "deadline_changed": "[EN] The deadline has changed since this page was opened: it is now {date}. Check it, then start again.",
+        "terms_unavailable": "[EN] The terms are not published, so there is nothing to re-consent to. Publish the terms first.",
+        "rehearsal_needed": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "roster_empty": "[EN] The drill roster is empty, so a rehearsal would reach nobody. Add the staff phones on the drill roster first.",
+        "already_started": "[EN] The campaign has already started. Nothing changed.",
+        "not_confirmed": "[EN] Tick the box to confirm you checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "not_ended": "[EN] Sign-ups can be reopened only after the campaign has ended.",
+        "already_reopened": "[EN] Sign-ups are already open.",
+        "no_campaign": "[EN] There is no campaign yet, so sign-ups are open.",
+        "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the campaign. Reload the page. If this stays, tell IT."
+      }
     }
   },
   "building": {
@@ -5826,7 +5911,8 @@
       "rate_limited": "Ήρθαν πάρα πολλές εγγραφές από αυτή τη σύνδεση. Δοκιμάστε ξανά σε μία ώρα.",
       "signup_unavailable": "Η εγγραφή για μηνύματα δεν είναι διαθέσιμη αυτή τη στιγμή. Δοκιμάστε ξανά αργότερα.",
       "network": "Δεν μπορέσαμε να συνδεθούμε με το CVH. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
-      "checkin_consent_missing": "Για να ζητήσετε να δουν αν είστε καλά, τσεκάρετε το κουτί συμφωνίας."
+      "checkin_consent_missing": "Για να ζητήσετε να δουν αν είστε καλά, τσεκάρετε το κουτί συμφωνίας.",
+      "signups_paused": "Οι εγγραφές έχουν ανασταλεί έως τη λήξη του πιλοτικού."
     }
   },
   "smsTexts": {
@@ -5857,7 +5943,11 @@
     "editLink": "Αλλάξτε ή διαγράψτε τις ειδοποιήσεις CVH εδώ: {link} Ο σύνδεσμος ισχύει μία φορά, για 30 λεπτά.",
     "editSaved": "Οι επιλογές σας για τις ειδοποιήσεις CVH άλλαξαν στον ιστότοπο. Δεν ήσασταν εσείς; Καλέστε το Hub στο {hub}.",
     "checkinMoved": "Ο όροφός σας άλλαξε και το αίτημα ακυρώθηκε. Στείλτε 1 για σύνδεσμο.",
-    "checkinUncoveredNow": "Κανένας πρεσβευτής στον όροφό σας τώρα. Καλέστε το Hub: {hub}"
+    "checkinUncoveredNow": "Κανένας πρεσβευτής στον όροφό σας τώρα. Καλέστε το Hub: {hub}",
+    "reconsent": "Λήξη πιλοτικού CVH. Στείλτε YES έως {date}, αλλιώς διαγραφή αριθμού.",
+    "reconsentKept": "Ευχαριστούμε. Θα συνεχίσετε να λαμβάνετε ειδοποιήσεις CVH.",
+    "pilotEnded": "Το πιλοτικό CVH έληξε· ο αριθμός σας δεν κρατήθηκε.",
+    "signupsPaused": "Οι εγγραφές CVH έχουν ανασταλεί έως τη λήξη του πιλοτικού."
   },
   "smsKeywords": {
     "yes": "ναι, nai"
@@ -5920,5 +6010,23 @@
     "body": "Δεν έχει ανοιχτεί ακόμα σε αυτό το τηλέφωνο με σήμα, γι' αυτό χρειάζεται σήμα. Οι αριθμοί τηλεφώνου είναι πάντα αποθηκευμένοι στο τηλέφωνό σας.",
     "available": "Μπορείτε να τα διαβάσετε χωρίς σήμα",
     "none": "Τίποτα άλλο δεν είναι ακόμα αποθηκευμένο σε αυτό το τηλέφωνο. Οι σελίδες που ανοίγετε με σήμα αποθηκεύονται για αργότερα."
+  },
+  "smsDate": {
+    "months": [
+      "Ιαν",
+      "Φεβ",
+      "Μαρ",
+      "Απρ",
+      "Μαΐ",
+      "Ιουν",
+      "Ιουλ",
+      "Αυγ",
+      "Σεπ",
+      "Οκτ",
+      "Νοε",
+      "Δεκ"
+    ],
+    "dayMonth": "{day} {month}",
+    "digits": "0123456789"
   }
 }

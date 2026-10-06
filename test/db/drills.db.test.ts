@@ -366,7 +366,7 @@ describe("the delivery trigger, by direct SQL (the app's role and the owner)", (
     expect(await owner`select recipient_kind from delivery`).toEqual([{ recipient_kind: "subscriber" }]);
   });
 
-  it("refuses a transactional or campaign text to a roster member: the roster is texted a drill alert and nothing else", async () => {
+  it("refuses a transactional text to a roster member, and a campaign text but a rehearsal's (S09.07): the roster is texted drills and rehearsals only", async () => {
     const member = await world.fx.rosterMember();
     const transactional = () =>
       appSql`insert into delivery (id, kind, recipient_kind, recipient_id, created_by_module, purpose, lang, body, segments, cost_estimate_cents, idempotency_key, send_by)

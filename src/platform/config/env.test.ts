@@ -831,6 +831,24 @@ describe("CVH_FAKE_TRANSLATOR", () => {
   });
 });
 
+describe("CVH_FAKE_RESIDENT_DATA_DELETED_ON (S09.08)", () => {
+  it("is allowed only in local development, off Vercel", () => {
+    expect(parseEnv({ ...local, CVH_FAKE_RESIDENT_DATA_DELETED_ON: "2026-12-08" }).fakeResidentDataDeletedOn).toBe("2026-12-08");
+    expect(parseEnv(local).fakeResidentDataDeletedOn).toBeUndefined();
+    for (const base of [production, preview, { ...local, VERCEL_ENV: "development" }, { ...local, VERCEL: "1", VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, CVH_FAKE_RESIDENT_DATA_DELETED_ON: "2026-12-08" })).toContain(
+        "CVH_FAKE_RESIDENT_DATA_DELETED_ON: the end-of-pilot date fake is only allowed in local development, never on Vercel",
+      );
+    }
+  });
+
+  it("is a day written YYYY-MM-DD", () => {
+    for (const other of ["8 December 2026", "2026-12-8", "yes"]) {
+      expect(problemsOf({ ...local, CVH_FAKE_RESIDENT_DATA_DELETED_ON: other }), other).toContain("CVH_FAKE_RESIDENT_DATA_DELETED_ON: must be a day written YYYY-MM-DD");
+    }
+  });
+});
+
 describe("parseSearchEnv (the search settings alone, for the test-set runner)", () => {
   it("resolves the search settings by the same rules and defaults as the app, whatever else the variables hold", () => {
     expect(parseSearchEnv({})).toEqual(parseEnv({ ...production }).search);

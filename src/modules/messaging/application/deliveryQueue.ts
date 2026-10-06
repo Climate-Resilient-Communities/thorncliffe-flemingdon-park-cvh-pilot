@@ -3,9 +3,9 @@
 //  - `alert`: only inside the approval transaction of its entry (`markApprovalTransaction`, then `enqueueAlertDeliveries`);
 //  - `transactional`: by `alerting`, `subscriptions`, `checkins` or `ops`, for a purpose on that module's allow-list,
 //    with a `send_by` (`enqueueTransactional`);
-//  - `campaign`: only for a campaign started by an Admin at aal2, to a subscriber (`enqueueCampaignDelivery`). No campaign exists
-//    until S09.07, so the database refuses every campaign row until then; S09.07 makes the trigger read the campaign row, and the
-//    use case needs no marker (a caller's own word about who started a campaign, or at which assurance level, is never trusted).
+//  - `campaign`: only for a campaign started by an Admin at aal2 (S09.07's `campaign` row, which the trigger reads: the use case needs no
+//    marker, and a caller's own word about who started a campaign, or at which assurance level, is never trusted), while it runs, to a
+//    subscriber it asks, or for its rehearsal to a drill-roster member (`enqueueCampaignDelivery`).
 // Every insert is idempotent on its key: a second insert of the same key returns the first row, with no error.
 //
 // Everything runs in the caller's transaction (the approval's, the sign-up's), so a delivery is written exactly when the
@@ -75,8 +75,9 @@ export interface DeliveryQueue {
   enqueueAlertDeliveries(tx: DbTransaction, entryId: string, texts: readonly AlertTextInput[]): Promise<DeliveryResult<Enqueued[]>>;
   enqueueTransactional(tx: DbTransaction, input: TransactionalInput): Promise<DeliveryResult<Enqueued>>;
   /**
-   * One campaign text to a subscriber (S09.07, in the transaction that starts the campaign). The database accepts it only for a
-   * campaign started by an Admin at aal2; until S09.07 creates campaigns it refuses every one, as an error from the insert.
+   * One campaign text (S09.07, in the transaction that starts the campaign or its rehearsal): to a subscriber the campaign asks, or to a drill-roster
+   * member for a rehearsal. The database accepts it only for a campaign started by an Admin at aal2 that still runs, in its frozen text; anything else
+   * is an error from the insert.
    */
   enqueueCampaignDelivery(tx: DbTransaction, input: CampaignTextInput): Promise<DeliveryResult<Enqueued>>;
   /**

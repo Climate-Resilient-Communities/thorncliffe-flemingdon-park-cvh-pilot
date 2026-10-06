@@ -99,6 +99,8 @@ export const SIGNUP_ERROR_CODES = [
   "checkin_consent_missing",
   "rate_limited",
   "signup_unavailable",
+  /** S09.07: sign-ups are paused from the start of the end-of-pilot campaign until an Admin reopens them for the MVP. */
+  "signups_paused",
 ] as const;
 export type SignupErrorCode = (typeof SIGNUP_ERROR_CODES)[number];
 
@@ -113,6 +115,7 @@ export const SIGNUP_ERROR_STATUS: Record<SignupErrorCode, 400 | 409 | 429 | 503>
   checkin_consent_missing: 400,
   rate_limited: 429,
   signup_unavailable: 503,
+  signups_paused: 409,
 };
 
 /** The body of a refused sign-up: `{error: {code, message_key}}` (AD-20); the page shows the catalog string of `message_key` in its language. */

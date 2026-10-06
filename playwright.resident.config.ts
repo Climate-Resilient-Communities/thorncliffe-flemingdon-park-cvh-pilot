@@ -1,6 +1,6 @@
 import path from "node:path";
 import { defineConfig } from "@playwright/test";
-import { ALERTS_PORT, ALERTS_URL, FEED_FIXTURE } from "./e2e/resident/alerts-server";
+import { ALERTS_PORT, ALERTS_URL, FEED_FIXTURE, RESIDENT_DATA_DELETED_ON } from "./e2e/resident/alerts-server";
 import { PUBLIC_ORIGINS } from "./e2e/resident/public-origin";
 import { FALLBACK_KEYS, FALLBACK_PORT, FALLBACK_URL } from "./e2e/resident/fallback-server";
 
@@ -69,9 +69,10 @@ export default defineConfig({
     {
       // The server of the alert tests (S04.08, e2e/resident/alerts-server.ts): the same, with the threads of fixtures/feed.json in the feed and on the
       // alert pages (CVH_FAKE_FEED_FILE), so the pages that show alerts are tested with alerts and every other page with none.
+      // Its terms page also states the day the pilot's resident data was deleted (S09.08), which only terms.spec.ts reads there.
       command: `npm run start -- --port ${ALERTS_PORT}`,
       url: ALERTS_URL,
-      env: { ...serverEnv(PUBLIC_ORIGINS.alerts), CVH_FAKE_FEED_FILE: FEED_FIXTURE },
+      env: { ...serverEnv(PUBLIC_ORIGINS.alerts), CVH_FAKE_FEED_FILE: FEED_FIXTURE, CVH_FAKE_RESIDENT_DATA_DELETED_ON: RESIDENT_DATA_DELETED_ON },
       reuseExistingServer: !process.env.CI,
     },
     // The same build again, with a few catalog keys shown as English fallback in every language but English

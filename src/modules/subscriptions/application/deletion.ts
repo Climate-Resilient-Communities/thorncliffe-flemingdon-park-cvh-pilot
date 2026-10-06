@@ -28,8 +28,12 @@ export interface NumberDeletionDeps {
 }
 
 export interface NumberDeletion {
-  /** Deletes what the caller found for the number, which it holds the number's lock for (the inbound router: it read the rows to decide). */
-  deleteFound(tx: DbTransaction, phone: string, found: { subscriber: SubscriberRow | null; pending: PendingSignupRow | null }): Promise<Deleted>;
+  /**
+   * Deletes what the caller found for the number, which it holds the number's lock for (the inbound router: it read the rows to decide). `roundsLocked`:
+   * the caller took checkins' `lockRounds` itself, before any lock of its own on the deliveries or the subscriber's row (S09.08's purge, which locks the
+   * row first to judge it again), so it is not taken again here, after the row (a thread lock is never taken after the subscriber's row, AD-18).
+   */
+  deleteFound(tx: DbTransaction, phone: string, found: { subscriber: SubscriberRow | null; pending: PendingSignupRow | null }, options?: { roundsLocked?: boolean }): Promise<Deleted>;
   /** Takes the number's lock (the sign-up's and the router's), finds its subscriber and its pending sign-up, and deletes everything held for it. */
   deleteNumber(tx: DbTransaction, phone: string): Promise<Deleted>;
 }
@@ -40,12 +44,12 @@ export function createNumberDeletion(deps: NumberDeletionDeps): NumberDeletion {
   const inbound = deps.stores?.inbound ?? inboundStore;
   const skip = async (tx: DbTransaction, kind: RecipientKind, id: string) => (await deps.skipRecipientDeliveries(tx, { kind, id })).skipped;
 
-  async function deleteFound(tx: DbTransaction, phone: string, found: { subscriber: SubscriberRow | null; pending: PendingSignupRow | null }): Promise<Deleted> {
+  async function deleteFound(tx: DbTransaction, phone: string, found: { subscriber: SubscriberRow | null; pending: PendingSignupRow | null }, options: { roundsLocked?: boolean } = {}): Promise<Deleted> {
     let skippedTexts = 0;
     let deletedSubscriber = false;
     if (found.subscriber) {
       const id = found.subscriber.id;
-      await deps.checkins.lockRounds?.(id, tx);
+      if (!options.roundsLocked) await deps.checkins.lockRounds?.(id, tx);
       skippedTexts += await skip(tx, "subscriber", id);
       if (await subscribers.lock(tx, id)) {
         // Again under the row's lock: a text an approval committed while this waited for the lock is stopped too.
