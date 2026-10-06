@@ -5,7 +5,8 @@ import { LANGUAGES, WIDTHS, catalogText, expectBaseline, openResident } from "./
 
 // S07.02: "Get text alerts" (R-05) and what to expect once it is sent (R-06), at /{lang}/text-alerts. The server behind these tests has no
 // database, so /api/buildings and /api/signup are answered here (the sign-up's own behaviour against a database is test/db/signup.db.test.ts).
-// The terms are still a draft, so the form records the draft's version and says it is a draft, as the terms page does outside production.
+// The terms are published (the owner reviewed them and waived counsel's review for the pilot), so the form records that version and says
+// nothing about a draft.
 // Every number is fictional (555).
 
 const MILEPOST = BUILDINGS[0].rsn; // Thorncliffe Park
@@ -51,10 +52,10 @@ test.describe("the form", () => {
     // Both saved buildings are in Thorncliffe Park, so it is chosen; the number is asked.
     await expect(page.getByTestId("signup-nbhd-TP").locator("input")).toBeChecked();
     await expect(page.getByTestId("signup-phone")).toHaveValue("");
-    // The terms, linked, with the version the sign-up records (a draft here).
+    // The terms, linked, with the version the sign-up records: published, so no draft note.
     await expect(page.getByTestId("signup-terms-link")).toHaveAttribute("href", "/en/terms");
     await expect(page.getByTestId("signup-terms-version")).toContainText(VERSION);
-    await expect(page.getByTestId("signup-terms-draft")).toBeVisible();
+    await expect(page.getByTestId("signup-terms-draft")).toHaveCount(0);
     await expect(page.getByTestId("signup-terms-agree").locator("input")).not.toBeChecked();
     await expect(page.getByTestId("signup-age").locator("input")).not.toBeChecked();
   });

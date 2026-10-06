@@ -31,6 +31,9 @@ function approved(change: Partial<TermsSource> = {}): TermsSource {
     ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource),
     owner: "Ana Reyes",
     privacyContact: "privacy@example.org",
+    lastUpdated: "2026-10-02",
+    counselWaiver: null,
+    publishedVersions: null,
     ...change,
   };
   const hash = termsReviewHash(terms, sha);
@@ -51,6 +54,62 @@ function editedAfterReview(edit: (t: TermsSource) => void): TermsSource {
   return terms;
 }
 
+/** The same terms, published without counsel's review under the owner's recorded waiver (the pilot). */
+function waived(change: Partial<TermsSource> = {}): TermsSource {
+  const terms = approved({ counselReview: null, ...change });
+  if (!("counselWaiver" in change)) {
+    terms.counselWaiver = { decidedBy: "Ana Reyes", date: "2026-10-04", reason: "Pilot: counsel review before the MVP.", version: terms.consentVersion, sourceHash: termsReviewHash(terms, sha) };
+  }
+  return terms;
+}
+
+describe("publishing the terms without counsel's review, under the owner's waiver", () => {
+  it("publishes when the owner waived counsel's review of exactly this version and text", () => {
+    expect(plan(waived()).reasons).toEqual([]);
+    expect(plan(waived()).published).toBe(true);
+  });
+
+  it("lapses like a review: a changed word, contact or version needs a new decision", () => {
+    const edited = waived();
+    edited.sections![0].lines![0] = "We keep five things.";
+    expect(reasons(edited)).toContain("counsel waiver: the terms changed since it was decided, so a new decision is needed");
+    const contact = waived();
+    contact.privacyContact = "someone@example.org";
+    expect(reasons(contact)).toContain("counsel waiver: the terms changed since it was decided, so a new decision is needed");
+    const bumped = waived();
+    bumped.consentVersion = "2026-10-09.1";
+    bumped.lastUpdated = "2026-10-09";
+    expect(reasons(bumped)).toContain("counsel waiver: covers version 2026-10-02.1, not 2026-10-09.1");
+  });
+
+  it("is decided by the owner, dated, and gives a reason", () => {
+    const by = (decidedBy: string) => waived({ counselWaiver: { ...waived().counselWaiver, decidedBy } });
+    expect(reasons(by("Someone Else"))).toContain("counsel waiver: not decided by the owner");
+    expect(reasons(by("PLACEHOLDER: later"))).toContain("counsel waiver: nobody is named as deciding it");
+    expect(reasons(waived({ counselWaiver: { ...waived().counselWaiver, reason: "" } }))).toContain("counsel waiver: no reason is recorded");
+    expect(reasons(waived({ counselWaiver: { ...waived().counselWaiver, date: "2026-12-02" } }))).toContain("counsel waiver: dated in the future");
+    expect(reasons(waived({ counselWaiver: { ...waived().counselWaiver, date: "2026-10-01" } }))).toContain(
+      "counsel waiver: dated before the last update, so a new decision is needed",
+    );
+    expect(reasons(waived({ counselWaiver: { ...waived().counselWaiver, sourceHash: null } }))).toContain(
+      "counsel waiver: records no source hash (the text it covers)",
+    );
+  });
+
+  it("does not stand in for a counsel review that is recorded: the review's rules apply", () => {
+    const both = waived();
+    both.counselReview = { reviewer: "Counsel Co.", date: "2026-10-04", version: "2026-09-01.1", sourceHash: termsReviewHash(both, sha) };
+    expect(reasons(both)).toContain("counsel review: covers version 2026-09-01.1, not 2026-10-02.1");
+  });
+
+  it("treats an unfilled placeholder counsel review as none recorded", () => {
+    const placeholder = waived({ counselReview: { reviewer: "PLACEHOLDER: counsel to be named", date: null, version: null, sourceHash: null } });
+    expect(plan(placeholder).published).toBe(true);
+    const noWaiver = approved({ counselReview: { reviewer: "PLACEHOLDER: counsel to be named", date: null, version: null, sourceHash: null } });
+    expect(reasons(noWaiver)).toContain("counsel review: none is recorded");
+  });
+});
+
 describe("publishing the terms", () => {
   it("publishes when the owner, the English review, the privacy contact, the version and counsel's review are in order", () => {
     const result = plan(approved());
@@ -64,19 +123,14 @@ describe("publishing the terms", () => {
     expect(formatTermsReport(result)[0]).toBe("Terms 2026-10-02.1 published");
   });
 
-  it("is not published as committed: the owner, the English review, the privacy contact and counsel's review are still to be named", () => {
+  it("is published as committed: owner and privacy contact named, the English reviewed by the owner, counsel's review waived for the pilot", () => {
     const result = plan(realTerms as unknown as TermsSource);
 
-    expect(result.published).toBe(false);
-    expect(result.reasons).toEqual(
-      expect.arrayContaining([
-        "the owner is still a placeholder",
-        "the English reviewer is still a placeholder",
-        "the privacy contact is still a placeholder",
-        "counsel review: no named reviewer",
-      ]),
-    );
-    expect(formatTermsReport(result)[0]).toBe("Terms NOT published (draft):");
+    expect(result.reasons).toEqual([]);
+    expect(result.published).toBe(true);
+    expect(result.owner).toBe("Helena Yu, Sprout Climate Association");
+    expect(result.privacyContact).toBe("helena.yu@sprout-climate.org");
+    expect(formatTermsReport(result)[0]).toBe("Terms 2026-10-02.1 published");
   });
 
   it("refuses a missing or placeholder owner, privacy contact and English review", () => {
@@ -348,7 +402,7 @@ describe("translations", () => {
   });
 
   it("are built even while the terms are a draft, so the draft view shows the page as residents would see it", () => {
-    const draft = plan(realTerms as unknown as TermsSource);
+    const draft = plan({ ...(realTerms as unknown as TermsSource), owner: "PLACEHOLDER: later" });
 
     expect(draft.published).toBe(false);
     expect(draft.documents.en.sections.map((s) => s.id)).toEqual([...REQUIRED_SECTIONS]);

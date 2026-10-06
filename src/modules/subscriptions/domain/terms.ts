@@ -32,6 +32,7 @@ import {
   isIsoDate,
   isPlaceholder,
   present,
+  sameText,
   type Hasher,
   type ReviewSource,
   type TranslationFile,
@@ -42,6 +43,18 @@ import {
 export interface CounselReview extends ReviewSource {
   /** The consent_version the counsel reviewed. */
   version?: string | null;
+}
+
+/**
+ * The owner's recorded decision to publish a version without counsel's review (the pilot, S07.01 owner decision of 2026-10-06). It stands in
+ * for the counsel review only, and is held to the same terms: named, dated, tied to the version and the exact text it covers.
+ */
+export interface CounselWaiver {
+  decidedBy?: string | null;
+  date?: string | null;
+  reason?: string | null;
+  version?: string | null;
+  sourceHash?: string | null;
 }
 
 export interface TermsSectionSource {
@@ -56,6 +69,8 @@ export interface TermsSource {
   lastUpdated?: string | null;
   englishReview?: ReviewSource | null;
   counselReview?: CounselReview | null;
+  /** Set only when no counsel review is recorded: see CounselWaiver. */
+  counselWaiver?: CounselWaiver | null;
   /** Ledger of the consent versions counsel has signed: version to the hash of the text it was signed with. Append only. */
   publishedVersions?: Record<string, string> | null;
   privacyContact?: string | null;
@@ -264,9 +279,14 @@ export function termsRefusals(terms: TermsSource, { hash, today }: TermsPlanOpti
     reasons.push(`the last-updated date (${terms.lastUpdated}) is before the date of consent_version ${terms.consentVersion}`);
   }
 
-  // The counsel gate.
+  // The counsel gate: counsel's review, or the owner's recorded waiver of it when no review is recorded.
   const counsel = terms.counselReview;
-  if (!counsel || (!present(counsel.reviewer) && !counsel.date && !present(counsel.version) && !present(counsel.sourceHash))) {
+  const noCounselReview =
+    !counsel ||
+    ((!present(counsel.reviewer) || isPlaceholder(counsel.reviewer)) && !counsel.date && !present(counsel.version) && !present(counsel.sourceHash));
+  if (noCounselReview && terms.counselWaiver) {
+    reasons.push(...waiverRefusals(terms, terms.counselWaiver, currentHash, today));
+  } else if (noCounselReview) {
     reasons.push("counsel review: none is recorded");
   } else {
     if (!present(counsel.reviewer) || isPlaceholder(counsel.reviewer)) reasons.push("counsel review: no named reviewer");
@@ -285,6 +305,25 @@ export function termsRefusals(terms: TermsSource, { hash, today }: TermsPlanOpti
       reasons.push("counsel review: the terms changed since counsel reviewed them, so a new review is needed");
     }
   }
+  return reasons;
+}
+
+/** Why a counsel waiver does not cover the current terms, or an empty list. */
+function waiverRefusals(terms: TermsSource, waiver: CounselWaiver, currentHash: string, today: string): string[] {
+  const reasons: string[] = [];
+  if (!present(waiver.decidedBy) || isPlaceholder(waiver.decidedBy)) reasons.push("counsel waiver: nobody is named as deciding it");
+  else if (present(terms.owner) && !sameText(waiver.decidedBy as string, terms.owner)) reasons.push("counsel waiver: not decided by the owner");
+  if (!present(waiver.reason) || isPlaceholder(waiver.reason)) reasons.push("counsel waiver: no reason is recorded");
+  if (!isIsoDate(waiver.date)) reasons.push("counsel waiver: no valid date");
+  else {
+    if (waiver.date > today) reasons.push("counsel waiver: dated in the future");
+    if (isIsoDate(terms.lastUpdated) && waiver.date < terms.lastUpdated) reasons.push("counsel waiver: dated before the last update, so a new decision is needed");
+  }
+  if (present(terms.consentVersion) && waiver.version !== terms.consentVersion) {
+    reasons.push(`counsel waiver: covers version ${waiver.version ?? "none"}, not ${terms.consentVersion}`);
+  }
+  if (!present(waiver.sourceHash)) reasons.push("counsel waiver: records no source hash (the text it covers)");
+  else if (waiver.sourceHash !== currentHash) reasons.push("counsel waiver: the terms changed since it was decided, so a new decision is needed");
   return reasons;
 }
 

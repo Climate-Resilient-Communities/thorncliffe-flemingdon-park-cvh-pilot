@@ -36,12 +36,15 @@ Terms and privacy page (S07.01, data/catalogue/terms.json; its texts are keyed t
 
   python3 scripts/review_translations.py --content --mark-english-reviewed --terms --reviewer "Owner" --reviewed-on 2026-10-20
   python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer "Counsel" --reviewed-on 2026-10-25
+  python3 scripts/review_translations.py --content --waive-counsel --reviewer "Owner" --reviewed-on 2026-10-25 --reason "..."
 
 --terms records the owner's English review of the terms; --mark-counsel-reviewed records counsel's review of the
 current English, privacy contact and consent_version. Both are tied to a hash of that text: the terms are published
 only while the counsel review matches, so any later change needs a new review. Counsel's review also records
 the version and its text hash in terms.json publishedVersions: a consentVersion is never reused for changed text
 (bump consentVersion, YYYY-MM-DD.n), and when the text changed lastUpdated must have moved past the review it replaces.
+--waive-counsel records instead the owner's decision to publish without counsel's review (counselWaiver), with a reason, tied
+to the same hash and version: it lapses the same way, and is refused once a counsel review is recorded.
 
 --content writes review/content-translation-status.json. --mark-reviewed changes status
 "machine" to "reviewed" (with reviewer and date) only on translations that are current
@@ -360,9 +363,44 @@ def mark_terms_reviewed(reviewer, reviewed_on, counsel):
     cc.write_json(cc.TERMS_PATH, terms, sort_keys=False)
 
 
+def waive_counsel(decided_by, decided_on, reason):
+    """Record the owner's decision to publish the current terms without counsel's review (counselWaiver), tied to the
+    version and the hash of the English and the privacy contact, as a counsel review would be."""
+    import content_catalogue as cc
+
+    if not reason or cc.is_placeholder(reason):
+        raise SystemExit('--reason must say why the terms are published without counsel review')
+    if not cc.valid_date(decided_on) or decided_on > date.today().isoformat():
+        raise SystemExit('--reviewed-on must be a date, YYYY-MM-DD, not in the future')
+    terms = cc.read_json(cc.TERMS_PATH)
+    counsel = terms.get('counselReview') or {}
+    if counsel.get('date') or counsel.get('sourceHash'):
+        raise SystemExit('a counsel review is recorded: there is nothing to waive')
+    owner = terms.get('owner')
+    if cc.is_placeholder(owner) or cc.is_placeholder(terms.get('privacyContact')):
+        raise SystemExit('the counsel review is waived only once the owner and the privacy contact are named')
+    if ' '.join(owner.lower().split()) != ' '.join(decided_by.lower().split()):
+        raise SystemExit(f'terms: only the owner ({owner}) can waive the counsel review')
+    if not cc.valid_date(terms.get('lastUpdated')) or decided_on < terms['lastUpdated']:
+        raise SystemExit(f'the decision cannot be dated before the last update ({terms.get("lastUpdated")})')
+    version = terms.get('consentVersion')
+    if not version_date(version):
+        raise SystemExit('consentVersion must be written YYYY-MM-DD.n')
+    current = cc.english_review_hash(cc.terms_review_texts(terms))
+    ledger = terms.get('publishedVersions') or {}
+    if ledger.get(version) not in (None, current):
+        raise SystemExit(f'consentVersion {version} was already published with different text; bump consentVersion')
+    terms['counselWaiver'] = {'decidedBy': decided_by, 'date': decided_on, 'reason': reason, 'version': version, 'sourceHash': current}
+    terms['publishedVersions'] = {**ledger, version: current}
+    cc.write_json(cc.TERMS_PATH, terms, sort_keys=False)
+    print(f'terms {version}: counsel review waived by {decided_by} on {decided_on}')
+
+
 def content_main(args):
     import content_catalogue as cc
 
+    if args.waive_counsel:
+        return waive_counsel(args.reviewer, args.reviewed_on, args.reason)
     if args.mark_counsel_reviewed or (args.mark_english_reviewed and args.terms):
         return mark_terms_reviewed(args.reviewer, args.reviewed_on, args.mark_counsel_reviewed)
     if args.mark_english_reviewed:
@@ -394,6 +432,10 @@ def main():
                     help="with --mark-english-reviewed: record the owner's review of the terms (terms.json) instead")
     ap.add_argument('--mark-counsel-reviewed', action='store_true',
                     help="with --content: record counsel's review of the current terms and consent version (--reviewer, --reviewed-on)")
+    ap.add_argument('--waive-counsel', action='store_true',
+                    help="with --content: record the owner's decision to publish the current terms without counsel's review "
+                         '(--reviewer is the owner, --reviewed-on the date, --reason why)')
+    ap.add_argument('--reason', help='with --waive-counsel: why the terms are published without counsel review')
     ap.add_argument('--keys', help='with --mark-reviewed: comma-separated text keys (default: all current machine texts)')
     args = ap.parse_args()
     if args.content:
