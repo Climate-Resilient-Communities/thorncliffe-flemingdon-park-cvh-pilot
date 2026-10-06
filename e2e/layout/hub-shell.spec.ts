@@ -18,6 +18,14 @@ import { mountHydrated } from "../helpers/layout-fixture";
 
 const brand = hubBrand();
 type Props = Parameters<typeof mountHydrated<"HubShellFixture">>[2];
+/**
+ * The Admin's menu with "Check-in rounds" listed but not built, as an Ambassador's menu still has it (S08.08 built the Hub's page; an Ambassador's round is their
+ * own page, reached from their home): the shell's way of drawing an item with no page.
+ */
+const UNBUILT_TEXTS = {
+  ...REAL_TEXTS,
+  navigation: REAL_TEXTS.navigation.map((section) => ({ ...section, items: section.items.map((item) => (item.id === "rounds" ? { ...item, href: null } : item)) })),
+};
 const open = (page: Page, props: Partial<Props> & Pick<Props, "texts">, lang = "en") =>
   mountHydrated(page, "HubShellFixture", { brand, ...props }, { lang });
 
@@ -109,9 +117,9 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: fourteen pages that exist (Incidents, Log a disruption, Compose an alert, Coverage, Spend, Measures, Text sign-up, People, Providers, Directory, Buildings, Pause texts, On-call numbers, and Drills) and one that is listed but not built yet.
-      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(14);
-      await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(1);
+      // The menu is the real one for an Admin: fifteen pages that exist (Incidents, Log a disruption, Compose an alert, Check-in rounds (S08.08), Coverage, Spend, Measures, Text sign-up, People, Providers, Directory, Buildings, Pause texts, On-call numbers, and Drills), none listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(15);
+      await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(0);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
       await expectShellDoesNotOverflow(page);
@@ -309,11 +317,13 @@ test.describe("what a screen reader reads", () => {
       ["/staff/alerts/log", "Log a disruption"],
       ["/staff/alerts/compose", "Compose an alert"],
       ["/staff/alerts/compose/", "Compose an alert"],
+      ["/staff/rounds", "Check-in rounds"],
+      ["/staff/rounds/escalation", "Check-in rounds"],
     ] as const) {
       await open(page, { texts: REAL_TEXTS, current: path });
 
       const links = page.getByTestId("hub-side").locator("a[href]");
-      await expect(links).toHaveCount(14);
+      await expect(links).toHaveCount(15);
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
       await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");
@@ -321,7 +331,8 @@ test.describe("what a screen reader reads", () => {
     // The home is current only for its own path, not for every page below /staff.
     await open(page, { texts: REAL_TEXTS, current: "/staff/people" });
     await expect(page.getByTestId("hub-side").getByRole("link", { name: "Incidents" })).not.toHaveAttribute("aria-current", "page");
-    // An unbuilt page is never current, whatever the path.
+    // An unbuilt page is never current, whatever the path (the Admin's menu with "Check-in rounds" as an Ambassador's menu has it, unbuilt).
+    await open(page, { texts: UNBUILT_TEXTS, current: "/staff/rounds" });
     await expect(sideNav(page).getByTestId("hub-nav-rounds")).not.toHaveAttribute("aria-current", /./);
     // A path outside every item: none current.
     await open(page, { texts: REAL_TEXTS, current: "/staff/elsewhere" });
@@ -332,7 +343,7 @@ test.describe("what a screen reader reads", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await open(page, { texts: REAL_TEXTS });
+    await open(page, { texts: UNBUILT_TEXTS });
 
     for (const [id, name] of [["rounds", "Check-in rounds"]] as const) {
       const item = sideNav(page).getByTestId(`hub-nav-${id}`);
@@ -369,7 +380,7 @@ test.describe("what a screen reader reads", () => {
 
   test("every item of the menu, linked or not, is at least the tap size high and muted when it is not a page yet", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await open(page, { texts: REAL_TEXTS });
+    await open(page, { texts: UNBUILT_TEXTS });
     const tap = await tokenPx(page, "--tap");
 
     for (const id of ["incidents", "log", "compose", "rounds", "coverage", "people", "buildings"]) {

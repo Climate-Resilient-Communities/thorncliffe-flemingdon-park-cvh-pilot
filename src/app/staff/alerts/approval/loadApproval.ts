@@ -1,6 +1,7 @@
 // The approval view's page data (S04.07): the entry as the use case reads it in one snapshot (its frozen texts and text messages, the author's
 // role, the possible duplicate, and the number of people the text reaches right now: the count Approve then names), the buildings its audience is
-// written in, the price of a segment, and the notice that all texts are paused when they are (S06.06). Server only.
+// written in, the price of a segment, and the notice that all texts are paused when they are (S06.06); S08.08: the warning that nobody is on duty for
+// check-ins, for an entry that starts or adds to a round. Server only.
 import type { EntryReview } from "@/modules/alerting";
 import type { BuildingFloorPlan } from "@/modules/places";
 import { residentAlertsEnabled } from "../../../feedCache";
@@ -11,6 +12,7 @@ import { pauseNoticeForApprover } from "../../pauseNotice";
 import { progressReader, textsArePaused } from "../../sendingProgress";
 import { sendingBlock } from "../sending/load";
 import type { SendingBlock } from "../sending/view";
+import { onDutyNoticeFor, type NoticeEntry } from "../../onDutyNotice";
 import { capNoticeFor } from "../../spendSeam";
 import { approvalScreen, missingApproval, spendEstimateCents, type ApprovalScreen, type MissingApproval } from "./view";
 
@@ -38,6 +40,11 @@ export interface ApprovalLoadDeps {
    * otherwise. It never throws and never blocks.
    */
   capNotice: (estimateCents: number | null) => Promise<string | null>;
+  /**
+   * `onDutyNoticeFor(entry)` (S08.08): the sentence when approving this entry starts or adds to a check-in round and nobody is on duty for check-ins, null
+   * otherwise. It only informs.
+   */
+  onDutyNotice: (entry: NoticeEntry) => Promise<string | null>;
   /** What became of the entry's texts (S06.09), for the confirmation of an approved entry. */
   sending: (review: EntryReview) => Promise<SendingBlock | null>;
   /** Where a notice that could not be read is logged (the error's name only). */
@@ -51,6 +58,7 @@ const live: ApprovalLoadDeps = {
   residentAlertsEnabled: () => residentAlertsEnabled(),
   pauseNotice: () => pauseNoticeForApprover(),
   capNotice: (estimateCents) => capNoticeFor(estimateCents),
+  onDutyNotice: (entry) => onDutyNoticeFor(entry),
   sending: (review) => sendingBlock(review, { progress: progressReader(), paused: textsArePaused, logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })) }),
   logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })),
 };
@@ -70,14 +78,31 @@ export async function loadApproval(query: ApprovalQuery, viewerId: string, deps:
   }
   // The monthly cap (S07.08), told before the approver decides: only for an entry waiting for approval, and only ever a note (it cannot fail the view).
   let capNotice: string | null = null;
+  // Nobody on duty for check-ins (S08.08), told before the approver approves an entry that starts or adds to a round; it never fails the view either.
+  let onDutyNotice: string | null = null;
   if (review.entry.status === "pending_approval") {
     try {
       capNotice = await deps.capNotice(spendEstimateCents(review.sms, review.recipients, deps.pricePerSegmentCents()));
     } catch (error) {
       deps.logError("approval.cap_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
     }
+    try {
+      onDutyNotice = await deps.onDutyNotice({ kind: review.entry.kind, types: review.entry.content.types, isDrill: review.thread.isDrill });
+    } catch (error) {
+      deps.logError("approval.on_duty_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
+    }
   }
   // What became of an approved entry's texts; it never throws (a failure is a note in its place), so it can never keep the confirmation from being shown.
   const sending = review.entry.status === "approved" ? await deps.sending(review) : null;
-  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice, capNotice, residentAlertsEnabled: deps.residentAlertsEnabled(), sending });
+  return approvalScreen({
+    review,
+    plans: await deps.plans(),
+    pricePerSegmentCents: deps.pricePerSegmentCents(),
+    viewerId,
+    pauseNotice,
+    capNotice,
+    onDutyNotice,
+    residentAlertsEnabled: deps.residentAlertsEnabled(),
+    sending,
+  });
 }

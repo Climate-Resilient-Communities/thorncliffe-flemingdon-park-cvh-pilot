@@ -38,7 +38,8 @@ export const opsEvent = pgTable(
 /**
  * The on-call roster (S06.07): the Admins' numbers that are texted when sending is stuck or failing. Personal data (AD-13): the number is read
  * only by the ContactResolver's source and by the roster screen (masked), and goes into no log, audit record, `ops_event` or `delivery`. The app
- * adds and deletes rows and never changes one. `delivery_forget_recipient('oncall')` (a trigger in the migration) is its ON DELETE SET NULL.
+ * adds and deletes rows and changes only an entry's role and account (S08.08's on-duty Admin; the migration's guard keeps the rest as written).
+ * `delivery_forget_recipient('oncall')` (a trigger in the migration) is its ON DELETE SET NULL.
  */
 export const oncallRoster = pgTable(
   "oncall_roster",
@@ -50,15 +51,24 @@ export const oncallRoster = pgTable(
       .notNull()
       .references(() => staffAccountKey.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** S08.08: `oncall`, or `on_duty` (at most one entry): the Admin who gets the check-in escalations, named by `staffId`. */
+    role: text().notNull().default("oncall"),
+    /** S08.08: the Admin account an on-duty entry belongs to (an active Admin with an authenticator, checked at the change); null for an `oncall` entry. */
+    staffId: uuid("staff_id").references(() => staffAccountKey.id),
   },
   (t) => [
     uniqueIndex("oncall_roster_phone_idx").on(t.phone),
     index("oncall_roster_added_by_idx").on(t.addedBy),
+    uniqueIndex("oncall_roster_one_on_duty_idx").on(t.role).where(sql`${t.role} = 'on_duty'`),
+    index("oncall_roster_staff_id_idx").on(t.staffId),
     check("oncall_roster_label_format", sql`btrim(${t.label}) <> '' and char_length(${t.label}) <= 40 and ${t.label} !~ '[[:cntrl:]]'`),
     check("oncall_roster_phone_format", sql`${t.phone} ~ '^\\+1[2-9][0-9]{9}$'`),
+    check("oncall_roster_role_known", sql`${t.role} in ('oncall', 'on_duty')`),
+    check("oncall_roster_on_duty_linked", sql`(${t.role} = 'on_duty') = (${t.staffId} is not null)`),
     pgPolicy("oncall_roster_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("oncall_roster_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("oncall_roster_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+    pgPolicy("oncall_roster_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();
 

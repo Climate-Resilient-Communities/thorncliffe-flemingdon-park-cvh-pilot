@@ -10,12 +10,21 @@ import type { ApprovalScreen } from "./view";
 const NOTICE = "Texts are paused; this will send when resumed";
 const query = { alert: ALERT, entry: ENTRY };
 
-function deps(options: { review?: ReviewOptions | null; paused?: () => Promise<boolean>; pauseNotice?: ApprovalLoadDeps["pauseNotice"]; capNotice?: ApprovalLoadDeps["capNotice"] } = {}) {
+function deps(
+  options: {
+    review?: ReviewOptions | null;
+    paused?: () => Promise<boolean>;
+    pauseNotice?: ApprovalLoadDeps["pauseNotice"];
+    capNotice?: ApprovalLoadDeps["capNotice"];
+    onDutyNotice?: ApprovalLoadDeps["onDutyNotice"];
+  } = {},
+) {
   const logError = vi.fn();
   const review = vi.fn(async () => (options.review === null ? null : reviewOf(options.review)));
   const paused = vi.fn(options.paused ?? (async () => false));
   const pauseLog = vi.fn();
   const capNotice = vi.fn(options.capNotice ?? (async () => null));
+  const onDutyNotice = vi.fn(options.onDutyNotice ?? (async () => null));
   const wired: ApprovalLoadDeps = {
     review,
     plans: async () => PLANS,
@@ -23,10 +32,11 @@ function deps(options: { review?: ReviewOptions | null; paused?: () => Promise<b
     residentAlertsEnabled: () => true,
     pauseNotice: options.pauseNotice ?? (() => pauseNoticeForApprover({ paused, logError: pauseLog })),
     capNotice,
+    onDutyNotice,
     sending: async () => null,
     logError,
   };
-  return { wired, review, paused, pauseLog, logError, capNotice };
+  return { wired, review, paused, pauseLog, logError, capNotice, onDutyNotice };
 }
 
 const screen = (loaded: unknown) => loaded as ApprovalScreen;
@@ -129,5 +139,32 @@ describe("the notice that the monthly cap would be passed, before the approver d
     });
     expect(screen(await loadApproval(query, APPROVER, d.wired))).toMatchObject({ status: "review", capNotice: null });
     expect(d.logError).toHaveBeenCalledWith("approval.cap_notice_failed", { error: "RangeError" });
+  });
+});
+
+describe("the warning that nobody is on duty for check-ins, before the approver decides (S08.08)", () => {
+  const ON_DUTY = "Nobody is on duty for check-ins.";
+
+  it("asks with the entry's kind, types and whether it is a drill, and shows what it answers; the view is otherwise what it is without it", async () => {
+    const d = deps({ onDutyNotice: async () => ON_DUTY });
+    const noticed = screen(await loadApproval(query, APPROVER, d.wired));
+    expect(d.onDutyNotice).toHaveBeenCalledWith({ kind: "ack", types: ["elevator", "power"], isDrill: false });
+    expect(noticed).toMatchObject({ status: "review", onDutyNotice: ON_DUTY });
+    const quiet = screen(await loadApproval(query, APPROVER, deps().wired));
+    expect(quiet.onDutyNotice).toBeNull();
+    expect({ ...noticed, onDutyNotice: null }).toEqual(quiet);
+  });
+
+  it("is told only for an entry waiting for approval, and never keeps the view from loading", async () => {
+    const approved = deps({ review: { entry: { status: "approved" } }, onDutyNotice: async () => ON_DUTY });
+    expect(screen(await loadApproval(query, APPROVER, approved.wired)).onDutyNotice).toBeNull();
+    expect(approved.onDutyNotice).not.toHaveBeenCalled();
+    const failing = deps({
+      onDutyNotice: async () => {
+        throw new TypeError("the roster is unreadable");
+      },
+    });
+    expect(screen(await loadApproval(query, APPROVER, failing.wired))).toMatchObject({ status: "review", onDutyNotice: null });
+    expect(failing.logError).toHaveBeenCalledWith("approval.on_duty_notice_failed", { error: "TypeError" });
   });
 });

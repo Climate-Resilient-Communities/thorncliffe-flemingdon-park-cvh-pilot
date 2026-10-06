@@ -11,6 +11,7 @@
 // A refusal rolls the transaction back and is audited as refused in its own transaction (S01.04).
 import { randomBytes } from "node:crypto";
 import { and, arrayOverlaps, desc, eq, inArray, lt, ne, or, sql } from "drizzle-orm";
+import { closeRound } from "../../checkins";
 import { decidePolicy, meetsAssurance } from "../../identity";
 import { recipientsPort, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "../../subscriptions";
 import { alertTextsOf, countsOfTexts, type AlertText } from "./approvalTexts";
@@ -1831,8 +1832,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         if (target !== null) await cancelQueued(tx, [target.id]);
         // A final closes the thread `resolved` in this same transaction (S05.03), before its recipients are captured: `closeAlert` discards the drafts and the
         // entries waiting for approval, stops the queued texts of every other entry (the final's own are kept), records the final as the entry that closed the
-        // thread and audits `alert.closed`. `feed_version` was raised above, so it is not raised twice.
-        if (row.kind === "final") await closeAlert(tx, actor, { alertId: thread.id, reason: "resolved", keepEntryId: row.id, feedRaised: true });
+        // thread and audits `alert.closed`. `feed_version` was raised above, so it is not raised twice. Its check-in round ends after the capture (below).
+        if (row.kind === "final") await closeAlert(tx, actor, { alertId: thread.id, reason: "resolved", keepEntryId: row.id, feedRaised: true, roundEndedByCaller: true });
         // The outbox's marker (S06.01, `createDeliveryQueue().markApprovalTransaction`): this transaction says that the alert deliveries about to be
         // written are this entry's approval, so the database accepts them. Nothing is captured and nothing is written before it.
         await markApproval(tx, row.id);
@@ -1861,6 +1862,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // ON CONFLICT DO NOTHING, reading each request under the lock the capture took), and the rows already made, with their marks, are left as they are
         // until the thread closes. After the texts and the audit, before the spend cap: AD-18's order (recipient rows, `checkin`, `checkin_tally`, `spend_cap`).
         if (deps.rounds && round && requesters.length > 0) await deps.rounds.start(tx, round, requesters);
+        // S08.08: a final's thread closed above; its round ends here, after the capture locked the recipient rows (AD-18: recipient rows, `checkin`,
+        // `checkin_tally`), where a round starts: checkins' `closeRound` tallies every row and keeps those the Hub must still follow up.
+        if (row.kind === "final") await closeRound(tx, thread.id);
         // A withdrawal that leaves no published, non-superseded substantive entry closes the thread `withdrawn`, in this same transaction, even though the
         // withdrawal notice is itself published (it is never substantive): the notice's own texts are kept (`keepEntryId`) and every other entry's stop.
         if (target !== null && row.kind === "withdrawal") {

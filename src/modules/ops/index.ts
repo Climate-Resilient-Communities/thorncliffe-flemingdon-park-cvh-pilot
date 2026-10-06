@@ -23,8 +23,24 @@ export {
   type SearchFailureReason,
 } from "./domain/events";
 
-// S06.07: the on-call roster, the health job and the Hub's banner for a sender that is failing (composed in src/app/health.ts and src/app/oncall.ts).
-export { createOncallRoster, hasOncallNumber, oncallNumberSource, type AddOutcome, type OncallEntry, type OncallRoster, type OncallRosterDeps, type RemoveOutcome } from "./application/oncallRoster";
+// S06.07: the on-call roster, the health job and the Hub's banner for a sender that is failing (composed in src/app/health.ts and src/app/oncall.ts); S08.08
+// the on-duty Admin and whom an escalation's text goes to (composed in src/app/escalations.ts).
+export {
+  createOncallRoster,
+  escalationRecipients,
+  hasOncallNumber,
+  onDutyStateOf,
+  oncallNumberSource,
+  type AddOutcome,
+  type EscalationRecipientIds,
+  type OnDutyAdminCheck,
+  type OnDutyOutcome,
+  type OnDutyState,
+  type OncallEntry,
+  type OncallRoster,
+  type OncallRosterDeps,
+  type RemoveOutcome,
+} from "./application/oncallRoster";
 export {
   activeHealthConditions,
   createHealthJob,

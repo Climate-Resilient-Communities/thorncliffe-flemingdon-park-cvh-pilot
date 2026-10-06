@@ -7,10 +7,12 @@
 //    (`round_ended`) without anything about the resident;
 //  - a mark whose id the row already took: nothing changes (`already`);
 //  - a live row: the mark becomes its latest (`marked`; a later mark replaces an earlier one, and the tally records the latest when the row leaves the
-//    round); `not_reached` and `needs_help` also make the row's escalation for that status, unless it exists (unique per `round_ref` and status);
-//  - a row that has left its round and not expired (a late mark): `not_reached` or `needs_help` makes the escalation for that status, once, with the
-//    stub's building and floor and the ambassador only (`hub_told`: "The Hub has been told; call the Hub if you can"); `done` changes nothing
-//    (`request_ended`: "This request has ended").
+//    round); `not_reached` and `needs_help` also make the row's escalation for that status, unless one is open (at most one open per `round_ref` and
+//    status: after the Hub handled it, S08.08, the next mark of that status makes a new one);
+//  - a row that has left its round and not expired (a late mark): `not_reached` or `needs_help` makes the escalation for that status unless one is open,
+//    with the stub's building and floor and the ambassador only (`hub_told`: "The Hub has been told; call the Hub if you can"); the same late mark sent
+//    again (its id is on the escalation it made) makes nothing, even once that escalation is handled; `done` changes nothing (`request_ended`: "This
+//    request has ended").
 // The escalation is made in the mark's transaction, then handed to the `escalations` seam in the same transaction (S08.08 adds the Hub's list, the
 // text to the on-duty Admin and the handling; until then nothing follows it).
 import type { MarkOutcome, MarkStatus } from "../../../contracts/checkinRound";
@@ -107,14 +109,16 @@ export function createMarks(deps: MarksDeps): Marks {
           if (decision === "already") return "already";
           if (decision === "ended") return "request_ended";
           const late = decision === "escalate";
+          // A late mark's id cannot be kept on a stub: the escalation it made keeps it, so the mark sent again is the one mark even after the Hub handled it.
+          if (late && (await store.escalatedBy(tx, input.roundRef, markId))) return "hub_told";
           if (!late) await store.applyMark(tx, input.roundRef, { id: markId, status: input.status });
           let escalated = false;
           if (escalates(input.status)) {
-            const escalation: NewEscalation = { id: newId(), roundRef: input.roundRef, status: input.status, alertId: row.alertId, rsn: row.rsn, floorId: row.floorId, raisedBy: actor.staffId, late };
+            const escalation: NewEscalation = { id: newId(), roundRef: input.roundRef, status: input.status, alertId: row.alertId, rsn: row.rsn, floorId: row.floorId, raisedBy: actor.staffId, late, markId };
             escalated = await store.raiseEscalation(tx, escalation);
             if (escalated) await escalations.raised(tx, escalation);
           }
-          // A late mark that finds its escalation already made (the same or another id) changes nothing: it is answered the same, and not recorded again.
+          // A late mark that finds an escalation of its status open (made by another id) changes nothing: it is answered the same, and not recorded again.
           if (late && !escalated) return "hub_told";
           await audit.record(tx, { action: "checkin.marked", actorStaffId: actor.staffId, subjectType: "alert", subjectId: row.alertId, meta: { status: input.status, late, escalated } });
           return late ? "hub_told" : "marked";

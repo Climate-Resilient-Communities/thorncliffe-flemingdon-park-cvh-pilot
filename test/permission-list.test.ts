@@ -52,6 +52,9 @@ async function staffEndpointsOnDisk(): Promise<Found[]> {
   return found;
 }
 
+/** The first test to read the guards imports every staff page, route and action (over a hundred files): seconds on a busy machine. */
+const IMPORTS_EVERY_ENDPOINT_MS = 30_000;
+
 describe("the permission test list", () => {
   it("has a row for every staff page, route handler and server action on disk, and none for anything else", async () => {
     const onDisk = (await staffEndpointsOnDisk()).map((endpoint) => endpoint.id).sort();
@@ -61,7 +64,7 @@ describe("the permission test list", () => {
     expect(missing, "staff endpoints missing from test/permissions/endpoints.ts").toEqual([]);
     expect(gone, "rows of test/permissions/endpoints.ts with no endpoint").toEqual([]);
     expect(new Set(listed).size).toBe(listed.length);
-  });
+  }, IMPORTS_EVERY_ENDPOINT_MS);
 
   it("lists each endpoint with the file, route and policy action its guard declares, and the public ones as public", async () => {
     const onDisk = new Map((await staffEndpointsOnDisk()).map((endpoint) => [endpoint.id, endpoint]));
@@ -73,7 +76,7 @@ describe("the permission test list", () => {
     for (const row of PUBLIC_ENDPOINTS) {
       expect(onDisk.get(row.id), row.id).toMatchObject({ file: row.file, export: row.export, route: row.route, access: "public" });
     }
-  });
+  }, IMPORTS_EVERY_ENDPOINT_MS);
 
   it("expects what the policy decides for each role, and a Director refused every business write", () => {
     for (const row of STAFF_ENDPOINTS) {

@@ -162,7 +162,10 @@ describe("hubNavigation", () => {
       if (item.href === null) continue;
       expect(existsSync(path.join(app, item.href, "page.tsx")), `${item.label}: ${item.href}`).toBe(true);
     }
-    expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual(["rounds"]);
+    // S08.08 built "Check-in rounds" (O-17) for the Hub's roles; an Ambassador's round is their own page, reached from their home.
+    expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual([]);
+    for (const role of ["coordinator", "director", "admin"] as const) expect(items(role).find((item) => item.id === "rounds")?.href).toBe("/staff/rounds");
+    expect(items("ambassador").find((item) => item.id === "rounds")?.href).toBeNull();
   });
 
   it("uses each id once and the English catalog's labels", () => {

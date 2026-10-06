@@ -117,8 +117,22 @@ vi.mock("../../src/app/staff/messagingPause", () => ({
   startSending: async () => {},
   logPauseError: () => {},
 }));
-// The On-call numbers page and its actions (S06.07) run the roster on the app's own connection.
-vi.mock("../../src/app/oncall", () => ({ oncallRoster: () => wired.oncall }));
+// The On-call numbers page and its actions (S06.07) run the roster on the app's own connection; S08.08's on-duty choice lists no account here.
+vi.mock("../../src/app/oncall", () => ({ oncallRoster: () => wired.oncall, onDutyCandidates: async () => [], onDutyName: async () => null }));
+// "Check-in rounds" and an escalation's page and action (S08.08) read and handle on the app's own connection.
+vi.mock("../../src/app/staff/rounds/load", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../src/app/staff/rounds/load")>();
+  return {
+    ...real,
+    loadRounds: () => real.loadRounds(wired.db as Db),
+    loadEscalation: (id: unknown, viewer: Parameters<typeof real.loadEscalation>[1]) => real.loadEscalation(id, viewer, wired.db as Db),
+  };
+});
+vi.mock("../../src/app/escalations", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../src/app/escalations")>();
+  const { createEscalationHandling } = await import("../../src/modules/checkins");
+  return { ...real, escalationHandling: () => createEscalationHandling({ db: wired.db as Db }) };
+});
 // The Spend page and its action (S07.08) run the spend module on the app's own connection.
 vi.mock("../../src/app/staff/spendSeam", () => ({
   spendCap: () => wired.spend,

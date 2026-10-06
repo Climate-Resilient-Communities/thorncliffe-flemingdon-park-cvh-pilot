@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull } from "drizzle-orm";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import type { DbExecutor } from "../../../platform/db";
 import { normaliseUsername } from "../domain/newAccount";
@@ -52,4 +52,30 @@ export async function readStaffByUsername(executor: DbExecutor, username: string
     .from(staffAccount)
     .where(eq(staffAccount.username, normaliseUsername(username)));
   return row ? { id: row.id, role: row.role, status: row.status, name: `${row.firstName} ${row.lastName}` } : null;
+}
+
+/** The database's facts of an Admin who can be on duty (S08.08): active, an Admin's account, its own password chosen, an authenticator enrolled through the app. */
+const onDutyAdmin = () => and(eq(staffAccount.role, "admin"), eq(staffAccount.status, "active"), eq(staffAccount.mustChangePassword, false), isNotNull(staffAccount.factorEnrolledAt));
+
+/**
+ * Whether the account can be the on-duty Admin (S08.08, E08 "On-duty Admin"): an active Admin with an authenticator enrolled through the app and their own
+ * password, so whoever receives an escalation's text can sign in at aal2 and open the resident's details. The database's record of the authenticator
+ * (`factor_enrolled_at`, which the two-Admin trigger reads too) is what counts; the provider is not asked (this is read in a mark's transaction).
+ */
+export async function isOnDutyAdmin(executor: DbExecutor, staffId: string): Promise<boolean> {
+  const [row] = await executor
+    .select({ id: staffAccount.id })
+    .from(staffAccount)
+    .where(and(eq(staffAccount.id, staffId), onDutyAdmin()));
+  return row !== undefined;
+}
+
+/** The accounts that can be the on-duty Admin, by name (the on-call page's choice, S08.08). */
+export async function readOnDutyCandidates(executor: DbExecutor): Promise<{ id: string; name: string }[]> {
+  const rows = await executor
+    .select({ id: staffAccount.id, firstName: staffAccount.firstName, lastName: staffAccount.lastName })
+    .from(staffAccount)
+    .where(onDutyAdmin())
+    .orderBy(asc(staffAccount.firstName), asc(staffAccount.lastName), asc(staffAccount.id));
+  return rows.map((row) => ({ id: row.id, name: `${row.firstName} ${row.lastName}` }));
 }

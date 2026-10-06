@@ -9,6 +9,7 @@ import { createAssignments, type PolicyAssignment } from "@/modules/identity";
 import { addressesOfBuildings, floorsOfBuilding } from "@/modules/places";
 import { checkinAskersAmong, checkinContactsOf } from "@/modules/subscriptions";
 import { getDb, type Db } from "@/platform/db";
+import { escalationTexts } from "../../../escalations";
 import type { StaffSession } from "../../session";
 import { composeRound, listedFloor, sightOf, type RoundPlan, type RoundViewer } from "./compose";
 
@@ -76,9 +77,12 @@ export function roundReads(): RoundReads {
   return (reads ??= createRoundReads(getDb()));
 }
 
-/** The marks use case on the app's database (made once). S08.08 gives it the escalations' follow-up. */
+/**
+ * The marks use case on the app's database (made once). S08.08: a new escalation is followed, in the mark's transaction, by its text to the on-duty Admin
+ * (or every on-call number when none is set; src/app/escalations.ts).
+ */
 export function roundMarks(): Marks {
-  return (marks ??= createMarks({ db: getDb() }));
+  return (marks ??= createMarks({ db: getDb(), escalations: escalationTexts() }));
 }
 
 /**

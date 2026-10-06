@@ -391,8 +391,41 @@ describe("an approved acknowledgement, update or correction of a round type star
     await freeze(finalRef, "final", null);
     await approve(finalRef);
     expect((await owner`select status from alert where id = ${heat.alertId}`)[0]).toEqual({ status: "closed" });
-    expect(await subscribersIn(heat.alertId)).toEqual([onA1]);
+    // S08.08: the close tallies the round in the final's approval: the one row it had (unmarked) is now a closed stub, and none was added.
+    expect(await rowsOf(heat.alertId)).toMatchObject([{ subscriber_id: null }]);
+    expect(await tallyOf(heat.alertId)).toEqual({ [`${RSN_A}/${A1}/requested`]: 1, [`${RSN_A}/${A1}/unmarked`]: 1 });
     expect(await liveRowsOf(since)).toHaveLength(0);
+  });
+
+  it("ends a final's round after the final's capture: the recipients' rows are locked before the round's (AD-18, S08.08)", async () => {
+    const onA1 = await subscriber({ request: { rsn: RSN_A, floor: A1 } });
+    const heat = await pendingAck(neighbourhood(["heat"]));
+    await approve(heat);
+    const made = await alerting.startFinal(actor(author), { alertId: heat.alertId }, { entryId: randomUUID(), text: "The heat warning is over." });
+    if (!made.ok) throw new Error(`startFinal refused: ${made.error}`);
+    const finalRef = { alertId: heat.alertId, entryId: made.value.entry.id };
+    await freeze(finalRef, "final", null);
+    // A mark holds the round's row (it locks that row only, S08.07).
+    const reached = deferred();
+    const hold = deferred();
+    const marking = appSql.begin(async (tx) => {
+      await tx`select 1 from checkin where alert_id = ${heat.alertId} for update`;
+      reached.resolve();
+      await hold.promise;
+    });
+    await reached.promise;
+    const approving = approve(finalRef);
+    await untilWaiting();
+    // The approval waits for the round's row holding its recipient's row already (FOR SHARE, the capture's): it was captured first.
+    const recipientHeld = await owner`select 1 from subscriber where id = ${onA1} for update nowait`.then(
+      () => false,
+      (error: unknown) => /could not obtain lock/.test(String(error)),
+    );
+    hold.resolve();
+    await marking;
+    await approving;
+    expect(recipientHeld).toBe(true);
+    expect(await rowsOf(heat.alertId)).toMatchObject([{ subscriber_id: null, outcome: "unmarked", closed: true }]);
   });
 
   it("refuses any check-in row for a drill thread, whoever inserts it (the trigger, direct SQL)", async () => {
