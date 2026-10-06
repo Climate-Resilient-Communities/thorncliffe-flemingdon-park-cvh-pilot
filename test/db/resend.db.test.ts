@@ -52,7 +52,9 @@ let madeNeighbourhood = false;
 let phoneCounter = 0;
 
 const auditTrail = { record: (tx: Parameters<typeof record>[0], event: Parameters<typeof record>[1]) => record(tx, event), recordRefusal: (db: Db, event: Parameters<typeof recordRefusal>[1]) => recordRefusal(db, event) };
-const hooks = createSmsSpend({ pricePerSegmentCents: PRICE, now: () => new Date(), log: { error: (evt, fields) => world.log.error(evt, fields) } });
+/** The instant the spend hooks stamp on an estimate: the wall clock, or a fixed one a test pins so a month boundary cannot fall between its readings. */
+let spendNow: (() => Date) | null = null;
+const hooks = createSmsSpend({ pricePerSegmentCents: PRICE, now: () => spendNow?.() ?? new Date(), log: { error: (evt, fields) => world.log.error(evt, fields) } });
 const spendSeams = { afterOutcome: hooks.afterOutcome, afterProviderId: hooks.afterProviderId };
 
 function resendService(over: { receives?: (tx: never, recipient: { kind: string; id: string }) => Promise<boolean>; cap?: boolean } = {}): Resend {
@@ -112,6 +114,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  spendNow = null;
   await resetAll();
   service = resendService();
   admin = await world.fx.staff("admin");
@@ -183,7 +186,7 @@ const chainOf = async (rootId: string) =>
 const resendsOf = async (entryId: string) =>
   (await owner`select id, state, resend_of, resend_n, idempotency_key, recipient_id, lang, body from delivery where entry_id = ${entryId} and resend_of is not null order by resend_of, resend_n`) as unknown as Row[];
 
-const one = (entryId: string, deliveryId: string, seen: string | null, confirmedUnknown = false): ResendInput => ({ actorStaffId: admin.id, entryId, scope: "one", deliveryId, seen, confirmedUnknown });
+const one = (entryId: string, deliveryId: string, seen: string, confirmedUnknown = false): ResendInput => ({ actorStaffId: admin.id, entryId, scope: "one", deliveryId, seen, confirmedUnknown });
 const all = (entryId: string, lang: string): ResendInput => ({ actorStaffId: admin.id, entryId, scope: "language", lang });
 const resent = (outcome: ResendOutcome) => {
   if (outcome.kind !== "resent") throw new Error(`expected a resend, got a refusal: ${outcome.reason}`);
@@ -250,7 +253,11 @@ describe("an Admin resends one text that failed", () => {
     expect(n).toBe(1);
     const [copy] = await resendsOf(seeded.entry.entryId);
     const calls = world.provider.calls.length;
-    const spentBefore = await monthSpentCents(app, new Date());
+    // The estimate is stamped at a pinned instant, mid-month in a month no other test writes, and the month's spend is read for that same instant: a Toronto
+    // month boundary passing while the test runs cannot move the estimate out of the month read.
+    const at = new Date("2031-03-17T16:00:00Z");
+    spendNow = () => at;
+    const spentBefore = await monthSpentCents(app, at);
 
     // Not counted while it waits.
     expect(await estimatesOf(copy.id as string)).toBe(0);
@@ -261,7 +268,7 @@ describe("an Admin resends one text that failed", () => {
     expect((await rowOf(copy.id as string)).state).toBe("submitted");
     expect(await estimatesOf(copy.id as string)).toBe(1);
     expect(await estimatesOf(text.id)).toBe(0);
-    expect((await monthSpentCents(app, new Date())) - spentBefore).toBe(Math.ceil(seeded.entry.bodies.en.segments * PRICE));
+    expect((await monthSpentCents(app, at)) - spentBefore).toBe(Math.ceil(seeded.entry.bodies.en.segments * PRICE));
   });
 
   it("refuses a text that arrived, one that is still on its way, and one that was cancelled", async () => {
@@ -352,14 +359,14 @@ describe("a chain has at most two resends, whichever row is resent", () => {
     // Six presses on the chain's latest text, and on the root, all at once: exactly one more is made, and the numbers are 1 and 2.
     const [latest] = (await chainOf(root.id)).slice(-1);
     const presses = await Promise.all(
-      Array.from({ length: 6 }, (_, index) => service.resend(one(seeded.entry.entryId, index % 2 === 0 ? (latest.id as string) : root.id, null))),
+      Array.from({ length: 6 }, (_, index) => service.resend(one(seeded.entry.entryId, index % 2 === 0 ? (latest.id as string) : root.id, "failed"))),
     );
     expect(presses.filter((outcome) => outcome.kind === "resent")).toHaveLength(1);
     const chain = await chainOf(root.id);
     expect(chain.map((row) => row.resend_n)).toEqual([null, 1, 2]);
     expect(new Set(chain.map((row) => row.idempotency_key)).size).toBe(3);
     await failAll(seeded);
-    const again = await Promise.all(Array.from({ length: 4 }, () => service.resend(one(seeded.entry.entryId, (chain.at(-1) as Row).id as string, null))));
+    const again = await Promise.all(Array.from({ length: 4 }, () => service.resend(one(seeded.entry.entryId, (chain.at(-1) as Row).id as string, "failed"))));
     expect(again.filter((outcome) => outcome.kind === "resent")).toHaveLength(0);
     expect(await chainOf(root.id)).toHaveLength(3);
   });

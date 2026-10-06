@@ -2,8 +2,9 @@
 // confirmations and deletions by language and neighbourhood as counts only, with no identifier; the trigger on `subscriber` counts every way a subscriber is
 // made or removed (the inbound router's YES and STOP included); running the job again on the same Toronto day replaces that day's figures; and the view the Hub
 // reads applies the small-number rule (1 to 4 read "fewer than 5", a second cell hidden when one would be revealed, zero shown as 0).
-// Every day the job records is relative to the database's own Toronto clock, so the tests pass at any time of day; the view's tests use a fixed past day the
-// database never compares with its clock. Every number is fictional (555 exchange).
+// Every day the job records is relative to the database's own Toronto clock, so the tests pass at any time of day: a test never starts within a minute of
+// Toronto's midnight (`clearOfTorontoMidnight` waits it out), so what it seeds, the day the job records and the day it reads are one day. The view's tests use
+// a fixed past day the database never compares with its clock. Every number is fictional (555 exchange).
 import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -73,7 +74,20 @@ async function clear() {
   await world.reset();
 }
 
-beforeEach(clear);
+/**
+ * Waits until the database's Toronto clock is more than a minute away from midnight. The trigger counts a subscriber made or removed on the Toronto day of
+ * the database's now(), and "today" is that clock's day when the job runs: a test that seeds at 23:59:59 and runs the job at 00:00:00 would read a day with
+ * none of its seeds. Every test here takes a few seconds at most.
+ */
+async function clearOfTorontoMidnight() {
+  const [{ left }] = await owner`select (86400 - extract(epoch from (now() at time zone 'America/Toronto')::time))::float8 as left`;
+  if (Number(left) < 60) await new Promise((resolve) => setTimeout(resolve, (Number(left) + 1) * 1000));
+}
+
+beforeEach(async () => {
+  await clearOfTorontoMidnight();
+  await clear();
+}, 90_000);
 afterAll(async () => {
   await clear();
   await owner`delete from building_floor where rsn = ${RSN}`;
@@ -131,6 +145,7 @@ async function totals(day: string): Promise<Record<string, number>> {
 
 describe("the daily measures job", () => {
   it("stores receiving subscribers by state, pending sign-ups, confirmations and deletions by language and neighbourhood", async () => {
+    const today = await torontoToday();
     await subscribers(6, "en", "TP");
     await subscribers(3, "ur", "TP");
     await subscribers(5, "en", "FP", "retained");
@@ -140,8 +155,8 @@ describe("the daily measures job", () => {
     await pendings(1, "hi", "FP", true);
     await owner`delete from subscriber where id = any(${leaving})`;
 
+    // The day the job recorded is the day the seeds were counted on (the test starts clear of Toronto's midnight).
     const report = await job().run({ day: "today" });
-    const today = await torontoToday();
     expect(report.day).toBe(today);
 
     expect(await stored(today, "receiving_active", { lang: "en", nbhd: "TP" })).toBe(6);

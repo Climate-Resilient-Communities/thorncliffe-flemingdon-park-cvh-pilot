@@ -1,7 +1,8 @@
 // Cost per alert (S07.10, FR-M5), for the Hub's Admin and Director edition (AD-4: spend is seen by an Admin and a Director only; the caller asks the policy).
 // Two readings, both SQL views that hold counts and amounts and nothing personal (db/migrations/20261006110100_delivery_measure_views.sql):
 //  - `alert_cost`: per alert entry, drill flag and language, the text messages and their cost, ACTUAL where the provider's price was reported and an ESTIMATE
-//    otherwise, labelled (`basis`). A cell of fewer than 5 texts shows "fewer than 5" and no amount. Drills are returned apart.
+//    otherwise, labelled (`basis`). A cell of fewer than 5 texts shows "fewer than 5" and no amount; when any language cell is hidden the entry's total is
+//    hidden too ("not shown", no amount: 20261007030000), so it cannot give the hidden cells away. Drills are returned apart.
 //  - `cohere_alert_entry`: per alert entry (drills apart), the vendor calls and billed tokens made for it (the translation at submit) and its share of all the
 //    vendor's billed tokens of the month; `cohere_alert_share`: the same per month, real alerts and drills apart. A price that is not known gives no amount:
 //    the usage is in calls and tokens and the cost reads "unknown".
