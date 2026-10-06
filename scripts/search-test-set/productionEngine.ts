@@ -27,6 +27,7 @@ import {
   type SearchDeps,
   type SearchObservation,
 } from "@/modules/directory";
+import { recordOpsEvent, type SEARCH_CHECKPOINTS } from "@/modules/ops";
 import { monthlyUsage } from "@/modules/spend";
 import { createCohereRestClient } from "@/platform/cohere/restClient";
 import { TRANSLATE_SPEND_KIND, cohereTranslator, createQuestionTranslator, type CohereChatClient } from "@/modules/translation";
@@ -37,7 +38,10 @@ import { errorCode } from "./lib";
 import { planQuestion } from "./callPlan";
 import type { ProductionEnv } from "./production";
 import { meterVendor } from "./vendorMeter";
+import type { Shortfall } from "./bar";
 import type { Asked, ReleaseFacts, TuningEngine } from "./tuningRun";
+
+export type SearchCheckpoint = (typeof SEARCH_CHECKPOINTS)[number];
 
 /** What the engine is made from; every part can be swapped by a test. */
 export type EngineParts = {
@@ -124,22 +128,66 @@ export async function engineFrom(parts: EngineParts, options: { translatedLeg: b
 }
 
 /**
- * The Cohere calls recorded in spend_event in the calendar month (America/Toronto) that `now` falls in: embedding and translation,
- * whoever made them (live search, a publish, an alert's translation, an earlier test-set run), because the key's limit is the
- * key's and not a purpose's. The same count the translation quota watch uses (`monthlyUsage`, without a purpose). The count is
+ * The Cohere usage recorded in spend_event in the calendar month (America/Toronto) that `now` falls in, in calls and tokens: embedding
+ * and translation, whoever made them (live search, a publish, an alert's translation, an earlier test-set run), because the key's limit
+ * is the key's and not a purpose's. The same count the translation quota watch uses (`monthlyUsage`, without a purpose). The count is
  * the app's own record, so it can miss a call that never reached it; the vendor's own count is the one that decides.
  */
-export async function cohereCallsThisMonth(db: Db, now: Date = new Date()): Promise<number> {
+export async function cohereUsageThisMonth(db: Db, now: Date = new Date()): Promise<{ calls: number; tokens: number }> {
   const embedding = await monthlyUsage(db, EMBED_SPEND_KIND, now);
   const translation = await monthlyUsage(db, TRANSLATE_SPEND_KIND, now);
-  return embedding.calls + translation.calls;
+  return { calls: embedding.calls + translation.calls, tokens: embedding.tokens + translation.tokens };
+}
+
+/** The month's Cohere calls alone (S03.07's allowance). */
+export async function cohereCallsThisMonth(db: Db, now: Date = new Date()): Promise<number> {
+  return (await cohereUsageThisMonth(db, now)).calls;
+}
+
+/** Connects with the run's database login, reads the month's Cohere usage and closes the connection. */
+export async function readCohereUsageThisMonth(env: ProductionEnv): Promise<{ calls: number; tokens: number }> {
+  const db = createDb(env.databaseUrl, { max: 1 });
+  try {
+    return await cohereUsageThisMonth(db);
+  } finally {
+    await db.$client.end({ timeout: 5 }).catch(() => undefined);
+  }
 }
 
 /** Connects with the run's database login, counts the month's Cohere calls and closes the connection. */
 export async function readCohereCallsThisMonth(env: ProductionEnv): Promise<number> {
+  return (await readCohereUsageThisMonth(env)).calls;
+}
+
+/**
+ * Records a manual run's measures below the launch bar as `search.below_bar` ops events (S03.09), one per measure, in one transaction,
+ * for the weekly review. The app's own login may insert ops events (and nothing in them is a question).
+ */
+export async function belowBarEvents(db: Db, release: number, checkpoint: SearchCheckpoint, shortfalls: readonly Shortfall[]): Promise<void> {
+  if (shortfalls.length === 0) return;
+  await db.transaction(async (tx) => {
+    for (const s of shortfalls) {
+      await recordOpsEvent(tx, {
+        kind: "search.below_bar",
+        subjectType: "directory_release",
+        subjectId: String(release),
+        detail: {
+          measure: s.measure,
+          ...(s.lang === null ? {} : { lang: s.lang }),
+          ...(s.observed === null ? {} : { observed_permille: Math.round(s.observed * 1000) }),
+          minimum_permille: Math.round(s.minimum * 1000),
+          checkpoint,
+        },
+      });
+    }
+  });
+}
+
+/** Connects with the run's database login, records the events and closes the connection. */
+export async function recordBelowBar(env: ProductionEnv, release: number, checkpoint: SearchCheckpoint, shortfalls: readonly Shortfall[]): Promise<void> {
   const db = createDb(env.databaseUrl, { max: 1 });
   try {
-    return await cohereCallsThisMonth(db);
+    await belowBarEvents(db, release, checkpoint, shortfalls);
   } finally {
     await db.$client.end({ timeout: 5 }).catch(() => undefined);
   }

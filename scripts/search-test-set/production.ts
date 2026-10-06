@@ -20,6 +20,9 @@
 //   SEARCH_TEST_MONTHLY_CALLS, SEARCH_TEST_RESERVE_CALLS
 //                                optional: the calls a month the Cohere key allows in all (default 1000) and the calls of it kept
 //                                for live search (default 200); see allowance.ts
+//   SEARCH_TEST_MONTHLY_TOKENS, SEARCH_TEST_PRICES
+//                                optional: the tokens a month (default 1,000,000, or `none`) and the models whose price is known;
+//                                the usage guard (usageGuard.ts, S03.09) checks the run's tokens and calls before its first call
 //
 // Usage allowance: production uses a free Cohere trial key that live search shares. A run prints the calls it plans per leg and
 // does nothing more without --yes (--plan-only prints the plan and stops, with exit 0); with --yes it first reads this month's
@@ -42,10 +45,11 @@ import path from "node:path";
 import type { TestQuestion } from "@/contracts/searchTestSet";
 import type { LegReport, TuningReport } from "@/contracts/searchTuning";
 import { EnvError, parseSearchEnv, type SearchSettings } from "@/platform/config/env";
-import { checkAllowance, formatAllowance, resolveAllowance } from "./allowance";
-import { formatPlan, planLeg, planningTranslator } from "./callPlan";
+import { formatAllowance, resolveAllowance } from "./allowance";
+import { formatPlan, planLeg, planQuestion, planningTranslator } from "./callPlan";
 import { buildReport, compareReports, errorCode, formatReport, reportFileName, torontoDate, uncheckedQuestions, type LocatedQuestion } from "./lib";
 import { STOP_REASONS, formatLeg, formatScores, markdownSummary } from "./tuningSummary";
+import { checkUsage, estimateUsage, resolveUsageBasis } from "./usageGuard";
 import { CallBudget, DEFAULT_MAX_CALLS, legReport, runLeg, type Pace, type TuningEngine } from "./tuningRun";
 
 /** The variables a production run cannot do without, in the order they are reported missing. */
@@ -204,6 +208,8 @@ export type ProductionRunDeps = {
   makeEngine: (env: ProductionEnv, options: { translatedLeg: boolean }) => Promise<TuningEngine>;
   /** The Cohere calls (embedding and translation, every purpose) recorded in spend_event this calendar month (America/Toronto); connects, reads and closes. */
   monthCalls: (env: ProductionEnv) => Promise<number>;
+  /** The same month's Cohere calls and tokens (S03.09's usage guard); the command line gives it, and it is read instead of `monthCalls`. A test that gives `monthCalls` alone counts no tokens. */
+  monthUsage?: (env: ProductionEnv) => Promise<{ calls: number; tokens: number }>;
   usage: string;
   /** Test seams: the pause between questions. */
   sleep?: (ms: number) => Promise<void>;
@@ -244,8 +250,23 @@ export async function runProduction(argv: string[], env: Variables, root: string
     return 1;
   }
 
+  const basis = resolveUsageBasis(env);
+  if (!basis.ok) {
+    for (const problem of basis.problems) console.error(annotate(env, "error", "Unusable setting", problem));
+    return 1;
+  }
+
   // The plan comes before anything is called, or even connected to: it needs only the questions, the route and the allowance.
   const plans = options.legs.map((leg) => ({ leg, plan: planLeg(tuning, leg === "on" ? planningTranslator(settings.settings) : null) }));
+  const perQuestion = options.legs.flatMap((leg) => {
+    const translator = leg === "on" ? planningTranslator(settings.settings) : null;
+    return tuning.map((question) => ({ question, plan: planQuestion(question, translator) }));
+  });
+  const estimate = estimateUsage(
+    perQuestion.map((p) => p.question),
+    perQuestion.map((p) => p.plan),
+    options.model,
+  );
   for (const line of [...formatPlan(options.model, plans, options.maxCalls), formatAllowance(allowance.allowance)]) console.log(line);
   if (options.planOnly) return 0;
   if (!options.yes) {
@@ -272,22 +293,16 @@ export async function runProduction(argv: string[], env: Variables, root: string
     return 1;
   }
 
-  // The month's calls before the first one is made: the shared key must keep its reserve for live search.
-  let used: number;
+  // The month's usage before the first call is made: the shared key must keep its reserve for live search (S03.09's usage guard).
+  let used: { calls: number; tokens: number };
   try {
-    used = await deps.monthCalls(resolved.value);
+    used = deps.monthUsage ? await deps.monthUsage(resolved.value) : { calls: await deps.monthCalls(resolved.value), tokens: 0 };
   } catch (error) {
     console.error(annotate(env, "error", "This month's calls unknown", `could not read this month's Cohere calls from spend_event (${errorCode(error)}), and the run needs them to keep the live-search reserve: nothing was called.`));
     return 1;
   }
-  const month = checkAllowance(
-    allowance.allowance,
-    used,
-    plans.reduce((n, { plan }) => n + plan.worst, 0),
-    options.maxCalls,
-    torontoDate().slice(0, 7),
-  );
-  console.log(month.summary);
+  const month = checkUsage(allowance.allowance, basis.basis, used, estimate, options.maxCalls, torontoDate().slice(0, 7));
+  for (const line of month.summary) console.log(line);
   if (month.refusal !== null) {
     console.error(annotate(env, "error", "Not enough of the month's calls left", month.refusal));
     return 1;

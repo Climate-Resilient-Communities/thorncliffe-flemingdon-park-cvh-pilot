@@ -302,6 +302,23 @@ describe("cap overruns and publish failures", () => {
   });
 });
 
+describe("search below the launch bar (S03.09)", () => {
+  it("lists each measure a manual run of the search test set found below its minimum, with its language and when it ran", async () => {
+    await opsEvent("search.below_bar", await at(WEEK, 3, 10), { measure: "hit_rate", lang: "ur", observed_permille: 600, minimum_permille: 700, checkpoint: "week_4" }, { type: "directory_release", id: "4" });
+    await opsEvent("search.below_bar", await at(WEEK, 3, 10, 1), { measure: "emergency_accuracy", minimum_permille: 1000, checkpoint: "week_4" }, { type: "directory_release", id: "4" });
+    // Another week's run is that week's.
+    await opsEvent("search.below_bar", await at(WEEK, -4, 10), { measure: "no_match_accuracy", observed_permille: 800, minimum_permille: 900, checkpoint: "pre_launch" });
+
+    const rows = of(await review(), "search_below_bar").sort((a, b) => a.startedAt!.getTime() - b.startedAt!.getTime());
+
+    expect(rows.map((row) => [row.reason, row.lang, row.isDrill, row.n, row.nShown])).toEqual([
+      ["hit_rate", "ur", false, null, null],
+      ["emergency_accuracy", null, false, null, null],
+    ]);
+    expect(rows[0]!.startedAt).toEqual(await at(WEEK, 3, 10));
+  });
+});
+
 describe("translation fallbacks", () => {
   it("counts the entries whose language fell back, once each, by language, a drill apart", async () => {
     const entries: SeededEntry[] = [];
