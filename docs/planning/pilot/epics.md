@@ -1754,7 +1754,7 @@ So that the choice is evidence, not guesswork, and can be repeated on the full t
 
 ### Story S03.08 — Ambassadors complete the test set and the Hub sets the launch bar
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** — (started 2026-10-06 23:17 UTC)
 - **Traces:** FR-D2-Q (acceptance), Launch readiness · **Depends on:** S03.07 · **Branch:** `e03-s08-full-test-set`
 
 As a Hub Coordinator,
