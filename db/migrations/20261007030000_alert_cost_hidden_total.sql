@@ -9,7 +9,10 @@
 -- or 'fewer than 5' when the total itself is 1 to 4), no basis and no amount. An entry whose language cells are all shown keeps its total as before.
 --
 -- The view keeps its name, columns, column types and order, `security_invoker` and grants (create or replace keeps the grants; they are stated again), so
--- the release before this one reads it unchanged: it already reads a total with no count or amount (an entry of fewer than 5 texts has one).
+-- the release before this one reads it unchanged: it already reads a total with no count or amount (an entry of fewer than 5 texts has one). The
+-- definition changes, which the check counts as destructive; the release in production when this was written (a989798d, S09.05 and S07.10 included)
+-- reads only these columns and handles a hidden total, so nothing it does can fail on the new definition.
+-- contract: a989798da4a23830517467d4dfdc7b15c9b3622d
 
 create or replace view alert_cost with (security_invoker = true) as
 with
