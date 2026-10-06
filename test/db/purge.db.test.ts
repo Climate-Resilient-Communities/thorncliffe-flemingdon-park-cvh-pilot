@@ -1,16 +1,19 @@
 // The end-of-pilot purge against a real database, as the app's own role (S09.08; FR-D-7, NFR-N5, AR-13; E09 definition "Campaign"; AD-9 D-7): the
-// `campaign_purge` record and its guard (the real campaign only, after its deadline by the database's clock, not cancelled; a count that never goes down; one
-// completion, once none is left, stamped and counted by the database); the job (nothing before the deadline; after it every subscriber still asked deleted
-// with the full E07 deletion, each in a transaction of its own, the others kept; one aggregate ops event); a YES racing it at the deadline (both judge the
-// deadline by the database's clock and meet at the subscriber's row lock and the number's lock: a YES first keeps the subscriber, one after the deadline is
-// refused with S09.07's reply); an interrupted purge resumed with a mix of states; the end of the pilot keeping the staff audit trail and the aggregate
-// measures; and the day the terms page states. Every number is fictitious (the 555 exchange); nothing reaches Twilio.
+// `campaign_purge` record and its guard (the real campaign only, after its deadline by the database's clock and its end, not cancelled; a count that never
+// goes down; one completion, once none is left, stamped and counted by the database); the job (nothing before the deadline and the end job; after them every
+// subscriber still asked deleted with the full E07 deletion, check-ins' port called in each deletion's transaction, each in a transaction of its own, the
+// others kept; one aggregate ops event whose counts are the end's); a YES racing it at the deadline (both judge the deadline by the database's clock and meet
+// at the subscriber's row lock and the number's lock: a YES first keeps the subscriber, one after the deadline is refused with S09.07's reply); an
+// interrupted purge resumed with a mix of states; the end of the pilot keeping the staff audit trail and the aggregate measures (the correction reach
+// included, kept as it stood when the purge began); and the day the terms page states. Every number is fictitious (the 555 exchange); nothing reaches
+// Twilio.
 import { randomBytes, randomUUID } from "node:crypto";
+import { sql } from "drizzle-orm";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { record, recordRefusal } from "../../src/modules/audit";
-import { createDeliveryQueue } from "../../src/modules/messaging";
+import { createDeliveryQueue, readCorrectionReach } from "../../src/modules/messaging";
 import { readWeeklyReview, recordOpsEvent } from "../../src/modules/ops";
 import { floorsOfBuilding } from "../../src/modules/places";
 import {
@@ -27,7 +30,7 @@ import {
 } from "../../src/modules/subscriptions";
 import { campaignStore } from "../../src/modules/subscriptions/adapters/campaignStore";
 import { purgeStore } from "../../src/modules/subscriptions/adapters/purgeStore";
-import { createDb, type Db } from "../../src/platform/db";
+import { createDb, type Db, type DbTransaction } from "../../src/platform/db";
 import { BASE_URL, deferred, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
 
@@ -40,6 +43,8 @@ let world: DispatcherWorld;
 let auditBaseline = 0;
 let phoneCounter = 0;
 let sid = 0;
+/** Entries moved into another thread (a correction replaces an entry of its own thread): they go first when the fixtures are removed. */
+let moved: string[] = [];
 
 const SIGNED_UP = "2026-10-01.1";
 const TERMS = "2026-11-02.2";
@@ -59,8 +64,8 @@ function campaigns(): Campaigns {
   });
 }
 
-/** The inbound router as src/app/inbound.ts composes it (its deletion is the purge's). */
-function router(stores?: InboundDeps["stores"]) {
+/** The inbound router as src/app/inbound.ts composes it (its deletion is the purge's); `checkins` stands for E08's port. */
+function router(stores?: InboundDeps["stores"], checkins?: InboundDeps["checkins"]) {
   return createInboundRouter({
     db: app,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
@@ -70,7 +75,24 @@ function router(stores?: InboundDeps["stores"]) {
     publicBaseUrl: () => BASE_URL,
     pricePerSegmentCents: () => 1.5,
     ...(stores ? { stores } : {}),
+    ...(checkins ? { checkins } : {}),
   });
+}
+
+/**
+ * E08's `deleteForSubscriber` port, recording each call with what the transaction it is given sees: the subscriber's texts still waiting, inside it (the
+ * deletion skipped them, not yet committed) and outside it (still waiting until it commits), which shows the call is made inside the deletion's transaction.
+ */
+function recordingCheckins() {
+  const calls: { id: string; waitingInside: number; waitingOutside: number }[] = [];
+  const port: NonNullable<InboundDeps["checkins"]> = {
+    deleteForSubscriber: async (id: string, tx: DbTransaction) => {
+      const [inside] = await tx.execute<{ n: number }>(sql`select count(*)::int as n from delivery where recipient_id = ${id} and state = 'queued'`);
+      const [outside] = await owner`select count(*)::int as n from delivery where recipient_id = ${id} and state = 'queued'`;
+      calls.push({ id, waitingInside: inside!.n, waitingOutside: outside!.n as number });
+    },
+  };
+  return { port, calls };
 }
 
 const errors: Row[] = [];
@@ -104,7 +126,16 @@ beforeAll(async () => {
 });
 
 async function resetAll() {
+  await owner`delete from correction_reach_kept`;
   await owner`delete from delivery`;
+  if (moved.length > 0) {
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+      for (const id of moved) await tx`delete from alert_entry where id = ${id}`;
+      await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+    });
+    moved = [];
+  }
   await owner`delete from subscriber`;
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
@@ -181,6 +212,19 @@ async function deadlineIn(campaignId: string, seconds: number) {
 }
 const pastDeadline = (campaignId: string) => deadlineIn(campaignId, -60);
 
+/** The end job's run (S09.07): the campaign ended and audited `campaign.ended` with who stayed and who did not reply. The purge waits for it. */
+async function endJob() {
+  const report = await campaigns().endDue();
+  if (report.real === null) throw new Error("the end job ended no real campaign");
+  return report.real;
+}
+
+/** Past the deadline and ended by the end job: the purge is due. */
+async function ended(campaignId: string) {
+  await pastDeadline(campaignId);
+  return endJob();
+}
+
 /** Waits until the database's clock has passed the campaign's deadline. */
 const untilPastDeadline = (campaignId: string) =>
   world.until(async () => (await owner`select clock_timestamp() >= deadline as past from campaign where id = ${campaignId}`)[0]!.past === true, "the deadline", 10_000);
@@ -196,13 +240,15 @@ const NOT_DUE = { due: false, deleted: 0, skipped: 0, failed: 0, more: false, co
 // --- the record -----------------------------------------------------------------------------------------------------------------------------------------
 
 describe("the campaign_purge record", () => {
-  it("is begun only for the real campaign once its deadline has passed, by the database's clock, and never for a cancelled one", async () => {
+  it("is begun only for the real campaign once its deadline has passed, by the database's clock, and the end job has ended it; never for a cancelled one", async () => {
     await subscriber("en");
     const campaignId = await started();
     const [rehearsal] = await owner`select id from campaign where rehearsal`;
     expect(await refusal(() => appSql`insert into campaign_purge (campaign_id) values (${campaignId})`)).toContain("the purge begins once the campaign's deadline has passed");
     await pastDeadline(campaignId);
     expect(await refusal(() => appSql`insert into campaign_purge (campaign_id) values (${rehearsal!.id as string})`)).toContain("only the real campaign is purged");
+    // Past the deadline, before the end job: its `campaign.ended` counts come before any deletion.
+    expect(await refusal(() => appSql`insert into campaign_purge (campaign_id) values (${campaignId})`)).toContain("the purge begins once the end job has ended the campaign");
     await owner`update campaign set state = 'cancelled' where id = ${campaignId}`;
     expect(await refusal(() => appSql`insert into campaign_purge (campaign_id) values (${campaignId})`)).toContain("a cancelled campaign is not purged");
   });
@@ -212,7 +258,7 @@ describe("the campaign_purge record", () => {
     const kept = await subscriber("ur");
     const campaignId = await started();
     await textFrom(kept.phone, "YES");
-    await pastDeadline(campaignId);
+    await ended(campaignId);
     await appSql`insert into campaign_purge (campaign_id, deleted, completed_at, retained) values (${campaignId}, 9, now(), 9)`;
     expect(await purgeRecord()).toEqual({ deleted: 0, retained: null, completed: false });
     await appSql`update campaign_purge set deleted = 2`;
@@ -233,19 +279,22 @@ describe("the campaign_purge record", () => {
 // --- the job --------------------------------------------------------------------------------------------------------------------------------------------
 
 describe("the purge job", () => {
-  it("does nothing with no campaign, before the deadline, or for a cancelled campaign", async () => {
+  it("does nothing with no campaign, before the deadline, before the end job has ended the campaign, or for a cancelled campaign", async () => {
     const asked = await subscriber("en");
     expect(await purge().run()).toEqual(NOT_DUE);
     const campaignId = await started();
     expect(await purge().run()).toEqual(NOT_DUE);
-    await owner`update campaign set state = 'cancelled' where id = ${campaignId}`;
     await pastDeadline(campaignId);
+    expect(await purge().run()).toEqual(NOT_DUE);
+    await owner`update campaign set state = 'cancelled' where id = ${campaignId}`;
+    // The end job ends no cancelled campaign.
+    expect(await campaigns().endDue()).toMatchObject({ real: null });
     expect(await purge().run()).toEqual(NOT_DUE);
     expect(await statesOf()).toEqual({ [asked.id]: "reconsent_pending" });
     expect(await owner`select count(*)::int as n from campaign_purge`).toEqual([{ n: 0 }]);
   });
 
-  it("after the deadline deletes everyone who did not say YES with the full E07 deletion, keeps who did, and records the counts once as an aggregate ops event", async () => {
+  it("after the deadline and the end deletes everyone who did not say YES with the full E07 deletion, keeps who did, and records the counts once as an aggregate ops event", async () => {
     const asked = await subscriber("en");
     const askedUr = await subscriber("ur", "active", "FP");
     const kept = await subscriber("fr");
@@ -260,8 +309,18 @@ describe("the purge job", () => {
     expect(await textFrom(askedUr.phone, "YES")).toMatchObject({ state: "lapsed", action: "pilot_ended", replied: true });
     expect(await owner`select count(*)::int as n from inbound_reply`).toEqual([{ n: 1 }]);
     expect(await residentDataDeletedOn(app)).toBeNull();
+    // The end job counts who stayed and who did not reply, before anyone is deleted.
+    expect(await endJob()).toEqual({ kept: 1, lapsed: 2 });
 
-    expect(await purge().run()).toEqual({ due: true, deleted: 2, skipped: 0, failed: 0, more: false, completed: true, completedNow: true });
+    // E08's check-ins port is called for each subscriber deleted, inside their deletion's transaction, and for nobody else.
+    const checkins = recordingCheckins();
+    expect(await purge({ deletion: router(undefined, checkins.port) }).run()).toEqual({ due: true, deleted: 2, skipped: 0, failed: 0, more: false, completed: true, completedNow: true });
+    expect(checkins.calls.sort((a, b) => a.id.localeCompare(b.id))).toEqual(
+      [
+        { id: asked.id, waitingInside: 0, waitingOutside: 2 },
+        { id: askedUr.id, waitingInside: 0, waitingOutside: 1 },
+      ].sort((a, b) => a.id.localeCompare(b.id)),
+    );
 
     expect(await statesOf()).toEqual({ [kept.id]: "retained", [joined.id]: "active" });
     // E07: their waiting texts were skipped (the campaign text, the alert and the reply), and every text of theirs forgot them.
@@ -273,8 +332,9 @@ describe("the purge job", () => {
       { purpose: "reconsent", state: "queued" },
       { purpose: "prompt_reply", state: "queued" },
     ]);
-    // One aggregate event: counts, no subject, no id, no number.
+    // One aggregate event: counts, no subject, no id, no number; the same counts as the end's audit.
     expect(await purgeEvents()).toEqual([{ severity: "info", subject_type: null, subject_id: null, detail: { deleted: 2, retained: 1 } }]);
+    expect(await owner`select meta from audit_event where action = 'campaign.ended' and id > ${auditBaseline}`).toEqual([{ meta: { kept: 1, lapsed: 2 } }]);
     expect(await purgeRecord()).toEqual({ deleted: 2, retained: 1, completed: true });
     // The deletions are counted in the subscriber measures (S07.10) like any other.
     expect(await owner`select lang, nbhd, n from subscriber_event_count where event = 'deleted' order by lang`).toEqual([
@@ -317,12 +377,17 @@ describe("a YES racing the purge at the deadline", () => {
     const replying = textFrom(yes.phone, "YES", held);
     await inside.promise;
     await untilPastDeadline(campaignId);
+    // The end job does not wait for the YES (it counts them as not yet replied: the YES has not committed).
+    await endJob();
 
-    const running = purge().run();
+    const checkins = recordingCheckins();
+    const running = purge({ deletion: router(undefined, checkins.port) }).run();
     await world.untilSomeoneWaitsForALock();
     release.resolve();
     expect(await replying).toMatchObject({ state: "active", action: "reconsent", replied: true });
     expect(await running).toEqual({ due: true, deleted: 1, skipped: 1, failed: 0, more: false, completed: true, completedNow: true });
+    // Check-ins were deleted for the one deleted, never for the one kept under the lock.
+    expect(checkins.calls.map((call) => call.id)).toEqual([silent.id]);
 
     expect(await statesOf()).toEqual({ [yes.id]: "retained" });
     // Nothing the purge began for them was kept: their campaign text and the confirmation of their YES are still waiting.
@@ -347,6 +412,7 @@ describe("a YES racing the purge at the deadline", () => {
     });
     expect(await updated.promise).toBe(true);
     await untilPastDeadline(campaignId);
+    await endJob();
 
     const running = purge().run();
     await world.untilSomeoneWaitsForALock();
@@ -368,6 +434,7 @@ describe("a YES racing the purge at the deadline", () => {
     await pastDeadline(campaignId);
     expect(await textFrom(before.phone, "Oui")).toMatchObject({ state: "lapsed", action: "pilot_ended", replied: true });
     expect(await statesOf()).toMatchObject({ [before.id]: "reconsent_pending" });
+    await endJob();
 
     // The purge holds `during` (its number's lock and its row) while their YES arrives: the YES waits, then finds a number the CVH does not know.
     const locked = deferred();
@@ -413,7 +480,7 @@ describe("an interrupted purge", () => {
     const campaignId = await started();
     for (const one of kept) await textFrom(one.phone, "YES");
     const joined = await subscriber("en", "active");
-    await pastDeadline(campaignId);
+    expect(await ended(campaignId)).toEqual({ kept: 2, lapsed: 6 });
     const askedIds = new Set(asked.map((one) => one.id));
     const remaining = async () => Object.entries(await statesOf()).filter(([id]) => askedIds.has(id)).length;
 
@@ -469,23 +536,52 @@ describe("an interrupted purge", () => {
 // --- the end of the pilot -------------------------------------------------------------------------------------------------------------------------------
 
 describe("the end of the pilot", () => {
-  it("keeps the staff audit trail and the aggregate measures: the subscriber measures, the usage counts, the weekly review and the texts already sent", async () => {
-    const asked = [await subscriber("en"), await subscriber("ur", "active", "FP")];
-    const kept = await subscriber("fr");
-    const campaignId = await started();
-    await textFrom(kept.phone, "YES");
-    // Texts to the asked subscribers that went out during the pilot: one delivered, one the carrier could not deliver.
-    const alert = await world.seedAlert({ recipients: asked.map((one) => one.id) });
+  /** Marks texts as sent during the pilot (handed off, then `state`), as the sender and the status callbacks would. */
+  async function sentAs(ids: string[], state: "delivered" | "undelivered") {
     await owner.begin(async (tx) => {
       await tx.unsafe("set local session_replication_role = replica");
-      await tx`update delivery set state = 'delivered', claimed_at = now(), claimed_by = 'worker-1', handed_off_at = now(), submitted_at = now(), completed_at = now(),
-                   provider_message_id = ${`SM${randomBytes(16).toString("hex")}`} where id = ${alert.ids[0]!}`;
-      await tx`update delivery set state = 'undelivered', claimed_at = now(), claimed_by = 'worker-1', handed_off_at = now(), submitted_at = now(), completed_at = now(),
-                   provider_message_id = ${`SM${randomBytes(16).toString("hex")}`}, provider_error_code = 30003 where id = ${alert.ids[1]!}`;
+      for (const id of ids) {
+        await tx`update delivery set state = ${state}, claimed_at = now(), claimed_by = 'worker-1', handed_off_at = now(), submitted_at = now(), completed_at = now(),
+                     provider_message_id = ${`SM${randomBytes(16).toString("hex")}`}, provider_error_code = ${state === "undelivered" ? 30003 : null} where id = ${id}`;
+      }
     });
+  }
+
+  /** Moves `entryId` into `thread` and makes it replace `thread`'s entry (a correction), as deliveryMeasureViews.db.test.ts does. */
+  async function correcting(entryId: string, thread: { alertId: string; entryId: string }) {
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+      await tx`update alert_entry set alert_id = ${thread.alertId}, supersedes_id = ${thread.entryId} where id = ${entryId}`;
+      await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+    });
+    moved.push(entryId);
+  }
+
+  it("keeps the staff audit trail and the aggregate measures: the subscriber measures, the usage counts, the weekly review, the correction reach and the texts already sent", async () => {
+    const asked = [
+      await subscriber("en"),
+      await subscriber("ur", "active", "FP"),
+      await subscriber("fr"),
+      await subscriber("zh"),
+      await subscriber("es"),
+      await subscriber("ta", "active", "FP"),
+      await subscriber("bn"),
+      await subscriber("el"),
+    ];
+    const kept = [await subscriber("fr"), await subscriber("en", "active", "FP")];
+    const campaignId = await started();
+    for (const one of kept) await textFrom(one.phone, "YES");
+    // During the pilot: an alert to all ten (one text the carrier could not deliver), then its correction, delivered to all ten.
+    const everyone = [...asked, ...kept].map((one) => one.id);
+    const original = await world.seedAlert({ recipients: everyone });
+    await sentAs(original.ids.slice(0, 9), "delivered");
+    await sentAs([original.ids[9]!], "undelivered");
+    const correction = await world.seedAlert({ recipients: everyone, kind: "correction" });
+    await correcting(correction.entry.entryId, original.entry);
+    await sentAs(correction.ids, "delivered");
     await createSubscriberMeasuresJob({ db: app }).run({ day: "today" });
     await owner`insert into usage_count (day, evt, lang, nbhd, n) values ((now() at time zone 'America/Toronto')::date, 'install', 'ur', 'FP', 3)`;
-    await pastDeadline(campaignId);
+    await ended(campaignId);
     const [{ week }] = await owner`select to_char(date_trunc('week', now() at time zone 'America/Toronto'), 'YYYY-MM-DD') as week`;
 
     const snapshot = async () => ({
@@ -495,17 +591,77 @@ describe("the end of the pilot", () => {
       sent: await owner`select id, kind, lang, state, provider_error_code from delivery where handed_off_at is not null order by id`,
       review: await readWeeklyReview(app, week as string),
       confirmed: await owner`select day, lang, nbhd, n from subscriber_event_count where event = 'confirmed' order by 1, 2, 3`,
+      reach: await readCorrectionReach(app, 50),
     });
     const before = await snapshot();
-    expect(before.audit.map((row) => row.action)).toEqual(expect.arrayContaining(["campaign.rehearsed", "campaign.started"]));
+    expect(before.audit.map((row) => row.action)).toEqual(expect.arrayContaining(["campaign.rehearsed", "campaign.started", "campaign.ended"]));
     expect(before.review.some((row) => row.section === "delivery_problem")).toBe(true);
     expect(before.measures.length).toBeGreaterThan(0);
+    expect(before.reach.real).toEqual([
+      expect.objectContaining({
+        entryId: correction.entry.entryId,
+        originalRecipients: { n: 10, shown: "10" },
+        attemptedReach: { n: 10, shown: "10" },
+        confirmedReach: { n: 10, shown: "10" },
+        attemptedPercent: 100,
+        confirmedPercent: 100,
+      }),
+    ]);
 
-    expect(await purge().run()).toMatchObject({ deleted: 2, completed: true });
+    expect(await purge().run()).toMatchObject({ deleted: 8, completed: true });
 
     // Everything aggregate is as it was; the texts already sent stay, only no longer naming anyone; the purge audits nothing of its own.
     expect(await snapshot()).toEqual(before);
-    expect(await owner`select count(*)::int as n from delivery where id = any(${alert.ids}) and recipient_id is null`).toEqual([{ n: 2 }]);
-    expect(await statesOf()).toEqual({ [kept.id]: "retained" });
+    expect(await owner`select count(*)::int as n from delivery where id = any(${[...original.ids, ...correction.ids]}) and recipient_id is null`).toEqual([{ n: 16 }]);
+    expect(await statesOf()).toEqual({ [kept[0]!.id]: "retained", [kept[1]!.id]: "retained" });
+    // Why the correction reach is kept: the view, counted from the recipient ids the deletions cleared, now sees only the two who stayed.
+    expect(await appSql`select original_recipients_shown, confirmed_percent from correction_reach where entry_id = ${correction.entry.entryId}`).toEqual([
+      { original_recipients_shown: "fewer than 5", confirmed_percent: null },
+    ]);
+    expect(await appSql`select entry_id, original_recipients, confirmed_percent from correction_reach_kept`).toEqual([
+      { entry_id: correction.entry.entryId, original_recipients: 10, confirmed_percent: 100 },
+    ]);
+    // The kept rows are the view's, written by the database when the purge began: the app reads them and can neither add, change nor delete one.
+    expect(
+      await refusal(
+        () => appSql`insert into correction_reach_kept (entry_id, alert_id, kind, is_drill, original_recipients_shown, attempted_reach_shown, confirmed_reach_shown)
+                     values (${original.entry.entryId}, ${original.entry.alertId}, 'correction', false, '99', '99', '99')`,
+      ),
+    ).toContain("permission denied");
+    expect(await refusal(() => appSql`update correction_reach_kept set confirmed_percent = 1`)).toContain("permission denied");
+    expect(await refusal(() => appSql`delete from correction_reach_kept`)).toContain("permission denied");
+    for (const role of ["anon", "authenticated"]) {
+      expect(await refusal(() => owner.begin(async (tx) => (await tx.unsafe(`set local role ${role}`), tx`select * from correction_reach_kept`)))).toContain("permission denied");
+    }
+  });
+
+  it("reads the correction reach of an entry measured after the purge began live, from the subscribers who stayed", async () => {
+    const asked = [await subscriber("en"), await subscriber("ur"), await subscriber("fr"), await subscriber("es"), await subscriber("zh")];
+    const kept = [await subscriber("en"), await subscriber("ta"), await subscriber("bn"), await subscriber("el"), await subscriber("hi")];
+    const campaignId = await started();
+    for (const one of kept) await textFrom(one.phone, "YES");
+    const everyone = [...asked, ...kept].map((one) => one.id);
+    const original = await world.seedAlert({ recipients: everyone });
+    await sentAs(original.ids, "delivered");
+    const correction = await world.seedAlert({ recipients: everyone, kind: "correction" });
+    await correcting(correction.entry.entryId, original.entry);
+    await sentAs(correction.ids, "delivered");
+    await ended(campaignId);
+
+    expect(await purge().run()).toMatchObject({ deleted: 5, completed: true });
+    // After the purge, a second correction of the same original goes to the five who stayed: measured live, against the original's recipients still there.
+    const later = await world.seedAlert({ recipients: kept.map((one) => one.id), kind: "correction" });
+    await correcting(later.entry.entryId, original.entry);
+    await sentAs(later.ids, "delivered");
+
+    const reach = await readCorrectionReach(app, 50);
+    expect(reach.real.map((row) => [row.entryId, row.originalRecipients.shown, row.confirmedPercent])).toEqual(
+      expect.arrayContaining([
+        [correction.entry.entryId, "10", 100],
+        [later.entry.entryId, "5", 100],
+      ]),
+    );
+    expect(reach.real).toHaveLength(2);
+    expect(await owner`select entry_id from correction_reach_kept`).toEqual([{ entry_id: correction.entry.entryId }]);
   });
 });

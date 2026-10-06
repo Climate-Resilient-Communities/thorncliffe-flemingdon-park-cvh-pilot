@@ -39,8 +39,9 @@ This page holds no phone number, name or secret; write counts and dates only.
 
 1. At the deadline, subscribers who have not replied stop receiving anything at once. A YES after it is answered "The CVH pilot has ended; your number was not
    kept" and changes nothing.
-2. Within 15 minutes the campaign shows as ended on the page, and the purge begins. It deletes each subscriber who did not reply YES the way STOP does, a few
-   hundred a minute; a long list takes a few runs, 15 minutes apart. Nobody needs to do anything.
+2. Within 15 minutes the campaign shows as ended on the page (the end job counts who stayed and who did not reply), and the purge begins 5 minutes after
+   that: it never starts before the end job has run. It deletes each subscriber who did not reply YES the way STOP does, a few hundred a minute; a long list
+   takes a few runs, 15 minutes apart. Nobody needs to do anything.
 3. **IT** checks that it completed: in the Supabase SQL editor, `select at, detail from ops_event where kind = 'campaign.purge_completed'` gives the time, how
    many were deleted and how many stayed. The terms page (`/en/terms`) then states "Resident data deleted" with the date.
 4. If the health banner says a scheduled job failed around then, the purge could not delete someone: IT looks in the logs for `purge.subscriber_failed` (it
@@ -51,7 +52,9 @@ This page holds no phone number, name or secret; write counts and dates only.
 
 1. Write the counts from step 3 above (deleted, stayed) in the report and in the record below. No names, no numbers.
 2. The staff audit trail and the measures are kept: the purge deletes none of them (the Hub's Measures page, the weekly review from
-   `scripts/export-weekly`, the usage counts and the texts already sent stay; sent texts no longer name anyone).
+   `scripts/export-weekly`, the usage counts and the texts already sent stay; sent texts no longer name anyone). How far corrections reached is counted
+   from who received each text, which the deletions forget, so the database kept it as it stood when the purge began (`correction_reach_kept`): the
+   Measures page shows those figures, not a count of the few who stayed.
 3. Check the terms page states the date in English and in one right-to-left language (`/ur/terms`).
 4. **IT** rotates the secrets at pilot end, following the "At pilot end" steps of `docs/procedures/rotate-secrets.md` (S09.03), writes the rotation in that
    page's rotation record, and writes the date here.

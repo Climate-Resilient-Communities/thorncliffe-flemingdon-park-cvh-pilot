@@ -1,6 +1,6 @@
-// `/api/jobs/end-of-pilot-purge` (S09.08, FR-D-7): the end-of-pilot purge, called by pg_cron every 15 minutes with the environment's job secret (docs/config.md
-// has the cron statement; it is not applied to production by this repository). Before the re-consent campaign's deadline, by the database's clock, it does
-// nothing. After it, every subscriber still `reconsent_pending` is deleted with the E07 deletion, each in a transaction of its own, for at most 40 seconds a
+// `/api/jobs/end-of-pilot-purge` (S09.08, FR-D-7): the end-of-pilot purge, called by pg_cron every 15 minutes, 5 minutes after the end job, with the
+// environment's job secret (docs/config.md has the cron statement; it is not applied to production by this repository). Before the re-consent campaign's
+// deadline, by the database's clock, and its end by the end job, it does nothing. After them, every subscriber still `reconsent_pending` is deleted with the E07 deletion, each in a transaction of its own, for at most 40 seconds a
 // run (the next run goes on); once none is left the completion is recorded with the aggregate ops event `campaign.purge_completed`, and the terms page's
 // reading of it is expired so it states the day at once. A run with a subscriber whose deletion failed answers 500 (the health job's `job_failed` then
 // tells the on-call Admins), after deleting the others. The answer is counts only: never a number or an id.

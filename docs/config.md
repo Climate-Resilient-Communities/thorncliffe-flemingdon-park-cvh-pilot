@@ -428,23 +428,23 @@ job secret, sends no text and reads no Twilio credential. What it does and fixes
 
 | What | Where | Value |
 |---|---|---|
-| When | pg_cron job below, every 15 minutes | Nothing until the real campaign's deadline (`campaign.deadline`: the end of the Toronto day its text names, the 30th day after the start) has passed by the database's clock, and nothing for a cancelled campaign. The first run after the deadline begins the purge; it does not wait for the end job. |
+| When | pg_cron job below, every 15 minutes, 5 minutes after the end job (`5,20,35,50 * * * *`) | Nothing until the real campaign's deadline (`campaign.deadline`: the end of the Toronto day its text names, the 30th day after the start) has passed by the database's clock and the end job has ended the campaign (its `campaign.ended` audit counts who stayed and who did not reply before anyone is deleted; the database refuses the purge's record earlier), and nothing for a cancelled campaign. The first run after the end begins the purge, about 5 minutes after the deadline. |
 | Who | `purgeableSql` in `src/modules/subscriptions/adapters/purgeStore.ts` | Subscribers still `reconsent_pending`. `retained` (said YES) and `active` (joined after the start) subscribers are never selected. |
 | How | `src/modules/subscriptions/application/purge.ts` | One short transaction per subscriber, 100 ids read at a time: the number's lock, the waiting texts skipped, the row locked and the state and deadline checked again under the lock by the database's clock (a YES that won keeps them), then the full deletion STOP runs (the row, a pending sign-up, the number's `inbound_reply` rows; texts already sent forget the subscriber). A run starts new deletions for 40 seconds (`PURGE_BUDGET_MS`), and the next run goes on. |
 | Record | `campaign_purge` | `deleted` (raised with each deletion), and once none is left `completed_at` and `retained`, with the one ops event `campaign.purge_completed` (`deleted`, `retained`: counts only). A run with a subscriber whose deletion failed answers 500, so the health job's `job_failed` texts the on-call Admins; that subscriber is tried again at the next run, and the purge completes only once none is left. |
 | The terms page | `/{lang}/terms`, `src/app/pilotEnd.ts` | Once the purge has completed, the page states "Resident data deleted" with the Toronto day it completed, in every language (AI-generated translations, not yet checked by native readers). The page now renders on request; the day is read from `campaign_purge` through Next's data cache (an hour, expired by the run that completes the purge). `CVH_FAKE_RESIDENT_DATA_DELETED_ON=YYYY-MM-DD` stands in for it in local development only (the resident page tests); start-up refuses it on Vercel. |
-| Kept | | The staff audit trail, `subscriber_measure`, `subscriber_event_count` (the deletions are counted there), `usage_count`, the weekly review and the delivery rows of texts already sent. |
+| Kept | `correction_reach_kept` | The staff audit trail, `subscriber_measure`, `subscriber_event_count` (the deletions are counted there), `usage_count`, the weekly review, the spend views and the delivery rows of texts already sent (no longer naming anyone). The correction reach (S07.10's `correction_reach`) counts from the recipient ids the deletions clear, so the purge keeps it as it stood when it began: the database copies the view's rows into `correction_reach_kept` in the transaction that begins the purge, and the Hub's Measures page reads a kept entry from there (an entry measured later is read live). |
 
 The purge job, which the owner runs once in production's Supabase SQL editor as `postgres` (nothing in the repository or CI runs it), before the campaign starts:
 
 ```sql
-select cron.schedule('cvh-end-of-pilot-purge', '*/15 * * * *', $
+select cron.schedule('cvh-end-of-pilot-purge', '5,20,35,50 * * * *', $$
   select net.http_post(
     url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/end-of-pilot-purge',
     headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
     timeout_milliseconds := 60000
   );
-$);
+$$);
 ```
 
 Once `campaign.purge_completed` is in `ops_event` (`select at, detail from ops_event where kind = 'campaign.purge_completed'`), the job has nothing left to

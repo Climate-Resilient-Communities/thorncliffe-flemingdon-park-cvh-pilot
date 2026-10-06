@@ -1,9 +1,11 @@
 // The end-of-pilot purge (S09.08; FR-D-7, NFR-N5, AR-13; E09 definition "Campaign"; spine AD-9 D-7): everyone who did not say YES is deleted when the
 // campaign text said they would be. `/api/jobs/end-of-pilot-purge` (pg_cron every 15 minutes, composed in src/app/purge.ts) runs `run()`:
 //
-//  1. Due? The real campaign, not cancelled, whose deadline (`campaign.deadline`, S09.07: the end of the Toronto day its text names) has passed by the
-//     database's clock. Before that, or with no campaign, the run does nothing.
-//  2. The purge's record (`campaign_purge`), made the first time; a purge that has completed does nothing more.
+//  1. Due? The real campaign whose deadline (`campaign.deadline`, S09.07: the end of the Toronto day its text names) has passed by the database's clock
+//     and which the end job has ended (its `campaign.ended` audit counts who stayed and who did not reply before anyone is deleted; a cancelled campaign
+//     never ends). Before that, or with no campaign, the run does nothing.
+//  2. The purge's record (`campaign_purge`), made the first time; making it keeps the correction reach measure as it stands (`correction_reach_kept`, a
+//     trigger in the same transaction), since the deletions clear the recipient ids it is counted from. A purge that has completed does nothing more.
 //  3. The subscribers still `reconsent_pending` (S09.07's `lapsedSql`), read 100 ids at a time in id order, each deleted in ONE SHORT TRANSACTION OF ITS
 //     OWN, so a large purge never holds one long transaction (the deletion counter of S07.10 and the number's lock are held only for one subscriber):
 //       a. the number, read only while they are still one the purge deletes, and the number's lock (the lock a YES, a STOP and a sign-up take), so a
@@ -56,7 +58,7 @@ export interface PurgeDeps {
 
 /** What one run did: counts only. */
 export interface PurgeReport {
-  /** The real campaign's deadline has passed and it is not cancelled. */
+  /** The real campaign's deadline has passed and the end job has ended it. */
   due: boolean;
   /** Subscribers this run deleted. */
   deleted: number;

@@ -28,16 +28,22 @@ const PURGEABLE = purgeableSql(subscriber.retentionState);
 const purgeColumns = { campaignId: campaignPurge.campaignId, deleted: campaignPurge.deleted, completedAt: campaignPurge.completedAt, retained: campaignPurge.retained };
 
 export const purgeStore = {
-  /** The real campaign whose subscribers the purge deletes now: its deadline has passed by the database's clock and it is not cancelled; else null. */
+  /**
+   * The real campaign whose subscribers the purge deletes now: its deadline has passed by the database's clock and the end job has ended it (so S09.07's
+   * `campaign.ended` audit has counted who stayed and who did not reply before anyone is deleted; a cancelled campaign is never ended); else null.
+   */
   async dueCampaign(executor: DbExecutor): Promise<string | null> {
     const [row] = await executor
       .select({ id: campaign.id })
       .from(campaign)
-      .where(and(eq(campaign.rehearsal, false), sql`${campaign.state} <> 'cancelled'`, sql`${campaign.deadline} <= now()`));
+      .where(and(eq(campaign.rehearsal, false), eq(campaign.state, "ended"), sql`${campaign.deadline} <= now()`));
     return row?.id ?? null;
   },
 
-  /** The campaign's purge record, made the first time (the database refuses one before the deadline, for a rehearsal or a cancelled campaign). */
+  /**
+   * The campaign's purge record, made the first time (the database refuses one before the deadline or the end, for a rehearsal or a cancelled campaign).
+   * Making it keeps the correction reach measure as it stands (a trigger: `correction_reach_kept`), before the first deletion.
+   */
   async begin(executor: DbExecutor, campaignId: string): Promise<PurgeRow> {
     await executor.insert(campaignPurge).values({ campaignId }).onConflictDoNothing();
     return (await purgeStore.find(executor, campaignId))!;
