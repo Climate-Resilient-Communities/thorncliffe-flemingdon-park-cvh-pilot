@@ -9,7 +9,8 @@
 //    nothing again. Each is counted in the transaction that moves the row (rolled back, nothing is counted), and after the close, at every place,
 //    `requested` is the sum of the outcomes;
 //  - the live counts during the round come from the rows as they are now (the Hub's view and "My round"), not from the tally;
-//  - the page, as a Coordinator, a Director and an Admin: the counts by building and floor and never a phone number; an Ambassador is refused.
+//  - the page, as a Coordinator, a Director and an Admin: the counts by building and floor and never a phone number; an Ambassador is refused;
+//  - the pilot measures (S09.05's `checkin_round_count`): a closed round's tally by thread, building and floor, nothing of an open one, no identifier.
 import { randomBytes, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import postgres from "postgres";
@@ -486,5 +487,35 @@ describe("the round progress view as each person (the page /staff/rounds, direct
     expect(refused).toContain("Coordinators, Directors and Admins see the check-in escalations.");
     expect(refused).not.toContain("Round progress");
     expect(refused).not.toMatch(/data-count=/);
+  });
+});
+
+describe("the pilot measures: a round's counts by thread, building and floor once its thread has closed (S09.05's checkin_round_count)", () => {
+  it("holds each closed, non-drill thread's tally at every place, nothing of an open round, and no identifier of anyone", async () => {
+    const ambassador = await person("ambassador");
+    const people = [await requester(F1), await requester(F1), await requester(B1)];
+    const closed = await round(people, { overdue: true });
+    await mark(ambassador, closed.refs[0]!, "done");
+    await withdraw(people[2]!.id);
+    const stillOpen = await round([await requester(F2)]);
+    await expire();
+
+    // Read as the export reads it: the app's own role.
+    const rows = await appSql`select * from checkin_round_count where rsn in ${appSql([RSN, RSN_B])} order by alert_id, rsn, floor_order, status`;
+    expect(Object.keys(rows[0]!).sort()).toEqual(["address", "alert_id", "closed_at", "floor_id", "floor_label", "floor_order", "n", "nbhd", "rsn", "status"]);
+    expect(rows.map((row) => [row.alert_id, row.address, row.floor_label, row.status, row.n])).toEqual([
+      [closed.alertId, "1 Count Street", "1", "done", 1],
+      [closed.alertId, "1 Count Street", "1", "requested", 2],
+      [closed.alertId, "1 Count Street", "1", "unmarked", 1],
+      [closed.alertId, "3 Count Street", "1", "requested", 1],
+      [closed.alertId, "3 Count Street", "1", "withdrawn", 1],
+    ]);
+    const stored = JSON.stringify(rows);
+    expect(stored).not.toContain(stillOpen.alertId);
+    for (const subscriber of people) {
+      expect(stored).not.toContain(subscriber.id);
+      expect(stored).not.toContain(subscriber.phone.slice(2));
+    }
+    for (const ref of closed.refs) expect(stored).not.toContain(ref);
   });
 });
