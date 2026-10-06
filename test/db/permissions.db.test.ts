@@ -96,6 +96,17 @@ vi.mock("../../src/app/staff/ambassador/home", () => ({
   loadPostStatus: async () => null,
   loadResolvable: async () => null,
 }));
+// "My round" and its marks (S08.07) read and mark on the app's own connection.
+vi.mock("../../src/app/staff/ambassador/round/load", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../src/app/staff/ambassador/round/load")>();
+  const { createMarks, roundRowPlace } = await import("../../src/modules/checkins");
+  return {
+    ...real,
+    roundReads: () => real.createRoundReads(wired.db as Db),
+    roundMarks: () => createMarks({ db: wired.db as Db }),
+    markPlace: (roundRef: string) => roundRowPlace(wired.db as Db, roundRef),
+  };
+});
 // The audience pickers and their actions (S04.04) run the alert use cases on the app's own connection.
 // Submit and the entry state (S04.05) run on the same connection, with no translation model and nothing to freeze: the endpoints are called for a draft that does not exist.
 vi.mock("../../src/app/staff/alerts", () => ({ alerting: () => wired.alerting, alertSubmitter: () => wired.alertSubmitter }));
@@ -482,6 +493,7 @@ describe.each(STAFF_ENDPOINTS.map((endpoint) => [endpoint.id, endpoint] as const
     if (expected === "allowed") {
       expect(denials, "the guard let the call through").toEqual([]);
       if (endpoint.kind === "page") expect(answer).toEqual({ rendered: true });
+      else if (endpoint.kind === "route" && endpoint.allowedStatus !== undefined) expect((answer as { status: number }).status).toBe(endpoint.allowedStatus);
       else if (endpoint.kind === "route") expect([401, 403]).not.toContain((answer as { status: number }).status);
       else expect(GUARD_MESSAGES).not.toContain((answer as { state: { message?: string } }).state.message);
       return;

@@ -30,3 +30,11 @@ export function checkinRequestCounts(executor: DbExecutor, store: SubscriberStor
 export function checkinRequestersIn(executor: DbExecutor, rsns: readonly string[], store: SubscriberStore = subscriberStore): Promise<string[]> {
   return store.checkinRequestersIn(executor, rsns);
 }
+
+/**
+ * S08.07: the phone numbers of the requesters in a round, by subscriber id, for "My round" (A-04): the app composes each request the person may see from
+ * its round row and this number, keeps the id to itself and sends the round no-store. Only subscribers who still ask and receive texts.
+ */
+export function checkinContactsOf(executor: DbExecutor, subscriberIds: readonly string[], store: SubscriberStore = subscriberStore): Promise<Map<string, string>> {
+  return store.checkinContactsOf(executor, subscriberIds);
+}

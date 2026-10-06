@@ -60,6 +60,11 @@ export interface StaffEndpoint extends EndpointBase {
    * the same 403 `forbidden`. A correction or a withdrawal: an Ambassador's rule is their own pending entry, which these Hub pages never name (an Ambassador follows up on their own post at /api/staff/ambassador/follow, S08.04).
    */
   auditedReason?: Partial<Record<RoleCaller, "out_of_scope">>;
+  /**
+   * S08.07: the answer a route gives a caller the guard let through when the request names nothing that exists and the use case must refuse it with a 403 of
+   * its own (a mark naming a `round_ref` no row has: "an unknown round_ref ... is refused (401 or 403)"). Without it an allowed call is anything but 401 or 403.
+   */
+  allowedStatus?: number;
   expected: Record<RoleCaller, Outcome>;
 }
 
@@ -300,6 +305,28 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     policyContext: { targets: [] },
     auditedReason: { ambassador: "out_of_scope", ambassador_out_of_scope: "out_of_scope" },
     expected: { ambassador: "forbidden", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" },
+  },
+  // S08.07: "My round" (A-04). The page and the round's read are every staff member's (`hub.open`): what each gets is the role policy's, floor by floor (the
+  // requests on floors an Ambassador covers or any for an Admin, counts only otherwise; test/db/roundPage.db.test.ts). A mark is `checkins.mark`, judged on
+  // the floor of the row its `round_ref` names, READ FROM THE DATABASE: the `round_ref` here names no row, so an Ambassador is refused out of scope whatever
+  // they are assigned to (`policyContext` has no floor), a Coordinator and a Director on their role, and an Admin passes the guard and is refused by the use
+  // case (403: an unknown `round_ref`, recorded as `checkin.marked` refused), changing nothing.
+  { id: "page /staff/ambassador/round", kind: "page", file: "src/app/staff/ambassador/round/page.tsx", export: "default", route: "/staff/ambassador/round", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
+  { id: "POST /api/staff/ambassador/round", kind: "route", file: "src/app/api/staff/ambassador/round/route.ts", export: "POST", route: "/api/staff/ambassador/round", action: "hub.open", writes: "none", gate: "hub", body: { v: 1 }, expected: EVERYONE },
+  {
+    id: "POST /api/staff/ambassador/marks",
+    kind: "route",
+    file: "src/app/api/staff/ambassador/marks/route.ts",
+    export: "POST",
+    route: "/api/staff/ambassador/marks",
+    action: "checkins.mark",
+    writes: "business",
+    gate: "hub",
+    body: { v: 1, mark_id: "0f0e0d0c-0b0a-4908-8706-0504030201aa", round_ref: "0f0e0d0c-0b0a-4908-8706-0504030201bb", status: "needs_help" },
+    policyContext: {},
+    auditedReason: { ambassador: "out_of_scope", ambassador_out_of_scope: "out_of_scope" },
+    allowedStatus: 403,
+    expected: { ambassador: "forbidden", coordinator: "forbidden", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" },
   },
   // S04.05: Submit, "Try translation again" and the entry's state (policy action `alert.author_wide`). The entry does not exist, so a
   // Coordinator's or an Admin's call passes the guard and is refused by the use case (or, for the state, by its lookup), changing nothing.

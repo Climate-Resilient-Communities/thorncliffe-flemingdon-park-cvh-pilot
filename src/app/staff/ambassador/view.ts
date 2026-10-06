@@ -2,9 +2,10 @@
 // none of it. Pure: the page reads the data (./home.ts) and hands it here.
 //
 // Four parts, in the order a person on a phone needs them: which buildings and floors are theirs, what is happening in them (the open alerts residents are
-// reading about them, newest first), their own posts with each one's state, and their round. Nothing links to posting yet (S08.02) or to the round (the
-// round stories that follow): a link is added by the story that builds its page.
+// reading about them, newest first), their own posts with each one's state, and their round. Each part links to the page a later story built: posting
+// (S08.02), a post's status (S08.04) and, while a round is open for their floors, "My round" (S08.07).
 import { BUILDING_TYPES } from "@/contracts/alertContent";
+import { ROUND_PAGE } from "@/contracts/checkinRound";
 import type { AmbassadorAlert, AmbassadorDrill, AmbassadorPost } from "@/modules/alerting";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
@@ -85,7 +86,8 @@ export interface AmbassadorHomeView {
   post: { href: string; label: string } | null;
   active: { title: string; none: string; items: AlertItemView[] };
   posts: { title: string; none: string; items: PostItemView[] };
-  round: { title: string; line: string | null; none: string | null };
+  /** S08.07: with a round open for their floors, "Open my round" (A-04). */
+  round: { title: string; line: string | null; none: string | null; link: { href: string; label: string } | null };
   /** S08.02: the open drills about their buildings, apart; null while there is none. */
   drills: { title: string; lead: string; items: DrillItemView[] } | null;
 }
@@ -158,6 +160,7 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
       title: t("roundTitle"),
       line: data.round === null ? null : data.round.requests === 1 ? t("roundCountOne") : t("roundCount", { n: data.round.requests }),
       none: data.round === null ? t("roundNone") : null,
+      link: data.round === null ? null : { href: ROUND_PAGE, label: englishText("A01.openRound") },
     },
     drills:
       (data.drills ?? []).length === 0

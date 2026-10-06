@@ -625,6 +625,31 @@ describe("round_types.changed (S08.06)", () => {
   });
 });
 
+describe("checkin.marked (S08.07)", () => {
+  const ALERT = "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d";
+  const marked = (meta: Record<string, unknown>) => event({ action: "checkin.marked", subjectType: "alert", subjectId: ALERT, meta } as Partial<AuditEvent>);
+
+  it("records the mark, whether it was late and whether it told the Hub, and nothing about the resident", () => {
+    expect(toAuditRecord(marked({ status: "needs_help", late: true, escalated: true }), "ok")).toMatchObject({
+      action: "checkin.marked",
+      subjectType: "alert",
+      subjectId: ALERT,
+      outcome: "ok",
+      meta: { status: "needs_help", late: true, escalated: true },
+    });
+    expect(() => toAuditRecord(marked({ status: "done", late: false }), "ok")).toThrow("meta is missing escalated");
+    expect(() => toAuditRecord(marked({ status: "pending", late: false, escalated: false }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(marked({ status: "done", late: false, escalated: false, round_ref: ALERT }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(marked({ status: "done", late: false, escalated: false, phone: "+14165550181" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("records a refusal with only its reason", () => {
+    for (const reason of ["round_ended", "out_of_scope"]) {
+      expect(toAuditRecord(event({ action: "checkin.marked", subjectType: "checkin", subjectId: null, meta: { reason } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason });
+    }
+  });
+});
+
 describe("delivery.resent (S09.02)", () => {
   const resent = (meta: Record<string, unknown>) =>
     event({ action: "delivery.resent", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);

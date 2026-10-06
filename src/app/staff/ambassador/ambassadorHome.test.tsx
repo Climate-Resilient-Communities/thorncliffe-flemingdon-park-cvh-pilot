@@ -95,11 +95,16 @@ describe("the Ambassador's home (A-01)", () => {
     expect(ambassadorHomeView(data({ posts: [post({ state: "live" })] })).posts.items[0].state).toBe("Live. Not yet verified");
   });
 
-  it("shows 'Your round' with the count of requests while a round is open, and says no round is open otherwise", () => {
-    expect(ambassadorHomeView(data({ round: { requests: 7 } })).round).toEqual({ title: "Your round", line: "7 check-in requests on your floors", none: null });
+  it("shows 'Your round' with the count of requests and a link to the round (S08.07) while a round is open, and says no round is open otherwise", () => {
+    expect(ambassadorHomeView(data({ round: { requests: 7 } })).round).toEqual({
+      title: "Your round",
+      line: "7 check-in requests on your floors",
+      none: null,
+      link: { href: "/staff/ambassador/round", label: "Open my round" },
+    });
     expect(ambassadorHomeView(data({ round: { requests: 1 } })).round.line).toBe("1 check-in request on your floors");
     expect(ambassadorHomeView(data({ round: { requests: 0 } })).round.line).toBe("0 check-in requests on your floors");
-    expect(ambassadorHomeView(data()).round).toEqual({ title: "Your round", line: null, none: expect.stringMatching(/^No check-in round right now/) });
+    expect(ambassadorHomeView(data()).round).toEqual({ title: "Your round", line: null, none: expect.stringMatching(/^No check-in round right now/), link: null });
   });
 
   it("tells a person with no assignment so, and lists nothing about buildings", () => {
@@ -125,15 +130,17 @@ describe("the Ambassador's home as drawn", () => {
     expect(html.match(/data-testid="amb-alert"/g)).toHaveLength(1);
     expect(html.match(/data-testid="amb-post"/g)).toHaveLength(2);
     expect(html).toContain("3 check-in requests on your floors");
+    expect(html).toContain('<a class="tap hub-link" href="/staff/ambassador/round" data-testid="amb-round-link">Open my round</a>');
     expect(html).toContain('href="/en/alerts/abcd2345"');
     expect(html).toContain("Note from the Hub: Which floors?");
   });
 
-  it("links to posting (S08.02): a new building update, and an update about each alert of the types an Ambassador posts; no link to a round yet", () => {
+  it("links to posting (S08.02): a new building update, and an update about each alert of the types an Ambassador posts, and the open round (S08.07)", () => {
     expect(html).toContain('<a class="tap hub-link" href="/staff/ambassador/post" data-testid="amb-post-link">Post a building update</a>');
     expect(html).toContain(`href="/staff/ambassador/post?alert=${ALERT}" data-testid="amb-alert-post">Post an update about this</a>`);
-    // The new-update link, the alert's two (what residents read, an update about it) and, since S08.04, each of the two posts' "Where it stands".
-    expect(html.match(/<a /g)).toHaveLength(5);
+    // The new-update link, the alert's two (what residents read, an update about it), since S08.04 each of the two posts' "Where it stands", and since
+    // S08.07 "Open my round" (a round is open for their floors here).
+    expect(html.match(/<a /g)).toHaveLength(6);
     expect(html).not.toContain("<button");
   });
 
