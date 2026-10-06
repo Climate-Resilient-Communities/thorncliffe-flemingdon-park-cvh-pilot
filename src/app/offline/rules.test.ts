@@ -61,6 +61,17 @@ describe("which requests the service worker answers (S02.12, AD-1)", () => {
     expect(classify(req("/api/subscription/confirm"), ORIGIN)).toEqual({ kind: "pass", reason: "subscription" });
   });
 
+  it("S08.05: keeps R-33 (Ask for a check-in) as a resident page, and never answers or stores a personalised check-in answer (the sign-up's and the edit page's POSTs)", () => {
+    for (const lang of LAUNCH_CODES) {
+      expect(classify(page(`/${lang}/ready/check-in`), ORIGIN)).toEqual({ kind: "page", lang });
+      expect(mayStore(`${ORIGIN}/${lang}/ready/check-in`, ORIGIN)).toBe(true);
+    }
+    for (const path of ["/api/signup", "/api/subscription/view", "/api/subscription/change"]) {
+      expect(classify(req(path, { method: "POST" }), ORIGIN), path).toEqual({ kind: "pass", reason: "method" });
+      expect(mayStore(`${ORIGIN}${path}`, ORIGIN), path).toBe(false);
+    }
+  });
+
   it("never answers or stores the one-time web link's page (S07.06) in any language, its data request or its three POSTs", () => {
     const token = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
     for (const lang of LAUNCH_CODES) {

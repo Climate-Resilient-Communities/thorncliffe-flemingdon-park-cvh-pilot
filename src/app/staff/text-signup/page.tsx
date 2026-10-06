@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { createTranslator, type AbstractIntlMessages } from "next-intl";
+import { HUB_PHONE_E164 } from "@/contracts/hubNumber.generated";
+import { displayPhone } from "@/contracts/phone";
 import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { stdoutMessagingLog } from "@/modules/messaging";
 import { termsPageView } from "@/modules/subscriptions";
@@ -20,9 +22,18 @@ type Query = { lang?: string | string[] };
 /** The resident's words on this screen, in their language, from the translated catalog (an untranslated string is English behind "[EN]"). */
 async function residentWords(lang: LaunchCode): Promise<ResidentWords> {
   const messages = (await import(`../../../i18n/messages/${lang}.json`)).default as AbstractIntlMessages;
-  const t = createTranslator({ locale: lang, messages }) as unknown as (key: string) => string;
+  const t = createTranslator({ locale: lang, messages }) as unknown as (key: string, values?: Record<string, string>) => string;
   const { bcp47, dir } = languageOf(lang);
-  return { bcp47, dir, age: t("signup.age"), expect: t("signup.expect"), howStop: t("R05.howStop") };
+  return {
+    bcp47,
+    dir,
+    age: t("signup.age"),
+    expect: t("signup.expect"),
+    howStop: t("R05.howStop"),
+    // S08.05: the check-in request's consent wording (that an ambassador on their floor will see their number and floor, not an emergency
+    // service, when to call 911), and what to tell them when no ambassador covers the floor.
+    checkin: { sees: t("checkin.sees"), notEmergency: t("R33.notEmergency"), call911: t("x01.call"), untilYes: t("checkin.untilYes"), uncovered: t("checkin.uncovered", { hub: displayPhone(HUB_PHONE_E164) }) },
+  };
 }
 
 /** The buildings for the optional building and floor; none (the choice is left out) when they cannot be read. */

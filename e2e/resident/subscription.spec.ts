@@ -16,7 +16,7 @@ const path = (lang: string, token = TOKEN) => `/${lang}/subscription/${token}`;
 const VIEW = {
   v: 1,
   status: "ok",
-  subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: MILEPOST, floors: [FLOOR.milepost2] }], groups: ["seniors"], muted_topics: ["water"], phone_last2: "23" },
+  subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: MILEPOST, floors: [FLOOR.milepost2] }], groups: ["seniors"], muted_topics: ["water"], phone_last2: "23", checkin: null },
 };
 
 type Answer = { status: number; json: unknown };

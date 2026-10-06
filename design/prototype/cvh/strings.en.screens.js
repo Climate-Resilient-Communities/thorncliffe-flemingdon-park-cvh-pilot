@@ -2222,7 +2222,27 @@
     withdrawNote: 'It is withdrawn when you save. You will still get alerts.',
     moved: 'Where you live has changed, so your check-in request will be withdrawn. To ask again for your new floor, choose it and agree again.',
     savedRequested: 'Your check-in request is saved.',
-    savedMethod: 'How you are checked on has changed.' } });
+    savedMethod: 'How you are checked on has changed.',
+    consentMissing: 'To ask for a check-in, tick the box to agree.' } });
+  /* S08.05: the staff-assisted sign-up's check-in request (the consent wording itself is shown in the resident's language: checkin.sees,
+     R33.notEmergency and the 911 block), and the coverage view's count of requests on floors without an ambassador. Staff screens are in
+     English. */
+  m(en, { staff: {
+    textSignup: {
+      checkinHeading: 'Check-in request',
+      checkinAsk: 'The resident asks for a check-in on this floor',
+      checkinNeedsFloor: 'A check-in is for a floor: choose the building and floor where the resident lives to ask for one.',
+      checkinMethod: 'How the ambassador should check on them',
+      checkinCall: 'A phone call',
+      checkinText: 'A text message',
+      checkinRead: 'Read this to the resident in their language:',
+      checkinAgreed: 'The resident has heard this and agrees.',
+      doneCheckinRequested: 'The check-in request starts when the resident replies YES.',
+      doneCheckinUncovered: 'No ambassador covers this floor yet, so no check-in request was saved. Show the resident:',
+      errors: { checkin_consent_missing: 'Confirm that the resident heard the check-in wording and agrees.' } },
+    coverage: {
+      requestsUncovered: 'Check-in requests on floors without an ambassador: {n}',
+      requestsSummary: 'Check-in requests on floors without an ambassador, in all buildings: {n}. Assign an ambassador or contact the residents through the Hub.' } } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

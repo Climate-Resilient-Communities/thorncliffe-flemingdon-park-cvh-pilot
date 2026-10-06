@@ -1,3 +1,4 @@
+import { CHECKIN_CONSENT_VERSION } from "@/contracts/checkin";
 import { SIGNUP_CONTRACT_VERSION, checkSignupRequest } from "@/contracts/signup";
 import type { Signup } from "@/modules/subscriptions";
 import type { StaffSession } from "../session";
@@ -8,7 +9,7 @@ import { refusalMessage } from "./view";
  * (AD-22): the staff member learns no more than the resident's web form would. A refusal is one message in the Hub's error style; nothing was
  * stored or sent. No answer holds the number.
  */
-export type SignupAnswer = { status: "done" } | { status: "refused"; message: string };
+export type SignupAnswer = { status: "done"; checkin?: "requested" | "uncovered" } | { status: "refused"; message: string };
 
 /** What the form shows: nothing yet, or the last answer with the time it was given (a new answer re-draws the form). */
 export type SignupState = { status: "idle" } | (SignupAnswer & { at: number });
@@ -44,6 +45,12 @@ export function bodyFromForm(form: FormData): unknown {
   const floor = text(form, "floor") ?? "";
   const groups = form.getAll("groups");
   if (groups.some((group) => typeof group !== "string")) return null;
+  // S08.05: a check-in request on the building and floor chosen, with the method; the consent version when the staff member ticked that
+  // the resident heard the wording (shown in their language) and agrees. A request without a floor is not one the contract reads.
+  const checkin =
+    text(form, "checkin") === "yes"
+      ? { rsn: building, floor, method: text(form, "checkin_method"), consent_version: text(form, "checkin_agreed") === "yes" ? CHECKIN_CONSENT_VERSION : null }
+      : undefined;
   return {
     v: SIGNUP_CONTRACT_VERSION,
     phone,
@@ -54,6 +61,7 @@ export function bodyFromForm(form: FormData): unknown {
     consent_version: consentVersion,
     terms_agreed: text(form, "terms_agreed") === "yes",
     age_confirmed: text(form, "age_confirmed") === "yes",
+    ...(checkin ? { checkin } : {}),
   };
 }
 
@@ -69,7 +77,7 @@ export async function signupFromForm(deps: ControlDeps, session: Pick<StaffSessi
     if (outcome.kind === "rate_limited") return { status: "refused", message: refusalMessage("rate_limited") };
     if (outcome.kind === "refused") return { status: "refused", message: refusalMessage(outcome.code) };
     deps.afterAccepted();
-    return { status: "done" };
+    return outcome.checkin === undefined ? { status: "done" } : { status: "done", checkin: outcome.checkin };
   } catch (error) {
     deps.logError("signup.assisted_failed", { error: nameOfError(error) });
     return { status: "refused", message: refusalMessage("failed") };

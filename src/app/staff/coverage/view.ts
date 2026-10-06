@@ -1,6 +1,7 @@
 // What the coverage screen shows (S01.14): the view models for the list of buildings and for one building,
 // with every text already resolved from the English catalog, so the components that draw them know none of it.
-// Covered and uncovered floors are always written out; colour only adds to the words.
+// Covered and uncovered floors are always written out; colour only adds to the words. S08.05: the number of check-in
+// requests on floors nobody covers (a floor that is gone counts as uncovered), per building and in all, counts only.
 import { englishText } from "@/i18n/text";
 import { floorCoverage, type AmbassadorOption, type AssignmentView } from "@/modules/identity";
 import type { BuildingFloorPlan } from "@/modules/places";
@@ -21,6 +22,8 @@ export interface CoverageItemView {
   covered?: { label: string; floors: string };
   /** The floors without an ambassador, written out, when there are any. */
   uncovered?: { label: string; floors: string };
+  /** S08.05: "Check-in requests on floors without an ambassador: 2", when there are any. A count, never who. */
+  requestsUncovered?: string;
 }
 
 export interface CoverageListView {
@@ -28,6 +31,8 @@ export interface CoverageListView {
   title: string;
   lead: string;
   summary: string;
+  /** S08.05: the check-in requests on floors without an ambassador in all buildings, when there are any. */
+  requestsSummary?: string;
   notice?: string;
   empty?: string;
   groups: { id: string; name: string; items: CoverageItemView[] }[];
@@ -85,6 +90,8 @@ export interface CoverageBuildingView {
   notice?: string;
   back: { href: string; label: string };
   summary: string;
+  /** S08.05: "Check-in requests on floors without an ambassador: 2", when there are any. */
+  requestsUncovered?: string;
   floors: { title: string; empty?: string; rows: FloorStateView[] };
   assignments: { title: string; empty?: string; rows: AssignmentRowView[] };
   /** Only for someone who may assign (an Admin): a Coordinator and a Director see the coverage, read-only. */
@@ -130,10 +137,20 @@ function summaryOf(total: number, covered: number): string {
   return t("floorsCovered", { covered, total });
 }
 
-export function coverageListView(plans: readonly BuildingFloorPlan[], assignments: readonly AssignmentView[], notice?: string): CoverageListView {
+/** S08.05: how many check-in requests each building has on each floor (subscriptions' counts: no one named). */
+export type CheckinRequestCount = { rsn: string; floorId: string; requests: number };
+
+/** The check-in requests of a building on floors nobody covers: on a floor no active Ambassador covers, or a floor that is no longer there. */
+function uncoveredRequests(plan: BuildingFloorPlan, assignments: readonly AssignmentView[], requests: readonly CheckinRequestCount[]): number {
+  const covered = new Set(floorCoverage(plan.floors, coveringIn(plan.rsn, assignments)).filter((floor) => floor.covered).map((floor) => floor.floorId));
+  return requests.filter((request) => request.rsn === plan.rsn && !covered.has(request.floorId)).reduce((sum, request) => sum + request.requests, 0);
+}
+
+export function coverageListView(plans: readonly BuildingFloorPlan[], assignments: readonly AssignmentView[], notice?: string, requests: readonly CheckinRequestCount[] = []): CoverageListView {
   const groups = new Map<string, CoverageListView["groups"][number]>();
   let complete = 0;
   let gaps = 0;
+  let waiting = 0;
   for (const plan of plans) {
     const coverage = floorCoverage(plan.floors, coveringIn(plan.rsn, assignments));
     const labelOf = new Map(plan.floors.map((floor) => [floor.id, floor.label]));
@@ -141,6 +158,8 @@ export function coverageListView(plans: readonly BuildingFloorPlan[], assignment
     const uncoveredLabels = coverage.filter((floor) => !floor.covered).map((floor) => labelOf.get(floor.floorId) ?? "");
     if (plan.floors.length > 0 && uncoveredLabels.length === 0) complete += 1;
     gaps += uncoveredLabels.length;
+    const uncoveredCount = uncoveredRequests(plan, assignments, requests);
+    waiting += uncoveredCount;
     const group = groups.get(plan.neighbourhoodId) ?? { id: plan.neighbourhoodId, name: plan.neighbourhoodName, items: [] };
     group.items.push({
       rsn: plan.rsn,
@@ -150,6 +169,7 @@ export function coverageListView(plans: readonly BuildingFloorPlan[], assignment
       summary: summaryOf(plan.floors.length, coveredLabels.length),
       ...(coveredLabels.length > 0 ? { covered: { label: t("coveredLabel"), floors: coveredLabels.join(", ") } } : {}),
       ...(uncoveredLabels.length > 0 ? { uncovered: { label: t("notCoveredLabel"), floors: uncoveredLabels.join(", ") } } : {}),
+      ...(uncoveredCount > 0 ? { requestsUncovered: t("requestsUncovered", { n: uncoveredCount }) } : {}),
     });
     groups.set(plan.neighbourhoodId, group);
   }
@@ -158,6 +178,7 @@ export function coverageListView(plans: readonly BuildingFloorPlan[], assignment
     title: t("title"),
     lead: t("lead"),
     summary: t("summary", { covered: complete, total: plans.length, gaps }),
+    ...(waiting > 0 ? { requestsSummary: t("requestsSummary", { n: waiting }) } : {}),
     ...(notice ? { notice } : {}),
     ...(plans.length === 0 ? { empty: t("empty") } : {}),
     groups: [...groups.values()],
@@ -179,8 +200,9 @@ function inactiveReason(assignment: AssignmentView): string {
 export function coverageBuildingView(
   plan: BuildingFloorPlan,
   assignments: readonly AssignmentView[],
-  options: { notice?: string; ambassadors?: readonly AmbassadorOption[] } = {},
+  options: { notice?: string; ambassadors?: readonly AmbassadorOption[]; requests?: readonly CheckinRequestCount[] } = {},
 ): CoverageBuildingView {
+  const waiting = uncoveredRequests(plan, assignments, options.requests ?? []);
   const here = assignments.filter((assignment) => assignment.rsn === plan.rsn);
   const covering = here.filter((assignment) => assignment.covering);
   const namesOf = new Map(here.map((assignment) => [assignment.staffId, personName(assignment)]));
@@ -194,6 +216,7 @@ export function coverageBuildingView(
     ...(options.notice ? { notice: options.notice } : {}),
     back: { href: COVERAGE_PAGE, label: t("back") },
     summary: summaryOf(plan.floors.length, coverage.filter((floor) => floor.covered).length),
+    ...(waiting > 0 ? { requestsUncovered: t("requestsUncovered", { n: waiting }) } : {}),
     floors: {
       title: t("floorsTitle"),
       ...(plan.floors.length === 0 ? { empty: t("noFloors") } : {}),

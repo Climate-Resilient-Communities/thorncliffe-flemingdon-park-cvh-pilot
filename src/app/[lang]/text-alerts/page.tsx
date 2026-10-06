@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { HUB_PHONE_E164 } from "@/contracts/hubNumber.generated";
+import { displayPhone } from "@/contracts/phone";
 import { isLaunchCode } from "@/i18n/languages";
 import { FALLBACK_MARKER } from "@/ui";
 import { TextSignup } from "@/ui/signup";
@@ -14,8 +16,8 @@ import { STEP_LANGUAGES } from "../choices-frame";
 // reads no cookie and sets none, and holds nothing about the visitor: the form is filled on the phone from its own choices.
 export const dynamic = "force-dynamic";
 
-// The parts of the catalog the form reads (it runs on the phone).
-const NAMESPACES = ["R05", "R34", "R35", "groups", "shell", "signup", "terms"] as const;
+// The parts of the catalog the form reads (it runs on the phone); S08.05's check-in request reads R33, checkin and the 911 block (x01).
+const NAMESPACES = ["R05", "R33", "R34", "R35", "checkin", "groups", "shell", "signup", "terms", "x01"] as const;
 
 /** The pilot's two neighbourhoods, in R-05's order. */
 const NEIGHBOURHOOD_IDS = ["TP", "FP"] as const;
@@ -55,6 +57,7 @@ export default async function TextAlertsPage({ params }: PageProps<"/[lang]/text
         consentVersion={consentVersion}
         termsDraft={termsDraft}
         textNumber={getEnv().twilio?.fromNumber ?? null}
+        hub={displayPhone(HUB_PHONE_E164)}
       />
     </NextIntlClientProvider>
   );

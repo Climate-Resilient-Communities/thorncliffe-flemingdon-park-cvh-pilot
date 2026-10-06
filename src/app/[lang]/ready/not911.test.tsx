@@ -41,6 +41,7 @@ import HomePage from "../page";
 import AlertPage from "../alerts/[slug]/page";
 import VerifiedPage from "../alerts/[slug]/verified/page";
 import OfflinePage from "../offline/page";
+import CheckinPage from "./check-in/page";
 
 /** The marker the 911 block carries (src/ui/emergency/not-911.tsx). */
 export const hasNot911 = (html: string) => (html.match(/data-component="not-911"/g) ?? []).length;
@@ -68,6 +69,8 @@ const PAGES: { name: string; render: Render }[] = [
   { name: "what verified means", render: async (lang) => (await VerifiedPage({ params: Promise.resolve({ lang, slug: "kbcdfghj" }) } as never)) as ReactElement },
   // The offline page (S02.12): what a phone without signal shows for a page it has not kept.
   { name: "offline", render: async (lang) => (await OfflinePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
+  // Ask for a check-in (R-33, S08.05): the full block, once.
+  { name: "ask for a check-in", render: async (lang) => (await CheckinPage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
 ];
 
 beforeEach(() => {
@@ -76,7 +79,7 @@ beforeEach(() => {
 });
 
 describe("the 911 block", () => {
-  it("is on every guide, the essential-numbers page, Be ready, home, an alert, what verified means and the offline page, exactly once, in English and in Urdu", async () => {
+  it("is on every guide, the essential-numbers page, Be ready, home, an alert, what verified means, the offline page and Ask for a check-in, exactly once, in English and in Urdu", async () => {
     for (const { name, render } of PAGES) {
       for (const lang of ["en", "ur"]) {
         const html = renderToStaticMarkup(await render(lang));

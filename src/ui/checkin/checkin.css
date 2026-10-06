@@ -1,0 +1,42 @@
+/*
+ * The check-in request of the sign-up form and the edit page, and the R-33 page (S08.05). Built on the choices' and the sign-up's classes
+ * (choices.css, signup.css); this sets the consent wording apart as a card, as the prototype's R-33 sets "What a check-in is", so it is read
+ * before the box is ticked. Spacing from the semantic tokens, direction from logical properties only, so it mirrors in Urdu, Pashto and Dari
+ * without a [dir] rule. Colours are existing tokens.
+ */
+@layer components {
+  .checkin-consent {
+    overflow-wrap: anywhere;
+    padding: var(--inset-card-compact);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .checkin-consent__sees {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* The Hub's number in a sentence: a `tel:` link, underlined so it never reads as plain text. */
+  .checkin-link {
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .checkin-link:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* R-33: the answer a form gives about a request, set apart as a note (a floor nobody covers is not an error the resident made). */
+  .checkin-answer {
+    overflow-wrap: anywhere;
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+}

@@ -16,8 +16,8 @@ import { STEP_LANGUAGES } from "../../choices-frame";
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";
 
-// The parts of the catalog the page reads (it runs on the phone).
-const NAMESPACES = ["R05", "R34", "R35", "groups", "x13", "subscriptionEdit"] as const;
+// The parts of the catalog the page reads (it runs on the phone); S08.05's check-in request reads R33, checkin and the 911 block (x01).
+const NAMESPACES = ["R05", "R33", "R34", "R35", "checkin", "groups", "x01", "x13", "subscriptionEdit"] as const;
 
 /** The pilot's two neighbourhoods, in R-05's order. */
 const NEIGHBOURHOOD_IDS = ["TP", "FP"] as const;

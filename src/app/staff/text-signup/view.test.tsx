@@ -13,7 +13,14 @@ const props: SignupFormProps = {
   neighbourhoods: neighbourhoodOptions(),
   buildings: [{ rsn: "9100001", address: "1 Sample Road", neighbourhoodId: "TP", floors: [{ id: "0190f000-0000-7000-8000-000000000002", label: "2" }] }],
   groups: groupOptions(),
-  resident: { bcp47: "ur", dir: "rtl", age: "میری عمر 16 سال", expect: "YES 48", howStop: "STOP" },
+  resident: {
+    bcp47: "ur",
+    dir: "rtl",
+    age: "میری عمر 16 سال",
+    expect: "YES 48",
+    howStop: "STOP",
+    checkin: { sees: "فون نمبر اور منزل", notEmergency: "ہنگامی سروس نہیں", call911: "911", untilYes: "YES", uncovered: "ہب (416) 421-8997" },
+  },
   nextHref: TEXT_SIGNUP_PAGE,
 };
 const draw = (answer: SignupState) => renderToStaticMarkup(<SignupFormView {...props} answer={answer} />);
