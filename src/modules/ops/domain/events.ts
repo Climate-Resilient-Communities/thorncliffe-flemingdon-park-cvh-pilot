@@ -221,6 +221,15 @@ export const OPS_EVENT_KINDS = {
     severity: "warning",
     detail: z.strictObject({ over_cents: count.optional() }),
   },
+  /**
+   * The end-of-pilot purge has completed (S09.08): every subscriber who did not reply YES to the re-consent campaign by its deadline was deleted. Written once,
+   * in the transaction that records the completion (`campaign_purge.completed_at`, the date the terms page states). `deleted` is how many subscribers the purge
+   * deleted over all its runs, `retained` how many had said YES and stayed. Aggregate counts only: no subject, no id, no number.
+   */
+  "campaign.purge_completed": {
+    severity: "info",
+    detail: z.strictObject({ deleted: count, retained: count }),
+  },
   /** A directory publish gave up: the previous release stays current. Subject: the release (`directory_release`, its number) when one exists. */
   "directory.publish_failed": {
     severity: "error",

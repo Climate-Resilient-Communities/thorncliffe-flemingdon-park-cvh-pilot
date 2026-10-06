@@ -30,7 +30,7 @@ import {
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
 import { createAlertSubmitter, createAlerting, createDrillThreads } from "../../src/modules/alerting";
 import { createDeliveryQueue, createMessagingPause, createResend, drillResults } from "../../src/modules/messaging";
-import { createDrillRoster, createRateLimiter, createSignup } from "../../src/modules/subscriptions";
+import { createCampaigns, createDrillRoster, createRateLimiter, createSignup } from "../../src/modules/subscriptions";
 import { createOncallRoster } from "../../src/modules/ops";
 import { createSpendCap, readSpendOverview } from "../../src/modules/spend";
 import { noTranslation } from "../../src/modules/translation";
@@ -63,6 +63,7 @@ const wired = vi.hoisted(() => ({
   drillThreads: null as unknown,
   drillResults: null as unknown,
   signup: null as unknown,
+  campaign: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -123,6 +124,14 @@ vi.mock("../../src/app/signup", () => ({
   currentSignupConsentVersion: () => "2026-10-02.1",
   signupBuildingList: async () => [],
   startSending: () => {},
+}));
+// The End of the pilot page and its actions (S09.07) run the campaign on the app's own connection; no sender is started.
+vi.mock("../../src/app/staff/campaignSeam", () => ({
+  campaignService: () => wired.campaign,
+  staffName: async () => "Ann Okafor",
+  textCounts: async () => ({ waiting: 0, handedOff: 0, delivered: 0, notDelivered: 0, unknown: 0 }),
+  startSending: async () => {},
+  logCampaignError: () => {},
 }));
 // The assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
@@ -283,6 +292,16 @@ beforeEach(async () => {
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
   });
   wired.drillResults = { forAlert: (alertId: string) => drillResults.forAlert(app, alertId) };
+  wired.campaign = createCampaigns({
+    db: app,
+    enqueue: () => {
+      throw new Error("no campaign text is written in the permission test");
+    },
+    skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+    termsVersion: () => "2026-10-02.1",
+    pricePerSegmentCents: () => 1.5,
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
+  });
   wired.places = createBuildingService({
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },

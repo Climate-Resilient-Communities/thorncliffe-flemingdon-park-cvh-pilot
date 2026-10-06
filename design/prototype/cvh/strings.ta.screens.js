@@ -12,7 +12,10 @@
    "draftTitle": "வரைவு: இன்னும் வெளியிடப்படவில்லை",
    "draftBody": "இந்த உரை இன்னும் அங்கீகரிக்கப்படவில்லை. இது இறுதி விதிமுறைகள் அல்ல. இதை நம்பிப் பதிவு செய்ய வேண்டாம்.",
    "draftWhy": "வெளியிடப்படாததற்குக் காரணம்:",
-   "translationNote": "இந்தப் பக்கத்தின் சில பகுதிகள் இன்னும் {lang} மொழியில் மொழிபெயர்க்கப்படவில்லை. அந்தப் பகுதிகள் ஆங்கிலத்தில் தெரியும்."
+   "translationNote": "இந்தப் பக்கத்தின் சில பகுதிகள் இன்னும் {lang} மொழியில் மொழிபெயர்க்கப்படவில்லை. அந்தப் பகுதிகள் ஆங்கிலத்தில் தெரியும்.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "குடியிருப்பாளர் தரவு நீக்கப்பட்டது",
+   "dataDeletedNote": "CVH சோதனை முடிந்தது. எச்சரிக்கைகளைத் தொடர்ந்து பெற YES என்று பதில் அனுப்பாத அனைவரின் தொலைபேசி எண்ணையும் தேர்வுகளையும் அந்தத் தேதியில் நீக்கினோம்."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1420,6 +1423,10 @@
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
      and {placeholders} stay as written). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"smsTexts": {"menuStreet": "தெரு:", "menuBuilding": "கட்டடம்:", "menuFloor": "தளம்:", "menuWholeBuilding": "முழுக் கட்டடம்", "menuLanguage": "மொழி:", "menuNav": "0 பின் 9 ஹப்", "menuNavMore": "0 பின் 8 மேலும் 9 ஹப்", "menuWarn": "இது உங்கள் {n} சேமித்த கட்டடங்களை மாற்றும். 1 தொடர், 0 பின்", "menuHub": "ஹப்பை அழையுங்கள்: {hub}", "menuClosed": "மெனு மூடப்பட்டது. எதுவும் மாறவில்லை.", "menuReset": "10 நிமிடம் பதில் இல்லாததால் மெனு மூடப்பட்டது. எதுவும் மாறவில்லை.", "menuLimit": "இன்று 5 மெனு முடிந்தது. நாளை முயலுங்கள். ஹப்: {hub}", "menuLimitLink": "இன்று 5 மெனு முடிந்தது. இணைப்புக்கு 1 அனுப்புக. ஹப்: {hub}", "buildingSaved": "உங்கள் கட்டடம் இப்போது {building}, தளம் {floor}.", "buildingSavedWhole": "உங்கள் கட்டடம் இப்போது {building}.", "languageSaved": "சேமிக்கப்பட்டது. இனி செய்திகள் தமிழில் வரும்.", "noCheckinRequest": "உங்களிடம் நலம் விசாரிப்புக் கோரிக்கை இல்லை.", "checkinWithdrawn": "உங்கள் நலம் விசாரிப்புக் கோரிக்கை திரும்பப் பெறப்பட்டது."}});
+  /* S07.06: the one-time web link's texts and its page (see the English file for what each is; menuClosedLink must fit one text; 0, 1, 30
+     and {placeholders} stay as written; the error lines other than edit_unavailable are the sign-up's own). AI-generated (Claude), not yet
+     checked by native readers. */
+  m(t, {"smsTexts":{"menuClosedLink":"மெனு மூடப்பட்டது. எதுவும் மாறவில்லை. இணைப்புக்கு 1 அனுப்புக.","editLink":"உங்கள் CVH குறுஞ்செய்தி எச்சரிக்கைகளை இங்கே மாற்றலாம் அல்லது நீக்கலாம்: {link} இந்த இணைப்பு ஒருமுறை, 30 நிமிடங்களுக்கு மட்டும் வேலை செய்யும்.","editSaved":"உங்கள் CVH எச்சரிக்கைத் தேர்வுகள் இணையப் பக்கத்தில் மாற்றப்பட்டன. நீங்கள் மாற்றவில்லையா? ஹப்பை அழையுங்கள்: {hub}"},"subscriptionEdit":{"title":"உங்கள் குறுஞ்செய்தி எச்சரிக்கைகளை மாற்றுங்கள்","loading":"உங்கள் தேர்வுகளைத் திறக்கிறோம்...","forNumber":"{digits} இல் முடியும் தொலைபேசி எண்ணுக்கு.","lead":"எந்தத் தேர்வையும் மாற்றி, பின் சேமியுங்கள். எல்லாச் செய்திகளையும் நிறுத்த, இந்தப் பக்கத்தின் இறுதியில் உங்கள் சந்தாவை நீக்குங்கள்.","topicsTitle":"செய்திகள் வேண்டாத தலைப்புகள்","topicsLead":"ஒரு தலைப்பின் எச்சரிக்கைகளை நிறுத்த அதைத் தேர்வு செய்யுங்கள். தீ அல்லது வெளியேற்றம் பற்றிய எச்சரிக்கைகள் எப்போதும் வரும்.","save":"என் மாற்றங்களைச் சேமி","saving":"சேமிக்கிறோம்...","savedTitle":"உங்கள் மாற்றங்கள் சேமிக்கப்பட்டன","savedBody":"உறுதிப்படுத்தும் செய்தி வருகிறது. இந்த இணைப்பு இப்போது பயன்படுத்தப்பட்டுவிட்டது: வேறு எதையாவது மாற்ற, குறுஞ்செய்தி மூலம் புதிய இணைப்பைக் கேளுங்கள்.","deleteTitle":"என் சந்தாவை நீக்கு","deleteLead":"CVH இலிருந்து இனி செய்திகள் வராது, உங்கள் எண் பற்றி வைக்கப்பட்டுள்ள அனைத்தும் நீக்கப்படும். இதைத் திரும்பப் பெற முடியாது.","deleteSure":"உங்கள் சந்தாவை இப்போதே நீக்கவா? CVH இலிருந்து இனி செய்திகள் வராது.","deleteYes":"ஆம், நீக்கு","deleteNo":"இல்லை, வைத்திரு","deleting":"நீக்குகிறோம்...","deletedTitle":"உங்கள் சந்தா நீக்கப்பட்டது","deletedBody":"CVH இலிருந்து இனி செய்திகள் வராது, உங்கள் எண் பற்றி எதுவும் வைக்கப்படவில்லை. இதை உறுதிப்படுத்த எந்தச் செய்தியும் அனுப்பப்படாது.","signUpAgain":"மீண்டும் பதிவு செய்யுங்கள்","expiredTitle":"இந்த இணைப்பின் காலம் முடிந்துவிட்டது","expiredBody":"ஒரு இணைப்பு ஒருமுறை மட்டுமே, அனுப்பிய பின் 30 நிமிடங்களுக்கு வேலை செய்யும்.","expiredHow":"குறுஞ்செய்தி மூலம் புதிய இணைப்பைப் பெற, CVH இன் ஏதாவது ஒரு செய்திக்கு 1 என்று பதில் அனுப்புங்கள். பதில் ஒரு மெனுவாக இருந்தால், அதை மூட 0 அனுப்புங்கள். பதிலில் இணைப்பு தரப்பட்டால், 1 அனுப்புங்கள்.","callHub":"அல்லது ஹப்பை அழையுங்கள்: {hub}","error":{"invalid_request":"படிவத்தில் உள்ள ஒன்றைப் படிக்க முடியவில்லை. பக்கத்தை மீண்டும் ஏற்றி, மீண்டும் முயலுங்கள்.","neighbourhood_missing":"உங்கள் பகுதியைத் தேர்ந்தெடுங்கள்.","place_unknown":"உங்கள் கட்டடங்கள் அல்லது தளங்களில் ஒன்று இப்போது பட்டியலில் இல்லை. உங்கள் கட்டடங்களைச் சரிபார்த்து மீண்டும் முயலுங்கள்.","edit_unavailable":"இப்போது மாற்றங்கள் செய்ய முடியாது. பிறகு மீண்டும் முயலுங்கள்.","network":"CVH-ஐ அடைய முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்."}}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1528,4 +1535,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["ஜன.","பிப்.","மார்.","ஏப்.","மே","ஜூன்","ஜூலை","ஆக.","செப்.","அக்.","நவ.","டிச."],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH சோதனை முடிகிறது. தொடர {date}க்குள் YES; இல்லையேல் எண் நீக்கம்.", "reconsentKept": "நன்றி. CVH எச்சரிக்கைகள் தொடர்ந்து வரும்.", "pilotEnded": "CVH சோதனை முடிந்தது; உங்கள் எண் வைக்கப்படவில்லை.", "signupsPaused": "சோதனை முடியும்வரை CVH பதிவு நிறுத்தப்பட்டுள்ளது."}, "signup": {"error": {"signups_paused": "சோதனை முடியும்வரை பதிவு நிறுத்தப்பட்டுள்ளது."}}});
 })();

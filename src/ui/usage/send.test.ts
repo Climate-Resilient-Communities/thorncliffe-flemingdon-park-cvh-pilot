@@ -31,6 +31,20 @@ describe("sendUsage", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
+  it("sends nothing from the one-time web link's page or its API (S07.06), in any language, and sends from every other page", async () => {
+    const fetcher = ok();
+    const token = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
+
+    for (const page of [`/en/subscription/${token}`, `/ur/subscription/${token}`, "/prs/subscription/x", "/api/subscription/view"]) {
+      expect(await sendUsage({ evt: "install", lang: "en" }, { fetcher, online: () => true, page: () => page }), page).toBe(false);
+    }
+    expect(fetcher).not.toHaveBeenCalled();
+    for (const page of ["/en", "/en/text-alerts", "/en/subscriptions", "/staff/subscription"]) {
+      expect(await sendUsage({ evt: "install", lang: "en" }, { fetcher, online: () => true, page: () => page }), page).toBe(true);
+    }
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+
   it("never throws and never retries: a failed request or an error answer is just not counted", async () => {
     const down = vi.fn(async () => {
       throw new TypeError("Failed to fetch");

@@ -5,10 +5,13 @@ import { FALLBACK_MARKER, ResidentText, Screen, Stack } from "@/ui";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { failClosedEnvironment } from "@/platform/config/env";
 import { termsPageMode, termsPageView, type TermsText } from "@/modules/subscriptions";
+import { residentDataDeletedOnCached } from "../../pilotEnd";
 import "./terms.css";
 
-// Prerendered at build time for every launch language (the layout's generateStaticParams) from the committed files.
-// The page reads no cookie and no header, and needs no database.
+// Rendered on request from the committed files, for the one fact that is not in them (S09.08): once the end-of-pilot purge has completed, the day the
+// pilot's resident data was deleted, read from the purge's record through Next's data cache (src/app/pilotEnd.ts); a page that cannot read it is the terms
+// without that line. The page reads no cookie and no header.
+export const dynamic = "force-dynamic";
 
 /**
  * One text of the terms, as the whole content of its element: a translation as is, and English standing in for a
@@ -36,7 +39,8 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/terms">): 
 
 /**
  * The terms and privacy page (S07.01, R-xx): the text, its version, owner and last-updated date, in the language of
- * the URL. Terms that are not published (a placeholder, no counsel review, or a change after it) are never shown as
+ * the URL, and once the end-of-pilot purge has completed (S09.08) the day the pilot's resident data was deleted.
+ * Terms that are not published (a placeholder, no counsel review, or a change after it) are never shown as
  * final: in production the page is a 404, so a resident cannot take a draft for the terms; in a preview or in
  * development the draft is shown under a "Draft: not yet published" banner with the reasons, so staff can check it.
  */
@@ -50,6 +54,8 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
   if (mode === "hidden") notFound();
 
   const t = await getTranslations({ locale: lang, namespace: "terms" });
+  // S09.08: the day the pilot's resident data was deleted, once the end-of-pilot purge has completed (null before, and when it cannot be read).
+  const deletedOn = await residentDataDeletedOnCached();
   const { document } = view;
   const someInEnglish = [document.title, ...document.sections.flatMap((s) => [s.heading, ...s.lines])].some((x) => x.unavailable);
   // Where the page says once that part of it is in English, its body paragraphs go without the per-paragraph "[EN]".
@@ -107,7 +113,22 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
                 </bdi>
               </dd>
             </div>
+            {deletedOn !== null && (
+              <div className="terms-facts__item">
+                <ResidentText as="dt">{t("dataDeleted")}</ResidentText>
+                <dd>
+                  <bdi dir="ltr" data-testid="terms-deleted">
+                    {deletedOn}
+                  </bdi>
+                </dd>
+              </div>
+            )}
           </dl>
+          {deletedOn !== null && (
+            <ResidentText as="p" testId="terms-deleted-note">
+              {t("dataDeletedNote")}
+            </ResidentText>
+          )}
           {showNote && (
             <ResidentText as="p" testId="terms-translation-note">
               {t("translationNote", { lang: languageOf(lang).native })}

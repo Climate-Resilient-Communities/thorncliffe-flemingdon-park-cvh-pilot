@@ -243,9 +243,13 @@ describe("never stored: the staff surface, subscriptions, map tiles (AD-1, S02.0
       new Request(`${ORIGIN}/api/buildings`),
     ];
     for (const request of passed) expect(w.handle(request, context()), request.url).toBeNull();
+    // S07.06: the one-time web link's page, with its token, is never kept, even when a page asks for it to be.
+    const editLink = "/ur/subscription/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
+    expect(w.handle(navigation(editLink), context())).toBeNull();
     await w.keepPage("/staff/sign-in");
     await w.keepPage("/en/subscription");
-    await w.install([`${ORIGIN}/staff/sign-in`, `${ORIGIN}/en/subscription`, `${ORIGIN}/en`]);
+    await w.keepPage(editLink);
+    await w.install([`${ORIGIN}/staff/sign-in`, `${ORIGIN}/en/subscription`, `${ORIGIN}${editLink}`, `${ORIGIN}/en`]);
     const stored = caches.everything();
     expect(stored.length).toBeGreaterThan(0);
     for (const entry of stored) {

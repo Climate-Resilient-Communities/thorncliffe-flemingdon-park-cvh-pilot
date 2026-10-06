@@ -4,6 +4,8 @@ import { SHARED_CACHE_GUIDES } from "./src/app/guideCache";
 import { LAUNCH_CODES } from "./src/i18n/languages";
 
 const noStore = [{ key: "Cache-Control", value: "no-store" }];
+// S07.06: the one-time web link's page and API carry a token in their address or body: never stored, and the page sends no referrer.
+const subscriptionHeaders = [...noStore, { key: "Referrer-Policy", value: "no-referrer" }];
 
 const nextConfig: NextConfig = {
   env: {
@@ -34,6 +36,10 @@ const nextConfig: NextConfig = {
       // is a 404, and a shared cache must not keep a 404 for an address anyone can make up (the default for a dynamic page,
       // no-store, applies to it).
       { source: `/:lang(${LAUNCH_CODES.join("|")})/ready/:guide(numbers|${SHARED_CACHE_GUIDES.join("|")})?`, headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }] },
+      // S07.06 (AD-1): every subscription edit page and API is network-only and no-store, and sends no referrer (the page's address holds the
+      // token). Pinned to the launch codes, as the rules above are; the service worker never answers these paths either (offline/rules.ts).
+      { source: `/:lang(${LAUNCH_CODES.join("|")})/subscription/:path*`, headers: subscriptionHeaders },
+      { source: "/api/subscription/:path*", headers: subscriptionHeaders },
     ];
   },
 };

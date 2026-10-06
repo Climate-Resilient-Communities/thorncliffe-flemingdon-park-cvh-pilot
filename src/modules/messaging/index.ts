@@ -101,6 +101,8 @@ export function createSenderHealth(): SenderHealthReader {
 
 /** The estimated cost of the texts waiting to be sent, in whole cents CAD (S07.08: the spend cap counts them before the provider has accepted them). */
 export { queuedCostCents } from "./adapters/queuedCost";
+/** What became of a campaign's texts (S09.07: the end-of-pilot campaign and its rehearsal), counts only. */
+export { campaignTextCounts, type CampaignTextCounts } from "./adapters/campaignTexts";
 export {
   LEASE_STALE_AFTER_MS,
   STUCK_QUEUE_AFTER_MS,
@@ -382,6 +384,9 @@ export { CORRECTION_REACH_KINDS, readCorrectionReach, type CorrectionReachKind, 
 
 // The subscribers an alert's entries were queued to text (S07.07): what subscriptions' recipient port adds to a correction's, a withdrawal's and a final's own audience.
 export { subscribersQueuedFor } from "./adapters/entryRecipientStore";
+
+// The texts held for a resident's records (S09.03): what a resident's access request reads back, without the body, the provider's id or the key.
+export { textsToRecipients, type RecipientText } from "./adapters/recipientTextStore";
 
 // A resend (S09.02, AR-21): an Admin's deliberate action that creates a new delivery copying an earlier one of the chain, never by itself. The caller (the staff
 // surface, src/app/staff/resendSeam.ts) gives it the resident's standing (subscriptions), the entry's standing (alerting) and the spend cap's check (spend).

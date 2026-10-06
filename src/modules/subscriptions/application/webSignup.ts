@@ -26,6 +26,10 @@
 // desk is one shared Wi-Fi from which a staff member signs up many people. And every attempt is audited as `signup.assisted`, with the staff id
 // and the outcome, never the number: an accepted one inside the sign-up's transaction (the same record for a new, a pending and a subscribed
 // number, so the trail cannot tell them apart either), a refused one in its own transaction afterwards.
+//
+// S09.07: sign-ups are paused from the end-of-pilot campaign's start until an Admin reopens them for the MVP (`SignupGate`): a sign-up is then refused
+// as `signups_paused` ("Sign-ups are paused while the pilot ends"), the same for every number, before anything is counted, and again inside the
+// transaction, under the gate the campaign's start takes, so a sign-up and the start never both commit (the start would not see the sign-up it closes).
 import type { SignupCheck, SignupErrorCode, SignupRequest } from "../../../contracts/signup";
 import { residentText } from "../../../i18n/residentTexts";
 import type { LaunchCode } from "../../../i18n/languages";
@@ -34,6 +38,7 @@ import { uuidv7 } from "../../../platform/ids";
 import type { AuditEvent } from "../../audit";
 import { countSms, normaliseSms, type DeliveryResult, type DeliveryView, type Enqueued, type SkippedForRecipient, type TransactionalInput } from "../../messaging";
 import { pendingSignupStore, type PendingSignupStore } from "../adapters/pendingSignupStore";
+import { campaignSignupGate, type SignupGate } from "./campaignGate";
 import type { RateLimiter, RateLimitRule } from "./rateLimit";
 
 /** Sign-up: more than 5 in an hour from one client is refused (S07.02, AD-22). */
@@ -59,6 +64,8 @@ export type SignupChannel = "web" | "staff";
 export interface SubscriberLookup {
   isSubscribed(tx: DbTransaction, phone: string): Promise<boolean>;
 }
+
+export type { SignupGate };
 
 /** Port: the places the form may name (places' readers, wired by the composition root). */
 export interface SignupPlaces {
@@ -87,6 +94,8 @@ export interface SignupDeps {
   /** The audit trail of staff-assisted sign-ups (S07.03); `assist` refuses to run without it. */
   audit?: AssistedSignupAudit;
   pricePerSegmentCents: () => number;
+  /** S09.07: the sign-up gate; by default the campaign's (`campaignSignupGate`). */
+  gate?: SignupGate;
   store?: PendingSignupStore;
   newId?: () => string;
 }
@@ -117,6 +126,7 @@ const ASSISTED_REFUSAL_REASON = {
   terms_changed: "conflict",
   rate_limited: "throttled",
   signup_unavailable: "not_available",
+  signups_paused: "not_available",
 } as const satisfies Record<SignupErrorCode, string>;
 
 /** The confirmation text in a language: the catalog string, normalised and counted as every outbound text is (AD-21). */
@@ -140,6 +150,7 @@ class Discard extends Error {
 
 export function createSignup(deps: SignupDeps): Signup {
   const store = deps.store ?? pendingSignupStore;
+  const gate = deps.gate ?? campaignSignupGate;
   const newId = deps.newId ?? (() => uuidv7());
 
   /** Whether the neighbourhood, the buildings and the floors are on the lists the server keeps. */
@@ -157,6 +168,7 @@ export function createSignup(deps: SignupDeps): Signup {
   async function refusalBeforeCounting(input: SignupRequest): Promise<Exclude<SignupErrorCode, "rate_limited"> | null> {
     const version = deps.consentVersion();
     if (version === null) return "signup_unavailable";
+    if (await gate.closed(deps.db)) return "signups_paused";
     if (input.consentVersion !== version) return "terms_changed";
     // A wrong building or floor is refused before the client is counted, so a mistake does not use up one of its sign-ups.
     const known = await checkPlaces(deps.db, input);
@@ -174,6 +186,8 @@ export function createSignup(deps: SignupDeps): Signup {
       if (places !== "ok") return { kind: "refused", code: places };
 
       await store.lockNumber(tx, input.phone);
+      // S09.07: under the gate the campaign's start takes: paused since the check above, the sign-up is refused here.
+      if (!(await gate.holdOpen(tx))) return { kind: "refused", code: "signups_paused" };
       const subscribed = await deps.subscribers.isSubscribed(tx, input.phone);
       await store.deleteExpired(tx, input.phone);
 

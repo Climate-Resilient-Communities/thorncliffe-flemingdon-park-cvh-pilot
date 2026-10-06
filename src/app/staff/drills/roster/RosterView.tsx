@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
+import { ProcedureLink } from "../../ProcedureLink";
+import { procedureLink } from "../../procedures";
 import { DRILLS_PAGE } from "../view";
 import { countLine } from "./view";
 
@@ -17,6 +19,7 @@ export function RosterView({ count, unreadable = false, forms }: { count: number
       <Stack gap="related">
         <h1>{t("title")}</h1>
         <p>{t("lead")}</p>
+        <ProcedureLink link={procedureLink("run-a-drill")} />
         <a className="tap hub-link" href={DRILLS_PAGE} data-testid="drill-roster-back">
           {t("back")}
         </a>

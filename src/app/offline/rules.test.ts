@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LAUNCH_CODES } from "@/i18n/languages";
 import { TILE_CACHE_NAME } from "@/ui/map/tile-cache";
 import { DATA_CACHE } from "@/ui/offline/protocol";
+import { isSubscriptionPath } from "@/contracts/subscriptionEdit";
 import { buildIdOf, cachesToDelete, classify, directoryFilesToDelete, mayStore, pagesCache, releaseOf, shouldKeepFeed, staticCache, titleOf, type RequestFacts } from "./rules";
 
 const ORIGIN = "https://cvh.example";
@@ -58,6 +59,23 @@ describe("which requests the service worker answers (S02.12, AD-1)", () => {
     expect(classify(page("/ur/subscription"), ORIGIN)).toEqual({ kind: "pass", reason: "subscription" });
     expect(classify(page("/en/subscription/edit/abc"), ORIGIN)).toEqual({ kind: "pass", reason: "subscription" });
     expect(classify(req("/api/subscription/confirm"), ORIGIN)).toEqual({ kind: "pass", reason: "subscription" });
+  });
+
+  it("never answers or stores the one-time web link's page (S07.06) in any language, its data request or its three POSTs", () => {
+    const token = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
+    for (const lang of LAUNCH_CODES) {
+      const path = `/${lang}/subscription/${token}`;
+      expect(classify(page(path), ORIGIN), path).toEqual({ kind: "pass", reason: "subscription" });
+      expect(classify(req(path, { headers: { rsc: "1" } }), ORIGIN), path).toEqual({ kind: "pass", reason: "subscription" });
+      expect(mayStore(`${ORIGIN}${path}`, ORIGIN), path).toBe(false);
+      expect(isSubscriptionPath(path), path).toBe(true);
+    }
+    for (const path of ["/api/subscription/view", "/api/subscription/change", "/api/subscription/delete"]) {
+      expect(classify(req(path, { method: "POST" }), ORIGIN), path).toEqual({ kind: "pass", reason: "method" });
+      expect(classify(req(path), ORIGIN), path).toEqual({ kind: "pass", reason: "subscription" });
+      expect(mayStore(`${ORIGIN}${path}`, ORIGIN), path).toBe(false);
+      expect(isSubscriptionPath(path), path).toBe(true);
+    }
   });
 
   it("leaves every map tile, and anything from another origin, to the network and the map page", () => {

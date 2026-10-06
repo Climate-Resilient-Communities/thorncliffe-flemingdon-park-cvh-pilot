@@ -12,7 +12,10 @@
    "draftTitle": "Návrh: zatiaľ nezverejnené",
    "draftBody": "Tento text ešte nebol schválený. Nie sú to konečné podmienky. Neprihlasujte sa na základe tohto textu.",
    "draftWhy": "Nezverejnené, pretože:",
-   "translationNote": "Časť tejto stránky ešte nie je preložená do jazyka {lang}. Tieto časti sa zobrazujú po anglicky."
+   "translationNote": "Časť tejto stránky ešte nie je preložená do jazyka {lang}. Tieto časti sa zobrazujú po anglicky.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Údaje obyvateľov vymazané",
+   "dataDeletedNote": "Pilot CVH sa skončil. V ten deň sme vymazali telefónne číslo a voľby všetkých, ktorí neodpovedali YES, aby dostávali upozornenia aj naďalej."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1420,6 +1423,10 @@
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
      and {placeholders} stay as written). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"smsTexts": {"menuStreet": "Ulica:", "menuBuilding": "Budova:", "menuFloor": "Poschodie:", "menuWholeBuilding": "Celá budova", "menuLanguage": "Jazyk:", "menuNav": "0 Späť 9 Hub", "menuNavMore": "0 Späť 8 Ďalej 9 Hub", "menuWarn": "Toto nahradí vaše uložené budovy ({n}). 1 Pokračovať, 0 Späť", "menuHub": "Zavolajte Hub na {hub}.", "menuClosed": "Menu sa zavrelo. Nič sa nezmenilo.", "menuReset": "Menu sa zavrelo po 10 minútach bez odpovede. Nič sa nezmenilo.", "menuLimit": "Dnes ste využili 5 menu. Skúste zajtra alebo Hub: {hub}", "menuLimitLink": "Dnes ste využili 5 menu. Pošlite 1 pre odkaz alebo Hub: {hub}", "buildingSaved": "Uložené. Vaša budova: {building}, poschodie {floor}.", "buildingSavedWhole": "Uložené. Vaša budova: {building}.", "languageSaved": "Uložené. Správy budete dostávať po slovensky.", "noCheckinRequest": "Nemáte žiadnu žiadosť o kontrolu.", "checkinWithdrawn": "Vaša žiadosť o kontrolu bola zrušená."}});
+  /* S07.06: the one-time web link's texts and its page (see the English file for what each is; menuClosedLink must fit one text; 0, 1, 30
+     and {placeholders} stay as written; the error lines other than edit_unavailable are the sign-up's own). AI-generated (Claude), not yet
+     checked by native readers. */
+  m(t, {"smsTexts":{"menuClosedLink":"Menu sa zavrelo. Nič sa nezmenilo. Pošlite 1 pre webový odkaz.","editLink":"Upozornenia CVH zmeníte alebo zrušíte tu: {link} Odkaz funguje raz, 30 minút.","editSaved":"Vaše voľby upozornení CVH sa zmenili na webe. Neboli ste to vy? Zavolajte Hub na {hub}."},"subscriptionEdit":{"title":"Zmeňte upozornenia cez SMS","loading":"Otvárajú sa vaše voľby...","forNumber":"Pre telefónne číslo končiace na {digits}.","lead":"Zmeňte, čo chcete, a potom uložte. Ak chcete zastaviť všetky správy, zrušte odber na konci tejto stránky.","topicsTitle":"Témy, o ktorých nechcete správy","topicsLead":"Zaškrtnite tému a jej upozornenia prestanú. Upozornenia na požiar alebo evakuáciu prídu vždy.","save":"Uložiť moje zmeny","saving":"Ukladá sa...","savedTitle":"Vaše zmeny sú uložené","savedBody":"Príde vám SMS s potvrdením. Tento odkaz je už použitý: ak chcete zmeniť niečo ďalšie, požiadajte cez SMS o nový odkaz.","deleteTitle":"Zrušiť môj odber","deleteLead":"Od CVH už nedostanete žiadne správy a všetko, čo sa o vašom čísle uchováva, sa vymaže. Nedá sa to vrátiť.","deleteSure":"Zrušiť odber hneď teraz? Od CVH už nedostanete žiadne správy.","deleteYes":"Áno, zrušiť","deleteNo":"Nie, ponechať","deleting":"Ruší sa...","deletedTitle":"Váš odber je zrušený","deletedBody":"Od CVH už nedostanete žiadne správy a o vašom čísle sa nič neuchováva. Potvrdenie sa neposiela.","signUpAgain":"Prihlásiť sa znova","expiredTitle":"Platnosť tohto odkazu vypršala","expiredBody":"Odkaz funguje raz, 30 minút po odoslaní.","expiredHow":"Nový odkaz cez SMS dostanete, keď odpoviete 1 na správu od CVH. Ak príde menu, zatvorte ho odpoveďou 0. Keď odpoveď ponúkne odkaz, pošlite 1.","callHub":"Alebo zavolajte Hub na {hub}.","error":{"invalid_request":"Niečo vo formulári sa nedalo prečítať. Načítajte stránku znova a skúste to znova.","neighbourhood_missing":"Vyberte svoju štvrť.","place_unknown":"Jedna z vašich budov alebo poschodí už nie je v zozname. Skontrolujte svoje budovy a skúste to znova.","edit_unavailable":"Zmeny sa teraz nedajú urobiť. Skúste to neskôr.","network":"Nepodarilo sa spojiť s CVH. Skontrolujte pripojenie a skúste to znova."}}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1528,4 +1535,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["januára","februára","marca","apríla","mája","júna","júla","augusta","septembra","októbra","novembra","decembra"],"dayMonth":"{day}. {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "Pilot CVH končí. Pre správy YES do {date}, inak číslo zmažeme.", "reconsentKept": "Ďakujeme. Upozornenia CVH budete dostávať aj naďalej.", "pilotEnded": "Pilot CVH sa skončil; vaše číslo sme neuchovali.", "signupsPaused": "Prihlasovanie na SMS CVH je do konca pilotu pozastavené."}, "signup": {"error": {"signups_paused": "Prihlasovanie je do konca pilotu pozastavené."}}});
 })();

@@ -4,21 +4,12 @@ import { Screen, Stack } from "@/ui";
 import { staffPage } from "../guard";
 import { identity } from "../identity";
 import { AddPersonBody } from "./AddPersonBody";
+import { PeopleHeading } from "./PeopleHeading";
 import { ReissueForm } from "./ReissueForm";
 import { ResetAuthenticatorForm } from "./ResetAuthenticatorForm";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
 export const metadata: Metadata = { title: englishText("staff.people.title") };
-
-/** The page's heading and lead, shown to everyone who reaches it. */
-function PeopleHeading() {
-  return (
-    <Stack gap="related">
-      <h1>{englishText("staff.people.title")}</h1>
-      <p>{englishText("staff.people.lead")}</p>
-    </Stack>
-  );
-}
 
 /**
  * "Add a person" (S01.05), with "Re-issue a starting password" (S01.07), "Reset password" (S01.08) and "Reset authenticator" (S01.11):

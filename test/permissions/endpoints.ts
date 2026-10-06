@@ -117,6 +117,7 @@ const SPEND_ACTIONS = "src/app/staff/spend/actions.ts";
 const RESEND_ACTIONS = "src/app/staff/alerts/sending/texts/actions.ts";
 const DRILL_ROSTER_ACTIONS = "src/app/staff/drills/roster/actions.ts";
 const DRILL_START_ACTIONS = "src/app/staff/drills/start/actions.ts";
+const CAMPAIGN_ACTIONS = "src/app/staff/campaign/actions.ts";
 const TEXT_SIGNUP_ACTIONS = "src/app/staff/text-signup/actions.ts";
 /**
  * Text sign-up (S07.03): `signup.assist`, for an Ambassador (whatever building they are assigned to: a sign-up has no building scope), a
@@ -188,6 +189,8 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/drills", kind: "page", file: "src/app/staff/drills/page.tsx", export: "default", route: "/staff/drills", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/drills/roster", kind: "page", file: "src/app/staff/drills/roster/page.tsx", export: "default", route: "/staff/drills/roster", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/drills/start", kind: "page", file: "src/app/staff/drills/start/page.tsx", export: "default", route: "/staff/drills/start", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  // S09.07: the end of the pilot (the re-consent campaign, its rehearsal, reopening sign-ups) is `campaign.run`, Admin only.
+  { id: "page /staff/campaign", kind: "page", file: "src/app/staff/campaign/page.tsx", export: "default", route: "/staff/campaign", action: "campaign.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -757,6 +760,45 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { kind: "ack" },
+    expected: ADMIN_ONLY,
+  },
+  // S09.07: "Rehearse on the drill roster", "Start the campaign" and "Reopen sign-ups for the MVP" (policy action `campaign.run`, Admins at aal2). Called as an
+  // allowed Admin, the rehearsal and the start carry a key the Hub never makes, so the use case refuses them (`key_invalid`, audited) and nothing is made or sent;
+  // the reopening finds no campaign (`no_campaign`, audited). Every other role is refused by the guard before the use case runs.
+  {
+    id: `action ${CAMPAIGN_ACTIONS}#rehearseCampaignAction`,
+    kind: "action",
+    file: CAMPAIGN_ACTIONS,
+    export: "rehearseCampaignAction",
+    route: "/staff/campaign",
+    action: "campaign.run",
+    writes: "business",
+    gate: "hub",
+    form: { key: "not-a-key", deadline: "2026-11-05" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${CAMPAIGN_ACTIONS}#startCampaignAction`,
+    kind: "action",
+    file: CAMPAIGN_ACTIONS,
+    export: "startCampaignAction",
+    route: "/staff/campaign",
+    action: "campaign.run",
+    writes: "business",
+    gate: "hub",
+    form: { key: "not-a-key", deadline: "2026-11-05", confirm: "yes" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${CAMPAIGN_ACTIONS}#reopenSignupsAction`,
+    kind: "action",
+    file: CAMPAIGN_ACTIONS,
+    export: "reopenSignupsAction",
+    route: "/staff/campaign",
+    action: "campaign.run",
+    writes: "business",
+    gate: "hub",
+    form: {},
     expected: ADMIN_ONLY,
   },
   // S07.03: "Send the confirmation text" (policy action `signup.assist`, not privileged). Called as an allowed caller, the form is refused by the

@@ -1,18 +1,21 @@
 import { sql } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
 import { SUBSCRIBER_LANGS, type MeasureViewRow, type MeasuredDay } from "../domain/subscriberMeasures";
+import { receivingSql } from "./campaignStore";
 
 /**
  * The retention state each "receiving" measure counts: together the states in which a subscriber gets alerts (`RECEIVING_STATES`, which the recipient list and
- * the hand-off read; subscriberMeasureStore.test.ts fails if the two drift apart).
- * TODO(E09, S09.07 reconsent campaign): a `reconsent_pending` subscriber receives only before the campaign deadline. That rule must change here too, together
- * with `recipientStore` and `subscriberStore.phoneOf`, or these figures overstate who receives after the deadline.
+ * the hand-off read; subscriberMeasureStore.test.ts fails if the two drift apart). Each is counted only while it receives (`receivingSql`, S09.07): after the
+ * campaign's deadline a `reconsent_pending` subscriber is no longer counted as receiving, as the recipient list and the hand-off no longer text them.
  */
 export const RECEIVING_MEASURE_STATES = {
   receiving_active: "active",
   receiving_reconsent_pending: "reconsent_pending",
   receiving_retained: "retained",
 } as const;
+
+/** Who receives now (E09 "Receiving subscriber"), the condition every receiving query shares. */
+const RECEIVING = receivingSql(sql`s.retention_state`);
 
 const LANG_ARRAY = sql.raw(`array[${SUBSCRIBER_LANGS.map((lang) => `'${lang}'`).join(", ")}]::text[]`);
 
@@ -42,9 +45,9 @@ export const subscriberMeasureStore = {
         insert into subscriber_measure (day, measure, lang, nbhd, n)
         select m.day, k.measure, g.lang, g.nbhd,
                case k.measure
-                 when 'receiving_active' then (select count(*) from subscriber s where s.lang = g.lang and s.neighbourhood_id = g.nbhd and s.retention_state = ${RECEIVING_MEASURE_STATES.receiving_active})
-                 when 'receiving_reconsent_pending' then (select count(*) from subscriber s where s.lang = g.lang and s.neighbourhood_id = g.nbhd and s.retention_state = ${RECEIVING_MEASURE_STATES.receiving_reconsent_pending})
-                 when 'receiving_retained' then (select count(*) from subscriber s where s.lang = g.lang and s.neighbourhood_id = g.nbhd and s.retention_state = ${RECEIVING_MEASURE_STATES.receiving_retained})
+                 when 'receiving_active' then (select count(*) from subscriber s where s.lang = g.lang and s.neighbourhood_id = g.nbhd and s.retention_state = ${RECEIVING_MEASURE_STATES.receiving_active} and ${RECEIVING})
+                 when 'receiving_reconsent_pending' then (select count(*) from subscriber s where s.lang = g.lang and s.neighbourhood_id = g.nbhd and s.retention_state = ${RECEIVING_MEASURE_STATES.receiving_reconsent_pending} and ${RECEIVING})
+                 when 'receiving_retained' then (select count(*) from subscriber s where s.lang = g.lang and s.neighbourhood_id = g.nbhd and s.retention_state = ${RECEIVING_MEASURE_STATES.receiving_retained} and ${RECEIVING})
                  when 'pending_signups' then (select count(*) from pending_signup p where p.lang = g.lang and p.neighbourhood_id = g.nbhd and p.expires_at > now())
                  when 'confirmations' then coalesce((select c.n from subscriber_event_count c where c.day = m.day and c.event = 'confirmed' and c.lang = g.lang and c.nbhd = g.nbhd), 0)
                  else coalesce((select c.n from subscriber_event_count c where c.day = m.day and c.event = 'deleted' and c.lang = g.lang and c.nbhd = g.nbhd), 0)

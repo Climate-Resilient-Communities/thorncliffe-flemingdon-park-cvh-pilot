@@ -46,7 +46,10 @@ const under = (path: string, prefix: string) => path === prefix || path.startsWi
 /** The staff surface and its API (AD-1): never answered, never stored. */
 export const isStaffPath = (path: string) => under(path, "/staff") || under(path, "/api/staff");
 
-/** Subscription pages and API (AD-1): network only, never stored. */
+/**
+ * Subscription pages and API (AD-1): network only, never stored. S07.06's one-time web link is `/{lang}/subscription/{token}` (the token in
+ * the address) and `/api/subscription/view`, `/change` and `/delete` (POSTs, which the worker never answers either).
+ */
 export function isSubscriptionPath(path: string): boolean {
   if (under(path, "/api/subscription")) return true;
   const [, first, second] = path.split("/");

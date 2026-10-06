@@ -12,7 +12,10 @@
    "draftTitle": "খসড়া: এখনও প্রকাশিত হয়নি",
    "draftBody": "এই লেখা এখনও অনুমোদিত হয়নি। এটি চূড়ান্ত শর্তাবলি নয়। এর ভরসায় নাম লেখাবেন না।",
    "draftWhy": "যে কারণে প্রকাশ করা হয়নি:",
-   "translationNote": "এই পাতার কিছু অংশ এখনও {lang}-এ অনুবাদ হয়নি। সেই অংশগুলো ইংরেজিতে দেখায়।"
+   "translationNote": "এই পাতার কিছু অংশ এখনও {lang}-এ অনুবাদ হয়নি। সেই অংশগুলো ইংরেজিতে দেখায়।",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "বাসিন্দাদের তথ্য মুছে ফেলা হয়েছে",
+   "dataDeletedNote": "CVH পাইলট শেষ হয়েছে। সতর্কতা পেতে থাকার জন্য যাঁরা YES উত্তর দেননি, সেই তারিখে আমরা তাঁদের সবার ফোন নম্বর ও পছন্দগুলো মুছে ফেলেছি।"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1409,6 +1412,10 @@
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
      and {placeholders} stay as written). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"smsTexts": {"menuStreet": "রাস্তা:", "menuBuilding": "ভবন:", "menuFloor": "তলা:", "menuWholeBuilding": "পুরো ভবন", "menuLanguage": "ভাষা:", "menuNav": "0 পেছনে 9 হাব", "menuNavMore": "0 পেছনে 8 আরও 9 হাব", "menuWarn": "এটি আপনার সংরক্ষিত {n}টি ভবনের জায়গা নেবে। 1 চালিয়ে যান, 0 পেছনে", "menuHub": "হাবকে ফোন করুন: {hub}", "menuClosed": "মেনু বন্ধ হয়েছে। কিছু বদলায়নি।", "menuReset": "10 মিনিট উত্তর না পাওয়ায় মেনু বন্ধ হয়েছে। কিছু বদলায়নি।", "menuLimit": "আজকের 5টি মেনু শেষ। কাল চেষ্টা করুন বা হাবকে ফোন করুন: {hub}", "menuLimitLink": "আজকের 5টি মেনু শেষ। ওয়েব লিঙ্কের জন্য 1 পাঠান, বা হাব: {hub}", "buildingSaved": "সংরক্ষিত। আপনার ভবন এখন {building}, তলা {floor}।", "buildingSavedWhole": "সংরক্ষিত। আপনার ভবন এখন {building}।", "languageSaved": "সংরক্ষিত। এখন থেকে বার্তা বাংলায় পাবেন।", "noCheckinRequest": "আপনার কোনো খোঁজখবর নেওয়ার অনুরোধ নেই।", "checkinWithdrawn": "আপনার খোঁজখবর নেওয়ার অনুরোধ ফিরিয়ে নেওয়া হয়েছে।"}});
+  /* S07.06: the one-time web link's texts and its page (see the English file for what each is; menuClosedLink must fit one text; 0, 1, 30
+     and {placeholders} stay as written; the error lines other than edit_unavailable are the sign-up's own). AI-generated (Claude), not yet
+     checked by native readers. */
+  m(t, {"smsTexts":{"menuClosedLink":"মেনু বন্ধ হয়েছে। কিছু বদলায়নি। ওয়েব লিঙ্কের জন্য 1 পাঠান।","editLink":"আপনার CVH টেক্সট সতর্কতা এখানে বদলান বা মুছুন: {link} লিঙ্কটি একবার, 30 মিনিটের জন্য কাজ করবে।","editSaved":"আপনার CVH সতর্কতার পছন্দগুলো ওয়েব পাতায় বদলানো হয়েছে। আপনি করেননি? হাবকে ফোন করুন: {hub}"},"subscriptionEdit":{"title":"আপনার টেক্সট সতর্কতা বদলান","loading":"আপনার পছন্দগুলো খোলা হচ্ছে...","forNumber":"{digits} দিয়ে শেষ হওয়া ফোন নম্বরের জন্য।","lead":"যেকোনো পছন্দ বদলান, তারপর সংরক্ষণ করুন। সব বার্তা বন্ধ করতে এই পাতার শেষে আপনার সাবস্ক্রিপশন মুছুন।","topicsTitle":"যেসব বিষয়ে আপনি বার্তা চান না","topicsLead":"কোনো বিষয়ের সতর্কতা বন্ধ করতে সেটিতে টিক দিন। আগুন বা ভবন খালি করার সতর্কতা সবসময় আসে।","save":"আমার পরিবর্তন সংরক্ষণ করুন","saving":"সংরক্ষণ করা হচ্ছে...","savedTitle":"আপনার পরিবর্তন সংরক্ষিত হয়েছে","savedBody":"নিশ্চিত করতে একটি বার্তা আসছে। এই লিঙ্কটি এখন ব্যবহার হয়ে গেছে: আর কিছু বদলাতে টেক্সটে নতুন লিঙ্ক চান।","deleteTitle":"আমার সাবস্ক্রিপশন মুছুন","deleteLead":"আপনি CVH থেকে আর কোনো বার্তা পাবেন না, এবং আপনার নম্বর সম্পর্কে রাখা সবকিছু মুছে যাবে। এটি ফেরানো যায় না।","deleteSure":"এখনই আপনার সাবস্ক্রিপশন মুছবেন? আপনি CVH থেকে আর কোনো বার্তা পাবেন না।","deleteYes":"হ্যাঁ, মুছুন","deleteNo":"না, রাখুন","deleting":"মোছা হচ্ছে...","deletedTitle":"আপনার সাবস্ক্রিপশন মুছে ফেলা হয়েছে","deletedBody":"আপনি CVH থেকে আর কোনো বার্তা পাবেন না, এবং আপনার নম্বর সম্পর্কে কিছুই রাখা হয়নি। এটি নিশ্চিত করতে কোনো বার্তা পাঠানো হয় না।","signUpAgain":"আবার সাইন আপ করুন","expiredTitle":"এই লিঙ্কের মেয়াদ শেষ হয়েছে","expiredBody":"একটি লিঙ্ক একবারই কাজ করে, পাঠানোর পর 30 মিনিট পর্যন্ত।","expiredHow":"টেক্সটে নতুন লিঙ্ক পেতে CVH-এর কোনো বার্তার উত্তরে 1 পাঠান। উত্তরে মেনু এলে সেটি বন্ধ করতে 0 পাঠান। উত্তরে লিঙ্ক দেওয়ার কথা থাকলে 1 পাঠান।","callHub":"অথবা হাবকে ফোন করুন: {hub}","error":{"invalid_request":"ফর্মের কিছু একটা পড়া যায়নি। পাতাটি আবার লোড করে আবার চেষ্টা করুন।","neighbourhood_missing":"আপনার পাড়া বেছে নিন।","place_unknown":"আপনার একটি বিল্ডিং বা ফ্লোর আর তালিকায় নেই। আপনার বিল্ডিংগুলো দেখে আবার চেষ্টা করুন।","edit_unavailable":"এখন পরিবর্তন করা যাচ্ছে না। পরে আবার চেষ্টা করুন।","network":"আমরা CVH-এর সাথে যোগাযোগ করতে পারিনি। আপনার সংযোগ দেখে আবার চেষ্টা করুন।"}}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1517,4 +1524,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["জানু","ফেব","মার্চ","এপ্রি","মে","জুন","জুল","আগ","সেপ","অক্টো","নভে","ডিসে"],"dayMonth":"{day} {month}","digits":"০১২৩৪৫৬৭৮৯"}, "smsTexts": {"reconsent": "CVH পাইলট শেষ: সতর্কতা পেতে {date}-এর মধ্যে YES দিন নইলে নম্বর মুছবে", "reconsentKept": "ধন্যবাদ। আপনি CVH সতর্কবার্তা পেতে থাকবেন।", "pilotEnded": "CVH পাইলট শেষ হয়েছে; আপনার নম্বর রাখা হয়নি।", "signupsPaused": "পাইলট শেষ না হওয়া পর্যন্ত CVH টেক্সট সাইন আপ বন্ধ।"}, "signup": {"error": {"signups_paused": "পাইলট শেষ না হওয়া পর্যন্ত সাইন আপ বন্ধ।"}}});
 })();

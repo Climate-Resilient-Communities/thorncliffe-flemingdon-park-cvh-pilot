@@ -340,6 +340,7 @@ const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/alerts/sending/texts/actions.ts": "An Admin must sign in with their authenticator code to resend texts. Sign in again and enter the code.",
   "src/app/staff/drills/roster/actions.ts": "An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
   "src/app/staff/drills/start/actions.ts": "An Admin must sign in with their authenticator code to start a drill. Sign in again and enter the code.",
+  "src/app/staff/campaign/actions.ts": "An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.",
 };
 /** What a role the policy refuses is told, where it is not "Only an Admin can ...": a Coordinator can approve too, but not what they wrote or changed (S04.07). */
 const FORBIDDEN_MESSAGE: Record<string, RegExp> = {

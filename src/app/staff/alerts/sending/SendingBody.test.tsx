@@ -152,8 +152,10 @@ describe("the list of the texts that did not arrive", () => {
 
     it("draws nothing of it without the slots, so a Coordinator's page is as it was", () => {
       const out = renderToStaticMarkup(<ProblemListBody screen={adminScreen("failed")} />);
-      expect(out).not.toContain("resend-");
+      expect(out).not.toContain('data-testid="resend-');
       expect(out).not.toContain("Resend");
+      // The procedure (S09.03) is linked for everyone who reads the list: it says who resends.
+      expect(out).toContain('data-procedure="resend-failed-texts"');
     });
 
     it("puts the warning and a box to tick on a text with an unknown outcome, and no button for a language", () => {

@@ -1774,6 +1774,21 @@
       pauseFailed: 'Texts were not paused. Try again. If it fails again, tell IT.',
       resumeFailed: 'Texts were not resumed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT.' } } } });
+  /* The written procedures (S09.03): each Hub screen that starts one of them links to its page in docs/procedures (on GitHub, in a new tab), under the
+     page's lead. Not a prototype screen. The titles are the pages' own. */
+  m(en, { staff: { procedures: {
+    link: 'Procedure: {title} (opens in a new tab)',
+    titles: {
+      'write-and-approve-an-alert': 'writing and approving an alert',
+      'correct-or-withdraw': 'correcting or withdrawing an entry',
+      'close-an-alert': 'closing an alert',
+      'run-a-drill': 'running a drill',
+      'pause-and-resume-texts': 'pausing and resuming texts',
+      'resend-failed-texts': 'resending texts that failed',
+      'cap-overrun': 'a spending cap overrun',
+      'health-alert': 'a health alert and who owns the incident',
+      'rotate-secrets': 'rotating secrets (pilot start, departures, pilot end)',
+      'end-of-pilot': 'the end of the pilot' } } } });
   /* The on-call roster, the stuck-queue alert and the Hub's sender banner (S06.07). Not a prototype screen: the Hub's list-and-form page, in the Pause texts
      page's words. The texts to on-call Admins hold counts only, never a number or a name; each fits one text message segment (GSM-7). */
   m(en, { hub: { nav: { oncall: 'On-call numbers' } },
@@ -2154,6 +2169,45 @@
     languageSaved: 'Saved. Your texts will now be in English.',
     noCheckinRequest: 'You have no check-in request.',
     checkinWithdrawn: 'Your check-in request is withdrawn.' } });
+  /* S07.06: the one-time web link. menuClosedLink replaces menuClosed once the link exists: a menu closed with nothing changed offers the
+     link ("Reply 1"); it is a menu text, so it must fit one segment in its language (the menus' fixture checks it). editLink is the text
+     that carries the link ({link}: the page's address, with nothing written next to it) and must say it works once, for 30 minutes;
+     editSaved confirms a change made on the page ({hub} is the Hub's number). The page (subscriptionEdit) is not a prototype screen: it is
+     R-05's form for changing what was chosen, opened only from the link. "This link has expired" is the story's own wording. */
+  m(en, { smsTexts: {
+    menuClosedLink: 'Menu closed. Nothing was changed. Reply 1 for a link to make changes online.',
+    editLink: 'Change or delete your CVH text alerts here: {link} The link works once, for 30 minutes.',
+    editSaved: 'Your CVH alert choices were changed on the web page. Not you? Call the Hub at {hub}.' },
+  subscriptionEdit: {
+    title: 'Change your text alerts',
+    loading: 'Opening your choices...',
+    forNumber: 'For the phone number ending in {digits}.',
+    lead: 'Change any choice, then save. To stop all texts, delete your subscription at the end of this page.',
+    topicsTitle: 'Topics you do not want texts about',
+    topicsLead: 'Tick a topic to stop its alerts. Alerts about a fire or an evacuation always come.',
+    save: 'Save my changes',
+    saving: 'Saving...',
+    savedTitle: 'Your changes are saved',
+    savedBody: 'A text is on its way to confirm them. This link has now been used: to change something else, ask for a new link by text.',
+    deleteTitle: 'Delete my subscription',
+    deleteLead: 'You will get no more texts from the CVH, and everything kept about your number is deleted. This cannot be undone.',
+    deleteSure: 'Delete your subscription now? You will get no more texts from the CVH.',
+    deleteYes: 'Yes, delete it',
+    deleteNo: 'No, keep it',
+    deleting: 'Deleting...',
+    deletedTitle: 'Your subscription is deleted',
+    deletedBody: 'You will get no more texts from the CVH, and nothing about your number is kept. No text is sent to confirm this.',
+    signUpAgain: 'Sign up again',
+    expiredTitle: 'This link has expired',
+    expiredBody: 'A link works once, for 30 minutes after it is sent.',
+    expiredHow: 'To get a new link by text, reply 1 to a text from the CVH. If the reply is a menu, reply 0 to close it. When a reply offers a link, reply 1.',
+    callHub: 'Or call the Hub at {hub}.',
+    error: {
+      invalid_request: 'Something in the form could not be read. Reload the page and try again.',
+      neighbourhood_missing: 'Choose your neighbourhood.',
+      place_unknown: 'One of your buildings or floors is no longer on the list. Check your buildings and try again.',
+      edit_unavailable: 'Changes cannot be made just now. Try again later.',
+      network: 'We could not reach the CVH. Check your connection and try again.' } } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {
@@ -2391,4 +2445,99 @@
       signup_unavailable: 'Text sign-up is not available just now. Try again later.',
       failed: 'The sign-up was not started. Try again. If it fails again, tell IT.',
       nothingChanged: 'Nothing was sent.' } } } });
+  /* The end-of-pilot re-consent campaign (S09.07). The texts subscribers get: the campaign text (a frozen catalog string, reviewed before the pilot, with
+     the deadline filled in as {date}), the confirmation after YES, the answer to a YES after the deadline and, while sign-ups are paused, the answer to a
+     number the CVH does not know. YES, STOP and CVH stay in English in every language. Each fits one text in every language with the longest date
+     (src/modules/subscriptions/application/campaignTexts.test.ts). smsDate is how a text writes the deadline: the twelve month names, `dayMonth` the
+     order of the day and the month ({day} and {month}), and `digits` the numerals 0 to 9 the day is written with. They are fixed here (taken from
+     CLDR 47) rather than asked of the runtime's Intl, whose data differ between Node versions, so the frozen text is the one reviewed and measured
+     on every runtime; a language whose text fits one message only with the month abbreviated has it abbreviated here. The sign-up form's and the
+     staff sign-up's refusal while sign-ups are paused, and the Hub's End of the pilot page (English, like every staff screen). */
+  m(en, {
+    smsDate: {
+      months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      dayMonth: '{month} {day}',
+      digits: '0123456789' },
+    smsTexts: {
+      reconsent: 'The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted.',
+      reconsentKept: 'Thank you. You will keep getting CVH alerts.',
+      pilotEnded: 'The CVH pilot has ended; your number was not kept.',
+      signupsPaused: 'CVH text sign-ups are paused while the pilot ends.' },
+    signup: { error: { signups_paused: 'Sign-ups are paused while the pilot ends.' } },
+    staff: {
+      textSignup: { errors: { signups_paused: 'Sign-ups are paused while the pilot ends.' } },
+      campaign: {
+        title: 'End of the pilot',
+        lead: 'Ask every subscriber whether to keep getting texts after the pilot. Subscribers who do not reply YES by the deadline are deleted after it.',
+        rehearsal: {
+          heading: 'Rehearse on the drill roster',
+          lead: 'Send the campaign text, exactly as subscribers will get it, to the staff phones on the drill roster. Check that it arrives in each language before the campaign starts.',
+          roster: 'Phones on the drill roster: {n}',
+          rosterOne: 'Phones on the drill roster: 1',
+          emptyRoster: 'The drill roster is empty, so a rehearsal reaches nobody. Add the staff phones on the drill roster first.',
+          none: 'No rehearsal yet.',
+          last: 'Last rehearsal: {when}, by {name}.',
+          texts: 'Its texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.',
+          button: 'Rehearse on the drill roster',
+          sending: 'Sending' },
+        start: {
+          heading: 'Start the campaign',
+          needsRehearsal: 'Rehearse on the drill roster first: the campaign starts only after a rehearsal.',
+          deadline: 'Deadline: {date}, end of day in Toronto.',
+          deadlineHint: 'Subscribers who have not replied YES by then receive nothing more and are deleted.',
+          asked: 'Subscribers who will be asked: {n}',
+          languagesHeading: 'Subscribers by language',
+          noSubscribers: 'There are no subscribers to ask.',
+          cost: 'Estimated cost: {cost} for {n} texts.',
+          capNotice: 'With this campaign, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still start it: the texts are sent, the overrun is recorded and the on-call Admins are told.',
+          what: 'Starting the campaign does all of this at once: every subscriber is asked to reply YES and gets the text in their language; every pending sign-up is deleted; new sign-ups are paused until an Admin reopens them after the campaign.',
+          textHeading: 'The text, in English:',
+          confirm: 'I have checked the rehearsal, the deadline, the number of subscribers and the cost.',
+          button: 'Start the campaign',
+          starting: 'Starting' },
+        running: {
+          heading: 'The campaign is running',
+          started: 'Started {when} by {name}.',
+          deadline: 'Deadline: {date}, end of day in Toronto.',
+          asked: 'Asked and not yet replied: {n}',
+          kept: 'Replied YES and stay: {n}',
+          texts: 'Campaign texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.' },
+        ended: {
+          heading: 'The campaign has ended',
+          when: 'Ended {when}; the deadline was {date}.',
+          kept: 'Replied YES and stay: {n}',
+          lapsed: 'Did not reply, to be deleted: {n}',
+          purge: 'Subscribers who did not reply receive nothing and are deleted by the end-of-pilot purge.' },
+        signups: {
+          heading: 'Sign-ups',
+          open: 'Sign-ups are open.',
+          paused: 'Sign-ups are paused while the pilot ends: the web form, the staff sign-up and replies by text all say so.',
+          reopenHint: 'Reopen them when the MVP is ready to take new subscribers.',
+          reopened: 'Sign-ups were reopened {when} by {name}.',
+          button: 'Reopen sign-ups for the MVP',
+          reopening: 'Reopening' },
+        someone: 'an Admin',
+        done: {
+          rehearsed: 'The rehearsal text is queued for {n} staff phones.',
+          rehearsedOne: 'The rehearsal text is queued for 1 staff phone.',
+          rehearsedNone: 'The rehearsal is recorded, but the drill roster is empty: no text was queued.',
+          rehearsedAlready: 'This rehearsal was already sent. Nothing changed.',
+          started: 'The campaign has started: {asked} subscribers are asked, {texts} texts are queued and {deleted} pending sign-ups were deleted. Sign-ups are paused.',
+          alreadyStarted: 'The campaign had already started. Nothing changed.',
+          reopened: 'Sign-ups are open again.' },
+        errors: {
+          forbidden: 'Only an Admin can run the end of the pilot.',
+          aal2Required: 'An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.',
+          key_invalid: 'This page is out of date. Reload it and try again.',
+          deadline_changed: 'The deadline has changed since this page was opened: it is now {date}. Check it, then start again.',
+          terms_unavailable: 'The terms are not published, so there is nothing to re-consent to. Publish the terms first.',
+          rehearsal_needed: 'Rehearse on the drill roster first: the campaign starts only after a rehearsal.',
+          roster_empty: 'The drill roster is empty, so a rehearsal would reach nobody. Add the staff phones on the drill roster first.',
+          already_started: 'The campaign has already started. Nothing changed.',
+          not_confirmed: 'Tick the box to confirm you checked the rehearsal, the deadline, the number of subscribers and the cost.',
+          not_ended: 'Sign-ups can be reopened only after the campaign has ended.',
+          already_reopened: 'Sign-ups are already open.',
+          no_campaign: 'There is no campaign yet, so sign-ups are open.',
+          failed: 'Nothing changed. Try again. If it fails again, tell IT.',
+          unreadable: 'The Hub could not read the campaign. Reload the page. If this stays, tell IT.' } } } });
 })();
