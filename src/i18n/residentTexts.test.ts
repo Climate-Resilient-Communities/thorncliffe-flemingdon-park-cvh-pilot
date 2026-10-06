@@ -62,6 +62,12 @@ describe("the resident texts' catalog strings (AD-9)", () => {
     }
   });
 
+  it("fills the {placeholders} it is given values for and leaves the others as written", () => {
+    expect(residentText("en", "buildingSaved", { building: "12 Menu Street", floor: "G" })).toBe("Saved. Your building is now 12 Menu Street, floor G.");
+    expect(residentText("en", "buildingSaved", { building: "12 Menu Street" })).toBe("Saved. Your building is now 12 Menu Street, floor {floor}.");
+    expect(residentText("en", "menuHub")).toBe("Call the Hub at {hub}.");
+  });
+
   it("has no catalog for a script variant", () => {
     expect(() => residentText("zh-Hant" as never, "confirmation")).toThrow(RangeError);
   });

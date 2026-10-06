@@ -2,8 +2,9 @@
 -- menu 1, replace all of its saved buildings with the one building (and floor) chosen, setting its neighbourhood to that building's.
 --
 --  - `subscriber`: the app may now update `lang` and `neighbourhood_id`, besides `retention_state` (S07.04, the deletion's row lock; E09). The
---    number, the groups, `consent_version` and `started_by` stay unchangeable by the app. A menu locks the row FOR UPDATE before it changes
---    anything (S07.07: an edit of a subscriber waits for an approval that is capturing recipients, and the next capture sees it whole).
+--    number, the groups, `consent_version` and `started_by` stay unchangeable by the app. A menu locks the row FOR NO KEY UPDATE, an edit's
+--    lock, before it changes anything (S07.07: an edit of a subscriber waits for an approval that is capturing recipients FOR SHARE, and the
+--    next capture sees it whole; a resend's FOR KEY SHARE, which only a deletion's FOR UPDATE stops, does not wait for it).
 --  - `subscriber_place`: unchanged; the app already selects, inserts and deletes its rows, which is how menu 1 replaces them.
 --  - `sms_prompt`: unchanged. Its `kind` is a code, not a fixed list (S07.04), so the menus' kinds (`menu_building`, `menu_language`) and the
 --    edit link's offer (`edit_link_offer`, used once S07.06 sends the link) need no change here; the menu's page is the row's `step`. A menu

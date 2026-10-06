@@ -2,14 +2,33 @@
 // exactly one segment with messaging's real encoder (GSM-7 or UCS-2, the body sent byte for byte with SmartEncoded=false), or this fails
 // naming the text and the language. The pages are the real ones: the 43 pilot buildings of the committed City register by street, each
 // building's floors as the seed makes them (1 to its storeys, unconfirmed), floors with the longest labels an Admin may give, and the 15
-// languages; every page of every list is walked with the menus' own moves. The fixed texts are filled with their longest values.
+// languages; every page of every list is walked with the menus' own moves (a page that cannot fit one option fails naming its catalog
+// strings and the language). The fixed texts are filled with their longest values, and each page's own strings (its title, the reserved
+// replies, "Whole building") are checked on their own too, with the two options of its list that make the longest page: a page holds at
+// least 2 options in every language, and a string too long for that fails here by name.
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { LAUNCH_CODES, type LaunchCode } from "../../../i18n/languages";
-import type { ResidentTextName } from "../../../i18n/residentTexts";
+import { LAUNCH_CODES, LAUNCH_LANGUAGES, type LaunchCode } from "../../../i18n/languages";
+import { residentText, type ResidentTextName } from "../../../i18n/residentTexts";
 import { countSms, normaliseSms } from "../../messaging";
 import { FLOOR_LABEL_MAX_LENGTH, planBuildingImport, readMergeFile, readRegisterFile, streetOf } from "../../places";
-import { HUB_NUMBER, MORE, OPTIONS_PER_PAGE, answerMenu, catalogText, startBuildingMenu, startLanguageMenu, type Menu, type MenuBuilding, type MenuFloor, type MenuMove, type MenuWorld } from "../domain/menus";
+import {
+  HUB_NUMBER,
+  MORE,
+  OPTIONS_PER_PAGE,
+  answerMenu,
+  buildingsOn,
+  pageName,
+  pageText,
+  startBuildingMenu,
+  startLanguageMenu,
+  streetsOf,
+  type Menu,
+  type MenuBuilding,
+  type MenuFloor,
+  type MenuMove,
+  type MenuWorld,
+} from "../domain/menus";
 import { fitsOneText } from "./menus";
 
 const ROOT = path.resolve(__dirname, "../../../..");
@@ -72,7 +91,33 @@ const optionsOf = (menu: Menu) => (menu.kind === "menu_language" ? menu.step.opt
 describe("the menus' one-segment fixture (every menu and prompt text, every language, the real encoder)", () => {
   it("renders every prompt and reply of the menus, filled with its longest values, to one segment", () => {
     for (const lang of LAUNCH_CODES) {
-      for (const name of PROMPT_TEXTS) expectOneSegment(catalogText(lang, name, FILL), name, lang);
+      for (const name of PROMPT_TEXTS) expectOneSegment(residentText(lang, name, FILL), name, lang);
+    }
+  });
+
+  it("fits each page's own strings (its title, menuNavMore, Whole building) with the two options of its list that make the longest page", () => {
+    /** Every label a page of each title may show: the streets, the buildings' numbers, the floors (Whole building, the longest label), the languages. */
+    const lists = (lang: LaunchCode): [ResidentTextName, string[]][] => [
+      ["menuStreet", streetsOf(BUILDINGS)],
+      ["menuBuilding", streetsOf(BUILDINGS).flatMap((street) => buildingsOn(BUILDINGS, street).map((item) => item.label))],
+      ["menuFloor", [residentText(lang, "menuWholeBuilding"), "PH-LEVEL", ...[...SEEDED.values()].flat().map((floor) => floor.label)]],
+      ["menuLanguage", LAUNCH_LANGUAGES.map((language) => language.native)],
+    ];
+    for (const lang of LAUNCH_CODES) {
+      for (const [title, labels] of lists(lang)) {
+        const distinct = [...new Set(labels)];
+        let longest = { size: -1, text: "" };
+        for (const a of distinct) {
+          for (const b of distinct) {
+            if (a === b) continue;
+            const text = pageText(lang, title, [a, b], true);
+            const counted = count(text);
+            const size = counted.segments * 10_000 + counted.units;
+            if (size > longest.size) longest = { size, text };
+          }
+        }
+        expectOneSegment(longest.text, `${pageName(title, lang).replace(` in ${lang}`, "")} with its two longest options`, lang);
+      }
     }
   });
 

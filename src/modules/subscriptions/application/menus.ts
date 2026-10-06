@@ -10,19 +10,21 @@
 //  - A page is sent (purpose `menu_reply`) and kept as the subscriber's `sms_prompt`: `kind` the menu, `step` the page and its options,
 //    kept an hour and open for 10 minutes after it was sent. The building whose floors a reply may need is read with places' share lock,
 //    so an Admin's floor edit waits until the reply is handled and the floor chosen is still there when it is saved.
-//  - The last step changes the subscriber under its row lock (FOR UPDATE, as S07.07 asks of every edit of a subscriber). Menu 1 first asks
-//    checkins (`locationChanging`, E08's "Changed location", a no-op until S08.05), then replaces every saved place with the building and
-//    floor chosen (no floor: the whole building), sets the neighbourhood to the building's, and confirms (adding the check-in request's
-//    withdrawal when there was one). Menu 2 sets the language and confirms in the new language.
+//  - The last step changes the subscriber under its row lock (an edit's FOR NO KEY UPDATE, `lockForEdit`: it waits for an approval capturing
+//    recipients, as S07.07 asks of every edit of a subscriber, while a resend still reads the resident as receiving). Menu 1 first asks
+//    checkins (`locationChanging`, E08's "Changed location", a no-op until S08.05) before it takes that lock, so that E08 can lock in its
+//    own order, then replaces every saved place with the building and floor chosen (no floor: the whole building), sets the neighbourhood
+//    to the building's, and confirms (adding the check-in request's withdrawal when there was one). Menu 2 sets the language and confirms
+//    in the new language.
 //  - Reply 3 asks checkins to withdraw the request (`withdrawRequest`, E08) and says what happened: "You have no check-in request" until E08.
 //
 // Every reply is a catalog text in the subscriber's language that fits one segment (menuTexts.test.ts renders each, and every real page).
 // Nothing here logs, audits or stores a number or a body: the router's log line names the keyword, the state and the action only.
 import type { LaunchCode } from "../../../i18n/languages";
-import type { ResidentTextName } from "../../../i18n/residentTexts";
+import { residentText, type ResidentTextName } from "../../../i18n/residentTexts";
 import type { DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
-import { countSms, normaliseSms, type DeliveryResult, type Enqueued, type TransactionalInput } from "../../messaging";
+import type { DeliveryResult, Enqueued, TransactionalInput } from "../../messaging";
 import { floorsOfBuilding, listBuildings, streetOf } from "../../places";
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { subscriberStore, type SubscriberStore } from "../adapters/subscriberStore";
@@ -34,7 +36,6 @@ import {
   MENU_KEPT_MS,
   MENU_SCOPE,
   answerMenu,
-  catalogText,
   floorsWanted,
   readMenu,
   startBuildingMenu,
@@ -44,7 +45,7 @@ import {
   type MenuMove,
   type MenuWorld,
 } from "../domain/menus";
-import { ReplyNotQueued, noCheckinRequestsYet, type CheckinRequests, type MenuPort, type MenuSubscriber } from "./inbound";
+import { noCheckinRequestsYet, queueReply, smsOf, type CheckinRequests, type MenuPort, type MenuSubscriber } from "./inbound";
 
 /**
  * Port: the edit link (S07.06): a single-use web link, sent by text, to change choices or delete the subscription. Until S07.06 there is
@@ -85,7 +86,7 @@ export interface MenuDeps {
 }
 
 /** Whether a text fits one segment, as messaging's encoder counts the body it would send (normalised, `SmartEncoded=false`). */
-export const fitsOneText = (text: string): boolean => countSms(normaliseSms(text)).segments === 1;
+export const fitsOneText = (text: string): boolean => smsOf(text).segments === 1;
 
 export function createMenus(deps: MenuDeps): MenuPort {
   const places = deps.places ?? placesForMenus;
@@ -95,26 +96,13 @@ export function createMenus(deps: MenuDeps): MenuPort {
   const inbound = deps.stores?.inbound ?? inboundStore;
   const newId = deps.newId ?? (() => uuidv7());
 
-  /** Queues a reply to the subscriber in `lang` (its language unless given): normalised and counted as every outbound text is (AD-21). */
+  /** Queues a reply to the subscriber in `lang` (its language unless given), as the router queues its own (`queueReply`). */
   async function say(tx: DbTransaction, subscriber: { id: string; lang: LaunchCode }, text: string, lang: LaunchCode = subscriber.lang): Promise<true> {
-    const body = normaliseSms(text);
-    const { segments } = countSms(body);
-    const queued = await deps.enqueue(tx, {
-      module: "subscriptions",
-      purpose: "menu_reply",
-      recipient: { kind: "subscriber", id: subscriber.id },
-      subject: subscriber.id,
-      nonce: newId(),
-      lang,
-      body,
-      segments,
-      costEstimateCents: Math.ceil(segments * deps.pricePerSegmentCents()),
-    });
-    if (!queued.ok) throw new ReplyNotQueued(queued.error);
+    await queueReply(deps, tx, { purpose: "menu_reply", recipient: { kind: "subscriber", id: subscriber.id }, nonce: newId(), lang, text });
     return true;
   }
   const sayText = (tx: DbTransaction, subscriber: MenuSubscriber, name: ResidentTextName, values: Record<string, string> = {}) =>
-    say(tx, subscriber, catalogText(subscriber.lang, name, values));
+    say(tx, subscriber, residentText(subscriber.lang, name, values));
 
   /** What a menu reads: the buildings (menu 1 only) and the floors of `rsns`, each building's row share-locked until the transaction ends. */
   async function worldOf(tx: DbTransaction, lang: LaunchCode, menu: Menu["kind"], rsns: readonly string[]): Promise<MenuWorld> {
@@ -133,9 +121,10 @@ export function createMenus(deps: MenuDeps): MenuPort {
     // The domain picked the building from `world.buildings` and checked the floor against `world.floors`, read under the building's lock.
     const building = world.buildings.find((candidate) => candidate.rsn === move.rsn)!;
     const floor = move.floorId === null ? null : world.floors.get(move.rsn)!.find((candidate) => candidate.id === move.floorId)!;
-    // Deleted meanwhile cannot happen under the number's lock (only this number's STOP deletes it); if it did, nothing is left to tell.
-    if (!(await subscribers.lock(tx, subscriber.id))) return false;
+    // E08 first, before the subscriber's row is locked here: it locks the round threads' `alert` rows before that row (its lock order).
     const withdrawal = await checkins.locationChanging(subscriber.id, [{ rsn: move.rsn, floorId: move.floorId }], tx);
+    // Deleted meanwhile cannot happen under the number's lock (only this number's STOP deletes it); if it did, nothing is left to tell.
+    if (!(await subscribers.lockForEdit(tx, subscriber.id))) return false;
     await subscribers.replacePlaces(tx, subscriber.id, [{ id: newId(), rsn: move.rsn, floorId: move.floorId }]);
     await subscribers.setNeighbourhood(tx, subscriber.id, building.neighbourhoodId);
     await subscribers.clearPrompt(tx, subscriber.id);
@@ -147,10 +136,10 @@ export function createMenus(deps: MenuDeps): MenuPort {
 
   /** Menu 2's last step: the language, confirmed in the new language. */
   async function saveLanguage(tx: DbTransaction, subscriber: MenuSubscriber, lang: LaunchCode): Promise<boolean> {
-    if (!(await subscribers.lock(tx, subscriber.id))) return false;
+    if (!(await subscribers.lockForEdit(tx, subscriber.id))) return false;
     await subscribers.setLang(tx, subscriber.id, lang);
     await subscribers.clearPrompt(tx, subscriber.id);
-    return say(tx, subscriber, catalogText(lang, "languageSaved"), lang);
+    return say(tx, subscriber, residentText(lang, "languageSaved"), lang);
   }
 
   async function perform(tx: DbTransaction, subscriber: MenuSubscriber, move: MenuMove, world: MenuWorld, current: Menu | null): Promise<boolean> {

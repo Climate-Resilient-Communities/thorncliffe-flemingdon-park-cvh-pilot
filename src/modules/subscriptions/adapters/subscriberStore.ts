@@ -52,6 +52,16 @@ export const subscriberStore = {
     return rows.length > 0;
   },
 
+  /**
+   * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus); false when it is gone. It waits for an approval that holds
+   * the row FOR SHARE while capturing recipients (S07.07), but not for a resend's FOR KEY SHARE (`receivesShared`), which only a deletion's
+   * FOR UPDATE stops: a resident changing their building is still receiving.
+   */
+  async lockForEdit(tx: DbTransaction, id: string): Promise<boolean> {
+    const rows = await tx.select({ id: subscriber.id }).from(subscriber).where(eq(subscriber.id, id)).for("no key update");
+    return rows.length > 0;
+  },
+
   async insert(tx: DbTransaction, row: NewSubscriber): Promise<void> {
     await tx.insert(subscriber).values(row);
   },
@@ -92,7 +102,7 @@ export const subscriberStore = {
   /**
    * Whether the subscriber exists and is in a receiving state, their row locked `FOR KEY SHARE` (it conflicts only with a deletion, not an ordinary update) for the caller's transaction (no number is read). The lock is taken
    * without waiting (`SKIP LOCKED`): a row someone holds `FOR UPDATE` is being deleted (STOP, reply 0), which reads as "does not receive", so a resend never waits
-   * on a deletion that is itself waiting for the delivery rows the resend holds.
+   * on a deletion that is itself waiting for the delivery rows the resend holds. An edit's lock (`lockForEdit`) does not conflict with it.
    */
   async receivesShared(tx: DbTransaction, id: string): Promise<boolean> {
     const rows = await tx
@@ -149,13 +159,13 @@ export const subscriberStore = {
     return row?.n ?? 0;
   },
 
-  /** Replaces every saved place of the subscriber with these (S07.05's menu 1). The caller holds the subscriber's row lock. */
+  /** Replaces every saved place of the subscriber with these (S07.05's menu 1). The caller holds the subscriber's row lock (`lockForEdit`). */
   async replacePlaces(tx: DbTransaction, subscriberId: string, places: readonly NewSubscriberPlace[]): Promise<void> {
     await tx.delete(subscriberPlace).where(eq(subscriberPlace.subscriberId, subscriberId));
     if (places.length > 0) await tx.insert(subscriberPlace).values(places.map((place) => ({ ...place, subscriberId })));
   },
 
-  /** Sets the subscriber's language (menu 2) or neighbourhood (menu 1); the caller holds the subscriber's row lock. */
+  /** Sets the subscriber's language (menu 2) or neighbourhood (menu 1); the caller holds the subscriber's row lock (`lockForEdit`). */
   async setLang(tx: DbTransaction, subscriberId: string, lang: string): Promise<void> {
     await tx.update(subscriber).set({ lang }).where(eq(subscriber.id, subscriberId));
   },
