@@ -717,6 +717,40 @@ describe("the start", () => {
     expect(await owner`select kind from sms_prompt where subscriber_id = ${en.id}`).toEqual([{ kind: "reconsent" }]);
   });
 
+  it("waits for a reply that is clearing an idle menu (the subscriber's row first, then its prompt), then replaces the menu the reply opened: no deadlock", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await rehearse(admin);
+    expect(await textFrom(en.phone, "2")).toMatchObject({ action: "menu" });
+    await owner`update sms_prompt set sent_at = sent_at - interval '11 minutes', expires_at = expires_at - interval '11 minutes' where subscriber_id = ${en.id}`;
+    // The router stops at the idle menu's reset notice: it has cleared the menu's prompt and will open a new menu's page next, nothing committed.
+    const pause = pausePoint();
+    const queue = createDeliveryQueue();
+    const replying = router({
+      menus: createMenus({
+        enqueue: async (tx, input) => {
+          await pause.wait();
+          return queue.enqueueTransactional(tx, input);
+        },
+        pricePerSegmentCents: () => 1.5,
+        places: placesForMenus,
+        checkins: noCheckinRequestsYet,
+        editLink: noEditLinkYet,
+      }),
+    }).handle({ messageSid: nextSid(), from: en.phone, body: "2", optOutType: null });
+    await pause.reached;
+    let settled = false;
+    const starting = start(admin).then((outcome) => ((settled = true), outcome));
+    await settleAfter(400);
+    expect(settled).toBe(false);
+    pause.release();
+    // Clearing a prompt locks the subscriber's row before the prompt, as opening one does and as the start does: the start waits, and neither is
+    // aborted as a deadlock (the start holding the row and waiting for the prompt the reply deleted, the reply waiting for the row).
+    expect(await replying).toMatchObject({ action: "menu", replied: true });
+    expect(await starting).toMatchObject({ kind: "started", asked: 1, texts: 1 });
+    expect(await owner`select kind from sms_prompt where subscriber_id = ${en.id}`).toEqual([{ kind: "reconsent" }]);
+  });
+
   it("holds a reply 0 that comes while it runs until it has committed; the router then replaces the re-consent prompt with the deletion's confirmation", async () => {
     const admin = await staff("admin");
     const en = await subscriber("en");

@@ -146,7 +146,7 @@ export const subscriberStore = {
    * is locked first with an edit's lock (`FOR NO KEY UPDATE`, `lockForEdit`; AD-18: the subscriber row before what hangs on it), so this waits for a
    * campaign's start that holds it and then replaces the re-consent prompt the start committed, and a start waits for this and then replaces this
    * prompt: neither finds the other's uncommitted row in `sms_prompt`'s primary key (S09.07). Every writer of a prompt (the router's deletion
-   * confirmation, S07.05's menu pages and the edit link's offer) opens it here.
+   * confirmation, S07.05's menu pages and the edit link's offer) opens it here, and `clearPrompt` closes one in the same order.
    */
   async openNewPrompt(tx: DbTransaction, subscriberId: string, kind: string, ms: number, step: Record<string, unknown> = {}): Promise<void> {
     await lockForEdit(tx, subscriberId);
@@ -175,7 +175,13 @@ export const subscriberStore = {
     await tx.update(subscriber).set({ neighbourhoodId }).where(eq(subscriber.id, subscriberId));
   },
 
+  /**
+   * Closes the subscriber's prompt. Like `openNewPrompt`, it locks the subscriber's row first (`lockForEdit`; AD-18): the router clears an idle menu
+   * and then opens a new menu's page, and a campaign's start that took the row between the two would otherwise wait for this prompt while this
+   * waits for the row (a deadlock, S09.07).
+   */
   async clearPrompt(tx: DbTransaction, subscriberId: string): Promise<void> {
+    await lockForEdit(tx, subscriberId);
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
   },
 };
