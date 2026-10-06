@@ -21,6 +21,7 @@ import { approveHref, sendingHref, updateHref } from "../pages";
 import type { SendingBlock } from "../sending/view";
 import { typeName } from "../typeNames";
 import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
+import { approvalProcedure, procedureLink, type ProcedureLinkView } from "../../procedures";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
 
@@ -120,6 +121,8 @@ export interface ApprovalScreen {
   here: string;
   title: string;
   lead: string;
+  /** The written procedure this approval belongs to (S09.03), linked under the heading. */
+  procedure: ProcedureLinkView;
   status: "review" | "locked";
   /** Why the entry is not waiting for this person (a locked screen), and the note sent with a return. */
   locked?: { message: string; note?: string };
@@ -459,6 +462,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     variant,
     ref,
     here: approveHref(ref),
+    procedure: procedureLink(approvalProcedure(entry.kind, thread.isDrill)),
     title: entry.kind === "correction" ? t("correctionTitle") : entry.kind === "withdrawal" ? t("withdrawalTitle") : entry.kind === "final" ? t("finalTitle") : variant === "alert" ? t("title") : t("ambassadorTitle"),
     lead: entry.kind === "correction" ? t("correctionLead") : entry.kind === "withdrawal" ? t("withdrawalLead") : entry.kind === "final" ? t("finalLead") : variant === "alert" ? t("lead") : t("ambassadorLead"),
     status: locked ? "locked" : "review",

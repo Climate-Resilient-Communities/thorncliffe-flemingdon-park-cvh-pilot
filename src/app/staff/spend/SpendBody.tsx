@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
+import { ProcedureLink } from "../ProcedureLink";
+import { procedureLink } from "../procedures";
 import type { PeriodView, SpendLine, SpendScreen } from "./view";
 
 function Lines({ lines, testId }: { lines: readonly SpendLine[]; testId: string }) {
@@ -54,6 +56,7 @@ export function SpendBody({ screen, unreadable = false, form }: { screen: SpendS
       <Stack gap="related">
         <h1>{englishText("staff.spend.title")}</h1>
         <p>{englishText("staff.spend.lead")}</p>
+        <ProcedureLink link={procedureLink("cap-overrun")} />
       </Stack>
       {screen === null || unreadable ? (
         <p role="alert" className="hub-error" data-testid="spend-unreadable">

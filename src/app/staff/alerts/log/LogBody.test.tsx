@@ -28,6 +28,14 @@ describe("O-11, log a disruption", () => {
     expect(out).toContain('name="kind" value="ack"');
   });
 
+  it("links the procedure for writing and approving an alert under its lead, and a drill's start to the drill's (S09.03)", () => {
+    expect(out).toContain('href="https://github.com/Climate-Resilient-Communities/thorncliffe-flemingdon-park-cvh-pilot/blob/main/docs/procedures/write-and-approve-an-alert.md"');
+    expect(out).toContain(">Procedure: writing and approving an alert (opens in a new tab)</a>");
+    expect(out.indexOf('data-testid="procedure-link"')).toBeLessThan(out.indexOf("<form "));
+    const drill = renderToStaticMarkup(<LogBody screen={logScreen(PLANS, NOW, { kind: "ack", drill: true })} action={noop} />);
+    expect(drill).toContain('data-procedure="run-a-drill"');
+  });
+
   it("lists every type as a checkbox in its own label, the building ones and then the neighbourhood-wide ones, none ticked", () => {
     const boxes = tags(out, "type");
     expect(boxes.map((tag) => /value="([^"]+)"/.exec(tag)?.[1])).toEqual(["power", "water", "elevator", "fire", "flood", "other", "heat", "smoke", "winter"]);

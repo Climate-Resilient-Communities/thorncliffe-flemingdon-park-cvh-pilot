@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
 import { ExerciseMarker } from "../../ExerciseMarker";
+import { ProcedureLink } from "../../ProcedureLink";
 import type { ApprovalState } from "./approveFromForm";
 import { confirmedCount } from "./countConfirmation";
 import { PublishedMain } from "./PublishedMain";
@@ -416,6 +417,8 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           </section>
         )}
         {screen.status === "review" && <p className="hub-wrap">{screen.cannotEdit}</p>}
+        {/* The procedure this approval belongs to (S09.03), last in the block, after everything about this entry. */}
+        <ProcedureLink link={screen.procedure} />
       </Stack>
     </Stack>
   );

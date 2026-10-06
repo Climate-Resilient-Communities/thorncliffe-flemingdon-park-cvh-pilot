@@ -117,6 +117,11 @@ describe("what a screen with languages that fell back, a duplicate and a drill a
     expect(out).toContain('data-testid="drill-note"');
     expect(out).toContain("This is a drill. It never reaches residents.");
   });
+
+  it("links the drill's procedure, not an alert's (S09.03)", () => {
+    expect(out).toContain('data-procedure="run-a-drill"');
+    expect(html(screenOf())).toContain('data-procedure="write-and-approve-an-alert"');
+  });
 });
 
 describe("the review of an ambassador's post (O-07)", () => {

@@ -116,6 +116,7 @@ describe("the start of a final message (O-16)", () => {
   it("is a composer of its own with the prototype's words, that has not made a draft yet: saving makes it", () => {
     expect(screen).toMatchObject({ mode: "resolve", from: "resolve", status: "new", title: "Mark resolved", ref: { alertId: ALERT, entryId: NEW_ENTRY }, here: `/staff/alerts/resolve?alert=${ALERT}` });
     expect(screen.lead).toContain("Resolving closes the alert with a final word");
+    expect(screen.procedure.id).toBe("close-an-alert");
     expect(screen.startNote).toContain("Approving it closes the alert");
     expect(screen.draft?.text.label).toBe("Final entry");
     expect(screen.draft?.text.hint).toContain("what is fixed, and what to do if it is not fixed for you");

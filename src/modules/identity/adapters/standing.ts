@@ -39,3 +39,15 @@ export async function readStaffName(executor: DbExecutor, staffId: string): Prom
   const [row] = await executor.select({ firstName: staffAccount.firstName, lastName: staffAccount.lastName }).from(staffAccount).where(eq(staffAccount.id, staffId));
   return row ? `${row.firstName} ${row.lastName}` : null;
 }
+
+/**
+ * A staff member found by username, for a script IT runs on an Admin's behalf (S09.03, scripts/access-request: the Admin who handled a resident's access request
+ * is the actor of its audit records): their id, role, status and name. Null when there is no such account.
+ */
+export async function readStaffByUsername(executor: DbExecutor, username: string): Promise<{ id: string; role: StaffRole; status: StaffStatus; name: string } | null> {
+  const [row] = await executor
+    .select({ id: staffAccount.id, role: staffAccount.role, status: staffAccount.status, firstName: staffAccount.firstName, lastName: staffAccount.lastName })
+    .from(staffAccount)
+    .where(eq(staffAccount.username, username));
+  return row ? { id: row.id, role: row.role, status: row.status, name: `${row.firstName} ${row.lastName}` } : null;
+}

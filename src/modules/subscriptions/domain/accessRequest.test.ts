@@ -1,0 +1,141 @@
+import { describe, expect, it } from "vitest";
+import { heldRecordLines, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
+
+const DAY = 86_400_000;
+const NOW = new Date("2026-10-30T16:00:00Z");
+const ago = (days: number) => new Date(NOW.getTime() - days * DAY);
+const received = (id: string, at: Date, over: Partial<RequestRecord> = {}): RequestRecord => ({
+  action: "access_request.received",
+  at,
+  subjectId: id,
+  actorStaffId: "s1",
+  isDrill: false,
+  meta: { request: "access" },
+  ...over,
+});
+const closed = (id: string, at: Date, outcome = "answered"): RequestRecord => ({ action: "access_request.closed", at, subjectId: id, actorStaffId: "s2", isDrill: false, meta: { outcome } });
+
+describe("openRequests", () => {
+  it("lists the requests not closed, oldest first, with whole days open and the last day to answer", () => {
+    const records = [received("b", ago(3)), received("a", ago(10), { meta: { request: "deletion" } }), received("c", ago(40)), closed("c", ago(20))];
+    const open = openRequests(records, NOW);
+
+    expect(open.map((r) => r.id)).toEqual(["a", "b"]);
+    expect(open[0]).toMatchObject({ request: "deletion", daysOpen: 10, flagged: false, receivedBy: "s1", rehearsal: false });
+    expect(open[0]!.dueBy.getTime()).toBe(ago(10).getTime() + 30 * DAY);
+  });
+
+  it("flags a request once it has been open for more than 25 days, as the weekly review does", () => {
+    const open = openRequests([received("at", ago(25)), received("past", new Date(ago(25).getTime() - 1)), received("rehearsal", ago(26), { isDrill: true })], NOW);
+
+    expect(open.map((r) => [r.id, r.flagged, r.rehearsal])).toEqual([
+      ["rehearsal", true, true],
+      ["past", true, false],
+      ["at", false, false],
+    ]);
+  });
+
+  it("reads a request kind it does not know as unknown rather than guessing", () => {
+    expect(openRequests([received("x", ago(1), { meta: {} })], NOW)[0]!.request).toBeNull();
+  });
+});
+
+describe("standingOf", () => {
+  it("says whether a request was never received, is open, or is closed and how", () => {
+    const records = [received("open", ago(2), { isDrill: true }), received("done", ago(5)), closed("done", ago(1), "not_verified")];
+
+    expect(standingOf(records, "nope")).toEqual({ kind: "unknown" });
+    expect(standingOf(records, "open")).toEqual({ kind: "open", receivedAt: ago(2), isDrill: true });
+    expect(standingOf(records, "done")).toEqual({ kind: "closed", outcome: "not_verified", closedAt: ago(1) });
+  });
+});
+
+describe("wholeDays and torontoTime", () => {
+  it("count whole days and read an instant in Toronto, across the end of daylight time", () => {
+    expect(wholeDays(ago(2.5), NOW)).toBe(2);
+    expect(wholeDays(NOW, ago(1))).toBe(0);
+    expect(torontoTime(new Date("2026-10-06T13:30:00Z"))).toBe("2026-10-06 09:30");
+    expect(torontoTime(new Date("2026-11-02T14:05:00Z"))).toBe("2026-11-02 09:05");
+  });
+});
+
+const NOTHING: HeldRecord = { maskedNumber: "+1 ••• ••• 0123", subscriber: null, pending: null, replies: [], texts: [], hashes: [], checkins: { kind: "not_built" } };
+
+describe("heldRecordLines", () => {
+  it("reads out everything held for a subscriber: places, groups, muted topics, terms, retention state, prompt, texts, hashes", () => {
+    const lines = heldRecordLines({
+      ...NOTHING,
+      subscriber: {
+        since: new Date("2026-10-01T14:00:00Z"),
+        lang: "ur",
+        neighbourhood: "Thorncliffe Park (TP)",
+        groups: ["seniors", "families"],
+        consentVersion: "2026-10-02.1",
+        startedBy: "staff",
+        retentionState: "active",
+        places: [
+          { rsn: "9100011", address: "11 Sample Road", floor: "2" },
+          { rsn: "9100099", address: null, floor: null },
+        ],
+        mutedTopics: [],
+        prompt: { kind: "delete_confirm", until: new Date("2026-10-06T13:40:00Z") },
+      },
+      texts: [
+        { createdAt: new Date("2026-10-01T14:01:00Z"), kind: "alert", purpose: null, lang: "ur", state: "undelivered", segments: 3, resendN: 1, providerErrorCode: 30003 },
+      ],
+      hashes: [{ scope: "inbound", count: 2, latest: new Date("2026-10-06T13:00:00Z") }],
+    }).join("\n");
+
+    expect(lines).toContain("What the CVH holds for +1 ••• ••• 0123:");
+    expect(lines).toContain("  Signed up: 2026-10-01 10:00, with a staff member's help");
+    expect(lines).toContain("  Groups: seniors, families");
+    expect(lines).toContain("    11 Sample Road (register number 9100011), floor 2");
+    expect(lines).toContain("    a building no longer in the register (register number 9100099), no floor");
+    expect(lines).toContain("  Muted topics: none");
+    expect(lines).toContain("  Terms accepted (consent version): 2026-10-02.1");
+    expect(lines).toContain("  Retention state: active");
+    expect(lines).toContain("  Open prompt: delete_confirm, until 2026-10-06 09:40");
+    expect(lines).toContain("Texts (1; the words are not kept here and are not read out):");
+    expect(lines).toContain("  2026-10-01 10:01  alert in ur, 3 segments, undelivered, resend 1, provider error 30003");
+    expect(lines).toContain("Keyed hashes of the number (rate limits, each deleted after 24 hours): inbound 2, latest 2026-10-06 09:00");
+    expect(lines).toContain("Pending sign-up: none");
+    expect(lines).not.toContain("Nothing is held");
+  });
+
+  it("reads out a pending sign-up and the replies waiting for a number with no subscription", () => {
+    const lines = heldRecordLines({
+      ...NOTHING,
+      pending: {
+        since: new Date("2026-10-05T14:00:00Z"),
+        expiresAt: new Date("2026-10-07T14:00:00Z"),
+        expired: true,
+        lang: "en",
+        neighbourhood: "Flemingdon Park (FP)",
+        groups: [],
+        topics: ["heat"],
+        consentVersion: "2026-10-02.1",
+        startedBy: "web",
+        places: [],
+      },
+      replies: [{ since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z") }],
+    });
+
+    expect(lines).toContain("Pending sign-up (waiting for YES, expired: the purge deletes it within 15 minutes):");
+    expect(lines).toContain("  Started: 2026-10-05 10:00, on the web; YES accepted until 2026-10-07 10:00");
+    expect(lines).toContain("  Places: none");
+    expect(lines).toContain("  Muted topics: heat");
+    expect(lines).toContain("Waiting reply to a number with no subscription: 1 (each deleted when its reply goes, or after 30 minutes)");
+  });
+
+  it("says when nothing is held, and never calls a check-in table it cannot read nothing", () => {
+    expect(nothingHeld(NOTHING)).toBe(true);
+    expect(heldRecordLines(NOTHING)).toContain("Nothing is held for this number.");
+    expect(heldRecordLines(NOTHING)).toContain("Check-in records: none (check-ins are not built yet)");
+
+    const unreadable: HeldRecord = { ...NOTHING, checkins: { kind: "unreadable" } };
+    expect(nothingHeld(unreadable)).toBe(false);
+    expect(heldRecordLines(unreadable).join("\n")).toMatch(/A CHECK-IN TABLE EXISTS THAT THIS SCRIPT CANNOT READ YET\. Do not answer the request as complete/);
+    expect(nothingHeld({ ...NOTHING, checkins: { kind: "rows", rows: [] } })).toBe(true);
+    expect(nothingHeld({ ...NOTHING, hashes: [{ scope: "signup_info", count: 1, latest: NOW }] })).toBe(false);
+  });
+});

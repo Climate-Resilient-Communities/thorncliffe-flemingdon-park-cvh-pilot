@@ -18,6 +18,7 @@ import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "../audience/editAudience
 import { fieldsOfStoredInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
 import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
+import { composerProcedure, procedureLink, type ProcedureLinkView } from "../../procedures";
 import { formatTorontoDateTime } from "@/platform/clock";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -146,6 +147,8 @@ export interface ComposerScreen {
   lead: string;
   /** The exercise marker (X-10, S06.05) when the thread is a drill, so no composer of a drill passes for a real alert's; null otherwise. */
   exercise: ExerciseWords | null;
+  /** The written procedure this composer starts (S09.03), linked under the lead. */
+  procedure: ProcedureLinkView;
   firstReport: string;
   benchmark: string;
   /** `new`: an update whose draft is not made yet (S05.01): saving makes it. */
@@ -389,6 +392,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
     title: TITLES[mode].title(t),
     lead: TITLES[mode].lead(t),
     exercise: thread.isDrill ? exerciseWords() : null,
+    procedure: procedureLink(composerProcedure(from, thread.isDrill)),
     firstReport: t("firstReport", { time: formatTorontoDateTime(thread.reportedAt) }),
     benchmark: t("benchmark"),
     status,
@@ -515,6 +519,7 @@ export function startScreen(input: StartInput): ComposerScreen {
     title: TITLES[mode].title(t),
     lead: TITLES[mode].lead(t),
     exercise: input.thread.thread.isDrill ? exerciseWords() : null,
+    procedure: procedureLink(composerProcedure(fromOfMode(mode), input.thread.thread.isDrill)),
     firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
     benchmark: "",
     status: "new",
@@ -619,6 +624,7 @@ export function replaceStartScreen(input: ReplaceStartInput): ComposerScreen {
     title: TITLES[mode].title(t),
     lead: TITLES[mode].lead(t),
     exercise: input.thread.thread.isDrill ? exerciseWords() : null,
+    procedure: procedureLink(composerProcedure(fromOfMode(mode), input.thread.thread.isDrill)),
     firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
     benchmark: "",
     status: "new",
