@@ -2,7 +2,7 @@
 // Hub's words. Pure of Next.js, so the tests call it directly. The guard (../../../guard.ts) has already refused everyone but an Admin at aal2; the actor is its session's,
 // never the form's.
 import { englishText } from "@/i18n/text";
-import { bucketOf, type DeliveryState, type Resend, type ResendOutcome } from "@/modules/messaging";
+import { RESENDABLE_STATES, bucketOf, type DeliveryState, type Resend, type ResendOutcome } from "@/modules/messaging";
 import { formatCents } from "../../approval/view";
 import { meaningText } from "../view";
 import type { StaffSession } from "../../../session";
@@ -68,12 +68,17 @@ async function run(deps: ControlDeps, call: () => Promise<ResendOutcome>, seen: 
   }
 }
 
-/** "Resend" on one text: the entry and the text from the form, the status the Admin saw, and (for an unknown text) their confirmation. */
+/**
+ * "Resend" on one text: the entry and the text from the form, the status the Admin saw, and (for an unknown text) their confirmation. The status seen is required
+ * and must be one a text can be resent from: without it the use case could not tell that a late callback changed the text since the page was drawn, so a form
+ * without it (or with another value) is not understood and nothing is resent.
+ */
 export async function resendOneFromForm(deps: ControlDeps, session: Pick<StaffSession, "staffId">, form: FormData): Promise<ResendAnswer> {
   const entryId = field(form, "entry");
   const deliveryId = field(form, "delivery");
-  if (entryId === null || deliveryId === null || !UUID.test(entryId) || !UUID.test(deliveryId)) return invalid();
   const seen = field(form, "seen");
+  if (entryId === null || deliveryId === null || !UUID.test(entryId) || !UUID.test(deliveryId)) return invalid();
+  if (seen === null || !(RESENDABLE_STATES as readonly string[]).includes(seen)) return invalid();
   return run(
     deps,
     () => deps.resend().resend({ actorStaffId: session.staffId, entryId, scope: "one", deliveryId, seen, confirmedUnknown: field(form, "confirm") === "on" }),

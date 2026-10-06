@@ -4,7 +4,7 @@
 //
 //  - One transaction does it all (a "resend all" for an entry and language is one transaction too, so it is all or nothing, with one audit record): for each chain,
 //    in the order of the roots' ids (so two Admins pressing at once lock them in the same order), the chain's root is locked `FOR UPDATE` and then the rest of the
-//    chain (AD-18: the delivery rows), the decision is made on what is read under those locks (`decideResend`), the resident's row is locked `FOR SHARE` without waiting (a deletion
+//    chain (AD-18: the delivery rows), the decision is made on what is read under those locks (`decideResend`), the resident's row is locked `FOR KEY SHARE SKIP LOCKED` (a deletion
 //    or STOP that comes next waits for this transaction and then skips the new text; one that is already running makes the resident "not receiving"), and the next `resend_n` is allocated by the new row's insert, which the database checks again
 //    (the unique `(resend_of, resend_n)`, the key `resend:{root}:{n}`, the copy).
 //  - Who may resend is the staff guard's rule (the policy action `delivery.resend`: Admins, at aal2), asked by the caller before it comes here; the actor is the
@@ -67,7 +67,7 @@ export interface ResendStore {
   insertResend(tx: DbTransaction, input: { id: string; root: RootText; n: number; key: string }): Promise<void>;
 }
 
-/** Port, implemented by `subscriptions` and wired by the composition root: whether the resident still receives alerts. Locks their row `FOR SHARE`, without waiting. */
+/** Port, implemented by `subscriptions` and wired by the composition root: whether the resident still receives alerts. Locks their row `FOR KEY SHARE SKIP LOCKED`: never waits, and a row a deletion holds reads as not receiving. */
 export interface ResendRecipients {
   receives(tx: DbTransaction, recipient: { kind: RecipientKind; id: string }): Promise<boolean>;
 }
@@ -106,8 +106,8 @@ export type ResendInput = {
   | {
       scope: "one";
       deliveryId: string;
-      /** The status the Admin saw (`unknown`, `failed`, `undelivered`); a text that is another status now is refused. */
-      seen: string | null;
+      /** The status the Admin saw (`unknown`, `failed`, `undelivered`), required: a text that is another status now is refused. */
+      seen: string;
       /** The Admin's confirmation, for an `unknown` text, that "This text may already have arrived; resending may send it twice". */
       confirmedUnknown: boolean;
     }
@@ -207,7 +207,7 @@ export function createResend(deps: ResendDeps): Resend {
         if (stop) return { ...stop, isDrill };
         continue;
       }
-      // The resident, last: their row is locked FOR SHARE (without waiting), so a deletion or a STOP that comes next waits, then skips the text this transaction adds.
+      // The resident, last: their row is locked FOR KEY SHARE SKIP LOCKED (without waiting), so a deletion or a STOP that comes next waits, then skips the text this transaction adds.
       if (locked.root.recipientId === null || !(await deps.recipients.receives(tx, { kind: "subscriber", id: locked.root.recipientId }))) {
         const stop = refuse(refusedWith("recipient_not_receiving"));
         if (stop) return { ...stop, isDrill };

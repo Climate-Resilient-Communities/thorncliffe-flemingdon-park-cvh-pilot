@@ -100,11 +100,18 @@ export function sortWeeklyRows(rows: readonly WeeklyRow[]): WeeklyRow[] {
   );
 }
 
-/** A cell for a spreadsheet: quoted when needed, and a text that starts like a formula is made harmless. */
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+
+/**
+ * A cell for a spreadsheet: quoted when needed, and a text that starts like a formula is made harmless. A cell that is
+ * entirely a plain number ("-12.34", an over-budget remainder) is left as it is, so the spreadsheet still reads it as a
+ * number: a minus sign, digits and an optional decimal part cannot form a formula. Anything else starting with `=`, `+`,
+ * `-`, `@`, a tab or a carriage return gets a leading `'`.
+ */
 export function csvCell(value: string | number | boolean | null): string {
   if (value === null) return "";
   let text = String(value);
-  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  if (/^[=+\-@\t\r]/.test(text) && !PLAIN_NUMBER.test(text)) text = `'${text}`;
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 

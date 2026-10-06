@@ -65,6 +65,15 @@ describe("the CSV", () => {
     expect(csvCell(false)).toBe("false");
   });
 
+  it("leaves a cell that is entirely a plain number as a number, negative or not, and guards everything else", () => {
+    for (const plain of ["-12.34", "-5", "12.34", "0", "-0.005"]) expect(csvCell(plain)).toBe(plain);
+    expect(csvCell(-1234)).toBe("-1234");
+    expect(csvCell(-12.5)).toBe("-12.5");
+    for (const formula of ["-1+1", "-12.34)", "-12.", "-.5", "- 12", "-12.34e5", "+12", "=1", "@SUM(A1)", "\t12", "\r12", "-", "--1", "-12,34", "-1\n"]) {
+      expect(csvCell(formula).replace(/^"/, "")).toMatch(/^'/);
+    }
+  });
+
   it("lists the sections in the review's order, real before drill, a total before its languages", () => {
     const rows = sortWeeklyRows([
       row({ section: "slow_delivery", reason: null }),

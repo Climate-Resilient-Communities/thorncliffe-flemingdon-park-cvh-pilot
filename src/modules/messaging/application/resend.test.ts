@@ -69,7 +69,7 @@ function world(chains: Record<string, ChainText[]>, options: { roots?: Record<st
   return { resend: createResend(deps), calls, inserted, audit, spendCap };
 }
 
-const one = (deliveryId: string, seen: string | null = "failed", confirmedUnknown = false) => ({ actorStaffId: ADMIN, entryId: ENTRY, scope: "one" as const, deliveryId: U(deliveryId), seen, confirmedUnknown });
+const one = (deliveryId: string, seen: string = "failed", confirmedUnknown = false) => ({ actorStaffId: ADMIN, entryId: ENTRY, scope: "one" as const, deliveryId: U(deliveryId), seen, confirmedUnknown });
 const all = (lang = "en") => ({ actorStaffId: ADMIN, entryId: ENTRY, scope: "language" as const, lang });
 
 describe("resending one text", () => {

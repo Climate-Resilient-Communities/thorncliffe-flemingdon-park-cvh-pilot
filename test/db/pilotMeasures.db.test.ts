@@ -360,7 +360,8 @@ describe("scripts/export-measures", () => {
     expect(where(director, { section: "spend", measure: "budget" })[0]).toMatchObject({ value: "1000.00", unit: "CAD" });
     expect(where(director, { section: "spend", measure: "translation_price_unknown", period: "pilot to date" })[0]).toMatchObject({ value: "unknown", basis: "price unknown" });
     expect(where(director, { section: "spend", measure: "sms_pending_reconciliation" }).every((row) => row.basis.startsWith("estimate"))).toBe(true);
-    expect(where(director, { section: "cost_per_alert", measure: "text_cost", entry_id: real.entryId, split: "entry" })[0]).toMatchObject({ value: "0.30", basis: "estimate" });
+    // Its Urdu texts (3) are hidden, and English (12) with them, so the entry's total cost is not shown either (20261007030000): with the count it would give them away.
+    expect(where(director, { section: "cost_per_alert", measure: "text_cost", entry_id: real.entryId, split: "entry" })[0]).toMatchObject({ value: "not shown", basis: "" });
     expect(where(director, { section: "cost_per_alert", measure: "translation_cost", entry_id: real.entryId })[0]).toMatchObject({ value: "unknown", basis: "price unknown" });
 
     const coordinator = rowsOf(csv("coordinator"));

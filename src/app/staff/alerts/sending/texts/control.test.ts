@@ -55,6 +55,12 @@ describe("pressing 'Resend' on one text", () => {
     [{ entry: ENTRY, delivery: "nope" }],
     [{ entry: ENTRY }],
     [{}],
+    // Without the status the Admin saw, a late callback that changed the text could not be noticed: the form is not understood.
+    [{ entry: ENTRY, delivery: TEXT }],
+    [{ entry: ENTRY, delivery: TEXT, confirm: "on" }],
+    [{ entry: ENTRY, delivery: TEXT, seen: "" }],
+    [{ entry: ENTRY, delivery: TEXT, seen: "delivered" }],
+    [{ entry: ENTRY, delivery: TEXT, seen: "Failed" }],
   ])("refuses a form that was not understood (%j) without calling the use case", async (fields) => {
     const w = world(resent());
     const answer = await resendOneFromForm(w.deps, ADMIN, form(fields));
