@@ -11,6 +11,8 @@ import { campaignPageText } from "./campaign/view";
 import { DrillsView } from "./drills/DrillsView";
 import { drillsView } from "./drills/view";
 import { RosterView } from "./drills/roster/RosterView";
+import { MeasuresView } from "./measures/MeasuresView";
+import { reachView, subscribersView } from "./measures/view";
 import { PeopleHeading } from "./people/PeopleHeading";
 import { PROCEDURES_BASE_URL, SCREEN_PROCEDURES, approvalProcedure, composerProcedure, procedureLink } from "./procedures";
 import { SpendBody } from "./spend/SpendBody";
@@ -100,6 +102,24 @@ describe("the link to a procedure", () => {
     ],
     ["People (someone leaving)", () => <PeopleHeading />, "rotate-secrets"],
     ["End of the pilot", () => <CampaignView text={campaignPageText()} procedure={procedureLink("end-of-pilot")} screen={null} unreadable />, "end-of-pilot"],
+    [
+      "Pilot measures",
+      () => (
+        <MeasuresView
+          view={{
+            title: "Pilot measures",
+            lead: "Counts only.",
+            privacy: "Fewer than 5.",
+            exportNote: "The full set is a file an Admin writes.",
+            procedure: procedureLink("export-measures"),
+            subscribers: subscribersView(null),
+            reach: reachView({ real: [], drills: [] }),
+            cost: null,
+          }}
+        />
+      ),
+      "export-measures",
+    ],
   ] as const)("is drawn on %s", (_, draw, id) => {
     const out = renderToStaticMarkup(draw());
     expect(out.match(/data-testid="procedure-link"/g)).toHaveLength(1);

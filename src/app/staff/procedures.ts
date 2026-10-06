@@ -17,6 +17,7 @@ export const SCREEN_PROCEDURES = [
   "health-alert",
   "rotate-secrets",
   "end-of-pilot",
+  "export-measures",
 ] as const;
 export type ProcedureId = (typeof SCREEN_PROCEDURES)[number];
 

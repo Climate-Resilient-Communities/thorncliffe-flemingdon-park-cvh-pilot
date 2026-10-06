@@ -1,6 +1,7 @@
 import { hubNavigation, hubShellLabels } from "../../src/app/staff/hubShell";
 import type { MeasuresView } from "../../src/app/staff/measures/view";
 import { costView, measuresText, reachView, subscribersView, type Text } from "../../src/app/staff/measures/view";
+import { procedureLink } from "../../src/app/staff/procedures";
 import type { CorrectionReachReport, CorrectionReachRow } from "../../src/modules/messaging";
 import type { AlertCost, AlertCostReport, AlertCostRow, CohereEntryShare, CohereShare } from "../../src/modules/spend";
 import type { HubShellTexts } from "../layout/fixtures";
@@ -96,6 +97,8 @@ export function sampleView(sample: MeasuresSample, t: Text = measuresText): Meas
     title: t("title"),
     lead: t("lead"),
     privacy: t("privacy"),
+    exportNote: t("exportNote"),
+    procedure: { ...procedureLink("export-measures"), ...(t === measuresText ? {} : { text: t("procedureLink") }) },
     subscribers: subscribersView(sample === "not-run" ? null : sampleDay(), t),
     reach: reachView(empty ? { real: [], drills: [] } : sampleReach(), t),
     cost: sample === "coordinator" ? null : costView(empty ? { real: [], drills: [] } : sampleCost(), empty ? [] : sampleCohere(), t),

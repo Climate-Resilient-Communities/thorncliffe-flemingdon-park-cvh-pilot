@@ -9,7 +9,7 @@ import { longestLabels } from "../helpers/strings";
 // S07.10: the Hub's pilot measures page (subscribers, how far corrections reached, cost per alert), at viewports of 699 and 700 px (the shell's breakpoint) and at content
 // widths of 799 and 800 px (viewports of 1087 and 1088 px with the side navigation), in `en` and `ur` with the longest translated labels of the language in every place the page
 // shows text, for a Director (cost of each alert included), a Coordinator (no cost: AD-4), and before the daily count has run or anything is texted. Nothing overflows horizontally,
-// and the page is read-only: it has no control of its own. The checks are the shared boundary helpers of S01.16, run on the app's own body inside the real Hub shell.
+// and the page is read-only: it has no control of its own (its one link is the export's procedure, S09.05). The checks are the shared boundary helpers of S01.16, run on the app's own body inside the real Hub shell.
 const brand = hubBrand();
 
 /** Every text of the page replaced by one of the language's longest labels (its longest sentences, words and one unbreakable token). */
@@ -54,7 +54,9 @@ for (const [name, sample] of SAMPLES) {
           await page.setViewportSize({ width, height: 900 });
           await open(page, sample, lang);
           await expectNoHorizontalOverflow(page, hubPage(page));
-          await expect(page.locator("main a[href], main button, main input, main select, main textarea, main summary")).toHaveCount(0);
+          // S09.05: its one link is the export's procedure (S09.03's link, opened in a new tab); nothing on it changes anything.
+          await expect(page.locator("main a[href]:not([data-testid=procedure-link]), main button, main input, main select, main textarea, main summary")).toHaveCount(0);
+          await expect(page.locator("main [data-testid=procedure-link]")).toHaveAttribute("data-procedure", "export-measures");
         }
       }
     });

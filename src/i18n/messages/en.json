@@ -4090,6 +4090,215 @@
       },
       "errors": {
         "unreadable": "The Hub could not read the measures. Reload the page. If this stays, tell IT."
+      },
+      "exportNote": "This page shows some of the pilot measures. The full set for the week-8 review is a file an Admin writes each day, a spreadsheet and a printable page: an edition for Admins and Directors, with spend, and one for Coordinators, without. Nobody can change a measure here or in the file."
+    },
+    "measuresExport": {
+      "title": "CVH pilot measures, {date}",
+      "heading": "CVH pilot measures",
+      "asOf": "As of {date} (Toronto). Written {written} UTC.",
+      "editions": {
+        "director": "Admin and Director edition: includes spend and cost per alert. Share it only with Admins and Directors.",
+        "coordinator": "Coordinator edition: spend and cost per alert are left out."
+      },
+      "noSpend": "Spend and cost per alert are in the Admin and Director edition only.",
+      "rule": "Counts only: nobody can be identified from these figures. A count of 1 to 4 reads \"fewer than 5\", and a percentage made from such a count reads \"not shown\". Where a total and the other figures would give one of those away, one more figure reads \"not shown\": it may be 5 or more. Zero is shown as 0. Drills are at the end, apart, and never added to real alerts.",
+      "leftOut": "Alerts sent for a rehearsal are left out of every measure about alerts, but not of the total spend. Alerts left out: {alerts}. Entries listed in docs/procedures/rehearsals.md: {listed}, of which not found: {notFound}.",
+      "week": "Installs, directory and map use and search are given for the week that starts on Monday {monday} and for the pilot to date.",
+      "empty": "Nothing to show yet.",
+      "columns": {
+        "measure": "Measure",
+        "period": "Period",
+        "for": "For",
+        "value": "Value",
+        "basis": "Basis"
+      },
+      "periods": {
+        "pilot": "Pilot to date",
+        "week": "Week of {monday}"
+      },
+      "splits": {
+        "total": "All",
+        "entry": "Alert entry {id}",
+        "thread": "Alert {id}"
+      },
+      "units": {
+        "calls": "{n} calls",
+        "tokens": "{n} tokens"
+      },
+      "noNeighbourhood": "No neighbourhood",
+      "floor": "floor {floor}",
+      "floorGone": "a floor no longer listed",
+      "values": {
+        "notRun": "The daily count has not run yet.",
+        "none": "none yet",
+        "notReached": "not reached",
+        "noSurvey": "No survey result has been recorded yet.",
+        "unknown": "unknown",
+        "notSet": "not set"
+      },
+      "kinds": {
+        "ack": "Acknowledgement",
+        "update": "Update",
+        "correction": "Correction",
+        "withdrawal": "Withdrawal",
+        "final": "Final"
+      },
+      "drills": {
+        "title": "Drills, reported apart",
+        "lead": "Drills and their texts to the drill roster, never added to the real measures above.",
+        "empty": "No drill has been run yet."
+      },
+      "sections": {
+        "about": {
+          "title": "About this export",
+          "lead": "The day, the edition and what was left out."
+        },
+        "subscribers": {
+          "title": "SMS subscribers",
+          "lead": "From the daily count of the day named: receiving texts by state, waiting to reply YES, and the day's confirmations and deletions, by language and neighbourhood."
+        },
+        "installs": {
+          "title": "Web app installs",
+          "lead": "Installs of the resident web app, by the page's language and neighbourhood."
+        },
+        "timing": {
+          "title": "Acknowledgement, approval and delivery times",
+          "lead": "Per alert entry: from the first report to the first approved acknowledgement, from the first save to approval, and from approval to the first text handed off and to 90% of its texts delivered. Then the medians over the alerts, and the time to 90% delivered by language."
+        },
+        "checkins": {
+          "title": "Check-ins",
+          "lead": "Each closed check-in round: what was asked for and how each request ended, by building and floor. Then the pilot to date by neighbourhood."
+        },
+        "directory_use": {
+          "title": "Directory and map use",
+          "lead": "Views of the directory, its listings, the map, the guides and the numbers page, by the page's language and neighbourhood."
+        },
+        "search": {
+          "title": "Search",
+          "lead": "Questions asked, those with no clear match and those that failed, by the page's language; the share with no clear match, and the median time to answer."
+        },
+        "translation": {
+          "title": "Translation",
+          "lead": "How often an approved alert fell back to English, by language; and the survey of residents and ambassadors who understood a translated alert (docs/procedures/survey-results.csv)."
+        },
+        "corrections": {
+          "title": "Corrections and their reach",
+          "lead": "Corrections, withdrawals and finals texted, each against the people who got the original. Attempted: handed to the provider. Confirmed: reported delivered."
+        },
+        "drills": {
+          "title": "Drills run",
+          "lead": "Each drill and its texts to the drill roster."
+        },
+        "cost_per_alert": {
+          "title": "Cost per alert",
+          "lead": "Text message cost by language, actual where the provider reported it and an estimate otherwise, labelled; each alert's share of the translation vendor's use in the month; and the month's use by all alerts."
+        },
+        "spend": {
+          "title": "Total spend",
+          "lead": "Spend for the pilot to date and this month against the budget of CAD 1,000: actual amounts where a month is reconciled, labelled estimates otherwise. Translation use whose price is unknown is shown as unknown."
+        },
+        "coverage": {
+          "title": "Coverage",
+          "lead": "Pilot buildings and floors with an ambassador assigned, by neighbourhood."
+        }
+      },
+      "measures": {
+        "as_of": "As of",
+        "edition": "Edition",
+        "week": "Week read",
+        "rehearsal_entries_listed": "Rehearsal entries listed",
+        "rehearsal_entries_not_found": "Rehearsal entries not found",
+        "rehearsal_alerts_left_out": "Rehearsal alerts left out",
+        "rehearsal_entries_left_out": "Rehearsal entries left out",
+        "not_run": "Subscribers",
+        "receiving_active": "Receiving texts",
+        "receiving_reconsent_pending": "Receiving texts, asked whether to stay",
+        "receiving_retained": "Receiving texts, kept after the pilot",
+        "pending_signups": "Waiting to reply YES",
+        "confirmations": "Confirmed on the day",
+        "deletions": "Left on the day",
+        "install": "Installs",
+        "kind": "Kind of entry",
+        "reported_to_first_ack_seconds": "First report to first acknowledgement",
+        "first_save_to_approval_seconds": "First save to approval",
+        "texts_handed_off": "Texts handed to the provider",
+        "approval_to_first_hand_off_seconds": "Approval to first text handed off",
+        "approval_to_90_percent_delivered_seconds": "Approval to 90% delivered",
+        "delivered_percent": "Delivered, when 90% was not reached",
+        "reported_to_first_ack_seconds_entries": "Alerts with a first acknowledgement",
+        "first_save_to_approval_seconds_entries": "Entries approved",
+        "approval_to_first_hand_off_seconds_entries": "Entries with texts handed off",
+        "approval_to_90_percent_delivered_seconds_entries": "Entries that reached 90% delivered",
+        "ninety_percent_not_reached_entries": "Entries that did not reach 90% delivered",
+        "requested": "Check-ins asked for",
+        "done": "Checked on",
+        "not_reached": "Not reached",
+        "needs_help": "Needs help",
+        "withdrawn": "Withdrawn",
+        "unmarked": "Not marked",
+        "rounds_closed": "Rounds closed",
+        "directory_view": "Directory views",
+        "listing_view": "Listing views",
+        "map_view": "Map views",
+        "guide_view": "Guide views",
+        "numbers_view": "Numbers page views",
+        "searches": "Questions asked",
+        "no_clear_match": "No clear match",
+        "failed": "Failed",
+        "no_clear_match_percent": "No clear match, share",
+        "median_answer_ms": "Median time to answer",
+        "entries_translated": "Alert entries translated",
+        "fell_back": "Fell back to English",
+        "fallback_percent": "Fallback rate",
+        "survey": "Translation survey",
+        "survey_asked": "Asked in the survey",
+        "survey_understood": "Understood the alert",
+        "survey_understood_percent": "Understood, share",
+        "corrections_sent": "Corrections texted",
+        "withdrawals_sent": "Withdrawals texted",
+        "finals_sent": "Finals texted",
+        "original_recipients": "Got the original",
+        "attempted_reach": "Attempted reach",
+        "confirmed_reach": "Confirmed reach",
+        "attempted_percent": "Attempted, share of the original's",
+        "confirmed_percent": "Confirmed, share of the original's",
+        "drills_run": "Drills run",
+        "entries_approved": "Entries approved",
+        "texts_delivered": "Texts delivered",
+        "texts_not_delivered": "Texts undelivered or failed",
+        "texts_unknown": "Texts with an unknown outcome",
+        "texts_in_flight": "Texts still waiting for an outcome",
+        "texts_not_sent": "Texts not sent",
+        "texts": "Texts",
+        "text_cost": "Text cost",
+        "translation_calls": "Translation calls",
+        "translation_token_share_percent": "Share of the month's billed tokens",
+        "translation_cost": "Translation cost",
+        "translation_calls_all": "Translation calls, all use",
+        "translation_calls_alerts": "Translation calls for alerts",
+        "translation_cost_alerts": "Translation cost for alerts",
+        "translation_cost_all": "Translation cost, all use",
+        "total_counted": "Total spend counted",
+        "sms_counted": "Text messages counted",
+        "sms_actual": "Text messages at the provider's price",
+        "sms_actual_texts": "Texts at the provider's price",
+        "sms_unmatched_actuals": "Billed texts no estimate answers for",
+        "sms_unresolved_estimates": "Estimates no bill has replaced",
+        "sms_pending_reconciliation": "Month not reconciled yet",
+        "translation_priced": "Translation at a known price",
+        "translation_price_unknown": "Translation whose price is unknown",
+        "translation_price_unknown_calls": "Translation calls whose price is unknown",
+        "translation_price_unknown_tokens": "Translation tokens whose price is unknown",
+        "budget": "Pilot budget",
+        "budget_remaining": "Budget remaining",
+        "monthly_cap": "Monthly cap on text spend",
+        "buildings": "Pilot buildings",
+        "buildings_covered": "Buildings with an ambassador",
+        "buildings_fully_covered": "Buildings with an ambassador on every floor",
+        "floors": "Floors",
+        "floors_covered": "Floors with an ambassador",
+        "floors_covered_percent": "Floors with an ambassador, share"
       }
     },
     "roles": {
@@ -5343,7 +5552,8 @@
         "cap-overrun": "a spending cap overrun",
         "health-alert": "a health alert and who owns the incident",
         "rotate-secrets": "rotating secrets (pilot start, departures, pilot end)",
-        "end-of-pilot": "the end of the pilot"
+        "end-of-pilot": "the end of the pilot",
+        "export-measures": "exporting the pilot measures"
       }
     },
     "oncall": {
