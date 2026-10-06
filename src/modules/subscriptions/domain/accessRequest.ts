@@ -1,6 +1,7 @@
 // A resident's access request (S09.03, E09 "Access request", PIPEDA): the rules that need no database. A request is kept only as two audit records, `received`
 // and `closed`, with the request as the subject (no table, no number); this file pairs them into the requests still open, says which are past 25 days of the
 // 30-day limit, and writes what the CVH holds for a number as the lines IT reads out on screen. Nothing here is saved anywhere.
+import type { Menu } from "./menus";
 
 /** What a resident may ask for (audit's ACCESS_REQUEST_KINDS). */
 export type AccessRequestKind = "access" | "correction" | "deletion";
@@ -102,6 +103,17 @@ export interface HeldText {
   providerErrorCode: number | null;
 }
 
+/**
+ * A subscriber's open prompt (`sms_prompt`): what it asks, when it was sent and until when it is kept, and where the resident is in a text menu (S07.05), in
+ * words (the application reads the menu's step: the street, the building or the language being chosen); null for a prompt that has no steps.
+ */
+export interface HeldPrompt {
+  kind: string;
+  since: Date;
+  until: Date;
+  step: string | null;
+}
+
 /** Check-in records (E08): not built yet, built and read, or a table this script cannot read yet (then nothing may be answered as complete). */
 export type HeldCheckins = { kind: "not_built" } | { kind: "unreadable" } | { kind: "rows"; rows: readonly { at: Date; description: string }[] };
 
@@ -119,7 +131,7 @@ export interface HeldRecord {
     retentionState: string;
     places: readonly HeldPlace[];
     mutedTopics: readonly string[];
-    prompt: { kind: string; until: Date } | null;
+    prompt: HeldPrompt | null;
     /** The link texted to change or delete the subscription on the web (S07.06), or none; its token is never held, and its hash is never shown. */
     editLink: { since: Date; expiresAt: Date; expired: boolean; usedAt: Date | null } | null;
   } | null;
@@ -172,6 +184,60 @@ export function torontoTime(at: Date): string {
 const list = (items: readonly string[]) => (items.length === 0 ? "none" : items.join(", "));
 const place = (p: HeldPlace) => `${p.address ?? "a building no longer in the register"} (register number ${p.rsn}), ${p.floor === null ? "no floor" : `floor ${p.floor}`}`;
 
+/** What each kind of prompt asks, as it is read out; a kind not listed here is read out by its code. */
+const PROMPT_WORDS: Readonly<Record<string, string>> = {
+  delete_confirm: "asked to reply 0 again to delete the subscription",
+  menu_building: "the building menu (reply 1)",
+  menu_language: "the language menu (reply 2)",
+  edit_link_offer: "offered a link to make changes online (reply 1)",
+  reconsent: "asked at the end of the pilot whether to keep getting alerts (reply YES to stay)",
+};
+
+/** The retention states (AR-13) as they are read out. */
+const RETENTION_WORDS: Readonly<Record<string, string>> = {
+  active: "active",
+  reconsent_pending:
+    "asked at the end of the pilot whether to stay (reconsent_pending): deleted with everything held for the number after the campaign's deadline unless they reply YES",
+  retained: "replied YES at the end of the pilot and stays (retained)",
+};
+
+/** What the keyed hashes under each scope count; a scope not listed here is read out by its name only. */
+const HASH_SCOPE_WORDS: Readonly<Record<string, string>> = {
+  inbound: "texts received from the number",
+  inbound_mute: "the number muted for the rest of the day",
+  signup_info: "the sign-up link sent to it",
+  sms_menu: "text menus started",
+};
+
+/**
+ * Where the resident is in a text menu (S07.05), from the step its prompt keeps, in words; `address` gives a building's address by its register number, or null
+ * when the building is no longer in the register.
+ */
+export function menuStepWords(menu: Menu, address: (rsn: string) => string | null): string {
+  if (menu.kind === "menu_language") return "choosing a language";
+  const step = menu.step;
+  switch (step.stage) {
+    case "warn":
+      return `asked to confirm replacing the ${step.saved} saved buildings`;
+    case "street":
+      return "choosing a street";
+    case "building":
+      return `choosing a building on ${step.street}`;
+    case "floor":
+      return `choosing a floor of ${address(step.rsn) ?? "a building no longer in the register"} (register number ${step.rsn})`;
+  }
+}
+
+function promptLine(prompt: HeldPrompt): string {
+  const what = PROMPT_WORDS[prompt.kind] ? `${PROMPT_WORDS[prompt.kind]} (${prompt.kind})` : prompt.kind;
+  return `${what}, sent ${torontoTime(prompt.since)}, kept until ${torontoTime(prompt.until)}${prompt.step === null ? "" : `; ${prompt.step}`}`;
+}
+
+function hashLine(hash: { scope: string; count: number; latest: Date }): string {
+  const what = HASH_SCOPE_WORDS[hash.scope] ? `${HASH_SCOPE_WORDS[hash.scope]} (${hash.scope})` : hash.scope;
+  return `${what} ${hash.count}, latest ${torontoTime(hash.latest)}`;
+}
+
 function editLinkLine(link: NonNullable<NonNullable<HeldRecord["subscriber"]>["editLink"]>): string {
   const used = link.usedAt === null ? "not used" : `used ${torontoTime(link.usedAt)}`;
   const expired = link.expired ? "; expired: the purge deletes it within 15 minutes" : "";
@@ -203,8 +269,8 @@ export function heldRecordLines(record: HeldRecord): string[] {
       ...s.places.map((p) => `    ${place(p)}`),
       `  Muted topics: ${list(s.mutedTopics)}`,
       `  Terms accepted (consent version): ${s.consentVersion}`,
-      `  Retention state: ${s.retentionState}`,
-      `  Open prompt: ${s.prompt === null ? "none" : `${s.prompt.kind}, until ${torontoTime(s.prompt.until)}`}`,
+      `  Retention state: ${RETENTION_WORDS[s.retentionState] ?? s.retentionState}`,
+      `  Open prompt: ${s.prompt === null ? "none" : promptLine(s.prompt)}`,
       `  Edit link (texted to change or delete the subscription on the web): ${s.editLink === null ? "none" : editLinkLine(s.editLink)}`,
     );
   } else {
@@ -236,7 +302,7 @@ export function heldRecordLines(record: HeldRecord): string[] {
   lines.push(
     record.hashes.length === 0
       ? "Keyed hashes of the number (rate limits): none"
-      : `Keyed hashes of the number (rate limits, each deleted after 24 hours): ${record.hashes.map((h) => `${h.scope} ${h.count}, latest ${torontoTime(h.latest)}`).join("; ")}`,
+      : `Keyed hashes of the number (rate limits, each deleted after 24 hours): ${record.hashes.map(hashLine).join("; ")}`,
   );
   switch (record.checkins.kind) {
     case "not_built":

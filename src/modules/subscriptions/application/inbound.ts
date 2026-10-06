@@ -227,8 +227,9 @@ export function signupLink(publicBaseUrl: string, lang: LaunchCode): string {
 /**
  * S09.08: the E07 deletion (`deleteNumber` in the router, the very steps STOP runs) for the end-of-pilot purge, in the purge's transaction, which holds the
  * number's lock and has locked the subscriber's row after checking again that the purge deletes them. Everything held for the number goes: the subscriber, a
- * pending sign-up of the number if one exists, and its `inbound_reply` rows. The number comes from the purge and never leaves this call. (Once the deletion is
- * its own `createNumberDeletion`, S09.03 and S07.06, the purge calls that instead.)
+ * pending sign-up of the number if one exists, and its `inbound_reply` rows. The number comes from the purge and never leaves this call. (`deleteNumber` is
+ * `createNumberDeletion`'s `deleteFound`, deletion.ts, the one deletion S09.03's access request and S07.06's edit page run too; the purge reaches it through
+ * the router so that it deletes with the webhook's own check-ins port.)
  */
 export interface SubscriberDeletion {
   deleteSubscriber(tx: DbTransaction, phone: string, subscriber: SubscriberRow): Promise<Deleted>;

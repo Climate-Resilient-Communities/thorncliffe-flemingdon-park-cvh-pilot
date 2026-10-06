@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deletionSummary, heldRecordLines, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
+import { deletionSummary, heldRecordLines, menuStepWords, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
 
 const DAY = 86_400_000;
 const NOW = new Date("2026-10-30T16:00:00Z");
@@ -78,13 +78,17 @@ describe("heldRecordLines", () => {
           { rsn: "9100099", address: null, floor: null },
         ],
         mutedTopics: [],
-        prompt: { kind: "delete_confirm", until: new Date("2026-10-06T13:40:00Z") },
+        prompt: { kind: "delete_confirm", since: new Date("2026-10-06T13:30:00Z"), until: new Date("2026-10-06T13:40:00Z"), step: null },
         editLink: { since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z"), expired: false, usedAt: new Date("2026-10-06T13:12:00Z") },
       },
       texts: [
         { createdAt: new Date("2026-10-01T14:01:00Z"), kind: "alert", purpose: null, lang: "ur", state: "undelivered", segments: 3, resendN: 1, providerErrorCode: 30003 },
       ],
-      hashes: [{ scope: "inbound", count: 2, latest: new Date("2026-10-06T13:00:00Z") }],
+      hashes: [
+        { scope: "inbound", count: 2, latest: new Date("2026-10-06T13:00:00Z") },
+        { scope: "sms_menu", count: 1, latest: new Date("2026-10-06T13:05:00Z") },
+        { scope: "some_new_scope", count: 1, latest: new Date("2026-10-06T13:06:00Z") },
+      ],
     }).join("\n");
 
     expect(lines).toContain("What the CVH holds for +1 ••• ••• 0123:");
@@ -95,11 +99,13 @@ describe("heldRecordLines", () => {
     expect(lines).toContain("  Muted topics: none");
     expect(lines).toContain("  Terms accepted (consent version): 2026-10-02.1");
     expect(lines).toContain("  Retention state: active");
-    expect(lines).toContain("  Open prompt: delete_confirm, until 2026-10-06 09:40");
+    expect(lines).toContain("  Open prompt: asked to reply 0 again to delete the subscription (delete_confirm), sent 2026-10-06 09:30, kept until 2026-10-06 09:40");
     expect(lines).toContain("  Edit link (texted to change or delete the subscription on the web): asked for 2026-10-06 09:00, valid until 2026-10-06 09:30, used 2026-10-06 09:12");
     expect(lines).toContain("Texts (1; the words are not kept here and are not read out):");
     expect(lines).toContain("  2026-10-01 10:01  alert in ur, 3 segments, undelivered, resend 1, provider error 30003");
-    expect(lines).toContain("Keyed hashes of the number (rate limits, each deleted after 24 hours): inbound 2, latest 2026-10-06 09:00");
+    expect(lines).toContain(
+      "Keyed hashes of the number (rate limits, each deleted after 24 hours): texts received from the number (inbound) 2, latest 2026-10-06 09:00; text menus started (sms_menu) 1, latest 2026-10-06 09:05; some_new_scope 1, latest 2026-10-06 09:06",
+    );
     expect(lines).toContain("Pending sign-up: none");
     expect(lines).not.toContain("Nothing is held");
   });
@@ -123,6 +129,57 @@ describe("heldRecordLines", () => {
       "  Edit link (texted to change or delete the subscription on the web): asked for 2026-10-06 09:00, valid until 2026-10-06 09:30, not used; expired: the purge deletes it within 15 minutes",
     );
     expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, editLink: null } })).toContain("  Edit link (texted to change or delete the subscription on the web): none");
+  });
+
+  it("reads out the end of the pilot's question, a text menu with where the resident is in it, and a prompt or state it does not know by its code", () => {
+    const subscriber: NonNullable<HeldRecord["subscriber"]> = {
+      since: new Date("2026-10-01T14:00:00Z"),
+      lang: "en",
+      neighbourhood: "Flemingdon Park (FP)",
+      groups: [],
+      consentVersion: "2026-10-02.1",
+      startedBy: "web",
+      retentionState: "reconsent_pending",
+      places: [],
+      mutedTopics: [],
+      prompt: { kind: "reconsent", since: new Date("2026-11-05T15:00:00Z"), until: new Date("2026-12-06T05:00:00Z"), step: null },
+      editLink: null,
+    };
+
+    const asked = heldRecordLines({ ...NOTHING, subscriber });
+    expect(asked).toContain(
+      "  Retention state: asked at the end of the pilot whether to stay (reconsent_pending): deleted with everything held for the number after the campaign's deadline unless they reply YES",
+    );
+    expect(asked).toContain(
+      "  Open prompt: asked at the end of the pilot whether to keep getting alerts (reply YES to stay) (reconsent), sent 2026-11-05 10:00, kept until 2026-12-06 00:00",
+    );
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "retained", prompt: null } })).toContain(
+      "  Retention state: replied YES at the end of the pilot and stays (retained)",
+    );
+
+    const menu = { kind: "menu_building", since: new Date("2026-10-06T13:30:00Z"), until: new Date("2026-10-06T14:30:00Z"), step: "choosing a building on Sample Road" };
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "active", prompt: menu } })).toContain(
+      "  Open prompt: the building menu (reply 1) (menu_building), sent 2026-10-06 09:30, kept until 2026-10-06 10:30; choosing a building on Sample Road",
+    );
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, retentionState: "someday", prompt: { ...menu, kind: "a_new_kind", step: null } } })).toEqual(
+      expect.arrayContaining(["  Retention state: someday", "  Open prompt: a_new_kind, sent 2026-10-06 09:30, kept until 2026-10-06 10:30"]),
+    );
+  });
+
+  it("says where the resident is in a text menu from the step it keeps", () => {
+    const address = (rsn: string) => (rsn === "9100031" ? "31 Sample Road" : null);
+    const saved = 2;
+    expect(menuStepWords({ kind: "menu_building", step: { stage: "warn", saved } }, address)).toBe("asked to confirm replacing the 2 saved buildings");
+    expect(menuStepWords({ kind: "menu_building", step: { stage: "street", saved, page: 0, options: ["Sample Road"] } }, address)).toBe("choosing a street");
+    expect(menuStepWords({ kind: "menu_building", step: { stage: "building", saved, street: "Sample Road", streetPage: 0, page: 0, options: ["9100031"] } }, address)).toBe(
+      "choosing a building on Sample Road",
+    );
+    const floor = { stage: "floor", saved, street: "Sample Road", streetPage: 0, rsn: "9100031", buildingPage: 0, page: 0, options: [null] } as const;
+    expect(menuStepWords({ kind: "menu_building", step: { ...floor, options: [null] } }, address)).toBe("choosing a floor of 31 Sample Road (register number 9100031)");
+    expect(menuStepWords({ kind: "menu_building", step: { ...floor, rsn: "9100099", options: [null] } }, address)).toBe(
+      "choosing a floor of a building no longer in the register (register number 9100099)",
+    );
+    expect(menuStepWords({ kind: "menu_language", step: { stage: "language", page: 1, options: ["ur"] } }, address)).toBe("choosing a language");
   });
 
   it("reads out a pending sign-up and the replies waiting for a number with no subscription", () => {

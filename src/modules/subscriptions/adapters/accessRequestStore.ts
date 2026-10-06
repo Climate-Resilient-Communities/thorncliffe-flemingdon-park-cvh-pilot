@@ -3,7 +3,7 @@
 // statement runs in the caller's executor (the lookup's read-only transaction); none writes a row.
 import { and, asc, count, eq, max, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
-import { inboundReply, pendingSignup, rateLimit, smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout, type PendingPlace } from "./schema";
+import { inboundReply, pendingSignup, rateLimit, smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout, subscriptionEditToken, type PendingPlace } from "./schema";
 
 // A fixed seed for the advisory lock of one request, so it never meets another lock on a hash of the same text.
 const REQUEST_LOCK_SEED = 9_031_303_771;
@@ -13,10 +13,11 @@ export type HoldingOwner = "subscriber" | "pending_signup" | "inbound_reply";
 
 /**
  * Every column of the tables that hold a number's records, as the lookup accounts for it: shown on screen, or the number itself, a row's id, a link between
- * rows, a prompt's own place in its steps, or an edit link's token hash (a credential, never shown). A column a later story adds (E08's check-in request on
- * the subscriber, the pending sign-up or a place, for example) is not here until the lookup shows it, and `unreadHoldings` reports it, so a request is never
- * answered as complete while part of it goes unread. `subscription_edit_token` is S07.06's, built on its own branch: listed here and read where it exists
- * (`editLinkOf`), so the lookup is complete whichever of the two stories is merged first.
+ * rows, or an edit link's token hash (a credential, never shown). A prompt's `step` is shown in words: where the resident is in a text menu (S07.05: the
+ * street, the building, the floor or the language being chosen); a step the lookup cannot read is reported as not read. The re-consent campaign (S09.07)
+ * adds no column here: it is the subscriber's `retention_state` and `consent_version`, a `reconsent` prompt and the campaign's texts, all shown. A column a
+ * later story adds (E08's check-in request on the subscriber, the pending sign-up or a place, for example) is not here until the lookup shows it, and
+ * `unreadHoldings` reports it, so a request is never answered as complete while part of it goes unread.
  */
 export const LOOKUP_COLUMNS: Readonly<Record<string, { owner: HoldingOwner; columns: readonly string[] }>> = {
   subscriber: { owner: "subscriber", columns: ["id", "phone", "lang", "neighbourhood_id", "groups", "consent_version", "started_by", "retention_state", "created_at"] },
@@ -43,6 +44,14 @@ export interface HeldSubscriberRow {
   consentVersion: string;
   startedBy: string;
   retentionState: string;
+}
+
+export interface HeldPromptRow {
+  kind: string;
+  /** The prompt's step (`{}` but for a text menu's page, S07.05). */
+  step: unknown;
+  since: Date;
+  until: Date;
 }
 
 export interface HeldEditLinkRow {
@@ -107,24 +116,33 @@ export const accessRequestStore = {
     return rows.map((row) => row.topic);
   },
 
-  /** The subscriber's prompt (kind and until when), or null; one that has run out and waits for the purge is still held, so it is listed. */
-  async promptOf(executor: DbExecutor, subscriberId: string): Promise<{ kind: string; until: Date } | null> {
-    const [row] = await executor.select({ kind: smsPrompt.kind, until: smsPrompt.expiresAt }).from(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
+  /**
+   * The subscriber's prompt (its kind, its step, when it was sent and until when), or null; one that has run out and waits for the purge is still held, so
+   * it is listed. A re-consent prompt (S09.07) is open until the campaign's deadline.
+   */
+  async promptOf(executor: DbExecutor, subscriberId: string): Promise<HeldPromptRow | null> {
+    const [row] = await executor
+      .select({ kind: smsPrompt.kind, step: smsPrompt.step, since: smsPrompt.sentAt, until: smsPrompt.expiresAt })
+      .from(smsPrompt)
+      .where(eq(smsPrompt.subscriberId, subscriberId));
     return row ?? null;
   },
 
   /**
    * The subscriber's edit link (S07.06: at most one, asked for by text, valid 30 minutes, used once), or null; never its token hash. One that has run out
-   * waits for the purge and is still held, so it is listed. Read only where the table exists (a catalog read first), as S07.06 may not be merged yet.
+   * waits for the purge and is still held, so it is listed.
    */
   async editLinkOf(executor: DbExecutor, subscriberId: string): Promise<HeldEditLinkRow | null> {
-    if (!(await accessRequestStore.tableExists(executor, "subscription_edit_token"))) return null;
-    const [row] = await executor.execute<{ since: Date | string; expires_at: Date | string; used_at: Date | string | null; expired: boolean }>(sql`
-      select created_at as since, expires_at, used_at, expires_at <= now() as expired
-        from subscription_edit_token
-       where subscriber_id = ${subscriberId}`);
-    if (!row) return null;
-    return { since: new Date(row.since), expiresAt: new Date(row.expires_at), expired: row.expired, usedAt: row.used_at === null ? null : new Date(row.used_at) };
+    const [row] = await executor
+      .select({
+        since: subscriptionEditToken.createdAt,
+        expiresAt: subscriptionEditToken.expiresAt,
+        expired: sql<boolean>`${subscriptionEditToken.expiresAt} <= now()`,
+        usedAt: subscriptionEditToken.usedAt,
+      })
+      .from(subscriptionEditToken)
+      .where(eq(subscriptionEditToken.subscriberId, subscriberId));
+    return row ?? null;
   },
 
   /** The number's pending sign-up, expired or not (an expired one is held until the purge). */

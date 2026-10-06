@@ -151,6 +151,7 @@ export {
   type AccessRequestOutcome,
   type ClosingOutcome,
   type HeldCheckins,
+  type HeldPrompt,
   type HeldRecord,
   type OpenRequest,
 } from "./domain/accessRequest";

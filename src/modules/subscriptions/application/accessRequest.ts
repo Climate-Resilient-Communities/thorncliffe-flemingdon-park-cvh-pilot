@@ -6,12 +6,14 @@
 //   receive            records a new request (what the resident asked for); a rehearsal's is marked as a drill, so the review reports it apart.
 //   open               the requests still open, oldest first, with the days each has been open (by the database's clock, as the weekly review counts).
 //   lookUp             everything held for the number, in ONE read-only transaction (Postgres refuses any write in it), for an open request only: the
-//                      subscriber, places, groups, muted topics, consent version, retention state, prompt and edit link (S07.06's, where it is built);
-//                      a pending sign-up; waiting replies; the texts held for those records (never their words); the keyed hashes of the number in
-//                      `rate_limit`; check-in records (E08's, through a port); and what holds the number's records that it cannot read yet (a column or
-//                      a table added since). Nothing is recorded or changed.
-//   deleteForResident  after verified control, the one E07 deletion (deletion.ts, the steps STOP runs) and the request's `closed` record (`deleted`), in one
-//                      transaction: both commit or neither does. Refused while a `checkin` table exists and E08's deletion port is not wired here.
+//                      subscriber, places, groups, muted topics, consent version, retention state (S09.07's re-consent), prompt (with where the
+//                      resident is in a text menu, S07.05) and edit link (S07.06, never its hash); a pending sign-up; waiting replies; the texts held for
+//                      those records (never their words); the keyed hashes of the number in `rate_limit`; check-in records (E08's, through a port); and
+//                      what holds the number's records that it cannot read yet (a column or a table added since, a prompt's step it does not know).
+//                      Nothing is recorded or changed.
+//   deleteForResident  after verified control, the one E07 deletion (deletion.ts, the steps STOP, S07.06's edit page and S09.08's purge run) and the
+//                      request's `closed` record (`deleted`), in one transaction: both commit or neither does. Refused while a `checkin` table exists and
+//                      E08's deletion port is not wired here.
 //   close              the request's `closed` record with how it ended (answered, not verified, withdrawn).
 //
 // Verified control is the Admin's call back to the number (or the resident's one-time phrase texted from it, procedures/access-request.md): the script makes
@@ -28,6 +30,7 @@ import { accessRequestStore, type AccessRequestStore } from "../adapters/accessR
 import { hashScopeOf } from "../adapters/inboundStore";
 import {
   CLOSING_OUTCOMES,
+  menuStepWords,
   openRequests,
   standingOf,
   wholeDays,
@@ -35,10 +38,12 @@ import {
   type ClosingOutcome,
   type HeldCheckins,
   type HeldPlace,
+  type HeldPrompt,
   type HeldRecord,
   type OpenRequest,
   type RequestRecord,
 } from "../domain/accessRequest";
+import { readMenu } from "../domain/menus";
 import { createNumberDeletion, type Deleted } from "./deletion";
 import { noCheckinsYet, type CheckinCleanup } from "./inbound";
 import { clientHash } from "./rateLimit";
@@ -161,6 +166,23 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     }));
   }
 
+  /**
+   * The subscriber's open prompt, with where the resident is in a text menu in words. A step it cannot read (a prompt that is not a menu and holds one, or a
+   * menu's step that is not one) is reported as not read, so the request is not answered as complete.
+   */
+  async function promptOf(tx: DbTransaction, subscriberId: string): Promise<{ prompt: HeldPrompt | null; unreadStep: boolean }> {
+    const row = await store.promptOf(tx, subscriberId);
+    if (!row) return { prompt: null, unreadStep: false };
+    const menu = readMenu(row.kind, row.step);
+    if (menu === null) {
+      const empty = typeof row.step === "object" && row.step !== null && !Array.isArray(row.step) && Object.keys(row.step).length === 0;
+      return { prompt: { kind: row.kind, since: row.since, until: row.until, step: null }, unreadStep: !empty };
+    }
+    const rsn = menu.kind === "menu_building" && menu.step.stage === "floor" ? menu.step.rsn : null;
+    const addresses = rsn === null ? new Map<string, string>() : await addressesOfBuildings(tx, [rsn]);
+    return { prompt: { kind: row.kind, since: row.since, until: row.until, step: menuStepWords(menu, (id) => addresses.get(id) ?? null) }, unreadStep: false };
+  }
+
   async function read(tx: DbTransaction, phone: string): Promise<HeldRecord> {
     const sub = await store.subscriberOf(tx, phone);
     const pending = await store.pendingOf(tx, phone);
@@ -175,6 +197,8 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     // A column or a table added since this lookup was written holds part of a record only where that record exists for the number.
     const owners = { subscriber: sub !== null, pending_signup: pending !== null, inbound_reply: replies.length > 0 };
     const unread = (await store.unreadHoldings(tx)).filter((holding) => owners[holding.owner]).map((holding) => holding.what);
+    const prompt = sub ? await promptOf(tx, sub.id) : { prompt: null, unreadStep: false };
+    if (prompt.unreadStep) unread.push("sms_prompt.step (a step this script cannot read)");
     return {
       maskedNumber: maskNumber(phone),
       subscriber: sub
@@ -188,7 +212,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
             retentionState: sub.retentionState,
             places: await placesOf(tx, await store.placesOf(tx, sub.id)),
             mutedTopics: await store.mutedTopicsOf(tx, sub.id),
-            prompt: await store.promptOf(tx, sub.id),
+            prompt: prompt.prompt,
             editLink: await store.editLinkOf(tx, sub.id),
           }
         : null,

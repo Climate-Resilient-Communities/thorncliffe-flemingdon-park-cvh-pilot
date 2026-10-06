@@ -1,12 +1,14 @@
 // A resident's access request against a real database (S09.03, E09 "Access request"), as the app's own role (cvh_app_login), which is what
 // scripts/access-request connects as:
 //  - a request is two audit records with the Admin as the actor and the request as the subject, holding no number; only an active Admin can be named;
-//  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt, edit link; a
-//    pending sign-up; a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound limit's mute row
-//    included; check-in records), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that holds a
-//    number's records is reported as not read, so a request is never answered as complete without it;
-//  - the deletion on the resident's behalf is the full E07 deletion (the one STOP runs) and closes the request in the same transaction; a failed audit record
-//    undoes the deletion; a `checkin` table with E08's port not wired refuses it; a request is closed once, even by two runs at once;
+//  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt, S07.06's edit link
+//    (never its hash); a pending sign-up; a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound
+//    limit's mute row and S07.05's menu limit included; where the resident is in a text menu (S07.05); the end of the pilot's question and its text
+//    (S09.07); check-in records), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that holds a
+//    number's records, or a prompt's step it cannot read, is reported as not read, so a request is never answered as complete without it;
+//  - the deletion on the resident's behalf is the full E07 deletion (the one STOP, the edit page and the end-of-pilot purge run) and closes the request in
+//    the same transaction, a subscriber being asked at the end of the pilot included; a failed audit record undoes the deletion; a `checkin` table with E08's
+//    port not wired refuses it; a request is closed once, even by two runs at once;
 //  - the weekly review (S09.04's `weekly_review`, and scripts/export-weekly's CSV) flags a request open longer than 25 days, a rehearsal's apart, and the
 //    script's own output and the audit trail never hold the number.
 // Every number is fictional (555-01xx). Nothing reaches Twilio: no text is sent.
@@ -17,12 +19,16 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { runAccessRequest } from "../../scripts/subscriptions/access-request";
 import { runExportWeekly } from "../../scripts/ops/export-weekly";
 import { migrate } from "../../scripts/db/migrate.mjs";
+import { record, recordRefusal } from "../../src/modules/audit";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { readWeeklyReview } from "../../src/modules/ops";
-import { floorsOfBuilding, neighbourhoodIds } from "../../src/modules/places";
+import { floorsOfBuilding, listBuildings, neighbourhoodIds } from "../../src/modules/places";
 import {
+  MENU_SCOPE,
   createAccessRequests,
+  createCampaigns,
   createInboundRouter,
+  createMenus,
   createRateLimiter,
   createSignup,
   noCheckinsYet,
@@ -59,25 +65,10 @@ const staff: Record<"admin" | "admin2" | "coordinator" | "suspended", { id: stri
 };
 const checkinCalls: string[] = [];
 let sid = 0;
-/** Whether this file made S07.06's `subscription_edit_token` (S07.06 is built on its own branch; once it is merged, its migration makes the table). */
-let madeEditLinks = false;
 
 beforeAll(async () => {
   owner = connect(serverUrl());
   await migrate({ sql: owner, log: () => {} });
-  // The lookup must read S07.06's edit links whichever story is merged first: until its migration is here, the table is made as it makes it.
-  const [{ found }] = await owner`select to_regclass('public.subscription_edit_token') is not null as found`;
-  if (!found) {
-    madeEditLinks = true;
-    await owner`create table subscription_edit_token (
-                  id uuid primary key,
-                  subscriber_id uuid not null references subscriber (id) on delete cascade,
-                  token_hash text not null,
-                  created_at timestamptz not null default now(),
-                  expires_at timestamptz not null default now() + interval '30 minutes',
-                  used_at timestamptz)`;
-    await owner`grant select, insert, delete on table subscription_edit_token to cvh_app`;
-  }
   const password = randomBytes(18).toString("hex");
   await owner.unsafe(`alter role cvh_app_login password '${password}'`);
   const url = new URL(serverUrl());
@@ -102,7 +93,12 @@ async function resetAll() {
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
   await owner`delete from inbound_seen`;
-  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', 'inbound_mute')`;
+  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', 'inbound_mute', ${MENU_SCOPE})`;
+  // A campaign's texts name it, and it names the Admin who started it from a session: they go before the Admin's account.
+  await owner`delete from delivery`;
+  await owner`delete from campaign_purge`;
+  await owner`delete from campaign`;
+  await owner`delete from staff_session where staff_account_id = ${staff.admin.id}`;
   await world.reset();
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
@@ -120,7 +116,6 @@ beforeEach(resetAll);
 
 afterAll(async () => {
   await resetAll();
-  if (madeEditLinks) await owner`drop table subscription_edit_token`;
   for (const account of Object.values(staff)) await owner`delete from staff_account where id = ${account.id}`;
   await owner`delete from building_floor where rsn = ${RSN}`;
   await owner`delete from building where rsn = ${RSN}`;
@@ -134,17 +129,46 @@ function requests(over: Partial<AccessRequestDeps> = {}) {
   return createAccessRequests({ db: app, numberKey: () => KEY, checkins: { deleteForSubscriber: async (id) => void checkinCalls.push(id) }, ...over });
 }
 
-/** The router as src/app/inbound.ts composes it (the welcome, STOP and the sign-up link go through it). */
+/** The router as src/app/inbound.ts composes it (the welcome, STOP, the sign-up link and S07.05's text menus go through it). */
 function router() {
+  const queue = createDeliveryQueue();
   return createInboundRouter({
     db: app,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
     enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
-    skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+    skipRecipientDeliveries: (tx, recipient) => queue.skipRecipientDeliveries(tx, recipient),
+    menus: createMenus({
+      enqueue: (tx, input) => queue.enqueueTransactional(tx, input),
+      pricePerSegmentCents: () => 1.5,
+      // places' real readers, the list kept to this file's building (other files' buildings may be in the database).
+      places: { buildings: async (tx) => (await listBuildings(tx)).filter((building) => building.rsn === RSN), floorsOf: (tx, rsn, options) => floorsOfBuilding(tx, rsn, options) },
+    }),
     numberKey: () => KEY,
     publicBaseUrl: () => BASE_URL,
     pricePerSegmentCents: () => 1.5,
   });
+}
+
+/** S09.07's campaign as the Hub starts it: an Admin at aal2 rehearses it on the drill roster, then starts it; every active subscriber is asked. */
+async function campaignStarted() {
+  const session = randomBytes(32).toString("hex");
+  await owner`insert into staff_session (id, staff_account_id, created_at, last_seen_at, revoked_at, aal2_at) values (${session}, ${staff.admin.id}, now(), now(), null, now())`;
+  await world.fx.rosterMember();
+  const queue = createDeliveryQueue();
+  const campaigns = createCampaigns({
+    db: app,
+    enqueue: (tx, input) => queue.enqueueCampaignDelivery(tx, input),
+    skipRecipientDeliveries: (tx, recipient) => queue.skipRecipientDeliveries(tx, recipient),
+    termsVersion: () => "2026-11-02.2",
+    pricePerSegmentCents: () => 1.5,
+    audit: { record, recordRefusal } as never,
+  });
+  const [{ day }] = await owner`select ((now() at time zone 'America/Toronto')::date + 30)::text as day`;
+  const input = { actorStaffId: staff.admin.id, sessionId: session, deadlineSeen: day as string };
+  expect(await campaigns.rehearse({ ...input, idempotencyKey: randomUUID() })).toMatchObject({ kind: "rehearsed" });
+  const started = await campaigns.start({ ...input, idempotencyKey: randomUUID(), confirmed: true });
+  if (started.kind !== "started") throw new Error(`start refused: ${JSON.stringify(started)}`);
+  return started;
 }
 
 /** Production's environment as the script requires it (nothing connects with it: the tests give the script their own connection). */
@@ -188,7 +212,7 @@ async function subscribed() {
   return row!.id as string;
 }
 
-/** An edit link of the subscriber, as S07.06 makes one (only its hash is kept); `minutesAgo` 31 makes one that has run out. Returns the hash. */
+/** An edit link of the subscriber in S07.06's table (only its hash is kept); `minutesAgo` 31 makes one that has run out. Returns the hash. */
 async function editLink(subscriberId: string, minutesAgo = 0): Promise<string> {
   const hash = randomBytes(32).toString("hex");
   await owner`insert into subscription_edit_token (id, subscriber_id, token_hash, created_at, expires_at)
@@ -340,6 +364,43 @@ describe("the lookup", () => {
     expect(used).toMatchObject({ ok: true, value: { subscriber: { editLink: { expired: false, usedAt: expect.any(Date) } } } });
   });
 
+  it("shows where the resident is in a text menu (S07.05) and the menu limit's keyed hash, and reports a step it cannot read", async () => {
+    const id = await received();
+    await signUp();
+    await router().handle(inbound("YES"));
+    // Reply 1, the building menu: the one street, then the one building on it; the floor is not chosen yet.
+    for (const reply of ["1", "1", "1"]) await router().handle(inbound(reply));
+
+    const result = await requests().lookUp({ id, number: NUMBER });
+    if (!result.ok) throw new Error(result.error);
+    expect(result.value.subscriber?.prompt).toMatchObject({ kind: "menu_building", step: "choosing a floor of 31 Sample Road (register number 9100031)" });
+    expect(result.value.hashes.map((h) => [h.scope, h.count]).sort()).toEqual([
+      ["inbound", 4],
+      [MENU_SCOPE, 1],
+    ]);
+    expect(result.value.unread).toEqual([]);
+
+    // A step the lookup cannot read (a kind it does not know that keeps one, or a menu's that is not one) is not shown and is said to be not read.
+    await owner`update sms_prompt set kind = 'some_new_prompt'`;
+    const unknown = await requests().lookUp({ id, number: NUMBER });
+    expect(unknown).toMatchObject({ ok: true, value: { subscriber: { prompt: { kind: "some_new_prompt", step: null } }, unread: ["sms_prompt.step (a step this script cannot read)"] } });
+  });
+
+  it("shows a subscriber asked at the end of the pilot (S09.07): the retention state, the question until the deadline, its text", async () => {
+    const id = await received();
+    const subscriberId = await subscribed();
+    const started = await campaignStarted();
+
+    const result = await requests().lookUp({ id, number: NUMBER });
+    if (!result.ok) throw new Error(result.error);
+    const [{ deadline }] = await owner`select deadline from campaign where id = ${started.campaign.id}`;
+    expect(result.value.subscriber).toMatchObject({ retentionState: "reconsent_pending", consentVersion: VERSION, prompt: { kind: "reconsent", until: deadline, step: null } });
+    expect(result.value.texts.map((t) => [t.kind, t.purpose, t.lang])).toContainEqual(["campaign", "reconsent", "ur"]);
+    expect(result.value.unread).toEqual([]);
+    const shown = JSON.stringify(result.value);
+    for (const row of await owner`select body from delivery where recipient_id = ${subscriberId}`) expect(shown).not.toContain(row.body as string);
+  });
+
   it("shows a pending sign-up, and a reply waiting for a number with no subscription", async () => {
     const id = await received();
     await signUp();
@@ -479,6 +540,19 @@ describe("the deletion on the resident's behalf", () => {
       is_drill: false,
       meta: { outcome: "deleted" },
     });
+  });
+
+  it("deletes a subscriber being asked at the end of the pilot as STOP would, and their campaign text forgets them", async () => {
+    const id = await received("deletion");
+    const subscriberId = await subscribed();
+    await campaignStarted();
+    expect(await owner`select 1 from delivery where kind = 'campaign' and recipient_id = ${subscriberId}`).toHaveLength(1);
+
+    expect(await requests().deleteForResident({ id, number: NUMBER, admin: staff.admin.username })).toMatchObject({ ok: true, value: { subscriber: true } });
+    expect(await owner`select 1 from subscriber`).toHaveLength(0);
+    expect(await owner`select 1 from sms_prompt`).toHaveLength(0);
+    expect(await owner`select 1 from delivery where recipient_id = ${subscriberId}`).toHaveLength(0);
+    expect((await owner`select state from delivery where kind = 'campaign' and recipient_kind = 'subscriber'`).map((row) => row.state)).toEqual(["skipped"]);
   });
 
   it("deletes a pending sign-up and the waiting replies of a number too", async () => {
