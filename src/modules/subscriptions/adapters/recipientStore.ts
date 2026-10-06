@@ -79,15 +79,19 @@ export const recipientStore = {
    * that was committed while the approval waited for a row is seen: (1) the candidates, (2) their rows locked (a delete, which locks the subscriber `FOR UPDATE`,
    * or an edit, `FOR NO KEY UPDATE`, waits here for the approval to commit, and one that committed first has its row gone or new), (3) the rule applied again to the locked rows,
    * which is the answer. A subscriber who signs up, changes places or unsubscribes meanwhile is then wholly in or wholly out, never half of each.
+   * (2) also locks the rows of `alsoLock` (S08.06: the requesters of the round the approval starts), in the same statement and the same id order, and never
+   * makes them recipients: one id order for every subscriber row of the approval, as the campaign start's `lockActive` takes them.
    */
-  async reachedForShare(tx: DbTransaction, audience: Audience, earlierIds: readonly string[] = []): Promise<RecipientRow[]> {
+  async reachedForShare(tx: DbTransaction, audience: Audience, earlierIds: readonly string[] = [], alsoLock: readonly string[] = []): Promise<RecipientRow[]> {
     const candidates = await tx.execute<{ id: string }>(sql`select s.id from subscriber s where ${reaches(audience, earlierIds)} order by s.id`);
-    if (candidates.length === 0) return [];
     const ids = [...candidates].map((row) => row.id);
+    const toLock = [...new Set([...ids, ...alsoLock])];
+    if (toLock.length === 0) return [];
     const locked = await tx.execute<{ id: string }>(sql`
-      select s.id from subscriber s where s.id in (select jsonb_array_elements_text(${json(ids)})::uuid) order by s.id for share of s`);
-    if (locked.length === 0) return [];
-    const lockedIds = [...locked].map((row) => row.id);
+      select s.id from subscriber s where s.id in (select jsonb_array_elements_text(${json(toLock)})::uuid) order by s.id for share of s`);
+    const candidateIds = new Set(ids);
+    const lockedIds = [...locked].map((row) => row.id).filter((id) => candidateIds.has(id));
+    if (lockedIds.length === 0) return [];
     return rowsOf(
       await tx.execute<{ id: string; lang: string }>(sql`
         select s.id, s.lang from subscriber s
