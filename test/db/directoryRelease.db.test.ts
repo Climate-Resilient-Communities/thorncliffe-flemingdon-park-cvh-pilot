@@ -33,14 +33,17 @@ import { catalogueTextId } from "@/modules/directory/adapters/hash";
 import { StorageWriteError } from "@/modules/directory/application/ports";
 import { PUBLISH_LOCK_KEY } from "@/modules/directory/application/publishLock";
 import { recordOpsEvent } from "@/modules/ops";
-import { SPEND_LOCK_KEY } from "@/modules/spend";
+import { SPEND_LOCK_KEY, monthInterval, monthOf } from "@/modules/spend";
 import { createDb, type Db } from "@/platform/db";
 import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { connect, serverUrl } from "./helpers";
 
 // The publish's moment, on the real clock: the database stamps its spend rows with its own now() and the month they count in is
-// the app clock's, so a fixed calendar day here would put the two in different months once that day's month is over.
-const T0 = new Date(Math.floor(Date.now() / 1000) * 1000);
+// the app clock's, so a fixed calendar day here would put the two in different months once that day's month is over. A press ten
+// minutes on (LATER) must still count that spend, so in the last quarter hour of a month in Toronto the moment is a quarter hour
+// before the month ends: ten minutes on is then still the database's month, not the next one.
+const REAL_NOW = new Date(Math.floor(Date.now() / 1000) * 1000);
+const T0 = new Date(Math.min(REAL_NOW.getTime(), monthInterval(monthOf(REAL_NOW)).endUtc.getTime() - 15 * 60_000));
 const at = (minutes: number, seconds = 0) => new Date(T0.getTime() + (minutes * 60 + seconds) * 1000);
 
 // The real audit module writes audit_event; the spy only lets a test make it fail once.
