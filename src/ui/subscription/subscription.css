@@ -1,0 +1,12 @@
+/*
+ * The one-time web link's page (S07.06). Built on the choices' and the sign-up's classes (choices.css, signup.css); this adds the delete
+ * section, set apart from the form by a rule so "Delete my subscription" is never read as part of saving. Spacing from the semantic tokens,
+ * direction from logical properties only, so it mirrors in Urdu, Pashto and Dari without a [dir] rule. Colours are existing tokens.
+ */
+@layer components {
+  .subscription-delete {
+    overflow-wrap: anywhere;
+    padding-block-start: var(--gap-stack);
+    border-block-start: 1px solid var(--border);
+  }
+}

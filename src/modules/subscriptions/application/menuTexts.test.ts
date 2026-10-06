@@ -52,6 +52,7 @@ const PROMPT_TEXTS: ResidentTextName[] = [
   "menuReset",
   "menuLimit",
   "menuLimitLink",
+  "menuClosedLink",
   "buildingSaved",
   "buildingSavedWhole",
   "languageSaved",

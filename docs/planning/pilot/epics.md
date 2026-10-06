@@ -3208,7 +3208,7 @@ So that I can keep my alerts right without a smartphone.
 
 ### Story S07.06 — Residents change or delete their subscription with a one-time web link
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 3 h 2 min (started 2026-10-06 03:08 UTC, built 06:10 UTC, with the first and second reviews' fixes)
 - **Traces:** FR-A2, AR-13, AR-17 · **Depends on:** S07.05 · **Branch:** `e07-s06-edit-link`
 
 As a resident with a smartphone,
@@ -3550,7 +3550,7 @@ So that someone notices if I need help.
 **When** the Admin opens the coverage view
 **Then** it shows the number of requests on uncovered floors per building (count only), so the Hub can assign someone or contact them
 
-**Handoff from S07.05.** E07's `CheckinRequests` port (`src/modules/subscriptions/application/inbound.ts`, beside `deleteForSubscriber`) is wired as `noCheckinRequestsYet` in `src/app/inbound.ts`: this story implements it and wires the real one there. `withdrawRequest(subscriberId, tx)` is reply 3: it answers `withdrawn` or `none`, and the menu replies `smsTexts.checkinWithdrawn` or `smsTexts.noCheckinRequest`. `locationChanging(subscriberId, place, tx)` is menu 1's "Changed location": it is called before the menu locks the subscriber's row and while the old places are still there, so it takes the request lock order itself (the round threads' `alert` rows, then the subscriber row, then `checkin` and `checkin_tally`); when it answers `withdrawn`, `checkinWithdrawn` follows the building's confirmation. "Changed location" says that SMS confirmation also offers the edit link: refine `checkinWithdrawn` (or add a text for a move) to offer it, keeping it one segment in every language (`menuTexts.test.ts`).
+**Handoff from S07.05.** E07's `CheckinRequests` port (`src/modules/subscriptions/application/inbound.ts`, beside `deleteForSubscriber`) is wired as `noCheckinRequestsYet` in `src/app/inbound.ts`: this story implements it and wires the real one there. `withdrawRequest(subscriberId, tx)` is reply 3: it answers `withdrawn` or `none`, and the menu replies `smsTexts.checkinWithdrawn` or `smsTexts.noCheckinRequest`. `locationChanging(subscriberId, places, tx)` is menu 1's "Changed location" (`[place]`) and S07.06's edit page's (the places left on it, called only when they differ): it is called before the menu or the page locks the subscriber's row and while the old places are still there, so it takes the request lock order itself (the round threads' `alert` rows, then the subscriber row, then `checkin` and `checkin_tally`); when it answers `withdrawn`, `checkinWithdrawn` follows the building's confirmation. "Changed location" says that SMS confirmation also offers the edit link: refine `checkinWithdrawn` (or add a text for a move) to offer it, keeping it one segment in every language (`menuTexts.test.ts`).
 
 ### Story S08.06 — Heat and power alerts start a check-in round
 

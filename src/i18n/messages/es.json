@@ -5838,10 +5838,45 @@
     "buildingSavedWhole": "Guardado. Su edificio es {building}.",
     "languageSaved": "Guardado. Recibirá los mensajes en español.",
     "noCheckinRequest": "No tiene ningún pedido de chequeo de bienestar.",
-    "checkinWithdrawn": "Se retiró su pedido de chequeo de bienestar."
+    "checkinWithdrawn": "Se retiró su pedido de chequeo de bienestar.",
+    "menuClosedLink": "Menú cerrado. No se cambió nada. Envíe 1 para un enlace web.",
+    "editLink": "Cambie o borre sus alertas del CVH aquí: {link} El enlace funciona una vez, durante 30 minutos.",
+    "editSaved": "Sus opciones de alertas del CVH se cambiaron en la página web. ¿No fue usted? Llame al Hub al {hub}."
   },
   "smsKeywords": {
     "yes": "sí, si"
+  },
+  "subscriptionEdit": {
+    "title": "Cambie sus alertas por mensaje de texto",
+    "loading": "Abriendo sus opciones...",
+    "forNumber": "Para el número de teléfono que termina en {digits}.",
+    "lead": "Cambie lo que quiera y luego guarde. Para dejar de recibir todos los mensajes, borre su suscripción al final de esta página.",
+    "topicsTitle": "Temas sobre los que no quiere mensajes",
+    "topicsLead": "Marque un tema para dejar de recibir sus alertas. Las alertas de incendio o evacuación siempre llegan.",
+    "save": "Guardar mis cambios",
+    "saving": "Guardando...",
+    "savedTitle": "Sus cambios se guardaron",
+    "savedBody": "Le llegará un mensaje para confirmarlos. Este enlace ya se usó: para cambiar otra cosa, pida un enlace nuevo por mensaje de texto.",
+    "deleteTitle": "Borrar mi suscripción",
+    "deleteLead": "No recibirá más mensajes del CVH y se borrará todo lo que se guarda sobre su número. Esto no se puede deshacer.",
+    "deleteSure": "¿Borrar su suscripción ahora? No recibirá más mensajes del CVH.",
+    "deleteYes": "Sí, borrarla",
+    "deleteNo": "No, mantenerla",
+    "deleting": "Borrando...",
+    "deletedTitle": "Su suscripción se borró",
+    "deletedBody": "No recibirá más mensajes del CVH y no se guarda nada sobre su número. No se envía ningún mensaje para confirmarlo.",
+    "signUpAgain": "Suscribirse de nuevo",
+    "expiredTitle": "Este enlace caducó",
+    "expiredBody": "Un enlace funciona una vez, durante 30 minutos después de enviarse.",
+    "expiredHow": "Para recibir un enlace nuevo por mensaje de texto, responda 1 a un mensaje del CVH. Si la respuesta es un menú, envíe 0 para cerrarlo. Cuando la respuesta le ofrezca un enlace, envíe 1.",
+    "callHub": "O llame al Hub al {hub}.",
+    "error": {
+      "invalid_request": "No se pudo leer algo del formulario. Vuelva a cargar la página e inténtelo de nuevo.",
+      "neighbourhood_missing": "Elija su barrio.",
+      "place_unknown": "Uno de sus edificios o pisos ya no está en la lista. Revise sus edificios e inténtelo de nuevo.",
+      "edit_unavailable": "No se pueden hacer cambios ahora. Inténtelo más tarde.",
+      "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo."
+    }
   },
   "offline": {
     "title": "Esta página no está guardada en su teléfono",
