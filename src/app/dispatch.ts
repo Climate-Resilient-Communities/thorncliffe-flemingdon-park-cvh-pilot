@@ -1,5 +1,5 @@
 // Composition root of the sender (S06.02, AD-2, AD-8): the validated environment, the app's database, the ContactResolver
-// (src/app/messaging.ts), alerting's reader of entries and threads, ops' event log and, in production only, Twilio's Messaging
+// (src/app/messaging.ts), alerting's reader of entries and threads, subscriptions' reader of campaigns (S09.07), ops' event log and, in production only, Twilio's Messaging
 // Service. Server only. This is the one place that reads Twilio's credentials for sending, and only where SMS_MODE is `live`: under
 // `log` the dispatcher gets no provider and nothing here touches `env.twilio`.
 //
@@ -19,6 +19,7 @@ import {
   twilioMessageSubmitter,
   twilioMessagingServiceReader,
   type AlertStandingReader,
+  type CampaignStandingReader,
   type ContactResolver,
   type DispatchReport,
   type Dispatcher,
@@ -30,7 +31,7 @@ import {
   type ServiceCheckFinding,
 } from "@/modules/messaging";
 import { recordOpsEvent, recordOpsEventUnlessBusy } from "@/modules/ops";
-import { forgetOptedOutSignup } from "@/modules/subscriptions";
+import { campaignStandingReader, forgetOptedOutSignup } from "@/modules/subscriptions";
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
 import { contactResolver } from "./messaging";
@@ -121,6 +122,8 @@ export interface DispatcherParts {
   db?: Db;
   resolver?: ContactResolver;
   alerts?: AlertStandingReader;
+  /** S09.07: whether a campaign text is still sendable at the hand-off point (subscriptions' reader of the campaign and its recipient). */
+  campaigns?: CampaignStandingReader;
   clock?: DispatcherClock;
   log?: MessagingLog;
   ops?: OpsRecorder;
@@ -150,6 +153,7 @@ export function appDispatcher(parts: DispatcherParts = {}): Dispatcher {
     db: parts.db ?? getDb(),
     resolver: parts.resolver ?? contactResolver(),
     alerts: parts.alerts ?? alertStandingReader,
+    campaigns: parts.campaigns ?? campaignStandingReader(),
     ops: parts.ops ?? opsRecorder,
     log: parts.log ?? stdoutMessagingLog,
     clock: parts.clock ?? systemClock,

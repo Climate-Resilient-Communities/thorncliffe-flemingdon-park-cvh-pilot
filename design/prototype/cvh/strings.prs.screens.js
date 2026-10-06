@@ -12,7 +12,10 @@
    "draftTitle": "پیش‌نویس: هنوز نشر نشده است",
    "draftBody": "این متن هنوز تأیید نشده است. این شرایط نهایی نیست. به اعتبار این متن ثبت نام نکنید.",
    "draftWhy": "نشر نشده است، چون:",
-   "translationNote": "بعضی بخش‌های این صفحه هنوز به {lang} ترجمه نشده است. آن بخش‌ها به انگلیسی نشان داده می‌شوند."
+   "translationNote": "بعضی بخش‌های این صفحه هنوز به {lang} ترجمه نشده است. آن بخش‌ها به انگلیسی نشان داده می‌شوند.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "معلومات باشندگان حذف شد",
+   "dataDeletedNote": "پیلوت CVH پایان یافت. در این تاریخ، شماره تلفن و انتخاب‌های همه کسانی را که برای ادامهٔ دریافت هشدارها YES نفرستادند حذف کردیم."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1405,7 +1408,14 @@
   });
   m(t, {"smsTexts": {"confirmation": "برای گرفتن هشدارهای CVH، جواب YES بفرستید. برای قطع، STOP بفرستید."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
-  m(t, {"smsTexts": {"welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.", "alreadySignedUp": "شما قبلاً برای هشدارهای CVH ثبت نام کرده‌اید.", "deletePrompt": "برای حذف اشتراک، در 10 دقیقه باز 0 بفرستید. بعد از آن پیامی نمی‌گیرید.", "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید."}, "smsKeywords": {"yes": "بله, بلی, هان"}});
+  m(t, {"smsTexts": {"welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای تغییر ساختمان یا طبقه 1، برای تغییر زبان 2، برای پس گرفتن درخواست احوال‌پرسی 3، و برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.", "alreadySignedUp": "شما قبلاً برای هشدارهای CVH ثبت نام کرده‌اید.", "deletePrompt": "برای حذف اشتراک، در 10 دقیقه باز 0 بفرستید. بعد از آن پیامی نمی‌گیرید.", "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید."}, "smsKeywords": {"yes": "بله, بلی, هان"}});
+  /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
+     and {placeholders} stay as written). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"smsTexts": {"menuStreet": "سرک:", "menuBuilding": "ساختمان:", "menuFloor": "طبقه:", "menuWholeBuilding": "تمام ساختمان", "menuLanguage": "زبان:", "menuNav": "0 برگشت 9 هب", "menuNavMore": "0 برگشت 8 بیشتر 9 هب", "menuWarn": "این جای {n} ساختمان ذخیره‌شدهٔ شما را می‌گیرد. 1 ادامه، 0 برگشت", "menuHub": "به هب زنگ بزنید: {hub}", "menuClosed": "مینو بسته شد. چیزی تغییر نکرد.", "menuReset": "مینو پس از 10 دقیقه بی‌پاسخ بسته شد. چیزی تغییر نکرد.", "menuLimit": "5 مینوی امروز تمام شد. فردا کوشش کنید یا هب: {hub}", "menuLimitLink": "5 مینوی امروز تمام شد. برای لینک ویب 1 بفرستید، یا هب: {hub}", "buildingSaved": "ساختمان شما اکنون {building}، طبقه {floor} است.", "buildingSavedWhole": "ساختمان شما اکنون {building} است.", "languageSaved": "ذخیره شد. اکنون پیام‌ها را به دری می‌گیرید.", "noCheckinRequest": "شما درخواست احوال‌پرسی ندارید.", "checkinWithdrawn": "درخواست احوال‌پرسی شما پس گرفته شد."}});
+  /* S07.06: the one-time web link's texts and its page (see the English file for what each is; menuClosedLink must fit one text; 0, 1, 30
+     and {placeholders} stay as written; the error lines other than edit_unavailable are the sign-up's own). AI-generated (Claude), not yet
+     checked by native readers. */
+  m(t, {"smsTexts":{"menuClosedLink":"مینو بسته شد. چیزی تغییر نکرد. برای لینک ویب 1 بفرستید.","editLink":"هشدارهای CVH خود را اینجا تغییر دهید یا حذف کنید: {link} این لینک یک بار و برای 30 دقیقه کار می‌کند.","editSaved":"انتخاب‌های هشدار CVH شما در صفحهٔ وب تغییر کرد. شما نبودید؟ به هب زنگ بزنید: {hub}"},"subscriptionEdit":{"title":"هشدارهای پیام کوتاه خود را تغییر دهید","loading":"انتخاب‌های شما باز می‌شود...","forNumber":"برای شماره تلفنی که به {digits} ختم می‌شود.","lead":"هر انتخابی را تغییر دهید، بعد ذخیره کنید. برای قطع همهٔ پیام‌ها، در پایان این صفحه اشتراک خود را حذف کنید.","topicsTitle":"موضوعاتی که دربارهٔ آن‌ها پیام نمی‌خواهید","topicsLead":"برای قطع هشدارهای یک موضوع، آن را علامت بزنید. هشدارهای آتش‌سوزی یا تخلیه همیشه می‌آیند.","save":"تغییرات مرا ذخیره کنید","saving":"در حال ذخیره...","savedTitle":"تغییرات شما ذخیره شد","savedBody":"پیامی برای تأیید در راه است. این لینک حالا استفاده شده است: برای تغییر چیز دیگری، با پیام کوتاه لینک تازه بخواهید.","deleteTitle":"اشتراک مرا حذف کنید","deleteLead":"دیگر از CVH پیامی نمی‌گیرید و هر چه دربارهٔ شمارهٔ شما نگه داشته شده حذف می‌شود. این کار برگشت‌پذیر نیست.","deleteSure":"اشتراک خود را همین حالا حذف می‌کنید؟ دیگر از CVH پیامی نمی‌گیرید.","deleteYes":"بله، حذف شود","deleteNo":"نه، بماند","deleting":"در حال حذف...","deletedTitle":"اشتراک شما حذف شد","deletedBody":"دیگر از CVH پیامی نمی‌گیرید و هیچ چیز دربارهٔ شمارهٔ شما نگه داشته نمی‌شود. برای تأیید این کار پیامی فرستاده نمی‌شود.","signUpAgain":"دوباره ثبت نام کنید","expiredTitle":"این لینک منقضی شده است","expiredBody":"هر لینک یک بار کار می‌کند، تا 30 دقیقه پس از فرستادن.","expiredHow":"برای گرفتن لینک تازه با پیام کوتاه، به یکی از پیام‌های CVH با 1 جواب دهید. اگر جواب یک مینو بود، برای بستن آن 0 بفرستید. وقتی جواب لینکی پیشنهاد کرد، 1 بفرستید.","callHub":"یا به هب زنگ بزنید: {hub}","error":{"invalid_request":"چیزی در فورم خوانده نشد. صفحه را دوباره باز کنید و باز کوشش کنید.","neighbourhood_missing":"محله خود را انتخاب کنید.","place_unknown":"یکی از ساختمان‌ها یا طبقه‌های شما دیگر در فهرست نیست. ساختمان‌های خود را ببینید و باز کوشش کنید.","edit_unavailable":"الان نمی‌توان تغییر داد. بعداً دوباره کوشش کنید.","network":"ما به CVH رسیده نتوانستیم. اتصال خود را ببینید و باز کوشش کنید."}}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1514,4 +1524,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["جنوری","فبروری","مارچ","اپریل","می","جون","جولای","اگست","سپتمبر","اکتوبر","نومبر","دسمبر"],"dayMonth":"{month} {day}","digits":"۰۱۲۳۴۵۶۷۸۹"}, "smsTexts": {"reconsent": "پایان پیلوت CVH: برای هشدار تا {date} YES بفرستید، ورنه شماره حذف.", "reconsentKept": "تشکر. هشدارهای CVH را همچنان دریافت می‌کنید.", "pilotEnded": "پیلوت CVH پایان یافت؛ شماره شما نگه داشته نشد.", "signupsPaused": "ثبت‌نام پیامکی CVH تا پایان پیلوت متوقف است."}, "signup": {"error": {"signups_paused": "ثبت‌نام تا پایان پیلوت متوقف است."}}});
 })();

@@ -85,6 +85,8 @@ export const REFUSAL_REASONS = [
   "recipient_gone",
   "recipient_not_receiving",
   "not_sendable",
+  /** S09.07: the end-of-pilot campaign starts only after a rehearsal on the drill roster. */
+  "rehearsal_needed",
 ] as const;
 
 /** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */
@@ -319,6 +321,17 @@ export const AUDIT_META = {
     resend_n: z.number().int().min(1).max(2).optional(),
   }),
 
+  // The end-of-pilot re-consent campaign (S09.07). The subject is the campaign (type `campaign`, its id). `campaign.rehearsed`: an Admin at aal2 sent the
+  // campaign text to the drill roster; `queued` is how many texts. `campaign.started`: an Admin at aal2 started it; `asked` subscribers were asked (and `queued` texts
+  // queued) and `pending_deleted` pending sign-ups deleted. `campaign.ended`: the end job (no actor) ended it after its deadline; `kept` subscribers said YES and
+  // `lapsed` did not reply (S09.08's purge deletes them). `signup.reopened`: an Admin at aal2 reopened sign-ups for the MVP after the campaign ended. Counts
+  // only, never a number. A refusal holds only its reason (`conflict`: already started, the deadline changed, not ended or already reopened; `validation`: a
+  // request the Hub did not make or a box not ticked; `rehearsal_needed`; `not_available`: no published terms; `not_found`: no campaign).
+  "campaign.rehearsed": meta({ queued: count.optional() }),
+  "campaign.started": meta({ asked: count.optional(), queued: count.optional(), pending_deleted: count.optional() }),
+  "campaign.ended": meta({ kept: count.optional(), lapsed: count.optional() }),
+  "signup.reopened": meta({}),
+
   // The drill roster (S06.05): an Admin at aal2 adds, edits or removes a roster entry. The subject is the roster row (type `drill_roster`, its id); the
   // number, the label and the language are in no audit record, which holds only how many entries the roster has afterwards. A refusal holds only its
   // reason (`validation`: no label, a label that is too long, not a Canadian number or not a language; `duplicate`: the number is already on the roster;
@@ -369,6 +382,9 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "spend.cap_set": ["cap_cents"],
   "spend.cap_overrun": ["over_cents", "cap_cents", "entry_cents"],
   "delivery.resent": ["scope", "resent"],
+  "campaign.rehearsed": ["queued"],
+  "campaign.started": ["asked", "queued", "pending_deleted"],
+  "campaign.ended": ["kept", "lapsed"],
   "drill_roster.added": ["roster_size"],
   "drill_roster.edited": ["roster_size"],
   "drill_roster.removed": ["roster_size"],

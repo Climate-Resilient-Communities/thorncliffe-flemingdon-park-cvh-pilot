@@ -205,6 +205,11 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        resident page tests can measure the English fallback whatever is
  *                                                        translated; read by src/i18n/untranslated.ts, which also ignores
  *                                                        it on Vercel and during `next build`
+ * CVH_FAKE_RESIDENT_DATA_DELETED_ON
+ *                      server   optional; local development only (start-up fails on Vercel): a day (YYYY-MM-DD) the terms
+ *                                                        page states as the day the pilot's resident data was deleted, instead
+ *                                                        of the end-of-pilot purge's completion read from the database (S09.08;
+ *                                                        the resident page tests and their screenshots)
  */
 
 /** A POSIX path from the root, or a Windows drive path. */
@@ -255,6 +260,7 @@ const rawSchema = z.object({
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   CVH_FAKE_TRANSLATOR: optionalText,
   CVH_FAKE_UNTRANSLATED_KEYS: optionalText,
+  CVH_FAKE_RESIDENT_DATA_DELETED_ON: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
   JOB_SECRET: optionalText,
   JOB_SECRET_PREVIOUS: optionalText,
@@ -399,6 +405,8 @@ export interface Env {
   fakeDirectoryDir?: string;
   /** Local development only: translate alerts with the fake model that answers every language with a sample text (end-to-end tests). */
   fakeTranslator?: "sample";
+  /** Local development only: the day the terms page states resident data was deleted (S09.08, the resident page tests), read instead of the database. */
+  fakeResidentDataDeletedOn?: string;
   /** Cohere's API key: set only in production. The publish job embeds search data when it is set, and publishes without when not. */
   cohereApiKey?: string;
   /** The search settings, with their defaults; they apply only where a key is configured. */
@@ -918,6 +926,11 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   } else if (raw.CVH_FAKE_TRANSLATOR !== undefined && raw.CVH_FAKE_TRANSLATOR !== "sample") {
     problems.push('CVH_FAKE_TRANSLATOR: the only fake is "sample"');
   }
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_RESIDENT_DATA_DELETED_ON !== undefined) {
+    problems.push("CVH_FAKE_RESIDENT_DATA_DELETED_ON: the end-of-pilot date fake is only allowed in local development, never on Vercel");
+  } else if (raw.CVH_FAKE_RESIDENT_DATA_DELETED_ON !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(raw.CVH_FAKE_RESIDENT_DATA_DELETED_ON)) {
+    problems.push("CVH_FAKE_RESIDENT_DATA_DELETED_ON: must be a day written YYYY-MM-DD");
+  }
 
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_UNTRANSLATED_KEYS !== undefined) {
     problems.push("CVH_FAKE_UNTRANSLATED_KEYS: the English-fallback test seam is only allowed in local development, never on Vercel");
@@ -994,6 +1007,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     fakeTranslator: raw.CVH_FAKE_TRANSLATOR === "sample" ? "sample" : undefined,
+    fakeResidentDataDeletedOn: raw.CVH_FAKE_RESIDENT_DATA_DELETED_ON,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
     jobSecrets: jobSecrets.secrets,
     jobSecretProblem: jobSecrets.problem,

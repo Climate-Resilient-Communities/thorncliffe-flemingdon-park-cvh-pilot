@@ -38,7 +38,9 @@
     "draftTitle": "草稿：尚未发布",
     "draftBody": "此文本尚未获批准，不是最终条款。请不要依据它来注册。",
     "draftWhy": "尚未发布，原因是：",
-    "translationNote": "本页部分内容尚未翻译成{lang}。这些部分以英文显示。"
+    "translationNote": "本页部分内容尚未翻译成{lang}。这些部分以英文显示。",
+    "dataDeleted": "居民数据删除日期",
+    "dataDeletedNote": "CVH试点已结束。我们在该日期删除了所有未回复YES以继续接收提醒的人的电话号码和选择。"
   },
   "shell": {
     "cvhName": "社区虚拟中心",
@@ -5719,7 +5721,90 @@
         "rate_limited": "[EN] You have started 40 sign-ups in the last 24 hours, the most one staff account can. Ask another staff member to continue.",
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
-        "nothingChanged": "[EN] Nothing was sent."
+        "nothingChanged": "[EN] Nothing was sent.",
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+      }
+    },
+    "campaign": {
+      "title": "[EN] End of the pilot",
+      "lead": "[EN] Ask every subscriber whether to keep getting texts after the pilot. Subscribers who do not reply YES by the deadline are deleted after it.",
+      "rehearsal": {
+        "heading": "[EN] Rehearse on the drill roster",
+        "lead": "[EN] Send the campaign text, exactly as subscribers will get it, to the staff phones on the drill roster. Check that it arrives in each language before the campaign starts.",
+        "roster": "[EN] Phones on the drill roster: {n}",
+        "rosterOne": "[EN] Phones on the drill roster: 1",
+        "emptyRoster": "[EN] The drill roster is empty, so a rehearsal reaches nobody. Add the staff phones on the drill roster first.",
+        "none": "[EN] No rehearsal yet.",
+        "last": "[EN] Last rehearsal: {when}, by {name}.",
+        "texts": "[EN] Its texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.",
+        "button": "[EN] Rehearse on the drill roster",
+        "sending": "[EN] Sending"
+      },
+      "start": {
+        "heading": "[EN] Start the campaign",
+        "needsRehearsal": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "deadlineHint": "[EN] Subscribers who have not replied YES by then receive nothing more and are deleted.",
+        "asked": "[EN] Subscribers who will be asked: {n}",
+        "languagesHeading": "[EN] Subscribers by language",
+        "noSubscribers": "[EN] There are no subscribers to ask.",
+        "cost": "[EN] Estimated cost: {cost} for {n} texts.",
+        "capNotice": "[EN] With this campaign, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still start it: the texts are sent, the overrun is recorded and the on-call Admins are told.",
+        "what": "[EN] Starting the campaign does all of this at once: every subscriber is asked to reply YES and gets the text in their language; every pending sign-up is deleted; new sign-ups are paused until an Admin reopens them after the campaign.",
+        "textHeading": "[EN] The text, in English:",
+        "confirm": "[EN] I have checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "button": "[EN] Start the campaign",
+        "starting": "[EN] Starting"
+      },
+      "running": {
+        "heading": "[EN] The campaign is running",
+        "started": "[EN] Started {when} by {name}.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "asked": "[EN] Asked and not yet replied: {n}",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "texts": "[EN] Campaign texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome."
+      },
+      "ended": {
+        "heading": "[EN] The campaign has ended",
+        "when": "[EN] Ended {when}; the deadline was {date}.",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "lapsed": "[EN] Did not reply, to be deleted: {n}",
+        "purge": "[EN] Subscribers who did not reply receive nothing and are deleted by the end-of-pilot purge."
+      },
+      "signups": {
+        "heading": "[EN] Sign-ups",
+        "open": "[EN] Sign-ups are open.",
+        "paused": "[EN] Sign-ups are paused while the pilot ends: the web form, the staff sign-up and replies by text all say so.",
+        "reopenHint": "[EN] Reopen them when the MVP is ready to take new subscribers.",
+        "reopened": "[EN] Sign-ups were reopened {when} by {name}.",
+        "button": "[EN] Reopen sign-ups for the MVP",
+        "reopening": "[EN] Reopening"
+      },
+      "someone": "[EN] an Admin",
+      "done": {
+        "rehearsed": "[EN] The rehearsal text is queued for {n} staff phones.",
+        "rehearsedOne": "[EN] The rehearsal text is queued for 1 staff phone.",
+        "rehearsedNone": "[EN] The rehearsal is recorded, but the drill roster is empty: no text was queued.",
+        "rehearsedAlready": "[EN] This rehearsal was already sent. Nothing changed.",
+        "started": "[EN] The campaign has started: {asked} subscribers are asked, {texts} texts are queued and {deleted} pending sign-ups were deleted. Sign-ups are paused.",
+        "alreadyStarted": "[EN] The campaign had already started. Nothing changed.",
+        "reopened": "[EN] Sign-ups are open again."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can run the end of the pilot.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.",
+        "key_invalid": "[EN] This page is out of date. Reload it and try again.",
+        "deadline_changed": "[EN] The deadline has changed since this page was opened: it is now {date}. Check it, then start again.",
+        "terms_unavailable": "[EN] The terms are not published, so there is nothing to re-consent to. Publish the terms first.",
+        "rehearsal_needed": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "roster_empty": "[EN] The drill roster is empty, so a rehearsal would reach nobody. Add the staff phones on the drill roster first.",
+        "already_started": "[EN] The campaign has already started. Nothing changed.",
+        "not_confirmed": "[EN] Tick the box to confirm you checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "not_ended": "[EN] Sign-ups can be reopened only after the campaign has ended.",
+        "already_reopened": "[EN] Sign-ups are already open.",
+        "no_campaign": "[EN] There is no campaign yet, so sign-ups are open.",
+        "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the campaign. Reload the page. If this stays, tell IT."
       }
     }
   },
@@ -5826,23 +5911,99 @@
       "place_unknown": "您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。",
       "rate_limited": "来自此连接的登记太多。请一小时后再试。",
       "signup_unavailable": "短信登记暂时无法使用。请稍后再试。",
-      "network": "无法连接到 CVH。请检查网络连接后再试。"
+      "network": "无法连接到 CVH。请检查网络连接后再试。",
+      "signups_paused": "试点结束期间，登记已暂停。"
     }
   },
   "smsTexts": {
     "confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。",
-    "welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 0 停止并删除订阅。回复 STOP 停止。",
+    "welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 1 更改楼宇或楼层，回复 2 更改语言，回复 3 撤回探望申请，回复 0 停止并删除订阅。回复 STOP 停止。",
     "alreadySignedUp": "您已订阅 CVH 警报。",
     "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。",
-    "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"
+    "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。",
+    "menuStreet": "街道：",
+    "menuBuilding": "楼宇：",
+    "menuFloor": "楼层：",
+    "menuWholeBuilding": "整栋楼",
+    "menuLanguage": "语言：",
+    "menuNav": "0 返回 9 Hub",
+    "menuNavMore": "0 返回 8 更多 9 Hub",
+    "menuWarn": "这将替换您已保存的 {n} 栋楼宇。1 继续，0 返回",
+    "menuHub": "请致电 Hub：{hub}",
+    "menuClosed": "菜单已关闭，未作任何更改。",
+    "menuReset": "您的菜单因 10 分钟未回复已关闭，未作任何更改。",
+    "menuLimit": "您今天的 5 次菜单已用完。请明天再试，或致电 Hub：{hub}",
+    "menuLimitLink": "您今天的 5 次菜单已用完。回复 1 获取在线修改链接，或致电 Hub：{hub}",
+    "buildingSaved": "已保存。您的楼宇现为 {building}，{floor} 层。",
+    "buildingSavedWhole": "已保存。您的楼宇现为 {building}。",
+    "languageSaved": "已保存。今后您将收到中文短信。",
+    "noCheckinRequest": "您没有探望申请。",
+    "checkinWithdrawn": "您的探望申请已撤回。",
+    "menuClosedLink": "菜单已关闭，未作任何更改。回复 1 获取在线修改链接。",
+    "editLink": "在此更改或删除您的 CVH 短信警报： {link} 此链接仅可使用一次，有效期 30 分钟。",
+    "editSaved": "您的 CVH 警报选择已在网页上更改。不是您本人？请致电 Hub：{hub}",
+    "reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}前未回复，您的号码将被删除。",
+    "reconsentKept": "谢谢。您将继续收到CVH提醒。",
+    "pilotEnded": "CVH试点已结束；您的号码未被保留。",
+    "signupsPaused": "试点结束期间，CVH短信登记已暂停。"
   },
   "smsKeywords": {
     "yes": "是, 是的, 好"
+  },
+  "subscriptionEdit": {
+    "title": "更改您的短信警报",
+    "loading": "正在打开您的选择……",
+    "forNumber": "尾号为 {digits} 的电话号码。",
+    "lead": "更改任何选择，然后保存。如要停止所有短信，请在本页末尾删除您的订阅。",
+    "topicsTitle": "您不想收到短信的主题",
+    "topicsLead": "勾选某个主题即可停止该主题的警报。有关火灾或疏散的警报始终会发送。",
+    "save": "保存我的更改",
+    "saving": "正在保存……",
+    "savedTitle": "您的更改已保存",
+    "savedBody": "确认短信正在发送。此链接现已使用：如需更改其他内容，请通过短信索取新链接。",
+    "deleteTitle": "删除我的订阅",
+    "deleteLead": "您将不再收到 CVH 的短信，与您号码有关的所有信息都会被删除。此操作无法撤销。",
+    "deleteSure": "现在删除您的订阅吗？您将不再收到 CVH 的短信。",
+    "deleteYes": "是，删除",
+    "deleteNo": "不，保留",
+    "deleting": "正在删除……",
+    "deletedTitle": "您的订阅已删除",
+    "deletedBody": "您将不再收到 CVH 的短信，系统不会保留与您号码有关的任何信息。不会发送短信确认此操作。",
+    "signUpAgain": "重新订阅",
+    "expiredTitle": "此链接已过期",
+    "expiredBody": "每个链接只能使用一次，发送后 30 分钟内有效。",
+    "expiredHow": "如需通过短信获取新链接，请向 CVH 的任意短信回复 1。如果回复的是菜单，请回复 0 关闭菜单。当回复提供链接时，请回复 1。",
+    "callHub": "或致电 Hub：{hub}",
+    "error": {
+      "invalid_request": "表格中的某些内容无法读取。请重新加载页面后再试。",
+      "neighbourhood_missing": "请选择您的社区。",
+      "place_unknown": "您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。",
+      "edit_unavailable": "现在无法更改，请稍后再试。",
+      "network": "无法连接到 CVH。请检查网络连接后再试。"
+    }
   },
   "offline": {
     "title": "此页面未保存在您的手机上",
     "body": "此页面还没有在这部手机上有信号时打开过，所以需要信号。电话号码始终保存在您的手机上。",
     "available": "以下内容没有信号时也能阅读",
     "none": "这部手机上还没有保存其他内容。有信号时打开的页面会保存下来，供以后阅读。"
+  },
+  "smsDate": {
+    "months": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "dayMonth": "{month}月{day}日",
+    "digits": "0123456789"
   }
 }

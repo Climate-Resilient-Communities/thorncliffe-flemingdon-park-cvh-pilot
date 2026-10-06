@@ -40,7 +40,7 @@ interface World {
 }
 
 /** The fake database: the state is copied at each (nested) transaction and put back when it throws. */
-function fakeWorld(options: { subscribed?: string[]; allowed?: boolean } = {}) {
+function fakeWorld(options: { subscribed?: string[]; allowed?: boolean; paused?: "before" | "inside" } = {}) {
   let world: World = { rows: new Map(), deliveries: [], log: [] };
   const copy = (w: World): World => ({ rows: new Map([...w.rows].map(([k, v]) => [k, { ...v }])), deliveries: [...w.deliveries], log: w.log });
   const tx = {
@@ -131,6 +131,16 @@ function fakeWorld(options: { subscribed?: string[]; allowed?: boolean } = {}) {
     consentVersion: () => VERSION,
     limiter: () => limiter,
     pricePerSegmentCents: () => 1.5,
+    // S09.07: the sign-up gate. `before`: paused when the sign-up is checked; `inside`: paused by a campaign that started while it was checked.
+    gate: {
+      async closed() {
+        return options.paused === "before";
+      },
+      async holdOpen() {
+        world.log.push("hold the sign-up gate");
+        return options.paused === undefined;
+      },
+    },
   };
   return {
     deps,
@@ -195,7 +205,7 @@ describe("the web sign-up", () => {
     expect([fresh.outcome, pending.outcome, subscribed.outcome]).toEqual([{ kind: "accepted" }, { kind: "accepted" }, { kind: "accepted" }]);
     // The places are read before the client is counted and again in the transaction.
     const places = ["read neighbourhoods", "read floors 100"];
-    const steps = [...places, ...places, "lock number", "is subscribed", "delete expired", "savepoint", "insert pending", "queue confirmation"];
+    const steps = [...places, ...places, "lock number", "hold the sign-up gate", "is subscribed", "delete expired", "savepoint", "insert pending", "queue confirmation"];
     expect(fresh.log).toEqual([...steps, "release"]);
     expect(pending.log).toEqual([...steps, "rollback to savepoint"]);
     expect(subscribed.log).toEqual([...steps, "rollback to savepoint"]);
@@ -256,6 +266,24 @@ describe("the web sign-up", () => {
     const changed = fakeWorld();
     expect(await createSignup(changed.deps).request(request({ consentVersion: "2026-09-01.1" }), "a")).toEqual({ kind: "refused", code: "terms_changed" });
     expect([...closed.counted, ...changed.counted]).toEqual([]);
+  });
+
+  it("refuses every sign-up while sign-ups are paused for the end of the pilot (S09.07), before counting the client, storing and sending nothing", async () => {
+    for (const subscribed of [[], ["+14165550123"]]) {
+      const fake = fakeWorld({ paused: "before", subscribed });
+      expect(await createSignup(fake.deps).request(request(), "a")).toEqual({ kind: "refused", code: "signups_paused" });
+      expect(fake.counted).toEqual([]);
+      expect(fake.world.rows.size).toBe(0);
+      expect(fake.world.deliveries).toEqual([]);
+    }
+  });
+
+  it("refuses a sign-up that the campaign's start closed while it was checked: the gate is held in its transaction, after the number's lock", async () => {
+    const fake = fakeWorld({ paused: "inside" });
+    expect(await createSignup(fake.deps).request(request(), "a")).toEqual({ kind: "refused", code: "signups_paused" });
+    expect(fake.world.log.filter((line) => !line.startsWith("read "))).toEqual(["lock number", "hold the sign-up gate"]);
+    expect(fake.world.rows.size).toBe(0);
+    expect(fake.world.deliveries).toEqual([]);
   });
 
   it("records a web sign-up as started on the web", async () => {
@@ -422,6 +450,17 @@ describe("the staff-assisted sign-up (S07.03)", () => {
     ]);
     expect(fake.world.rows.size).toBe(0);
     expect(fake.world.deliveries).toEqual([]);
+  });
+
+  it("refuses while sign-ups are paused (S09.07), audited as not available with the code, counting and storing nothing", async () => {
+    for (const paused of ["before", "inside"] as const) {
+      const fake = assisted({ paused });
+      expect(await createSignup(fake.deps).assist(ok(), STAFF)).toEqual({ kind: "refused", code: "signups_paused" });
+      expect(fake.audited).toEqual([
+        { outcome: "refused", event: { action: "signup.assisted", actorStaffId: STAFF, subjectType: "pending_signup", subjectId: null, meta: { reason: "not_available", code: "signups_paused" } } },
+      ]);
+      expect(fake.world.rows.size).toBe(0);
+    }
   });
 
   it("will not run without the audit trail", async () => {

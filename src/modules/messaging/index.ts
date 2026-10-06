@@ -101,6 +101,8 @@ export function createSenderHealth(): SenderHealthReader {
 
 /** The estimated cost of the texts waiting to be sent, in whole cents CAD (S07.08: the spend cap counts them before the provider has accepted them). */
 export { queuedCostCents } from "./adapters/queuedCost";
+/** What became of a campaign's texts (S09.07: the end-of-pilot campaign and its rehearsal), counts only. */
+export { campaignTextCounts, type CampaignTextCounts } from "./adapters/campaignTexts";
 export {
   LEASE_STALE_AFTER_MS,
   STUCK_QUEUE_AFTER_MS,

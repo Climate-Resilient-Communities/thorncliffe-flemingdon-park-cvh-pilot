@@ -28,6 +28,10 @@ import { TextsView } from "@/app/staff/texts/TextsView";
 import type { PausedView } from "@/app/staff/texts/view";
 import { MeasuresView } from "@/app/staff/measures/MeasuresView";
 import type { MeasuresView as MeasuresModel } from "@/app/staff/measures/view";
+import { CampaignView } from "@/app/staff/campaign/CampaignView";
+import { CampaignAnswerView, RehearseFormView, ReopenFormView, StartFormView, type CampaignFormLabels } from "@/app/staff/campaign/CampaignFormsView";
+import type { CampaignState } from "@/app/staff/campaign/control";
+import type { CampaignPageText, CampaignScreen } from "@/app/staff/campaign/view";
 import type { ComponentProps, ReactNode } from "react";
 import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
 import { SignOutButton } from "@/app/staff/SignOutButton";
@@ -1296,6 +1300,48 @@ export function TextSignupFixture({
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/text-signup">
       <Screen surface="staff" testId="screen">
         <TextSignupView model={model} form={form ? <SignupFormView {...form} /> : undefined} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The Hub shell around the End of the pilot screen (S09.07), as an Admin sees it: the real body (CampaignView) on a screen built by the app's own view function
+ * (e2e/hub/campaign.spec.ts), with the real, behaviour-free forms and the answer a press would leave. Every number is fictional.
+ */
+export function CampaignFixture({
+  texts,
+  brand,
+  text,
+  screen,
+  unreadable,
+  labels,
+  answer,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  text: CampaignPageText;
+  screen: CampaignScreen | null;
+  unreadable?: boolean;
+  labels: CampaignFormLabels;
+  answer: CampaignState;
+}) {
+  const KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
+  const deadlineDate = screen?.start?.deadlineDate ?? "";
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/campaign">
+      <Screen surface="staff" testId="screen">
+        <CampaignView
+          text={text}
+          screen={screen}
+          unreadable={unreadable}
+          answer={<CampaignAnswerView answer={answer} />}
+          forms={{
+            rehearse: <RehearseFormView labels={labels} requestKey={KEY} deadlineDate={deadlineDate} />,
+            start: <StartFormView labels={labels} requestKey={KEY} deadlineDate={deadlineDate} />,
+            reopen: <ReopenFormView labels={labels} />,
+          }}
+        />
       </Screen>
     </AroundTheScreen>
   );

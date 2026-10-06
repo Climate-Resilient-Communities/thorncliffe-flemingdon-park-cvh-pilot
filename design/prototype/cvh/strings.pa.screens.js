@@ -12,7 +12,10 @@
    "draftTitle": "ਖਰੜਾ: ਅਜੇ ਛਪਿਆ ਨਹੀਂ",
    "draftBody": "ਇਸ ਲਿਖਤ ਨੂੰ ਅਜੇ ਮਨਜ਼ੂਰੀ ਨਹੀਂ ਮਿਲੀ। ਇਹ ਆਖ਼ਰੀ ਸ਼ਰਤਾਂ ਨਹੀਂ ਹਨ। ਇਸ ਦੇ ਭਰੋਸੇ ਸਾਈਨ ਅੱਪ ਨਾ ਕਰੋ।",
    "draftWhy": "ਇਸ ਕਾਰਨ ਛਪਿਆ ਨਹੀਂ:",
-   "translationNote": "ਇਸ ਪੰਨੇ ਦੇ ਕੁਝ ਹਿੱਸਿਆਂ ਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ। ਉਹ ਹਿੱਸੇ ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ ਦਿਸਦੇ ਹਨ।"
+   "translationNote": "ਇਸ ਪੰਨੇ ਦੇ ਕੁਝ ਹਿੱਸਿਆਂ ਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ। ਉਹ ਹਿੱਸੇ ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ ਦਿਸਦੇ ਹਨ।",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "ਵਸਨੀਕਾਂ ਦਾ ਡਾਟਾ ਹਟਾਇਆ ਗਿਆ",
+   "dataDeletedNote": "CVH ਪਾਇਲਟ ਖਤਮ ਹੋ ਗਿਆ ਹੈ। ਉਸ ਤਾਰੀਖ ਨੂੰ ਅਸੀਂ ਉਹਨਾਂ ਸਭ ਲੋਕਾਂ ਦਾ ਫ਼ੋਨ ਨੰਬਰ ਅਤੇ ਚੋਣਾਂ ਹਟਾ ਦਿੱਤੀਆਂ ਜਿਨ੍ਹਾਂ ਨੇ ਅਲਰਟ ਮਿਲਦੇ ਰਹਿਣ ਲਈ YES ਜਵਾਬ ਨਹੀਂ ਦਿੱਤਾ।"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1416,7 +1419,14 @@
   });
   m(t, {"smsTexts": {"confirmation": "CVH ਚੇਤਾਵਨੀਆਂ ਲੈਣ ਲਈ YES ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ। ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।"}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
-  m(t, {"smsTexts": {"welcome": "ਤੁਸੀਂ CVH ਚੇਤਾਵਨੀਆਂ ਲਈ ਸਾਈਨ ਅੱਪ ਕਰ ਲਿਆ ਹੈ। ਹੱਬ ਦਾ ਸਟਾਫ਼ ਹਰ ਸੁਨੇਹਾ ਜਾਂਚਦਾ ਹੈ, ਇਸ ਲਈ ਰਾਤ ਨੂੰ ਚੇਤਾਵਨੀਆਂ ਸ਼ਾਇਦ ਨਾ ਭੇਜੀਆਂ ਜਾਣ। ਬੰਦ ਕਰਕੇ ਆਪਣੀ ਮੈਂਬਰੀ ਮਿਟਾਉਣ ਲਈ 0 ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ। ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।", "alreadySignedUp": "ਤੁਸੀਂ ਪਹਿਲਾਂ ਹੀ CVH ਚੇਤਾਵਨੀਆਂ ਲਈ ਸਾਈਨ ਅੱਪ ਹੋ।", "deletePrompt": "ਮੈਂਬਰੀ ਮਿਟਾਉਣ ਲਈ 10 ਮਿੰਟ ਵਿੱਚ ਫਿਰ 0 ਭੇਜੋ। ਫਿਰ ਕੋਈ ਸੁਨੇਹਾ ਨਹੀਂ ਆਵੇਗਾ।", "signupInfo": "ਟੈਕਸਟ ਰਾਹੀਂ CVH ਚੇਤਾਵਨੀਆਂ ਲੈਣ ਲਈ ਇੱਥੇ ਸਾਈਨ ਅੱਪ ਕਰੋ: {link} ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।"}, "smsKeywords": {"yes": "ਹਾਂ, ਹਾਂਜੀ, ਹਾਂ ਜੀ"}});
+  m(t, {"smsTexts": {"welcome": "ਤੁਸੀਂ CVH ਚੇਤਾਵਨੀਆਂ ਲਈ ਸਾਈਨ ਅੱਪ ਕਰ ਲਿਆ ਹੈ। ਹੱਬ ਦਾ ਸਟਾਫ਼ ਹਰ ਸੁਨੇਹਾ ਜਾਂਚਦਾ ਹੈ, ਇਸ ਲਈ ਰਾਤ ਨੂੰ ਚੇਤਾਵਨੀਆਂ ਸ਼ਾਇਦ ਨਾ ਭੇਜੀਆਂ ਜਾਣ। ਇਮਾਰਤ ਜਾਂ ਮੰਜ਼ਿਲ ਬਦਲਣ ਲਈ 1, ਭਾਸ਼ਾ ਬਦਲਣ ਲਈ 2, ਹਾਲ-ਚਾਲ ਪੁੱਛਣ ਦੀ ਬੇਨਤੀ ਵਾਪਸ ਲੈਣ ਲਈ 3, ਅਤੇ ਬੰਦ ਕਰਕੇ ਆਪਣੀ ਮੈਂਬਰੀ ਮਿਟਾਉਣ ਲਈ 0 ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ। ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।", "alreadySignedUp": "ਤੁਸੀਂ ਪਹਿਲਾਂ ਹੀ CVH ਚੇਤਾਵਨੀਆਂ ਲਈ ਸਾਈਨ ਅੱਪ ਹੋ।", "deletePrompt": "ਮੈਂਬਰੀ ਮਿਟਾਉਣ ਲਈ 10 ਮਿੰਟ ਵਿੱਚ ਫਿਰ 0 ਭੇਜੋ। ਫਿਰ ਕੋਈ ਸੁਨੇਹਾ ਨਹੀਂ ਆਵੇਗਾ।", "signupInfo": "ਟੈਕਸਟ ਰਾਹੀਂ CVH ਚੇਤਾਵਨੀਆਂ ਲੈਣ ਲਈ ਇੱਥੇ ਸਾਈਨ ਅੱਪ ਕਰੋ: {link} ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।"}, "smsKeywords": {"yes": "ਹਾਂ, ਹਾਂਜੀ, ਹਾਂ ਜੀ"}});
+  /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
+     and {placeholders} stay as written). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"smsTexts": {"menuStreet": "ਗਲੀ:", "menuBuilding": "ਇਮਾਰਤ:", "menuFloor": "ਮੰਜ਼ਿਲ:", "menuWholeBuilding": "ਪੂਰੀ ਇਮਾਰਤ", "menuLanguage": "ਭਾਸ਼ਾ:", "menuNav": "0 ਪਿੱਛੇ 9 ਹੱਬ", "menuNavMore": "0 ਪਿੱਛੇ 8 ਹੋਰ 9 ਹੱਬ", "menuWarn": "ਇਹ ਤੁਹਾਡੀਆਂ {n} ਸੰਭਾਲੀਆਂ ਇਮਾਰਤਾਂ ਦੀ ਥਾਂ ਲਵੇਗਾ। 1 ਜਾਰੀ ਰੱਖੋ, 0 ਪਿੱਛੇ", "menuHub": "ਹੱਬ ਨੂੰ ਫ਼ੋਨ ਕਰੋ: {hub}", "menuClosed": "ਮੀਨੂ ਬੰਦ ਹੋ ਗਿਆ। ਕੁਝ ਨਹੀਂ ਬਦਲਿਆ।", "menuReset": "10 ਮਿੰਟ ਜਵਾਬ ਨਾ ਆਉਣ ਕਰਕੇ ਮੀਨੂ ਬੰਦ ਹੋ ਗਿਆ। ਕੁਝ ਨਹੀਂ ਬਦਲਿਆ।", "menuLimit": "ਅੱਜ ਦੇ 5 ਮੀਨੂ ਹੋ ਗਏ। ਕੱਲ੍ਹ ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜਾਂ ਹੱਬ: {hub}", "menuLimitLink": "ਅੱਜ ਦੇ 5 ਮੀਨੂ ਹੋ ਗਏ। ਵੈੱਬ ਲਿੰਕ ਲਈ 1 ਭੇਜੋ, ਜਾਂ ਹੱਬ: {hub}", "buildingSaved": "ਤੁਹਾਡੀ ਇਮਾਰਤ ਹੁਣ {building}, ਮੰਜ਼ਿਲ {floor} ਹੈ।", "buildingSavedWhole": "ਤੁਹਾਡੀ ਇਮਾਰਤ ਹੁਣ {building} ਹੈ।", "languageSaved": "ਸੰਭਾਲਿਆ ਗਿਆ। ਹੁਣ ਤੁਹਾਨੂੰ ਸੁਨੇਹੇ ਪੰਜਾਬੀ ਵਿੱਚ ਮਿਲਣਗੇ।", "noCheckinRequest": "ਤੁਹਾਡੀ ਕੋਈ ਹਾਲ-ਚਾਲ ਪੁੱਛਣ ਦੀ ਬੇਨਤੀ ਨਹੀਂ ਹੈ।", "checkinWithdrawn": "ਤੁਹਾਡੀ ਹਾਲ-ਚਾਲ ਪੁੱਛਣ ਦੀ ਬੇਨਤੀ ਵਾਪਸ ਲੈ ਲਈ ਗਈ।"}});
+  /* S07.06: the one-time web link's texts and its page (see the English file for what each is; menuClosedLink must fit one text; 0, 1, 30
+     and {placeholders} stay as written; the error lines other than edit_unavailable are the sign-up's own). AI-generated (Claude), not yet
+     checked by native readers. */
+  m(t, {"smsTexts":{"menuClosedLink":"ਮੀਨੂ ਬੰਦ ਹੋ ਗਿਆ। ਕੁਝ ਨਹੀਂ ਬਦਲਿਆ। ਵੈੱਬ ਲਿੰਕ ਲਈ 1 ਭੇਜੋ।","editLink":"ਆਪਣੀਆਂ CVH ਟੈਕਸਟ ਚੇਤਾਵਨੀਆਂ ਇੱਥੇ ਬਦਲੋ ਜਾਂ ਮਿਟਾਓ: {link} ਇਹ ਲਿੰਕ ਇੱਕ ਵਾਰ, 30 ਮਿੰਟ ਲਈ ਚੱਲੇਗਾ।","editSaved":"ਤੁਹਾਡੀਆਂ CVH ਚੇਤਾਵਨੀ ਚੋਣਾਂ ਵੈੱਬ ਪੰਨੇ ਤੇ ਬਦਲ ਦਿੱਤੀਆਂ ਗਈਆਂ। ਤੁਸੀਂ ਨਹੀਂ ਬਦਲੀਆਂ? ਹੱਬ ਨੂੰ ਫ਼ੋਨ ਕਰੋ: {hub}"},"subscriptionEdit":{"title":"ਆਪਣੀਆਂ ਟੈਕਸਟ ਚੇਤਾਵਨੀਆਂ ਬਦਲੋ","loading":"ਤੁਹਾਡੀਆਂ ਚੋਣਾਂ ਖੁੱਲ੍ਹ ਰਹੀਆਂ ਹਨ...","forNumber":"{digits} ਤੇ ਖ਼ਤਮ ਹੋਣ ਵਾਲੇ ਫ਼ੋਨ ਨੰਬਰ ਲਈ।","lead":"ਕੋਈ ਵੀ ਚੋਣ ਬਦਲੋ, ਫਿਰ ਸੰਭਾਲੋ। ਸਾਰੇ ਸੁਨੇਹੇ ਬੰਦ ਕਰਨ ਲਈ ਇਸ ਪੰਨੇ ਦੇ ਅੰਤ ਵਿੱਚ ਆਪਣੀ ਮੈਂਬਰੀ ਮਿਟਾਓ।","topicsTitle":"ਉਹ ਵਿਸ਼ੇ ਜਿਨ੍ਹਾਂ ਬਾਰੇ ਤੁਸੀਂ ਸੁਨੇਹੇ ਨਹੀਂ ਚਾਹੁੰਦੇ","topicsLead":"ਕਿਸੇ ਵਿਸ਼ੇ ਦੀਆਂ ਚੇਤਾਵਨੀਆਂ ਬੰਦ ਕਰਨ ਲਈ ਉਸ ਤੇ ਨਿਸ਼ਾਨ ਲਾਓ। ਅੱਗ ਜਾਂ ਇਮਾਰਤ ਖ਼ਾਲੀ ਕਰਨ ਦੀਆਂ ਚੇਤਾਵਨੀਆਂ ਹਮੇਸ਼ਾ ਆਉਂਦੀਆਂ ਹਨ।","save":"ਮੇਰੇ ਬਦਲਾਅ ਸੰਭਾਲੋ","saving":"ਸੰਭਾਲ ਰਹੇ ਹਾਂ...","savedTitle":"ਤੁਹਾਡੇ ਬਦਲਾਅ ਸੰਭਾਲੇ ਗਏ","savedBody":"ਪੁਸ਼ਟੀ ਦਾ ਸੁਨੇਹਾ ਆ ਰਿਹਾ ਹੈ। ਇਹ ਲਿੰਕ ਹੁਣ ਵਰਤਿਆ ਜਾ ਚੁੱਕਾ ਹੈ: ਕੁਝ ਹੋਰ ਬਦਲਣ ਲਈ ਟੈਕਸਟ ਰਾਹੀਂ ਨਵਾਂ ਲਿੰਕ ਮੰਗੋ।","deleteTitle":"ਮੇਰੀ ਮੈਂਬਰੀ ਮਿਟਾਓ","deleteLead":"ਤੁਹਾਨੂੰ CVH ਤੋਂ ਹੋਰ ਸੁਨੇਹੇ ਨਹੀਂ ਆਉਣਗੇ, ਅਤੇ ਤੁਹਾਡੇ ਨੰਬਰ ਬਾਰੇ ਰੱਖੀ ਹਰ ਚੀਜ਼ ਮਿਟਾ ਦਿੱਤੀ ਜਾਵੇਗੀ। ਇਹ ਵਾਪਸ ਨਹੀਂ ਹੋ ਸਕਦਾ।","deleteSure":"ਕੀ ਹੁਣੇ ਆਪਣੀ ਮੈਂਬਰੀ ਮਿਟਾਉਣੀ ਹੈ? ਤੁਹਾਨੂੰ CVH ਤੋਂ ਹੋਰ ਸੁਨੇਹੇ ਨਹੀਂ ਆਉਣਗੇ।","deleteYes":"ਹਾਂ, ਮਿਟਾਓ","deleteNo":"ਨਹੀਂ, ਰੱਖੋ","deleting":"ਮਿਟਾ ਰਹੇ ਹਾਂ...","deletedTitle":"ਤੁਹਾਡੀ ਮੈਂਬਰੀ ਮਿਟਾ ਦਿੱਤੀ ਗਈ","deletedBody":"ਤੁਹਾਨੂੰ CVH ਤੋਂ ਹੋਰ ਸੁਨੇਹੇ ਨਹੀਂ ਆਉਣਗੇ, ਅਤੇ ਤੁਹਾਡੇ ਨੰਬਰ ਬਾਰੇ ਕੁਝ ਨਹੀਂ ਰੱਖਿਆ ਗਿਆ। ਇਸ ਦੀ ਪੁਸ਼ਟੀ ਲਈ ਕੋਈ ਸੁਨੇਹਾ ਨਹੀਂ ਭੇਜਿਆ ਜਾਂਦਾ।","signUpAgain":"ਫਿਰ ਸਾਈਨ ਅੱਪ ਕਰੋ","expiredTitle":"ਇਸ ਲਿੰਕ ਦੀ ਮਿਆਦ ਖ਼ਤਮ ਹੋ ਗਈ ਹੈ","expiredBody":"ਲਿੰਕ ਇੱਕ ਵਾਰ ਹੀ ਚੱਲਦਾ ਹੈ, ਭੇਜਣ ਤੋਂ ਬਾਅਦ 30 ਮਿੰਟ ਤੱਕ।","expiredHow":"ਟੈਕਸਟ ਰਾਹੀਂ ਨਵਾਂ ਲਿੰਕ ਲੈਣ ਲਈ CVH ਦੇ ਕਿਸੇ ਸੁਨੇਹੇ ਦੇ ਜਵਾਬ ਵਿੱਚ 1 ਭੇਜੋ। ਜੇ ਜਵਾਬ ਵਿੱਚ ਮੀਨੂ ਆਵੇ, ਤਾਂ ਉਸ ਨੂੰ ਬੰਦ ਕਰਨ ਲਈ 0 ਭੇਜੋ। ਜਦੋਂ ਜਵਾਬ ਵਿੱਚ ਲਿੰਕ ਦੀ ਪੇਸ਼ਕਸ਼ ਹੋਵੇ, ਤਾਂ 1 ਭੇਜੋ।","callHub":"ਜਾਂ ਹੱਬ ਨੂੰ ਫ਼ੋਨ ਕਰੋ: {hub}","error":{"invalid_request":"ਫ਼ਾਰਮ ਦੀ ਕੋਈ ਚੀਜ਼ ਪੜ੍ਹੀ ਨਹੀਂ ਜਾ ਸਕੀ। ਪੰਨਾ ਦੁਬਾਰਾ ਲੋਡ ਕਰੋ ਅਤੇ ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।","neighbourhood_missing":"ਆਪਣਾ ਇਲਾਕਾ ਚੁਣੋ।","place_unknown":"ਤੁਹਾਡੀ ਕੋਈ ਬਿਲਡਿੰਗ ਜਾਂ ਮੰਜ਼ਿਲ ਹੁਣ ਸੂਚੀ ਵਿੱਚ ਨਹੀਂ ਹੈ। ਆਪਣੀਆਂ ਬਿਲਡਿੰਗਾਂ ਦੇਖੋ ਅਤੇ ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।","edit_unavailable":"ਹੁਣੇ ਬਦਲਾਅ ਨਹੀਂ ਹੋ ਸਕਦੇ। ਬਾਅਦ ਵਿੱਚ ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।","network":"ਅਸੀਂ CVH ਤੱਕ ਨਹੀਂ ਪਹੁੰਚ ਸਕੇ। ਆਪਣਾ ਕਨੈਕਸ਼ਨ ਦੇਖੋ ਅਤੇ ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"}}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1525,4 +1535,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["ਜਨਵਰੀ","ਫ਼ਰਵਰੀ","ਮਾਰਚ","ਅਪ੍ਰੈਲ","ਮਈ","ਜੂਨ","ਜੁਲਾਈ","ਅਗਸਤ","ਸਤੰਬਰ","ਅਕਤੂਬਰ","ਨਵੰਬਰ","ਦਸੰਬਰ"],"dayMonth":"{month} {day}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH ਪਾਇਲਟ ਖਤਮ: ਅਲਰਟ ਲਈ {date} ਤੱਕ YES ਭੇਜੋ, ਨਹੀਂ ਤਾਂ ਨੰਬਰ ਹਟੇਗਾ।", "reconsentKept": "ਧੰਨਵਾਦ। ਤੁਹਾਨੂੰ CVH ਅਲਰਟ ਮਿਲਦੇ ਰਹਿਣਗੇ।", "pilotEnded": "CVH ਪਾਇਲਟ ਖਤਮ ਹੋ ਗਿਆ; ਤੁਹਾਡਾ ਨੰਬਰ ਨਹੀਂ ਰੱਖਿਆ ਗਿਆ।", "signupsPaused": "ਪਾਇਲਟ ਖਤਮ ਹੋਣ ਤੱਕ CVH ਟੈਕਸਟ ਸਾਈਨ ਅੱਪ ਬੰਦ ਹਨ।"}, "signup": {"error": {"signups_paused": "ਪਾਇਲਟ ਖਤਮ ਹੋਣ ਤੱਕ ਸਾਈਨ ਅੱਪ ਬੰਦ ਹਨ।"}}});
 })();

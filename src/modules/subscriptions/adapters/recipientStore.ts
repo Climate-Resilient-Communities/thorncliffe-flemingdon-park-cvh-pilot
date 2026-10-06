@@ -9,15 +9,13 @@ import { sql, type SQL } from "drizzle-orm";
 import { SAFETY_OVERRIDE_TYPES, type Audience } from "../../../contracts/audience";
 import type { LangCode } from "../../../contracts/lang";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
-import { RECEIVING_STATES } from "./subscriberStore";
+import { receivingSql } from "./campaignStore";
 
 /**
- * The states in which a subscriber gets alerts (epics, "Receiving subscriber"), built from the one list `phoneOf` also uses at the hand-off, so the reviewed count and
- * the texts sent cannot disagree.
- * TODO(E09, S09.07 reconsent campaign): a `reconsent_pending` subscriber receives only before the campaign deadline. That rule must change here AND in
- * `subscriberStore.phoneOf` together (both read RECEIVING_STATES today).
+ * The subscribers who get alerts (E09 "Receiving subscriber": `active`, `retained`, and `reconsent_pending` until the campaign's deadline), by the one
+ * condition `phoneOf` also uses at the hand-off (`receivingSql`, S09.07), so the reviewed count and the texts sent cannot disagree.
  */
-const RECEIVING = sql`s.retention_state in (${sql.join(RECEIVING_STATES.map((state) => sql`${state}`), sql`, `)})`;
+const RECEIVING = receivingSql(sql`s.retention_state`);
 
 /** A subscriber the alert reaches: their id and the language they chose. */
 export interface RecipientRow {
@@ -78,8 +76,8 @@ export const recipientStore = {
 
   /**
    * The same, read inside the approval's transaction with every one of them locked `FOR SHARE`, in id order (AD-18's lock order). Three statements, so a change
-   * that was committed while the approval waited for a row is seen: (1) the candidates, (2) their rows locked (a delete, or a change that locks the subscriber
-   * `FOR UPDATE`, waits here for the approval to commit, and one that committed first has its row gone or new), (3) the rule applied again to the locked rows,
+   * that was committed while the approval waited for a row is seen: (1) the candidates, (2) their rows locked (a delete, which locks the subscriber `FOR UPDATE`,
+   * or an edit, `FOR NO KEY UPDATE`, waits here for the approval to commit, and one that committed first has its row gone or new), (3) the rule applied again to the locked rows,
    * which is the answer. A subscriber who signs up, changes places or unsubscribes meanwhile is then wholly in or wholly out, never half of each.
    */
   async reachedForShare(tx: DbTransaction, audience: Audience, earlierIds: readonly string[] = []): Promise<RecipientRow[]> {

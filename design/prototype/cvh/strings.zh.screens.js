@@ -12,7 +12,10 @@
    "draftTitle": "草稿：尚未发布",
    "draftBody": "此文本尚未获批准，不是最终条款。请不要依据它来注册。",
    "draftWhy": "尚未发布，原因是：",
-   "translationNote": "本页部分内容尚未翻译成{lang}。这些部分以英文显示。"
+   "translationNote": "本页部分内容尚未翻译成{lang}。这些部分以英文显示。",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "居民数据删除日期",
+   "dataDeletedNote": "CVH试点已结束。我们在该日期删除了所有未回复YES以继续接收提醒的人的电话号码和选择。"
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",
@@ -1416,7 +1419,14 @@
   });
   m(t, {"smsTexts": {"confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。"}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
-  m(t, {"smsTexts": {"welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 0 停止并删除订阅。回复 STOP 停止。", "alreadySignedUp": "您已订阅 CVH 警报。", "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。", "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"}, "smsKeywords": {"yes": "是, 是的, 好"}});
+  m(t, {"smsTexts": {"welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 1 更改楼宇或楼层，回复 2 更改语言，回复 3 撤回探望申请，回复 0 停止并删除订阅。回复 STOP 停止。", "alreadySignedUp": "您已订阅 CVH 警报。", "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。", "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"}, "smsKeywords": {"yes": "是, 是的, 好"}});
+  /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
+     and {placeholders} stay as written). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"smsTexts": {"menuStreet": "街道：", "menuBuilding": "楼宇：", "menuFloor": "楼层：", "menuWholeBuilding": "整栋楼", "menuLanguage": "语言：", "menuNav": "0 返回 9 Hub", "menuNavMore": "0 返回 8 更多 9 Hub", "menuWarn": "这将替换您已保存的 {n} 栋楼宇。1 继续，0 返回", "menuHub": "请致电 Hub：{hub}", "menuClosed": "菜单已关闭，未作任何更改。", "menuReset": "您的菜单因 10 分钟未回复已关闭，未作任何更改。", "menuLimit": "您今天的 5 次菜单已用完。请明天再试，或致电 Hub：{hub}", "menuLimitLink": "您今天的 5 次菜单已用完。回复 1 获取在线修改链接，或致电 Hub：{hub}", "buildingSaved": "已保存。您的楼宇现为 {building}，{floor} 层。", "buildingSavedWhole": "已保存。您的楼宇现为 {building}。", "languageSaved": "已保存。今后您将收到中文短信。", "noCheckinRequest": "您没有探望申请。", "checkinWithdrawn": "您的探望申请已撤回。"}});
+  /* S07.06: the one-time web link's texts and its page (see the English file for what each is; menuClosedLink must fit one text; 0, 1, 30
+     and {placeholders} stay as written; the error lines other than edit_unavailable are the sign-up's own). AI-generated (Claude), not yet
+     checked by native readers. */
+  m(t, {"smsTexts":{"menuClosedLink":"菜单已关闭，未作任何更改。回复 1 获取在线修改链接。","editLink":"在此更改或删除您的 CVH 短信警报： {link} 此链接仅可使用一次，有效期 30 分钟。","editSaved":"您的 CVH 警报选择已在网页上更改。不是您本人？请致电 Hub：{hub}"},"subscriptionEdit":{"title":"更改您的短信警报","loading":"正在打开您的选择……","forNumber":"尾号为 {digits} 的电话号码。","lead":"更改任何选择，然后保存。如要停止所有短信，请在本页末尾删除您的订阅。","topicsTitle":"您不想收到短信的主题","topicsLead":"勾选某个主题即可停止该主题的警报。有关火灾或疏散的警报始终会发送。","save":"保存我的更改","saving":"正在保存……","savedTitle":"您的更改已保存","savedBody":"确认短信正在发送。此链接现已使用：如需更改其他内容，请通过短信索取新链接。","deleteTitle":"删除我的订阅","deleteLead":"您将不再收到 CVH 的短信，与您号码有关的所有信息都会被删除。此操作无法撤销。","deleteSure":"现在删除您的订阅吗？您将不再收到 CVH 的短信。","deleteYes":"是，删除","deleteNo":"不，保留","deleting":"正在删除……","deletedTitle":"您的订阅已删除","deletedBody":"您将不再收到 CVH 的短信，系统不会保留与您号码有关的任何信息。不会发送短信确认此操作。","signUpAgain":"重新订阅","expiredTitle":"此链接已过期","expiredBody":"每个链接只能使用一次，发送后 30 分钟内有效。","expiredHow":"如需通过短信获取新链接，请向 CVH 的任意短信回复 1。如果回复的是菜单，请回复 0 关闭菜单。当回复提供链接时，请回复 1。","callHub":"或致电 Hub：{hub}","error":{"invalid_request":"表格中的某些内容无法读取。请重新加载页面后再试。","neighbourhood_missing":"请选择您的社区。","place_unknown":"您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。","edit_unavailable":"现在无法更改，请稍后再试。","network":"无法连接到 CVH。请检查网络连接后再试。"}}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1525,4 +1535,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["1","2","3","4","5","6","7","8","9","10","11","12"],"dayMonth":"{month}月{day}日","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}前未回复，您的号码将被删除。", "reconsentKept": "谢谢。您将继续收到CVH提醒。", "pilotEnded": "CVH试点已结束；您的号码未被保留。", "signupsPaused": "试点结束期间，CVH短信登记已暂停。"}, "signup": {"error": {"signups_paused": "试点结束期间，登记已暂停。"}}});
 })();

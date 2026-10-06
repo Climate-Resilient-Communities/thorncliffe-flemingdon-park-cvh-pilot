@@ -1,7 +1,7 @@
 // Drizzle tables of the subscriptions module (AD-2), written by hand to match db/migrations; the drift test compares them.
 // The grants (select, insert and delete to cvh_app, nothing to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";
-import { bigint, check, date, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, date, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -208,7 +208,7 @@ export const subscriberTopicOptout = pgTable(
   ],
 ).enableRLS();
 
-/** A subscriber's one open prompt (S07.04: `delete_confirm`, the "reply 0 again" step; S07.05 adds the menus' steps). */
+/** A subscriber's one open prompt (S07.04: `delete_confirm`, the "reply 0 again" step; S07.05 adds the menus' steps; S09.07 `reconsent`, open until the campaign's deadline). */
 export const smsPrompt = pgTable(
   "sms_prompt",
   {
@@ -224,10 +224,47 @@ export const smsPrompt = pgTable(
     index("sms_prompt_expires_at_idx").on(t.expiresAt),
     check("sms_prompt_kind_format", sql`${t.kind} ~ '^[a-z][a-z0-9_]{0,39}$'`),
     check("sms_prompt_step_object", sql`jsonb_typeof(${t.step}) = 'object'`),
-    check("sms_prompt_expires_after_sent", sql`${t.expiresAt} > ${t.sentAt} and ${t.expiresAt} <= ${t.sentAt} + interval '1 hour'`),
+    // S09.07: the re-consent prompt is open until the campaign's deadline; every other prompt keeps to one hour.
+    check(
+      "sms_prompt_expires_after_sent",
+      sql`${t.expiresAt} > ${t.sentAt} and (${t.expiresAt} <= ${t.sentAt} + interval '1 hour' or (${t.kind} = 'reconsent' and ${t.expiresAt} <= ${t.sentAt} + interval '32 days'))`,
+    ),
     pgPolicy("sms_prompt_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("sms_prompt_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("sms_prompt_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * A subscriber's one-time web link (S07.06, 20261006150000_subscription_edit_token.sql): the sha256 of the token only, valid 30 minutes,
+ * used once (`used_at`, set only while null and before `expires_at`; a guard trigger keeps the rest of the row as written). One per
+ * subscriber: a new link replaces the one before. Deleted with the subscriber and by the purge job once run out.
+ */
+export const subscriptionEditToken = pgTable(
+  "subscription_edit_token",
+  {
+    id: uuid().primaryKey(),
+    subscriberId: uuid("subscriber_id")
+      .notNull()
+      .references(() => subscriber.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now() + interval '30 minutes'`),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("subscription_edit_token_hash_idx").on(t.tokenHash),
+    uniqueIndex("subscription_edit_token_subscriber_id_idx").on(t.subscriberId),
+    index("subscription_edit_token_expires_at_idx").on(t.expiresAt),
+    check("subscription_edit_token_hash_format", sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
+    check("subscription_edit_token_expires_after_30_minutes", sql`${t.expiresAt} = ${t.createdAt} + interval '30 minutes'`),
+    check("subscription_edit_token_used_in_time", sql`${t.usedAt} is null or (${t.usedAt} >= ${t.createdAt} and ${t.usedAt} < ${t.expiresAt})`),
+    pgPolicy("subscription_edit_token_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("subscription_edit_token_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("subscription_edit_token_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+    pgPolicy("subscription_edit_token_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();
 
@@ -353,5 +390,86 @@ export const subscriberMeasure = pgTable(
     pgPolicy("subscriber_measure_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("subscriber_measure_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("subscriber_measure_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * The end-of-pilot re-consent campaign (S09.07, 20261006155000_reconsent_campaign.sql): the real one (at most one) and its rehearsals on the drill roster. It freezes
+ * the campaign text in each language (`texts`: `{lang: {body, segments}}`, the deadline filled in), the terms version, the deadline (the Toronto day 30 days after the
+ * start, `deadlineDate`, and the end of that day, `deadline`), who started it from which session and at which level (`startedAal`, read by the database from the
+ * session), and the Admin's idempotency key. `campaign_guard()` (a trigger in the migration) refuses everything else; the app inserts rows and changes only `state`
+ * (the end job) and `signupsReopenedBy` (the Admin who reopens sign-ups for the MVP).
+ */
+export interface CampaignText {
+  body: string;
+  segments: number;
+}
+
+export const campaign = pgTable(
+  "campaign",
+  {
+    id: uuid().primaryKey(),
+    rehearsal: boolean().notNull(),
+    state: text().notNull().default("started"),
+    deadlineDate: date("deadline_date").notNull(),
+    deadline: timestamp({ withTimezone: true }).notNull(),
+    termsVersion: text("terms_version").notNull(),
+    texts: jsonb().$type<Record<string, CampaignText>>().notNull(),
+    startedBy: uuid("started_by")
+      .notNull()
+      .references(() => staffAccountKey.id),
+    startedSession: text("started_session").notNull(),
+    startedAal: text("started_aal").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    idempotencyKey: text("idempotency_key").notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    signupsReopenedAt: timestamp("signups_reopened_at", { withTimezone: true }),
+    signupsReopenedBy: uuid("signups_reopened_by").references(() => staffAccountKey.id),
+  },
+  (t) => [
+    unique("campaign_idempotency_key_unique").on(t.idempotencyKey),
+    uniqueIndex("campaign_one_real_idx").on(t.rehearsal).where(sql`not ${t.rehearsal}`),
+    index("campaign_started_by_idx").on(t.startedBy),
+    index("campaign_signups_reopened_by_idx").on(t.signupsReopenedBy),
+    check("campaign_idempotency_key_format", sql`${t.idempotencyKey} ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'`),
+    check("campaign_state_known", sql`${t.state} in ('started', 'ended', 'cancelled')`),
+    check("campaign_terms_version_format", sql`${t.termsVersion} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}\\.[1-9][0-9]*$'`),
+    check("campaign_texts_object", sql`jsonb_typeof(${t.texts}) = 'object'`),
+    check("campaign_started_session_format", sql`${t.startedSession} ~ '^[0-9a-f]{64}$'`),
+    check("campaign_started_aal_known", sql`${t.startedAal} in ('aal1', 'aal2')`),
+    check("campaign_ended_when_ended", sql`(${t.state} = 'ended') = (${t.endedAt} is not null)`),
+    check("campaign_reopened_shape", sql`(${t.signupsReopenedAt} is null) = (${t.signupsReopenedBy} is null)`),
+    check("campaign_reopened_real_ended", sql`${t.signupsReopenedAt} is null or (not ${t.rehearsal} and ${t.state} = 'ended')`),
+    pgPolicy("campaign_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("campaign_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("campaign_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * The end-of-pilot purge's record (S09.08, 20261006160000_end_of_pilot_purge.sql): one row for the real campaign, made when the purge begins after its deadline.
+ * `deleted` counts the subscribers the purge deleted (raised in each deletion's transaction, so a resumed purge counts each once); `completedAt` is when no
+ * subscriber was left to delete (the date the terms page states) and `retained` how many had said YES then, both set by the database. `campaign_purge_guard()`
+ * (a trigger in the migration) refuses a rehearsal, a cancelled campaign, a start before the deadline, a count that goes down, an early completion and any change
+ * after it.
+ */
+export const campaignPurge = pgTable(
+  "campaign_purge",
+  {
+    campaignId: uuid("campaign_id")
+      .primaryKey()
+      .references(() => campaign.id),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    deleted: integer().notNull().default(0),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    retained: integer(),
+  },
+  (t) => [
+    check("campaign_purge_deleted_not_negative", sql`${t.deleted} >= 0`),
+    check("campaign_purge_retained_not_negative", sql`${t.retained} is null or ${t.retained} >= 0`),
+    check("campaign_purge_completed_shape", sql`(${t.completedAt} is null) = (${t.retained} is null)`),
+    pgPolicy("campaign_purge_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("campaign_purge_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("campaign_purge_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

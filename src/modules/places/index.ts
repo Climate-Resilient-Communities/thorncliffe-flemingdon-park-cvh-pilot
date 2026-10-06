@@ -3,7 +3,7 @@
 export { readBuildingsFixtureFile } from "./adapters/buildingsFixture";
 export { readMergeFile, readRegisterFile } from "./adapters/registerFiles";
 export { createBuildingService } from "./application/floors";
-export { addressesOfBuildings, directnessOfTypes, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings, type FloorRecord } from "./application/floorReader";
+export { addressesOfBuildings, directnessOfTypes, floorsOfBuilding, listBuildings, neighbourhoodIds, neighbourhoodsOfBuildings, type BuildingRecord, type FloorRecord } from "./application/floorReader";
 export type { BuildingContact, BuildingDetail, BuildingFacts, BuildingFloorPlan, BuildingService, BuildingServiceDeps, BuildingSummary, FloorPlace, FloorPlanFloor, FloorRefusal, FloorResult, FloorView } from "./application/floors";
 export { listBuildingContacts, type BuildingWithContact } from "./application/buildingContacts";
 export { readPublicBuilding, type PublicBuilding } from "./application/publicBuilding";
@@ -13,6 +13,7 @@ export { NO_ASSIGNMENTS, type AssignedAmbassador, type FloorAssignments, type Pl
 export { CONTACT_OWNER, CONTACT_ROLES, CONTACT_ROLE_LABEL_KEYS, checkContact, displayPhone, isContactRole, normalizePhone, telHref, type ContactCheck, type ContactError, type ContactRole } from "./domain/buildingContact";
 export { FLOOR_LABEL_MAX_LENGTH, checkFloorLabel, floorLabelKey, trimFloorLabel, type FloorLabelCheck, type FloorLabelError } from "./domain/floorLabel";
 export { formatImportReport } from "./domain/importReport";
+export { streetOf, type StreetAddress } from "./domain/street";
 export {
   PILOT_AREAS,
   formatProblem,

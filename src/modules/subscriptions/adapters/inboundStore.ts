@@ -1,7 +1,8 @@
 // The inbound router's own tables (S07.04): the MessageSid hashes that make a retried webhook do nothing, the daily keyword counts, the
 // short-lived `inbound_reply` rows that hold a number with no subscription until its one reply is handed off, and the once-a-day limit of
-// that reply (a keyed hash of the number in `rate_limit`, deleted after 24 hours). Every statement runs in the caller's transaction.
-import { and, count, eq, gt, lt, sql } from "drizzle-orm";
+// that reply (a keyed hash of the number in `rate_limit`, deleted after 24 hours), and S07.05's daily menu limit (the same kind of hash).
+// Every statement runs in the caller's transaction.
+import { and, count, eq, gt, gte, lt, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
 import { INBOUND_SCOPE } from "../domain/inbound";
 import { inboundKeywordCount, inboundLimitedCount, inboundReply, inboundSeen, rateLimit } from "./schema";
@@ -72,6 +73,22 @@ export const inboundStore = {
     }
     await tx.insert(rateLimit).values({ scope: INBOUND_SCOPE, clientHash: hash, at: sql`now()` as unknown as Date });
     await tx.delete(rateLimit).where(lt(rateLimit.at, sql`now() - interval '24 hours'`));
+    return "allowed";
+  },
+
+  /**
+   * The daily menu limit (S07.05, E07 "Menu"): a menu started by the number whose keyed hash is `hash` is counted under `scope` and
+   * `allowed` when the number has started fewer than `perDay` today (Toronto, by the database's clock); otherwise nothing is counted and
+   * the result is `limit`. The caller holds the number's lock, so two replies from one number cannot both take the last menu. The rows go
+   * with every other `rate_limit` hash after 24 hours (S07.09's purge).
+   */
+  async startMenu(tx: DbTransaction, scope: string, hash: string, perDay: number): Promise<"allowed" | "limit"> {
+    const [row] = await tx
+      .select({ n: count() })
+      .from(rateLimit)
+      .where(and(eq(rateLimit.scope, scope), eq(rateLimit.clientHash, hash), gte(rateLimit.at, TORONTO_DAY_START)));
+    if ((row?.n ?? 0) >= perDay) return "limit";
+    await tx.insert(rateLimit).values({ scope, clientHash: hash, at: sql`now()` as unknown as Date });
     return "allowed";
   },
 

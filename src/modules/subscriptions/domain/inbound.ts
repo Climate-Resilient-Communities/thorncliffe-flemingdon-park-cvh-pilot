@@ -67,35 +67,54 @@ export function readKeyword(input: { body: string; optOutType: string | null; ye
   return "other";
 }
 
-/** The prompt a subscriber can have open in S07.04 (S07.05 adds the menus' steps). An expired prompt is no prompt. */
-export type OpenPrompt = "none" | "delete_confirm";
+/**
+ * The prompt a subscriber can have open. An expired prompt is no prompt. S07.04: the deletion's confirmation. S07.05 (domain/menus.ts,
+ * `openPromptOf`): a menu (`menu`), a menu whose last message is 10 minutes old (`menu_idle`: it has reset), and the edit link's offer at
+ * the daily menu limit (`edit_link_offer`, once S07.06 sends the link).
+ */
+export type OpenPrompt = "none" | "delete_confirm" | "menu" | "menu_idle" | "edit_link_offer";
 
-/** The number's state, as the router reads it under the number's lock. A pending sign-up past its `expires_at` is `none` (S07.02 handoff). */
-export type NumberState = { kind: "none" } | { kind: "pending" } | { kind: "active"; prompt: OpenPrompt };
+/**
+ * The number's state, as the router reads it under the number's lock. A pending sign-up past its `expires_at` is `none` (S07.02 handoff).
+ * S09.07: an `active` state carries `reconsent` while the subscriber is asked to re-consent and the campaign's deadline has not passed (their re-consent
+ * prompt is open, though a later prompt, an S07.05 menu or the deletion's confirmation, may hold its row); `lapsed` is a subscriber who was asked and did
+ * not reply by the deadline (they receive nothing, no menu either, until S09.08's purge deletes them).
+ */
+export type NumberState = { kind: "none" } | { kind: "pending" } | { kind: "active"; prompt: OpenPrompt; reconsent?: true } | { kind: "lapsed" };
 
 /**
  * What the router does (E07 "Decision table"):
+ *  - `reconsent` (S09.07): YES resolves to the re-consent prompt: the subscriber stays (`retained`) and is told so;
+ *  - `pilot_ended` (S09.07): YES after the deadline: "The CVH pilot has ended; your number was not kept", through `inbound_reply`;
  *  - `delete`: delete everything held for the number, and send nothing (STOP; the second 0);
  *  - `none`: change nothing and send nothing;
  *  - `confirm`: the pending sign-up becomes a subscriber, and the welcome text is queued;
  *  - `already_signed_up`: "You are already signed up";
  *  - `ask_delete`: open the deletion's confirmation prompt and send it;
- *  - `menu`: reply 1, 2 or 3, handed to the menus (S07.05);
+ *  - `menu`: reply 1, 2 or 3, handed to the menus (S07.05: 1 and 2 start a menu, 3 withdraws a check-in request);
+ *  - `menu_reply`: a reply inside an open menu, handed to it (S07.05: 0 is Back there, not a deletion);
+ *  - `edit_link`: 1 to the edit link's offer, handed to the edit link (S07.06);
  *  - `signup_info`: the sign-up link, at most once a day per number, through `inbound_reply`.
  */
 export type InboundAction =
+  | { kind: "reconsent" }
+  | { kind: "pilot_ended" }
   | { kind: "delete" }
   | { kind: "none" }
   | { kind: "confirm" }
   | { kind: "already_signed_up" }
   | { kind: "ask_delete" }
   | { kind: "menu"; choice: "1" | "2" | "3" }
+  | { kind: "menu_reply" }
+  | { kind: "edit_link" }
   | { kind: "signup_info" };
 
 export interface Decision {
   action: InboundAction;
   /** True when the subscriber's open prompt is cancelled first ("any other reply cancels it"). */
   cancelPrompt: boolean;
+  /** S07.05: the menu was idle for 10 minutes: the reply says it has reset, and the text is then read as a new keyword (`action`). */
+  menuReset?: true;
 }
 
 const keep = (action: InboundAction): Decision => ({ action, cancelPrompt: false });
@@ -108,6 +127,9 @@ export function decide(keyword: InboundKeyword, state: NumberState): Decision {
   if (keyword === "start" || keyword === "help") return keep({ kind: "none" });
 
   switch (state.kind) {
+    case "lapsed":
+      // S09.07: asked to re-consent and past the deadline: nothing is sent to them any more but the answer to YES (through `inbound_reply`).
+      return keep(keyword === "yes" ? { kind: "pilot_ended" } : { kind: "none" });
     case "none":
       // YES with no pending sign-up (or after it expired), and anything else from a number the CVH does not know: the sign-up link.
       return keep({ kind: "signup_info" });
@@ -115,8 +137,21 @@ export function decide(keyword: InboundKeyword, state: NumberState): Decision {
       // Only YES confirms; the confirmation text already told the resident what to do, so nothing else is answered.
       return keep(keyword === "yes" ? { kind: "confirm" } : { kind: "none" });
     case "active": {
+      // S07.05: inside an open menu every reply but STOP, START and HELP is the menu's (0 is Back, a digit an option, anything else sends
+      // the page again); a menu idle for 10 minutes has reset, and the reply is read as a new keyword with no prompt open; 1 asks for the
+      // link the edit link's offer made, and any other reply cancels the offer as it does the deletion's confirmation.
+      // S09.07 with S07.05: the open prompt written last wins (AD-9, one `sms_prompt` row per subscriber). A menu opened after the campaign
+      // asked the subscriber took the row, so YES inside it is the menu's (the page is sent again) and keeps the subscriber asked; once the
+      // menu has reset or closed, YES resolves to the re-consent again. A campaign started after the menu opened replaced the menu's row
+      // with the re-consent prompt, so the menu is gone and the reply is read as a new keyword.
+      if (state.prompt === "menu") return keep({ kind: "menu_reply" });
+      if (state.prompt === "menu_idle") return { ...decide(keyword, { ...state, prompt: "none" }), cancelPrompt: true, menuReset: true };
+      if (state.prompt === "edit_link_offer" && keyword === "1") return { action: { kind: "edit_link" }, cancelPrompt: true };
       const open = state.prompt !== "none";
       if (keyword === "0") return state.prompt === "delete_confirm" ? keep({ kind: "delete" }) : { action: { kind: "ask_delete" }, cancelPrompt: open };
+      // S09.07: YES from a subscriber asked to re-consent, before the deadline and outside a menu, resolves to the re-consent prompt (it cancels a later
+      // deletion's confirmation or edit link's offer, as any reply does).
+      if (keyword === "yes" && state.reconsent) return { action: { kind: "reconsent" }, cancelPrompt: open };
       if (keyword === "yes") return { action: { kind: "already_signed_up" }, cancelPrompt: open };
       if (keyword === "1" || keyword === "2" || keyword === "3") return { action: { kind: "menu", choice: keyword }, cancelPrompt: open };
       return { action: { kind: "none" }, cancelPrompt: open };

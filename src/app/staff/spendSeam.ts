@@ -50,9 +50,10 @@ const live: CapNoticeDeps = {
  * The sentence an approver is shown BEFORE approving when this entry's estimate would take the month's text spending past the cap (S07.08): the
  * shortfall, and that the alert can still be approved. Null when it would not, when no cap is set, or when the entry has no estimate. Like the pause
  * notice it only informs: if the figures cannot be read the approver is shown nothing and the failure is logged by the error's name, because the
- * cap never blocks an approval (the use case judges it again, in the approval's own transaction).
+ * cap never blocks an approval (the use case judges it again, in the approval's own transaction). `key` is the sentence's catalog key: the end-of-pilot campaign
+ * (S09.07) says it of its own texts (`staff.campaign.start.capNotice`).
  */
-export async function capNoticeFor(estimateCents: number | null, deps: CapNoticeDeps = live): Promise<string | null> {
+export async function capNoticeFor(estimateCents: number | null, deps: CapNoticeDeps = live, key = "staff.approve.capNotice"): Promise<string | null> {
   if (estimateCents === null || estimateCents <= 0) return null;
   try {
     const cap = await deps.capCents();
@@ -60,7 +61,7 @@ export async function capNoticeFor(estimateCents: number | null, deps: CapNotice
     const assessment = assessCap({ capCents: cap, spentCents: await deps.spentCents(deps.now()), queuedCents: await deps.queuedCents(), estimateCents });
     if (assessment.overCents === 0) return null;
     const amount = (cents: number) => `${formatCents(cents)} CAD`;
-    return englishText("staff.approve.capNotice", { over: amount(assessment.overCents), cap: amount(cap), projected: amount(assessment.projectedCents) });
+    return englishText(key, { over: amount(assessment.overCents), cap: amount(cap), projected: amount(assessment.projectedCents) });
   } catch (error) {
     deps.logError("approval.cap_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
     return null;

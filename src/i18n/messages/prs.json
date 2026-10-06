@@ -38,7 +38,9 @@
     "draftTitle": "پیش‌نویس: هنوز نشر نشده است",
     "draftBody": "این متن هنوز تأیید نشده است. این شرایط نهایی نیست. به اعتبار این متن ثبت نام نکنید.",
     "draftWhy": "نشر نشده است، چون:",
-    "translationNote": "بعضی بخش‌های این صفحه هنوز به {lang} ترجمه نشده است. آن بخش‌ها به انگلیسی نشان داده می‌شوند."
+    "translationNote": "بعضی بخش‌های این صفحه هنوز به {lang} ترجمه نشده است. آن بخش‌ها به انگلیسی نشان داده می‌شوند.",
+    "dataDeleted": "معلومات باشندگان حذف شد",
+    "dataDeletedNote": "پیلوت CVH پایان یافت. در این تاریخ، شماره تلفن و انتخاب‌های همه کسانی را که برای ادامهٔ دریافت هشدارها YES نفرستادند حذف کردیم."
   },
   "shell": {
     "cvhName": "مرکز مجازی اجتماعی",
@@ -5719,7 +5721,90 @@
         "rate_limited": "[EN] You have started 40 sign-ups in the last 24 hours, the most one staff account can. Ask another staff member to continue.",
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
-        "nothingChanged": "[EN] Nothing was sent."
+        "nothingChanged": "[EN] Nothing was sent.",
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+      }
+    },
+    "campaign": {
+      "title": "[EN] End of the pilot",
+      "lead": "[EN] Ask every subscriber whether to keep getting texts after the pilot. Subscribers who do not reply YES by the deadline are deleted after it.",
+      "rehearsal": {
+        "heading": "[EN] Rehearse on the drill roster",
+        "lead": "[EN] Send the campaign text, exactly as subscribers will get it, to the staff phones on the drill roster. Check that it arrives in each language before the campaign starts.",
+        "roster": "[EN] Phones on the drill roster: {n}",
+        "rosterOne": "[EN] Phones on the drill roster: 1",
+        "emptyRoster": "[EN] The drill roster is empty, so a rehearsal reaches nobody. Add the staff phones on the drill roster first.",
+        "none": "[EN] No rehearsal yet.",
+        "last": "[EN] Last rehearsal: {when}, by {name}.",
+        "texts": "[EN] Its texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.",
+        "button": "[EN] Rehearse on the drill roster",
+        "sending": "[EN] Sending"
+      },
+      "start": {
+        "heading": "[EN] Start the campaign",
+        "needsRehearsal": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "deadlineHint": "[EN] Subscribers who have not replied YES by then receive nothing more and are deleted.",
+        "asked": "[EN] Subscribers who will be asked: {n}",
+        "languagesHeading": "[EN] Subscribers by language",
+        "noSubscribers": "[EN] There are no subscribers to ask.",
+        "cost": "[EN] Estimated cost: {cost} for {n} texts.",
+        "capNotice": "[EN] With this campaign, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still start it: the texts are sent, the overrun is recorded and the on-call Admins are told.",
+        "what": "[EN] Starting the campaign does all of this at once: every subscriber is asked to reply YES and gets the text in their language; every pending sign-up is deleted; new sign-ups are paused until an Admin reopens them after the campaign.",
+        "textHeading": "[EN] The text, in English:",
+        "confirm": "[EN] I have checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "button": "[EN] Start the campaign",
+        "starting": "[EN] Starting"
+      },
+      "running": {
+        "heading": "[EN] The campaign is running",
+        "started": "[EN] Started {when} by {name}.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "asked": "[EN] Asked and not yet replied: {n}",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "texts": "[EN] Campaign texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome."
+      },
+      "ended": {
+        "heading": "[EN] The campaign has ended",
+        "when": "[EN] Ended {when}; the deadline was {date}.",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "lapsed": "[EN] Did not reply, to be deleted: {n}",
+        "purge": "[EN] Subscribers who did not reply receive nothing and are deleted by the end-of-pilot purge."
+      },
+      "signups": {
+        "heading": "[EN] Sign-ups",
+        "open": "[EN] Sign-ups are open.",
+        "paused": "[EN] Sign-ups are paused while the pilot ends: the web form, the staff sign-up and replies by text all say so.",
+        "reopenHint": "[EN] Reopen them when the MVP is ready to take new subscribers.",
+        "reopened": "[EN] Sign-ups were reopened {when} by {name}.",
+        "button": "[EN] Reopen sign-ups for the MVP",
+        "reopening": "[EN] Reopening"
+      },
+      "someone": "[EN] an Admin",
+      "done": {
+        "rehearsed": "[EN] The rehearsal text is queued for {n} staff phones.",
+        "rehearsedOne": "[EN] The rehearsal text is queued for 1 staff phone.",
+        "rehearsedNone": "[EN] The rehearsal is recorded, but the drill roster is empty: no text was queued.",
+        "rehearsedAlready": "[EN] This rehearsal was already sent. Nothing changed.",
+        "started": "[EN] The campaign has started: {asked} subscribers are asked, {texts} texts are queued and {deleted} pending sign-ups were deleted. Sign-ups are paused.",
+        "alreadyStarted": "[EN] The campaign had already started. Nothing changed.",
+        "reopened": "[EN] Sign-ups are open again."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can run the end of the pilot.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.",
+        "key_invalid": "[EN] This page is out of date. Reload it and try again.",
+        "deadline_changed": "[EN] The deadline has changed since this page was opened: it is now {date}. Check it, then start again.",
+        "terms_unavailable": "[EN] The terms are not published, so there is nothing to re-consent to. Publish the terms first.",
+        "rehearsal_needed": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "roster_empty": "[EN] The drill roster is empty, so a rehearsal would reach nobody. Add the staff phones on the drill roster first.",
+        "already_started": "[EN] The campaign has already started. Nothing changed.",
+        "not_confirmed": "[EN] Tick the box to confirm you checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "not_ended": "[EN] Sign-ups can be reopened only after the campaign has ended.",
+        "already_reopened": "[EN] Sign-ups are already open.",
+        "no_campaign": "[EN] There is no campaign yet, so sign-ups are open.",
+        "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the campaign. Reload the page. If this stays, tell IT."
       }
     }
   },
@@ -5826,23 +5911,99 @@
       "place_unknown": "یکی از ساختمان‌ها یا طبقه‌های شما دیگر در فهرست نیست. ساختمان‌های خود را ببینید و باز کوشش کنید.",
       "rate_limited": "از این اتصال ثبت نام‌های زیادی آمده است. یک ساعت بعد باز کوشش کنید.",
       "signup_unavailable": "ثبت نام برای پیام کوتاه فعلاً در دسترس نیست. بعداً باز کوشش کنید.",
-      "network": "ما به CVH رسیده نتوانستیم. اتصال خود را ببینید و باز کوشش کنید."
+      "network": "ما به CVH رسیده نتوانستیم. اتصال خود را ببینید و باز کوشش کنید.",
+      "signups_paused": "ثبت‌نام تا پایان پیلوت متوقف است."
     }
   },
   "smsTexts": {
     "confirmation": "برای گرفتن هشدارهای CVH، جواب YES بفرستید. برای قطع، STOP بفرستید.",
-    "welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.",
+    "welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای تغییر ساختمان یا طبقه 1، برای تغییر زبان 2، برای پس گرفتن درخواست احوال‌پرسی 3، و برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.",
     "alreadySignedUp": "شما قبلاً برای هشدارهای CVH ثبت نام کرده‌اید.",
     "deletePrompt": "برای حذف اشتراک، در 10 دقیقه باز 0 بفرستید. بعد از آن پیامی نمی‌گیرید.",
-    "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید."
+    "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید.",
+    "menuStreet": "سرک:",
+    "menuBuilding": "ساختمان:",
+    "menuFloor": "طبقه:",
+    "menuWholeBuilding": "تمام ساختمان",
+    "menuLanguage": "زبان:",
+    "menuNav": "0 برگشت 9 هب",
+    "menuNavMore": "0 برگشت 8 بیشتر 9 هب",
+    "menuWarn": "این جای {n} ساختمان ذخیره‌شدهٔ شما را می‌گیرد. 1 ادامه، 0 برگشت",
+    "menuHub": "به هب زنگ بزنید: {hub}",
+    "menuClosed": "مینو بسته شد. چیزی تغییر نکرد.",
+    "menuReset": "مینو پس از 10 دقیقه بی‌پاسخ بسته شد. چیزی تغییر نکرد.",
+    "menuLimit": "5 مینوی امروز تمام شد. فردا کوشش کنید یا هب: {hub}",
+    "menuLimitLink": "5 مینوی امروز تمام شد. برای لینک ویب 1 بفرستید، یا هب: {hub}",
+    "buildingSaved": "ساختمان شما اکنون {building}، طبقه {floor} است.",
+    "buildingSavedWhole": "ساختمان شما اکنون {building} است.",
+    "languageSaved": "ذخیره شد. اکنون پیام‌ها را به دری می‌گیرید.",
+    "noCheckinRequest": "شما درخواست احوال‌پرسی ندارید.",
+    "checkinWithdrawn": "درخواست احوال‌پرسی شما پس گرفته شد.",
+    "menuClosedLink": "مینو بسته شد. چیزی تغییر نکرد. برای لینک ویب 1 بفرستید.",
+    "editLink": "هشدارهای CVH خود را اینجا تغییر دهید یا حذف کنید: {link} این لینک یک بار و برای 30 دقیقه کار می‌کند.",
+    "editSaved": "انتخاب‌های هشدار CVH شما در صفحهٔ وب تغییر کرد. شما نبودید؟ به هب زنگ بزنید: {hub}",
+    "reconsent": "پایان پیلوت CVH: برای هشدار تا {date} YES بفرستید، ورنه شماره حذف.",
+    "reconsentKept": "تشکر. هشدارهای CVH را همچنان دریافت می‌کنید.",
+    "pilotEnded": "پیلوت CVH پایان یافت؛ شماره شما نگه داشته نشد.",
+    "signupsPaused": "ثبت‌نام پیامکی CVH تا پایان پیلوت متوقف است."
   },
   "smsKeywords": {
     "yes": "بله, بلی, هان"
+  },
+  "subscriptionEdit": {
+    "title": "هشدارهای پیام کوتاه خود را تغییر دهید",
+    "loading": "انتخاب‌های شما باز می‌شود...",
+    "forNumber": "برای شماره تلفنی که به {digits} ختم می‌شود.",
+    "lead": "هر انتخابی را تغییر دهید، بعد ذخیره کنید. برای قطع همهٔ پیام‌ها، در پایان این صفحه اشتراک خود را حذف کنید.",
+    "topicsTitle": "موضوعاتی که دربارهٔ آن‌ها پیام نمی‌خواهید",
+    "topicsLead": "برای قطع هشدارهای یک موضوع، آن را علامت بزنید. هشدارهای آتش‌سوزی یا تخلیه همیشه می‌آیند.",
+    "save": "تغییرات مرا ذخیره کنید",
+    "saving": "در حال ذخیره...",
+    "savedTitle": "تغییرات شما ذخیره شد",
+    "savedBody": "پیامی برای تأیید در راه است. این لینک حالا استفاده شده است: برای تغییر چیز دیگری، با پیام کوتاه لینک تازه بخواهید.",
+    "deleteTitle": "اشتراک مرا حذف کنید",
+    "deleteLead": "دیگر از CVH پیامی نمی‌گیرید و هر چه دربارهٔ شمارهٔ شما نگه داشته شده حذف می‌شود. این کار برگشت‌پذیر نیست.",
+    "deleteSure": "اشتراک خود را همین حالا حذف می‌کنید؟ دیگر از CVH پیامی نمی‌گیرید.",
+    "deleteYes": "بله، حذف شود",
+    "deleteNo": "نه، بماند",
+    "deleting": "در حال حذف...",
+    "deletedTitle": "اشتراک شما حذف شد",
+    "deletedBody": "دیگر از CVH پیامی نمی‌گیرید و هیچ چیز دربارهٔ شمارهٔ شما نگه داشته نمی‌شود. برای تأیید این کار پیامی فرستاده نمی‌شود.",
+    "signUpAgain": "دوباره ثبت نام کنید",
+    "expiredTitle": "این لینک منقضی شده است",
+    "expiredBody": "هر لینک یک بار کار می‌کند، تا 30 دقیقه پس از فرستادن.",
+    "expiredHow": "برای گرفتن لینک تازه با پیام کوتاه، به یکی از پیام‌های CVH با 1 جواب دهید. اگر جواب یک مینو بود، برای بستن آن 0 بفرستید. وقتی جواب لینکی پیشنهاد کرد، 1 بفرستید.",
+    "callHub": "یا به هب زنگ بزنید: {hub}",
+    "error": {
+      "invalid_request": "چیزی در فورم خوانده نشد. صفحه را دوباره باز کنید و باز کوشش کنید.",
+      "neighbourhood_missing": "محله خود را انتخاب کنید.",
+      "place_unknown": "یکی از ساختمان‌ها یا طبقه‌های شما دیگر در فهرست نیست. ساختمان‌های خود را ببینید و باز کوشش کنید.",
+      "edit_unavailable": "الان نمی‌توان تغییر داد. بعداً دوباره کوشش کنید.",
+      "network": "ما به CVH رسیده نتوانستیم. اتصال خود را ببینید و باز کوشش کنید."
+    }
   },
   "offline": {
     "title": "این صفحه در تلفون شما ذخیره نشده است",
     "body": "این صفحه هنوز در این تلفون با سیگنال باز نشده، بنابراین به سیگنال نیاز دارد. شماره‌ها همیشه در تلفون شما ذخیره هستند.",
     "available": "این‌ها را بدون سیگنال می‌توانید بخوانید",
     "none": "هنوز چیز دیگری در این تلفون ذخیره نشده است. صفحه‌هایی که با سیگنال باز می‌کنید برای بعد ذخیره می‌شوند."
+  },
+  "smsDate": {
+    "months": [
+      "جنوری",
+      "فبروری",
+      "مارچ",
+      "اپریل",
+      "می",
+      "جون",
+      "جولای",
+      "اگست",
+      "سپتمبر",
+      "اکتوبر",
+      "نومبر",
+      "دسمبر"
+    ],
+    "dayMonth": "{month} {day}",
+    "digits": "۰۱۲۳۴۵۶۷۸۹"
   }
 }
