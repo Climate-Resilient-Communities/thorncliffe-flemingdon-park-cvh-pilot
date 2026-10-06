@@ -141,6 +141,9 @@ async function asApp<T>(run: (tx: Tx) => PromiseLike<T>, approving?: string): Pr
   }) as Promise<T>;
 }
 
+/** What a deleted resident's own text says once they are deleted (20261007010000_forget_resident_texts.sql). */
+const FORGOTTEN_BODY = "[deleted]";
+
 /** A row without what forgetting a recipient changes (its link, its key and the update time). */
 const withoutLink = (row: Row) => Object.fromEntries(Object.entries(row).filter(([column]) => !["recipient_id", "idempotency_key", "updated_at"].includes(column)));
 
@@ -1001,13 +1004,89 @@ describe("a deleted recipient", () => {
       const after = await rowOf(ids[state]);
       expect(after.recipient_id, state).toBeNull();
       expect(after.idempotency_key, state).toBe(`detached:${ids[state]}`);
-      // Nothing else changed: not the state, not the body, not the times.
-      expect(withoutLink(after), state).toEqual(withoutLink(before[index]));
+      // A text written to the resident alone (a menu reply here) forgets what it said too.
+      expect(after.body, state).toBe(FORGOTTEN_BODY);
+      // Nothing else changed: not the state, not the provider's id, not the segments or the cost, not the times.
+      expect({ ...withoutLink(after), body: null }, state).toEqual({ ...withoutLink(before[index]), body: null });
     }
     expect(JSON.stringify(await owner`select * from delivery where recipient_kind = 'subscriber'`)).not.toContain(gone);
     const survivor = await rowOf(keptId);
     expect(survivor.recipient_id).toBe(kept);
     expect(survivor.idempotency_key).toContain(kept);
+  });
+
+  it("forgets the words of every text written to a deleted resident alone, and keeps the alerts' and the campaign's, which everyone got (AD-13)", async () => {
+    const subscribers = await recipientTable("subscriber");
+    const signups = await recipientTable("pending_signup");
+    const replies = await recipientTable("inbound_reply");
+    const gone = randomUUID();
+    const signup = randomUUID();
+    const reply = randomUUID();
+    await owner.unsafe(`insert into ${subscribers} (id) values ('${gone}')`);
+    await owner.unsafe(`insert into ${signups} (id) values ('${signup}')`);
+    await owner.unsafe(`insert into ${replies} (id) values ('${reply}')`);
+    const to = (purpose: string, body: string, kind = "subscriber", id = gone) => ({ recipient_kind: kind, recipient_id: id, purpose, body, idempotency_key: `transactional:${id}:${purpose}:${randomUUID()}` });
+    // Every purpose subscriptions texts a resident: the building a menu saved, a menu page, the edit link with its token, the welcome, a reply.
+    const personal = {
+      saved: await rowIn("delivered", { over: to("menu_reply", "Saved. Your building is now 10 Example Road, floor 7.") }),
+      page: await rowIn("submitted", { over: to("menu_reply", "Your building: 1) 10 2) 12 0 Back 9 Hub") }),
+      link: await rowIn("delivered", { over: to("edit_link", `Change or delete your CVH text alerts here: https://cvh.example/en/subscription/${"A".repeat(43)} The link works once, for 30 minutes.`) }),
+      welcome: await rowIn("delivered", { over: to("welcome", "You are signed up for CVH alerts. Reply STOP to stop.") }),
+      kept: await rowIn("delivered", { over: to("reconsent_kept", "Thank you. You will keep getting CVH alerts.") }),
+      waiting: await rowIn("skipped", { over: to("prompt_reply", "Reply 0 again within 10 minutes to delete your subscription.") }),
+      confirmation: await rowIn("delivered", { over: to("confirmation", "Reply YES to get CVH alerts. Reply STOP to stop.", "pending_signup", signup) }),
+    };
+    // An alert is the entry's frozen body, the same for everyone; the sign-up link to a number with no subscription is the same for everyone too.
+    const entry = await fx.entry("pending_approval");
+    const alert = (await asApp((tx) => insertRow(tx, alertRow(entry, { recipient_id: gone })), entry.entryId)).id as string;
+    const info = await rowIn("delivered", { over: to("signup_info", "To get CVH alerts by text, sign up here: https://cvh.example/en/text-alerts Reply STOP to stop.", "inbound_reply", reply) });
+    const before = Object.fromEntries(await Promise.all([...Object.entries(personal), ["alert", alert], ["info", info]].map(async ([name, id]) => [name, await rowOf(id as string)])));
+
+    await asApp((tx) => tx.unsafe(`delete from ${subscribers} where id = '${gone}'`));
+    await asApp((tx) => tx.unsafe(`delete from ${signups} where id = '${signup}'`));
+    await asApp((tx) => tx.unsafe(`delete from ${replies} where id = '${reply}'`));
+
+    for (const [name, id] of Object.entries(personal)) {
+      const after = await rowOf(id);
+      expect([after.recipient_id, after.idempotency_key, after.body], name).toEqual([null, `detached:${id}`, FORGOTTEN_BODY]);
+      // The provider's id stays (the price reconciliation matches with it), and so do the segments, the cost, the purpose and the state.
+      expect({ ...withoutLink(after), body: null }, name).toEqual({ ...withoutLink(before[name]), body: null });
+    }
+    expect((await rowOf(personal.saved)).provider_message_id).toMatch(/^SM[0-9a-f]{32}$/);
+    for (const [name, id] of [["alert", alert], ["info", info]] as const) {
+      const after = await rowOf(id);
+      expect([after.recipient_id, after.idempotency_key], name).toEqual([null, `detached:${id}`]);
+      expect(after.body, name).toBe(before[name].body);
+    }
+    // Nothing of the resident's is left in any body: not the building, not the token.
+    const bodies = JSON.stringify(await owner`select body from delivery`);
+    expect(bodies).not.toContain("10 Example Road");
+    expect(bodies).not.toContain("A".repeat(43));
+  });
+
+  it("lets the body change only to the placeholder, only for a resident's own text, and only as its recipient is forgotten", async () => {
+    const id = await rowIn("delivered");
+    const detached = `detached:${id}`;
+    // Not to anything else, even as the recipient is forgotten; never by itself on a row that still names its recipient.
+    expect(await refusal(() => owner`update delivery set recipient_id = null, idempotency_key = ${detached}, body = 'something else' where id = ${id}`)).toMatch(/forgetting a recipient changes nothing else/);
+    expect(await refusal(() => owner`update delivery set body = ${FORGOTTEN_BODY} where id = ${id}`)).toMatch(/frozen at creation/);
+    // An alert keeps its body when its recipient is forgotten.
+    const entry = await fx.entry("pending_approval");
+    const alert = (await asApp((tx) => insertRow(tx, alertRow(entry)), entry.entryId)).id as string;
+    expect(await refusal(() => owner`update delivery set recipient_id = null, idempotency_key = ${`detached:${alert}`}, body = ${FORGOTTEN_BODY} where id = ${alert}`)).toMatch(
+      /forgetting a recipient changes nothing else/,
+    );
+    // A resident's text forgotten before the body was (before this rule): its body may become the placeholder, once, and nothing else changes.
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table delivery disable trigger delivery_guard");
+      await tx`update delivery set recipient_id = null, idempotency_key = ${detached} where id = ${id}`;
+      await tx.unsafe("alter table delivery enable trigger delivery_guard");
+    });
+    expect(await refusal(() => owner`update delivery set body = 'something else' where id = ${id}`)).toMatch(/frozen at creation|never changes/);
+    expect(await refusal(() => owner`update delivery set body = ${FORGOTTEN_BODY}, segments = 2 where id = ${id}`)).toMatch(/forgetting a recipient changes nothing else/);
+    await owner`update delivery set body = ${FORGOTTEN_BODY} where id = ${id}`;
+    expect((await rowOf(id)).body).toBe(FORGOTTEN_BODY);
+    expect(await refusal(() => owner`update delivery set body = 'back again' where id = ${id}`)).toMatch(/frozen at creation|never changes/);
   });
 
   it("is forgotten only by rows of its kind: another kind's row with the same id is left alone", async () => {

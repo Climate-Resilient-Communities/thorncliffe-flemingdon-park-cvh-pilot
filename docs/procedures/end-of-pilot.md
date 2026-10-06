@@ -1,6 +1,6 @@
 # The end of the pilot: asking subscribers, then deleting everyone else
 
-**Owner:** Hub Admin lead (the campaign and the final report); IT lead (the jobs, Twilio's replies and the secrets)
+**Owner:** Hub Admin lead (the campaign and the final report); IT lead (the jobs, Twilio's replies, deleting the texts from Twilio and the secrets)
 **Last reviewed:** 2026-10-06
 
 At the end of the pilot every subscriber is asked by text whether to keep getting alerts (S09.07). Those who reply YES by the deadline stay. Everyone else is deleted by the purge after the deadline, as the text told them (S09.08). The campaign is started from the Hub's **End of the pilot** page (`/staff/campaign`, not in the menu: type the address), by an Admin signed in with the authenticator code. The purge needs no one: it runs by itself. This page holds no phone number, name or secret; write counts and dates only.
@@ -33,6 +33,31 @@ At the end of the pilot every subscriber is asked by text whether to keep gettin
 4. If the health banner says a scheduled job failed around then, the purge could not delete someone: IT looks in the logs for `purge.subscriber_failed` (it names the error's kind only), fixes the cause, and the next run deletes them. The purge records its completion only once no one is left.
 5. **IT** unschedules both jobs: `select cron.unschedule('cvh-end-of-pilot-purge')` and `select cron.unschedule('cvh-campaign-end')`.
 
+## Delete the pilot's texts from Twilio (IT)
+
+The purge deletes everything the CVH holds about the residents who did not stay, and their past texts in the CVH's database lose their recipient and their words (alerts and the end-of-pilot question, the same text everyone got, keep theirs). **Twilio keeps its own copy** of every text it sent and received, in its message log: the resident's phone number, the words of each text (the building and floor a menu saved, the edit links) and every reply the resident sent, STOP included. The database still holds each text's Twilio message id (the monthly price reconciliation matches Twilio's prices with it), and that id leads to the copy in Twilio. So Twilio's copies are deleted once the purge and the reconciliation no longer need them. The terms page tells residents this ("Twilio's copies ... stay until the Hub deletes them from Twilio after the pilot ends").
+
+**When:** after both of these, so in the month after the purge:
+
+- the purge completed (step 3 of "The deadline and the purge": `campaign.purge_completed` is recorded), and
+- every month with pilot texts is reconciled: **Spend** shows the month of the purge, and every month before it, at actual prices, not "Pending reconciliation" ([a spending cap overrun](cap-overrun.md), "After each month ends"). The reconciliation reads Twilio's message log for the prices: a month whose messages were deleted before it was reconciled stays pending for good.
+
+**What:** every message in the CVH's Twilio account sent or received on or before the day the purge completed, outbound and inbound. The messages of the subscribers who stayed go too: the CVH never reads Twilio's log for anything else. Nothing the CVH needs is lost: the database keeps the counts, the spend and the texts' outcomes.
+
+**How**, with the Twilio CLI signed in to the CVH's account (`twilio profiles:list` shows which) in a terminal on IT's own machine, never in a shared log. `DAY_AFTER` is the day after the purge completed (YYYY-MM-DD); Twilio's filter takes the messages sent before it:
+
+```sh
+twilio api:core:messages:list --date-sent-before DAY_AFTER --limit 1000000 --properties sid -o tsv \
+  | grep -E '^(SM|MM)[0-9a-f]{32}$' > /tmp/cvh-twilio-sids.txt
+wc -l < /tmp/cvh-twilio-sids.txt
+while read -r sid; do twilio api:core:messages:remove --sid "$sid" || echo "not deleted: $sid"; done < /tmp/cvh-twilio-sids.txt
+rm /tmp/cvh-twilio-sids.txt
+```
+
+The list holds message ids only, never a number or a body. Each `remove` is the Messages API's `DELETE /2010-04-01/Accounts/{AccountSid}/Messages/{MessageSid}.json`, which deletes the message, inbound or outbound, with its body and numbers. A message still on its way cannot be deleted: run the loop again the next day for any id it printed. Then check that nothing is left: the first command, run again, lists no id; in the Twilio Console, **Monitor > Logs > Messaging** for those dates shows nothing. Write the count deleted and the date in the record below.
+
+Twilio's opt-out list (Advanced Opt-Out: the numbers that texted STOP) is not a message and stays: it is what keeps Twilio from texting a number that said STOP.
+
 ## The final report (Hub Admin lead, with IT)
 
 1. Write the counts from step 3 above (deleted, stayed) in the report and in the record below. No names, no numbers.
@@ -53,6 +78,7 @@ At the end of the pilot every subscriber is asked by text whether to keep gettin
 | Purge completed (deleted, stayed: from `campaign.purge_completed`) | | | |
 | Terms page states the date | | | |
 | Jobs unscheduled | | | |
+| Pilot's texts deleted from Twilio (count deleted; after the purge and the last month's reconciliation) | | | |
 | Secrets rotated at pilot end ([rotating secrets](rotate-secrets.md)) | | | |
 | Final report written | | | |
 | Sign-ups reopened for the MVP, and the link back in Twilio's START and HELP replies | | | |

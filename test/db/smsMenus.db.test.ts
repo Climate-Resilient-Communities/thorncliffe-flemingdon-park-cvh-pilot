@@ -76,7 +76,7 @@ async function resetAll() {
   await owner`delete from subscriber`;
   await owner`delete from inbound_seen`;
   await owner`delete from inbound_keyword_count`;
-  await owner`delete from rate_limit where scope in ('inbound', 'inbound_mute', ${MENU_SCOPE})`;
+  await owner`delete from rate_limit where scope in ('inbound', 'inbound_mute', ${MENU_SCOPE}, 'sms_edit_link')`;
   await owner`delete from inbound_limited_count`;
   await world.reset();
   routerLines.length = 0;

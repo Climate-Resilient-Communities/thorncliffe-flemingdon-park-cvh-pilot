@@ -167,7 +167,7 @@ describe("a staff-assisted sign-up", () => {
     const rows = await pendingRows();
     expect(rows.filter((r) => r.started_by === "web")).toHaveLength(5);
     expect(rows.filter((r) => r.started_by === "staff")).toHaveLength(10);
-    const counted = await owner`select scope, count(*)::int as n from rate_limit group by scope order by scope`;
+    const counted = await owner`select scope, count(*)::int as n from rate_limit where scope in (${SIGNUP_RATE_LIMIT.scope}, ${ASSISTED_SIGNUP_RATE_LIMIT.scope}) group by scope order by scope`;
     expect(counted).toEqual([
       { scope: SIGNUP_RATE_LIMIT.scope, n: 5 },
       { scope: ASSISTED_SIGNUP_RATE_LIMIT.scope, n: 10 },

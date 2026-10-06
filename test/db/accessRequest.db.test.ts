@@ -103,7 +103,7 @@ async function resetAll() {
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
   await owner`delete from inbound_seen`;
-  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', 'inbound_mute', ${MENU_SCOPE})`;
+  await owner`delete from rate_limit where scope in ('signup', 'signup_info', 'inbound', 'inbound_mute', ${MENU_SCOPE}, 'sms_edit_link')`;
   // A campaign's texts name it, and it names the Admin who started it from a session: they go before the Admin's account.
   await owner`delete from delivery`;
   await owner`delete from campaign_purge`;
