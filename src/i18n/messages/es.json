@@ -5812,7 +5812,8 @@
       "place_unknown": "Uno de sus edificios o pisos ya no está en la lista. Revise sus edificios e inténtelo de nuevo.",
       "rate_limited": "Llegaron demasiadas inscripciones desde esta conexión. Inténtelo de nuevo dentro de una hora.",
       "signup_unavailable": "La inscripción por mensaje de texto no está disponible ahora. Inténtelo más tarde.",
-      "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo."
+      "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo.",
+      "checkin_consent_missing": "Para pedir un chequeo de bienestar, marque la casilla para aceptar."
     }
   },
   "smsTexts": {
@@ -5841,7 +5842,9 @@
     "checkinWithdrawn": "Se retiró su pedido de chequeo de bienestar.",
     "menuClosedLink": "Menú cerrado. No se cambió nada. Envíe 1 para un enlace web.",
     "editLink": "Cambie o borre sus alertas del CVH aquí: {link} El enlace funciona una vez, durante 30 minutos.",
-    "editSaved": "Sus opciones de alertas del CVH se cambiaron en la página web. ¿No fue usted? Llame al Hub al {hub}."
+    "editSaved": "Sus opciones de alertas del CVH se cambiaron en la página web. ¿No fue usted? Llame al Hub al {hub}.",
+    "checkinMoved": "Su piso cambió: pedido de chequeo retirado. Envíe 1 para un enlace.",
+    "checkinUncoveredNow": "Ahora ningún embajador cubre su piso. Llame al Hub: {hub}"
   },
   "smsKeywords": {
     "yes": "sí, si"
@@ -5875,8 +5878,28 @@
       "neighbourhood_missing": "Elija su barrio.",
       "place_unknown": "Uno de sus edificios o pisos ya no está en la lista. Revise sus edificios e inténtelo de nuevo.",
       "edit_unavailable": "No se pueden hacer cambios ahora. Inténtelo más tarde.",
-      "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo."
+      "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo.",
+      "checkin_consent_missing": "Para pedir un chequeo de bienestar, marque la casilla para aceptar."
     }
+  },
+  "checkin": {
+    "sees": "Un embajador de su piso verá su número de teléfono y su piso, para poder llamarle o enviarle un mensaje.",
+    "isNot": "Un chequeo de bienestar es una llamada o un mensaje para preguntar si usted está bien. No es atención médica, ni una promesa de que alguien vendrá enseguida.",
+    "howTitle": "Cómo pedirlo",
+    "howNew": "Necesita las alertas de texto del CVH. Suscríbase y pida el chequeo en el mismo formulario.",
+    "howHelp": "En un evento del CVH o en el Hub, el personal o un embajador del edificio pueden ayudarle a suscribirse.",
+    "howSubscribed": "¿Ya recibe textos del CVH? Pida el chequeo en la página donde cambia sus opciones.",
+    "noCoverage": "Si ningún embajador cubre su piso todavía, se lo diremos enseguida. En su lugar, puede llamar al Hub al {hub}.",
+    "ask": "Que un embajador de mi piso me haga un chequeo de bienestar",
+    "whereHint": "Elija el edificio y el piso donde vive, de los de arriba.",
+    "agree": "Acepto que un embajador de mi piso vea mi número de teléfono y mi piso, y me haga un chequeo de bienestar.",
+    "untilYes": "Su pedido de chequeo empieza cuando responda YES a nuestro mensaje.",
+    "uncovered": "Ningún embajador cubre su piso todavía. Llame al Hub al {hub}.",
+    "withdraw": "Retirar mi pedido de chequeo",
+    "withdrawNote": "Se retira al guardar. Seguirá recibiendo alertas.",
+    "moved": "Cambió el lugar donde vive, así que su pedido de chequeo se retirará. Para pedirlo otra vez para su nuevo piso, elíjalo y acepte de nuevo.",
+    "savedRequested": "Su pedido de chequeo está guardado.",
+    "savedMethod": "Cambió la forma de su chequeo."
   },
   "offline": {
     "title": "Esta página no está guardada en su teléfono",

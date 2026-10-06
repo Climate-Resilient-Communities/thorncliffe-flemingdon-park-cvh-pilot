@@ -5812,7 +5812,8 @@
       "place_unknown": "One of your buildings or floors is no longer on the list. Check your buildings and try again.",
       "rate_limited": "Too many sign-ups came from this connection. Try again in an hour.",
       "signup_unavailable": "Text sign-up is not available just now. Try again later.",
-      "network": "We could not reach the CVH. Check your connection and try again."
+      "network": "We could not reach the CVH. Check your connection and try again.",
+      "checkin_consent_missing": "To ask for a check-in, tick the box to agree."
     }
   },
   "smsTexts": {
@@ -5841,7 +5842,9 @@
     "checkinWithdrawn": "Your check-in request is withdrawn.",
     "menuClosedLink": "Menu closed. Nothing was changed. Reply 1 for a link to make changes online.",
     "editLink": "Change or delete your CVH text alerts here: {link} The link works once, for 30 minutes.",
-    "editSaved": "Your CVH alert choices were changed on the web page. Not you? Call the Hub at {hub}."
+    "editSaved": "Your CVH alert choices were changed on the web page. Not you? Call the Hub at {hub}.",
+    "checkinMoved": "Your check-in request was withdrawn because your floor changed. Reply 1 for a link to ask again.",
+    "checkinUncoveredNow": "No ambassador covers your floor now. Call the Hub at {hub}."
   },
   "smsKeywords": {
     "yes": "yes"
@@ -5875,8 +5878,28 @@
       "neighbourhood_missing": "Choose your neighbourhood.",
       "place_unknown": "One of your buildings or floors is no longer on the list. Check your buildings and try again.",
       "edit_unavailable": "Changes cannot be made just now. Try again later.",
-      "network": "We could not reach the CVH. Check your connection and try again."
+      "network": "We could not reach the CVH. Check your connection and try again.",
+      "checkin_consent_missing": "To ask for a check-in, tick the box to agree."
     }
+  },
+  "checkin": {
+    "sees": "An ambassador on your floor will see your phone number and your floor, so they can call or text you.",
+    "isNot": "A check-in is a call or a text to ask if you are all right. It is not medical care, and it is not a promise that someone will come at once.",
+    "howTitle": "How to ask",
+    "howNew": "You need CVH text alerts. Sign up for them and ask for a check-in on the same form.",
+    "howHelp": "At a CVH event or at the Hub, staff or a building ambassador can help you sign up.",
+    "howSubscribed": "Already get CVH texts? Ask for a check-in on the page where you change your choices.",
+    "noCoverage": "If no ambassador covers your floor yet, we tell you at once. You can call the Hub at {hub} instead.",
+    "ask": "Ask an ambassador on my floor to check on me",
+    "whereHint": "Choose the building and floor where you live, from the ones above.",
+    "agree": "I agree that an ambassador on my floor may see my phone number and floor, and check on me.",
+    "untilYes": "Your check-in request starts when you reply YES to our text.",
+    "uncovered": "No ambassador covers your floor yet. Call the Hub at {hub}.",
+    "withdraw": "Withdraw my check-in request",
+    "withdrawNote": "It is withdrawn when you save. You will still get alerts.",
+    "moved": "Where you live has changed, so your check-in request will be withdrawn. To ask again for your new floor, choose it and agree again.",
+    "savedRequested": "Your check-in request is saved.",
+    "savedMethod": "How you are checked on has changed."
   },
   "offline": {
     "title": "This page is not saved on your phone",

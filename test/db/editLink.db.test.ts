@@ -24,7 +24,9 @@ import {
   createInboundRouter,
   createMenus,
   editTokenHash,
+  noCheckinRequestsYet,
   type CheckinCleanup,
+  type CheckinRequestChanges,
   type CheckinRequests,
   type EditLink,
   type InboundOutcome,
@@ -119,7 +121,8 @@ afterAll(async () => {
 beforeEach(resetAll);
 
 /** checkins' ports as fakes that record what they were asked (E08 implements them). */
-const checkins: CheckinRequests & CheckinCleanup = {
+const checkins: CheckinRequests & CheckinRequestChanges & CheckinCleanup = {
+  ...noCheckinRequestsYet,
   withdrawRequest: async () => "none",
   locationChanging: async (subscriberId, places) => {
     located.push({ subscriberId, places });
@@ -133,7 +136,7 @@ const checkins: CheckinRequests & CheckinCleanup = {
  * ports and the subscriber store can be swapped, and `onText` is called with each text's body before it is queued, inside the transaction
  * that queues it (what other sessions see then).
  */
-function editLinkOn(seams: { checkins?: CheckinRequests & CheckinCleanup; subscribers?: SubscriberStore; onText?: (body: string) => Promise<void> } = {}): EditLink {
+function editLinkOn(seams: { checkins?: CheckinRequests & CheckinRequestChanges & CheckinCleanup; subscribers?: SubscriberStore; onText?: (body: string) => Promise<void> } = {}): EditLink {
   const queue = createDeliveryQueue();
   return createEditLink({
     db: app,
@@ -368,6 +371,7 @@ describe("the page's view", () => {
         groups: ["seniors"],
         muted_topics: ["power"],
         phone_last2: "71",
+        checkin: null,
       },
     });
     expect(JSON.stringify(view)).not.toContain("5550171");

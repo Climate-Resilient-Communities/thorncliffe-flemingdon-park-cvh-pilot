@@ -5,8 +5,9 @@
 //  - every request body is read (at most SUBSCRIPTION_EDIT_MAX_BODY_CHARS) and checked by the contract: 400 `{error: {code, message_key}}`
 //    for an unreadable one, and nothing is used;
 //  - `view` answers the choices, or `{v, status: "expired"}` (HTTP 200) for a link that is unknown, used or run out;
-//  - `change` answers `{v, status: "changed"}` or `expired`, or 400 `neighbourhood_missing` / `place_unknown` (nothing changed, the link
-//    still usable); `delete` answers `{v, status: "deleted"}` or `expired`. A failure is 503 `edit_unavailable`.
+//  - `change` answers `{v, status: "changed"}` (S08.05: with `checkin`, what became of the check-in request, when the change touched one) or
+//    `expired`, or 400 `neighbourhood_missing` / `place_unknown` / `checkin_consent_missing` (nothing changed, the link still usable);
+//    `delete` answers `{v, status: "deleted"}` or `expired`. A failure is 503 `edit_unavailable`.
 // The token, the number and the body are never logged or echoed: a log line names the request and its outcome, or a safe classification.
 import {
   EDIT_EXPIRED,
@@ -74,7 +75,8 @@ export async function subscriptionChangeResponse(deps: SubscriptionRouteDeps, re
     if (outcome.kind === "refused") return refused(outcome.code);
     if (outcome.kind === "expired") return answer(EDIT_EXPIRED);
     deps.afterChanged?.();
-    return answer({ v: 1, status: "changed" });
+    // S08.05: what became of the check-in request, when the change touched one (personal: this POST's no-store answer only).
+    return answer(outcome.checkin === undefined ? { v: 1, status: "changed" } : { v: 1, status: "changed", checkin: outcome.checkin });
   });
 }
 

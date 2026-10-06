@@ -5812,7 +5812,8 @@
       "place_unknown": "Wala na sa listahan ang isa sa inyong mga gusali o palapag. Tingnan ang inyong mga gusali at subukan ulit.",
       "rate_limited": "Masyadong maraming sign-up ang nanggaling sa koneksyong ito. Subukan ulit pagkalipas ng isang oras.",
       "signup_unavailable": "Hindi magagamit ngayon ang pag-sign up para sa text. Subukan ulit mamaya.",
-      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit."
+      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit.",
+      "checkin_consent_missing": "Para humiling ng pangungumusta, lagyan ng tsek ang kahon para pumayag."
     }
   },
   "smsTexts": {
@@ -5841,7 +5842,9 @@
     "checkinWithdrawn": "Nabawi na ang iyong hiling na pangungumusta.",
     "menuClosedLink": "Sarado na ang menu. Walang binago. Sumagot ng 1 para sa link para magbago online.",
     "editLink": "Baguhin o burahin ang iyong CVH text alert dito: {link} Gumagana ang link nang isang beses, sa loob ng 30 minuto.",
-    "editSaved": "Binago sa web page ang iyong mga pinili sa CVH alert. Hindi ikaw? Tawagan ang Hub sa {hub}."
+    "editSaved": "Binago sa web page ang iyong mga pinili sa CVH alert. Hindi ikaw? Tawagan ang Hub sa {hub}.",
+    "checkinMoved": "Nabawi ang iyong hiling na pangungumusta dahil nagbago ang palapag mo. Sumagot ng 1 para sa link.",
+    "checkinUncoveredNow": "Walang ambassador sa iyong palapag ngayon. Tawagan ang Hub sa {hub}."
   },
   "smsKeywords": {
     "yes": "oo, opo, oho"
@@ -5875,8 +5878,28 @@
       "neighbourhood_missing": "Piliin ang inyong kapitbahayan.",
       "place_unknown": "Wala na sa listahan ang isa sa inyong mga gusali o palapag. Tingnan ang inyong mga gusali at subukan ulit.",
       "edit_unavailable": "Hindi pa puwedeng gumawa ng pagbabago ngayon. Subukan ulit mamaya.",
-      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit."
+      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit.",
+      "checkin_consent_missing": "Para humiling ng pangungumusta, lagyan ng tsek ang kahon para pumayag."
     }
+  },
+  "checkin": {
+    "sees": "Makikita ng ambassador sa iyong palapag ang numero ng telepono at palapag mo, para matawagan o ma-text ka.",
+    "isNot": "Ang pangungumusta ay tawag o text para itanong kung ayos ka. Hindi ito pangangalagang medikal, at hindi ito pangako na may darating agad.",
+    "howTitle": "Paano humiling",
+    "howNew": "Kailangan mo ang mga text alert ng CVH. Mag-sign up at humiling ng pangungumusta sa parehong form.",
+    "howHelp": "Sa isang event ng CVH o sa Hub, matutulungan ka ng staff o ng ambassador ng gusali na mag-sign up.",
+    "howSubscribed": "Nakakatanggap ka na ng text ng CVH? Humiling ng pangungumusta sa page kung saan mo binabago ang iyong mga pinili.",
+    "noCoverage": "Kung wala pang ambassador sa iyong palapag, sasabihin namin agad. Puwede mong tawagan ang Hub sa {hub} sa halip.",
+    "ask": "Kumustahin ako ng ambassador sa aking palapag",
+    "whereHint": "Piliin ang gusali at palapag kung saan ka nakatira, mula sa mga nasa itaas.",
+    "agree": "Pumapayag ako na makita ng ambassador sa aking palapag ang numero ng telepono at palapag ko, at kumustahin ako.",
+    "untilYes": "Magsisimula ang iyong hiling na pangungumusta kapag sumagot ka ng YES sa aming text.",
+    "uncovered": "Wala pang ambassador sa iyong palapag. Tawagan ang Hub sa {hub}.",
+    "withdraw": "Bawiin ang aking hiling na pangungumusta",
+    "withdrawNote": "Babawiin ito kapag nag-save ka. Makakatanggap ka pa rin ng mga alert.",
+    "moved": "Nagbago kung saan ka nakatira, kaya babawiin ang iyong hiling na pangungumusta. Para humiling muli para sa bago mong palapag, piliin ito at pumayag muli.",
+    "savedRequested": "Na-save ang iyong hiling na pangungumusta.",
+    "savedMethod": "Nabago ang paraan ng pangungumusta sa iyo."
   },
   "offline": {
     "title": "Hindi naka-save sa iyong telepono ang pahinang ito",

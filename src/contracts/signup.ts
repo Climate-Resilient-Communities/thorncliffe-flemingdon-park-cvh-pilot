@@ -3,6 +3,7 @@
 // S07.06); it sets no cookie and is never cached. Pure and browser-safe: the form checks a number with the same rule as the server.
 import { z } from "zod";
 import { isCanadianAreaCode } from "./canadianAreaCodes";
+import { CHECKIN_CONSENT_VERSION, CheckinRequestSchema, checkinRequestInput, isSavedPlace, type CheckinRequestInput } from "./checkin";
 import { toAsciiDigits } from "./digits";
 import { NEIGHBOURHOOD_ID } from "./audience";
 import { GroupSchema } from "./groups";
@@ -12,7 +13,10 @@ import { FloorIdSchema, RsnSchema } from "./places";
 /** The contract version of the request and of the accepted body. */
 export const SIGNUP_CONTRACT_VERSION = 1;
 
-/** The groups the web form offers. `checkin` is a check-in request, which E08 adds to the form with its coverage check (E07 handoffs). */
+/**
+ * The groups the web form offers. The device's `checkin` group is not one: a check-in request is the form's own `checkin` (S08.05), with the
+ * consent and the coverage check it needs.
+ */
 export const SIGNUP_GROUPS = ["seniors", "newcomers", "families"] as const;
 
 /** How many buildings one sign-up may name (the pilot has 43), and floors per building. */
@@ -66,6 +70,8 @@ export const SignupRequestSchema = z.strictObject({
   consent_version: z.string().max(40),
   terms_agreed: z.boolean(),
   age_confirmed: z.boolean(),
+  /** S08.05: an optional check-in request on one of the places above (E08 "Request during sign-up"); kept until YES if its floor is covered. */
+  checkin: CheckinRequestSchema.optional(),
 });
 export type SignupRequestBody = z.infer<typeof SignupRequestSchema>;
 
@@ -77,6 +83,8 @@ export interface SignupRequest {
   places: { rsn: string; floors: string[] }[];
   groups: z.infer<typeof GroupSchema>[];
   consentVersion: string;
+  /** S08.05: the check-in request, with the consent confirmed, on one of `places`; null or absent when none was asked for. */
+  checkin?: (CheckinRequestInput & { consentVersion: string }) | null;
 }
 
 /** What a sign-up can be refused with; the HTTP status of each is in SIGNUP_ERROR_STATUS. */
@@ -88,6 +96,7 @@ export const SIGNUP_ERROR_CODES = [
   "age_not_confirmed",
   "terms_changed",
   "place_unknown",
+  "checkin_consent_missing",
   "rate_limited",
   "signup_unavailable",
 ] as const;
@@ -101,6 +110,7 @@ export const SIGNUP_ERROR_STATUS: Record<SignupErrorCode, 400 | 409 | 429 | 503>
   age_not_confirmed: 400,
   terms_changed: 409,
   place_unknown: 400,
+  checkin_consent_missing: 400,
   rate_limited: 429,
   signup_unavailable: 503,
 };
@@ -115,9 +125,14 @@ export const signupErrorBody = (code: SignupErrorCode): SignupError => ({ error:
 
 /**
  * The one body of every accepted sign-up, whether the number is new, already has a pending sign-up or is already subscribed: nothing in the
- * answer tells them apart (AD-22). HTTP 202.
+ * answer tells them apart (AD-22). HTTP 202. S08.05: a sign-up with a check-in request also says whether its floor is covered (`requested`,
+ * saved until YES) or not (`uncovered`: "No ambassador covers your floor yet"), which depends on the floor alone, never on the number.
  */
-export const SignupAcceptedSchema = z.strictObject({ v: z.literal(SIGNUP_CONTRACT_VERSION), status: z.literal("accepted") });
+export const SignupAcceptedSchema = z.strictObject({
+  v: z.literal(SIGNUP_CONTRACT_VERSION),
+  status: z.literal("accepted"),
+  checkin: z.enum(["requested", "uncovered"]).optional(),
+});
 export type SignupAccepted = z.infer<typeof SignupAcceptedSchema>;
 export const SIGNUP_ACCEPTED: SignupAccepted = { v: SIGNUP_CONTRACT_VERSION, status: "accepted" };
 
@@ -144,7 +159,16 @@ export function checkSignupRequest(raw: unknown): SignupCheck {
   }
   const places = [...byRsn.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([rsn, floors]) => ({ rsn, floors: [...floors].sort() }));
   const groups = SIGNUP_GROUPS.filter((group) => body.groups.includes(group));
-  return { ok: true, value: { phone, lang: body.lang, neighbourhood: body.neighbourhood, places, groups, consentVersion: body.consent_version } };
+  // S08.05: a check-in request is on one of the places sent, with its floor, and comes with the consent shown now.
+  let checkin: SignupRequest["checkin"];
+  if (body.checkin) {
+    const request = checkinRequestInput(body.checkin);
+    if (!isSavedPlace(request, places)) return { ok: false, code: "invalid_request" };
+    if (request.consentVersion === null) return { ok: false, code: "checkin_consent_missing" };
+    if (request.consentVersion !== CHECKIN_CONSENT_VERSION) return { ok: false, code: "invalid_request" };
+    checkin = { ...request, consentVersion: request.consentVersion };
+  }
+  return { ok: true, value: { phone, lang: body.lang, neighbourhood: body.neighbourhood, places, groups, consentVersion: body.consent_version, ...(checkin ? { checkin } : {}) } };
 }
 
 /**

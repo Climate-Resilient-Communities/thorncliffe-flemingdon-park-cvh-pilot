@@ -5812,7 +5812,8 @@
       "place_unknown": "您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。",
       "rate_limited": "来自此连接的登记太多。请一小时后再试。",
       "signup_unavailable": "短信登记暂时无法使用。请稍后再试。",
-      "network": "无法连接到 CVH。请检查网络连接后再试。"
+      "network": "无法连接到 CVH。请检查网络连接后再试。",
+      "checkin_consent_missing": "如需申请探望，请勾选同意框。"
     }
   },
   "smsTexts": {
@@ -5841,7 +5842,9 @@
     "checkinWithdrawn": "您的探望申请已撤回。",
     "menuClosedLink": "菜单已关闭，未作任何更改。回复 1 获取在线修改链接。",
     "editLink": "在此更改或删除您的 CVH 短信警报： {link} 此链接仅可使用一次，有效期 30 分钟。",
-    "editSaved": "您的 CVH 警报选择已在网页上更改。不是您本人？请致电 Hub：{hub}"
+    "editSaved": "您的 CVH 警报选择已在网页上更改。不是您本人？请致电 Hub：{hub}",
+    "checkinMoved": "您的楼层已更改，探望申请已撤回。回复 1 获取链接重新申请。",
+    "checkinUncoveredNow": "您的楼层目前没有楼层联络员。请致电 Hub：{hub}"
   },
   "smsKeywords": {
     "yes": "是, 是的, 好"
@@ -5875,8 +5878,28 @@
       "neighbourhood_missing": "请选择您的社区。",
       "place_unknown": "您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。",
       "edit_unavailable": "现在无法更改，请稍后再试。",
-      "network": "无法连接到 CVH。请检查网络连接后再试。"
+      "network": "无法连接到 CVH。请检查网络连接后再试。",
+      "checkin_consent_missing": "如需申请探望，请勾选同意框。"
     }
+  },
+  "checkin": {
+    "sees": "您所在楼层的联络员会看到您的电话号码和楼层，以便给您打电话或发短信。",
+    "isNot": "探望是一通电话或一条短信，问问您是否安好。它不是医疗护理，也不保证有人会立刻来。",
+    "howTitle": "如何申请",
+    "howNew": "您需要先订阅 CVH 短信提醒。订阅时在同一张表上申请探望。",
+    "howHelp": "在 CVH 活动或 Hub，工作人员或楼宇联络员可以帮您订阅。",
+    "howSubscribed": "已经收到 CVH 短信？请在更改选择的页面上申请探望。",
+    "noCoverage": "如果您的楼层还没有联络员，我们会立刻告诉您。您也可以致电 Hub：{hub}。",
+    "ask": "请我所在楼层的联络员来探望我",
+    "whereHint": "从上面的楼宇和楼层中选择您居住的地方。",
+    "agree": "我同意我所在楼层的联络员看到我的电话号码和楼层，并来探望我。",
+    "untilYes": "您回复我们的短信 YES 后，探望申请才开始。",
+    "uncovered": "您的楼层还没有联络员。请致电 Hub：{hub}。",
+    "withdraw": "撤回我的探望申请",
+    "withdrawNote": "保存后即撤回。您仍会收到提醒。",
+    "moved": "您的住处已更改，所以您的探望申请将被撤回。如要为新楼层重新申请，请选择该楼层并再次同意。",
+    "savedRequested": "您的探望申请已保存。",
+    "savedMethod": "探望方式已更改。"
   },
   "offline": {
     "title": "此页面未保存在您的手机上",

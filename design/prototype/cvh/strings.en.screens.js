@@ -2193,6 +2193,36 @@
       place_unknown: 'One of your buildings or floors is no longer on the list. Check your buildings and try again.',
       edit_unavailable: 'Changes cannot be made just now. Try again later.',
       network: 'We could not reach the CVH. Check your connection and try again.' } } });
+  /* S08.05: a check-in request (E08 "Check-in request", "Request during sign-up", "Changed location"; R-33 as built). The R-33 page explains
+     what a check-in is and is not with the prototype's own R33 strings (title, what, notEmergency, the 911 block) and these; the sign-up form,
+     the edit page and the staff screen ask for one with them (where I live is R34.whereLive, the methods R33.how, R33.call and R33.text). sees
+     and agree are the consent wording a request records (CHECKIN_CONSENT_VERSION in src/contracts/checkin.ts: change the version with them).
+     uncovered is the story's own wording. checkinMoved is menu 1's text when a move withdrew the request ("Reply 1" asks for the edit link)
+     and checkinUncoveredNow the text after the welcome when the floor of a request made at sign-up is no longer covered at YES ({hub}: the
+     Hub's number); both must fit one segment in every language (the menus' fixture checks them). */
+  m(en, { smsTexts: {
+    checkinMoved: 'Your check-in request was withdrawn because your floor changed. Reply 1 for a link to ask again.',
+    checkinUncoveredNow: 'No ambassador covers your floor now. Call the Hub at {hub}.' },
+  signup: { error: { checkin_consent_missing: 'To ask for a check-in, tick the box to agree.' } },
+  subscriptionEdit: { error: { checkin_consent_missing: 'To ask for a check-in, tick the box to agree.' } },
+  checkin: {
+    sees: 'An ambassador on your floor will see your phone number and your floor, so they can call or text you.',
+    isNot: 'A check-in is a call or a text to ask if you are all right. It is not medical care, and it is not a promise that someone will come at once.',
+    howTitle: 'How to ask',
+    howNew: 'You need CVH text alerts. Sign up for them and ask for a check-in on the same form.',
+    howHelp: 'At a CVH event or at the Hub, staff or a building ambassador can help you sign up.',
+    howSubscribed: 'Already get CVH texts? Ask for a check-in on the page where you change your choices.',
+    noCoverage: 'If no ambassador covers your floor yet, we tell you at once. You can call the Hub at {hub} instead.',
+    ask: 'Ask an ambassador on my floor to check on me',
+    whereHint: 'Choose the building and floor where you live, from the ones above.',
+    agree: 'I agree that an ambassador on my floor may see my phone number and floor, and check on me.',
+    untilYes: 'Your check-in request starts when you reply YES to our text.',
+    uncovered: 'No ambassador covers your floor yet. Call the Hub at {hub}.',
+    withdraw: 'Withdraw my check-in request',
+    withdrawNote: 'It is withdrawn when you save. You will still get alerts.',
+    moved: 'Where you live has changed, so your check-in request will be withdrawn. To ask again for your new floor, choose it and agree again.',
+    savedRequested: 'Your check-in request is saved.',
+    savedMethod: 'How you are checked on has changed.' } });
   /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
   m(en, {
     offline: {

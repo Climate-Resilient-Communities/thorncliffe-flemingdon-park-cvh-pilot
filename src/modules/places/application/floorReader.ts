@@ -73,6 +73,12 @@ export interface BuildingRecord {
   neighbourhoodId: string;
 }
 
+/** The round types (S08.05, `disruption_type.checkin`): the disruption types whose approved alerts start a check-in round (pilot: heat and power). */
+export async function roundTypes(executor: DbExecutor): Promise<string[]> {
+  const rows = await executor.select({ id: disruptionType.id }).from(disruptionType).where(eq(disruptionType.checkin, true)).orderBy(asc(disruptionType.id));
+  return rows.map((row) => row.id);
+}
+
 /**
  * Every pilot building, by address then rsn, read through the executor given: what the SMS building menu lists by street (S07.05).
  * subscriptions may not import the table, so it reads it here. A building flagged `not_in_register_since` is listed, as on R-35.

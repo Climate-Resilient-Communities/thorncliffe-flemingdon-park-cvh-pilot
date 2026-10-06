@@ -1,7 +1,7 @@
 // Composition root of the web sign-up (S07.02, AD-2): subscriptions' use case on the app's database, with places' readers of the
 // neighbourhoods and floors, messaging's outbox for the confirmation text, the terms version the page shows, the per-client limiter and the
 // price of a segment for the text's cost estimate. Server only. POST /api/signup is one caller; S07.03's staff screen (/staff/text-signup) is
-// the second, through `assist`, with the audit trail wired here.
+// the second, through `assist`, with the audit trail wired here. S08.05: identity's `coversFloor` for a check-in request's floor.
 //
 // After an accepted sign-up the dispatcher is started (`kickDispatcher`, after the response), so the confirmation goes out within seconds
 // rather than at pg_cron's next minute; it is started for every accepted answer, whatever the number, so nothing about the number shows.
@@ -13,6 +13,7 @@ import { createRateLimiter, createSignup, rateLimitKeyFromSecret, signupConsentV
 import { failClosedEnvironment, getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { kickDispatcher } from "./dispatch";
+import { assignments } from "./staff/assignments";
 
 let service: Signup | undefined;
 let limiter: RateLimiter | undefined;
@@ -46,6 +47,7 @@ export function signupService(): Signup {
     },
     // S07.04: the subscriber table's lookup (one select, whatever the answer, so the three cases still do the same work).
     subscribers: subscriberLookup(),
+    coversFloor: (rsn, floorId, executor) => assignments().coversFloor(rsn, floorId, executor),
     enqueue: (tx, input) => queue.enqueueTransactional(tx, input),
     consentVersion: currentSignupConsentVersion,
     limiter: signupRateLimiter,

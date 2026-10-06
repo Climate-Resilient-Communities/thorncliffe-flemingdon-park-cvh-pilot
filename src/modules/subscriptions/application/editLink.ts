@@ -17,6 +17,10 @@
 //    it), and the change written in the same transaction: language, neighbourhood, groups (the check-in group kept), places and muted
 //    topics. A confirmation (`smsTexts.editSaved`, in the new language) is queued, and the check-in request's withdrawal after it when
 //    checkins reports one.
+//  - S08.05, the check-in request: a change that sends one (or none) asks checkins' `changeRequest` instead of `locationChanging`, in the same
+//    place: kept, withdrawn, its method changed, or asked for at a place with the consent confirmed again (a refusal for want of that consent
+//    comes before the link is used); a covered floor saves it and joins the open rounds that match, an uncovered one saves nothing and the
+//    answer says so. The view shows the request.
 //  - `delete(token)`: the same lock, the link used, then E07's one deletion (`createNumberDeletion`, the one STOP runs) of everything held
 //    for the number in the same transaction; the link goes with the subscriber. Nothing is texted: the page alone confirms it.
 //
@@ -38,7 +42,8 @@ import { subscriberStore, type SubscriberStore } from "../adapters/subscriberSto
 import { EDIT_LINK_PURPOSE, editLinkUrl, groupsAfterChange, placeRows, placesOfRows, samePlaces } from "../domain/editLink";
 import { HUB_NUMBER } from "../domain/menus";
 import { createNumberDeletion } from "./deletion";
-import { noCheckinRequestsYet, noCheckinsYet, queueReply, type CheckinCleanup, type CheckinRequests } from "./inbound";
+import type { CheckinAnswer } from "../../../contracts/checkin";
+import { noCheckinRequestsYet, noCheckinsYet, queueReply, type CheckinCleanup, type CheckinRequestChanges, type CheckinRequests } from "./inbound";
 import type { EditLinkPort } from "./menus";
 
 /** Port: what a change reads of places: the neighbourhoods, and a building's floors (null: no such building), its row share-locked. */
@@ -54,8 +59,8 @@ export interface EditLinkDeps {
   /** messaging's `skipRecipientDeliveries`, for the deletion. */
   skipRecipientDeliveries: (tx: DbTransaction, recipient: { kind: RecipientKind; id: string }) => Promise<SkippedForRecipient>;
   places: EditPlaces;
-  /** checkins' ports (E08): the request's "Changed location" on a change of places, and the check-in rows at a deletion. */
-  checkins?: CheckinRequests & CheckinCleanup;
+  /** checkins' ports (E08): the request's "Changed location" on a change of places, the page's request (S08.05), and the check-in rows at a deletion. */
+  checkins?: CheckinRequests & CheckinRequestChanges & CheckinCleanup;
   /** PUBLIC_BASE_URL, for the link. */
   publicBaseUrl: () => string;
   pricePerSegmentCents: () => number;
@@ -65,7 +70,8 @@ export interface EditLinkDeps {
   newToken?: () => string;
 }
 
-export type EditChangeOutcome = { kind: "changed" } | { kind: "expired" } | { kind: "refused"; code: SubscriptionEditErrorCode };
+/** `checkin`: what became of the check-in request (S08.05), when the change touched one. */
+export type EditChangeOutcome = { kind: "changed"; checkin?: CheckinAnswer } | { kind: "expired" } | { kind: "refused"; code: SubscriptionEditErrorCode };
 export type EditDeleteOutcome = { kind: "deleted" } | { kind: "expired" };
 
 export interface EditLink {
@@ -151,6 +157,7 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
             groups: SIGNUP_GROUPS.filter((group) => row.groups.includes(group)),
             muted_topics: row.mutedTopics.filter(isMutableTopic),
             phone_last2: row.phoneLast2,
+            checkin: row.checkin === null ? null : { rsn: row.checkin.rsn, floor: row.checkin.floorId, method: row.checkin.method },
           },
         };
       });
@@ -164,14 +171,25 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
           // A refusal comes before anything is written or used: the link still works for the corrected change.
           const refusal = await checkPlaces(tx, change);
           if (refusal !== null) return { kind: "refused", code: refusal };
+          // S08.05: a request asked at a new place needs the consent again; refused before the link is used.
+          const edit = { places: placeRows(change.places), request: change.checkin };
+          if (change.checkin !== undefined && (await checkins.checkRequestChange(link.subscriberId, edit, tx)) === "consent_missing") return { kind: "refused", code: "checkin_consent_missing" };
           // Used first: a second submission, lined up behind this one by the number's lock, finds it used and asks or writes nothing.
           if (!(await tokens.consume(tx, link.id))) return { kind: "expired" };
           const id = link.subscriberId;
           // Read under the number's lock, with the link used: the subscriber is there (a deletion waits for that lock, and takes the link).
           const before = (await subscribers.editView(tx, id))!;
           const rows = placeRows(change.places);
-          // E08 first, before the subscriber's row is locked here (as menu 1): it locks the round threads' `alert` rows before that row.
-          const withdrawal = samePlaces(before.places, rows) ? "none" : await checkins.locationChanging(id, rows, tx);
+          // E08 first, before the subscriber's row is locked here (as menu 1): it locks the round threads' `alert` rows before that row. With a
+          // request sent (S08.05) checkins' `changeRequest` decides it all, the places' "Changed location" included.
+          let withdrawal: "withdrawn" | "none" = "none";
+          let answer: CheckinAnswer | null = null;
+          if (change.checkin === undefined) withdrawal = samePlaces(before.places, rows) ? "none" : await checkins.locationChanging(id, rows, tx);
+          else {
+            const done = await checkins.changeRequest(id, edit, tx);
+            withdrawal = done.withdrawn || done.answer === "withdrawn" ? "withdrawn" : "none";
+            answer = done.answer;
+          }
           if (!(await subscribers.lockForEdit(tx, id)) || !(await subscribers.receivesShared(tx, id))) throw new NoLongerReceiving();
           await subscribers.replacePlaces(tx, id, rows.map((row) => ({ id: newId(), ...row })));
           await subscribers.setNeighbourhood(tx, id, change.neighbourhood);
@@ -181,7 +199,7 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
           // The confirmation in the language the texts now come in (as menu 2's), then the request's withdrawal (as menu 1's).
           await text(tx, id, change.lang, `${link.id}.saved`, "editSaved", { hub: HUB_NUMBER });
           if (withdrawal === "withdrawn") await text(tx, id, change.lang, `${link.id}.checkin`, "checkinWithdrawn");
-          return { kind: "changed" };
+          return answer === null ? { kind: "changed" } : { kind: "changed", checkin: answer };
         });
       } catch (error) {
         if (error instanceof NoLongerReceiving) return { kind: "expired" };

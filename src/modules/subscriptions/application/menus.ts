@@ -14,7 +14,8 @@
 //    recipients, as S07.07 asks of every edit of a subscriber, while a resend still reads the resident as receiving). Menu 1 first asks
 //    checkins (`locationChanging`, E08's "Changed location", a no-op until S08.05) before it takes that lock, so that E08 can lock in its
 //    own order, then replaces every saved place with the building and floor chosen (no floor: the whole building), sets the neighbourhood
-//    to the building's, and confirms (adding the check-in request's withdrawal when there was one). Menu 2 sets the language and confirms
+//    to the building's, and confirms. When checkins withdrew the request (S08.05), a second text says so and offers the edit link to ask
+//    again for the new floor ("Reply 1", the link's offer prompt; with no link, the plain withdrawal). Menu 2 sets the language and confirms
 //    in the new language.
 //  - Reply 3 asks checkins to withdraw the request (`withdrawRequest`, E08) and says what happened: "You have no check-in request" until E08.
 //
@@ -130,7 +131,13 @@ export function createMenus(deps: MenuDeps): MenuPort {
     await subscribers.clearPrompt(tx, subscriber.id);
     if (floor) await sayText(tx, subscriber, "buildingSaved", { building: building.address, floor: floor.label });
     else await sayText(tx, subscriber, "buildingSavedWhole", { building: building.address });
-    if (withdrawal === "withdrawn") await sayText(tx, subscriber, "checkinWithdrawn");
+    if (withdrawal === "withdrawn") {
+      // S08.05 (E08 "Changed location"): the request was withdrawn because where the resident lives changed; asking again for the new floor
+      // needs the consent again, which only the edit page shows: the text offers its link ("Reply 1"), with the link's offer prompt.
+      if (!editLink.available) return sayText(tx, subscriber, "checkinWithdrawn");
+      await subscribers.openNewPrompt(tx, subscriber.id, EDIT_LINK_OFFER_KIND, EDIT_LINK_OFFER_MS);
+      return sayText(tx, subscriber, "checkinMoved");
+    }
     return true;
   }
 

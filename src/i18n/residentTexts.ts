@@ -66,6 +66,10 @@ export const RESIDENT_TEXT_KEYS = {
   /** Reply 3: no check-in request to withdraw (checkins' port says none: always, until E08), or the request withdrawn (S08.05). */
   noCheckinRequest: "smsTexts.noCheckinRequest",
   checkinWithdrawn: "smsTexts.checkinWithdrawn",
+  /** S08.05: menu 1 moved the resident, so the request was withdrawn; "Reply 1" for the edit link to ask again for the new floor. */
+  checkinMoved: "smsTexts.checkinMoved",
+  /** S08.05: at YES, the floor of a request made during sign-up is no longer covered ({hub}: the Hub's number); it follows the welcome. */
+  checkinUncoveredNow: "smsTexts.checkinUncoveredNow",
   // S07.06: the one-time web link. A menu closed with nothing changed offers it (one segment, as every menu text); the link's text
   // ({link} is `/{lang}/subscription/{token}` on the public origin) and the confirmation of a change made with it ({hub}, the Hub's number).
   menuClosedLink: "smsTexts.menuClosedLink",

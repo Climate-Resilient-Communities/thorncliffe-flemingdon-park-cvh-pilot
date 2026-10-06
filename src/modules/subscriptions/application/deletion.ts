@@ -2,8 +2,9 @@
 // on a resident's behalf after verified control (S09.03, `accessRequest.ts`) runs the very same steps. In the caller's transaction, with nothing kept:
 // the subscriber (its places, muted topics and prompt go with it, ON DELETE CASCADE), any pending sign-up and any `inbound_reply` rows of the number. Each
 // recipient's `queued` and claimed-but-not-handed-off texts are set `skipped` first (`skipRecipientDeliveries`), and the delete's trigger makes the texts
-// already handed off forget the recipient (AD-8). Lock order (E07): delivery rows, then the subscriber row, then check-ins (`checkins.deleteForSubscriber`,
-// E08's port; a no-op until then). Nothing is sent afterwards: no record could resolve the number. The number is never logged, audited or returned.
+// already handed off forget the recipient (AD-8). Lock order (E07, E08 "Request lock order"): the subscriber's round threads (`checkins.lockRounds`,
+// S08.05), delivery rows, then the subscriber row, then its check-in rows (`checkins.deleteForSubscriber`: tallied and closed into stubs). Nothing is
+// sent afterwards: no record could resolve the number. The number is never logged, audited or returned.
 import type { DbTransaction } from "../../../platform/db";
 import type { RecipientKind, SkippedForRecipient } from "../../messaging";
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
@@ -21,8 +22,8 @@ export interface Deleted {
 export interface NumberDeletionDeps {
   /** messaging's `skipRecipientDeliveries`. */
   skipRecipientDeliveries: (tx: DbTransaction, recipient: { kind: RecipientKind; id: string }) => Promise<SkippedForRecipient>;
-  /** `checkins`' port (E07 handoffs): called after the subscriber's row is locked and before it is deleted. */
-  checkins: { deleteForSubscriber(subscriberId: string, tx: DbTransaction): Promise<void> };
+  /** `checkins`' port (E07 handoffs, S08.05): `lockRounds` first, `deleteForSubscriber` after the subscriber's row is locked and before it is deleted. */
+  checkins: { lockRounds?(subscriberId: string, tx: DbTransaction): Promise<void>; deleteForSubscriber(subscriberId: string, tx: DbTransaction): Promise<void> };
   stores?: { pending?: PendingSignupStore; subscribers?: SubscriberStore; inbound?: InboundStore };
 }
 
@@ -44,6 +45,7 @@ export function createNumberDeletion(deps: NumberDeletionDeps): NumberDeletion {
     let deletedSubscriber = false;
     if (found.subscriber) {
       const id = found.subscriber.id;
+      await deps.checkins.lockRounds?.(id, tx);
       skippedTexts += await skip(tx, "subscriber", id);
       if (await subscribers.lock(tx, id)) {
         // Again under the row's lock: a text an approval committed while this waited for the lock is stopped too.

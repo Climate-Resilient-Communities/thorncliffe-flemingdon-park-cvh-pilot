@@ -5812,7 +5812,8 @@
       "place_unknown": "Un de vos immeubles ou étages n'est plus dans la liste. Vérifiez vos immeubles et réessayez.",
       "rate_limited": "Trop d'inscriptions sont venues de cette connexion. Réessayez dans une heure.",
       "signup_unavailable": "L'inscription par texto n'est pas disponible pour le moment. Réessayez plus tard.",
-      "network": "Nous n'avons pas pu joindre le CVH. Vérifiez votre connexion et réessayez."
+      "network": "Nous n'avons pas pu joindre le CVH. Vérifiez votre connexion et réessayez.",
+      "checkin_consent_missing": "Pour demander une prise de nouvelles, cochez la case pour accepter."
     }
   },
   "smsTexts": {
@@ -5841,7 +5842,9 @@
     "checkinWithdrawn": "Votre demande de prise de nouvelles est retirée.",
     "menuClosedLink": "Menu fermé. Rien n'a été changé. Répondez 1 pour un lien de modification en ligne.",
     "editLink": "Modifiez ou supprimez vos alertes du CVH ici : {link} Le lien fonctionne une fois, pendant 30 minutes.",
-    "editSaved": "Vos choix d'alertes du CVH ont été modifiés sur la page web. Ce n'était pas vous ? Appelez le Hub au {hub}."
+    "editSaved": "Vos choix d'alertes du CVH ont été modifiés sur la page web. Ce n'était pas vous ? Appelez le Hub au {hub}.",
+    "checkinMoved": "Votre étage a changé : votre demande de prise de nouvelles est retirée. Répondez 1 pour un lien.",
+    "checkinUncoveredNow": "Aucun ambassadeur ne couvre votre étage pour l'instant. Appelez le Hub au {hub}."
   },
   "smsKeywords": {
     "yes": "oui"
@@ -5875,8 +5878,28 @@
       "neighbourhood_missing": "Choisissez votre quartier.",
       "place_unknown": "Un de vos immeubles ou étages n'est plus dans la liste. Vérifiez vos immeubles et réessayez.",
       "edit_unavailable": "Les modifications ne sont pas possibles pour le moment. Réessayez plus tard.",
-      "network": "Nous n'avons pas pu joindre le CVH. Vérifiez votre connexion et réessayez."
+      "network": "Nous n'avons pas pu joindre le CVH. Vérifiez votre connexion et réessayez.",
+      "checkin_consent_missing": "Pour demander une prise de nouvelles, cochez la case pour accepter."
     }
+  },
+  "checkin": {
+    "sees": "Un ambassadeur de votre étage verra votre numéro de téléphone et votre étage, pour pouvoir vous appeler ou vous écrire.",
+    "isNot": "Une prise de nouvelles est un appel ou un message pour demander si vous allez bien. Ce ne sont pas des soins médicaux, ni la promesse que quelqu'un viendra tout de suite.",
+    "howTitle": "Comment la demander",
+    "howNew": "Il vous faut les alertes par texto du CVH. Inscrivez-vous et demandez la prise de nouvelles dans le même formulaire.",
+    "howHelp": "Lors d'un événement du CVH ou au Hub, le personnel ou un ambassadeur d'immeuble peut vous aider à vous inscrire.",
+    "howSubscribed": "Vous recevez déjà les textos du CVH ? Demandez-la sur la page où vous modifiez vos choix.",
+    "noCoverage": "Si aucun ambassadeur ne couvre encore votre étage, nous vous le disons tout de suite. Vous pouvez plutôt appeler le Hub au {hub}.",
+    "ask": "Qu'un ambassadeur de mon étage prenne de mes nouvelles",
+    "whereHint": "Choisissez l'immeuble et l'étage où vous habitez, parmi ceux du haut.",
+    "agree": "J'accepte qu'un ambassadeur de mon étage voie mon numéro de téléphone et mon étage, et prenne de mes nouvelles.",
+    "untilYes": "Votre demande de prise de nouvelles commence quand vous répondez YES à notre texto.",
+    "uncovered": "Aucun ambassadeur ne couvre encore votre étage. Appelez le Hub au {hub}.",
+    "withdraw": "Retirer ma demande de prise de nouvelles",
+    "withdrawNote": "Elle est retirée quand vous enregistrez. Vous recevrez toujours les alertes.",
+    "moved": "Votre lieu de résidence a changé, donc votre demande de prise de nouvelles sera retirée. Pour la redemander pour votre nouvel étage, choisissez-le et acceptez de nouveau.",
+    "savedRequested": "Votre demande de prise de nouvelles est enregistrée.",
+    "savedMethod": "La façon de prendre de vos nouvelles a changé."
   },
   "offline": {
     "title": "Cette page n'est pas enregistrée sur votre téléphone",

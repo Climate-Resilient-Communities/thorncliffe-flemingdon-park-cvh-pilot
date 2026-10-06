@@ -69,6 +69,11 @@ export const pendingSignup = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true })
       .notNull()
       .default(sql`now() + interval '48 hours'`),
+    // S08.05: a check-in request made during sign-up (20261006170000_checkin_request.sql), activated at YES if the floor is still covered.
+    checkinMethod: text("checkin_method"),
+    checkinConsentVersion: text("checkin_consent_version"),
+    whereILiveRsn: text("where_i_live_rsn"),
+    whereILiveFloorId: uuid("where_i_live_floor_id"),
   },
   (t) => [
     uniqueIndex("pending_signup_phone_idx").on(t.phone),
@@ -82,6 +87,19 @@ export const pendingSignup = pgTable(
     check("pending_signup_consent_version_format", sql`${t.consentVersion} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}\\.[1-9][0-9]*$'`),
     check("pending_signup_started_by_known", sql`${t.startedBy} in ('web', 'staff')`),
     check("pending_signup_expires_after_48_hours", sql`${t.expiresAt} = ${t.createdAt} + interval '48 hours'`),
+    check("pending_signup_checkin_method_known", sql`${t.checkinMethod} is null or ${t.checkinMethod} in ('call', 'text')`),
+    check(
+      "pending_signup_checkin_consent_version_format",
+      sql`${t.checkinConsentVersion} is null or ${t.checkinConsentVersion} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}\\.[1-9][0-9]*$'`,
+    ),
+    check(
+      "pending_signup_checkin_request_whole",
+      sql`(${t.checkinMethod} is null and ${t.checkinConsentVersion} is null and ${t.whereILiveRsn} is null and ${t.whereILiveFloorId} is null) or (${t.checkinMethod} is not null and ${t.checkinConsentVersion} is not null and ${t.whereILiveRsn} is not null and ${t.whereILiveFloorId} is not null)`,
+    ),
+    check(
+      "pending_signup_where_i_live_saved",
+      sql`${t.whereILiveRsn} is null or ${t.places} @> jsonb_build_array(jsonb_build_object('rsn', ${t.whereILiveRsn}, 'floors', jsonb_build_array(${t.whereILiveFloorId}::text)))`,
+    ),
     pgPolicy("pending_signup_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("pending_signup_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("pending_signup_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
@@ -148,6 +166,12 @@ export const subscriber = pgTable(
     startedBy: text("started_by").notNull(),
     retentionState: text("retention_state").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // S08.05: the check-in request (20261006170000_checkin_request.sql): the method, the "where I live" place it is on (one of the saved
+    // places, with a floor) and the version of the consent wording confirmed; all four set together or all null.
+    checkinMethod: text("checkin_method"),
+    checkinConsentVersion: text("checkin_consent_version"),
+    whereILiveRsn: text("where_i_live_rsn").references(() => buildingKey.rsn),
+    whereILiveFloorId: uuid("where_i_live_floor_id"),
   },
   (t) => [
     uniqueIndex("subscriber_phone_idx").on(t.phone),
@@ -158,6 +182,16 @@ export const subscriber = pgTable(
     check("subscriber_consent_version_format", sql`${t.consentVersion} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}\\.[1-9][0-9]*$'`),
     check("subscriber_started_by_known", sql`${t.startedBy} in ('web', 'staff')`),
     check("subscriber_retention_state_known", sql`${t.retentionState} in ('active', 'reconsent_pending', 'retained')`),
+    check("subscriber_checkin_method_known", sql`${t.checkinMethod} is null or ${t.checkinMethod} in ('call', 'text')`),
+    check(
+      "subscriber_checkin_consent_version_format",
+      sql`${t.checkinConsentVersion} is null or ${t.checkinConsentVersion} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}\\.[1-9][0-9]*$'`,
+    ),
+    check(
+      "subscriber_checkin_request_whole",
+      sql`(${t.checkinMethod} is null and ${t.checkinConsentVersion} is null and ${t.whereILiveRsn} is null and ${t.whereILiveFloorId} is null) or (${t.checkinMethod} is not null and ${t.checkinConsentVersion} is not null and ${t.whereILiveRsn} is not null and ${t.whereILiveFloorId} is not null)`,
+    ),
+    index("subscriber_where_i_live_idx").on(t.whereILiveRsn, t.whereILiveFloorId).where(sql`${t.checkinMethod} is not null`),
     pgPolicy("subscriber_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("subscriber_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("subscriber_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),

@@ -52,6 +52,16 @@ describe("POST /api/signup", () => {
     expect(fake.afterAccepted).toHaveBeenCalledTimes(1);
   });
 
+  it("S08.05: says whether a check-in request's floor is covered in the same no-store answer (the personalised check-in response rule)", async () => {
+    for (const checkin of ["requested", "uncovered"] as const) {
+      const fake = deps({ kind: "accepted", checkin });
+      const response = await signupResponse(fake.deps, post(BODY));
+      expect(response.status).toBe(202);
+      expect(await response.json()).toEqual({ v: 1, status: "accepted", checkin });
+      expect(headersOf(response)).toEqual({ "cache-control": "no-store", "content-type": "application/json" });
+    }
+  });
+
   it("reads a number typed in Urdu or full-width digits as the same E.164 number", async () => {
     for (const phone of ["۴۱۶ ۵۵۵ ۰۱۲۳", "４１６ ５５５ ０１２３"]) {
       const fake = deps({ kind: "accepted" });
