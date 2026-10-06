@@ -136,7 +136,7 @@ async function clear() {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
-    await tx.unsafe("truncate approval_probe, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate approval_probe, checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
     // The on-call roster and the drill roster name the Admin who added a number (S06.07, S06.05), whom afterAll deletes.
     await tx`delete from oncall_roster`;
     await tx`delete from drill_roster`;

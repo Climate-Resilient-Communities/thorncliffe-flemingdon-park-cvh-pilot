@@ -18,7 +18,8 @@
     color: var(--ink);
   }
 
-  /* The Hub's number in a sentence: a `tel:` link, underlined so it never reads as plain text. */
+  /* The Hub's number in a sentence: a `tel:` link, underlined so it never reads as plain text. It is a link in running text (its paragraph is
+     marked data-tap-exempt="inline-text", touch-target.md); the number is also a full-size control on "Numbers I might need". */
   .checkin-link {
     color: var(--accent-text);
     font-weight: 700;

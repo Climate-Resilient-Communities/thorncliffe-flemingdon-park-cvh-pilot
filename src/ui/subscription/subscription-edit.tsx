@@ -264,6 +264,7 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
       requestAnimationFrame(() => checkinRef.current?.querySelector<HTMLElement>("input")?.focus());
       return;
     }
+    const checkinBody = list ? requestBody(checkin, held, options, "edit") : undefined;
     const request: EditChangeRequestBody = {
       v: SUBSCRIPTION_EDIT_CONTRACT_VERSION,
       token,
@@ -272,8 +273,9 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
       places: form.places,
       groups: SIGNUP_GROUPS.filter((g) => form.groups.includes(g)),
       muted_topics: MUTABLE_TOPICS.filter((topic) => form.muted.includes(topic)),
-      // S08.05: the request as the page leaves it. With the building list unread there are no choices, so none is sent (kept as it is).
-      ...(list ? { checkin: requestBody(checkin, held, options, "edit") ?? null } : {}),
+      // S08.05: the request as the page leaves it, or null to withdraw the one held. With the building list unread there are no choices, and
+      // with none held and none asked there is nothing to say, so the field is left out (the request, if any, is kept as it is).
+      ...(checkinBody !== undefined ? { checkin: checkinBody } : {}),
     };
     setBusy("save");
     try {

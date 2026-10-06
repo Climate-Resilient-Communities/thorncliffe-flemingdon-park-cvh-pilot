@@ -16,7 +16,7 @@ export function CheckinAnswerNote({ answer, page, hub, testId }: { answer: Check
   const r33 = useTranslations("R33");
   if (answer === "uncovered") {
     return (
-      <p className="checkin-answer" role="status" data-testid={testId} data-answer={answer}>
+      <p className="checkin-answer" role="status" data-testid={testId} data-answer={answer} data-tap-exempt="inline-text">
         {withIsolated((number) => t("uncovered", { hub: number }), <a className="checkin-link" href={`tel:${hub.replace(/[^0-9+]/g, "")}`}>{hub}</a>)}
       </p>
     );

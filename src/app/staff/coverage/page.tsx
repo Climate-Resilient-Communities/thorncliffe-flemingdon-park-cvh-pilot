@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
-import { checkinRequestCounts } from "@/modules/subscriptions";
-import { getDb } from "@/platform/db";
 import { Screen } from "@/ui";
 import { assignments } from "../assignments";
+import { checkinRequestsByFloor } from "../checkinRequests";
 import { staffPage } from "../guard";
 import { buildings } from "../places";
 import { assignAmbassadorAction, removeAssignmentAction } from "./actions";
@@ -42,7 +41,7 @@ export default staffPage(
     const rsn = Array.isArray(query.building) ? query.building[0] : query.building;
     const notice = savedNotice(query);
     // S08.05: the check-in requests per building and floor (counts only), for the count of those on floors nobody covers.
-    const [plans, all, requests] = await Promise.all([buildings().listFloorPlans(), assignments().allAssignments(), checkinRequestCounts(getDb())]);
+    const [plans, all, requests] = await Promise.all([buildings().listFloorPlans(), assignments().allAssignments(), checkinRequestsByFloor()]);
     let screen;
     if (rsn === undefined) {
       screen = coverageListView(plans, all, notice, requests);

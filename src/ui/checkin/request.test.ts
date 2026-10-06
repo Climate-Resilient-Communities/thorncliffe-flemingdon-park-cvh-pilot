@@ -40,6 +40,7 @@ describe("the check-in section's rules (S08.05)", () => {
     expect(problemOf(elsewhere, HELD, OPTIONS)).toBe("consent");
     expect(requestBody({ ...elsewhere, agreed: true }, HELD, OPTIONS, "edit")).toMatchObject({ floor: F2, consent_version: CHECKIN_CONSENT_VERSION });
     expect(requestBody({ ...kept, on: false }, HELD, OPTIONS, "edit")).toBeNull();
+    expect(requestBody(NO_REQUEST, null, OPTIONS, "edit")).toBeUndefined();
   });
 
   it("on the edit page: a request whose place is no longer saved is withdrawn, not a problem, unless a new place is asked for", () => {

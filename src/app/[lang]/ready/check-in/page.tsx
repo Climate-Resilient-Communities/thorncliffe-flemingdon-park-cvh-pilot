@@ -74,7 +74,7 @@ export default async function CheckinPage({ params }: PageProps<"/[lang]/ready/c
           <ResidentText as="p" className="checkin-consent__sees" testId="checkin-page-sees">
             {t("checkin.sees")}
           </ResidentText>
-          <p data-testid="checkin-page-coverage">{withIsolated((number) => t("checkin.noCoverage", { hub: number }), hubLink)}</p>
+          <p data-testid="checkin-page-coverage" data-tap-exempt="inline-text">{withIsolated((number) => t("checkin.noCoverage", { hub: number }), hubLink)}</p>
         </Stack>
 
         <section className="ready-section" aria-labelledby="checkin-page-how" data-testid="checkin-page-how">

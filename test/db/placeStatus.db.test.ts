@@ -70,7 +70,7 @@ async function seedThread(opts: { drill?: boolean; closed?: { reason: string; at
 
 async function clear() {
   await owner.begin(async (tx) => {
-    await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   });
 }
 

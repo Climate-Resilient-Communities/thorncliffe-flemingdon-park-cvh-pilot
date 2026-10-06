@@ -63,10 +63,11 @@ export function problemOf(draft: CheckinDraft, held: HeldRequest | null, options
 }
 
 /**
- * The request the form sends: one on a chosen place (with the consent version when it was asked), null to have none (withdraw the one held,
- * or the edit page with none), or undefined (the sign-up without one: the field is left out). Call it only when `problemOf` is null.
+ * The request the form sends: one on a chosen place (with the consent version when it was asked), null to withdraw the one held, or undefined
+ * when there is none to send (the sign-up without one, or the edit page with none held and none asked: the field is left out, as before
+ * S08.05). Call it only when `problemOf` is null.
  */
 export function requestBody(draft: CheckinDraft, held: HeldRequest | null, options: readonly WhereOption[], page: "signup" | "edit"): CheckinRequestBody | null | undefined {
-  if (!draft.on || draft.rsn === null || draft.floorId === null || draft.method === null || !chosenAmong(draft, options)) return page === "signup" ? undefined : null;
+  if (!draft.on || draft.rsn === null || draft.floorId === null || draft.method === null || !chosenAmong(draft, options)) return page === "edit" && held !== null ? null : undefined;
   return { rsn: draft.rsn, floor: draft.floorId, method: draft.method, consent_version: needsConsent(draft, held) ? CHECKIN_CONSENT_VERSION : null };
 }

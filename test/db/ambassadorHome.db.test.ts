@@ -113,7 +113,7 @@ async function clear() {
   await owner`delete from ambassador_assignment`;
   // The alert tables, with delivery (E06's foreign key to the entries).
   await owner.begin(async (tx) => {
-    await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   });
 }
 
