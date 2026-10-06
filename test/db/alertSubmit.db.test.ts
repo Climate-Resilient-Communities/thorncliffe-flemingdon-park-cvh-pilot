@@ -261,7 +261,7 @@ async function clear() {
       "alter table audit_event enable trigger audit_event_no_update_or_delete",
     );
     await tx.unsafe(
-      "truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert",
+      "truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert",
     );
     await tx`delete from ops_event where kind like 'alert.%'`;
     await tx`delete from translation_cache`;

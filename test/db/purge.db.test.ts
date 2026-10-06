@@ -15,8 +15,12 @@ import { migrate } from "../../scripts/db/migrate.mjs";
 import { record, recordRefusal } from "../../src/modules/audit";
 import { createDeliveryQueue, readCorrectionReach } from "../../src/modules/messaging";
 import { readWeeklyReview, recordOpsEvent } from "../../src/modules/ops";
+import { CHECKIN_CONSENT_VERSION } from "../../src/contracts/checkin";
+import { roundThreads } from "../../src/modules/alerting";
+import { createCheckinRequests } from "../../src/modules/checkins";
 import { floorsOfBuilding } from "../../src/modules/places";
 import {
+  checkinRequestStore,
   createCampaigns,
   createEndOfPilotPurge,
   createInboundRouter,
@@ -47,6 +51,9 @@ let sid = 0;
 let moved: string[] = [];
 
 const SIGNED_UP = "2026-10-01.1";
+// S08.05: a building of Thorncliffe Park (the fixtures' threads are for the whole neighbourhood) with one floor, for a check-in request and its round row.
+const RSN_HOME = "9109101";
+const FLOOR_HOME = "0190f000-0000-7000-8000-000000910101";
 const TERMS = "2026-11-02.2";
 const KEY = "a-test-key-for-the-reply-limit";
 
@@ -126,6 +133,8 @@ beforeAll(async () => {
 });
 
 async function resetAll() {
+  await owner`delete from checkin`;
+  await owner`delete from checkin_tally`;
   await owner`delete from correction_reach_kept`;
   await owner`delete from delivery`;
   if (moved.length > 0) {
@@ -159,6 +168,8 @@ async function resetAll() {
 
 afterAll(async () => {
   await resetAll();
+  await owner`delete from building_floor where rsn = ${RSN_HOME}`;
+  await owner`delete from building where rsn = ${RSN_HOME}`;
   await app.$client.end({ timeout: 5 });
   await appSql.end({ timeout: 5 });
   await owner.unsafe("alter role cvh_app_login password null");
@@ -348,6 +359,48 @@ describe("the purge job", () => {
     // Again: nothing more, no second event.
     expect(await purge().run()).toEqual({ due: true, deleted: 0, skipped: 0, failed: 0, more: false, completed: true, completedNow: false });
     expect(await purgeEvents()).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
+});
+
+// --- check-ins (S08.05) ---------------------------------------------------------------------------------------------------------------------------------
+
+describe("a deleted subscriber's check-in rows (S08.05)", () => {
+  it("are closed into stubs by checkins' real port, tallied once, the subscriber's round threads locked first: before their texts and their row", async () => {
+    await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at) values (${RSN_HOME}, 'TP', '1 Purge Place', 43.7, -79.34, now()) on conflict do nothing`;
+    await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOOR_HOME}, ${RSN_HOME}, '1', 1, true) on conflict do nothing`;
+    const asked = await subscriber("en");
+    await owner`update subscriber set checkin_method = 'call', checkin_consent_version = ${CHECKIN_CONSENT_VERSION}, where_i_live_rsn = ${RSN_HOME}, where_i_live_floor_id = ${FLOOR_HOME}
+                where id = ${asked.id}`;
+    const campaignId = await started();
+    // An open heat round for the whole neighbourhood with the subscriber's row in it (as S08.06's approval makes it).
+    const round = (await world.fx.entry("approved", { types: ["heat"], kind: "update" })).alertId;
+    await owner`insert into checkin (id, alert_id, subscriber_id, rsn, floor_id, method) values (${randomUUID()}, ${round}, ${asked.id}, ${RSN_HOME}, ${FLOOR_HOME}, 'call')`;
+    await ended(campaignId);
+
+    // The real port, as src/app/checkins.ts composes it, recording the order of the steps the purge's transaction takes.
+    const checkins = createCheckinRequests({ requests: checkinRequestStore(), threads: roundThreads, coversFloor: async () => true });
+    const steps: string[] = [];
+    const queue = createDeliveryQueue();
+    const report = await purge({
+      deletion: router(undefined, {
+        lockRounds: async (id, tx) => (steps.push("deletion.lockRounds"), checkins.lockRounds(id, tx)),
+        deleteForSubscriber: async (id, tx) => (steps.push("deleteForSubscriber"), checkins.deleteForSubscriber(id, tx)),
+      }),
+      checkins: { lockRounds: async (id, tx) => (steps.push("lockRounds"), checkins.lockRounds(id, tx)) },
+      skipRecipientDeliveries: async (tx, recipient) => (steps.push("skip"), queue.skipRecipientDeliveries(tx, recipient)),
+    }).run();
+    expect(report).toMatchObject({ due: true, deleted: 1, failed: 0, completed: true });
+    // The threads first, then the texts, then (under the row lock) the rows; the deletion does not lock the threads again after the row.
+    expect(steps).toEqual(["lockRounds", "skip", "deleteForSubscriber"]);
+    expect(await owner`select subscriber_id, method, outcome, tallied_at is not null as tallied, closed_at is not null as closed from checkin where alert_id = ${round}`).toEqual([
+      { subscriber_id: null, method: null, outcome: "withdrawn", tallied: true, closed: true },
+    ]);
+    expect(await owner`select status, n from checkin_tally where alert_id = ${round} order by status`).toEqual([
+      { status: "requested", n: 1 },
+      { status: "withdrawn", n: 1 },
+    ]);
+    expect(await owner`select count(*)::int as n from subscriber where id = ${asked.id}`).toEqual([{ n: 0 }]);
     expect(errors).toEqual([]);
   });
 });
@@ -680,11 +733,12 @@ describe("the end of the pilot", () => {
     expect(await owner`select entry_id from correction_reach_kept`).toEqual([{ entry_id: correction.entry.entryId }]);
 
     // Postgres refuses `truncate alert_entry` while any table holds a foreign key to it and is not truncated with it, empty or not; the database tests'
-    // resets truncate the alert tables without naming this one. Rolled back: only that the truncate is not refused is checked.
+    // resets truncate the alert tables without naming this one (S08.05's check-in tables, which do reference alert, are named). Rolled back: only that the
+    // truncate is not refused is checked.
     expect(await owner`select conname from pg_constraint where conrelid = 'correction_reach_kept'::regclass and contype = 'f'`).toEqual([]);
     const reset = () =>
       owner.begin(async (tx) => {
-        await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+        await tx.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
         throw new Error("rolled back");
       });
     expect(await refusal(reset)).toBe("rolled back");

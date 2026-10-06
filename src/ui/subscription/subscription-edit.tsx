@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { CheckinAnswer } from "@/contracts/checkin";
 import { SIGNUP_GROUPS } from "@/contracts/signup";
 import {
   EDIT_TOKEN,
@@ -21,6 +22,7 @@ import {
   type SubscriptionView,
 } from "@/contracts/subscriptionEdit";
 import type { LaunchCode } from "@/i18n/languages";
+import { CheckinAnswerNote, CheckinFields, NO_REQUEST, draftOf, problemOf, requestBody, whereOptions, type CheckinDraft, type HeldRequest } from "../checkin";
 import { sortBuildings } from "../choices/building-list";
 import { ChoiceButton, ChoiceOption } from "../choices/parts";
 import type { StepLanguage } from "../choices/language-step";
@@ -63,7 +65,7 @@ type Phase =
   | { kind: "expired" }
   | { kind: "unreachable" }
   | { kind: "form"; view: SubscriptionView }
-  | { kind: "saved" }
+  | { kind: "saved"; checkin: CheckinAnswer | null }
   | { kind: "deleted" };
 
 type Problem = SubscriptionEditErrorCode | "network";
@@ -104,6 +106,11 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
   const [askDelete, setAskDelete] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [attempt, setAttempt] = useState(0);
+  // S08.05: the check-in request as the page found it, and as the resident leaves it (held in the page's memory only).
+  const [held, setHeld] = useState<HeldRequest | null>(null);
+  const [checkin, setCheckin] = useState<CheckinDraft>(NO_REQUEST);
+  const [sent, setSent] = useState(false);
+  const checkinRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const { state, retry } = useBuildingList(phase.kind === "form");
@@ -121,6 +128,9 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
         if (view.success) {
           const shown = view.data.subscription;
           setDraft({ lang: shown.lang, nbhd: shown.neighbourhood, places: shown.places.map((p) => ({ rsn: p.rsn, floors: [...p.floors] })), groups: [...shown.groups], muted: [...shown.muted_topics] });
+          const found = shown.checkin === null ? null : { rsn: shown.checkin.rsn, floorId: shown.checkin.floor, method: shown.checkin.method };
+          setHeld(found);
+          setCheckin(draftOf(found));
           setPhase({ kind: "form", view: shown });
         } else setPhase(EditExpiredBodySchema.safeParse(body).success ? { kind: "expired" } : { kind: "unreachable" });
       } catch {
@@ -184,6 +194,7 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
                   {line}
                 </ResidentText>
               ))}
+              {phase.kind === "saved" && phase.checkin !== null && <CheckinAnswerNote answer={phase.checkin} page="edit" hub={hub} testId="subscription-checkin-answer" />}
               {phase.kind === "expired" && (
                 <p data-testid="subscription-call-hub">
                   {withIsolated((number) => t("callHub", { hub: number }), <a href={`tel:${hub.replace(/[^0-9+]/g, "")}`}>{hub}</a>)}
@@ -225,12 +236,15 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
     setQuery("");
   };
   const toggleFloor = (rsn: string, id: string) => update({ places: form.places.map((p) => (p.rsn === rsn ? { ...p, floors: toggle(p.floors, id) } : p)) });
+  // The "where I live" choices: the buildings and floors the page will save (known once the building list has loaded).
+  const options = list ? whereOptions(form.places, list.buildings) : [];
+  const checkinProblem = problemOf(checkin, held, options);
 
   const answered = async (response: Response, done: "changed" | "deleted") => {
     const body: unknown = await response.json().catch(() => null);
     const outcome = EditDoneBodySchema.safeParse(body);
     if (outcome.success && outcome.data.status === done) {
-      setPhase({ kind: done === "changed" ? "saved" : "deleted" });
+      setPhase(done === "changed" ? { kind: "saved", checkin: outcome.data.checkin ?? null } : { kind: "deleted" });
       return;
     }
     if (EditExpiredBodySchema.safeParse(body).success) {
@@ -245,6 +259,12 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
   const save = async (event: FormEvent) => {
     event.preventDefault();
     setProblem(null);
+    setSent(true);
+    if (checkinProblem !== null) {
+      requestAnimationFrame(() => checkinRef.current?.querySelector<HTMLElement>("input")?.focus());
+      return;
+    }
+    const checkinBody = list ? requestBody(checkin, held, options, "edit") : undefined;
     const request: EditChangeRequestBody = {
       v: SUBSCRIPTION_EDIT_CONTRACT_VERSION,
       token,
@@ -253,6 +273,9 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
       places: form.places,
       groups: SIGNUP_GROUPS.filter((g) => form.groups.includes(g)),
       muted_topics: MUTABLE_TOPICS.filter((topic) => form.muted.includes(topic)),
+      // S08.05: the request as the page leaves it, or null to withdraw the one held. With the building list unread there are no choices, and
+      // with none held and none asked there is nothing to say, so the field is left out (the request, if any, is kept as it is).
+      ...(checkinBody !== undefined ? { checkin: checkinBody } : {}),
     };
     setBusy("save");
     try {
@@ -457,6 +480,10 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
               ))}
             </Stack>
           </fieldset>
+
+          <div ref={checkinRef}>
+            <CheckinFields lang={lang} draft={checkin} onChange={setCheckin} options={options} held={held} showProblems={sent} prefix="subscription" />
+          </div>
 
           <button type="submit" className="choice-btn choice-btn--primary tap signup-send" disabled={busy !== null} data-testid="subscription-save">
             <ResidentText>{busy === "save" ? t("saving") : t("save")}</ResidentText>

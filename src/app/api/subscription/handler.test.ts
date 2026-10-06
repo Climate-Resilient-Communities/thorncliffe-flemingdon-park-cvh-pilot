@@ -10,7 +10,7 @@ import { subscriptionChangeResponse, subscriptionDeleteResponse, subscriptionMet
 const TOKEN = "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE";
 
 afterEach(() => vi.restoreAllMocks());
-const VIEW = { v: 1 as const, status: "ok" as const, subscription: { lang: "en" as const, neighbourhood: "TP", places: [], groups: [], muted_topics: [], phone_last2: "23" } };
+const VIEW = { v: 1 as const, status: "ok" as const, subscription: { lang: "en" as const, neighbourhood: "TP", places: [], groups: [], muted_topics: [], phone_last2: "23", checkin: null } };
 
 function fakeEdit(over: Partial<EditLink> = {}): EditLink & { changes: EditChange[] } {
   const changes: EditChange[] = [];
@@ -83,6 +83,17 @@ describe("POST /api/subscription/change", () => {
 
     response = await subscriptionChangeResponse(deps(fakeEdit()), post({ ...changeBody, neighbourhood: null }));
     expect([response.status, (await response.json()).error.code]).toEqual([400, "neighbourhood_missing"]);
+  });
+
+  it("S08.05: answers what became of the check-in request in the same private answer, and its refusal for want of consent", async () => {
+    for (const checkin of ["requested", "uncovered", "method_changed", "withdrawn"] as const) {
+      const response = await subscriptionChangeResponse(deps(fakeEdit({ change: async () => ({ kind: "changed", checkin }) })), post(changeBody));
+      expect([response.status, await response.json()]).toEqual([200, { v: 1, status: "changed", checkin }]);
+      await expectPrivate(response);
+    }
+    const refused = await subscriptionChangeResponse(deps(fakeEdit({ change: async () => ({ kind: "refused", code: "checkin_consent_missing" }) })), post(changeBody));
+    expect([refused.status, await refused.json()]).toEqual([400, { error: { code: "checkin_consent_missing", message_key: "subscriptionEdit.error.checkin_consent_missing" } }]);
+    await expectPrivate(refused);
   });
 
   it("answers a failure 503 and logs its classification only: never the token, the choices or the error's text", async () => {

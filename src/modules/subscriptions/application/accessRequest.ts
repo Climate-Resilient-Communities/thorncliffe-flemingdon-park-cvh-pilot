@@ -8,17 +8,19 @@
 //   lookUp             everything held for the number, in ONE read-only transaction (Postgres refuses any write in it), for an open request only: the
 //                      subscriber, places, groups, muted topics, consent version, retention state (S09.07's re-consent), prompt (with where the
 //                      resident is in a text menu, S07.05) and edit link (S07.06, never its hash); a pending sign-up; waiting replies; the texts held for
-//                      those records (never their words); the keyed hashes of the number in `rate_limit`; check-in records (E08's, through a port); and
-//                      what holds the number's records that it cannot read yet (a column or a table added since, a prompt's step it does not know).
+//                      those records (never their words); the keyed hashes of the number in `rate_limit`; S08.05's check-in request, on the subscriber
+//                      and on the pending sign-up; check-in records (through a port: checkins' rows that still name the subscriber, `checkinRowRecords`);
+//                      and what holds the number's records that it cannot read yet (a column or a table added since, a prompt's step it does not know).
 //                      Nothing is recorded or changed.
 //   deleteForResident  after verified control, the one E07 deletion (deletion.ts, the steps STOP, S07.06's edit page and S09.08's purge run) and the
 //                      request's `closed` record (`deleted`), in one transaction: both commit or neither does. Refused while a `checkin` table exists and
-//                      E08's deletion port is not wired here.
+//                      E08's deletion port is not wired here (scripts/access-request wires checkins' real one, S08.05).
 //   close              the request's `closed` record with how it ended (answered, not verified, withdrawn).
 //
 // Verified control is the Admin's call back to the number (or the resident's one-time phrase texted from it, procedures/access-request.md): the script makes
 // IT confirm it before a lookup or a deletion. The number goes into the reads and the deletion only; it is never logged, audited or returned whole.
 import { ACCESS_REQUEST_KINDS, readAuditRecords, record as auditRecord, type AuditEvent } from "../../audit";
+import { subscriberCheckinRows } from "../../checkins";
 import { readStaffByUsername, readStaffName } from "../../identity";
 import { createDeliveryQueue, maskNumber, textsToRecipients, type RecipientKind, type SkippedForRecipient } from "../../messaging";
 import { addressesOfBuildings, floorsOfBuilding } from "../../places";
@@ -26,16 +28,18 @@ import { canadianNumber } from "../../../contracts/signup";
 import { englishText } from "../../../i18n/text";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
-import { accessRequestStore, type AccessRequestStore } from "../adapters/accessRequestStore";
+import { accessRequestStore, type AccessRequestStore, type HeldCheckinRequestRow } from "../adapters/accessRequestStore";
 import { hashScopeOf } from "../adapters/inboundStore";
 import {
   CLOSING_OUTCOMES,
+  checkinRowWords,
   menuStepWords,
   openRequests,
   standingOf,
   wholeDays,
   type AccessRequestKind,
   type ClosingOutcome,
+  type HeldCheckinRequest,
   type HeldCheckins,
   type HeldPlace,
   type HeldPrompt,
@@ -54,9 +58,9 @@ const ACTIONS = ["access_request.received", "access_request.closed"] as const;
 type RequestAction = (typeof ACTIONS)[number];
 
 /**
- * Port: `checkins`' reader of a subscriber's check-in records (E08), for the lookup. Until E08 wires it, the lookup asks the catalog whether a `checkin`
- * table exists (`checkinTableCheck`): none means none are held; one that exists while this port is not wired is reported as unreadable, so a request is never
- * answered as complete while a table of residents' records goes unread.
+ * Port: `checkins`' reader of a subscriber's check-in records (E08), for the lookup: `checkinRowRecords` (S08.05), which scripts/access-request wires. Where it
+ * is not wired, the lookup asks the catalog whether a `checkin` table exists (`checkinTableCheck`): none means none are held; one that exists while this port
+ * is not wired is reported as unreadable, so a request is never answered as complete while a table of residents' records goes unread.
  */
 export interface CheckinRecords {
   recordsOf(executor: DbExecutor, subscriberId: string): Promise<HeldCheckins>;
@@ -107,6 +111,37 @@ export function checkinTableCheck(store: AccessRequestStore = accessRequestStore
   return { recordsOf: async (executor) => ((await store.tableExists(executor, "checkin")) ? { kind: "unreadable" } : { kind: "not_built" }) };
 }
 
+/** Places as they are read out: each building's address and each floor's label (a floor or building no longer in the register says so). */
+async function placesOf(executor: DbExecutor, rows: readonly { rsn: string; floorId: string | null }[]): Promise<HeldPlace[]> {
+  const addresses = await addressesOfBuildings(executor, [...new Set(rows.map((row) => row.rsn))]);
+  const labels = new Map<string, Map<string, string>>();
+  for (const rsn of new Set(rows.map((row) => row.rsn))) labels.set(rsn, new Map(((await floorsOfBuilding(executor, rsn)) ?? []).map((floor) => [floor.id, floor.label])));
+  return rows.map((row) => ({
+    rsn: row.rsn,
+    address: addresses.get(row.rsn) ?? null,
+    floor: row.floorId === null ? null : (labels.get(row.rsn)?.get(row.floorId) ?? "a floor no longer in the register"),
+  }));
+}
+
+/** A check-in request (S08.05) as it is read out, its "where I live" place in words. */
+async function checkinRequestOf(executor: DbExecutor, request: HeldCheckinRequestRow | null): Promise<HeldCheckinRequest | null> {
+  if (request === null) return null;
+  const [place] = await placesOf(executor, [{ rsn: request.rsn, floorId: request.floorId }]);
+  return { method: request.method, consentVersion: request.consentVersion, place: place! };
+}
+
+/**
+ * checkins' rows that still name the subscriber (S08.05: live, or kept after a close for the Hub's follow-up; a closed stub names no one), read out in words
+ * with their place. The reader scripts/access-request wires as `checkinRecords`.
+ */
+export const checkinRowRecords: CheckinRecords = {
+  async recordsOf(executor, subscriberId) {
+    const rows = await subscriberCheckinRows(executor, subscriberId);
+    const places = await placesOf(executor, rows);
+    return { kind: "rows", rows: rows.map((row, n) => ({ at: row.createdAt, description: checkinRowWords(row, places[n]!) })) };
+  },
+};
+
 function neighbourhoodName(id: string): string {
   try {
     return `${englishText(`neighbourhoods.${id}`)} (${id})`;
@@ -152,18 +187,6 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
     if (standing.kind === "unknown") return { ok: false, error: "not_found" };
     if (standing.kind === "closed") return { ok: false, error: "closed" };
     return { ok: true, value: { receivedAt: standing.receivedAt, isDrill: standing.isDrill } };
-  }
-
-  /** Places as they are read out: each building's address and each floor's label (a floor or building no longer in the register says so). */
-  async function placesOf(executor: DbExecutor, rows: readonly { rsn: string; floorId: string | null }[]): Promise<HeldPlace[]> {
-    const addresses = await addressesOfBuildings(executor, [...new Set(rows.map((row) => row.rsn))]);
-    const labels = new Map<string, Map<string, string>>();
-    for (const rsn of new Set(rows.map((row) => row.rsn))) labels.set(rsn, new Map(((await floorsOfBuilding(executor, rsn)) ?? []).map((floor) => [floor.id, floor.label])));
-    return rows.map((row) => ({
-      rsn: row.rsn,
-      address: addresses.get(row.rsn) ?? null,
-      floor: row.floorId === null ? null : (labels.get(row.rsn)?.get(row.floorId) ?? "a floor no longer in the register"),
-    }));
   }
 
   /**
@@ -214,6 +237,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
             mutedTopics: await store.mutedTopicsOf(tx, sub.id),
             prompt: prompt.prompt,
             editLink: await store.editLinkOf(tx, sub.id),
+            checkinRequest: await checkinRequestOf(tx, sub.checkinRequest),
           }
         : null,
       pending: pending
@@ -234,6 +258,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
                 place.floors.length === 0 ? [{ rsn: place.rsn, floorId: null }] : place.floors.map((floorId) => ({ rsn: place.rsn, floorId })),
               ),
             ),
+            checkinRequest: await checkinRequestOf(tx, pending.checkinRequest),
           }
         : null,
       replies: replies.map((reply) => ({ since: reply.since, expiresAt: reply.expiresAt })),

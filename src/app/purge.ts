@@ -7,6 +7,7 @@ import { createDeliveryQueue } from "@/modules/messaging";
 import { recordOpsEvent } from "@/modules/ops";
 import { createEndOfPilotPurge, type EndOfPilotPurge, type PurgeLog, type PurgeReport, type createInboundRouter } from "@/modules/subscriptions";
 import { getDb, type Db } from "@/platform/db";
+import { checkinRequests } from "./checkins";
 import { inboundRouter } from "./inbound";
 
 /** A failed deletion's log line: one JSON line with the error's class only. */
@@ -23,6 +24,8 @@ export function endOfPilotPurge(db: Db = getDb()): EndOfPilotPurge {
     // `SubscriberDeletion`; `inboundRouter` declares only the webhook's half. (That deletion is `createNumberDeletion`, which S09.03's access request and
     // S07.06's edit page run too; going through the router keeps the purge on the webhook's own check-ins port when E08 wires it.)
     deletion: inboundRouter({ db }) as ReturnType<typeof createInboundRouter>,
+    // S08.05: the subscriber's round threads locked first, the deletion's first step (the router's deletion has the same port and is told not to repeat it).
+    checkins: checkinRequests(),
     skipRecipientDeliveries: (tx, recipient) => queue.skipRecipientDeliveries(tx, recipient),
     recordCompleted: (tx, counts) => recordOpsEvent(tx, { kind: "campaign.purge_completed", detail: counts }),
     log: stdoutPurgeLog,

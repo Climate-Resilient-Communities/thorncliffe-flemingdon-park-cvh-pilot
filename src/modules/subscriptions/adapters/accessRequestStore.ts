@@ -8,6 +8,17 @@ import { inboundReply, pendingSignup, rateLimit, smsPrompt, subscriber, subscrib
 // A fixed seed for the advisory lock of one request, so it never meets another lock on a hash of the same text.
 const REQUEST_LOCK_SEED = 9_031_303_771;
 
+/** S08.05's check-in request, the same four columns on the subscriber and on the pending sign-up: all set, or all null. */
+const CHECKIN_REQUEST_COLUMNS = ["checkin_method", "checkin_consent_version", "where_i_live_rsn", "where_i_live_floor_id"] as const;
+
+/** A check-in request as the lookup reads it (S08.05), or null when the row has none. */
+export interface HeldCheckinRequestRow {
+  method: string;
+  consentVersion: string;
+  rsn: string;
+  floorId: string;
+}
+
 /** Whose records a table holds: a subscriber's, a pending sign-up's, or a waiting reply's (each found by the number). */
 export type HoldingOwner = "subscriber" | "pending_signup" | "inbound_reply";
 
@@ -15,18 +26,33 @@ export type HoldingOwner = "subscriber" | "pending_signup" | "inbound_reply";
  * Every column of the tables that hold a number's records, as the lookup accounts for it: shown on screen, or the number itself, a row's id, a link between
  * rows, or an edit link's token hash (a credential, never shown). A prompt's `step` is shown in words: where the resident is in a text menu (S07.05: the
  * street, the building, the floor or the language being chosen); a step the lookup cannot read is reported as not read. The re-consent campaign (S09.07)
- * adds no column here: it is the subscriber's `retention_state` and `consent_version`, a `reconsent` prompt and the campaign's texts, all shown. A column a
- * later story adds (E08's check-in request on the subscriber, the pending sign-up or a place, for example) is not here until the lookup shows it, and
- * `unreadHoldings` reports it, so a request is never answered as complete while part of it goes unread.
+ * adds no column here: it is the subscriber's `retention_state` and `consent_version`, a `reconsent` prompt and the campaign's texts, all shown. S08.05's
+ * check-in request (`checkin_method`, the "where I live" place, `checkin_consent_version`) is shown on the subscriber and on the pending sign-up. A column a
+ * later story adds is not here until the lookup shows it, and `unreadHoldings` reports it, so a request is never answered as complete while part of it goes
+ * unread.
  */
 export const LOOKUP_COLUMNS: Readonly<Record<string, { owner: HoldingOwner; columns: readonly string[] }>> = {
-  subscriber: { owner: "subscriber", columns: ["id", "phone", "lang", "neighbourhood_id", "groups", "consent_version", "started_by", "retention_state", "created_at"] },
+  subscriber: {
+    owner: "subscriber",
+    columns: [
+      "id",
+      "phone",
+      "lang",
+      "neighbourhood_id",
+      "groups",
+      "consent_version",
+      "started_by",
+      "retention_state",
+      "created_at",
+      ...CHECKIN_REQUEST_COLUMNS,
+    ],
+  },
   subscriber_place: { owner: "subscriber", columns: ["id", "subscriber_id", "rsn", "floor_id"] },
   subscriber_topic_optout: { owner: "subscriber", columns: ["subscriber_id", "topic"] },
   sms_prompt: { owner: "subscriber", columns: ["subscriber_id", "kind", "step", "sent_at", "expires_at"] },
   pending_signup: {
     owner: "pending_signup",
-    columns: ["id", "phone", "lang", "neighbourhood_id", "places", "groups", "topics", "consent_version", "started_by", "created_at", "expires_at"],
+    columns: ["id", "phone", "lang", "neighbourhood_id", "places", "groups", "topics", "consent_version", "started_by", "created_at", "expires_at", ...CHECKIN_REQUEST_COLUMNS],
   },
   inbound_reply: { owner: "inbound_reply", columns: ["id", "phone", "created_at", "expires_at"] },
   subscription_edit_token: { owner: "subscriber", columns: ["id", "subscriber_id", "token_hash", "created_at", "expires_at", "used_at"] },
@@ -44,6 +70,7 @@ export interface HeldSubscriberRow {
   consentVersion: string;
   startedBy: string;
   retentionState: string;
+  checkinRequest: HeldCheckinRequestRow | null;
 }
 
 export interface HeldPromptRow {
@@ -73,6 +100,13 @@ export interface HeldPendingRow {
   topics: string[];
   consentVersion: string;
   startedBy: string;
+  checkinRequest: HeldCheckinRequestRow | null;
+}
+
+/** The request's four columns read together: null unless the method is set (the request is whole or absent, `*_checkin_request_whole`). */
+function requestOf(row: { checkinMethod: string | null; checkinConsentVersion: string | null; whereILiveRsn: string | null; whereILiveFloorId: string | null }): HeldCheckinRequestRow | null {
+  if (row.checkinMethod === null || row.checkinConsentVersion === null || row.whereILiveRsn === null || row.whereILiveFloorId === null) return null;
+  return { method: row.checkinMethod, consentVersion: row.checkinConsentVersion, rsn: row.whereILiveRsn, floorId: row.whereILiveFloorId };
 }
 
 export const accessRequestStore = {
@@ -92,10 +126,16 @@ export const accessRequestStore = {
         consentVersion: subscriber.consentVersion,
         startedBy: subscriber.startedBy,
         retentionState: subscriber.retentionState,
+        checkinMethod: subscriber.checkinMethod,
+        checkinConsentVersion: subscriber.checkinConsentVersion,
+        whereILiveRsn: subscriber.whereILiveRsn,
+        whereILiveFloorId: subscriber.whereILiveFloorId,
       })
       .from(subscriber)
       .where(eq(subscriber.phone, phone));
-    return row ?? null;
+    if (!row) return null;
+    const { checkinMethod, checkinConsentVersion, whereILiveRsn, whereILiveFloorId, ...held } = row;
+    return { ...held, checkinRequest: requestOf({ checkinMethod, checkinConsentVersion, whereILiveRsn, whereILiveFloorId }) };
   },
 
   /** The subscriber's places: one row per building and floor, a null floor for "no floor recorded there". */
@@ -160,10 +200,16 @@ export const accessRequestStore = {
         topics: pendingSignup.topics,
         consentVersion: pendingSignup.consentVersion,
         startedBy: pendingSignup.startedBy,
+        checkinMethod: pendingSignup.checkinMethod,
+        checkinConsentVersion: pendingSignup.checkinConsentVersion,
+        whereILiveRsn: pendingSignup.whereILiveRsn,
+        whereILiveFloorId: pendingSignup.whereILiveFloorId,
       })
       .from(pendingSignup)
       .where(eq(pendingSignup.phone, phone));
-    return row ?? null;
+    if (!row) return null;
+    const { checkinMethod, checkinConsentVersion, whereILiveRsn, whereILiveFloorId, ...held } = row;
+    return { ...held, checkinRequest: requestOf({ checkinMethod, checkinConsentVersion, whereILiveRsn, whereILiveFloorId }) };
   },
 
   async repliesOf(executor: DbExecutor, phone: string): Promise<{ id: string; since: Date; expiresAt: Date }[]> {

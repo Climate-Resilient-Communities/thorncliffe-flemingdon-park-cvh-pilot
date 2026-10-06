@@ -62,6 +62,8 @@ const PROMPT_TEXTS: ResidentTextName[] = [
   "languageSaved",
   "noCheckinRequest",
   "checkinWithdrawn",
+  "checkinMoved",
+  "checkinUncoveredNow",
   "deletePrompt",
   "alreadySignedUp",
   "reconsentKept",

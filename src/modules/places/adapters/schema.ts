@@ -107,13 +107,15 @@ export const buildingFloor = pgTable(
  * S04.03: the types of disruption, seeded by the migration (20261002250000_alert_lifecycle.sql).
  * `direct` is whether an Ambassador's post of that type may appear on the web at once (D-1, AD-5):
  * true for the lower-risk types, false for fire and "Other", null (not decided, counts as false)
- * for the neighbourhood-wide ones. The app only reads it.
+ * for the neighbourhood-wide ones. The app only reads it. `checkin` (S08.05, 20261006170000_checkin_request.sql) marks the round types,
+ * whose approved alerts start a check-in round (pilot: heat and power; S08.06 lets an Admin change them).
  */
 export const disruptionType = pgTable(
   "disruption_type",
   {
     id: text().primaryKey(),
     direct: boolean(),
+    checkin: boolean().notNull().default(false),
   },
   (t) => [
     check("disruption_type_id_format", sql`${t.id} ~ '^[a-z][a-z_]{1,19}$'`),

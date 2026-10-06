@@ -138,3 +138,17 @@ test("all 43 buildings list their floors in words and fit the phone without scro
   await expectShellDoesNotOverflow(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
+
+// S08.05: the check-in requests on floors without an ambassador, per building and in all: a count, never who.
+test("the list with check-in requests on floors without an ambassador at 390px", async ({ page }) => {
+  const requests = [
+    { rsn: "4154159", floorId: floorId("4154159", 5), requests: 2 },
+    { rsn: "4154169", floorId: floorId("4154169", 0), requests: 1 },
+    { rsn: "4154146", floorId: floorId("4154146", 1), requests: 4 },
+  ];
+  await open(page, 390, { screen: coverageListView(PLANS, ASSIGNMENTS, undefined, requests) }, 1900);
+  await expect(page.getByTestId("coverage-requests-summary")).toContainText("in all buildings: 3.");
+  await expect(page.getByTestId("coverage-requests-4154159")).toHaveText("Check-in requests on floors without an ambassador: 2");
+  await expect(page.getByTestId("coverage-requests-4154146")).toHaveCount(0);
+  await expectBaseline(page, "coverage-list-requests-390.png");
+});

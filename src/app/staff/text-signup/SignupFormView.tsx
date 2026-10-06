@@ -14,6 +14,8 @@ export interface ResidentWords {
   expect: string;
   /** How to stop: reply STOP. */
   howStop: string;
+  /** S08.05: the check-in request's consent wording, and what the resident is told about it after sending. */
+  checkin: { sees: string; notEmergency: string; call911: string; untilYes: string; uncovered: string };
 }
 
 export interface SignupFormProps {
@@ -26,6 +28,8 @@ export interface SignupFormProps {
   resident: ResidentWords;
   /** The first step (choose the next resident's language). */
   nextHref: string;
+  /** Test seam: the building, floor and check-in request as a staff member left them (the screenshots show the request opened). */
+  initial?: { rsn: string; floorId: string; asking: boolean };
 }
 
 const ERROR_ID = "text-signup-error";
@@ -37,8 +41,11 @@ const NUMBER_HINT_ID = "text-signup-number-hint";
  */
 function Fields({ props, busy, describedBy }: { props: SignupFormProps; busy: boolean; describedBy: string | undefined }) {
   const { labels, neighbourhoods, buildings, groups, resident } = props;
-  const [nbhd, setNbhd] = useState("");
-  const [rsn, setRsn] = useState("");
+  const initialBuilding = buildings.find((b) => b.rsn === props.initial?.rsn);
+  const [nbhd, setNbhd] = useState(initialBuilding?.neighbourhoodId ?? "");
+  const [rsn, setRsn] = useState(initialBuilding?.rsn ?? "");
+  const [floorId, setFloorId] = useState(initialBuilding ? (props.initial?.floorId ?? "") : "");
+  const [asking, setAsking] = useState(initialBuilding !== undefined && props.initial?.asking === true);
   const floors = buildings.find((b) => b.rsn === rsn)?.floors ?? [];
   const tag = (optional: boolean) => <span className="hub-flag__label">{optional ? labels.optional : labels.required}</span>;
   return (
@@ -89,6 +96,8 @@ function Fields({ props, busy, describedBy }: { props: SignupFormProps; busy: bo
           onChange={(event) => {
             const chosen = buildings.find((b) => b.rsn === event.target.value);
             setRsn(event.target.value);
+            setFloorId("");
+            setAsking(false);
             if (chosen) setNbhd(chosen.neighbourhoodId);
           }}
         >
@@ -111,7 +120,17 @@ function Fields({ props, busy, describedBy }: { props: SignupFormProps; busy: bo
           <label htmlFor="text-signup-floor">
             {labels.floor} {tag(true)}
           </label>
-          <select className="hub-input" id="text-signup-floor" name="floor" defaultValue="" disabled={busy}>
+          <select
+            className="hub-input"
+            id="text-signup-floor"
+            name="floor"
+            value={floorId}
+            disabled={busy}
+            onChange={(event) => {
+              setFloorId(event.target.value);
+              if (event.target.value === "") setAsking(false);
+            }}
+          >
             <option value="">{labels.floorNone}</option>
             {floors.map((floor) => (
               <option key={floor.id} value={floor.id}>
@@ -121,6 +140,59 @@ function Fields({ props, busy, describedBy }: { props: SignupFormProps; busy: bo
           </select>
         </Stack>
       )}
+      <fieldset aria-labelledby="text-signup-checkin" data-testid="text-signup-checkin">
+        <Stack gap="target">
+          <legend id="text-signup-checkin">
+            {labels.checkinHeading} {tag(true)}
+          </legend>
+          {floorId === "" ? (
+            <small data-testid="text-signup-checkin-needs-floor">{labels.checkinNeedsFloor}</small>
+          ) : (
+            <label className="hub-check">
+              <input type="checkbox" name="checkin" value="yes" checked={asking} disabled={busy} onChange={() => setAsking(!asking)} data-testid="text-signup-checkin-ask" />
+              <span>{labels.checkinAsk}</span>
+            </label>
+          )}
+          {asking && floorId !== "" && (
+            <Stack gap="related">
+              <fieldset aria-labelledby="text-signup-checkin-method">
+                <Stack gap="target">
+                  <legend id="text-signup-checkin-method">{labels.checkinMethod}</legend>
+                  {(
+                    [
+                      ["call", labels.checkinCall],
+                      ["text", labels.checkinText],
+                    ] as const
+                  ).map(([method, label]) => (
+                    <label key={method} className="hub-choice">
+                      <input type="radio" name="checkin_method" value={method} required disabled={busy} data-testid={`text-signup-checkin-${method}`} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </Stack>
+              </fieldset>
+              <p>{labels.checkinRead}</p>
+              <div lang={resident.bcp47} dir={resident.dir} className="hub-resident-words" data-testid="text-signup-checkin-wording">
+                <Stack gap="related">
+                  <p>
+                    <ResidentText>{resident.checkin.sees}</ResidentText>
+                  </p>
+                  <p>
+                    <ResidentText>{resident.checkin.notEmergency}</ResidentText>
+                  </p>
+                  <p>
+                    <ResidentText>{resident.checkin.call911}</ResidentText>
+                  </p>
+                </Stack>
+              </div>
+              <label className="hub-check">
+                <input type="checkbox" name="checkin_agreed" value="yes" required disabled={busy} data-testid="text-signup-checkin-agreed" />
+                <span>{labels.checkinAgreed}</span>
+              </label>
+            </Stack>
+          )}
+        </Stack>
+      </fieldset>
       <fieldset aria-labelledby="text-signup-groups">
         <Stack gap="target">
           <legend id="text-signup-groups">
@@ -176,6 +248,8 @@ export function SignupFormView({ answer, busy = false, action, ...props }: Signu
               </p>
               <p>{labels.done}</p>
               <p>{labels.doneYes}</p>
+              {answer.checkin === "requested" && <p data-testid="text-signup-checkin-requested">{labels.doneCheckinRequested}</p>}
+              {answer.checkin === "uncovered" && <p data-testid="text-signup-checkin-uncovered">{labels.doneCheckinUncovered}</p>}
               <p>{labels.doneShow}</p>
               <div className="hub-resident-words" lang={resident.bcp47} dir={resident.dir} data-testid="text-signup-next-steps">
                 <Stack gap="related">
@@ -185,6 +259,11 @@ export function SignupFormView({ answer, busy = false, action, ...props }: Signu
                   <p>
                     <ResidentText>{resident.howStop}</ResidentText>
                   </p>
+                  {answer.checkin !== undefined && (
+                    <p data-testid="text-signup-checkin-resident">
+                      <ResidentText>{answer.checkin === "requested" ? resident.checkin.untilYes : resident.checkin.uncovered}</ResidentText>
+                    </p>
+                  )}
                 </Stack>
               </div>
               <p>

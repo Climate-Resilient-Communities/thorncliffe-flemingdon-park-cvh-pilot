@@ -27,6 +27,11 @@
 // and the outcome, never the number: an accepted one inside the sign-up's transaction (the same record for a new, a pending and a subscribed
 // number, so the trail cannot tell them apart either), a refused one in its own transaction afterwards.
 //
+// S08.05, a check-in request made with the sign-up (E08 "Request during sign-up", "Covered request"): its floor is checked with identity's
+// `coversFloor` in the sign-up's transaction, for every number alike (the answer depends on the floor alone). A covered request is kept on
+// the new pending sign-up until YES; an uncovered one is not kept, and the answer says so ("No ambassador covers your floor yet. Call the Hub
+// at {number}"), while the rest of the sign-up is saved as usual. A request for a number already pending or subscribed is dropped with the
+// rest of what the savepoint wrote.
 // S09.07: sign-ups are paused from the end-of-pilot campaign's start until an Admin reopens them for the MVP (`SignupGate`): a sign-up is then refused
 // as `signups_paused` ("Sign-ups are paused while the pilot ends"), the same for every number, before anything is counted, and again inside the
 // transaction, under the gate the campaign's start takes, so a sign-up and the start never both commit (the start would not see the sign-up it closes).
@@ -81,9 +86,14 @@ export type AssistedSignupAudit = {
   recordRefusal(db: Db, event: AuditEvent<"signup.assisted">): Promise<unknown>;
 };
 
+/** Port: identity's `coversFloor` (AD-12, the only coverage test), asked in the sign-up's transaction for a check-in request's floor. */
+export type SignupCoverage = (rsn: string, floorId: string, executor: DbExecutor) => Promise<boolean>;
+
 export interface SignupDeps {
   db: Db;
   places: SignupPlaces;
+  /** S08.05: the coverage of a check-in request's floor; a sign-up with a request is refused as unavailable without it. */
+  coversFloor?: SignupCoverage;
   subscribers: SubscriberLookup;
   /** messaging's `createDeliveryQueue().enqueueTransactional`. */
   enqueue: (tx: DbTransaction, input: TransactionalInput) => Promise<DeliveryResult<Enqueued>>;
@@ -101,7 +111,8 @@ export interface SignupDeps {
 }
 
 export type SignupOutcome =
-  | { kind: "accepted" }
+  /** `checkin`: what became of a check-in request (S08.05), the same for every number; absent when none was asked for. */
+  | { kind: "accepted"; checkin?: "requested" | "uncovered" }
   | { kind: "refused"; code: Exclude<SignupErrorCode, "rate_limited"> }
   | { kind: "rate_limited"; retryAfterSeconds: number };
 
@@ -123,6 +134,7 @@ const ASSISTED_REFUSAL_REASON = {
   terms_not_agreed: "validation",
   age_not_confirmed: "validation",
   place_unknown: "validation",
+  checkin_consent_missing: "validation",
   terms_changed: "conflict",
   rate_limited: "throttled",
   signup_unavailable: "not_available",
@@ -168,6 +180,7 @@ export function createSignup(deps: SignupDeps): Signup {
   async function refusalBeforeCounting(input: SignupRequest): Promise<Exclude<SignupErrorCode, "rate_limited"> | null> {
     const version = deps.consentVersion();
     if (version === null) return "signup_unavailable";
+    if (input.checkin && deps.coversFloor === undefined) return "signup_unavailable";
     if (await gate.closed(deps.db)) return "signups_paused";
     if (input.consentVersion !== version) return "terms_changed";
     // A wrong building or floor is refused before the client is counted, so a mistake does not use up one of its sign-ups.
@@ -184,6 +197,10 @@ export function createSignup(deps: SignupDeps): Signup {
     return deps.db.transaction(async (tx): Promise<SignupOutcome> => {
       const places = await checkPlaces(tx, input);
       if (places !== "ok") return { kind: "refused", code: places };
+
+      // S08.05: the request's floor, for every number alike: kept only when covered.
+      const request = input.checkin ?? null;
+      const covered = request === null ? null : await deps.coversFloor!(request.rsn, request.floorId, tx);
 
       await store.lockNumber(tx, input.phone);
       // S09.07: under the gate the campaign's start takes: paused since the check above, the sign-up is refused here.
@@ -205,6 +222,7 @@ export function createSignup(deps: SignupDeps): Signup {
             topics: [],
             consentVersion: version,
             startedBy: channel,
+            ...(request !== null && covered ? { checkin: { method: request.method, rsn: request.rsn, floorId: request.floorId, consentVersion: request.consentVersion } } : {}),
           });
           const queued = await deps.enqueue(savepoint, {
             module: "subscriptions",
@@ -224,7 +242,7 @@ export function createSignup(deps: SignupDeps): Signup {
         if (!(error instanceof Discard)) throw error;
       }
       await inside?.(tx);
-      return { kind: "accepted" };
+      return covered === null ? { kind: "accepted" } : { kind: "accepted", checkin: covered ? "requested" : "uncovered" };
     });
   }
 

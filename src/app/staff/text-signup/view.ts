@@ -73,6 +73,17 @@ export interface SignupFormLabels {
   next: string;
   limit: string;
   noList: string;
+  // S08.05: the check-in request.
+  checkinHeading: string;
+  checkinAsk: string;
+  checkinNeedsFloor: string;
+  checkinMethod: string;
+  checkinCall: string;
+  checkinText: string;
+  checkinRead: string;
+  checkinAgreed: string;
+  doneCheckinRequested: string;
+  doneCheckinUncovered: string;
 }
 
 export function signupFormLabels(): SignupFormLabels {
@@ -100,6 +111,16 @@ export function signupFormLabels(): SignupFormLabels {
     "next",
     "limit",
     "noList",
+    "checkinHeading",
+    "checkinAsk",
+    "checkinNeedsFloor",
+    "checkinMethod",
+    "checkinCall",
+    "checkinText",
+    "checkinRead",
+    "checkinAgreed",
+    "doneCheckinRequested",
+    "doneCheckinUncovered",
   ] as const;
   return { ...(Object.fromEntries(keys.map((key) => [key, signupText(key)])) as Omit<SignupFormLabels, "floorLabel">), floorLabel: signupText("floorLabel", { label: "{label}" }) };
 }

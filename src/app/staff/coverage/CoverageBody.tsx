@@ -26,6 +26,11 @@ function List({ view }: { view: CoverageListView }) {
         <h1>{view.title}</h1>
         <p>{view.lead}</p>
         <p data-testid="coverage-summary">{view.summary}</p>
+        {view.requestsSummary && (
+          <p role="note" className="hub-flag" data-testid="coverage-requests-summary">
+            {view.requestsSummary}
+          </p>
+        )}
         <Notice text={view.notice} />
       </Stack>
       {view.empty && <p>{view.empty}</p>}
@@ -54,6 +59,11 @@ function List({ view }: { view: CoverageListView }) {
                         <span className="hub-cover__label">{item.uncovered.label}</span> {item.uncovered.floors}
                       </p>
                     )}
+                    {item.requestsUncovered && (
+                      <p role="note" className="hub-flag" data-testid={`coverage-requests-${item.rsn}`}>
+                        {item.requestsUncovered}
+                      </p>
+                    )}
                   </Stack>
                 </li>
               ))}
@@ -76,6 +86,11 @@ function Building({ view, actions, initial }: { view: CoverageBuildingView; acti
         <p>
           {view.neighbourhood}. {view.summary}
         </p>
+        {view.requestsUncovered && (
+          <p role="note" className="hub-flag" data-testid="coverage-requests">
+            {view.requestsUncovered}
+          </p>
+        )}
         <Notice text={view.notice} />
       </Stack>
 

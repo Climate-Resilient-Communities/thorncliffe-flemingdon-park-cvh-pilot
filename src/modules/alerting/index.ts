@@ -20,6 +20,9 @@ import type { FreezeInput } from "./application/freezeContent";
 /** What the sender's hand-off point reads about an alert delivery's entry and thread (messaging's AlertStandingReader port, S06.02). */
 export { alertStandingReader, isClosingEntry } from "./adapters/handOffStanding";
 
+/** The threads a check-in round can be on (checkins' RoundThreads port, S08.05). */
+export { roundThreads } from "./adapters/roundThreads";
+
 export interface AlertingWiring {
   db: Db;
   /** Test seams. */

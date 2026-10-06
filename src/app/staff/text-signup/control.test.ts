@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SignupCheck } from "@/contracts/signup";
+import { CHECKIN_CONSENT_VERSION } from "@/contracts/checkin";
+import { checkSignupRequest, type SignupCheck } from "@/contracts/signup";
 import type { Signup, SignupOutcome } from "@/modules/subscriptions";
 import { bodyFromForm, signupFromForm, type ControlDeps } from "./control";
 
@@ -79,6 +80,15 @@ describe("the form as the sign-up contract's body", () => {
     const withFile = form(FULL);
     withFile.append("groups", new Blob(["x"]));
     expect(bodyFromForm(withFile)).toBeNull();
+  });
+
+  it("S08.05: reads a check-in request on the building and floor chosen, with the consent only when the staff member ticked it", () => {
+    const asked = bodyFromForm(form({ ...FULL, checkin: "yes", checkin_method: "text", checkin_agreed: "yes" }));
+    expect(asked).toMatchObject({ checkin: { rsn: "9100001", floor: FLOOR, method: "text", consent_version: CHECKIN_CONSENT_VERSION } });
+    expect(checkSignupRequest(asked)).toMatchObject({ ok: true, value: { checkin: { rsn: "9100001", floorId: FLOOR, method: "text" } } });
+    // Without the resident's agreement it is refused, and nothing is sent.
+    expect(checkSignupRequest(bodyFromForm(form({ ...FULL, checkin: "yes", checkin_method: "call" })))).toEqual({ ok: false, code: "checkin_consent_missing" });
+    expect(bodyFromForm(form(FULL))).not.toHaveProperty("checkin");
   });
 });
 

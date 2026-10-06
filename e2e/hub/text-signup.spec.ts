@@ -32,7 +32,14 @@ const form = (answer: SignupState): SignupFormProps & { answer: SignupState } =>
     { rsn: "9100002", address: "10 Gateway Boulevard", neighbourhoodId: "FP", floors: [] },
   ],
   groups: groupOptions(),
-  resident: { bcp47, dir, age: ur.signup.age, expect: ur.signup.expect, howStop: ur.R05.howStop },
+  resident: {
+    bcp47,
+    dir,
+    age: ur.signup.age,
+    expect: ur.signup.expect,
+    howStop: ur.R05.howStop,
+    checkin: { sees: ur.checkin.sees, notEmergency: ur.R33.notEmergency, call911: ur.x01.call, untilYes: ur.checkin.untilYes, uncovered: ur.checkin.uncovered.replace("{hub}", "(416) 421-8997") },
+  },
   nextHref: TEXT_SIGNUP_PAGE,
   answer,
 });
@@ -41,10 +48,12 @@ const STATES = {
   language: () => ({ model: { step: "language", languages: languageOptions() } as TextSignupModel }),
   form: () => ({ model: FORM_STEP, form: form({ status: "idle" }) }),
   done: () => ({ model: FORM_STEP, form: form({ status: "done", at: 1 }) }),
+  // S08.05: a sign-up whose check-in request's floor nobody covers.
+  doneUncovered: () => ({ model: FORM_STEP, form: form({ status: "done", at: 1, checkin: "uncovered" }) }),
   refused: () => ({ model: FORM_STEP, form: form({ status: "refused", at: 1, message: refusalMessage("phone_not_canadian") }) }),
   unavailable: () => ({ model: { step: "unavailable" } as TextSignupModel }),
 } as const;
-const WIDTHS: Record<keyof typeof STATES, number[]> = { language: [390, 1280], form: [390, 1280], done: [390], refused: [390], unavailable: [390] };
+const WIDTHS: Record<keyof typeof STATES, number[]> = { language: [390, 1280], form: [390, 1280], done: [390], doneUncovered: [390], refused: [390], unavailable: [390] };
 
 async function open(page: Page, state: keyof typeof STATES, width: number) {
   await page.setViewportSize({ width, height: HEIGHT });
@@ -84,3 +93,23 @@ for (const state of Object.keys(STATES) as (keyof typeof STATES)[]) {
     });
   }
 }
+
+// S08.05: the check-in request on the staff-assisted sign-up: offered once a building and floor are chosen (the form's state given through its test
+// seam: the fixture is drawn without its script), with the method, the consent wording in the resident's language, and the box the staff member ticks
+// once the resident agrees.
+test("text sign-up with a check-in request opened at 390px", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: HEIGHT });
+  const props = { ...form({ status: "idle" }), initial: { rsn: "9100001", floorId: "0190f000-0000-7000-8000-000000000001", asking: true } };
+  await mount(page, "TextSignupFixture", { texts: REAL_TEXTS, brand, model: FORM_STEP, form: props }, { lang: "en" });
+  await expect(page.getByTestId("text-signup-checkin-wording")).toHaveAttribute("lang", "ur");
+  await expect(page.getByTestId("text-signup-checkin-wording")).toContainText(ur.checkin.sees);
+  await expect(page.getByTestId("text-signup-checkin-ask")).toBeChecked();
+  await page.getByTestId("text-signup-checkin-call").check();
+  await expectBaseline(page, "text-signup-en-checkin-390.png", { fullPage: true });
+});
+
+test("text sign-up offers a check-in only once a floor is chosen, at 390px", async ({ page }) => {
+  await open(page, "form", 390);
+  await expect(page.getByTestId("text-signup-checkin-needs-floor")).toBeVisible();
+  await expect(page.getByTestId("text-signup-checkin-ask")).toHaveCount(0);
+});

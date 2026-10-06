@@ -57,6 +57,25 @@ describe("Coverage: the list of buildings", () => {
     expect(out).toMatch(/<span class="hub-cover__label">Not covered:<\/span> G, 1, 2, 3</);
   });
 
+  it("S08.05: counts the check-in requests on floors nobody covers, per building and in all (a floor that is gone too), and never who", () => {
+    const plans = [plan("1", ["G", "1"]), plan("2", ["G"])];
+    const requests = [
+      { rsn: "1", floorId: floorId("1", 0), requests: 4 },
+      { rsn: "1", floorId: floorId("1", 1), requests: 2 },
+      { rsn: "1", floorId: "01900000-0000-7000-8000-0000deadbeef", requests: 1 },
+      { rsn: "2", floorId: floorId("2", 0), requests: 3 },
+    ];
+    const assigned = [assignment({ rsn: "1", floorIds: [floorId("1", 0)] }), assignment({ rsn: "2", floorIds: null, staffId: OMAR })];
+    const out = html(coverageListView(plans, assigned, undefined, requests));
+    expect(out).toContain('data-testid="coverage-requests-1">Check-in requests on floors without an ambassador: 3</p>');
+    expect(out).not.toContain('data-testid="coverage-requests-2"');
+    expect(out).toContain("Check-in requests on floors without an ambassador, in all buildings: 3.");
+    expect(html(coverageListView(plans, assigned))).not.toContain("Check-in requests");
+
+    const one = html(coverageBuildingView(plans[0]!, assigned, { requests }));
+    expect(one).toContain('data-testid="coverage-requests">Check-in requests on floors without an ambassador: 3</p>');
+  });
+
   it("writes the state in words as well as in colour: every coloured line carries its label, and the uncovered ones are notes", () => {
     const out = html(coverageListView([plan("1", ["G", "1"])], [assignment({ rsn: "1", floorIds: [floorId("1", 0)] })]));
 

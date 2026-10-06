@@ -61,6 +61,8 @@ const PAGES: PageCase[] = [
   { name: "be ready", path: (l) => `/${l}/ready` },
   { name: "guide", path: (l) => `/${l}/ready/heat` },
   { name: "numbers", path: (l) => `/${l}/ready/numbers`, stub: stubBuildingList },
+  // S08.05: Ask for a check-in (R-33).
+  { name: "ask for a check-in", path: (l) => `/${l}/ready/check-in` },
   { name: "building", path: (l) => `/${l}/buildings/${SIGNED_BUILDING}` },
   { name: "my choices", path: (l) => `/${l}/choices`, stub: stubBuildingList },
   { name: "choose language", path: (l) => `/${l}/choices/language` },
@@ -76,7 +78,7 @@ const PAGES: PageCase[] = [
     path: (l) => `/${l}/subscription/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789-_AbCdE`,
     stub: async (page) => {
       await stubBuildingList(page);
-      const view = { v: 1, status: "ok", subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: SIGNED_BUILDING, floors: [] }], groups: ["seniors"], muted_topics: [], phone_last2: "23" } };
+      const view = { v: 1, status: "ok", subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: SIGNED_BUILDING, floors: [] }], groups: ["seniors"], muted_topics: [], phone_last2: "23", checkin: null } };
       await page.route("**/api/subscription/view", (route) => route.fulfill({ json: view, headers: { "Cache-Control": "no-store" } }));
     },
     settle: (page) => expect(page.getByTestId("subscription-form")).toBeVisible(),

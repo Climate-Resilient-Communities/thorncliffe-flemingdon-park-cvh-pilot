@@ -84,6 +84,10 @@ vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, d
 vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }));
 // The coverage page and its actions (S01.14) read and write through identity's assignments on the app's own connection.
 vi.mock("../../src/app/staff/assignments", () => ({ assignments: () => wired.assignmentService }));
+// Its count of check-in requests on uncovered floors (S08.05) reads subscriptions' requests on the same connection.
+vi.mock("../../src/app/staff/checkinRequests", () => ({
+  checkinRequestsByFloor: async () => (await import("../../src/modules/subscriptions")).checkinRequestCounts(wired.db as Db),
+}));
 // The Ambassador's home (S08.01), which an Ambassador gets at the Hub's home, reads the alerts and posts on the app's own connection; the guard is what this test is
 // about (the reads are test/db/ambassadorHome.db.test.ts).
 vi.mock("../../src/app/staff/ambassador/home", () => ({

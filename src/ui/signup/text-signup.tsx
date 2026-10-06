@@ -4,17 +4,20 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { BuildingList } from "@/contracts/buildingList";
+import type { CheckinAnswer } from "@/contracts/checkin";
 import { displayPhone } from "@/contracts/phone";
 import {
   SIGNUP_CONTRACT_VERSION,
   SIGNUP_ERROR_CODES,
   SIGNUP_GROUPS,
+  SignupAcceptedSchema,
   canadianNumber,
   presetNeighbourhood,
   type SignupErrorCode,
   type SignupRequestBody,
 } from "@/contracts/signup";
 import type { LaunchCode } from "@/i18n/languages";
+import { CheckinAnswerNote, CheckinFields, NO_REQUEST, problemOf, requestBody, whereOptions, type CheckinDraft } from "../checkin";
 import { sortBuildings } from "../choices/building-list";
 import { ChoiceButton, ChoiceOption } from "../choices/parts";
 import type { StepLanguage } from "../choices/language-step";
@@ -42,6 +45,8 @@ export interface TextSignupProps {
   termsDraft: boolean;
   /** The number the texts come from (E.164), to text START to; null where it is not configured. */
   textNumber: string | null;
+  /** S08.05: the Hub's number as a resident dials it, for "No ambassador covers your floor yet. Call the Hub at {number}". */
+  hub: string;
   /** Test seam: where the form is sent. */
   endpoint?: string;
 }
@@ -79,7 +84,7 @@ function placesOf(draft: Draft, list: BuildingList): SignupRequestBody["places"]
  * resident only when every saved building is in one neighbourhood. Nothing is stored on the phone: not the number, not that a sign-up was
  * sent. The POST is the one resident request that carries places and groups; it sets no cookie.
  */
-export function TextSignup({ lang, languages, neighbourhoods, consentVersion, termsDraft, textNumber, endpoint = "/api/signup" }: TextSignupProps) {
+export function TextSignup({ lang, languages, neighbourhoods, consentVersion, termsDraft, textNumber, hub, endpoint = "/api/signup" }: TextSignupProps) {
   const t = useTranslations("signup");
   const r05 = useTranslations("R05");
   const r34 = useTranslations("R34");
@@ -98,6 +103,10 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState<"form" | "sending" | "sent">("form");
   const [serverError, setServerError] = useState<SignupErrorCode | "network" | null>(null);
+  // S08.05: the optional check-in request, and what the answer said of it (held in the page's memory only).
+  const [checkin, setCheckin] = useState<CheckinDraft>(NO_REQUEST);
+  const [checkinAnswer, setCheckinAnswer] = useState<CheckinAnswer | null>(null);
+  const checkinRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const sentRef = useRef<HTMLHeadingElement>(null);
   const listFailedRef = useRef<HTMLParagraphElement>(null);
@@ -158,6 +167,10 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
   const shows = (field: Field) => submitted && problems.includes(field);
   const missingWords: Record<Field, string> = { phone: r05("missingPhone"), nbhd: r05("missingNbhd"), terms: t("missingTerms"), age: t("missingAge") };
 
+  // The "where I live" choices: the buildings and floors the form will send (known once the building list has loaded).
+  const options = list ? whereOptions(placesOf(draft, list), list.buildings) : [];
+  const checkinProblem = problemOf(checkin, null, options);
+
   const update = (change: Partial<Draft>) => setEdits({ ...edits, ...change });
   const toggleBuilding = (rsn: string, floorIds: readonly string[]) => {
     if (draft.buildings.includes(rsn)) update({ buildings: draft.buildings.filter((r) => r !== rsn), floors: draft.floors.filter((id) => !floorIds.includes(id)) });
@@ -177,6 +190,11 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
       requestAnimationFrame(() => errorRef.current?.focus());
       return;
     }
+    if (checkinProblem !== null) {
+      requestAnimationFrame(() => checkinRef.current?.querySelector<HTMLElement>("input")?.focus());
+      return;
+    }
+    const checkinBody = requestBody(checkin, null, options, "signup");
     const body: Omit<SignupRequestBody, "places"> = {
       v: SIGNUP_CONTRACT_VERSION,
       phone: draft.phone,
@@ -200,10 +218,13 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
       }
     }
     const places = loaded.status === "ready" ? placesOf(draft, loaded.list) : draft.buildings.map((rsn) => ({ rsn, floors: [] }));
-    const request: SignupRequestBody = { ...body, places };
+    const request: SignupRequestBody = { ...body, places, ...(checkinBody ? { checkin: checkinBody } : {}) };
     try {
       const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(request), credentials: "omit", cache: "no-store" });
       if (response.status === 202) {
+        // The answer says whether a check-in request's floor is covered (POST only, no-store: never kept, never sent anywhere else).
+        const accepted = SignupAcceptedSchema.safeParse(await response.json().catch(() => null));
+        setCheckinAnswer(accepted.success ? (accepted.data.checkin ?? null) : null);
         setStatus("sent");
         return;
       }
@@ -233,6 +254,7 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
               </ResidentText>
             </Stack>
           </section>
+          {checkinAnswer !== null && <CheckinAnswerNote answer={checkinAnswer} page="signup" hub={hub} testId="signup-checkin-answer" />}
           <Stack gap="related">
             <ResidentText as="p" testId="signup-how-stop">
               {r05("howStop")}
@@ -489,6 +511,10 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
               ))}
             </Stack>
           </fieldset>
+
+          <div ref={checkinRef}>
+            <CheckinFields lang={lang} draft={checkin} onChange={setCheckin} options={options} held={null} showProblems={submitted} prefix="signup" />
+          </div>
 
           <div className="signup-field" data-testid="signup-terms">
             <Stack gap="target">

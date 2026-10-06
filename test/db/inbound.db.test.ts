@@ -12,9 +12,13 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { opsRecorder } from "../../src/app/dispatch";
 import { ownerSources, wireContactResolver } from "../../src/app/messaging";
+import { roundThreads } from "../../src/modules/alerting";
+import { createCheckinRequests } from "../../src/modules/checkins";
+import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { floorsOfBuilding, neighbourhoodIds } from "../../src/modules/places";
 import {
+  checkinRequestStore,
   createInboundRouter,
   createInboundWebhook,
   clientHash,
@@ -66,6 +70,8 @@ beforeAll(async () => {
 });
 
 async function resetAll() {
+  await owner`delete from checkin`;
+  await owner`delete from checkin_tally`;
   await owner`delete from subscriber`;
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
@@ -91,14 +97,34 @@ afterAll(async () => {
 
 beforeEach(resetAll);
 
-/** The router on the real tables, as src/app/inbound.ts composes it, with a fake check-in port that records its calls. */
+/**
+ * checkins' real ports (S08.05, src/app/checkins.ts), wrapped to record the deletions they are asked for: E07's deletion tests run against the
+ * real `deleteForSubscriber`.
+ */
+function checkinsOn(db: Db) {
+  const real = createCheckinRequests({
+    requests: checkinRequestStore(),
+    threads: roundThreads,
+    coversFloor: (rsn, floorId, executor) => createAssignments({ db, floors: { floorsOf: floorsOfBuilding } }).coversFloor(rsn, floorId, executor),
+  });
+  return {
+    ...real,
+    deleteForSubscriber: async (id: string, tx: Parameters<typeof real.deleteForSubscriber>[1]) => {
+      checkinCalls.push(id);
+      await real.deleteForSubscriber(id, tx);
+    },
+  };
+}
+
+/** The router on the real tables, as src/app/inbound.ts composes it, with checkins' real ports recording the deletions they are asked for. */
 function routerOn(db: Db = app): InboundRouter {
   return createInboundRouter({
     db,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
     enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
-    checkins: { deleteForSubscriber: async (id) => void checkinCalls.push(id) },
+    checkins: checkinsOn(db),
+    checkinActivation: checkinsOn(db),
     numberKey: () => KEY,
     publicBaseUrl: () => BASE_URL,
     pricePerSegmentCents: () => 1.5,
@@ -352,6 +378,14 @@ describe("deletion", () => {
     return { subscriber: subscriber!, welcome: welcome!, queued: queued! };
   }
 
+  /** S08.05: the subscriber's request on floor 1, and a row in the round of an open heat thread, as an approval makes it (S08.06's ensureRound). */
+  async function roundFor(subscriberId: string): Promise<string> {
+    await owner`update subscriber set checkin_method = 'call', checkin_consent_version = '2026-10-06.1', where_i_live_rsn = ${RSN}, where_i_live_floor_id = ${FLOOR_1} where id = ${subscriberId}`;
+    const alertId = (await world.fx.entry("approved", { types: ["heat"], kind: "update" })).alertId;
+    await owner`insert into checkin (id, alert_id, subscriber_id, rsn, floor_id, method) values (${crypto.randomUUID()}, ${alertId}, ${subscriberId}, ${RSN}, ${FLOOR_1}, 'call')`;
+    return alertId;
+  }
+
   async function expectNothingLeft(subscriberId: string) {
     expect(await subscribers()).toEqual([]);
     expect(await owner`select 1 from subscriber_place where subscriber_id = ${subscriberId}`).toHaveLength(0);
@@ -367,12 +401,17 @@ describe("deletion", () => {
     const { subscriber, welcome, queued } = await fullSubscriber();
     // A pending sign-up for the same number cannot exist beside a subscriber; an inbound_reply row can (a reply the router sent before YES).
     await owner`insert into inbound_reply (id, phone) values (${crypto.randomUUID()}, ${NUMBER})`;
+    // S08.05: the subscriber asked for check-ins and is in an open heat round.
+    const round = await roundFor(subscriber.id as string);
     const before = (await texts()).length;
 
     expect(await send("STOP", { optOutType: "STOP" })).toEqual({ kind: "handled", keyword: "stop", state: "active", action: "delete", replied: false });
 
     await expectNothingLeft(subscriber.id as string);
     expect(checkinCalls).toEqual([subscriber.id]);
+    // checkins' real deleteForSubscriber: the row is a closed stub with no one in it, tallied once.
+    expect(await owner`select subscriber_id, method, outcome, closed_at is not null as closed from checkin where alert_id = ${round}`).toEqual([{ subscriber_id: null, method: null, outcome: "withdrawn", closed: true }]);
+    expect(await owner`select status, n from checkin_tally where alert_id = ${round} order by status`).toEqual([{ status: "requested", n: 1 }, { status: "withdrawn", n: 1 }]);
     expect(await world.rowOf(queued.id as string)).toMatchObject({ state: "skipped", recipient_id: null });
     expect(await world.rowOf(welcome.id as string)).toMatchObject({ state: "submitted", recipient_id: null, idempotency_key: `detached:${welcome.id}` });
     // The app sent nothing of its own: Twilio replied to the STOP.

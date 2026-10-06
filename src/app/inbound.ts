@@ -4,9 +4,10 @@
 // webhook's signature check with the Twilio account's Auth Token, recording a refused signature in ops_event as the status callbacks do.
 // Server only. Where there is no Twilio account (every environment but production) nothing can be validated and the route does nothing.
 //
-// S07.05: the numbered menus (replies 1, 2 and 3) on the same outbox, with places' buildings and floors. checkins' ports are E08's: until
-// then no subscriber has check-in rows or a check-in request. S07.06: the menus offer the one-time web link (at the daily menu limit, and
-// when a menu is closed with nothing changed) and send it through the edit link's port (src/app/subscriptionEdit.ts).
+// S07.05: the numbered menus (replies 1, 2 and 3) on the same outbox, with places' buildings and floors. S07.06: the menus offer the one-time
+// web link (at the daily menu limit, and when a menu is closed with nothing changed) and send it through the edit link's port
+// (src/app/subscriptionEdit.ts). S08.05: checkins' real ports (src/app/checkins.ts): reply 3 withdraws a check-in request, menu 1's move
+// withdraws it ("Changed location"), YES activates one made during sign-up, and a deletion closes the subscriber's round rows.
 //
 // After a message that queued a text, the dispatcher is started (after the response), so a welcome or a reply goes out within seconds.
 import "server-only";
@@ -16,8 +17,6 @@ import {
   createInboundRouter,
   createInboundWebhook,
   createMenus,
-  noCheckinRequestsYet,
-  noCheckinsYet,
   placesForMenus,
   type InboundLog,
   type InboundRouter,
@@ -25,6 +24,7 @@ import {
 } from "@/modules/subscriptions";
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
+import { checkinRequests } from "./checkins";
 import { kickDispatcher, opsRecorder } from "./dispatch";
 import { rateLimitKey } from "./signup";
 import { editLink } from "./subscriptionEdit";
@@ -49,13 +49,14 @@ export function inboundRouter(parts: Pick<InboundParts, "env" | "db"> = {}): Inb
     // The queue checks a given send_by (signup_info's inbound_reply expiry) against the database's clock of the row that set it.
     enqueue: (tx, input, now) => createDeliveryQueue(now ? { now: () => now } : {}).enqueueTransactional(tx, input),
     skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
-    // E08 implements checkins' deleteForSubscriber, withdrawRequest and locationChanging.
-    checkins: noCheckinsYet,
+    // S08.05: checkins' ports (the deletion's, YES's activation, and the menus' withdrawal and move).
+    checkins: checkinRequests(),
+    checkinActivation: checkinRequests(),
     menus: createMenus({
       enqueue: (tx, input) => createDeliveryQueue().enqueueTransactional(tx, input),
       pricePerSegmentCents,
       places: placesForMenus,
-      checkins: noCheckinRequestsYet,
+      checkins: checkinRequests(),
       editLink: editLink({ env, db }).port,
     }),
     numberKey: rateLimitKey,

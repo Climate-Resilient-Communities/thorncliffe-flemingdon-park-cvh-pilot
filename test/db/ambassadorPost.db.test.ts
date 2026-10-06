@@ -100,7 +100,7 @@ async function clear() {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
-    await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
     await tx`delete from ambassador_assignment where rsn in (${RSN}, ${OTHER_RSN})`;
   });
 }

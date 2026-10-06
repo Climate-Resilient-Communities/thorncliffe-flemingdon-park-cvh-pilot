@@ -4,6 +4,14 @@ import { and, eq, gt, lte, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { pendingSignup, type PendingPlace } from "./schema";
 
+/** S08.05: a check-in request made during sign-up, on one of its places with that floor, kept until YES (E08 "Request during sign-up"). */
+export interface PendingCheckin {
+  method: "call" | "text";
+  rsn: string;
+  floorId: string;
+  consentVersion: string;
+}
+
 /** A pending sign-up to insert; the database gives `created_at` and `expires_at` (48 hours later), from its own clock. */
 export interface NewPendingSignup {
   id: string;
@@ -15,10 +23,13 @@ export interface NewPendingSignup {
   topics: string[];
   consentVersion: string;
   startedBy: "web" | "staff";
+  /** S08.05: a covered request (an uncovered one is never saved); none by default. */
+  checkin?: PendingCheckin | null;
 }
 
 /** A pending sign-up as the inbound router reads it (no number). */
-export interface PendingSignupRow extends Omit<NewPendingSignup, "phone"> {
+export interface PendingSignupRow extends Omit<NewPendingSignup, "phone" | "checkin"> {
+  checkin: PendingCheckin | null;
   expired: boolean;
 }
 
@@ -41,7 +52,12 @@ export const pendingSignupStore = {
 
   /** The new row's id, or null when the number already has a pending sign-up (nothing is written then). */
   async insert(tx: DbTransaction, row: NewPendingSignup): Promise<string | null> {
-    const inserted = await tx.insert(pendingSignup).values(row).onConflictDoNothing({ target: pendingSignup.phone }).returning({ id: pendingSignup.id });
+    const { checkin, ...rest } = row;
+    const values = {
+      ...rest,
+      ...(checkin ? { checkinMethod: checkin.method, checkinConsentVersion: checkin.consentVersion, whereILiveRsn: checkin.rsn, whereILiveFloorId: checkin.floorId } : {}),
+    };
+    const inserted = await tx.insert(pendingSignup).values(values).onConflictDoNothing({ target: pendingSignup.phone }).returning({ id: pendingSignup.id });
     return inserted[0]?.id ?? null;
   },
 
@@ -71,11 +87,22 @@ export const pendingSignupStore = {
         topics: pendingSignup.topics,
         consentVersion: pendingSignup.consentVersion,
         startedBy: pendingSignup.startedBy,
+        checkinMethod: pendingSignup.checkinMethod,
+        checkinConsentVersion: pendingSignup.checkinConsentVersion,
+        whereILiveRsn: pendingSignup.whereILiveRsn,
+        whereILiveFloorId: pendingSignup.whereILiveFloorId,
         expired: sql<boolean>`${pendingSignup.expiresAt} <= now()`,
       })
       .from(pendingSignup)
       .where(eq(pendingSignup.phone, phone));
-    return row ? { ...row, startedBy: row.startedBy as "web" | "staff" } : null;
+    if (!row) return null;
+    const { checkinMethod, checkinConsentVersion, whereILiveRsn, whereILiveFloorId, ...rest } = row;
+    // The four are set together or not at all (the table's check).
+    const checkin =
+      checkinMethod !== null && checkinConsentVersion !== null && whereILiveRsn !== null && whereILiveFloorId !== null
+        ? { method: checkinMethod as PendingCheckin["method"], rsn: whereILiveRsn, floorId: whereILiveFloorId, consentVersion: checkinConsentVersion }
+        : null;
+    return { ...rest, startedBy: rest.startedBy as "web" | "staff", checkin };
   },
 
   /** The number of an unexpired pending sign-up, for the resolver's source only. Null when it is gone or its 48 hours have passed. */

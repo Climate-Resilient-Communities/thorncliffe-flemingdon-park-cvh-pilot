@@ -114,6 +114,16 @@ export interface HeldPrompt {
   step: string | null;
 }
 
+/**
+ * A check-in request (S08.05) as it is read out: call or text, the "where I live" place, and the version of the check-in consent wording the resident
+ * confirmed.
+ */
+export interface HeldCheckinRequest {
+  method: string;
+  place: HeldPlace;
+  consentVersion: string;
+}
+
 /** Check-in records (E08): not built yet, built and read, or a table this script cannot read yet (then nothing may be answered as complete). */
 export type HeldCheckins = { kind: "not_built" } | { kind: "unreadable" } | { kind: "rows"; rows: readonly { at: Date; description: string }[] };
 
@@ -134,6 +144,8 @@ export interface HeldRecord {
     prompt: HeldPrompt | null;
     /** The link texted to change or delete the subscription on the web (S07.06), or none; its token is never held, and its hash is never shown. */
     editLink: { since: Date; expiresAt: Date; expired: boolean; usedAt: Date | null } | null;
+    /** The check-in request (S08.05), or none. */
+    checkinRequest: HeldCheckinRequest | null;
   } | null;
   pending: {
     since: Date;
@@ -146,6 +158,8 @@ export interface HeldRecord {
     consentVersion: string;
     startedBy: string;
     places: readonly HeldPlace[];
+    /** A check-in request made with the sign-up (S08.05), activated at YES if its floor is still covered; or none. */
+    checkinRequest: HeldCheckinRequest | null;
   } | null;
   /** `inbound_reply` rows: a number with no subscription waiting for its one reply (30 minutes at most). */
   replies: readonly { since: Date; expiresAt: Date }[];
@@ -154,7 +168,7 @@ export interface HeldRecord {
   hashes: readonly { scope: string; count: number; latest: Date }[];
   checkins: HeldCheckins;
   /**
-   * What holds this number's records and the lookup cannot read yet: a column or a table added after it was written (E08's check-in request, for example).
+   * What holds this number's records and the lookup cannot read yet: a column or a table added after it was written.
    * Empty until a story adds one; while it is not, the request is never answered as complete.
    */
   unread: readonly string[];
@@ -183,6 +197,8 @@ export function torontoTime(at: Date): string {
 
 const list = (items: readonly string[]) => (items.length === 0 ? "none" : items.join(", "));
 const place = (p: HeldPlace) => `${p.address ?? "a building no longer in the register"} (register number ${p.rsn}), ${p.floor === null ? "no floor" : `floor ${p.floor}`}`;
+const checkinRequestLine = (request: HeldCheckinRequest | null) =>
+  request === null ? "none" : `by ${request.method === "call" ? "a call" : "a text"}, where I live: ${place(request.place)}; check-in consent version ${request.consentVersion}`;
 
 /** What each kind of prompt asks, as it is read out; a kind not listed here is read out by its code. */
 const PROMPT_WORDS: Readonly<Record<string, string>> = {
@@ -208,6 +224,24 @@ const HASH_SCOPE_WORDS: Readonly<Record<string, string>> = {
   signup_info: "the sign-up link sent to it",
   sms_menu: "text menus started",
 };
+
+/** Where a check-in row stands (S08.05's statuses, S08.07's marks), as it is read out. */
+const CHECKIN_STATUS_WORDS: Readonly<Record<string, string>> = {
+  pending: "not checked on yet",
+  done: "checked on (done)",
+  not_reached: "not reached",
+  needs_help: "needs help",
+};
+
+/**
+ * A check-in row that still names the subscriber (S08.05), in words: the round's alert thread, the place, the method and where it stands; a row kept after
+ * the round closed for the Hub's follow-up (S08.08) says so. Never a round's reference and never anyone else.
+ */
+export function checkinRowWords(row: { alertId: string; method: string; status: string; outcome: string | null }, at: HeldPlace): string {
+  const status = CHECKIN_STATUS_WORDS[row.status] ?? row.status;
+  const kept = row.outcome === null ? "" : "; the round has closed and the row is kept for the Hub's follow-up";
+  return `in the check-in round of alert thread ${row.alertId}, at ${place(at)}, by ${row.method === "call" ? "a call" : "a text"}: ${status}${kept}`;
+}
 
 /**
  * Where the resident is in a text menu (S07.05), from the step its prompt keeps, in words; `address` gives a building's address by its register number, or null
@@ -272,6 +306,7 @@ export function heldRecordLines(record: HeldRecord): string[] {
       `  Retention state: ${RETENTION_WORDS[s.retentionState] ?? s.retentionState}`,
       `  Open prompt: ${s.prompt === null ? "none" : promptLine(s.prompt)}`,
       `  Edit link (texted to change or delete the subscription on the web): ${s.editLink === null ? "none" : editLinkLine(s.editLink)}`,
+      `  Check-in request (an ambassador on the floor sees the number and the floor): ${checkinRequestLine(s.checkinRequest)}`,
     );
   } else {
     lines.push("Subscriber: none");
@@ -288,6 +323,7 @@ export function heldRecordLines(record: HeldRecord): string[] {
       ...p.places.map((pl) => `    ${place(pl)}`),
       `  Muted topics: ${list(p.topics)}`,
       `  Terms accepted (consent version): ${p.consentVersion}`,
+      `  Check-in request (saved with the sign-up until YES): ${checkinRequestLine(p.checkinRequest)}`,
     );
   } else {
     lines.push("Pending sign-up: none");

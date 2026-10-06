@@ -3,6 +3,7 @@ import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import { Screen } from "@/ui";
 import { assignments } from "../assignments";
+import { checkinRequestsByFloor } from "../checkinRequests";
 import { staffPage } from "../guard";
 import { buildings } from "../places";
 import { assignAmbassadorAction, removeAssignmentAction } from "./actions";
@@ -21,7 +22,8 @@ type Query = SavedQuery & { building?: string | string[] };
  * words, and, with `?building=<rsn>`, one building's floors, who covers them and its assignments. Only an Admin
  * (`accounts.manage`) is given the forms to assign and remove; the actions refuse everyone else on their own.
  * Staff at the Hub only (the guard sends everyone else to sign-in or their setup gate); an Ambassador sees "Only
- * an Admin, a Coordinator or a Director can see coverage." Responses are no-store. The shell (layout.tsx) owns the <main>.
+ * an Admin, a Coordinator or a Director can see coverage." Responses are no-store. The shell (layout.tsx) owns the <main>. S08.05: how many
+ * check-in requests are on floors nobody covers, per building and in all (counts only), so the Hub can assign someone or contact them.
  */
 export default staffPage(
   {
@@ -38,14 +40,15 @@ export default staffPage(
     const query = (await props.searchParams) ?? {};
     const rsn = Array.isArray(query.building) ? query.building[0] : query.building;
     const notice = savedNotice(query);
-    const [plans, all] = await Promise.all([buildings().listFloorPlans(), assignments().allAssignments()]);
+    // S08.05: the check-in requests per building and floor (counts only), for the count of those on floors nobody covers.
+    const [plans, all, requests] = await Promise.all([buildings().listFloorPlans(), assignments().allAssignments(), checkinRequestsByFloor()]);
     let screen;
     if (rsn === undefined) {
-      screen = coverageListView(plans, all, notice);
+      screen = coverageListView(plans, all, notice, requests);
     } else {
       const plan = plans.find((candidate) => candidate.rsn === rsn);
       const ambassadors = plan && can(session.role, "accounts.manage") ? await assignments().ambassadors() : undefined;
-      screen = plan ? coverageBuildingView(plan, all, { notice, ambassadors }) : coverageMissingView();
+      screen = plan ? coverageBuildingView(plan, all, { notice, ambassadors, requests }) : coverageMissingView();
     }
     return (
       <Screen surface="staff">

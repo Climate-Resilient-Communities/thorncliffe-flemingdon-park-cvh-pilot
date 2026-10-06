@@ -76,7 +76,7 @@ describe("the edit link's wire contract (S07.06)", () => {
     expect(EditExpiredBodySchema.parse({ v: 1, status: "expired" })).toBeDefined();
     expect(EditDoneBodySchema.parse({ v: 1, status: "changed" })).toBeDefined();
     expect(EditDoneBodySchema.parse({ v: 1, status: "deleted" })).toBeDefined();
-    const view = { v: 1, status: "ok", subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: "1", floors: [F1] }], groups: ["seniors"], muted_topics: [], phone_last2: "23" } };
+    const view = { v: 1, status: "ok", subscription: { lang: "en", neighbourhood: "TP", places: [{ rsn: "1", floors: [F1] }], groups: ["seniors"], muted_topics: [], phone_last2: "23", checkin: null } };
     expect(EditViewBodySchema.parse(view)).toEqual(view);
     // Never more of the number than its last two digits.
     expect(EditViewBodySchema.safeParse({ ...view, subscription: { ...view.subscription, phone_last2: "0123" } }).success).toBe(false);

@@ -14,8 +14,12 @@
 // Deletion (`deleteNumber`): STOP, or a second 0 within 10 minutes, hard-deletes everything held for the number in this transaction, with
 // nothing kept: the subscriber (its places, muted topics and prompt go with it), any pending sign-up and any `inbound_reply` rows; each
 // recipient's `queued` and claimed-but-not-handed-off texts are set `skipped` first (`skipRecipientDeliveries`), and the delete's trigger
-// makes the texts already handed off forget the recipient (AD-8). Lock order (E07): delivery rows, then the subscriber row, then check-ins
-// (`checkins.deleteForSubscriber`, E08's port; a no-op until then). Nothing is sent afterwards: no record could resolve the number.
+// makes the texts already handed off forget the recipient (AD-8). Lock order (E07, E08 "Request lock order"): the subscriber's round threads
+// (`checkins.lockRounds`), delivery rows, the subscriber row, then its check-in rows (`checkins.deleteForSubscriber`, S08.05). Nothing is sent
+// afterwards: no record could resolve the number.
+//
+// YES (S07.04) makes the subscriber from the pending sign-up; a check-in request made with it is activated in the same transaction if its
+// floor is still covered (S08.05, `checkinActivation`).
 //
 // The number is never logged, audited, put in an `ops_event` or a `delivery` row, or put in an error: log lines carry the keyword, the
 // state and the action only.
@@ -29,15 +33,16 @@ import { createHash } from "node:crypto";
 import { canadianNumber } from "../../../contracts/signup";
 import type { LaunchCode } from "../../../i18n/languages";
 import { residentText, type ResidentTextName } from "../../../i18n/residentTexts";
-import type { Db, DbTransaction } from "../../../platform/db";
+import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
+import type { CheckinRequest, RequestEdit, RequestEditDone } from "../../checkins";
 import { countSms, normaliseSms, type DeliveryResult, type Enqueued, type RecipientKind, type SkippedForRecipient, type TransactionalInput } from "../../messaging";
 import { campaignStore, type CampaignStore } from "../adapters/campaignStore";
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { pendingSignupStore, type PendingSignupRow, type PendingSignupStore } from "../adapters/pendingSignupStore";
 import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type SubscriberStore } from "../adapters/subscriberStore";
 import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
-import { MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
+import { HUB_NUMBER, MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
 import { createSignupGate } from "./campaignGate";
 import { createNumberDeletion, type Deleted } from "./deletion";
 import { clientHash } from "./rateLimit";
@@ -49,39 +54,66 @@ export const SIGNUP_INFO_SCOPE = "signup_info";
 /** The scope of the inbound limit's keyed hash (more than 20 messages an hour from one number, S07.09). */
 
 /**
- * Port: `checkins`' `deleteForSubscriber(subscriberId, tx)` (E07 handoffs). Deleting a subscriber calls it in the deletion's transaction,
- * after the subscriber's row is locked and before it is deleted; E08 implements it (tally the subscriber's check-in rows into closed stubs).
+ * Port: `checkins`' `deleteForSubscriber(subscriberId, tx)` (E07 handoffs), implemented by S08.05 (`createCheckinRequests`). Deleting a
+ * subscriber calls it in the deletion's transaction, after the subscriber's row is locked and before it is deleted: every check-in row that
+ * names the subscriber is tallied (if it was not yet) and closed into a stub. `lockRounds` is the deletion's first step (E08 "Request lock
+ * order": the subscriber's round threads' `alert` rows, before its deliveries and its row); a port with no rounds has none to lock.
  */
 export interface CheckinCleanup {
+  lockRounds?(subscriberId: string, tx: DbTransaction): Promise<void>;
   deleteForSubscriber(subscriberId: string, tx: DbTransaction): Promise<void>;
 }
 
-/** Until E08: there are no check-in rows to remove. */
-export const noCheckinsYet: CheckinCleanup = { deleteForSubscriber: async () => undefined };
+/** No check-in rows to remove (a test of something else). */
+export const noCheckinsYet: CheckinCleanup = { lockRounds: async () => undefined, deleteForSubscriber: async () => undefined };
 
 /** What a withdrawal of a check-in request did: it withdrew one, or there was none. */
 export type CheckinWithdrawal = "withdrawn" | "none";
 
 /**
  * Port: `checkins`' check-in request (E07 handoffs; E08 definitions "Check-in request", "Changed location"), beside `deleteForSubscriber`
- * and implemented with it by E08 (S08.05), in the router's transaction under the number's lock:
- *  - `withdrawRequest(subscriberId, tx)`: reply 3 (S07.05). E08 withdraws the subscriber's request (`removeRequester`: its open rows tallied
- *    and closed, `checkin_method` cleared, in the request lock order it owns) and says whether there was one; the reply is "You have no
- *    check-in request" or the withdrawal's confirmation;
+ * and implemented with it by S08.05 (`createCheckinRequests`), in the caller's transaction under the number's lock:
+ *  - `withdrawRequest(subscriberId, tx)`: reply 3 (S07.05). checkins withdraws the subscriber's request (`removeRequester`: its open rows
+ *    tallied and closed, `checkin_method` cleared, in the request lock order it owns) and says whether there was one; the reply is "You have
+ *    no check-in request" or the withdrawal's confirmation;
  *  - `locationChanging(subscriberId, places, tx)`: every saved place is about to be replaced with `places` (menu 1: the one building and
  *    floor chosen; S07.06's edit page: the places left on it, one row per building and floor, a null floor for none). It is called before
- *    the caller locks the subscriber's row and before its places are deleted, so that E08 takes its own "Request lock order" (the candidate
- *    round threads' `alert` rows, then the subscriber row, then `checkin` and `checkin_tally`) and can still read the "where I live" place;
- *    the caller's row lock (`lockForEdit`) comes after it, a re-lock when E08 already holds the row. E08 withdraws the request when that
- *    place's building or floor changes ("Changed location") and says so; the confirmation is then followed by the withdrawal's text.
+ *    the caller locks the subscriber's row and before its places are deleted, so that checkins takes its own "Request lock order" (the
+ *    candidate round threads' `alert` rows, then the subscriber row, then `checkin` and `checkin_tally`) and can still read the "where I
+ *    live" place; the caller's row lock (`lockForEdit`) comes after it, a re-lock when checkins already holds the row. checkins withdraws
+ *    the request when that place's building or floor is not among the new places ("Changed location") and says so; the confirmation is
+ *    then followed by the withdrawal's text.
  */
 export interface CheckinRequests {
   withdrawRequest(subscriberId: string, tx: DbTransaction): Promise<CheckinWithdrawal>;
   locationChanging(subscriberId: string, places: readonly { rsn: string; floorId: string | null }[], tx: DbTransaction): Promise<CheckinWithdrawal>;
 }
 
-/** Until E08: nobody has a check-in request, so reply 3 is answered "You have no check-in request" and a move withdraws nothing. */
-export const noCheckinRequestsYet: CheckinRequests = { withdrawRequest: async () => "none", locationChanging: async () => "none" };
+/**
+ * Port: the request a resident asks for (S08.05, checkins' `createCheckinRequests`), the edit page's and YES's:
+ *  - `checkRequestChange`: whether the page's change can be made (a request at a new place needs the consent confirmed), asked before the
+ *    link is used, so a refusal uses nothing;
+ *  - `changeRequest`: the page's change, called where `locationChanging` is (before the subscriber's row is locked here) with the places
+ *    that replace the saved ones and the request the page sends; it says whether a request was withdrawn and what the page tells the resident;
+ *  - `activate`: at YES, the request made during sign-up, saved and joined to the matching open rounds if its floor is still covered.
+ */
+export interface CheckinRequestChanges {
+  checkRequestChange(subscriberId: string, edit: RequestEdit, executor: DbExecutor): Promise<"consent_missing" | null>;
+  changeRequest(subscriberId: string, edit: RequestEdit, tx: DbTransaction): Promise<RequestEditDone>;
+  activate(subscriberId: string, request: CheckinRequest, tx: DbTransaction): Promise<"requested" | "uncovered">;
+}
+
+/**
+ * Nobody has a check-in request (a test of something else): reply 3 is answered "You have no check-in request", a move withdraws nothing,
+ * the page's request changes nothing, and a request at YES is not activated.
+ */
+export const noCheckinRequestsYet: CheckinRequests & CheckinRequestChanges = {
+  withdrawRequest: async () => "none",
+  locationChanging: async () => "none",
+  checkRequestChange: async () => null,
+  changeRequest: async () => ({ withdrawn: false, answer: null }),
+  activate: async () => "uncovered",
+};
 
 /** The subscriber a menu acts for: its id and language, and the keyed hash of its number (the daily menu limit is per number). */
 export interface MenuSubscriber {
@@ -124,6 +156,8 @@ export interface InboundDeps {
   /** messaging's `skipRecipientDeliveries`. */
   skipRecipientDeliveries: (tx: DbTransaction, recipient: { kind: RecipientKind; id: string }) => Promise<SkippedForRecipient>;
   checkins?: CheckinCleanup;
+  /** S08.05: checkins' activation of a request made during sign-up, at YES (E08 "Request during sign-up"). */
+  checkinActivation?: Pick<CheckinRequestChanges, "activate">;
   menus?: MenuPort;
   /** The server-only key of the keyed hash the once-a-day limit keeps (the rate limiter's key). */
   numberKey: () => string;
@@ -232,7 +266,8 @@ export function signupLink(publicBaseUrl: string, lang: LaunchCode): string {
  * the router so that it deletes with the webhook's own check-ins port.)
  */
 export interface SubscriberDeletion {
-  deleteSubscriber(tx: DbTransaction, phone: string, subscriber: SubscriberRow): Promise<Deleted>;
+  /** `roundsLocked`: the purge took checkins' `lockRounds` itself, first (S08.05), so the deletion does not take it again after the row. */
+  deleteSubscriber(tx: DbTransaction, phone: string, subscriber: SubscriberRow, options?: { roundsLocked?: boolean }): Promise<Deleted>;
 }
 
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
@@ -243,6 +278,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
   const inbound = deps.stores?.inbound ?? inboundStore;
   const campaigns = deps.stores?.campaigns ?? campaignStore;
   const checkins = deps.checkins ?? noCheckinsYet;
+  const activation = deps.checkinActivation ?? noCheckinRequestsYet;
   const menus = deps.menus ?? noMenus;
   const newId = deps.newId ?? (() => uuidv7());
 
@@ -277,9 +313,15 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
     }
     await subscribers.insertPlaces(tx, id, places);
     for (const topic of row.topics) await subscribers.insertTopic(tx, id, topic);
+    // S08.05 (E08 "Request during sign-up"): a check-in request made with the sign-up is activated now only if its place is still saved and its
+    // floor is still covered (checkins checks the coverage again, saves it and joins the matching open rounds in this transaction); if not, the
+    // welcome is followed by "No ambassador covers your floor now. Call the Hub at {number}".
+    const request = row.checkin;
+    const checkin = request === null ? null : places.some((place) => place.rsn === request.rsn && place.floorId === request.floorId) ? await activation.activate(id, request, tx) : "uncovered";
     await skip(tx, "pending_signup", row.id);
     await pending.delete(tx, row.id);
     await queue(tx, { purpose: "welcome", recipient: { kind: "subscriber", id }, nonce: "yes", lang, name: "welcome" });
+    if (checkin === "uncovered") await queue(tx, { purpose: "welcome", recipient: { kind: "subscriber", id }, nonce: "yes.checkin", lang, name: "checkinUncoveredNow", values: { hub: HUB_NUMBER } });
   }
 
   /** What a number with no subscription is told (S09.07): the sign-up link; while sign-ups are paused, that they are; YES after the deadline, that the pilot ended. */
@@ -348,7 +390,10 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
           const limited = await inbound.limitInbound(tx, clientHash(deps.numberKey(), INBOUND_SCOPE, phone), INBOUND_LIMIT);
           if (limited !== "allowed") return { kind: "handled", keyword, state: state.kind, action: "rate_limited", replied: false };
         }
-        if (cancelPrompt && subscriber) await subscribers.clearPrompt(tx, subscriber.id);
+        // S08.05: reply 3 asks checkins first, which locks the round threads before the subscriber's row (E08 "Request lock order"); the prompt
+        // it cancels is cleared after that, never before, so an approval holding a thread and then the row FOR SHARE cannot deadlock with it.
+        const withdrawFirst = action.kind === "menu" && action.choice === "3";
+        if (cancelPrompt && subscriber && !withdrawFirst) await subscribers.clearPrompt(tx, subscriber.id);
 
         let replied = false;
         // S07.05: the menus act for the subscriber with its number's keyed hash (the daily menu limit is per number); an idle menu's reset
@@ -388,6 +433,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
             break;
           case "menu":
             replied = (await menus.start(tx, menuSubscriber(), action.choice)) || replied;
+            if (cancelPrompt && withdrawFirst) await subscribers.clearPrompt(tx, subscriber!.id);
             break;
           case "menu_reply":
             // The reply's digit is all a menu reads of the body.
@@ -414,7 +460,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
       return outcome;
     },
     // S09.08: the end-of-pilot purge's call of the one deletion (SubscriberDeletion above).
-    deleteSubscriber: async (tx, phone, subscriber) => deleteNumber(tx, phone, { subscriber, pending: await pending.ofNumber(tx, phone) }),
+    deleteSubscriber: async (tx, phone, subscriber, options) => deleteNumber(tx, phone, { subscriber, pending: await pending.ofNumber(tx, phone) }, options),
   };
 }
 

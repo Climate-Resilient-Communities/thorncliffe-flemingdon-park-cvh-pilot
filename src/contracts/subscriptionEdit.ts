@@ -3,8 +3,11 @@
 // of the page sees nothing and uses nothing. `change` and `delete` each use the link once. With the sign-up, these POSTs are the only resident
 // requests that carry places and groups (AD-3's exception); none sets a cookie, none is cached, and the service worker never answers them.
 // An expired or used link is a success body with `status: "expired"` (spine: expected outcomes are bodies with a status). Pure and browser-safe.
+// S08.05 adds the check-in request: the view says what is asked for, a change may ask for one, change its method or withdraw it, and the
+// answer says what became of it (these answers are personal: POST only, no-store, never the service worker, no usage event).
 import { z } from "zod";
 import { NEIGHBOURHOOD_ID, SAFETY_OVERRIDE_TYPES } from "./audience";
+import { CHECKIN_CONSENT_VERSION, CHECKIN_METHODS, CheckinAnswerSchema, CheckinRequestSchema, checkinRequestInput, isSavedPlace, type CheckinRequestInput } from "./checkin";
 import { LangCodeSchema } from "./lang";
 import { FloorIdSchema, RsnSchema } from "./places";
 import { SIGNUP_GROUPS, SIGNUP_MAX_FLOORS_PER_PLACE, SIGNUP_MAX_PLACES } from "./signup";
@@ -70,6 +73,12 @@ export const EditChangeRequestSchema = z.strictObject({
   places: z.array(PlaceSchema).max(SIGNUP_MAX_PLACES),
   groups: z.array(z.enum(SIGNUP_GROUPS)).max(SIGNUP_GROUPS.length),
   muted_topics: z.array(z.enum(MUTABLE_TOPICS)).max(MUTABLE_TOPICS.length),
+  /**
+   * S08.05: the check-in request as the page leaves it: one on a place of `places` (the consent version when it is asked at a new place,
+   * null for the same place with another method), null to have none (withdraw it), or left out to keep it as it is (withdrawn only if its
+   * place is no longer saved).
+   */
+  checkin: CheckinRequestSchema.nullable().optional(),
 });
 export type EditChangeRequestBody = z.infer<typeof EditChangeRequestSchema>;
 
@@ -81,6 +90,8 @@ export interface EditChange {
   places: { rsn: string; floors: string[] }[];
   groups: (typeof SIGNUP_GROUPS)[number][];
   mutedTopics: MutableTopic[];
+  /** S08.05: the request the page sends (undefined: none sent, kept as it is; null: none). */
+  checkin?: CheckinRequestInput | null;
 }
 
 /** What the page shows of the subscription: no number but its last two digits. */
@@ -92,13 +103,20 @@ const SubscriptionViewSchema = z.strictObject({
   groups: z.array(z.enum(SIGNUP_GROUPS)),
   muted_topics: z.array(z.string()),
   phone_last2: z.string().regex(/^[0-9]{2}$/),
+  /** S08.05: the check-in request, or null: its "where I live" building and floor, and the method. */
+  checkin: z.strictObject({ rsn: RsnSchema, floor: FloorIdSchema, method: z.enum(CHECKIN_METHODS) }).nullable(),
 });
 export type SubscriptionView = z.infer<typeof SubscriptionViewSchema>;
 
 export const EditViewBodySchema = z.strictObject({ v: z.literal(SUBSCRIPTION_EDIT_CONTRACT_VERSION), status: z.literal("ok"), subscription: SubscriptionViewSchema });
 /** The link is unknown, used or run out, or its subscriber no longer receives texts: all the same answer. */
 export const EditExpiredBodySchema = z.strictObject({ v: z.literal(SUBSCRIPTION_EDIT_CONTRACT_VERSION), status: z.literal("expired") });
-export const EditDoneBodySchema = z.strictObject({ v: z.literal(SUBSCRIPTION_EDIT_CONTRACT_VERSION), status: z.enum(["changed", "deleted"]) });
+/** S08.05: a change's answer also says what became of the check-in request, when the change touched one. */
+export const EditDoneBodySchema = z.strictObject({
+  v: z.literal(SUBSCRIPTION_EDIT_CONTRACT_VERSION),
+  status: z.enum(["changed", "deleted"]),
+  checkin: CheckinAnswerSchema.optional(),
+});
 export type EditViewBody = z.infer<typeof EditViewBodySchema>;
 export type EditExpiredBody = z.infer<typeof EditExpiredBodySchema>;
 export type EditDoneBody = z.infer<typeof EditDoneBodySchema>;
@@ -106,13 +124,14 @@ export type EditDoneBody = z.infer<typeof EditDoneBodySchema>;
 export const EDIT_EXPIRED: EditExpiredBody = { v: SUBSCRIPTION_EDIT_CONTRACT_VERSION, status: "expired" };
 
 /** What a request can be refused with; the HTTP status of each is in SUBSCRIPTION_EDIT_ERROR_STATUS. A refused change uses nothing. */
-export const SUBSCRIPTION_EDIT_ERROR_CODES = ["invalid_request", "neighbourhood_missing", "place_unknown", "edit_unavailable"] as const;
+export const SUBSCRIPTION_EDIT_ERROR_CODES = ["invalid_request", "neighbourhood_missing", "place_unknown", "checkin_consent_missing", "edit_unavailable"] as const;
 export type SubscriptionEditErrorCode = (typeof SUBSCRIPTION_EDIT_ERROR_CODES)[number];
 
 export const SUBSCRIPTION_EDIT_ERROR_STATUS: Record<SubscriptionEditErrorCode, 400 | 503> = {
   invalid_request: 400,
   neighbourhood_missing: 400,
   place_unknown: 400,
+  checkin_consent_missing: 400,
   edit_unavailable: 503,
 };
 
@@ -144,6 +163,9 @@ export function checkEditChangeRequest(raw: unknown): EditCheck<EditChange> {
     byRsn.set(place.rsn, floors);
   }
   const places = [...byRsn.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([rsn, floors]) => ({ rsn, floors: [...floors].sort() }));
+  // S08.05: a request is on one of the places sent, with its floor; a consent given is the wording shown now.
+  const checkin = body.checkin ? checkinRequestInput(body.checkin) : body.checkin;
+  if (checkin && (!isSavedPlace(checkin, places) || (checkin.consentVersion !== null && checkin.consentVersion !== CHECKIN_CONSENT_VERSION))) return { ok: false, code: "invalid_request" };
   return {
     ok: true,
     value: {
@@ -153,6 +175,7 @@ export function checkEditChangeRequest(raw: unknown): EditCheck<EditChange> {
       places,
       groups: SIGNUP_GROUPS.filter((group) => body.groups.includes(group)),
       mutedTopics: MUTABLE_TOPICS.filter((topic) => body.muted_topics.includes(topic)),
+      ...(checkin === undefined ? {} : { checkin }),
     },
   };
 }

@@ -3,7 +3,7 @@
 // `phoneOf` (the ContactResolver's source, at the hand-off point, and S07.06's deletion, which deletes by number); the router and the web
 // sign-up find a subscriber by number and read back its id, language and prompt, never the number; S07.06's edit page reads its last two
 // digits only.
-import { and, countDistinct, eq, gt, sql } from "drizzle-orm";
+import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { receivingSql } from "./campaignStore";
 import { smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout } from "./schema";
@@ -28,6 +28,26 @@ export interface NewSubscriber {
   groups: string[];
   consentVersion: string;
   startedBy: "web" | "staff";
+}
+
+/** S08.05: a subscriber's check-in request: the method, the "where I live" building and floor, and the consent version confirmed. */
+export interface SubscriberCheckin {
+  method: "call" | "text";
+  rsn: string;
+  floorId: string;
+  consentVersion: string;
+}
+
+/** The request's four columns read back as one value, or null (the table keeps them all set or all null). */
+const requestColumns = {
+  checkinMethod: subscriber.checkinMethod,
+  checkinConsentVersion: subscriber.checkinConsentVersion,
+  whereILiveRsn: subscriber.whereILiveRsn,
+  whereILiveFloorId: subscriber.whereILiveFloorId,
+};
+function requestOfRow(row: { checkinMethod: string | null; checkinConsentVersion: string | null; whereILiveRsn: string | null; whereILiveFloorId: string | null }): SubscriberCheckin | null {
+  if (row.checkinMethod === null || row.checkinConsentVersion === null || row.whereILiveRsn === null || row.whereILiveFloorId === null) return null;
+  return { method: row.checkinMethod as SubscriberCheckin["method"], rsn: row.whereILiveRsn, floorId: row.whereILiveFloorId, consentVersion: row.checkinConsentVersion };
 }
 
 /** One place row: a building, and one floor in it or none. */
@@ -206,13 +226,71 @@ export const subscriberStore = {
    */
   async editView(tx: DbTransaction, id: string): Promise<SubscriberEditView | null> {
     const [row] = await tx
-      .select({ lang: subscriber.lang, neighbourhoodId: subscriber.neighbourhoodId, groups: subscriber.groups, phoneLast2: sql<string>`right(${subscriber.phone}, 2)` })
+      .select({ lang: subscriber.lang, neighbourhoodId: subscriber.neighbourhoodId, groups: subscriber.groups, phoneLast2: sql<string>`right(${subscriber.phone}, 2)`, ...requestColumns })
       .from(subscriber)
       .where(eq(subscriber.id, id));
     if (!row) return null;
     const places = await tx.select({ rsn: subscriberPlace.rsn, floorId: subscriberPlace.floorId }).from(subscriberPlace).where(eq(subscriberPlace.subscriberId, id));
     const topics = await tx.select({ topic: subscriberTopicOptout.topic }).from(subscriberTopicOptout).where(eq(subscriberTopicOptout.subscriberId, id));
-    return { ...row, places, mutedTopics: topics.map((topic) => topic.topic) };
+    const { lang, neighbourhoodId, groups, phoneLast2 } = row;
+    return { lang, neighbourhoodId, groups, phoneLast2, places, mutedTopics: topics.map((topic) => topic.topic), checkin: requestOfRow(row) };
+  },
+
+  /** S08.05: the subscriber's check-in request, read without a lock; null with none, or no such subscriber. */
+  async checkinOf(executor: DbExecutor, id: string): Promise<SubscriberCheckin | null> {
+    const [row] = await executor.select(requestColumns).from(subscriber).where(eq(subscriber.id, id));
+    return row ? requestOfRow(row) : null;
+  },
+
+  /** S08.05: the subscriber's row locked for an edit (`lockForEdit`'s FOR NO KEY UPDATE) and its request read under the lock; null when gone. */
+  async lockForEditWithCheckin(tx: DbTransaction, id: string): Promise<{ request: SubscriberCheckin | null } | null> {
+    const [row] = await tx.select(requestColumns).from(subscriber).where(eq(subscriber.id, id)).for("no key update");
+    return row ? { request: requestOfRow(row) } : null;
+  },
+
+  /**
+   * S08.05: the rows of these subscribers locked FOR SHARE, in id order (an approval's round, S08.06: it waits for a withdrawal's edit lock and
+   * a deletion's FOR UPDATE, then reads the row as they left it), with the request of each one that still receives texts and has one.
+   */
+  async lockRequesters(tx: DbTransaction, ids: readonly string[]): Promise<Map<string, SubscriberCheckin>> {
+    const found = new Map<string, SubscriberCheckin>();
+    if (ids.length === 0) return found;
+    const rows = await tx
+      .select({ id: subscriber.id, ...requestColumns })
+      .from(subscriber)
+      .where(and(inArray(subscriber.id, [...ids]), receivingSql(subscriber.retentionState), isNotNull(subscriber.checkinMethod)))
+      .orderBy(asc(subscriber.id))
+      .for("share");
+    for (const row of rows) {
+      const request = requestOfRow(row);
+      if (request) found.set(row.id, request);
+    }
+    return found;
+  },
+
+  /** S08.05: writes the request, or clears it (null); the caller holds the subscriber's row lock. */
+  async setCheckin(tx: DbTransaction, id: string, request: SubscriberCheckin | null): Promise<void> {
+    await tx
+      .update(subscriber)
+      .set(
+        request === null
+          ? { checkinMethod: null, checkinConsentVersion: null, whereILiveRsn: null, whereILiveFloorId: null }
+          : { checkinMethod: request.method, checkinConsentVersion: request.consentVersion, whereILiveRsn: request.rsn, whereILiveFloorId: request.floorId },
+      )
+      .where(eq(subscriber.id, id));
+  },
+
+  /**
+   * S08.05: how many receiving subscribers have a check-in request on each building and floor (the coverage view's count of requests on
+   * floors nobody covers). Counts only: no subscriber is named.
+   */
+  async checkinCountsByFloor(executor: DbExecutor): Promise<{ rsn: string; floorId: string; requests: number }[]> {
+    const rows = await executor
+      .select({ rsn: subscriber.whereILiveRsn, floorId: subscriber.whereILiveFloorId, requests: count() })
+      .from(subscriber)
+      .where(and(isNotNull(subscriber.checkinMethod), receivingSql(subscriber.retentionState)))
+      .groupBy(subscriber.whereILiveRsn, subscriber.whereILiveFloorId);
+    return rows.flatMap((row) => (row.rsn !== null && row.floorId !== null ? [{ rsn: row.rsn, floorId: row.floorId, requests: row.requests }] : []));
   },
 
   /** Sets the subscriber's groups (S07.06's page); the caller holds the subscriber's row lock (`lockForEdit`). */
@@ -235,6 +313,8 @@ export interface SubscriberEditView {
   phoneLast2: string;
   places: { rsn: string; floorId: string | null }[];
   mutedTopics: string[];
+  /** S08.05: the check-in request, or null. */
+  checkin: SubscriberCheckin | null;
 }
 
 export type SubscriberStore = typeof subscriberStore;

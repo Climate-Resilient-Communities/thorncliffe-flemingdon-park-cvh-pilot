@@ -6,7 +6,8 @@
 //  2. the use case (subscriptions' createSignup) checks the terms version (409 `terms_changed`; 503 `signup_unavailable` while no terms may
 //     be signed up to) and the places (400), counts the client (429 `rate_limited` with a Retry-After, nothing stored), then writes;
 //  3. every accepted sign-up answers HTTP 202 with the same bytes, `{"v":1,"status":"accepted"}`, and the same headers, whether the number
-//     is new, already pending or already subscribed.
+//     is new, already pending or already subscribed. S08.05: with a check-in request, `checkin` says whether its floor is covered
+//     (`requested`) or not (`uncovered`), the same for all three.
 // Nothing here logs, echoes or stores the number; a failure is logged with a safe classification only.
 import { SIGNUP_ACCEPTED, SIGNUP_ERROR_STATUS, SIGNUP_MAX_BODY_CHARS, checkSignupRequest, signupErrorBody, type SignupErrorCode } from "@/contracts/signup";
 import type { Signup } from "@/modules/subscriptions";
@@ -52,5 +53,8 @@ export async function signupResponse(deps: SignupRouteDeps, request: Request): P
   if (outcome.kind === "rate_limited") return refused("rate_limited", { "Retry-After": String(outcome.retryAfterSeconds) });
   if (outcome.kind === "refused") return refused(outcome.code);
   deps.afterAccepted?.();
+  // S08.05: a sign-up with a check-in request also says whether its floor is covered; that depends on the floor alone, so the three cases
+  // (a new, a pending and a subscribed number) still answer the same bytes.
+  if (outcome.checkin !== undefined) return new Response(JSON.stringify({ ...SIGNUP_ACCEPTED, checkin: outcome.checkin }), { status: 202, headers: HEADERS });
   return new Response(ACCEPTED_BODY, { status: 202, headers: HEADERS });
 }

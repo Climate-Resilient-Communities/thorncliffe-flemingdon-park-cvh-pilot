@@ -10,7 +10,8 @@
 //     OWN, so a large purge never holds one long transaction (the deletion counter of S07.10 and the number's lock are held only for one subscriber):
 //       a. the number, read only while they are still one the purge deletes, and the number's lock (the lock a YES, a STOP and a sign-up take), so a
 //          reply from the number that is under way finishes first;
-//       b. their waiting texts skipped, the E07 deletion's first step taken first, so its lock order holds (delivery rows, then the subscriber's row);
+//       b. their round threads locked (checkins' `lockRounds`, S08.05: the E07 deletion's first step, so a thread lock is never taken after the
+//          subscriber's row) and their waiting texts skipped, so the deletion's lock order holds (threads, delivery rows, then the subscriber's row);
 //       c. their row locked `FOR UPDATE` and the condition judged again under the lock with the database's clock: still `reconsent_pending` and the
 //          deadline passed. A YES (`campaignStore.retain`: one conditional update under the same row lock and clock) that committed first, or before
 //          the deadline, has made them `retained`: the transaction is rolled back, the skip with it, and they are kept. A YES after the deadline changed
@@ -44,6 +45,11 @@ export interface PurgeDeps {
   db: Db;
   /** The E07 deletion: the inbound router's `deleteSubscriber` (the composition root's). */
   deletion: SubscriberDeletion;
+  /**
+   * checkins' `lockRounds` (S08.05): the subscriber's round threads locked before their texts and their row, as the E07 deletion takes it first; the
+   * deletion is then told not to take it again. Without it the deletion takes it itself, after the purge's row lock.
+   */
+  checkins?: { lockRounds(subscriberId: string, tx: DbTransaction): Promise<void> };
   /** messaging's `skipRecipientDeliveries`: the deletion's first step, taken before the row lock. */
   skipRecipientDeliveries: (tx: DbTransaction, recipient: { kind: RecipientKind; id: string }) => Promise<SkippedForRecipient>;
   /** Writes the aggregate ops event `campaign.purge_completed` in the completion's transaction (ops' `recordOpsEvent`, wired by the composition root). */
@@ -99,10 +105,11 @@ export function createEndOfPilotPurge(deps: PurgeDeps): EndOfPilotPurge {
         const phone = await store.numberOfPurgeable(tx, id);
         if (phone === null) return "skipped";
         await pending.lockNumber(tx, phone);
+        await deps.checkins?.lockRounds(id, tx);
         await deps.skipRecipientDeliveries(tx, { kind: "subscriber", id });
         const row = await store.lockPurgeable(tx, id);
         if (row === null) throw new NotPurgeable();
-        const deleted = await deps.deletion.deleteSubscriber(tx, phone, row);
+        const deleted = await deps.deletion.deleteSubscriber(tx, phone, row, { roundsLocked: deps.checkins !== undefined });
         if (!deleted.subscriber) throw new NotPurgeable();
         await store.countDeleted(tx, campaignId);
         return "deleted";

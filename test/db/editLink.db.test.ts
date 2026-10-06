@@ -1,7 +1,7 @@
 // The one-time web link against a real database (S07.06), as src/app/subscriptionEdit.ts and src/app/inbound.ts compose it: asked for from the
 // menus' offers (the daily limit's, and a menu closed with nothing changed), made as a hashed token valid 30 minutes and texted as
 // `/{lang}/subscription/{token}`; the page's view (reads only), its change (the link used in the same transaction, a confirmation queued) and
-// its deletion (E07's one deletion, nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; a link
+// its deletion (E07's one deletion, against checkins' real deletion port, S08.05; nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; a link
 // preview's GET of the page (the page module as the server renders it) and two submissions of one link at once through the change route make
 // exactly one change; the change's locks (checkins asked before the subscriber's row is locked, then an edit's lock, under which a resend
 // still finds the resident receiving); the grants and the guard. Every number is fictional (555-01xx) and nothing reaches Twilio.
@@ -16,15 +16,21 @@ import SubscriptionEditPage from "../../src/app/[lang]/subscription/[token]/page
 import { subscriptionChangeResponse, subscriptionViewResponse, type SubscriptionRouteDeps } from "../../src/app/api/subscription/handler";
 import { EDIT_LINK_TTL_MS, type EditChange } from "../../src/contracts/subscriptionEdit";
 import en from "../../src/i18n/messages/en.json";
+import { roundThreads } from "../../src/modules/alerting";
+import { createCheckinRequests } from "../../src/modules/checkins";
+import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { floorsOfBuilding, listBuildings, neighbourhoodIds } from "../../src/modules/places";
 import {
   MENU_SCOPE,
+  checkinRequestStore,
   createEditLink,
   createInboundRouter,
   createMenus,
   editTokenHash,
+  noCheckinRequestsYet,
   type CheckinCleanup,
+  type CheckinRequestChanges,
   type CheckinRequests,
   type EditLink,
   type InboundOutcome,
@@ -118,14 +124,30 @@ afterAll(async () => {
 
 beforeEach(resetAll);
 
-/** checkins' ports as fakes that record what they were asked (E08 implements them). */
-const checkins: CheckinRequests & CheckinCleanup = {
+/** checkins' real ports (S08.05, src/app/checkins.ts): E07's deletion runs against them (the round threads locked first, the rows closed). */
+const realCheckins = () =>
+  createCheckinRequests({
+    requests: checkinRequestStore(),
+    threads: roundThreads,
+    coversFloor: (rsn, floorId, executor) => createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } }).coversFloor(rsn, floorId, executor),
+  });
+
+/**
+ * checkins' ports as the edit link sees them, recording what they were asked: the deletion's are the real ones (test/db/checkinRequest.db.test.ts
+ * has a request's rows closed by them), and the request's are fakes whose answer a test sets (the real ones are tested there as well).
+ */
+const checkins: CheckinRequests & CheckinRequestChanges & CheckinCleanup = {
+  ...noCheckinRequestsYet,
   withdrawRequest: async () => "none",
   locationChanging: async (subscriberId, places) => {
     located.push({ subscriberId, places });
     return withdrawal;
   },
-  deleteForSubscriber: async (subscriberId) => void cleaned.push(subscriberId),
+  lockRounds: (subscriberId, tx) => realCheckins().lockRounds(subscriberId, tx),
+  deleteForSubscriber: async (subscriberId, tx) => {
+    cleaned.push(subscriberId);
+    await realCheckins().deleteForSubscriber(subscriberId, tx);
+  },
 };
 
 /**
@@ -133,7 +155,7 @@ const checkins: CheckinRequests & CheckinCleanup = {
  * ports and the subscriber store can be swapped, and `onText` is called with each text's body before it is queued, inside the transaction
  * that queues it (what other sessions see then).
  */
-function editLinkOn(seams: { checkins?: CheckinRequests & CheckinCleanup; subscribers?: SubscriberStore; onText?: (body: string) => Promise<void> } = {}): EditLink {
+function editLinkOn(seams: { checkins?: CheckinRequests & CheckinRequestChanges & CheckinCleanup; subscribers?: SubscriberStore; onText?: (body: string) => Promise<void> } = {}): EditLink {
   const queue = createDeliveryQueue();
   return createEditLink({
     db: app,
@@ -369,6 +391,7 @@ describe("the page's view", () => {
         groups: ["seniors"],
         muted_topics: ["power"],
         phone_last2: "71",
+        checkin: null,
       },
     });
     expect(JSON.stringify(view)).not.toContain("5550171");

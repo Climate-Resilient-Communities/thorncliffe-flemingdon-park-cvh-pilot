@@ -498,7 +498,7 @@ Replies 1 (building or floor) and 2 (language) start a menu; reply 3 withdraws a
 | Idle reset | `MENU_IDLE_MS` (10 minutes) and `MENU_KEPT_MS` (1 hour) in `src/modules/subscriptions/domain/menus.ts` | A menu is open for 10 minutes after its last message; a reply after that, until an hour after the last message, is told the menu reset and is read as a new keyword; the purge job deletes the row after the hour, and a later reply is read as a new keyword with no notice (as built, for the product owner to confirm: S07.05's story). |
 | Daily menu limit | `MENUS_PER_DAY` (5) in the same file | Menus started per number per day in Toronto, kept as keyed hashes in `rate_limit` (scope `sms_menu`, deleted after 24 hours by `subscriptions-purge-rate-limit`). The 6th reply 1 or 2 gets the Hub's number and the edit link's offer (S07.06). Known edge, as with the inbound limit's mute: the day the clocks go back is 25 hours long, so the menus started in its first hour are deleted in its last hour, and a number that used its 5 in that first hour can start a 6th in the last. |
 | The Hub's number | `data/catalogue/numbers.json` (id `hub`), generated into `src/contracts/hubNumber.generated.ts` | What reply 9 and the limit reply give, as `(416) 421-8997`. |
-| Check-in requests | `checkins`' ports, wired in `src/app/inbound.ts` | Until E08 (S08.05) nobody has a check-in request: reply 3 is answered "You have no check-in request", and a move by menu 1 withdraws nothing. |
+| Check-in requests | `checkins`' ports (`src/app/checkins.ts`), wired in `src/app/inbound.ts` | Reply 3 withdraws the request ("Your check-in request is withdrawn", or "You have no check-in request" when there is none); a move by menu 1 off the "where I live" floor withdraws it and offers the edit link to ask again (S08.05, below). |
 
 ### The one-time web link (S07.06)
 
@@ -512,6 +512,20 @@ gets `PUBLIC_BASE_URL/{lang}/subscription/{token}`. It adds no environment varia
 | The page and its API | `/{lang}/subscription/{token}`, `POST /api/subscription/view`, `/change`, `/delete` | `Cache-Control: no-store`, `Referrer-Policy: no-referrer`, no cookie, never kept by the service worker, no usage event. The page's HTML is the same for every link; the choices come only from `view`. |
 | Expired links | pg_cron job `subscriptions-purge-edit-tokens` (the same migration) | Every 15 minutes: links past their 30 minutes, used or not. |
 | Logs | `stdoutSubscriptionsLog` in `src/modules/subscriptions/adapters/subscriptionsLog.ts` | One JSON line per request with its outcome; any token and any phone number is taken out of every field. |
+
+### Check-in requests (S08.05)
+
+A subscribed resident asks to be checked on during a heat or power disruption: on the web sign-up form, the staff-assisted sign-up and the
+edit page, after reading `/{lang}/ready/check-in` (R-33). It adds no environment variable; what it reads and fixes:
+
+| What | Where | Value |
+|---|---|---|
+| The consent wording's version | `CHECKIN_CONSENT_VERSION` in `src/contracts/checkin.ts`, with the catalog's `checkin.consent*` | Recorded on the request (`checkin_consent_version`); a request is saved only with the version the server shows now. Change the version with the wording. |
+| Round types | `disruption_type.checkin` (migration `20261006170000_checkin_request.sql`) | `heat` and `power` in the pilot: a thread of one of these types is a round. Read only until S08.06 lets an Admin change them. |
+| Coverage | identity's `coversFloor` (an active Ambassador assigned to that floor or the whole building) | A request for a floor nobody covers is not saved ("No ambassador covers your floor yet. Call the Hub at {number}"); the rest of the form saves. At YES the floor is checked again. The Admin coverage screen counts the requests on uncovered floors per building, with no one named. |
+| Texts | catalog `smsTexts.checkinWithdrawn`, `smsTexts.checkinMoved`, `smsTexts.checkinUncoveredNow`, all 15 languages (AI-generated, not yet checked by native readers) | `checkinWithdrawn` after a withdrawal (reply 3, the edit page, a move off the floor without the edit link); `checkinMoved` after menu 1's move withdrew the request, with the edit link's offer ("Reply 1"); `checkinUncoveredNow` after the welcome when the floor of a request made at sign-up is no longer covered at YES. Each fits one segment (`menuTexts.test.ts`). |
+| Personalised answers | `POST /api/signup`, the staff sign-up's action, `POST /api/subscription/view` and `/change` | The only place a request's outcome is said: POST only, `Cache-Control: no-store`, never kept by the service worker, no usage event. R-33 itself is public and cacheable. |
+| Closed stubs | pg_cron job `checkins-purge-stubs` (the same migration) | Every 15 minutes, as the table's owner: `checkin` rows closed into stubs more than 2 hours ago. Live rows and rows kept for the Hub's follow-up (not closed) stay; the tally is never touched. |
 
 ## GitHub: environments
 
