@@ -664,4 +664,30 @@ describe("the end of the pilot", () => {
     expect(reach.real).toHaveLength(2);
     expect(await owner`select entry_id from correction_reach_kept`).toEqual([{ entry_id: correction.entry.entryId }]);
   });
+
+  it("keeps the correction reach as a copy with no foreign key, so the alert tables are still truncated as the alert tests reset them", async () => {
+    const asked = await subscriber("en");
+    const kept = await subscriber("fr");
+    const campaignId = await started();
+    await textFrom(kept.phone, "YES");
+    const original = await world.seedAlert({ recipients: [asked.id, kept.id] });
+    await sentAs(original.ids, "delivered");
+    const correction = await world.seedAlert({ recipients: [asked.id, kept.id], kind: "correction" });
+    await correcting(correction.entry.entryId, original.entry);
+    await sentAs(correction.ids, "delivered");
+    await ended(campaignId);
+    expect(await purge().run()).toMatchObject({ deleted: 1, completed: true });
+    expect(await owner`select entry_id from correction_reach_kept`).toEqual([{ entry_id: correction.entry.entryId }]);
+
+    // Postgres refuses `truncate alert_entry` while any table holds a foreign key to it and is not truncated with it, empty or not; the database tests'
+    // resets truncate the alert tables without naming this one. Rolled back: only that the truncate is not refused is checked.
+    expect(await owner`select conname from pg_constraint where conrelid = 'correction_reach_kept'::regclass and contype = 'f'`).toEqual([]);
+    const reset = () =>
+      owner.begin(async (tx) => {
+        await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+        throw new Error("rolled back");
+      });
+    expect(await refusal(reset)).toBe("rolled back");
+    expect(await owner`select entry_id from correction_reach_kept`).toEqual([{ entry_id: correction.entry.entryId }]);
+  });
 });

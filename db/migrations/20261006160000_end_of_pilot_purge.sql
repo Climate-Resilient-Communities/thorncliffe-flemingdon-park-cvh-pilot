@@ -108,9 +108,10 @@ create trigger campaign_purge_guard before insert or update on campaign_purge
 -- The correction reach measure as it stood when the purge began (messaging's; see the header). What the view shows: counts (null when the small-number
 -- rule hides them), the words shown for them, percentages, the ids of alert entries and alerts; never a number, a subscriber or recipient id or a body.
 -- The app only reads it: `correction_reach_keep()` (security definer, so the rows are the view's whoever began the purge) is its one writer, and a row is
--- never changed (an entry kept already is left as it was).
+-- never changed (an entry kept already is left as it was). `entry_id` and `alert_id` are plain ids, not foreign keys: a kept row is a frozen copy and alert
+-- entries are never deleted, and a foreign key to `alert_entry` would make every `truncate alert_entry` (the database tests' resets) name this table too.
 create table correction_reach_kept (
-  entry_id uuid primary key references alert_entry (id),
+  entry_id uuid primary key,
   alert_id uuid not null,
   kind text not null,
   is_drill boolean not null,

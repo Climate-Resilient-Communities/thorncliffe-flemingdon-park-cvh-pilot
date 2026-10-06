@@ -220,13 +220,12 @@ export const messagingControl = pgTable(
  * The correction reach measure (S07.10's view `correction_reach`, FR-M4) as it stood when the end-of-pilot purge began (S09.08): the view's rows, copied by
  * a trigger on subscriptions' `campaign_purge` in the transaction that makes it, before the first deletion, because the E07 deletion clears the recipient
  * ids the view matches on. `readCorrectionReach` reads a kept entry here instead of the view. The app only reads it; the copy is the migration's function.
+ * `entryId` is a plain id, not a reference: a kept row is a frozen copy, and a foreign key would make every `truncate alert_entry` name this table.
  */
 export const correctionReachKept = pgTable(
   "correction_reach_kept",
   {
-    entryId: uuid("entry_id")
-      .primaryKey()
-      .references(() => alertEntryKey.id),
+    entryId: uuid("entry_id").primaryKey(),
     alertId: uuid("alert_id").notNull(),
     kind: text().notNull(),
     isDrill: boolean("is_drill").notNull(),
