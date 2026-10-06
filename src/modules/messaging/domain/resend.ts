@@ -68,7 +68,7 @@ export interface ResendFacts {
   recipientId: string | null;
   /** Whether the recipient is a resident of the real alert (`subscriber`); a drill's roster member is not. */
   recipientIsSubscriber: boolean;
-  /** The status the Admin saw when they confirmed (single resend), or null when they were not shown one (resend all). */
+  /** The status the Admin saw (single resend: always given, the form is refused without it), or null for "resend all", which shows none and takes no `unknown` text. */
   seen: string | null;
   /** Whether the Admin confirmed that an `unknown` text may already have arrived. */
   confirmedUnknown: boolean;
