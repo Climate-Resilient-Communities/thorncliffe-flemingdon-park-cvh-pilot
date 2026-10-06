@@ -91,15 +91,21 @@ export interface AlertLifecycleDeps {
    */
   oncall?: { required: () => boolean; hasNumber: (tx: DbTransaction) => Promise<boolean> };
   /**
-   * The check-in round an approval starts or adds to (S08.06, AD-12, E08 "Round"): called in the approval's transaction of an acknowledgement, an update or a
-   * correction in a thread that is not a drill (and open: the approval refuses a closed one), after the entry's texts are queued and its approval audited, with
-   * the thread as the approved entry has it (its id, types and audience). `createAlerting` wires checkins' `ensureRound` here with the requesters in the
-   * buildings the audience covers: it keeps the round types (read in this transaction, so an Admin's change applies from the next approval), locks the
-   * requesters FOR SHARE in id order and adds one row for each whose "where I live" place matches the audience on a covered floor and who has none in the
-   * thread (AD-18: the recipient rows, then `checkin`, then `checkin_tally`, before the spend cap). Answers how many rows it added. Left out (the use case's
-   * own tests), an approval starts no round.
+   * The check-in round an approval starts or adds to (S08.06, AD-12, E08 "Round"), in the approval's transaction of an acknowledgement, an update or a
+   * correction in a thread that is not a drill (and open: the approval refuses a closed one), with the thread as the approved entry has it (its id, types
+   * and audience). Two steps, wired by `createAlerting`:
+   *  - `requesters`, before the texts are captured: the candidates, read without a lock (none unless one of the entry's types is a round type, read in this
+   *    transaction, so an Admin's change applies from the next approval). The capture locks their rows FOR SHARE in its one id-ordered statement with the
+   *    recipients' (`alsoLock`): every subscriber row of the approval in one id order (AD-18).
+   *  - `start`, after the texts are queued and the approval audited, with those candidates: checkins' `ensureRound`, which reads each one's request under that
+   *    lock and adds one row for each whose "where I live" place matches the audience on a covered floor and who has none in the thread (AD-18: the
+   *    recipient rows, then `checkin`, then `checkin_tally`, before the spend cap). Answers how many rows it added.
+   * Left out (the use case's own tests), an approval starts no round.
    */
-  rounds?: (tx: DbTransaction, thread: { alertId: string; types: readonly string[]; audience: Audience }) => Promise<number>;
+  rounds?: {
+    requesters: (tx: DbTransaction, thread: RoundStart) => Promise<string[]>;
+    start: (tx: DbTransaction, thread: RoundStart, requesterIds: readonly string[]) => Promise<number>;
+  };
   /**
    * The catalog's words of the system withdrawal that takes the place of a web-published post when it is discarded (S08.03), in English: residents read them with
    * "Withdrawn". `createAlerting` callers pass the catalog's (`staff.discard.withdrawnText`); the default is for the use case's own tests.
@@ -505,6 +511,13 @@ const contentOf = (row: EntryRow): EntryContent => ({
 
 /** The kinds whose approval starts a check-in round or adds to it (S08.06, AD-12): never a withdrawal or a final. */
 const ROUND_KINDS: ReadonlySet<string> = new Set<EntryKind>(["ack", "update", "correction"]);
+
+/** The thread of the round an approval starts or adds to (S08.06): its id, and the approved entry's types and audience. */
+export interface RoundStart {
+  alertId: string;
+  types: readonly string[];
+  audience: Audience;
+}
 
 type AttemptRow = typeof alertSubmitAttempt.$inferSelect;
 
@@ -1730,9 +1743,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
      * the deliveries with it; else `entry.approved` is audited with the version, the hash and that recipient count. After it commits the
      * caller revalidates the feed's tag and kicks the dispatcher (src/app/staff/alerts/approval).
      *
-     * The order is the lock order of AD-18: alert, alert_entry, feed_version, then the delivery rows and the recipient rows `captureRecipients` locks, then
-     * (S08.06, an acknowledgement, update or correction of a round type) the requesters' rows, `checkin` and `checkin_tally` of the thread's round, then the
-     * spend cap.
+     * The order is the lock order of AD-18: alert, alert_entry, feed_version, then the delivery rows and the recipient rows `captureRecipients` locks (with
+     * them, in the same id-ordered statement, S08.06's requesters of the thread's round, for an acknowledgement, update or correction of a round type), then
+     * the round's `checkin` and `checkin_tally`, then the spend cap.
      */
     async approveEntry(actor: AlertActor, ref: EntryRef, shown: ApprovalRequest): Promise<AlertResult<ApprovalOutcome>> {
       return change("entry.approved", actor, { type: "alert_entry", id: ref.entryId }, async (tx): Promise<ApprovalOutcome> => {
@@ -1823,9 +1836,17 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // The outbox's marker (S06.01, `createDeliveryQueue().markApprovalTransaction`): this transaction says that the alert deliveries about to be
         // written are this entry's approval, so the database accepts them. Nothing is captured and nothing is written before it.
         await markApproval(tx, row.id);
+        // S08.06: an acknowledgement, update or correction of a real thread starts its check-in round, or adds to it, when one of its types is a round
+        // type. Its candidate requesters are read now, without a lock, so that the capture below locks their rows with the recipients' in its one
+        // id-ordered statement (AD-18: in a second pass, a requester whose id is below a recipient's would be locked after it, and the campaign start's
+        // `lockActive`, which takes every active subscriber in id order, could deadlock with this approval). A withdrawal or a final never starts a round,
+        // nor a D-1 publication (made at submit, not here).
+        const { types, audience } = contentOf(approved);
+        const round: RoundStart | null = !thread.isDrill && ROUND_KINDS.has(row.kind) ? { alertId: thread.id, types, audience } : null;
+        const requesters = deps.rounds && round ? await deps.rounds.requesters(tx, round) : [];
         // The snapshot, in this transaction (AD-7): who gets the text and in which language (`captureRecipients`), their texts queued through the
         // outbox (`enqueueAlertDeliveries`), and the number of texts it returns by language. What the approver reviewed is compared with that.
-        const { counts: snapshot, costCents: entryCostCents } = await queueSnapshot(tx, await recipientEntryOf(tx, approved, thread));
+        const { counts: snapshot, costCents: entryCostCents } = await queueSnapshot(tx, { ...(await recipientEntryOf(tx, approved, thread)), alsoLock: requesters });
         const reviewed = shown.recipients ?? NO_RECIPIENTS;
         if (!sameRecipientCounts(reviewed, snapshot)) throw new Refused("RECIPIENT_COUNT_CHANGED", { recipients: snapshot, reviewed });
         await audit.record(tx, {
@@ -1836,15 +1857,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           isDrill: thread.isDrill,
           meta: { entry_id: row.id, version: approved.version, content_hash: row.contentHash!, recipient_count: snapshot.total },
         });
-        // S08.06: an approved acknowledgement, update or correction of a real thread starts its check-in round, or adds to it, when one of its types is a
-        // round type: each requester whose "where I live" place matches the entry's audience, on a covered floor, gets one row (`ensureRound`, ON CONFLICT
-        // DO NOTHING), and the rows already made, with their marks, are left as they are until the thread closes. A withdrawal or a final never does, nor a
-        // D-1 publication (made at submit, not here). After the texts and the audit, before the spend cap: AD-18's order (recipient rows, `checkin`,
-        // `checkin_tally`, `spend_cap`).
-        if (deps.rounds && !thread.isDrill && ROUND_KINDS.has(row.kind)) {
-          const content = contentOf(approved);
-          await deps.rounds(tx, { alertId: thread.id, types: content.types, audience: content.audience });
-        }
+        // S08.06: the round itself. Each candidate whose "where I live" place matches the entry's audience, on a covered floor, gets one row (`ensureRound`,
+        // ON CONFLICT DO NOTHING, reading each request under the lock the capture took), and the rows already made, with their marks, are left as they are
+        // until the thread closes. After the texts and the audit, before the spend cap: AD-18's order (recipient rows, `checkin`, `checkin_tally`, `spend_cap`).
+        if (deps.rounds && round && requesters.length > 0) await deps.rounds.start(tx, round, requesters);
         // A withdrawal that leaves no published, non-superseded substantive entry closes the thread `withdrawn`, in this same transaction, even though the
         // withdrawal notice is itself published (it is never substantive): the notice's own texts are kept (`keepEntryId`) and every other entry's stop.
         if (target !== null && row.kind === "withdrawal") {

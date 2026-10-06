@@ -107,8 +107,9 @@ export const buildingFloor = pgTable(
  * S04.03: the types of disruption, seeded by the migration (20261002250000_alert_lifecycle.sql).
  * `direct` is whether an Ambassador's post of that type may appear on the web at once (D-1, AD-5):
  * true for the lower-risk types, false for fire and "Other", null (not decided, counts as false)
- * for the neighbourhood-wide ones. The app only reads it. `checkin` (S08.05, 20261006170000_checkin_request.sql) marks the round types,
- * whose approved alerts start a check-in round (pilot: heat and power; S08.06 lets an Admin change them).
+ * for the neighbourhood-wide ones. `checkin` (S08.05, 20261006170000_checkin_request.sql) marks the round types, whose approved alerts
+ * start a check-in round (pilot: heat and power). The app reads the table and may update `checkin` only (S08.06, 20261006180000_round_types.sql:
+ * an Admin's round types, places/application/roundTypes.ts).
  */
 export const disruptionType = pgTable(
   "disruption_type",
@@ -120,5 +121,6 @@ export const disruptionType = pgTable(
   (t) => [
     check("disruption_type_id_format", sql`${t.id} ~ '^[a-z][a-z_]{1,19}$'`),
     pgPolicy("disruption_type_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("disruption_type_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

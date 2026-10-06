@@ -64,15 +64,18 @@ export interface AlertingWiring {
 /**
  * The check-in round of an approval (S08.06, AD-12): when one of the entry's types is a round type (places' `disruption_type.checkin`, read in the approval's
  * transaction), the candidates are subscriptions' requesters in the buildings the audience covers (a buildings audience: its buildings; a neighbourhood
- * audience: every building of its neighbourhoods, which places reads), read without a lock; checkins' `ensureRound` keeps those whose "where I live" place
- * matches the audience by the one matcher, on a covered floor, under each one's FOR SHARE lock, and adds a row for each who has none in the thread.
+ * audience: every building of its neighbourhoods, which places reads), read without a lock and locked FOR SHARE by the approval's capture with its
+ * recipients; checkins' `ensureRound` keeps those whose "where I live" place matches the audience by the one matcher, on a covered floor, under that lock,
+ * and adds a row for each who has none in the thread.
  */
-function roundStarter(checkins: Pick<CheckinRequests, "ensureRound">): AlertLifecycleDeps["rounds"] {
-  return async (tx, thread) => {
-    if (!isRoundThread(thread.types, await roundTypes(tx))) return 0;
-    const rsns = thread.audience.scope === "buildings" ? audienceRsns(thread.audience) : await buildingsOfNeighbourhoods(tx, thread.audience.neighbourhood_ids);
-    const requesters = await checkinRequestersIn(tx, rsns);
-    return requesters.length === 0 ? 0 : checkins.ensureRound(tx, thread, requesters);
+function roundStarter(checkins: Pick<CheckinRequests, "ensureRound">): NonNullable<AlertLifecycleDeps["rounds"]> {
+  return {
+    async requesters(tx, thread) {
+      if (!isRoundThread(thread.types, await roundTypes(tx))) return [];
+      const rsns = thread.audience.scope === "buildings" ? audienceRsns(thread.audience) : await buildingsOfNeighbourhoods(tx, thread.audience.neighbourhood_ids);
+      return checkinRequestersIn(tx, rsns);
+    },
+    start: (tx, thread, requesterIds) => checkins.ensureRound(tx, thread, requesterIds),
   };
 }
 
@@ -190,7 +193,8 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     // point (it locks a row and checks it is still `queued`) cannot overtake.
     cancelQueued: wiring.cancelQueued ?? (async (tx, entryIds) => void (await queue.cancelQueued(entryIds, tx))),
     oncall: wiring.oncall && { required: wiring.oncall.required, hasNumber: wiring.oncall.hasNumber ?? hasOncallNumber },
-    // The check-in round (S08.06): an approval of a round type starts it or adds to it in its own transaction, after its texts, before the spend cap.
+    // The check-in round (S08.06): an approval of a round type starts it or adds to it in its own transaction, its requesters locked with its recipients,
+    // its rows made after its texts, before the spend cap.
     rounds: wiring.checkins && roundStarter(wiring.checkins),
     // The monthly spending cap (S07.08): the approval's transaction asks spend how far the month would pass the cap with this entry's texts (the month's
     // spending, the estimates of the texts still waiting to go, and the entry's own). It warns and never blocks: when the cap is passed the overrun is

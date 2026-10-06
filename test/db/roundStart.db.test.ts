@@ -8,7 +8,9 @@
 //  - a later approval in the thread adds the requesters without a row and leaves the rows already made, and their marks, as they are;
 //  - an Admin's change of the round types is audited with the types before and after, and applies from the next approval only;
 //  - a withdrawal or a deletion racing the approval that creates the round, in both orders: never a live row for a withdrawn requester or a deleted
-//    subscriber; and a request activated while that approval runs, in both orders, ends in the round.
+//    subscriber; a request activated while that approval runs, in both orders, ends in the round; and the end-of-pilot campaign's start, which locks
+//    every active subscriber in id order, waits for the approval (its requesters are locked with its recipients, in one id order) and never deadlocks;
+//  - a requester who no longer receives texts (the campaign's deadline passed without her YES) gets no row.
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -35,6 +37,7 @@ import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { createRoundTypes, floorsOfBuilding } from "../../src/modules/places";
 import { checkinRequestStore, createNumberDeletion } from "../../src/modules/subscriptions";
+import { campaignStore } from "../../src/modules/subscriptions/adapters/campaignStore";
 import { createDb, type Db } from "../../src/platform/db";
 import { submitSeams } from "./alertSubmitSeams";
 import { deliveryFixtures } from "./deliveryFixtures";
@@ -117,6 +120,8 @@ async function resetAll() {
   await owner.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   await owner`delete from pending_signup`;
   await owner`delete from subscriber`;
+  // A campaign names the Admin who started it: it goes before the Admin's account.
+  await owner`delete from campaign`;
   await owner`delete from ambassador_assignment where rsn in ${owner(RSNS)}`;
   await owner`update disruption_type set checkin = (id in ('heat', 'power'))`;
   await fixtures.cleanup();
@@ -155,21 +160,57 @@ beforeEach(async () => {
 
 const phoneOf = (index: number) => `+1416555${String(100 + index).padStart(4, "0")}`;
 
+interface SubscriberSpec {
+  /** The subscriber's id (a race that needs an id order); a random one by default. */
+  id?: string;
+  places?: { rsn: string; floor: string | null }[];
+  request?: { rsn: string; floor: string; method?: "call" | "text" };
+  muted?: string[];
+  groups?: string[];
+  neighbourhood?: string;
+  /** S09.07's retention state: `active` by default. */
+  state?: "active" | "reconsent_pending" | "retained";
+}
+
 /**
  * A confirmed subscriber (YES is S08.05's) with places, muted topics and groups, and, optionally, a check-in request on one of its places (`request`):
  * the "where I live" building and floor and the method. Its neighbourhood is the one given (the building's, unless a test says otherwise).
  */
-async function subscriber(spec: { places?: { rsn: string; floor: string | null }[]; request?: { rsn: string; floor: string; method?: "call" | "text" }; muted?: string[]; groups?: string[]; neighbourhood?: string } = {}): Promise<string> {
-  const id = randomUUID();
+async function subscriber(spec: SubscriberSpec = {}): Promise<string> {
+  const id = spec.id ?? randomUUID();
   phoneCounter += 1;
   const request = spec.request;
   const places = spec.places ?? (request ? [{ rsn: request.rsn, floor: request.floor }] : []);
-  await owner`insert into subscriber (id, phone, lang, neighbourhood_id, groups, consent_version, started_by, checkin_method, checkin_consent_version, where_i_live_rsn, where_i_live_floor_id)
-    values (${id}, ${phoneOf(phoneCounter)}, 'en', ${spec.neighbourhood ?? "TP"}, ${spec.groups ?? []}, '2026-10-01.1', 'web', ${request ? (request.method ?? "call") : null},
+  await owner`insert into subscriber (id, phone, lang, neighbourhood_id, groups, consent_version, started_by, retention_state, checkin_method, checkin_consent_version, where_i_live_rsn, where_i_live_floor_id)
+    values (${id}, ${phoneOf(phoneCounter)}, 'en', ${spec.neighbourhood ?? "TP"}, ${spec.groups ?? []}, '2026-10-01.1', 'web', ${spec.state ?? "active"}, ${request ? (request.method ?? "call") : null},
             ${request ? CHECKIN_CONSENT_VERSION : null}, ${request?.rsn ?? null}, ${request?.floor ?? null})`;
   for (const place of places) await owner`insert into subscriber_place (id, subscriber_id, rsn, floor_id) values (${randomUUID()}, ${id}, ${place.rsn}, ${place.floor})`;
   for (const topic of spec.muted ?? []) await owner`insert into subscriber_topic_optout (subscriber_id, topic) values (${id}, ${topic})`;
   return id;
+}
+
+/**
+ * The real end-of-pilot campaign (S09.07), started by the Admin, as the owner writes it with its guard switched off (its rehearsal, texts and session are
+ * campaign.db.test.ts's), its deadline 30 days on. `pastDeadline` moves the deadline before the database's clock, as if the days had gone by.
+ */
+async function realCampaign(): Promise<string> {
+  const id = randomUUID();
+  await owner.begin(async (tx) => {
+    await tx.unsafe("alter table campaign disable trigger campaign_guard");
+    await tx`insert into campaign (id, rehearsal, deadline_date, deadline, terms_version, texts, started_by, started_session, started_aal, idempotency_key)
+      values (${id}, false, (now() at time zone 'America/Toronto')::date + 30, now() + interval '30 days', '2026-10-01.1', '{}'::jsonb, ${admin.id},
+              ${randomBytes(32).toString("hex")}, 'aal2', ${randomUUID()})`;
+    await tx.unsafe("alter table campaign enable trigger campaign_guard");
+  });
+  return id;
+}
+
+async function pastDeadline(campaignId: string): Promise<void> {
+  await owner.begin(async (tx) => {
+    await tx.unsafe("alter table campaign disable trigger campaign_guard");
+    await tx`update campaign set deadline_date = deadline_date - 31, deadline = now() - interval '1 day' where id = ${campaignId}`;
+    await tx.unsafe("alter table campaign enable trigger campaign_guard");
+  });
 }
 
 const neighbourhood = (types: string[], ids: string[] = ["TP"]): Audience => ({ scope: "neighbourhood", neighbourhood_ids: ids, groups: [], types: [...types].sort() });
@@ -303,6 +344,26 @@ describe("an approved acknowledgement, update or correction of a round type star
     const ref = await pendingAck(buildings([{ rsn: RSN_A, floors: [A1, A3] }], ["power"]));
     await approve(ref);
     expect(await subscribersIn(ref.alertId)).toEqual([onA1]);
+  });
+
+  it("only for receiving subscribers: a requester the end-of-pilot campaign asked is in no new round once its deadline has passed (S09.07's receivingSql)", async () => {
+    const asked = await subscriber({ request: { rsn: RSN_A, floor: A1 }, state: "reconsent_pending" });
+    const retained = await subscriber({ request: { rsn: RSN_A, floor: A2 }, state: "retained" });
+    const campaignId = await realCampaign();
+    // Before the deadline, the subscriber asked to stay still receives texts: both are in the round.
+    const before = await pendingAck(neighbourhood(["heat"]));
+    await approve(before);
+    expect(await subscribersIn(before.alertId)).toEqual(sorted([asked, retained]));
+
+    // After it, without her YES, she receives nothing (S09.08's purge deletes her later): a new round leaves her out. Her row in the round she is in
+    // stays as it was, and the next approval there adds only a newcomer.
+    await pastDeadline(campaignId);
+    const after = await pendingAck(neighbourhood(["heat"]));
+    await approve(after);
+    expect(await subscribersIn(after.alertId)).toEqual([retained]);
+    const newcomer = await subscriber({ request: { rsn: RSN_A, floor: A3 } });
+    await approve(await pendingUpdate(before.alertId));
+    expect(await subscribersIn(before.alertId)).toEqual(sorted([asked, retained, newcomer]));
   });
 
   it("makes no row for a type that is not a round type, a drill, a final, or a thread whose round type an alert of several types shares", async () => {
@@ -480,7 +541,8 @@ describe("an Admin changes which types are round types (E08 'Round types')", () 
 // --- races --------------------------------------------------------------------------------------------------------------------------------------
 
 describe("a requester withdraws or is deleted while an approval is creating the round (E08 'Request lock order')", () => {
-  // The requester muted heat, so the approval's texts do not lock her row first: the race is the round's own (`ensureRound` locks her FOR SHARE).
+  // The requester muted heat, so she is no recipient of the approval's texts: the race is the round's own (the capture locks her row FOR SHARE as a
+  // requester, with the recipients', and `ensureRound` reads her request under that lock).
   const requester = () => subscriber({ request: { rsn: RSN_A, floor: A1 }, muted: ["heat"] });
 
   /** The approval, held open after its round's rows are made (it holds the thread, the requesters FOR SHARE and the new rows). */
@@ -652,4 +714,38 @@ describe("a request activated while the approval that starts the round runs (S08
     };
     return { checkins: checkinsOn(store), reached: reached.promise, release: hold.resolve };
   }
+});
+
+describe("the end-of-pilot campaign starts while an approval is creating the round (AD-18: one id order for every subscriber row)", () => {
+  it("a requester who is not texted, her id below a recipient's: the campaign's lock of every active subscriber waits for the approval, and both go through", async () => {
+    // She muted heat, so she is a requester and no recipient; he is texted. Her id comes first: locked in a second pass, after his, she could be
+    // held by the campaign while it waits for him.
+    const requester = await subscriber({ id: "00000000-0000-4000-8000-000000000001", request: { rsn: RSN_A, floor: A1 }, muted: ["heat"] });
+    const recipient = await subscriber({ id: "ffffffff-ffff-4fff-bfff-ffffffffffff", places: [{ rsn: RSN_A, floor: A2 }] });
+    const ref = await pendingAck(neighbourhood(["heat"]));
+    // The approval, held where its round's rows are about to be made: its recipients are captured and its texts queued.
+    const reached = deferred();
+    const hold = deferred();
+    const real = checkinsOn();
+    const lifecycle = alertingWith({
+      checkins: {
+        ensureRound: async (tx, thread, ids) => {
+          reached.resolve();
+          await hold.promise;
+          return real.ensureRound(tx, thread, ids);
+        },
+      },
+    });
+    const approval = approve(ref, lifecycle);
+    await reached.promise;
+    // The campaign start's own statement (S09.07's `lockActive`): every active subscriber locked FOR NO KEY UPDATE in id order, as the app's role.
+    const campaign = app.transaction((tx) => campaignStore.lockActive(tx));
+    await untilWaiting();
+    hold.resolve();
+    // In two passes, Postgres would abort one of them as a deadlock (40P01).
+    const [approved, locked] = await Promise.all([approval, campaign]);
+    expect(approved).toMatchObject({ recipients: { total: 1 } });
+    expect(locked.map((row) => row.id)).toEqual([requester, recipient]);
+    expect(await subscribersIn(ref.alertId)).toEqual([requester]);
+  });
 });
