@@ -3665,7 +3665,7 @@ Decisions for the owner: (1) the escalation record is made here for every accept
 
 ### Story S08.08 — The Hub hears at once about anyone not reached or needing help
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** 2 h 42 min (started 2026-10-06 10:52 UTC, built 13:34 UTC, with the merge of S08.07's review round 1, this story's review round 1 and the merge of S09.05)
+- **Size:** M · **Estimate:** 6 h · **Actual:** 3 h 13 min (started 2026-10-06 10:52 UTC, built 14:05 UTC, with the merge of S08.07's review round 1, this story's review rounds 1 and 2 and the merge of S09.05)
 - **Traces:** FR-C7 (escalation), AR-16, NFR-N5 · **Depends on:** S08.07, S06.07 · **Branch:** `e08-s08-escalations`
 
 As the on-duty Hub staff member,

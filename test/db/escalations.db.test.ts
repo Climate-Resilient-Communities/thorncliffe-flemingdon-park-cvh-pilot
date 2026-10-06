@@ -75,6 +75,7 @@ let app: Db;
 let world: DispatcherWorld;
 let marks: Marks;
 let auditBaseline = 0;
+let opsBaseline = 0;
 const madeNeighbourhoods: string[] = [];
 const staffIds: string[] = [];
 
@@ -177,6 +178,7 @@ beforeAll(async () => {
   world = dispatcherWorld(owner, appSql, app);
   marks = createMarks({ db: app, escalations: escalationTexts(ENV) });
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
+  [{ max: opsBaseline }] = await owner`select coalesce(max(id), 0)::int as max from ops_event`;
   if ((await owner`select 1 from neighbourhood where id = 'TP'`).length === 0) {
     await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H')`;
     madeNeighbourhoods.push("TP");
@@ -194,6 +196,8 @@ async function resetAll() {
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
   });
   await owner`delete from checkin_escalation`;
+  // An overdue round's close is a late expiry, which the expire job records (as the expiry tests clear them).
+  await owner`delete from ops_event where kind in ('alert.expire_failed', 'alert.expire_late')`;
   // The expire job's system finals are no fixture's: the threads go whole, as the expiry tests clear them.
   await owner.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   await owner`delete from oncall_roster`;
@@ -207,6 +211,8 @@ beforeEach(resetAll);
 
 afterAll(async () => {
   await resetAll();
+  // The files after this one read every ops event (statusCallbacks' `allEvents()`): the reset leaves none of this file's behind.
+  const leftOps = await owner`select kind from ops_event where id > ${opsBaseline} order by id`;
   await owner`delete from building_floor where rsn = ${RSN}`;
   await owner`delete from building where rsn = ${RSN}`;
   for (const id of madeNeighbourhoods) await owner`delete from neighbourhood where id = ${id}`;
@@ -214,6 +220,7 @@ afterAll(async () => {
   await appSql.end({ timeout: 5 });
   await owner.unsafe("alter role cvh_app_login password null");
   await owner.end({ timeout: 5 });
+  expect(leftOps).toEqual([]);
 });
 
 describe("the tables (20261006210000_escalations.sql)", () => {
