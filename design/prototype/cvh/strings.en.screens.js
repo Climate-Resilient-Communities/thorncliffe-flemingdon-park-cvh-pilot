@@ -1774,6 +1774,21 @@
       pauseFailed: 'Texts were not paused. Try again. If it fails again, tell IT.',
       resumeFailed: 'Texts were not resumed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT.' } } } });
+  /* The written procedures (S09.03): each Hub screen that starts one of them links to its page in docs/procedures (on GitHub, in a new tab), under the
+     page's lead. Not a prototype screen. The titles are the pages' own. */
+  m(en, { staff: { procedures: {
+    link: 'Procedure: {title} (opens in a new tab)',
+    titles: {
+      'write-and-approve-an-alert': 'writing and approving an alert',
+      'correct-or-withdraw': 'correcting or withdrawing an entry',
+      'close-an-alert': 'closing an alert',
+      'run-a-drill': 'running a drill',
+      'pause-and-resume-texts': 'pausing and resuming texts',
+      'resend-failed-texts': 'resending texts that failed',
+      'cap-overrun': 'a spending cap overrun',
+      'health-alert': 'a health alert and who owns the incident',
+      'rotate-secrets': 'rotating secrets (pilot start, departures, pilot end)',
+      'end-of-pilot': 'the end of the pilot' } } } });
   /* The on-call roster, the stuck-queue alert and the Hub's sender banner (S06.07). Not a prototype screen: the Hub's list-and-form page, in the Pause texts
      page's words. The texts to on-call Admins hold counts only, never a number or a name; each fits one text message segment (GSM-7). */
   m(en, { hub: { nav: { oncall: 'On-call numbers' } },

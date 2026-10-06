@@ -117,6 +117,8 @@ for (const state of Object.keys(STATES) as (keyof typeof STATES)[]) {
       await open(page, state, width);
 
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("End of the pilot");
+      // The written procedure (S09.03), under the lead in every state.
+      await expect(page.getByTestId("procedure-link")).toHaveAttribute("data-procedure", "end-of-pilot");
       // No page needs a sideways scroll.
       const root = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
       expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);

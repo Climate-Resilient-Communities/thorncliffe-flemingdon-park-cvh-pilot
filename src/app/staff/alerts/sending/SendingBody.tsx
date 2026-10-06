@@ -2,6 +2,8 @@
 // `/staff/alerts/sending/texts`: what the entry is, and the progress block or the reason there is none. Pure; the pages are staffPage()s that load the data.
 import type { ReactNode } from "react";
 import { Stack } from "@/ui";
+import { ProcedureLink } from "../../ProcedureLink";
+import { procedureLink } from "../../procedures";
 import type { ProblemListScreen, SendingScreen } from "./load";
 import type { ResendAllView, ResendControlView } from "./view";
 import { SendingProgress, SendingProgressBody } from "./SendingProgress";
@@ -56,6 +58,7 @@ export function ProblemListBody({ screen, resend }: { screen: ProblemListScreen;
         </h1>
         <p className="hub-wrap">{screen.heading}</p>
         <p className="hub-wrap">{list.lead}</p>
+        <ProcedureLink link={procedureLink("resend-failed-texts")} />
       </Stack>
       {resend && list.resendIntro ? (
         <section aria-labelledby="resend-title" data-testid="resend-intro">

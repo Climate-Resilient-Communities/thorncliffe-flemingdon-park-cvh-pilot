@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
 import { ExerciseMarker } from "../../ExerciseMarker";
+import { ProcedureLink } from "../../ProcedureLink";
 import type { ComposeState } from "./editDraft";
 import { doneCount, initialSubmitUi, submitReducer, unconfirmedOf, type SubmitKind } from "./submitMachine";
 import { submitApi, type SubmitApi } from "./submitClient";
@@ -390,6 +391,7 @@ export function ComposerBody({
       {screen.exercise ? <ExerciseMarker words={screen.exercise} /> : null}
       <h1>{screen.title}</h1>
       <p>{screen.lead}</p>
+      <ProcedureLink link={screen.procedure} />
       <p data-testid="first-report">{screen.firstReport}</p>
       {screen.benchmark && <p>{screen.benchmark}</p>}
     </Stack>

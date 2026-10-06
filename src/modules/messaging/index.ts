@@ -385,6 +385,9 @@ export { CORRECTION_REACH_KINDS, readCorrectionReach, type CorrectionReachKind, 
 // The subscribers an alert's entries were queued to text (S07.07): what subscriptions' recipient port adds to a correction's, a withdrawal's and a final's own audience.
 export { subscribersQueuedFor } from "./adapters/entryRecipientStore";
 
+// The texts held for a resident's records (S09.03): what a resident's access request reads back, without the body, the provider's id or the key.
+export { textsToRecipients, type RecipientText } from "./adapters/recipientTextStore";
+
 // A resend (S09.02, AR-21): an Admin's deliberate action that creates a new delivery copying an earlier one of the chain, never by itself. The caller (the staff
 // surface, src/app/staff/resendSeam.ts) gives it the resident's standing (subscriptions), the entry's standing (alerting) and the spend cap's check (spend).
 import { drizzleResendStore } from "./adapters/resendStore";

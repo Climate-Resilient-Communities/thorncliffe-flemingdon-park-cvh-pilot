@@ -672,3 +672,38 @@ describe("oncall.added and oncall.removed (S06.07)", () => {
     }
   });
 });
+
+describe("access_request.received and access_request.closed (S09.03)", () => {
+  const REQUEST = "0192c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6";
+  const request = (action: "access_request.received" | "access_request.closed", meta: Record<string, unknown>) =>
+    event({ action, subjectType: "access_request", subjectId: REQUEST, meta } as Partial<AuditEvent>);
+
+  it("record what the resident asked for and how the request ended, with the Admin as the actor and the request as the subject", () => {
+    expect(toAuditRecord(request("access_request.received", { request: "access" }), "ok")).toMatchObject({
+      action: "access_request.received",
+      actorStaffId: STAFF,
+      subjectType: "access_request",
+      subjectId: REQUEST,
+      outcome: "ok",
+      meta: { request: "access" },
+    });
+    for (const outcome of ["answered", "deleted", "not_verified", "withdrawn"]) {
+      expect(toAuditRecord(request("access_request.closed", { outcome }), "ok").meta).toEqual({ outcome });
+    }
+  });
+
+  it("must say what was asked for, and how it ended", () => {
+    expect(() => toAuditRecord(request("access_request.received", {}), "ok")).toThrow("meta is missing request");
+    expect(() => toAuditRecord(request("access_request.closed", {}), "ok")).toThrow("meta is missing outcome");
+    expect(() => toAuditRecord(request("access_request.received", { request: "everything" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(request("access_request.closed", { outcome: "lost" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("have nowhere to put the number, a name or what was held", () => {
+    expect(() => toAuditRecord(request("access_request.received", { request: "access", number: "+14165550123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(request("access_request.received", { request: "access", resident: "Amina" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(request("access_request.closed", { outcome: "answered", held: { lang: "ur" } }), "ok")).toThrow(AuditRecordError);
+    const numberAsSubject = event({ action: "access_request.received", subjectType: "access_request", subjectId: "+14165550123", meta: { request: "access" } } as Partial<AuditEvent>);
+    expect(() => toAuditRecord(numberAsSubject, "ok")).toThrow(AuditRecordError);
+  });
+});
