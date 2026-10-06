@@ -19,7 +19,8 @@ import { uuidv7 } from "../../../platform/ids";
 import { record, recordRefusal, type AuditEvent } from "../../audit";
 import { can, readStaffStanding, type StaffStanding } from "../../identity";
 import { markStore, type MarkStore, type NewEscalation } from "../adapters/markStore";
-import { decideMark, escalates } from "../domain/marks";
+import { decideMark, escalates, markIdOf } from "../domain/marks";
+import { listedFloorOf } from "./round";
 
 /** The person marking, as the session names them: their id (their role and assignments are read again in the transaction). */
 export interface MarkActor {
@@ -76,8 +77,11 @@ class Refused extends Error {
   }
 }
 
-/** Whether this person may mark a row on this floor now: active, and the role policy's `checkins.mark` on their current assignments. */
-function mayMark(standing: StaffStanding | null, place: { rsn: string; floorId: string }): boolean {
+/**
+ * Whether this person may mark a row on this floor now: active, and the role policy's `checkins.mark` on their current assignments. The floor is null
+ * when it is no longer one of the building's floors (`listedFloorOf`): no Ambassador covers it.
+ */
+function mayMark(standing: StaffStanding | null, place: { rsn: string; floorId: string | null }): boolean {
   if (standing === null || standing.status !== "active") return false;
   return can(standing.role, "checkins.mark", { assignments: standing.assignments, target: { rsn: place.rsn, floorId: place.floorId } });
 }
@@ -91,17 +95,19 @@ export function createMarks(deps: MarksDeps): Marks {
 
   return {
     async mark(actor, input) {
+      // The id as the row keeps it (lower case), so a mark sent again in another case is still the one mark.
+      const markId = markIdOf(input.markId);
       try {
         const outcome = await deps.db.transaction(async (tx): Promise<MarkOutcome> => {
           const row = await store.lockForMark(tx, input.roundRef);
           if (row === null) throw new Refused("round_ended");
-          if (!mayMark(await standingOf(tx, actor.staffId), row)) throw new Refused("out_of_scope");
-          const decision = decideMark(row, { id: input.markId, status: input.status });
+          if (!mayMark(await standingOf(tx, actor.staffId), { rsn: row.rsn, floorId: await listedFloorOf(tx, row.rsn, row.floorId) })) throw new Refused("out_of_scope");
+          const decision = decideMark(row, { id: markId, status: input.status });
           if (decision === "round_ended") throw new Refused("round_ended");
           if (decision === "already") return "already";
           if (decision === "ended") return "request_ended";
           const late = decision === "escalate";
-          if (!late) await store.applyMark(tx, input.roundRef, { id: input.markId, status: input.status });
+          if (!late) await store.applyMark(tx, input.roundRef, { id: markId, status: input.status });
           let escalated = false;
           if (escalates(input.status)) {
             const escalation: NewEscalation = { id: newId(), roundRef: input.roundRef, status: input.status, alertId: row.alertId, rsn: row.rsn, floorId: row.floorId, raisedBy: actor.staffId, late };

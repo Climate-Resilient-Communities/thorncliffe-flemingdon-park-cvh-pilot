@@ -3,13 +3,14 @@
 // "My round" (A-04, S08.07) as it is drawn and tapped: one column for a phone, used with one hand. Every text comes from the screen (view.ts); the round and
 // the marks waiting to be sent are held by the model (roundModel.ts) in this page's memory only. The page listens for the background (`visibilitychange`,
 // `pagehide`, `pageshow`) and hands each event to the model inside `flushSync`, so a round cleared after 10 minutes in the background is gone from the
-// screen before the browser draws it again. Nothing is written to the phone's storage.
+// screen before the browser draws it again. What a mark was answered is said on its row, or above the round when the row is not shown (a waiting mark
+// refused after the round was cleared). Nothing is written to the phone's storage.
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MARK_STATUSES, type RoundCounts, type RoundThreadView } from "@/contracts/checkinRound";
 import { displayPhone } from "@/contracts/phone";
 import { Grid, Stack } from "@/ui";
-import { createRoundModel, type RoundEnv, type RoundModel, type RoundState } from "./roundModel";
+import { createRoundModel, type RoundEnv, type RoundModel, type RoundState, type RowNote } from "./roundModel";
 import { contactHref, fill, type RoundScreen } from "./view";
 
 /** The browser's seams for the model: the network, the `online` event, a timer, the id maker and the clock; never any storage. */
@@ -40,6 +41,30 @@ function tallyOf(thread: RoundThreadView): RoundCounts {
     }
   }
   return counts;
+}
+
+/** The `round_ref`s of the requests the page shows now (none unless the round is held). */
+function shownRefs(state: RoundState): Set<string> {
+  const refs = new Set<string>();
+  if (state.phase !== "ready" || state.round === null) return refs;
+  for (const thread of state.round.rounds) {
+    for (const building of thread.buildings) for (const floor of building.floors) if (floor.kind === "contacts") for (const request of floor.requests) refs.add(request.round_ref);
+  }
+  return refs;
+}
+
+/** What a mark was answered: "This round has ended..." with the Hub's number as a `tel:` link, or the note's own words. */
+function NoteText({ screen, note }: { screen: RoundScreen; note: RowNote }) {
+  if (note !== "round_ended") return <>{screen.notes[note]}</>;
+  return (
+    <>
+      {screen.roundEnded.before}
+      <a className="hub-link" href={screen.hub.href}>
+        {screen.hub.label}
+      </a>
+      {screen.roundEnded.after}
+    </>
+  );
 }
 
 const tallyLine = (screen: RoundScreen, counts: RoundCounts) => fill(screen.tally, { todo: counts.pending, done: counts.done, nr: counts.not_reached, help: counts.needs_help });
@@ -93,6 +118,9 @@ export function RoundPage({ screen, initial, env }: { screen: RoundScreen; initi
   }, [waiting]);
 
   const queued = new Set(state.waiting.map((mark) => mark.roundRef));
+  // The answer to a mark whose row is not on the screen (the round was cleared, or read again without it) is said above the round, once per kind.
+  const shown = shownRefs(state);
+  const loose = [...new Set(Object.entries(state.notes).flatMap(([roundRef, note]) => (shown.has(roundRef) ? [] : [note])))];
   const reload = (
     <p>
       <button type="button" className="hub-button hub-button--primary" onClick={() => modelRef.current?.load()} data-testid="round-reload">
@@ -116,6 +144,11 @@ export function RoundPage({ screen, initial, env }: { screen: RoundScreen; initi
             <span className="hub-flag__label">{state.waiting.length === 1 ? screen.waitingOne : fill(screen.waitingMany, { n: state.waiting.length })}</span> {screen.keepOpen}
           </p>
         )}
+        {loose.map((note) => (
+          <p key={note} role="status" className="hub-flag hub-wrap" data-testid="round-note-loose" data-tap-exempt="inline-text">
+            <NoteText screen={screen} note={note} />
+          </p>
+        ))}
       </Stack>
 
       {state.phase === "loading" && (
@@ -199,17 +232,7 @@ export function RoundPage({ screen, initial, env }: { screen: RoundScreen; initi
                                   )}
                                   {note !== undefined && (
                                     <p role="status" className="hub-flag hub-wrap" data-testid="round-note" data-tap-exempt="inline-text">
-                                      {note === "round_ended" ? (
-                                        <>
-                                          {screen.roundEnded.before}
-                                          <a className="hub-link" href={screen.hub.href}>
-                                            {screen.hub.label}
-                                          </a>
-                                          {screen.roundEnded.after}
-                                        </>
-                                      ) : (
-                                        screen.notes[note]
-                                      )}
+                                      <NoteText screen={screen} note={note} />
                                     </p>
                                   )}
                                   <div role="group" aria-label={fill(screen.marksFor, { phone: number })}>

@@ -3,7 +3,8 @@
 // automated check of the service worker's caches, localStorage, sessionStorage, IndexedDB and cookies); a tap is sent at once with signal, and without signal
 // the marks wait in the page, in order, are counted, warn before leaving and go when signal returns; in the background, with the browser's timers suspended
 // (a clock jump), a return at 9 minutes keeps the round and one at 10 minutes clears it and every unsent mark ("Reload your round with signal"); back
-// navigation after leaving reads the round again from the server, and a restore from the page cache after 10 minutes says to reload; late marks are told
+// navigation after leaving reads the round again from the server, and a restore from the page cache (its events in the browser's order) after 10 minutes
+// says to reload and reads nothing until asked; late marks are told
 // "The Hub has been told", "This request has ended" and, after 2 hours, "This round has ended" with the Hub's number; and a direct request from an Ambassador
 // who does not cover a floor gets counts only for it and is refused a mark there. Every number is fictional (555-01xx).
 import { randomBytes, randomUUID } from "node:crypto";
@@ -312,10 +313,17 @@ test("back navigation after leaving reads the round again from the server; a res
   expect(reads, "the round was read again from the server, never from the phone").toBeGreaterThanOrEqual(2);
   await expectNothingOnThePhone(page, residents, before);
 
-  // A page put in the browser's page cache: pagehide clears the round at once; a restore within 10 minutes reads it again, after 10 minutes says to reload.
+  // A page put in the browser's page cache, its events in Chromium's order (leaving: pagehide, then hidden; restored: visible, then pageshow): pagehide
+  // clears the round at once; a restore within 10 minutes reads it again; after 10 minutes the page says to reload and reads nothing until asked.
   await page.clock.install();
-  const leave = () => page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: true })));
-  const restore = () => page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
+  const leave = async () => {
+    await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: true })));
+    await setVisibility(page, "hidden");
+  };
+  const restore = async () => {
+    await setVisibility(page, "visible");
+    await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
+  };
   await leave();
   await expect(page.locator("[data-round-ref]")).toHaveCount(0);
   let leftAt = await page.evaluate(() => Date.now());
@@ -325,9 +333,17 @@ test("back navigation after leaving reads the round again from the server; a res
   await leave();
   leftAt = await page.evaluate(() => Date.now());
   await page.clock.setSystemTime(leftAt + TEN_MINUTES);
+  const readsBefore = reads;
   await restore();
   await expect(page.getByTestId("round-cleared")).toContainText("Reload your round with signal");
+  // It stays so: the round is not read again by itself (the restore's pageshow comes after the visibilitychange that cleared it).
+  await page.waitForTimeout(1_000);
+  expect(reads, "the round was not read again after 10 minutes away").toBe(readsBefore);
+  await expect(page.getByTestId("round-cleared")).toBeVisible();
   await expect(page.locator("[data-round-ref]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Reload my round" }).click();
+  await expect(rowOf(page, onFirst!.roundRef)).toBeVisible();
+  expect(reads).toBe(readsBefore + 1);
 });
 
 test("late marks: 'The Hub has been told' and 'This request has ended' on a request that ended; after 2 hours 'This round has ended' with the Hub's number", async ({ page }) => {

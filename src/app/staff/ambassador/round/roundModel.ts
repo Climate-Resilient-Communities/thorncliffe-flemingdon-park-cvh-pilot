@@ -10,8 +10,10 @@
 //
 // Background (the page cannot trust a timer: browsers suspend them): when the page is hidden the time is recorded; when it is visible again, or restored by
 // back navigation or the browser's page cache (`pageshow`), the page compares that time with now before anything is drawn, and after 10 minutes or more it
-// clears the round and every unsent mark and says "Reload your round with signal". `pagehide` clears the round's numbers at once; the unsent marks (a
-// `round_ref` and a mark each, nothing about the resident) stay so that a page restored within 10 minutes still sends them, and the round is read again.
+// clears the round and every unsent mark and says "Reload your round with signal" until the person asks for it again ("Reload my round"): a restore from
+// the page cache fires `visibilitychange` before `pageshow`, and the `pageshow` after a page cleared for its time away reads nothing. `pagehide` clears the
+// round's numbers at once; the unsent marks (a `round_ref` and a mark each, nothing about the resident) stay so that a page restored within 10 minutes
+// still sends them, and the round is read again.
 import { MARK_ROUTE, MarkResultSchema, ROUND_ROUTE, RoundResponseSchema, type MarkOutcome, type MarkStatus, type RoundResponse, type RowStatus } from "@/contracts/checkinRound";
 
 /** How long the page may stay in the background before it clears everything (AD-1, E08). */
@@ -69,7 +71,7 @@ export interface RoundEnv {
 
 export interface RoundModel {
   state(): RoundState;
-  /** Reads the round (on opening, and "Reload my round"); without signal the page says to reload with signal. */
+  /** Reads the round (on opening, and "Reload my round"); without signal the page says to reload with signal. Once the round was cleared for its time in the background, only this reads it again. */
   load(): void;
   /** One tap: the mark is shown on its row at once and sent, or waits for signal. Ignored unless the round is held and has that row. */
   mark(roundRef: string, status: MarkStatus): void;
@@ -79,7 +81,7 @@ export interface RoundModel {
   visible(): void;
   /** `pagehide`: the round's numbers are cleared at once. */
   pagehide(): void;
-  /** `pageshow`; `persisted` when restored from the browser's page cache. Run before anything is drawn. */
+  /** `pageshow`; `persisted` when restored from the browser's page cache (the browser fires `visibilitychange` first). Run before anything is drawn. */
   pageshow(persisted: boolean): void;
   /** The browser's `online` and `offline` events (the banner). */
   signal(online: boolean): void;
@@ -114,6 +116,8 @@ export function createRoundModel(env: RoundEnv, onChange: (state: RoundState) =>
   let online = env.isOnline();
   /** When the page went to the background; null while it is in front. */
   let hiddenAt: number | null = null;
+  /** The round was cleared for its time in the background: nothing is read again until the person asks ("Reload my round"). */
+  let expired = false;
   /** Raised each time everything is cleared, so an answer to a request made before that is ignored. */
   let generation = 0;
   let sending = false;
@@ -140,6 +144,13 @@ export function createRoundModel(env: RoundEnv, onChange: (state: RoundState) =>
     sending = false;
     loading = false;
     phase = "cleared";
+  }
+
+  /** 10 minutes or more in the background: everything goes, and stays gone until the person reloads the round. */
+  function expire() {
+    clearAll();
+    expired = true;
+    changed();
   }
 
   /** No signal, or no answer: try again when signal returns (the `online` event), or in 20 s in case it never comes. */
@@ -257,7 +268,10 @@ export function createRoundModel(env: RoundEnv, onChange: (state: RoundState) =>
 
   return {
     state: snapshot,
-    load: () => void load(),
+    load: () => {
+      expired = false;
+      void load();
+    },
     mark(roundRef, status) {
       if (stopped || phase !== "ready" || round === null || !hasRow(round, roundRef)) return;
       queue.push({ id: env.newId(), roundRef, status });
@@ -271,11 +285,7 @@ export function createRoundModel(env: RoundEnv, onChange: (state: RoundState) =>
     visible() {
       const since = hiddenAt;
       hiddenAt = null;
-      if (since !== null && env.now() - since >= BACKGROUND_LIMIT_MS) {
-        clearAll();
-        changed();
-        return;
-      }
+      if (since !== null && env.now() - since >= BACKGROUND_LIMIT_MS) return expire();
       void flush();
     },
     pagehide() {
@@ -293,11 +303,9 @@ export function createRoundModel(env: RoundEnv, onChange: (state: RoundState) =>
       if (!persisted) return;
       const since = hiddenAt;
       hiddenAt = null;
-      if (since !== null && env.now() - since >= BACKGROUND_LIMIT_MS) {
-        clearAll();
-        changed();
-        return;
-      }
+      if (since !== null && env.now() - since >= BACKGROUND_LIMIT_MS) return expire();
+      // The `visibilitychange` before it (a restore fires it first) found 10 minutes or more and cleared everything: it stays cleared.
+      if (expired) return changed();
       // Restored within 10 minutes: the numbers went at pagehide; with signal the round is read again and the waiting marks go on.
       changed();
       void load();

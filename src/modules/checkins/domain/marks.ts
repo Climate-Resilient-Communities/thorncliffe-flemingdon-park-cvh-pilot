@@ -13,7 +13,7 @@ export interface MarkTarget {
   live: boolean;
   /** A stub closed more than STUB_LIFETIME_HOURS ago (not purged yet): it takes no mark. */
   expired: boolean;
-  /** The ids of the marks already applied to it. */
+  /** The ids of the marks already applied to it (as the database returns a uuid: lower case). */
   markIds: readonly string[];
 }
 
@@ -27,9 +27,12 @@ export interface MarkTarget {
  */
 export type MarkDecision = "already" | "mark" | "escalate" | "ended" | "round_ended";
 
+/** A mark id as the row keeps it: a uuid in lower case, so the same id sent in upper case is the same mark. */
+export const markIdOf = (id: string): string => id.toLowerCase();
+
 export function decideMark(target: MarkTarget | null, mark: { id: string; status: MarkStatus }): MarkDecision {
   if (target === null) return "round_ended";
-  if (target.markIds.includes(mark.id)) return "already";
+  if (target.markIds.some((id) => markIdOf(id) === markIdOf(mark.id))) return "already";
   if (target.live) return "mark";
   if (target.expired) return "round_ended";
   return mark.status === "done" ? "ended" : "escalate";
