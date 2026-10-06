@@ -20,13 +20,12 @@ describe("the resident texts' catalog strings (AD-9)", () => {
     }
   });
 
-  it("keep STOP, the digit 0 and {link} in S07.04's texts in every language (the router reads Western digits; the link is filled in)", () => {
+  it("keep STOP, the digits 0 to 3 and {link} in S07.04's texts in every language (the router reads Western digits; the link is filled in)", () => {
     for (const lang of LAUNCH_CODES) {
       const welcome = residentText(lang, "welcome");
       expect(welcome, lang).toMatch(/\bSTOP\b/u);
-      expect(welcome, lang).toContain("0");
-      // Replies 1, 2 and 3 get no answer until S07.05's menus, so the welcome does not offer them yet (S07.05 puts them back).
-      for (const digit of ["1", "2", "3"]) expect(welcome, `${lang} ${digit}`).not.toContain(digit);
+      // S07.05's menus answer replies 1, 2 and 3, so the welcome offers them again, with 0.
+      for (const digit of ["0", "1", "2", "3"]) expect(welcome, `${lang} ${digit}`).toContain(digit);
       expect(residentText(lang, "deletePrompt"), lang).toMatch(/0[^]*10|10[^]*0/u);
       expect(residentText(lang, "signupInfo"), lang).toContain("{link}");
       expect(residentText(lang, "signupInfo"), lang).toMatch(/\bSTOP\b/u);
@@ -47,6 +46,31 @@ describe("the resident texts' catalog strings (AD-9)", () => {
     }
     expect(smsDateWords("en")).toEqual({ months: expect.arrayContaining(["January", "December"]), dayMonth: "{month} {day}", digits: [..."0123456789"] });
     expect(smsDateWords("bn").digits.join("")).toBe("০১২৩৪৫৬৭৮৯");
+  });
+
+  it("keep the reserved digits, the counts and the {placeholders} of S07.05's menu texts in every language", () => {
+    for (const lang of LAUNCH_CODES) {
+      const has = (name: Parameters<typeof residentText>[1], ...parts: string[]) => {
+        for (const part of parts) expect(residentText(lang, name), `${name} in ${lang}: ${part}`).toContain(part);
+      };
+      has("menuNav", "0", "9");
+      has("menuNavMore", "0", "8", "9");
+      has("menuWarn", "{n}", "1", "0");
+      has("menuHub", "{hub}");
+      has("menuReset", "10");
+      has("menuLimit", "5", "{hub}");
+      has("menuLimitLink", "5", "1", "{hub}");
+      has("buildingSaved", "{building}", "{floor}");
+      has("buildingSavedWhole", "{building}");
+      expect(residentText(lang, "menuNav"), lang).not.toContain("8");
+      expect(residentText(lang, "languageSaved"), lang).not.toMatch(/\{\w+\}/u);
+    }
+  });
+
+  it("fills the {placeholders} it is given values for and leaves the others as written", () => {
+    expect(residentText("en", "buildingSaved", { building: "12 Menu Street", floor: "G" })).toBe("Saved. Your building is now 12 Menu Street, floor G.");
+    expect(residentText("en", "buildingSaved", { building: "12 Menu Street" })).toBe("Saved. Your building is now 12 Menu Street, floor {floor}.");
+    expect(residentText("en", "menuHub")).toBe("Call the Hub at {hub}.");
   });
 
   it("has no catalog for a script variant", () => {

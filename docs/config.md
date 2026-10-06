@@ -447,7 +447,7 @@ needs and fixes:
 |---|---|---|
 | The inbound webhook | Twilio Console, the Messaging Service's Integration, "Send a webhook" | `PUBLIC_BASE_URL/api/twilio/inbound`, HTTP POST, exactly as written (the signature is checked against that URL, built from `PUBLIC_BASE_URL`). Signed with `TWILIO_AUTH_TOKEN`: without it the route answers 503 and does nothing; a wrong signature is 403 and counts toward the same on-call alert as the status callbacks'. |
 | Advanced Opt-Out | Twilio Console, the Messaging Service's Opt-Out Management | On. STOP, START and HELP are Twilio's to answer (its START and HELP replies carry the sign-up link, launch readiness). **YES must not be an opt-in (START) keyword**: a YES Twilio marks `OptOutType=START` is left to Twilio, and the sign-up is never confirmed. |
-| Replies | catalog `smsTexts.welcome`, `smsTexts.alreadySignedUp`, `smsTexts.deletePrompt`, `smsTexts.signupInfo`, all 15 languages | `welcome` (after YES; purpose `welcome`; reply 0, STOP and the overnight notice, with replies 1, 2 and 3 added by S07.05), `alreadySignedUp` and `deletePrompt` (purpose `prompt_reply`, one text in every language), `signupInfo` (the sign-up link `/{lang}/text-alerts`, purpose `signup_info`, through a 30-minute `inbound_reply` row). |
+| Replies | catalog `smsTexts.welcome`, `smsTexts.alreadySignedUp`, `smsTexts.deletePrompt`, `smsTexts.signupInfo`, all 15 languages | `welcome` (after YES; purpose `welcome`; replies 1, 2 and 3 (S07.05's menus), 0, STOP and the overnight notice), `alreadySignedUp` and `deletePrompt` (purpose `prompt_reply`, one text in every language), `signupInfo` (the sign-up link `/{lang}/text-alerts`, purpose `signup_info`, through a 30-minute `inbound_reply` row). |
 | The words for yes | catalog `smsKeywords.yes`, comma-separated | Accepted besides YES and Y, in the number's language (for example `oui`, `sí, si`, `ہاں, جی`). Read, never sent. |
 | The sign-up link to an unknown number | `SIGNUP_INFO_SCOPE` in `src/modules/subscriptions/application/inbound.ts` | At most once in 24 hours per number (a keyed hash in `rate_limit`, scope `signup_info`). |
 | The inbound limit (S07.09) | `INBOUND_LIMIT` in `src/modules/subscriptions/domain/inbound.ts` | More than 20 messages in an hour from one number: the 21st and every later one that day (Toronto) get no reply and change nothing; only the day's count is kept (`inbound_limited_count`: messages, and numbers that reached it). Kept as keyed hashes in `rate_limit` (scopes `inbound`, `inbound_mute`). STOP, the second 0, and Twilio's STOP, START and HELP are decided before this limit and are never limited or counted. |
@@ -457,6 +457,18 @@ needs and fixes:
 STOP (and a second reply 0 within 10 minutes) deletes the subscriber, its places, muted topics and prompt, any pending sign-up and any
 `inbound_reply` row of the number, at once and for good; no record of the number is kept. Only the day's count of each keyword is kept of
 any inbound text.
+
+### The numbered menus (S07.05)
+
+Replies 1 (building or floor) and 2 (language) start a menu; reply 3 withdraws a check-in request. They add no environment variable:
+
+| What | Where | Value |
+|---|---|---|
+| Menu texts | catalog `smsTexts.menu*`, `buildingSaved`, `buildingSavedWhole`, `languageSaved`, `noCheckinRequest`, `checkinWithdrawn`, all 15 languages (AI-generated, not yet checked by native readers) | Every one fits one segment in its language; `src/modules/subscriptions/application/menuTexts.test.ts` fails CI naming the text and the language otherwise, and renders every page of the 43 register buildings. A page holds as many options as fit, at most 7, so a translation that grows means more pages, never a second segment. |
+| Idle reset | `MENU_IDLE_MS` (10 minutes) and `MENU_KEPT_MS` (1 hour) in `src/modules/subscriptions/domain/menus.ts` | A menu is open for 10 minutes after its last message; a reply after that, until an hour after the last message, is told the menu reset and is read as a new keyword; the purge job deletes the row after the hour, and a later reply is read as a new keyword with no notice (as built, for the product owner to confirm: S07.05's story). |
+| Daily menu limit | `MENUS_PER_DAY` (5) in the same file | Menus started per number per day in Toronto, kept as keyed hashes in `rate_limit` (scope `sms_menu`, deleted after 24 hours by `subscriptions-purge-rate-limit`). The 6th reply 1 or 2 gets the Hub's number, and the edit link's offer once S07.06 wires it. Known edge, as with the inbound limit's mute: the day the clocks go back is 25 hours long, so the menus started in its first hour are deleted in its last hour, and a number that used its 5 in that first hour can start a 6th in the last. |
+| The Hub's number | `data/catalogue/numbers.json` (id `hub`), generated into `src/contracts/hubNumber.generated.ts` | What reply 9 and the limit reply give, as `(416) 421-8997`. |
+| Check-in requests | `checkins`' ports, wired in `src/app/inbound.ts` | Until E08 (S08.05) nobody has a check-in request: reply 3 is answered "You have no check-in request", and a move by menu 1 withdraws nothing. |
 
 ## GitHub: environments
 
