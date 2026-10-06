@@ -100,8 +100,9 @@ export {
   type MenuPort,
   type MenuSubscriber,
 } from "./application/inbound";
-// S08.05: checkins' RequestStore port on the subscriber table (the check-in request is on subscriptions' row), and the coverage view's counts.
-export { checkinRequestCounts, checkinRequestStore } from "./application/checkinRequestStore";
+// S08.05: checkins' RequestStore port on the subscriber table (the check-in request is on subscriptions' row), and the coverage view's counts;
+// S08.06: the requesters an approval's round is looked for among.
+export { checkinRequestCounts, checkinRequestStore, checkinRequestersIn } from "./application/checkinRequestStore";
 // The numbered text menus (S07.05) behind the router's MenuPort: reply 1 (building or floor), 2 (language) and 3 (withdraw a check-in
 // request), with the edit link's port (S07.06) and the rules of their pages.
 export { createMenus, fitsOneText, noEditLinkYet, placesForMenus, type EditLinkPort, type MenuDeps, type MenuPlaces } from "./application/menus";

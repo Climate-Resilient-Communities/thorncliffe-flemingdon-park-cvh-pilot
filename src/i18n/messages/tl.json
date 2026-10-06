@@ -4412,7 +4412,27 @@
         "rangeReversed": "[EN] The range goes from a higher floor to a lower one. Put the lower floor first."
       },
       "requestsUncovered": "[EN] Check-in requests on floors without an ambassador: {n}",
-      "requestsSummary": "[EN] Check-in requests on floors without an ambassador, in all buildings: {n}. Assign an ambassador or contact the residents through the Hub."
+      "requestsSummary": "[EN] Check-in requests on floors without an ambassador, in all buildings: {n}. Assign an ambassador or contact the residents through the Hub.",
+      "rounds": {
+        "heading": "[EN] Check-in rounds",
+        "lead": "[EN] When the Hub approves an alert of one of these types, a check-in round starts: the ambassadors check on the residents who asked, on the floors they cover. A drill never starts one.",
+        "current": "[EN] Types that start a round now: {types}.",
+        "none": "[EN] No type starts a round now, so no alert starts a check-in round.",
+        "legend": "[EN] Types that start a round",
+        "hint": "[EN] A change applies from the next approval. A round already started keeps everyone in it until its alert closes.",
+        "save": "[EN] Save round types",
+        "saving": "[EN] Saving",
+        "readOnly": "[EN] Only an Admin can change which types start a round.",
+        "done": "[EN] Saved. Types that start a round from the next approval: {types}.",
+        "doneNone": "[EN] Saved. From the next approval, no alert starts a check-in round.",
+        "errors": {
+          "forbidden": "[EN] Only an Admin can change which types start a round.",
+          "aal2Required": "[EN] An Admin must sign in with their authenticator code to change which types start a round. Sign in again and enter the code.",
+          "unknownType": "[EN] One of those is not a type of disruption. Reload the page and try again.",
+          "noChange": "[EN] Nothing to change: those are the round types already.",
+          "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT."
+        }
+      }
     },
     "ambassadorHome": {
       "title": "[EN] My building",

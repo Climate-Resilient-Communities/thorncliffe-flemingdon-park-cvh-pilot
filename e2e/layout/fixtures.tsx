@@ -570,7 +570,7 @@ export function CoverageFixture({
   screen: CoverageScreen;
   initial?: CoverageInitial;
 }) {
-  const actions: CoverageActions = { assign: noAction, remove: noAction };
+  const actions: CoverageActions = { assign: noAction, remove: noAction, roundTypes: noAction };
   return (
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/coverage">
       <Screen surface="staff" testId="screen">

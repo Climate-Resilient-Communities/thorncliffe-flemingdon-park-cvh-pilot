@@ -2,11 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { AmbassadorOption, AssignmentView } from "@/modules/identity";
 import type { BuildingFloorPlan } from "@/modules/places";
-import { CoverageBody, type CoverageActions } from "./CoverageBody";
+import { CoverageBody, type CoverageActions, type CoverageInitial } from "./CoverageBody";
+import { roundTypesView } from "./rounds/roundTypes";
 import { coverageBuildingView, coverageListView, coverageMissingView, savedNotice } from "./view";
 
 const noop = async () => ({ status: "idle" as const });
-const actions: CoverageActions = { assign: noop, remove: noop };
+const actions: CoverageActions = { assign: noop, remove: noop, roundTypes: noop };
 
 const floorId = (rsn: string, index: number) => `01900000-0000-7000-8000-${rsn.padStart(8, "0")}${String(index).padStart(4, "0")}`;
 
@@ -271,5 +272,54 @@ describe("Coverage: the notice after a saved change", () => {
     expect(savedNotice({ done: ["removed", "assigned"] })).toBe("Assignment removed.");
     expect(savedNotice({ done: "<script>" })).toBeUndefined();
     expect(savedNotice({})).toBeUndefined();
+  });
+});
+
+describe("Coverage: the round types (S08.06)", () => {
+  const CHOICES = [
+    { id: "elevator", round: false },
+    { id: "fire", round: false },
+    { id: "heat", round: true },
+    { id: "power", round: true },
+  ];
+  const list = (rounds: ReturnType<typeof roundTypesView>, initial?: CoverageInitial) =>
+    renderToStaticMarkup(<CoverageBody screen={{ ...coverageListView([plan("1", ["G"])], []), rounds }} actions={actions} initial={initial} />);
+
+  it("shows an Admin the types now in words and a box for every type, ticked when it starts a round, with what a change does", () => {
+    const out = list(roundTypesView(CHOICES, { editable: true }));
+    expect(out).toContain('<h2 id="round-types-title">Check-in rounds</h2>');
+    expect(out).toContain('data-testid="round-types-current">Types that start a round now: Heat, Power.</p>');
+    expect(out).toMatch(/<input type="checkbox" name="type" checked="" value="heat"\/><span>Heat<\/span>/);
+    expect(out).toMatch(/<input type="checkbox" name="type" checked="" value="power"\/><span>Power<\/span>/);
+    expect(out).toMatch(/<input type="checkbox" name="type" value="fire"\/><span>Fire alarm or evacuation<\/span>/);
+    expect(out).toContain("A change applies from the next approval. A round already started keeps everyone in it until its alert closes.");
+    expect(out).toContain(">Save round types</button>");
+    expect(out).not.toContain("round-types-read-only");
+  });
+
+  it("shows a Coordinator or a Director the types in words only, and who can change them", () => {
+    const out = list(roundTypesView(CHOICES, { editable: false }));
+    expect(out).toContain("Types that start a round now: Heat, Power.");
+    expect(out).toContain('data-testid="round-types-read-only">Only an Admin can change which types start a round.</p>');
+    expect(out).not.toContain('name="type"');
+    expect(out).not.toContain("<button");
+  });
+
+  it("says so when no type starts a round", () => {
+    expect(list(roundTypesView(CHOICES.map((choice) => ({ ...choice, round: false })), { editable: false }))).toContain(
+      "No type starts a round now, so no alert starts a check-in round.",
+    );
+  });
+
+  it("keeps the answer of a press in its live region, and a refusal as an alert the boxes point to", () => {
+    const done = list(roundTypesView(CHOICES, { editable: true }), { roundTypes: { status: "done", line: "Saved. Types that start a round from the next approval: Heat.", at: 1 } });
+    expect(done).toContain('<div aria-live="polite" data-testid="round-types-answer"><p>Saved. Types that start a round from the next approval: Heat.</p></div>');
+    const refused = list(roundTypesView(CHOICES, { editable: true }), { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } });
+    expect(refused).toContain('<p id="round-types-error" role="alert" class="hub-error" data-testid="round-types-error">Nothing to change: those are the round types already.</p>');
+    expect(refused).toContain('aria-describedby="round-types-hint round-types-error"');
+  });
+
+  it("is not on one building's page", () => {
+    expect(html(coverageBuildingView(plan("1", ["G"]), []))).not.toContain("round-types");
   });
 });

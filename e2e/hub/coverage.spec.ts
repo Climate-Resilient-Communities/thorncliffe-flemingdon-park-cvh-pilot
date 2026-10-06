@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { coverageBuildingView, coverageListView, savedNotice } from "../../src/app/staff/coverage/view";
+import { roundTypesView } from "../../src/app/staff/coverage/rounds/roundTypes";
+import { coverageBuildingView, coverageListView, savedNotice, type CoverageListView } from "../../src/app/staff/coverage/view";
 import type { AmbassadorOption, AssignmentView } from "../../src/modules/identity";
 import type { BuildingFloorPlan } from "../../src/modules/places";
 import { REAL_TEXTS, expectShellDoesNotOverflow, hubBrand } from "../helpers/hub-shell";
@@ -11,7 +12,9 @@ import { expectBaseline } from "./helpers";
 // Director sees it (read-only), and the form after a refusal. The views are built by the app's own view functions
 // from sample buildings (dates on or before 2026-10-01), the screen is the app's own CoverageBody with actions that do
 // nothing. The behaviour is asserted in e2e/staff/coverage.spec.ts and src/app/staff/coverage/CoverageBody.test.tsx;
-// these pictures show what it looks like. The staff screens are English in the pilot, so there is no ur picture.
+// these pictures show what it looks like. The staff screens are English in the pilot, so there is no ur picture. S08.06: below the list, the types
+// that start a check-in round, with the Admin's form to change them (the list pictures are an Admin's), a Director's read-only words, and the
+// form's answers after a save and after a refusal.
 const brand = hubBrand();
 
 const floorId = (rsn: string, index: number) => `01900000-0000-7000-8000-${rsn.padStart(8, "0")}${String(index).padStart(4, "0")}`;
@@ -65,6 +68,11 @@ const AMBASSADORS: AmbassadorOption[] = [
   { staffId: "01900000-0000-7000-8000-0000000000a4", firstName: "Sam", lastName: "Reyes" },
 ];
 
+/** S08.06: the pilot's types of disruption, heat and power starting a round. */
+const ROUND_TYPES = ["elevator", "fire", "flood", "heat", "other", "power", "smoke", "water", "winter"].map((id) => ({ id, round: id === "heat" || id === "power" }));
+/** The list as the page draws it: the buildings, then the round types as an Admin (`editable`) or anyone else sees them. */
+const listWithRounds = (list: CoverageListView, editable = true): CoverageListView => ({ ...list, rounds: roundTypesView(ROUND_TYPES, { editable }) });
+
 async function open(page: Page, width: number, props: Omit<Parameters<typeof mount<"CoverageFixture">>[2], "texts" | "brand">, height = 1100) {
   await page.setViewportSize({ width, height });
   await mount(page, "CoverageFixture", { texts: REAL_TEXTS, brand, ...props });
@@ -72,8 +80,11 @@ async function open(page: Page, width: number, props: Omit<Parameters<typeof mou
 
 for (const width of [390, 1280]) {
   test(`coverage list at ${width}px`, async ({ page }) => {
-    await open(page, width, { screen: coverageListView(PLANS, ASSIGNMENTS) }, width === 390 ? 1900 : 1400);
+    await open(page, width, { screen: listWithRounds(coverageListView(PLANS, ASSIGNMENTS)) }, width === 390 ? 2000 : 1600);
     await expect(page.getByTestId("screen")).toContainText("Buildings with every floor covered: 1 of 6.");
+    await expect(page.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat, Power.");
+    await expect(page.getByRole("checkbox", { name: "Heat" })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: "Water" })).not.toBeChecked();
     await expectBaseline(page, `coverage-list-${width}.png`);
   });
 
@@ -151,4 +162,24 @@ test("the list with check-in requests on floors without an ambassador at 390px",
   await expect(page.getByTestId("coverage-requests-4154159")).toHaveText("Check-in requests on floors without an ambassador: 2");
   await expect(page.getByTestId("coverage-requests-4154146")).toHaveCount(0);
   await expectBaseline(page, "coverage-list-requests-390.png");
+});
+
+// S08.06: which types start a check-in round. A Director (and a Coordinator) reads them in words, with no form; an Admin's save is answered in the
+// form's live region, and a refusal in the Hub's error style, nothing changed.
+test("the round types as a Director reads them at 390px: words only, no form", async ({ page }) => {
+  await open(page, 390, { screen: listWithRounds(coverageListView(PLANS.slice(0, 1), ASSIGNMENTS), false) }, 800);
+  await expect(page.getByTestId("round-types").locator("form, button, input")).toHaveCount(0);
+  await expect(page.getByTestId("round-types-read-only")).toHaveText("Only an Admin can change which types start a round.");
+  await expectBaseline(page, "coverage-rounds-director-390.png");
+});
+
+test("the round types after an Admin saved them, and after a refusal, at 390px", async ({ page }) => {
+  const screen = listWithRounds(coverageListView(PLANS.slice(0, 1), ASSIGNMENTS));
+  await open(page, 390, { screen, initial: { roundTypes: { status: "done", line: "Saved. Types that start a round from the next approval: Heat, Power.", at: 1 } } }, 1150);
+  await expect(page.getByTestId("round-types-answer")).toHaveText("Saved. Types that start a round from the next approval: Heat, Power.");
+  await expectBaseline(page, "coverage-rounds-saved-390.png");
+
+  await open(page, 390, { screen, initial: { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } } }, 1150);
+  await expect(page.getByTestId("round-types-error")).toHaveText("Nothing to change: those are the round types already.");
+  await expectBaseline(page, "coverage-rounds-refused-390.png");
 });

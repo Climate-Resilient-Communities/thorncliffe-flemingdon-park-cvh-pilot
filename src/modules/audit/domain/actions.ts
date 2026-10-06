@@ -301,6 +301,11 @@ export const AUDIT_META = {
   "spend.cap_set": meta({ cap_cents: count.optional(), previous_cents: count.optional() }),
   "spend.cap_overrun": meta({ over_cents: count.optional(), cap_cents: count.optional(), entry_cents: count.optional() }),
 
+  // The round types (S08.06, E08 "Round types"): an Admin at aal2 changes which types of disruption start a check-in round (`disruption_type.checkin`). The
+  // subject is the types (type `disruption_type`, no id); `round_types` are the types afterwards and `previous` the ones they replaced, by id (either may be
+  // empty). A refusal holds only its reason (`validation`: not a type of disruption; `conflict`: those are the round types already).
+  "round_types.changed": meta({ round_types: z.array(code).max(20).optional(), previous: z.array(code).max(20).optional() }),
+
   // A resend (S09.02): an Admin at aal2 resends one text, or all the failed and undelivered texts of an entry in one language. The subject is the alert entry
   // (type `alert_entry`); `scope` is `one` or `language`, `lang` the language of a "resend all", `resent` how many new texts were made, `not_resent` how many
   // chains a "resend all" left out (a number that cannot receive texts, two resends already), `resend_n` which resend of its chain a single one is. Counts only:
@@ -367,6 +372,7 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "oncall.removed": ["roster_size"],
   "spend.cap_set": ["cap_cents"],
   "spend.cap_overrun": ["over_cents", "cap_cents", "entry_cents"],
+  "round_types.changed": ["round_types", "previous"],
   "delivery.resent": ["scope", "resent"],
   "campaign.rehearsed": ["queued"],
   "campaign.started": ["asked", "queued", "pending_deleted"],

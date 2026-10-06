@@ -100,6 +100,7 @@ const NO_SUCH_BUILDING = "7001";
 const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction", "setContactAction"] as const;
 const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
+const ROUND_TYPES_ACTIONS = "src/app/staff/coverage/rounds/actions.ts";
 const ALERT_AUDIENCE_ACTIONS = "src/app/staff/alerts/audience/actions.ts";
 const ALERT_LOG_ACTIONS = "src/app/staff/alerts/log/actions.ts";
 const ALERT_COMPOSER_ACTIONS = "src/app/staff/alerts/composer/actions.ts";
@@ -453,6 +454,21 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: ADMIN_ONLY,
     }),
   ),
+  // S08.06: "Save round types" on the coverage page (policy action `checkins.round_types`, Admins at aal2). The form names a type of disruption that does
+  // not exist, so an Admin's call passes the guard and is then refused by the use case (audited as a refusal), changing nothing; a Coordinator and a Director,
+  // who read the round types, are refused like every other role.
+  {
+    id: `action ${ROUND_TYPES_ACTIONS}#setRoundTypesAction`,
+    kind: "action",
+    file: ROUND_TYPES_ACTIONS,
+    export: "setRoundTypesAction",
+    route: "/staff/coverage",
+    action: "checkins.round_types",
+    writes: "business",
+    gate: "hub",
+    form: { type: "no_such_type" },
+    expected: ADMIN_ONLY,
+  },
   // S04.04: the place picker (O-03) and the group picker (O-04), policy action `alert.author_wide`. The draft does not exist, so a
   // Coordinator's or an Admin's call passes the guard and is then refused by the use case ("that alert draft was not found"),
   // changing nothing. An Ambassador, a Director and an Ambassador outside their building are refused by the guard on the

@@ -99,7 +99,7 @@ export function createCheckinRequests(deps: CheckinRequestsDeps): CheckinRequest
   const places = deps.places ?? placesReaders;
   const newId = deps.newId ?? (() => uuidv7());
 
-  /** The open round threads (read without a lock) that match a place. */
+  /** The open round threads (read without a lock) that match a place, with (S08.06) those an approval waiting would make one that matches. */
   async function matchingRounds(executor: DbExecutor, place: RequestPlace): Promise<string[]> {
     const [types, neighbourhoodId, open] = [await places.roundTypes(executor), await places.neighbourhoodOf(executor, place.rsn), await deps.threads.open(executor)];
     if (neighbourhoodId === null) return [];
