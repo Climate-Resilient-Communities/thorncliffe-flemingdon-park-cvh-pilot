@@ -218,3 +218,18 @@ test("the published confirmation of a drill, at 390px", async ({ page }) => {
   await expect(page.getByTestId("published-title")).toHaveText("Practice publish: nothing was sent to residents");
   await expectBaseline(page, "published-drill-390.png");
 });
+
+// S07.08: when this alert's texts would take the month's text spending past the monthly cap, the approver is told before approving, by how much, and that
+// they can still approve (the sentence is the catalog's, built by the app's own capNoticeFor).
+const CAP_NOTICE =
+  "With this alert, text spending this month would be about $312.40 CAD, which is $12.40 over the monthly cap of $300.00 CAD. You can still approve it: the texts are sent, the overrun is recorded and the on-call Admins are told.";
+for (const width of [390, 1280]) {
+  test(`the approval view of an alert that would pass the monthly spending cap, at ${width}px`, async ({ page }) => {
+    const screen = approvalScreen({ review: reviewOf({ recipients: OPEN }), plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER, capNotice: CAP_NOTICE });
+    await openApproval(page, width, { screen });
+    await expect(page.getByTestId("cap-notice")).toHaveText(CAP_NOTICE);
+    // It informs and takes nothing away: Approve is still on the page, after the notice.
+    await expect(page.getByTestId("approve-button")).toBeVisible();
+    await expectBaseline(page, `approval-cap-notice-${width}.png`);
+  });
+}

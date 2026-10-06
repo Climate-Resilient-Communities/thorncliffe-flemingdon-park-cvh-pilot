@@ -576,6 +576,70 @@ describe("drill_roster.added, drill_roster.edited and drill_roster.removed (S06.
   });
 });
 
+describe("spend.cap_set and spend.cap_overrun (S07.08)", () => {
+  const cap = (meta: Record<string, unknown>) => event({ action: "spend.cap_set", subjectType: "spend_cap", subjectId: "1", meta } as Partial<AuditEvent>);
+  const overrun = (meta: Record<string, unknown>) =>
+    event({ action: "spend.cap_overrun", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);
+
+  it("record a cap that was set with the cap afterwards, and the one it replaced when there was one, as amounts in cents and nothing else", () => {
+    expect(toAuditRecord(cap({ cap_cents: 25_000 }), "ok")).toMatchObject({ action: "spend.cap_set", subjectType: "spend_cap", subjectId: "1", outcome: "ok", meta: { cap_cents: 25_000 } });
+    expect(toAuditRecord(cap({ cap_cents: 30_000, previous_cents: 25_000 }), "ok").meta).toEqual({ cap_cents: 30_000, previous_cents: 25_000 });
+    expect(() => toAuditRecord(cap({}), "ok")).toThrow("meta is missing cap_cents");
+    expect(() => toAuditRecord(cap({ cap_cents: 1, note: "free text" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("record a refused cap with only its reason", () => {
+    expect(toAuditRecord(cap({ reason: "validation" }), "refused").meta).toEqual({ reason: "validation" });
+  });
+
+  it("record an overrun with by how much, the cap and the entry's own estimate, on the entry that was approved", () => {
+    expect(toAuditRecord(overrun({ over_cents: 125, cap_cents: 10_000, entry_cents: 900 }), "ok")).toMatchObject({
+      action: "spend.cap_overrun",
+      subjectType: "alert_entry",
+      meta: { over_cents: 125, cap_cents: 10_000, entry_cents: 900 },
+    });
+    expect(() => toAuditRecord(overrun({ over_cents: 125 }), "ok")).toThrow("meta is missing cap_cents");
+    expect(() => toAuditRecord(overrun({ over_cents: -1, cap_cents: 1, entry_cents: 1 }), "ok")).toThrow(AuditRecordError);
+  });
+});
+
+describe("delivery.resent (S09.02)", () => {
+  const resent = (meta: Record<string, unknown>) =>
+    event({ action: "delivery.resent", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);
+
+  it("records one text resent as a count and which resend of its chain it is, and nothing else", () => {
+    expect(toAuditRecord(resent({ scope: "one", resent: 1, not_resent: 0, resend_n: 2 }), "ok")).toMatchObject({
+      action: "delivery.resent",
+      subjectType: "alert_entry",
+      outcome: "ok",
+      meta: { scope: "one", resent: 1, not_resent: 0, resend_n: 2 },
+    });
+  });
+
+  it("records a resend of all as the language and the counts", () => {
+    expect(toAuditRecord(resent({ scope: "language", lang: "zh-Hant", resent: 40, not_resent: 3 }), "ok").meta).toEqual({ scope: "language", lang: "zh-Hant", resent: 40, not_resent: 3 });
+  });
+
+  it("must say the scope and how many were resent when it is ok", () => {
+    expect(() => toAuditRecord(resent({ resent: 1 }), "ok")).toThrow("meta is missing scope");
+    expect(() => toAuditRecord(resent({ scope: "one" }), "ok")).toThrow("meta is missing resent");
+  });
+
+  it("has nowhere to put a number, a recipient, a body or a resend that is not the first or second", () => {
+    expect(() => toAuditRecord(resent({ scope: "one", resent: 1, phone: "+14165550123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(resent({ scope: "one", resent: 1, recipient: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(resent({ scope: "one", resent: 1, resend_n: 3 }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(resent({ scope: "language", lang: "+14165550123", resent: 1 }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it.each(["not_found", "confirm_needed", "status_changed", "resend_limit", "already_resent", "not_resendable", "cannot_receive", "recipient_gone", "recipient_not_receiving", "not_sendable"])(
+    "records a refusal with its reason %s and nothing more",
+    (reason) => {
+      expect(toAuditRecord(resent({ reason }), "refused").meta).toEqual({ reason });
+    },
+  );
+});
+
 describe("oncall.added and oncall.removed (S06.07)", () => {
   const roster = (action: "oncall.added" | "oncall.removed", meta: Record<string, unknown>) =>
     event({ action, subjectType: "oncall_roster", subjectId: "0190c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6", meta } as Partial<AuditEvent>);

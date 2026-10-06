@@ -336,6 +336,8 @@ const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/alerts/correct/actions.ts": "Correcting or withdrawing needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",
   "src/app/staff/texts/actions.ts": "An Admin must sign in with their authenticator code to pause or resume texts. Sign in again and enter the code.",
   "src/app/staff/oncall/actions.ts": "An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.",
+  "src/app/staff/spend/actions.ts": "An Admin must sign in with their authenticator code to change the monthly cap. Sign in again and enter the code.",
+  "src/app/staff/alerts/sending/texts/actions.ts": "An Admin must sign in with their authenticator code to resend texts. Sign in again and enter the code.",
   "src/app/staff/drills/roster/actions.ts": "An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
   "src/app/staff/drills/start/actions.ts": "An Admin must sign in with their authenticator code to start a drill. Sign in again and enter the code.",
 };

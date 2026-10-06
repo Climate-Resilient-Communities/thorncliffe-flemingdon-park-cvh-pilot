@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING,
-  DEFAULT_SMS_USD_TO_CAD_RATE, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
+  DEFAULT_SMS_USD_TO_CAD_RATE, DEFAULT_SPEND_PILOT_BUDGET_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -891,6 +891,39 @@ describe("SMS_USD_TO_CAD_RATE (S06.08)", () => {
 
   it.each(["0", "0.4999", "5.0001", "6", "-1.4", "1.23456", "1e0", "cad", "1,4", "$1.4", "NaN", "Infinity", ".5", "1.", "100"])("refuses %j and names the variable", (value) => {
     expect(problemsOf({ ...production, SMS_USD_TO_CAD_RATE: value })).toEqual([expect.stringMatching(/^SMS_USD_TO_CAD_RATE: must be a positive number with at most four decimals, between 0\.5 and 5/)]);
+  });
+});
+
+describe("SPEND_PILOT_BUDGET_CENTS and SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION (S07.08)", () => {
+  it("default to the CAD 1,000 pilot budget and no estimate rate in every environment, and docs/config.md documents both", () => {
+    for (const base of [production, preview, local]) {
+      expect(parseEnv(base)).toMatchObject({ spendPilotBudgetCents: DEFAULT_SPEND_PILOT_BUDGET_CENTS, spendTokenEstimateCadPerMillion: null });
+    }
+    expect(DEFAULT_SPEND_PILOT_BUDGET_CENTS).toBe(100_000);
+    const config = readFileSync("docs/config.md", "utf8");
+    expect(config).toMatch(/`SPEND_PILOT_BUDGET_CENTS`[^\n]*default `100000`/);
+    expect(config).toMatch(/`SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION`/);
+  });
+
+  it("read the budget in whole cents and the rate in dollars per million tokens, in any environment (neither is a credential)", () => {
+    for (const base of [production, preview, local]) {
+      expect(parseEnv({ ...base, SPEND_PILOT_BUDGET_CENTS: " 250000 ", SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: "0.5" })).toMatchObject({ spendPilotBudgetCents: 250_000, spendTokenEstimateCadPerMillion: 0.5 });
+    }
+    expect(parseEnv({ ...local, SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: " 12.3456 " }).spendTokenEstimateCadPerMillion).toBe(12.3456);
+  });
+
+  it("treat blank values as unset", () => {
+    expect(parseEnv({ ...production, SPEND_PILOT_BUDGET_CENTS: " ", SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: "" })).toMatchObject({ spendPilotBudgetCents: DEFAULT_SPEND_PILOT_BUDGET_CENTS, spendTokenEstimateCadPerMillion: null });
+  });
+
+  it.each(["0", "-5", "1.5", "ten", "1e5"])("refuse a budget of %j and name the variable", (value) => {
+    expect(problemsOf({ ...production, SPEND_PILOT_BUDGET_CENTS: value })).toEqual(["SPEND_PILOT_BUDGET_CENTS: must be a whole number of at least 1"]);
+  });
+
+  it.each(["0", "0.00", "-1", "1.23456", "10000.01", "abc", "1e3", ".5", "1,5"])("refuse an estimate rate of %j and name the variable", (value) => {
+    expect(problemsOf({ ...production, SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: value })).toEqual([
+      expect.stringMatching(/^SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: must be a positive number of dollars per million tokens/),
+    ]);
   });
 });
 

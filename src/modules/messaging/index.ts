@@ -98,6 +98,9 @@ export function createDeliveryMeasures(): DeliveryMeasures {
 export function createSenderHealth(): SenderHealthReader {
   return drizzleSenderHealth;
 }
+
+/** The estimated cost of the texts waiting to be sent, in whole cents CAD (S07.08: the spend cap counts them before the provider has accepted them). */
+export { queuedCostCents } from "./adapters/queuedCost";
 export {
   LEASE_STALE_AFTER_MS,
   STUCK_QUEUE_AFTER_MS,
@@ -374,5 +377,55 @@ export {
   type ReachRow,
 } from "./domain/deliveryMeasures";
 
+// How far corrections, withdrawals and finals reached, for the Hub (S07.10, FR-M4): the SQL view `correction_reach`, drills apart.
+export { CORRECTION_REACH_KINDS, readCorrectionReach, type CorrectionReachKind, type CorrectionReachReport, type CorrectionReachRow } from "./application/reachReport";
+
 // The subscribers an alert's entries were queued to text (S07.07): what subscriptions' recipient port adds to a correction's, a withdrawal's and a final's own audience.
 export { subscribersQueuedFor } from "./adapters/entryRecipientStore";
+
+// A resend (S09.02, AR-21): an Admin's deliberate action that creates a new delivery copying an earlier one of the chain, never by itself. The caller (the staff
+// surface, src/app/staff/resendSeam.ts) gives it the resident's standing (subscriptions), the entry's standing (alerting) and the spend cap's check (spend).
+import { drizzleResendStore } from "./adapters/resendStore";
+import { createResend as createResendService, type Resend, type ResendAudit, type ResendDeps } from "./application/resend";
+
+export interface ResendWiring {
+  db: Db;
+  recipients: ResendDeps["recipients"];
+  standing: ResendDeps["standing"];
+  spendCap?: ResendDeps["spendCap"];
+  /** Test seams: another audit writer, the ids and the clock. */
+  audit?: ResendAudit;
+  newId?: ResendDeps["newId"];
+  now?: ResendDeps["now"];
+}
+
+/** The resend (S09.02): each call is one transaction, with its audit record. Who may resend is the guard's rule (`delivery.resend`, Admins, at aal2), asked before. */
+export function createResend(wiring: ResendWiring): Resend {
+  return createResendService({
+    db: wiring.db,
+    store: drizzleResendStore,
+    audit: wiring.audit ?? { record: audit.record, recordRefusal: audit.recordRefusal },
+    recipients: wiring.recipients,
+    standing: wiring.standing,
+    spendCap: wiring.spendCap,
+    newId: wiring.newId,
+    now: wiring.now,
+  });
+}
+export type { NotResent, Resend, ResendAudit, ResendDeps, ResendInput, ResendOutcome, ResendRecipients, ResendSpendCap, ResendStanding, ResendStore, RootText } from "./application/resend";
+export {
+  BULK_RESEND_LIMIT,
+  BULK_RESEND_STATES,
+  RESENDABLE_STATES,
+  RESEND_LIMIT,
+  RESEND_REFUSALS,
+  UNRECEIVABLE_MEANINGS,
+  decideResend,
+  latestOf,
+  resendKey,
+  unreceivableMeaning,
+  type ChainText,
+  type ResendDecision,
+  type ResendFacts,
+  type ResendRefusal,
+} from "./domain/resend";

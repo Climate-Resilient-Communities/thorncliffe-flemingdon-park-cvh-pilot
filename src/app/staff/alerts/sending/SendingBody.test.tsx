@@ -8,6 +8,7 @@ import { ApprovalBody, type ApprovalActions } from "../approval/ApprovalBody";
 import { approvalScreen } from "../approval/view";
 import type { ProblemListScreen, SendingScreen } from "./load";
 import { ProblemListBody, SendingBody } from "./SendingBody";
+import { ResendAllFormView, ResendOneFormView } from "./texts/ResendFormView";
 import { sendingProgressView, problemListView } from "./view";
 
 // The reload uses the router, which a static render does not have.
@@ -88,8 +89,8 @@ describe("the list of the texts that did not arrive", () => {
       ref: REF,
       state: "failed",
       texts: [
-        { id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed", meaning: "not_in_service", code: null, at: new Date("2026-10-05T18:15:00Z") },
-        { id: "01900000-0000-7000-8000-00000abc5678", reference: "abc567", lang: "en", state: "failed", meaning: "retries_exhausted", code: null, at: new Date("2026-10-05T18:16:00Z") },
+        { id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed", meaning: "not_in_service", code: null, at: new Date("2026-10-05T18:15:00Z"), resendN: null, resends: 0, resent: false },
+        { id: "01900000-0000-7000-8000-00000abc5678", reference: "abc567", lang: "en", state: "failed", meaning: "retries_exhausted", code: null, at: new Date("2026-10-05T18:16:00Z"), resendN: null, resends: 0, resent: false },
       ],
       more: false,
       limit: 200,
@@ -110,6 +111,57 @@ describe("the list of the texts that did not arrive", () => {
   it("says when no text is in the state", () => {
     const empty = { ...screen, list: problemListView({ ref: REF, state: "unknown", texts: [], more: false, limit: 200 }) };
     expect(renderToStaticMarkup(<ProblemListBody screen={empty} />)).toContain('data-testid="sending-list-none"');
+  });
+
+  describe("for an Admin (S09.02)", () => {
+    const at = new Date("2026-10-05T18:15:00Z");
+    const adminScreen = (state: "failed" | "unknown"): ProblemListScreen => ({
+      kind: "list",
+      ref: REF,
+      heading: "Elevator, Power · Acknowledgement",
+      list: problemListView({
+        ref: REF,
+        state,
+        texts: [
+          { id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state, meaning: state === "unknown" ? "unclear" : "no_reason", code: null, at, resendN: null, resends: 0, resent: false },
+          { id: "01900000-0000-7000-8000-00000abc5678", reference: "abc567", lang: "en", state, meaning: "invalid_number", code: null, at, resendN: null, resends: 0, resent: false },
+        ],
+        more: false,
+        limit: 200,
+        canResend: true,
+        resendLanguages: ["en", "ur"],
+      }),
+    });
+    const slots = {
+      one: (view: { deliveryId: string }) => <ResendOneFormView view={view as never} />,
+      all: (view: { lang: string }) => <ResendAllFormView view={view as never} />,
+    };
+
+    it("draws a Resend on the text that can be resent, a note on the one that cannot, and a button for each language", () => {
+      const out = renderToStaticMarkup(<ProblemListBody screen={adminScreen("failed")} resend={slots} />);
+      expect(out).toContain('data-testid="resend-intro"');
+      expect(out.match(/data-testid="resend-one"/g)).toHaveLength(1);
+      expect(out).toContain('aria-label="Resend text abc123"');
+      expect(out).not.toContain('aria-label="Resend text abc567"');
+      expect(out).toContain("Cannot be resent: the number cannot receive texts.");
+      expect(out).toContain('data-testid="resend-all-en"');
+      expect(out).toContain('data-testid="resend-all-ur"');
+      expect(out).toContain("Resend the failed and undelivered texts in Urdu");
+      expect(out).toMatch(/<input type="hidden" name="seen" value="failed"\/>/);
+    });
+
+    it("draws nothing of it without the slots, so a Coordinator's page is as it was", () => {
+      const out = renderToStaticMarkup(<ProblemListBody screen={adminScreen("failed")} />);
+      expect(out).not.toContain("resend-");
+      expect(out).not.toContain("Resend");
+    });
+
+    it("puts the warning and a box to tick on a text with an unknown outcome, and no button for a language", () => {
+      const out = renderToStaticMarkup(<ProblemListBody screen={adminScreen("unknown")} resend={slots} />);
+      expect(out).toContain("This text may already have arrived; resending may send it twice");
+      expect(out).toMatch(/<label class="hub-check"[^>]*><input[^>]*type="checkbox"[^>]*required=""[^>]*name="confirm"/);
+      expect(out).not.toContain('data-testid="resend-all-en"');
+    });
   });
 });
 

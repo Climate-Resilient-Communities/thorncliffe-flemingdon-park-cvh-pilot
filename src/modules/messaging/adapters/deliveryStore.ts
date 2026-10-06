@@ -39,6 +39,8 @@ export const viewOf = (row: DeliveryRow): DeliveryView => ({
   completedAt: row.completedAt,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
+  resendOf: row.resendOf,
+  resendN: row.resendN,
 });
 
 /** `send_by` as the insert takes it: an instant, or the database's now() plus a whole number of milliseconds (no app clock). */

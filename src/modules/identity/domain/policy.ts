@@ -61,7 +61,7 @@ export const AUTHORITY_MATRIX = [
     // authority one step earlier: choosing which loaded providers are published and confirming them is what the
     // directory is published from, so it follows the row's "publish directory" (Admin only, aal2).
     row: "Drills, publish directory, accounts, cap, pause",
-    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage"],
+    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage", "delivery.resend"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {

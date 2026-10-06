@@ -21,6 +21,7 @@ let fx: ReturnType<typeof deliveryFixtures>;
 async function clearAll() {
   await sql`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
   await fx.cleanup();
+  await sql`delete from subscriber`;
 }
 
 test.beforeAll(async () => {
@@ -105,7 +106,8 @@ async function drive(id: string, to: To, code?: number) {
 }
 
 /** An approved entry with one text per spec, each to its own recipient, driven to its state. Rows hold no phone number. */
-async function seed(specs: readonly Spec[], options: { isDrill?: boolean } = {}): Promise<{ entry: SeededEntry; ids: string[] }> {
+let phoneSerial = 0;
+async function seed(specs: readonly Spec[], options: { isDrill?: boolean; subscribers?: boolean } = {}): Promise<{ entry: SeededEntry; ids: string[]; recipients: string[] }> {
   const entry = await fx.entry("pending_approval", { isDrill: options.isDrill });
   const recipients = specs.map(() => randomUUID());
   if (options.isDrill) for (const recipient of recipients) await fx.rosterMember({ id: recipient });
@@ -122,7 +124,16 @@ async function seed(specs: readonly Spec[], options: { isDrill?: boolean } = {})
     await fx.approve(tx, entry);
   });
   for (const [index, item] of specs.entries()) await drive(ids[index], item.to, item.code);
-  return { entry, ids };
+  // A resend goes only to a resident who still receives alerts (S09.02): the texts of these entries are to real subscribers (fictitious numbers, the 555 exchange).
+  if (options.subscribers) {
+    await sql`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H') on conflict do nothing`;
+    for (const [index, item] of specs.entries()) {
+      phoneSerial += 1;
+      await sql`insert into subscriber (id, phone, lang, neighbourhood_id, groups, consent_version, started_by, retention_state)
+                values (${recipients[index]}, ${`+1416555${String(phoneSerial).padStart(4, "0")}`}, ${item.lang}, 'TP', ${[]}, '2026-10-01.1', 'web', 'active')`;
+    }
+  }
+  return { entry, ids, recipients };
 }
 
 const progressUrl = (entry: SeededEntry) => `/staff/alerts/sending?alert=${entry.alertId}&entry=${entry.entryId}`;
@@ -318,4 +329,106 @@ test("the first-text spike is gone: no Test text page, no menu item", async ({ p
   await expect(page.getByTestId("hub-side").getByRole("link", { name: "Test text" })).toHaveCount(0);
   const response = await page.goto("/staff/sms-test");
   expect(response?.status()).toBe(404);
+});
+
+// --- S09.02: an Admin resends texts that failed ----------------------------------------------------------------------------------------------------------
+
+const resendsOf = (entry: SeededEntry) =>
+  sql<{ resend_of: string; resend_n: number; state: string; idempotency_key: string }[]>`select resend_of, resend_n, state, idempotency_key from delivery where entry_id = ${entry.entryId} and resend_of is not null order by resend_of, resend_n`;
+
+test("an Admin resends one failed text from the list, and the chain, the audit and the page say so; a Coordinator sees the list without the button", async ({ page, browser }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { entry, ids } = await seed([...spec("en", "failed", 1, 21999), ...spec("en", "failed", 1, 21211)], { subscribers: true });
+  await signInToTheHub(page, "admin");
+
+  await page.goto(listUrl(entry, "failed"));
+
+  // The text whose number cannot receive texts has a note and no button; the other has the button.
+  await expect(page.getByTestId("sending-list-item")).toHaveCount(2);
+  await expect(page.getByTestId("resend-one")).toHaveCount(1);
+  await expect(page.getByTestId("sending-list-note")).toHaveText("Cannot be resent: the number cannot receive texts.");
+  await expectNoHorizontalScroll(page);
+  await page.getByRole("button", { name: /^Resend text / }).click();
+  await expect(page.getByTestId("resend-one").getByTestId("resend-answer")).toHaveText("The text was resent. It is in the queue and goes out in its usual order.");
+  // It was resent: the button is not pressed again.
+  await expect(page.getByRole("button", { name: /^Resend text / })).toBeDisabled();
+
+  const made = await resendsOf(entry);
+  expect(made).toHaveLength(1);
+  expect(made[0]).toMatchObject({ resend_of: ids[0], resend_n: 1, idempotency_key: `resend:${ids[0]}:1` });
+  const audit = await sql`select outcome, meta from audit_event where action = 'delivery.resent' and subject_id = ${entry.entryId}`;
+  expect(audit).toEqual([{ outcome: "ok", meta: { scope: "one", resent: 1, not_resent: 0, resend_n: 1 } }]);
+  expect(JSON.stringify(audit)).not.toMatch(/\+\d/);
+
+  // The page reads the chain again: the text that was resent says so and has no button.
+  await page.reload();
+  await expect(page.getByTestId("resend-one")).toHaveCount(0);
+  await expect(page.getByTestId("sending-list-note")).toHaveCount(2);
+  await expect(page.getByTestId("sending-list-items")).toContainText("Already resent: a newer text was made for this one.");
+  await expect(page.getByTestId("sending-list-items")).toContainText("Cannot be resent: the number cannot receive texts.");
+
+  const other = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const coordinatorPage = await other.newPage();
+  await signInToTheHub(coordinatorPage, "coordinator");
+  await coordinatorPage.goto(listUrl(entry, "failed"));
+  await expect(coordinatorPage.getByTestId("sending-list-item")).toHaveCount(2);
+  await expect(coordinatorPage.getByTestId("resend-one")).toHaveCount(0);
+  await expect(coordinatorPage.getByRole("button", { name: /Resend/ })).toHaveCount(0);
+  await other.close();
+});
+
+test("a text with an unknown outcome is resent only after the Admin ticks that it may arrive twice", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { entry, ids } = await seed(spec("en", "unknown", 1), { subscribers: true });
+  await signInToTheHub(page, "admin");
+
+  await page.goto(listUrl(entry, "unknown"));
+  const warning = page.getByLabel("This text may already have arrived; resending may send it twice");
+  await expect(warning).not.toBeChecked();
+  await expect(page.getByTestId("resend-all-en")).toHaveCount(0);
+  await page.getByRole("button", { name: /^Resend text / }).click();
+  // The form is not sent without the box: the browser asks for it, and nothing is made.
+  await expect(warning).toBeFocused();
+  expect(await resendsOf(entry)).toEqual([]);
+
+  await warning.check();
+  await page.getByRole("button", { name: /^Resend text / }).click();
+  await expect(page.getByTestId("resend-one").getByTestId("resend-answer")).toContainText("The text was resent");
+  expect(await resendsOf(entry)).toMatchObject([{ resend_of: ids[0], resend_n: 1 }]);
+  // The unknown text itself is untouched: only a late callback resolves it.
+  expect((await sql`select state from delivery where id = ${ids[0]}`)[0].state).toBe("unknown");
+});
+
+test("an Admin resends all the failed and undelivered texts of a language in one press, leaving out the ones that cannot receive texts, and never an unknown one", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { entry, ids } = await seed(
+    [...spec("en", "failed", 2, 21999), ...spec("en", "undelivered", 1, 30003), ...spec("en", "failed", 1, 21610), ...spec("en", "unknown", 1), ...spec("ur", "failed", 1, 21999)],
+    { subscribers: true },
+  );
+  await signInToTheHub(page, "admin");
+
+  await page.goto(listUrl(entry, "failed"));
+  await expect(page.getByTestId("resend-all-en")).toBeVisible();
+  await expect(page.getByTestId("resend-all-ur")).toBeVisible();
+  await page.getByRole("button", { name: "Resend the failed and undelivered texts in English" }).click();
+  await expect(page.getByTestId("resend-answer").first()).toContainText("3 texts were resent");
+  await expect(page.getByTestId("resend-answer").first()).toContainText("1 left out: 1 the number cannot receive texts.");
+
+  const made = await resendsOf(entry);
+  expect(made.map((row) => row.resend_of).sort()).toEqual([ids[0], ids[1], ids[2]].sort());
+  expect((await sql`select state from delivery where id = ${ids[4]}`)[0].state).toBe("unknown");
+  expect(await sql`select outcome, meta from audit_event where action = 'delivery.resent' and subject_id = ${entry.entryId}`).toEqual([
+    { outcome: "ok", meta: { scope: "language", lang: "en", resent: 3, not_resent: 1 } },
+  ]);
+});
+
+test("pressing 'Resend' on a text that can no longer be resent says why and sends nothing", async ({ page }) => {
+  const { entry, ids } = await seed(spec("en", "failed", 1, 21999), { subscribers: true });
+  await signInToTheHub(page, "admin");
+  await page.goto(listUrl(entry, "failed"));
+  // Another Admin got there first.
+  await sql`delete from subscriber where id = (select recipient_id from delivery where id = ${ids[0]})`;
+  await page.getByRole("button", { name: /^Resend text / }).click();
+  await expect(page.getByTestId("resend-error")).toHaveText("The person is gone (they replied STOP or their number was deleted), so nothing was resent.");
+  expect(await resendsOf(entry)).toEqual([]);
 });

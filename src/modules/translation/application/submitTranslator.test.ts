@@ -61,6 +61,20 @@ describe("the submit budget", () => {
   });
 });
 
+describe("the entry it translates for", () => {
+  it("is carried into every spend event, with whether it is a drill's (S07.10)", async () => {
+    const spend: { entryId?: string | null; isDrill?: boolean | null }[] = [];
+    const t = setup({ deps: { recordSpend: async (event) => void spend.push(event) } });
+
+    const run = t.submit.translate({ english: ENGLISH_ALERT, entry: { entryId: "01900000-0000-7000-8000-0000000000e1", isDrill: false } });
+    await vi.advanceTimersByTimeAsync(5000);
+    await run;
+
+    expect(spend.length).toBeGreaterThan(0);
+    for (const event of spend) expect(event).toMatchObject({ entryId: "01900000-0000-7000-8000-0000000000e1", isDrill: false });
+  });
+});
+
 describe("progress", () => {
   it("reports each of the 15 languages as it settles, and returns the whole set", async () => {
     const t = setup();

@@ -50,6 +50,11 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   // Coverage (S01.14) is `coverage.view`: an Admin and a Coordinator, and a Director read-only. It sits with the
   // disruption screens because it says where a check-in round can be promised.
   if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "coverage", label: englishText("hub.nav.coverage"), href: "/staff/coverage", icon: "ready" }];
+  // Spend (S07.08) is `spend.view`: an Admin, and a Director read-only. It sits beside Coverage, which the same two roles (and the Coordinator) see.
+  if (can(role, "spend.view")) sections[0].items = [...sections[0].items, { id: "spend", label: englishText("hub.nav.spend"), href: "/staff/spend", icon: "layers" }];
+  // The pilot measures (S07.10: subscribers, how far corrections reached, cost per alert) are counts, so they follow `coverage.view`: a Coordinator, a Director
+  // read-only and an Admin. The cost of an alert on the page is `spend.view` (no Coordinator).
+  if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "measures", label: englishText("hub.nav.measures"), href: "/staff/measures", icon: "layers" }];
   // Text sign-up (S07.03) is `signup.assist`: an Ambassador, a Coordinator and an Admin start a resident's sign-up at an event or the Hub desk.
   if (can(role, "signup.assist")) sections[0].items = [...sections[0].items, { id: "text-signup", label: englishText("hub.nav.textSignup"), href: "/staff/text-signup", icon: "phone" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is

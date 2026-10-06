@@ -39,7 +39,7 @@ function longestText(lang: string): Text {
 
 const BACK = { href: "/staff/alerts/approve?alert=a&entry=e", label: "Back to the alert" };
 const at = new Date("2026-10-05T18:15:00Z");
-const problem = (n: number, over: Partial<ProblemText>): ProblemText => ({ id: `01900000-0000-7000-8000-0000000abc${String(n).padStart(2, "0")}`, reference: `0abc${String(n).padStart(2, "0")}`, lang: "ur", state: "failed", meaning: "not_in_service", code: null, at, ...over });
+const problem = (n: number, over: Partial<ProblemText>): ProblemText => ({ id: `01900000-0000-7000-8000-0000000abc${String(n).padStart(2, "0")}`, reference: `0abc${String(n).padStart(2, "0")}`, lang: "ur", state: "failed", meaning: "not_in_service", code: null, at, resendN: null, resends: 0, resent: false, ...over });
 
 function screens(lang: string, text?: Text): Record<string, SendingScreen> {
   const heading = text ? `${longestLabels(lang).sentences[0]}` : "Elevator, Power · Acknowledgement";
@@ -62,7 +62,17 @@ function lists(lang: string, text?: Text): Record<string, ProblemListScreen> {
     problem(3, { lang: "prs", meaning: "other_code", code: 31999 }),
     problem(4, { lang: "hi", meaning: "retries_exhausted", state: "failed" }),
   ];
+  // The Admin's lists (S09.02): a Resend on each text that can be resent, a note on the ones that cannot, the warning and box of an unknown text, and a button for each language.
+  const admin = { canResend: true, resendLanguages: ["en", "ur", "zh-Hant", "prs"] };
+  const adminTexts = [problem(5, { meaning: "no_reason" }), problem(6, { lang: "zh-Hant", meaning: "retries_exhausted", resendN: 1, resends: 1 }), problem(7, { lang: "prs", meaning: "no_reason", resent: true, resends: 1 }), problem(8, { lang: "hi", meaning: "invalid_number" })];
   return {
+    "the Admin's list of failed texts": { kind: "list", ref: REF, heading, list: problemListView({ ref: REF, state: "failed", texts: adminTexts, more: false, limit: 200, ...admin, ...(text ? { text, compose: text } : {}) }) },
+    "the Admin's list of texts with an unknown outcome": {
+      kind: "list",
+      ref: REF,
+      heading,
+      list: problemListView({ ref: REF, state: "unknown", texts: adminTexts.map((item) => ({ ...item, state: "unknown", meaning: "unclear", code: null })), more: false, limit: 200, ...admin, ...(text ? { text, compose: text } : {}) }),
+    },
     "the list of failed texts": { kind: "list", ref: REF, heading, list: problemListView({ ref: REF, state: "failed", texts, more: true, limit: 200, ...(text ? { text, compose: text } : {}) }) },
     "the list of texts with an unknown outcome": { kind: "list", ref: REF, heading, list: problemListView({ ref: REF, state: "unknown", texts: texts.map((item) => ({ ...item, state: "unknown", meaning: "unclear", code: null })), more: false, limit: 200, ...(text ? { text, compose: text } : {}) }) },
     "the empty list": { kind: "list", ref: REF, heading, list: problemListView({ ref: REF, state: "undelivered", texts: [], more: false, limit: 200, ...(text ? { text, compose: text } : {}) }) },
@@ -76,7 +86,7 @@ const textOf = (lang: HubLanguage, words: Words) => (words === "longest" ? longe
 const openScreen = (page: Page, name: string, lang: HubLanguage, words: Words = "longest") =>
   mount(page, "SendingFixture", { texts: textsFor(lang, words), brand, screen: screens(lang, textOf(lang, words))[name] }, { lang });
 const openList = (page: Page, name: string, lang: HubLanguage, words: Words = "longest") =>
-  mount(page, "SendingFixture", { texts: textsFor(lang, words), brand, list: lists(lang, textOf(lang, words))[name] }, { lang });
+  mount(page, "SendingFixture", { texts: textsFor(lang, words), brand, list: lists(lang, textOf(lang, words))[name], ...(name.startsWith("the Admin's") ? { resend: {} } : {}) }, { lang });
 
 const NAMES = Object.keys(screens("en"));
 const LIST_NAMES = Object.keys(lists("en"));

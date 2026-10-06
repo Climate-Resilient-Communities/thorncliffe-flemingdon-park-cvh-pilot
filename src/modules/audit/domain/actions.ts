@@ -67,6 +67,16 @@ export const REFUSAL_REASONS = [
   "alert_closed",
   /** S06.06: refused because all texts are paused (the first-text spike, removed by S06.09, wrote it as well). */
   "paused",
+  /** S09.02, a resend refused (`delivery.resent`): messaging's RESEND_REFUSALS says what each means. */
+  "confirm_needed",
+  "status_changed",
+  "resend_limit",
+  "already_resent",
+  "not_resendable",
+  "cannot_receive",
+  "recipient_gone",
+  "recipient_not_receiving",
+  "not_sendable",
 ] as const;
 
 /** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */
@@ -93,6 +103,8 @@ const rsn = z.string().regex(/^[0-9]{1,9}$/);
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
 /** A SHA-256 as 64 lower-case hex digits (an entry's content hash). */
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
+/** A language code as the catalog writes it (`en`, `prs`, `zh-Hant`). */
+const langCode = z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/);
 /** The code of a lifecycle refusal (`ENTRY_CHANGED`, `VALID_UNTIL_PAST`, ...): a code, never text (S04.07). */
 const refusalCode = z.string().regex(/^[A-Z][A-Z0-9_]{2,40}$/);
 /** An alert entry's kind (AD-5). */
@@ -279,6 +291,26 @@ export const AUDIT_META = {
   "oncall.added": meta({ roster_size: count.optional() }),
   "oncall.removed": meta({ roster_size: count.optional() }),
 
+  // The monthly cap on text message spending (S07.08). `spend.cap_set`: an Admin at aal2 sets or changes the cap; the subject is the one cap row
+  // (type `spend_cap`, id 1), `cap_cents` the cap afterwards and `previous_cents` the one it replaced (absent when none was set). Amounts are cents CAD.
+  // A refusal holds only its reason (`validation`: not an amount the cap can be). `spend.cap_overrun`: an approval whose estimate took the month's
+  // spending past the cap (approval is never blocked); the subject is the entry approved (type `alert_entry`), `over_cents` by how much the cap was
+  // passed, `cap_cents` the cap and `entry_cents` the entry's own estimate.
+  "spend.cap_set": meta({ cap_cents: count.optional(), previous_cents: count.optional() }),
+  "spend.cap_overrun": meta({ over_cents: count.optional(), cap_cents: count.optional(), entry_cents: count.optional() }),
+
+  // A resend (S09.02): an Admin at aal2 resends one text, or all the failed and undelivered texts of an entry in one language. The subject is the alert entry
+  // (type `alert_entry`); `scope` is `one` or `language`, `lang` the language of a "resend all", `resent` how many new texts were made, `not_resent` how many
+  // chains a "resend all" left out (a number that cannot receive texts, two resends already), `resend_n` which resend of its chain a single one is. Counts only:
+  // never a number, a recipient or a body. A refusal holds only its reason (`not_found`, or one of the resend reasons above).
+  "delivery.resent": meta({
+    scope: z.enum(["one", "language"]).optional(),
+    lang: langCode.optional(),
+    resent: count.optional(),
+    not_resent: count.optional(),
+    resend_n: z.number().int().min(1).max(2).optional(),
+  }),
+
   // The drill roster (S06.05): an Admin at aal2 adds, edits or removes a roster entry. The subject is the roster row (type `drill_roster`, its id); the
   // number, the label and the language are in no audit record, which holds only how many entries the roster has afterwards. A refusal holds only its
   // reason (`validation`: no label, a label that is too long, not a Canadian number or not a language; `duplicate`: the number is already on the roster;
@@ -320,6 +352,9 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "sending.resumed": ["waiting"],
   "oncall.added": ["roster_size"],
   "oncall.removed": ["roster_size"],
+  "spend.cap_set": ["cap_cents"],
+  "spend.cap_overrun": ["over_cents", "cap_cents", "entry_cents"],
+  "delivery.resent": ["scope", "resent"],
   "drill_roster.added": ["roster_size"],
   "drill_roster.edited": ["roster_size"],
   "drill_roster.removed": ["roster_size"],

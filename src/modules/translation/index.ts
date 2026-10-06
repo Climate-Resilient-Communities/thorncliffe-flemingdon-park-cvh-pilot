@@ -16,6 +16,7 @@ export {
   STORE_GRACE_MS,
   checkVersion,
   createAlertTranslator,
+  type AlertSpendEntry,
   type AlertTranslation,
   type AlertTranslator,
   type AlertTranslatorDeps,

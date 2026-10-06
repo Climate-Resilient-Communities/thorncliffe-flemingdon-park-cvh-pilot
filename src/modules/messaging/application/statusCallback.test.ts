@@ -50,6 +50,8 @@ function row(over: Partial<DeliveryView> = {}): DeliveryView {
     completedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    resendOf: null,
+    resendN: null,
     ...over,
   };
 }

@@ -96,6 +96,9 @@
 
   .hub-check span {
     align-self: center;
+    /* The sentence wraps beside the box, even a word that cannot break (a long translated label), instead of keeping the row wider than its column (S09.02). */
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
 
   /*

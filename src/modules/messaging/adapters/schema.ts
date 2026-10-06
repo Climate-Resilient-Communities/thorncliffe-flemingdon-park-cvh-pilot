@@ -1,10 +1,10 @@
 // Drizzle tables of the messaging module (AD-2), written by hand to match
 // db/migrations/20261002220000_sms_test_send.sql (the first-text spike's ledger), db/migrations/20261003400000_delivery_outbox.sql
 // (the outbox), db/migrations/20261003410000_dispatcher.sql (the sender lease, the pause switch and the claim order) and
-// db/migrations/20261003430000_messaging_pause.sql (the app's update of the pause); the drift test compares them.
+// db/migrations/20261003430000_messaging_pause.sql (the app's update of the pause) and db/migrations/20261006120000_resend.sql (a resend's two columns); the drift test compares them.
 // The grants, the functions and the triggers live only in the migrations.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, index, integer, pgPolicy, pgRole, pgTable, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, foreignKey, index, integer, pgPolicy, pgRole, pgTable, smallint, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by the audit migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -98,8 +98,15 @@ export const delivery = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The claim order as one number (S06.02), set by the insert trigger from the entry's frozen content: see `delivery_claim_rank()`. */
     claimRank: smallint("claim_rank").notNull().default(5),
+    /** The chain's first delivery, when this row is a resend (S09.02); null on every other row. A resend is always a copy of the root, whichever row was resent. */
+    resendOf: uuid("resend_of"),
+    /** Which resend of the chain this is, 1 or 2 (key `resend:{root}:{n}`); null on every other row. */
+    resendN: smallint("resend_n"),
   },
   (t) => [
+    check("delivery_resend_shape", sql`(${t.resendOf} is null and ${t.resendN} is null) or (${t.resendOf} is not null and ${t.resendN} in (1, 2))`),
+    foreignKey({ name: "delivery_resend_of_fkey", columns: [t.resendOf], foreignColumns: [t.id] }),
+    uniqueIndex("delivery_resend_unique").on(t.resendOf, t.resendN).where(sql`${t.resendOf} is not null`),
     unique("delivery_idempotency_key_unique").on(t.idempotencyKey),
     unique("delivery_callback_ref_unique").on(t.callbackRef),
     check("delivery_kind_valid", sql`${t.kind} in ('alert', 'transactional', 'campaign')`),

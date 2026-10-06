@@ -16,7 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 that residents are told to text START to (R-06, S07.02). The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`, `/api/jobs/subscriber-measures`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. The code lock is released as of E05 (`RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is true), so `true` now starts in production and turns the gate on. The switch is only this Vercel variable: an Admin sets it with a production redeploy and records it in the launch-readiness checklist. Previews and local development run with it on unless it is `false` | default (off) |
@@ -25,6 +25,8 @@ are in `src/platform/config/env.ts`.
 | `SMS_TRANSACTIONAL_DAILY_CEILING` | no | the daily ceiling on non-alert (`transactional`) texts, menus and prompts included and the texts to on-call numbers not counted (AD-22, S09.01): more than this many created since midnight in Toronto raises the health job's "daily limit" condition, which texts the on-call Admins once that day and shows on the Hub until midnight; texts keep sending. A whole number of at least 1. PROVISIONAL default `300`: the owner confirms it against the sign-ups expected on the busiest day (a launch event). Any environment may set it | default |
 | `EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH` | no | `500` | 2026-10-02 |
 | `EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH` | no | `1000000` | 2026-10-02 |
+| `SPEND_PILOT_BUDGET_CENTS` | no | the pilot's budget in whole cents CAD that the Spend page (S07.08) shows spending against: a whole number of at least 1; default `100000` (CAD 1,000). It is a figure to show, not a limit: the monthly cap an Admin sets on the Hub is stored in the database (`spend_cap`). Any environment may set it | default |
+| `SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION` | no | an estimate rate, in dollars (CAD) per million tokens, for Cohere usage whose price is unknown (S07.08): a positive number with at most four decimals, at most 10000. Unset, such usage is shown on the Spend page as "price unknown" with its calls and tokens and is left out of the totals (which then say so); set, it is shown as a labelled estimate and counted. Not a `COHERE_` variable (it is no credential), so any environment may set it | not set |
 | `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | not yet |
 | `SEARCH_THRESHOLD` | no | default `0.3` (provisional until S03.07) | default |
 | `SEARCH_EMBED_MODEL` | no | default `embed-v4.0` | default |
@@ -346,6 +348,20 @@ $$);
 
 By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"2026-10"}' <production URL>/api/jobs/reconcile-spend` answers each month's result (counts and codes, no message and no number).
 
+**The daily subscriber measures (S07.10, `/api/jobs/subscriber-measures`).** Once a day it stores, for the Toronto day that has just ended, receiving subscribers by state, pending sign-ups,
+confirmations and deletions by language and neighbourhood, as counts only (`subscriber_measure`; the Hub's Measures page shows them, a count of 1 to 4 as "Fewer than 5"). It reads no Twilio credential and works in every environment.
+The state figures (receiving subscribers, pending sign-ups) are taken at the run and filed under the day that has just ended, and the day's confirmations and deletions are counted up to midnight, so the job runs just after Toronto midnight: 05:05 UTC is 00:05 in winter and 01:05 in summer (pg_cron has no time zone, so one schedule cannot be exact in both; an hour is the most a state figure can be ahead of its day's events). A run that is late or retried is filed under the same day but is taken later, so the gap widens by that delay; a second run on the same day replaces that day's figures. A day on which the job did not run has no subscriber figures. The owner runs this once in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it:
+
+```sql
+select cron.schedule('cvh-subscriber-measures', '5 5 * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/subscriber-measures',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+```
+
 **Owner decisions recorded here (S06.08).**
 
 - *The exchange rate.* `SMS_USD_TO_CAD_RATE`, default `1.4` (provisional). Twilio bills in US dollars; the CAD amount is the price × this rate, to the thousandth of a cent, and each actual keeps the rate it used.
@@ -354,6 +370,29 @@ By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"202
 - *Rounding.* An estimate is rounded up to whole cents per text, so a one-segment text at 1.5 cents is estimated at 2: an estimate may overstate by less than a cent a text and never understates, until its actual replaces it.
 - *A message Twilio never prices.* A month with an outbound message that has no price keeps the whole month pending (its estimates stay counted). If Twilio leaves a failed or cancelled message unpriced for good, the owner decides whether that counts as zero.
 - *Before the first real run.* The Twilio adapter follows Twilio's documentation (the date filters `DateSent>` and `DateSent<` as GMT dates `YYYY-MM-DD`, widened by a day on each side because a date cannot say where in its day an instant is, with the exact interval applied afterwards; `next_page_uri`, `price` and `price_unit`) and has been tested only against a fake. IT checks the first real month's count and total against Twilio's usage page.
+
+## Spend against the budget, and the monthly cap (S07.08)
+
+`/staff/spend` ("Spend", Admins and Directors; a Director read-only) shows text message and Cohere spend for this month (Toronto calendar month) and for the pilot to date against
+`SPEND_PILOT_BUDGET_CENTS`. Text messages are shown the way S06.08 counts them: the actual where a month's reconciliation is complete, with the unmatched actuals and the unresolved
+estimates labelled and shown apart (they may overlap, and the page says so), and a month with no complete reconciliation labelled "pending reconciliation" with its estimates counted. Cohere
+usage with a price is shown at it; usage without one is shown as "price unknown" with its calls and tokens, or as a labelled estimate when `SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION` is set,
+and a total that leaves such usage out says so. None of it is ever shown as zero.
+
+**The monthly cap** is one row, `spend_cap`. An Admin at `aal2` types it in dollars on the Spend page (the policy action `spend.cap`); it is saved with who set it and when, and audited
+(`spend.cap_set`, with the cap afterwards and the one it replaced) in the same transaction. It **warns and never blocks**:
+
+- Before approving, the approval view says when the month's text spending plus the texts still waiting to be sent plus this entry's estimate (each text's own estimate rounded up to a cent, as the
+  outbox stores it) would pass the cap, and by how much. Reaching the cap exactly is within it.
+- The approval's own transaction judges it again, under the `spend_cap` row's lock (last in AD-18's order, so two approvals that overlap are judged one after the other). If the cap is passed the
+  approval still commits and the same transaction records the audit record `spend.cap_overrun` (subject: the entry; `over_cents`, `cap_cents`, `entry_cents`) and the `spend.cap_overrun` ops event,
+  which the health job (S09.01) turns into one `transactional` text to the on-call Admins, once for each new overrun, and a banner on the Hub until the month ends.
+- Nothing else is held back by the cap: not a text to the on-call Admins, not a reply to STOP, not an alert.
+
+**Owner decisions recorded here (S07.08).** (1) The pilot budget is CAD 1,000, set by `SPEND_PILOT_BUDGET_CENTS`, and is a figure to show; the cap is the Admin's to set and starts unset. (2) "Admins are
+notified by a `transactional` text" is met by the on-call roster the health job already texts (`oncall_roster` holds the Admins' numbers); there is no second list. (3) The cap is on text messages only; Cohere
+has its own limit on its key, and its usage is shown beside it. (4) A text counts towards the month when the provider accepts it (S06.08), so the cap also adds the estimate of texts still waiting to be sent
+(queued, or claimed and not settled), which would otherwise let several approvals each look free while the sender is paused or behind.
 
 ## Web sign-up for text alerts (S07.02)
 

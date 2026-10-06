@@ -10,10 +10,15 @@ import { HealthBanner } from "@/app/staff/HealthBanner";
 import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
+import { CapFormView } from "@/app/staff/spend/CapFormView";
+import { SpendBody } from "@/app/staff/spend/SpendBody";
+import type { SpendScreen } from "@/app/staff/spend/view";
 import { DrillsView } from "@/app/staff/drills/DrillsView";
 import { SignupFormView } from "@/app/staff/text-signup/SignupFormView";
 import { TextSignupView, type TextSignupModel } from "@/app/staff/text-signup/TextSignupView";
 import { ProblemListBody, SendingBody } from "@/app/staff/alerts/sending/SendingBody";
+import type { ResendState } from "@/app/staff/alerts/sending/texts/control";
+import { ResendAllFormView, ResendOneFormView } from "@/app/staff/alerts/sending/texts/ResendFormView";
 import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
 import { RosterFormsView } from "@/app/staff/drills/roster/RosterFormsView";
 import { RosterView } from "@/app/staff/drills/roster/RosterView";
@@ -21,6 +26,8 @@ import type { PauseBannerView } from "@/app/staff/pauseBanner";
 import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
 import { TextsView } from "@/app/staff/texts/TextsView";
 import type { PausedView } from "@/app/staff/texts/view";
+import { MeasuresView } from "@/app/staff/measures/MeasuresView";
+import type { MeasuresView as MeasuresModel } from "@/app/staff/measures/view";
 import type { ComponentProps, ReactNode } from "react";
 import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
 import { SignOutButton } from "@/app/staff/SignOutButton";
@@ -835,19 +842,56 @@ export function TextsFixture({
 }
 
 /**
+ * The Hub shell around the pilot measures page (S07.10): the real, read-only body (MeasuresView) with the view model a Director (the cost of each alert
+ * included), a Coordinator (no cost, AD-4), or either before anything is counted would be given. Counts, languages and amounts: nothing here is a phone number.
+ */
+export function MeasuresFixture({ texts, brand, view, role = "director" }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; view: MeasuresModel; role?: "director" | "coordinator" | "admin" }) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role }}
+      navigation={texts.navigation}
+      currentPath="/staff/measures"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <MeasuresView view={view} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
  * The Hub shell around the sending progress of an alert (S06.09), as a Coordinator sees it: the real body of the alert's staff view (SendingBody, drawn without
  * the 15 second reload) or of the list of the texts that did not arrive (ProblemListBody). Counts, languages and meanings only: nothing here is a phone number.
+ * With `resend` the list is the Admin's (S09.02): the real, behaviour-free "Resend" forms, each showing `resend.answer` when one is given (the state a press would leave).
  */
 export function SendingFixture({
   texts,
   brand,
   screen,
   list,
+  resend,
 }: {
   texts: HubShellTexts;
   brand: { logoSrc: string; symbolSrc: string };
   screen?: ComponentProps<typeof SendingBody>["screen"];
   list?: ComponentProps<typeof ProblemListBody>["screen"];
+  resend?: { answer?: ResendState };
 }) {
   return (
     <HubShell
@@ -873,7 +917,19 @@ export function SendingFixture({
     >
       <Screen surface="staff" width="review" testId="screen">
         {screen ? <SendingBody screen={screen} live={false} /> : null}
-        {list ? <ProblemListBody screen={list} /> : null}
+        {list ? (
+          <ProblemListBody
+            screen={list}
+            resend={
+              resend
+                ? {
+                    one: (view) => <ResendOneFormView view={view} answer={resend.answer} />,
+                    all: (view) => <ResendAllFormView view={view} answer={resend.answer} />,
+                  }
+                : undefined
+            }
+          />
+        ) : null}
       </Screen>
     </HubShell>
   );
@@ -924,6 +980,59 @@ export function OncallFixture({
       {banner ? <HealthBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <OncallView count={count} unreadable={unreadable} forms={<OncallFormsView {...form} />} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Spend screen (S07.08), as an Admin sees it (with the cap form) or a Director (read-only: the note in its place): the real body
+ * (SpendBody) on a screen built by the app's own view function (e2e/hub/spend.spec.ts), and the real, behaviour-free cap form (CapFormView) with the state a
+ * press would leave. Every figure is fictional.
+ */
+export function SpendFixture({
+  texts,
+  brand,
+  role,
+  screen,
+  unreadable,
+  form,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  role: "admin" | "director";
+  screen: SpendScreen | null;
+  unreadable?: boolean;
+  form: ComponentProps<typeof CapFormView>;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role }}
+      navigation={texts.navigation}
+      currentPath="/staff/spend"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <SpendBody
+          screen={screen}
+          unreadable={unreadable}
+          form={role === "admin" ? <CapFormView {...form} /> : <p data-testid="cap-read-only">{englishText("staff.spend.cap.readOnly")}</p>}
+        />
       </Screen>
     </HubShell>
   );

@@ -39,6 +39,8 @@ export {
   type ReconciliationRow,
 } from "./application/smsSpend";
 export { stdoutSpendLog } from "./adapters/spendLog";
+// Cost per alert (S07.10, FR-M5): SMS cost by language (actual where reported, otherwise a labelled estimate) and the alerts' share of the vendor's usage.
+export { COST_BASES, readAlertCost, readCohereShare, type AlertCost, type AlertCostReport, type AlertCostRow, type CohereEntryShare, type CohereShare, type CostBasis } from "./application/alertCost";
 export {
   PENDING_REASONS,
   TORONTO,
@@ -55,3 +57,35 @@ export { isOutbound, toActuals, type ActualInput, type ActualsResult, type Provi
 export { SMS_ESTIMATE_PURPOSES, SMS_KIND, SMS_MODEL, SMS_SEGMENTS_MAX, SmsEstimateError, SmsEstimateSchema, toSmsEstimate, type SmsEstimate, type SmsEstimateInput, type SmsEstimatePurpose } from "./domain/smsEstimate";
 export { centsOf, rateInTenThousandths, toCadMillicents, type CadConversion, type Millicents } from "./domain/smsPrice";
 export { SMS_SPEND_LABELS, buildMonthReport, type MonthFigures, type SmsMonthReport } from "./domain/smsReport";
+
+// The monthly cap on text message spending and the spend view (S07.08): the cap row, setting it (audited), judging an approval against it, and the
+// month's and the pilot's figures against the budget.
+export {
+  SpendCapMissing,
+  assessApproval,
+  createSpendCap,
+  lockSpendCap,
+  monthSpentCents,
+  readSpendCap,
+  type ApprovalCapInput,
+  type SetCapOutcome,
+  type SpendCapAudit,
+  type SpendCapRow,
+  type SpendCapService,
+} from "./application/spendCap";
+export { readSpendOverview, type SpendOverviewOptions } from "./application/spendOverview";
+export { SPEND_CAP_MAX_CENTS, SPEND_CAP_MIN_CENTS, assessCap, parseCapAmount, type CapAssessment, type CapInput, type CapProblem } from "./domain/spendCap";
+export {
+  COHERE_SPEND_LABELS,
+  DEFAULT_PILOT_BUDGET_CENTS,
+  buildCohereSpend,
+  buildOverview,
+  buildPeriod,
+  summariseSms,
+  type CohereFigures,
+  type CohereSpend,
+  type PendingMonth,
+  type PeriodSpend,
+  type SmsSpendSummary,
+  type SpendOverview,
+} from "./domain/spendOverview";

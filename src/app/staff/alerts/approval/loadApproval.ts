@@ -11,7 +11,8 @@ import { pauseNoticeForApprover } from "../../pauseNotice";
 import { progressReader, textsArePaused } from "../../sendingProgress";
 import { sendingBlock } from "../sending/load";
 import type { SendingBlock } from "../sending/view";
-import { approvalScreen, missingApproval, type ApprovalScreen, type MissingApproval } from "./view";
+import { capNoticeFor } from "../../spendSeam";
+import { approvalScreen, missingApproval, spendEstimateCents, type ApprovalScreen, type MissingApproval } from "./view";
 
 export interface ApprovalQuery {
   alert?: string | string[];
@@ -32,6 +33,11 @@ export interface ApprovalLoadDeps {
   residentAlertsEnabled: () => boolean;
   /** `pauseNoticeForApprover()` (S06.06): the sentence while texts are paused, null otherwise. */
   pauseNotice: () => Promise<string | null>;
+  /**
+   * `capNoticeFor(estimateCents)` (S07.08): the sentence when month-to-date text spending plus this entry's estimate would pass the monthly cap, null
+   * otherwise. It never throws and never blocks.
+   */
+  capNotice: (estimateCents: number | null) => Promise<string | null>;
   /** What became of the entry's texts (S06.09), for the confirmation of an approved entry. */
   sending: (review: EntryReview) => Promise<SendingBlock | null>;
   /** Where a notice that could not be read is logged (the error's name only). */
@@ -44,6 +50,7 @@ const live: ApprovalLoadDeps = {
   pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents,
   residentAlertsEnabled: () => residentAlertsEnabled(),
   pauseNotice: () => pauseNoticeForApprover(),
+  capNotice: (estimateCents) => capNoticeFor(estimateCents),
   sending: (review) => sendingBlock(review, { progress: progressReader(), paused: textsArePaused, logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })) }),
   logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })),
 };
@@ -61,7 +68,16 @@ export async function loadApproval(query: ApprovalQuery, viewerId: string, deps:
   } catch (error) {
     deps.logError("approval.pause_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
   }
+  // The monthly cap (S07.08), told before the approver decides: only for an entry waiting for approval, and only ever a note (it cannot fail the view).
+  let capNotice: string | null = null;
+  if (review.entry.status === "pending_approval") {
+    try {
+      capNotice = await deps.capNotice(spendEstimateCents(review.sms, review.recipients, deps.pricePerSegmentCents()));
+    } catch (error) {
+      deps.logError("approval.cap_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
+    }
+  }
   // What became of an approved entry's texts; it never throws (a failure is a note in its place), so it can never keep the confirmation from being shown.
   const sending = review.entry.status === "approved" ? await deps.sending(review) : null;
-  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice, residentAlertsEnabled: deps.residentAlertsEnabled(), sending });
+  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice, capNotice, residentAlertsEnabled: deps.residentAlertsEnabled(), sending });
 }

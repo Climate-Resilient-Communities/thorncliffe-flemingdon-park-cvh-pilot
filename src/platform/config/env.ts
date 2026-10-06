@@ -80,6 +80,16 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        `transactional_ceiling` condition (the on-call Admins are texted once
  *                                                        that day; texts keep sending). A whole number of at least 1; default 300.
  *                                                        PROVISIONAL: the owner confirms it against the expected sign-ups a day
+ * SPEND_PILOT_BUDGET_CENTS
+ *                      server   optional                 the pilot's budget in whole cents CAD that the spend view (S07.08) shows spending
+ *                                                        against: a whole number of at least 1; default 100000 (CAD 1,000). Not a cap:
+ *                                                        the monthly cap an Admin sets on the Hub is stored in the database
+ * SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION
+ *                      server   optional                 an estimate rate, in CAD per million tokens, for Cohere usage whose price is
+ *                                                        unknown (S07.08): a positive number with at most four decimals. Unset, such
+ *                                                        usage is shown as "price unknown" with its units and left out of totals; set,
+ *                                                        it is shown as a labelled estimate and counted. Not a COHERE_ variable (it is
+ *                                                        no credential and is allowed everywhere)
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -235,6 +245,8 @@ const rawSchema = z.object({
   SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
   SMS_USD_TO_CAD_RATE: optionalText,
   SMS_TRANSACTIONAL_DAILY_CEILING: optionalText,
+  SPEND_PILOT_BUDGET_CENTS: optionalText,
+  SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_FEED_FILE: optionalText,
@@ -338,6 +350,9 @@ export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 /** PROVISIONAL (S09.01): the daily ceiling on non-alert texts until the owner confirms one (AD-22). */
 export const DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING = 300;
 
+/** The pilot's budget in cents CAD (CAD 1,000, S07.08) until the owner sets another. */
+export const DEFAULT_SPEND_PILOT_BUDGET_CENTS = 100_000;
+
 /** PROVISIONAL (S06.08): Canadian dollars per US dollar, the rate Twilio's prices (billed in US dollars) are converted at until the owner sets one. */
 export const DEFAULT_SMS_USD_TO_CAD_RATE = 1.4;
 
@@ -367,6 +382,10 @@ export interface Env {
   smsUsdToCadRate: number;
   /** The daily ceiling on non-alert texts (S09.01, AD-22): the health job's `transactional_ceiling` condition. */
   smsTransactionalDailyCeiling: number;
+  /** The pilot's budget in whole cents CAD, shown with the spend (S07.08). */
+  spendPilotBudgetCents: number;
+  /** CAD per million tokens to estimate Cohere usage whose price is unknown at (S07.08); null when none is configured: such usage is then "price unknown". */
+  spendTokenEstimateCadPerMillion: number | null;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
@@ -665,6 +684,20 @@ function parseSmsRate(value: string | undefined, problems: string[]): number {
   return rate;
 }
 
+const TOKEN_ESTIMATE_PROBLEM = "SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION: must be a positive number of dollars per million tokens with at most four decimals, such as 0.5";
+
+/** The estimate rate for Cohere usage whose price is unknown: positive, at most four decimals, at most 10000; null when unset (or a problem, named without the value). */
+function parseTokenEstimate(value: string | undefined, problems: string[]): number | null {
+  if (value === undefined) return null;
+  const text = value.trim();
+  const rate = Number(text);
+  if (!/^[0-9]{1,5}(\.[0-9]{1,4})?$/.test(text) || !(rate > 0 && rate <= 10_000)) {
+    problems.push(TOKEN_ESTIMATE_PROBLEM);
+    return null;
+  }
+  return rate;
+}
+
 /** A whole number of at least 1 from a variable, or the default; a bad value is a problem that names the variable, never the value. */
 function positiveInteger(name: string, value: string | undefined, fallback: number, problems: string[]): number {
   if (value === undefined) return fallback;
@@ -853,6 +886,8 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const smsPricePerSegmentCents = parseSmsPrice(raw.SMS_PRICE_PER_SEGMENT_CENTS, problems);
   const smsUsdToCadRate = parseSmsRate(raw.SMS_USD_TO_CAD_RATE, problems);
   const smsTransactionalDailyCeiling = positiveInteger("SMS_TRANSACTIONAL_DAILY_CEILING", raw.SMS_TRANSACTIONAL_DAILY_CEILING, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING, problems);
+  const spendPilotBudgetCents = positiveInteger("SPEND_PILOT_BUDGET_CENTS", raw.SPEND_PILOT_BUDGET_CENTS, DEFAULT_SPEND_PILOT_BUDGET_CENTS, problems);
+  const spendTokenEstimateCadPerMillion = parseTokenEstimate(raw.SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION, problems);
 
   // A typo in the number residents text START to must not take the whole site down at every cold start (the staffPasswordPepperProblem pattern): it is dropped.
   const fromNumber = raw.TWILIO_FROM_NUMBER?.trim();
@@ -948,6 +983,8 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     smsPricePerSegmentCents,
     smsUsdToCadRate,
     smsTransactionalDailyCeiling,
+    spendPilotBudgetCents,
+    spendTokenEstimateCadPerMillion,
     cohereApiKey: raw.COHERE_API_KEY?.trim(),
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,

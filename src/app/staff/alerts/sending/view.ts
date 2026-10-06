@@ -120,6 +120,19 @@ export const unavailableNote = (t: Text = sendingText): string => t("unavailable
 
 // --- the list of the texts that did not arrive ---------------------------------------------------------------------------------------------------------
 
+/** "Resend" on one text (S09.02), shown to an Admin: the form carries the status the Admin saw, and for an `unknown` text the warning they must confirm. */
+export interface ResendControlView {
+  entryId: string;
+  deliveryId: string;
+  /** The status the Admin saw: the server refuses the resend if the text is another status by then. */
+  seen: ProblemState;
+  label: string;
+  ariaLabel: string;
+  sending: string;
+  /** "This text may already have arrived; resending may send it twice": an `unknown` text only. */
+  confirm: string | null;
+}
+
 export interface ProblemTextView {
   key: string;
   /** "Text 3f9a1c · Urdu · Oct 5, 2026, 2:15 p.m." */
@@ -127,6 +140,19 @@ export interface ProblemTextView {
   /** The meaning in plain words: "Number not in service", "Outcome unclear; not re-sent". */
   meaning: string;
   meaningId: ProblemMeaning;
+  /** What the text's chain says (S09.02): "Resend 1 of 2.", "Already resent: ...", "Resent twice already, ...", or null. */
+  note: string | null;
+  /** The Admin's "Resend", or null for anyone else and for a text that cannot be resent. */
+  resend: ResendControlView | null;
+}
+
+/** "Resend the failed and undelivered texts in Urdu" (S09.02), shown to an Admin on the lists of failed and undelivered texts. */
+export interface ResendAllView {
+  entryId: string;
+  lang: string;
+  label: string;
+  hint: string;
+  sending: string;
 }
 
 export interface ProblemListView {
@@ -136,8 +162,27 @@ export interface ProblemListView {
   none: string | null;
   items: ProblemTextView[];
   more: string | null;
+  /** What a resend is, said once above the buttons; null for anyone who has none. */
+  resendIntro: { title: string; lead: string } | null;
+  /** The Admin's way to resend a language's failed and undelivered texts in one press; empty for anyone else and on the list of unknown texts. */
+  resendAll: ResendAllView[];
   back: { href: string; label: string };
 }
+
+/** The meanings that say the number cannot receive texts, so no resend is offered. messaging's `UNRECEIVABLE_MEANINGS` is the same list (view.test.ts compares them). */
+export const UNRECEIVABLE_MEANING_IDS = ["not_in_service", "invalid_number", "landline", "opted_out"] as const satisfies readonly ProblemMeaning[];
+/** A chain has at most this many resends. messaging's `RESEND_LIMIT` is the same number (view.test.ts compares them). */
+export const RESEND_MOST = 2;
+
+const resendNote = (text: ProblemText, t: Text): string | null => {
+  if (text.resent) return t("resend.note.resent");
+  if ((UNRECEIVABLE_MEANING_IDS as readonly string[]).includes(text.meaning)) return t("resend.note.cannot");
+  if (text.resends >= RESEND_MOST) return t("resend.note.limit");
+  return text.resendN !== null ? t("resend.note.resend", { n: text.resendN }) : null;
+};
+
+const canBeResent = (text: ProblemText): boolean =>
+  !text.resent && text.resends < RESEND_MOST && !(UNRECEIVABLE_MEANING_IDS as readonly string[]).includes(text.meaning);
 
 export const meaningText = (meaning: ProblemMeaning, code: number | null, t: Text = sendingText): string => t(`meaning.${meaning}`, { code: code ?? "" });
 
@@ -150,20 +195,49 @@ export function problemListView(input: {
   limit: number;
   text?: Text;
   compose?: Text;
+  /** Whether the viewer is an Admin, who may resend (`delivery.resend`); the buttons are drawn for no one else. */
+  canResend?: boolean;
+  /** The languages that have a failed or undelivered text to resend, for "resend all" (the list shows only the most recent texts). */
+  resendLanguages?: readonly string[];
 }): ProblemListView {
   const t = input.text ?? sendingText;
+  const canResend = input.canResend === true;
+  const forms: ResendAllView[] =
+    canResend && input.state !== "unknown"
+      ? (input.resendLanguages ?? []).map((lang) => {
+          const language = languageLabel(lang, t, input.compose);
+          return { entryId: input.ref.entryId, lang, label: t("resend.all", { language }), hint: t("resend.allHint", { language }), sending: t("resend.sending") };
+        })
+      : [];
+  const items: ProblemTextView[] = input.texts.map((text) => ({
+    key: text.id,
+    line: t("list.item", { ref: text.reference, language: languageLabel(text.lang, t, input.compose), when: formatTorontoDateTime(text.at) }),
+    meaning: meaningText(text.meaning, text.code, t),
+    meaningId: text.meaning,
+    // What the chain says about resending is for the Admin, who can resend: anyone else sees the list as it was.
+    note: canResend ? resendNote(text, t) : null,
+    resend:
+      canResend && canBeResent(text)
+        ? {
+            entryId: input.ref.entryId,
+            deliveryId: text.id,
+            seen: text.state,
+            label: t("resend.one"),
+            ariaLabel: t("resend.oneFor", { ref: text.reference }),
+            sending: t("resend.sending"),
+            confirm: text.state === "unknown" ? t("resend.confirm") : null,
+          }
+        : null,
+  }));
   return {
     state: input.state,
     title: t(`list.title.${input.state}`),
     lead: t("list.lead"),
     none: input.texts.length === 0 ? t("list.none") : null,
-    items: input.texts.map((text) => ({
-      key: text.id,
-      line: t("list.item", { ref: text.reference, language: languageLabel(text.lang, t, input.compose), when: formatTorontoDateTime(text.at) }),
-      meaning: meaningText(text.meaning, text.code, t),
-      meaningId: text.meaning,
-    })),
+    items,
     more: input.more ? t("list.more", { n: input.limit }) : null,
+    resendIntro: forms.length > 0 || items.some((item) => item.resend !== null) ? { title: t("resend.title"), lead: t("resend.lead") } : null,
+    resendAll: forms,
     back: { href: sendingHref(input.ref), label: t("list.back") },
   };
 }

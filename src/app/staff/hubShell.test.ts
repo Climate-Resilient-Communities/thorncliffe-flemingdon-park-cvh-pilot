@@ -37,10 +37,10 @@ describe("hubNavigation", () => {
 
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
     expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Check-in rounds", "Text sign-up"]);
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Text sign-up"]);
-    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills"]);
+    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend", "Measures"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -62,6 +62,13 @@ describe("hubNavigation", () => {
     expect(items("admin").filter((item) => item.icon === coverage?.icon)).toHaveLength(1);
   });
 
+  it("adds Measures (S07.10) for exactly the roles whose policy allows coverage.view", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/measures"), role).toBe(can(role, "coverage.view"));
+    }
+    expect(items("director").find((item) => item.id === "measures")).toEqual({ id: "measures", label: "Measures", href: "/staff/measures", icon: "layers" });
+  });
+
   it("adds Text sign-up (S07.03) for exactly the roles whose policy allows signup.assist: not a Director", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/text-signup"), role).toBe(can(role, "signup.assist"));
@@ -77,6 +84,13 @@ describe("hubNavigation", () => {
       expect(everything, mvp).not.toContain(mvp);
     }
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
+  });
+
+  it("shows Spend (S07.08) beside Coverage to the roles whose policy has spend.view: an Admin, and a Director read-only", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/spend"), role).toBe(role === "admin" || role === "director");
+    }
+    expect(items("admin").find((item) => item.href === "/staff/spend")).toEqual({ id: "spend", label: "Spend", href: "/staff/spend", icon: "layers" });
   });
 
   it("adds Administration with People, Providers, Directory, Buildings, Pause texts, On-call numbers and Drills for Admins only", () => {

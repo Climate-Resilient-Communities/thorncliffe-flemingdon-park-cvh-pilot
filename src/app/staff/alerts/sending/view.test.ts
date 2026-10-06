@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { PROBLEM_MEANINGS, PROBLEM_STATES, PROGRESS_COUNT_KEYS, progressOf, type EntryProgress, type ProblemText } from "@/modules/messaging";
+import { PROBLEM_MEANINGS, PROBLEM_STATES, PROGRESS_COUNT_KEYS, RESEND_LIMIT, UNRECEIVABLE_MEANINGS, progressOf, type EntryProgress, type ProblemText } from "@/modules/messaging";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
-import { COUNT_ORDER, PROBLEM_ORDER, REFRESH_SECONDS, languageLabel, meaningText, problemListView, sendingProgressView } from "./view";
+import { COUNT_ORDER, PROBLEM_ORDER, REFRESH_SECONDS, RESEND_MOST, UNRECEIVABLE_MEANING_IDS, languageLabel, meaningText, problemListView, sendingProgressView } from "./view";
 
 const REF = { alertId: "01900000-0000-7000-8000-00000000a1e7", entryId: "01900000-0000-7000-8000-00000000e177" };
 
@@ -141,7 +141,7 @@ describe("the names of languages", () => {
 
 describe("the list of the texts that did not arrive", () => {
   const at = new Date("2026-10-05T18:15:00Z");
-  const text = (over: Partial<ProblemText> & Pick<ProblemText, "state" | "meaning">): ProblemText => ({ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", code: null, at, ...over });
+  const text = (over: Partial<ProblemText> & Pick<ProblemText, "state" | "meaning">): ProblemText => ({ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", code: null, at, resendN: null, resends: 0, resent: false, ...over });
 
   it("gives each text its reference, language and time, and what it means in plain words, without a number", () => {
     const list = problemListView({
@@ -178,5 +178,74 @@ describe("the list of the texts that did not arrive", () => {
       expect(sentence.length, meaning).toBeGreaterThan(5);
       expect(sentence, meaning).not.toMatch(/\{/);
     }
+  });
+});
+
+describe("the Admin's resend on the list of the texts that did not arrive (S09.02)", () => {
+  const at = new Date("2026-10-05T18:15:00Z");
+  const text = (over: Partial<ProblemText> & Pick<ProblemText, "state" | "meaning">): ProblemText => ({ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", code: null, at, resendN: null, resends: 0, resent: false, ...over });
+  const list = (texts: ProblemText[], over: Partial<Parameters<typeof problemListView>[0]> = {}) => problemListView({ ref: REF, state: "failed", texts, more: false, limit: 200, canResend: true, resendLanguages: ["ur"], ...over });
+
+  it("agrees with the module on the numbers that cannot receive texts and on the limit of two", () => {
+    expect([...UNRECEIVABLE_MEANING_IDS]).toEqual([...UNRECEIVABLE_MEANINGS]);
+    expect(RESEND_MOST).toBe(RESEND_LIMIT);
+  });
+
+  it("draws nothing for anyone who is not an Admin", () => {
+    const shown = list([text({ state: "failed", meaning: "no_reason" })], { canResend: false });
+    expect(shown.items[0].resend).toBeNull();
+    expect(shown.resendAll).toEqual([]);
+    expect(shown.resendIntro).toBeNull();
+  });
+
+  it("gives an Admin a Resend on each text, carrying the entry, the text and the status they saw", () => {
+    const shown = list([text({ state: "failed", meaning: "no_reason" })]);
+    expect(shown.items[0].resend).toEqual({
+      entryId: REF.entryId,
+      deliveryId: "01900000-0000-7000-8000-00000abc1234",
+      seen: "failed",
+      label: "Resend",
+      ariaLabel: "Resend text abc123",
+      sending: "Resending",
+      confirm: null,
+    });
+    expect(shown.resendIntro).toMatchObject({ title: "Resend texts" });
+  });
+
+  it("puts the warning on a text with an unknown outcome, and no bulk button on its list", () => {
+    const shown = list([text({ state: "unknown", meaning: "unclear" })], { state: "unknown" });
+    expect(shown.items[0].resend).toMatchObject({ seen: "unknown", confirm: "This text may already have arrived; resending may send it twice" });
+    expect(shown.resendAll).toEqual([]);
+    expect(shown.resendIntro).not.toBeNull();
+  });
+
+  it("offers one button for each language that has a text to resend, with the language named", () => {
+    const shown = list([text({ state: "failed", meaning: "no_reason" })], { resendLanguages: ["en", "zh-Hant"] });
+    expect(shown.resendAll.map((form) => [form.lang, form.entryId, form.label])).toEqual([
+      ["en", REF.entryId, "Resend the failed and undelivered texts in English"],
+      ["zh-Hant", REF.entryId, expect.stringMatching(/^Resend the failed and undelivered texts in .*Chinese/)],
+    ]);
+    expect(shown.resendAll[0].hint).toContain("Texts with an unknown outcome are never included");
+  });
+
+  it("offers no Resend on a text that cannot be resent, and says why in a note", () => {
+    const shown = list([
+      text({ id: "01900000-0000-7000-8000-00000abc0001", state: "failed", meaning: "invalid_number" }),
+      text({ id: "01900000-0000-7000-8000-00000abc0002", state: "failed", meaning: "no_reason", resent: true, resends: 1 }),
+      text({ id: "01900000-0000-7000-8000-00000abc0003", state: "failed", meaning: "no_reason", resendN: 2, resends: 2 }),
+      text({ id: "01900000-0000-7000-8000-00000abc0004", state: "failed", meaning: "no_reason", resendN: 1, resends: 1 }),
+    ]);
+    expect(shown.items.map((item) => item.resend !== null)).toEqual([false, false, false, true]);
+    expect(shown.items.map((item) => item.note)).toEqual([
+      "Cannot be resent: the number cannot receive texts.",
+      "Already resent: a newer text was made for this one.",
+      "Resent twice already, which is the most.",
+      "Resend 1 of 2.",
+    ]);
+  });
+
+  it("shows no phone number in anything it says", () => {
+    const shown = list([text({ state: "unknown", meaning: "unclear" })], { state: "unknown" });
+    expect(JSON.stringify(shown)).not.toMatch(/\+\d|\d{3}[\s-]\d{3}[\s-]\d{4}|\d{10}/);
   });
 });

@@ -1492,6 +1492,7 @@
       "supplies": "[EN] Supplies",
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
+      "measures": "[EN] Measures",
       "people": "[EN] People",
       "buildings": "[EN] Buildings",
       "ambassadorHome": "[EN] My building",
@@ -1500,6 +1501,7 @@
       "texts": "[EN] Pause texts",
       "oncall": "[EN] On-call numbers",
       "drills": "[EN] Drills",
+      "spend": "[EN] Spend",
       "textSignup": "[EN] Text sign-up"
     },
     "sections": {
@@ -3996,6 +3998,98 @@
     "newTag": "[EN] Added in this session"
   },
   "staff": {
+    "measures": {
+      "title": "[EN] Pilot measures",
+      "lead": "[EN] Counts only. Nobody can be identified from these figures.",
+      "privacy": "[EN] A number from 1 to 4 is shown as \"Fewer than 5\", in every split. Where a total and the other figures would give away one of those numbers, one more figure is marked \"Not shown\": it may be 5 or more. Exercises and drills are shown apart and never added to real alerts.",
+      "fewer": "[EN] Fewer than 5",
+      "notShown": "[EN] Not shown",
+      "allLanguages": "[EN] All languages",
+      "unknown": "[EN] Unknown",
+      "nbhd": {
+        "TP": "[EN] Thorncliffe Park",
+        "FP": "[EN] Flemingdon Park"
+      },
+      "subscribers": {
+        "heading": "[EN] Subscribers",
+        "lead": "[EN] Counted by the daily job for {day}. The numbers who were receiving texts or waiting to reply YES are as they stood shortly after midnight when the day ended; confirmations and deletions are those of the day. By language and neighbourhood.",
+        "neverRun": "[EN] The daily count has not run yet. The first figures appear the morning after it first runs.",
+        "total": "[EN] All: {n}",
+        "byLanguage": "[EN] By language",
+        "byNbhd": "[EN] By neighbourhood",
+        "cell": "{name}: {n}",
+        "measures": {
+          "receiving_active": "[EN] Receiving texts",
+          "receiving_reconsent_pending": "[EN] Receiving texts, asked whether to stay",
+          "receiving_retained": "[EN] Receiving texts, kept after the pilot",
+          "pending_signups": "[EN] Waiting to reply YES",
+          "confirmations": "[EN] Confirmed on the day",
+          "deletions": "[EN] Left on the day"
+        }
+      },
+      "reach": {
+        "heading": "[EN] How far corrections, withdrawals and finals reached",
+        "lead": "[EN] Measured against the people who got the original alert. Attempted: the text was handed to the provider. Confirmed: the provider reported it delivered.",
+        "empty": "[EN] No correction, withdrawal or final has been texted yet.",
+        "drillsHeading": "[EN] Drills, kept apart",
+        "drillsEmpty": "[EN] No drill correction, withdrawal or final has been texted.",
+        "kinds": {
+          "correction": "[EN] Correction",
+          "withdrawal": "[EN] Withdrawal",
+          "final": "[EN] Final"
+        },
+        "approved": "[EN] approved {when}",
+        "original": "[EN] Got the original: {n}",
+        "attempted": "[EN] Attempted: {n}",
+        "confirmed": "[EN] Confirmed: {n}",
+        "percent": "[EN] Attempted {attempted}% and confirmed {confirmed}% of those who got the original",
+        "noPercent": "[EN] No percentage: a figure is under 5"
+      },
+      "cost": {
+        "heading": "[EN] Cost per alert",
+        "lead": "[EN] Text message cost by language: the provider's price where it has been reported, otherwise an estimate, labelled. Each alert also shows its share of the translation vendor's use in the month. Only Admins and Directors see this.",
+        "empty": "[EN] No alert has texts with a recorded cost yet.",
+        "drillsHeading": "[EN] Drills, kept apart",
+        "drillsEmpty": "[EN] No drill has texts with a recorded cost.",
+        "texts": "[EN] {n} texts",
+        "basis": {
+          "actual": "[EN] actual",
+          "estimate": "[EN] estimate",
+          "mixed": "[EN] part actual, part estimate"
+        },
+        "amount": "[EN] {amount} CAD ({basis})",
+        "noAmount": "[EN] No amount: it would give away a small number of texts",
+        "textsNotShown": "[EN] Number of texts not shown",
+        "noTexts": "[EN] No texts were sent for this alert.",
+        "kinds": {
+          "ack": "[EN] Acknowledgement",
+          "update": "[EN] Update",
+          "correction": "[EN] Correction",
+          "withdrawal": "[EN] Withdrawal",
+          "final": "[EN] Final"
+        },
+        "cohere": {
+          "heading": "[EN] Cohere use by alerts",
+          "lead": "[EN] The month's use of the translation vendor, real alerts and drills apart. Use recorded before calls were tied to an alert is counted with the real alerts.",
+          "entry": "[EN] Translation, {month}: {share} of the vendor's billed tokens that month ({calls} calls).",
+          "entryNoShare": "[EN] Translation, {month}: {calls} calls, no billed tokens yet.",
+          "entryCost": "[EN] Translation cost: {amount} CAD.",
+          "entryCostUnknown": "[EN] Translation cost: unknown, because a price is not set.",
+          "entryEstimated": "[EN] Some token counts are estimates.",
+          "empty": "[EN] Cohere has not been used yet.",
+          "line": "[EN] {month}: real alerts used {share} of the billed tokens ({alertCalls} of {allCalls} calls).",
+          "drillLine": "[EN] {month}: drills used {share} of the billed tokens ({drillCalls} of {allCalls} calls).",
+          "noShare": "[EN] {month}: no billed tokens yet ({alertCalls} of {allCalls} calls).",
+          "cost": "[EN] Cost to real alerts: {amount} CAD. All use: {all} CAD.",
+          "drillCost": "[EN] Cost to drills: {amount} CAD.",
+          "costUnknown": "[EN] Cost: unknown, because a price is not set.",
+          "estimated": "[EN] Some token counts are estimates."
+        }
+      },
+      "errors": {
+        "unreadable": "[EN] The Hub could not read the measures. Reload the page. If this stays, tell IT."
+      }
+    },
     "roles": {
       "ambassador": "[EN] Ambassador",
       "coordinator": "[EN] Coordinator",
@@ -4850,7 +4944,8 @@
       "finalLead": "[EN] Read exactly what residents will read as the last word of this alert. You approve this version only. If it changes while you read, you review it again.",
       "closingTitle": "[EN] What approving does",
       "closingReach": "[EN] This goes to everyone who got any entry of this alert, on the channels they got it on, and to everyone in the audience above.",
-      "closingCloses": "[EN] Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top."
+      "closingCloses": "[EN] Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top.",
+      "capNotice": "[EN] With this alert, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still approve it: the texts are sent, the overrun is recorded and the on-call Admins are told."
     },
     "incidents": {
       "waitingTitle": "[EN] Waiting for your approval",
@@ -5109,6 +5204,74 @@
         "no_reason": "[EN] It failed and the provider gave no reason",
         "undelivered_no_reason": "[EN] The carrier did not deliver it and gave no reason",
         "unclear": "[EN] Outcome unclear; not re-sent"
+      },
+      "resend": {
+        "title": "[EN] Resend texts",
+        "lead": "[EN] A resend sends the same words once more, to the same person, in its usual place in the queue. A text can be resent twice at most. It is counted in spend when the provider accepts it, and against the monthly cap like any other text.",
+        "one": "[EN] Resend",
+        "oneFor": "[EN] Resend text {ref}",
+        "sending": "[EN] Resending",
+        "all": "[EN] Resend the failed and undelivered texts in {language}",
+        "allHint": "[EN] Takes the latest text of each person in {language} that failed or was not delivered. Texts with an unknown outcome are never included: resend those one at a time, after reading the warning.",
+        "confirm": "[EN] This text may already have arrived; resending may send it twice",
+        "confirmHint": "[EN] Tick the box to resend this text anyway.",
+        "note": {
+          "resend": "[EN] Resend {n} of 2.",
+          "resent": "[EN] Already resent: a newer text was made for this one.",
+          "limit": "[EN] Resent twice already, which is the most.",
+          "cannot": "[EN] Cannot be resent: the number cannot receive texts."
+        },
+        "done": {
+          "one": "[EN] The text was resent. It is in the queue and goes out in its usual order.",
+          "many": "[EN] {n} texts were resent. They are in the queue and go out in their usual order.",
+          "none": "[EN] No text needed resending. Nothing was changed.",
+          "left": "[EN] {n} left out: {reasons}.",
+          "more": "[EN] There are more texts to resend. Press the button again to take the next ones.",
+          "overrun": "[EN] These texts took this month's text spending {over} past the cap of {cap}. They were still resent."
+        },
+        "left": {
+          "not_found": "[EN] not found",
+          "not_resendable": "[EN] not a text that can be resent",
+          "status_changed": "[EN] its status changed",
+          "confirm_needed": "[EN] not confirmed",
+          "resend_limit": "[EN] resent twice already",
+          "already_resent": "[EN] already resent",
+          "cannot_receive": "[EN] the number cannot receive texts",
+          "recipient_gone": "[EN] the person left",
+          "recipient_not_receiving": "[EN] the person no longer gets alerts",
+          "not_sendable": "[EN] the alert no longer sends it"
+        },
+        "refused": {
+          "not_found": "[EN] That text was not found for this alert. Nothing was resent.",
+          "not_resendable": "[EN] That text is {status}, so it cannot be resent. Only a text that failed, was undelivered or has an unknown outcome can be. Nothing was resent.",
+          "status_changed": "[EN] This text is now {status}, not {seen}, so it was not resent. Reload the page to see where it stands.",
+          "confirm_needed": "[EN] This text has an unknown outcome. Tick the box to confirm that it may arrive twice. Nothing was resent.",
+          "resend_limit": "[EN] This text has already been resent twice, which is the most. Nothing was resent.",
+          "already_resent": "[EN] A newer text was already made for this one ({status}), so it was not resent again. Reload the page to see it.",
+          "cannot_receive": "[EN] The provider said \"{reason}\", so this number cannot receive texts. Nothing was resent.",
+          "recipient_gone": "[EN] The person is gone (they replied STOP or their number was deleted), so nothing was resent.",
+          "recipient_not_receiving": "[EN] The person no longer gets alerts, so nothing was resent.",
+          "not_sendable": "[EN] This alert can no longer send this text: {cause}. Nothing was resent."
+        },
+        "cause": {
+          "paused": "[EN] texts are paused",
+          "send_by_passed": "[EN] it is too late for it",
+          "recipient_gone": "[EN] the person is gone",
+          "entry_missing": "[EN] the entry is gone",
+          "entry_not_approved": "[EN] the entry is not approved",
+          "entry_superseded": "[EN] a newer entry replaced it",
+          "entry_discarded": "[EN] the entry was discarded",
+          "thread_closed": "[EN] the alert is closed",
+          "valid_until_passed": "[EN] its valid-until time has passed",
+          "drill_recipient_mismatch": "[EN] it is a practice alert",
+          "campaign_not_sendable": "[EN] it is not sendable"
+        },
+        "errors": {
+          "forbidden": "[EN] Only an Admin can resend texts.",
+          "aal2Required": "[EN] An Admin must sign in with their authenticator code to resend texts. Sign in again and enter the code.",
+          "invalid": "[EN] The form was not understood. Nothing was resent. Reload the page and try again.",
+          "failed": "[EN] The texts could not be resent just now. Nothing was resent. Reload the page and try again. If this stays, tell IT."
+        }
       },
       "errors": {
         "forbidden": "[EN] Only an Admin or a Coordinator can see sending progress.",
@@ -5415,6 +5578,82 @@
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
         "failed": "[EN] The roster was not changed. Try again. If it fails again, tell IT.",
         "unreadable": "[EN] The Hub could not read the drill roster. Reload the page. If this stays, tell IT."
+      }
+    },
+    "spend": {
+      "title": "[EN] Spend",
+      "lead": "[EN] What texts and translation have cost against the pilot budget, and the monthly cap on texts. Texts keep going out when the cap is passed: the cap only warns.",
+      "budget": {
+        "heading": "[EN] Pilot budget",
+        "line": "[EN] Budget: {budget}. Counted so far: {spent}. {left}.",
+        "left": "[EN] {amount} left",
+        "over": "[EN] {amount} over the budget",
+        "incomplete": "[EN] This leaves out Cohere usage whose price is unknown, so the real total is higher."
+      },
+      "period": {
+        "thisMonth": "[EN] This month ({month})",
+        "pilot": "[EN] The pilot to date",
+        "total": "[EN] Counted: {amount}"
+      },
+      "sms": {
+        "heading": "[EN] Text messages",
+        "counted": "[EN] Counted: {amount}",
+        "none": "[EN] No texts have been counted yet.",
+        "actual": "[EN] Actual price of {n} texts the provider billed: {amount}",
+        "actualOne": "[EN] Actual price of 1 text the provider billed: {amount}",
+        "unmatched": "[EN] Unmatched actuals: {amount} for {n} billed texts that no estimate answers for (counted at their actual price, inside the line above)",
+        "unmatchedOne": "[EN] Unmatched actuals: {amount} for 1 billed text that no estimate answers for (counted at its actual price, inside the line above)",
+        "unresolved": "[EN] Unresolved estimates: {amount} for {n} texts, counted at their estimate until the provider's price is matched to them",
+        "unresolvedOne": "[EN] Unresolved estimates: {amount} for 1 text, counted at its estimate until the provider's price is matched to it",
+        "pending": "[EN] Pending reconciliation, {month}: {amount} estimated for {n} texts ({reason})",
+        "pendingOne": "[EN] Pending reconciliation, {month}: {amount} estimated for 1 text ({reason})",
+        "overlap": "[EN] An unresolved estimate and an unmatched actual can be the same text, so these two lines may count it twice.",
+        "reasons": {
+          "not_run": "[EN] the month has not been reconciled yet",
+          "listing_failed": "[EN] the provider's list of texts could not be read",
+          "cut_short": "[EN] the provider's list was cut short",
+          "message_without_price": "[EN] the provider has not priced every text yet",
+          "price_unusable": "[EN] a price could not be converted",
+          "message_malformed": "[EN] a text in the provider's list could not be read"
+        }
+      },
+      "cohere": {
+        "heading": "[EN] Cohere (translation and search)",
+        "none": "[EN] No Cohere usage has been recorded yet.",
+        "priced": "[EN] At a known price: {amount} for {calls} calls",
+        "pricedOne": "[EN] At a known price: {amount} for 1 call",
+        "unknown": "[EN] Price unknown: {calls} calls, {tokens} tokens",
+        "unknownOne": "[EN] Price unknown: 1 call, {tokens} tokens",
+        "estimate": "[EN] Estimate: {amount} for {calls} calls and {tokens} tokens whose price is unknown",
+        "estimateOne": "[EN] Estimate: {amount} for 1 call and {tokens} tokens whose price is unknown",
+        "tokensEstimated": "[EN] Some token counts are estimates of the provider's."
+      },
+      "cap": {
+        "heading": "[EN] Monthly cap on texts",
+        "none": "[EN] No cap is set. Set one to be warned before a month's texts pass it.",
+        "current": "[EN] The monthly cap is {amount}. {percent}% of it is used this month.",
+        "setOn": "[EN] Last set on {when}.",
+        "rule": "[EN] The cap warns and never blocks. An alert that takes the month past it is still approved and sent, the overrun is recorded, and the on-call Admins are texted. Texts to the on-call Admins and replies to STOP are never held back.",
+        "readOnly": "[EN] Only an Admin can change the cap.",
+        "label": "[EN] Monthly cap (CAD)",
+        "hint": "[EN] A dollar amount, for example 250 or 250.50: at least $0.01 and at most $100,000.",
+        "save": "[EN] Save cap",
+        "saving": "[EN] Saving cap",
+        "done": {
+          "set": "[EN] The monthly cap is now {amount}.",
+          "changed": "[EN] The monthly cap changed from {previous} to {amount}."
+        }
+      },
+      "errors": {
+        "missing": "[EN] Type the monthly cap in dollars.",
+        "not_a_number": "[EN] That is not an amount. Use dollars, for example 250 or 250.50.",
+        "too_small": "[EN] The cap must be at least $0.01.",
+        "too_large": "[EN] The cap can be at most $100,000.",
+        "forbidden": "[EN] Only an Admin or a Director can see spend.",
+        "forbiddenCap": "[EN] Only an Admin can change the monthly cap.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the monthly cap. Sign in again and enter the code.",
+        "failed": "[EN] The cap was not changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the spend. Reload the page. If this stays, tell IT."
       }
     },
     "textSignup": {

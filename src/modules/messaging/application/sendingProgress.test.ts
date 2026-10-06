@@ -16,7 +16,7 @@ const lang = (code: string, over: Partial<{ waiting: number; inFlight: number; d
   ...over,
 });
 
-const row = (n: number, over: Partial<ProblemRow> = {}): ProblemRow => ({ id: `01900000-0000-7000-8000-${String(n).padStart(12, "0")}`, lang: "en", state: "failed", providerErrorCode: null, attempts: 1, at: new Date(2026, 9, 5, 12, 0, n), ...over });
+const row = (n: number, over: Partial<ProblemRow> = {}): ProblemRow => ({ id: `01900000-0000-7000-8000-${String(n).padStart(12, "0")}`, lang: "en", state: "failed", providerErrorCode: null, attempts: 1, at: new Date(2026, 9, 5, 12, 0, n), resendN: null, resends: 0, resent: false, ...over });
 
 function service(over: Partial<ProgressStore> = {}) {
   const store: ProgressStore = {

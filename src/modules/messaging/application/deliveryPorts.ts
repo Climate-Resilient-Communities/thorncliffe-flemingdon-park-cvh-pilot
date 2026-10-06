@@ -41,6 +41,10 @@ export interface DeliveryView {
   completedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  /** The chain's first delivery when this row is a resend (S09.02), else null. */
+  resendOf: string | null;
+  /** Which resend of its chain this is (1 or 2), else null. */
+  resendN: number | null;
 }
 
 /** When a text must be sent by: an instant (a recipient row's own expiry), or a window from the database's now(). */

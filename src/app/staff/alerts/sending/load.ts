@@ -107,8 +107,17 @@ export interface ProblemListScreen {
   list: ProblemListView;
 }
 
-/** The list of an entry's texts in one state (its own view). A drill's entry, an unapproved one and a state that is not one of the three have no list. */
-export async function loadProblemList(query: SendingQuery, deps: SendingDeps = live(), text: Text = sendingText): Promise<ProblemListScreen | MissingSending> {
+/**
+ * The list of an entry's texts in one state (its own view). A drill's entry, an unapproved one and a state that is not one of the three have no list.
+ * `viewer.canResend` is true for an Admin (the policy action `delivery.resend`, S09.02): only then does the list carry "Resend" on a text and "Resend the failed and
+ * undelivered texts in {language}"; the server action asks the guard again, so the buttons are a convenience and never the rule.
+ */
+export async function loadProblemList(
+  query: SendingQuery,
+  deps: SendingDeps = live(),
+  text: Text = sendingText,
+  viewer: { canResend: boolean } = { canResend: false },
+): Promise<ProblemListScreen | MissingSending> {
   const ref = refOfQuery(query);
   const state = stateOfQuery(query);
   const review = await deps.review(ref);
@@ -122,5 +131,21 @@ export async function loadProblemList(query: SendingQuery, deps: SendingDeps = l
     return { ...missing, message: unavailableNote(text) };
   }
   const { texts, more } = found;
-  return { kind: "list", ref, heading: headingOf(review), list: problemListView({ ref, state, texts, more, limit: PROBLEM_LIST_LIMIT, text }) };
+  // The languages that have a failed or undelivered text to resend (the list shows only the most recent ones): from the entry's counts. A failure to read them
+  // leaves the per-text buttons and takes away only "resend all".
+  let resendLanguages: string[] = [];
+  if (viewer.canResend && state !== "unknown") {
+    try {
+      const progress = await deps.progress.forEntry(ref.entryId);
+      resendLanguages = progress.languages.filter((language) => language.failed + language.undelivered > 0).map((language) => language.lang);
+    } catch (error) {
+      deps.logError("sending.progress_failed", { error: errorName(error) });
+    }
+  }
+  return {
+    kind: "list",
+    ref,
+    heading: headingOf(review),
+    list: problemListView({ ref, state, texts, more, limit: PROBLEM_LIST_LIMIT, text, canResend: viewer.canResend, resendLanguages }),
+  };
 }
