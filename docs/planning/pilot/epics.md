@@ -3507,7 +3507,7 @@ So that residents are not left with an old problem on screen.
 
 ### Story S08.05 — A subscribed resident asks for a check-in, honestly
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** 1 h 42 min (started 2026-10-06 06:26 UTC, built 08:08 UTC; review round 1 and the merge of S09.03 built 09:40 UTC)
+- **Size:** M · **Estimate:** 5 h · **Actual:** 2 h 54 min (started 2026-10-06 06:26 UTC, built 09:20 UTC, with review round 1's fixes and the merge of main's S09.03)
 - **Traces:** FR-C1, FR-C4, FR-C6, NFR-N5 (consent), AR-16, UX-DR14 (R-33) · **Depends on:** S07.06, S01.14 · **Branch:** `e08-s05-checkin-request`
 
 As a resident who lives alone,
