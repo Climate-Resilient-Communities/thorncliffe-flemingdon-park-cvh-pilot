@@ -1,21 +1,26 @@
 import type { ReactNode } from "react";
 import { Inline, Stack } from "@/ui";
+import { ProcedureLink } from "../ProcedureLink";
+import type { ProcedureLinkView } from "../procedures";
 import type { CampaignPageText, CampaignScreen } from "./view";
 
 /**
  * The End of the pilot page's body (S09.07), as it is drawn: the heading, then by phase the rehearsal and the confirmation of the start (before), how far the
  * campaign has got (while it runs) or who stayed (after it), and sign-ups. The forms come in as `forms`, keyed by where they go, so this file holds no behaviour
  * and the tests draw the very same markup; its fixed words come in as `text` (resolved by the server: this file is drawn in the browser too, and imports no
- * catalog). `unreadable` is a campaign the Hub could not read: the page says so and offers nothing.
+ * catalog). `unreadable` is a campaign the Hub could not read: the page says so and offers nothing. `procedure` is the link to the end-of-pilot procedure (S09.03),
+ * under the lead, built on the server.
  */
 export function CampaignView({
   text,
+  procedure,
   screen,
   unreadable = false,
   answer,
   forms,
 }: {
   text: CampaignPageText;
+  procedure: ProcedureLinkView;
   screen: CampaignScreen | null;
   unreadable?: boolean;
   /** The answer region of the forms (always in the page: a live region must exist before its text does). */
@@ -27,6 +32,7 @@ export function CampaignView({
       <Stack gap="related">
         <h1>{text["title"]}</h1>
         <p>{text["lead"]}</p>
+        <ProcedureLink link={procedure} />
       </Stack>
       {answer}
       {unreadable || screen === null ? (

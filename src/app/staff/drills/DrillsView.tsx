@@ -1,5 +1,7 @@
 import { Inline, Stack } from "@/ui";
 import { ExerciseMarker } from "../ExerciseMarker";
+import { ProcedureLink } from "../ProcedureLink";
+import { procedureLink } from "../procedures";
 import type { DrillView, DrillsView as DrillsModel } from "./view";
 
 function Drill({ drill }: { drill: DrillView }) {
@@ -68,6 +70,7 @@ export function DrillsView({ view }: { view: DrillsModel }) {
       <Stack gap="related">
         <h1>{view.title}</h1>
         <p>{view.lead}</p>
+        <ProcedureLink link={procedureLink("run-a-drill")} />
       </Stack>
       <Stack gap="related" testId="drills-start">
         <p>{view.start.lead}</p>

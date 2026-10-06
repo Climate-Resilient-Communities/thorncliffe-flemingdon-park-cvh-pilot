@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import { ExerciseMarker } from "../../ExerciseMarker";
+import { ProcedureLink } from "../../ProcedureLink";
 import { PlaceFields } from "../audience/AudienceForms";
 import type { LogState } from "./logDisruption";
 import type { LogScreen, TypeChoiceView } from "./view";
@@ -60,6 +61,7 @@ export function LogBody({ screen, action, initialState = IDLE }: { screen: LogSc
         <Stack gap="related">
           <h1>{screen.title}</h1>
           <p>{screen.lead}</p>
+          <ProcedureLink link={screen.procedure} />
           <p className="hub-flag" role="note">
             {screen.benchmark}
           </p>

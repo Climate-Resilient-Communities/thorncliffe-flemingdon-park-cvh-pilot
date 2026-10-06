@@ -6,6 +6,7 @@ import { placeFieldsOf, type PlaceFieldsView } from "../audience/view";
 import { fieldsOfInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
 import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
+import { procedureLink, type ProcedureLinkView } from "../../procedures";
 import { BUILDING_TYPES, NEIGHBOURHOOD_ONLY_TYPES as NEIGHBOURHOOD_TYPES } from "@/contracts/alertContent";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -35,6 +36,8 @@ export interface LogScreen {
   place: { title: string; hint: string; fields: PlaceFieldsView };
   /** "Start a drill" (S06.05): the exercise marker, shown above the form; null for a real disruption. */
   exercise: ExerciseWords | null;
+  /** The written procedure this page starts (S09.03): running a drill, or writing and approving an alert. */
+  procedure: ProcedureLinkView;
   when: { title: string; hint: string; dateLabel: string; timeLabel: string; fields: TimeFields; foldLegend: string };
   submit: string;
 }
@@ -60,6 +63,7 @@ export function logScreen(plans: readonly BuildingFloorPlan[], now: Date, option
     lead: drill ? t("drillLead") : options.kind === "ack" ? t("lead") : t("alertLead"),
     benchmark: drill ? t("drillBenchmark") : t("benchmark"),
     exercise: drill ? exerciseWords() : null,
+    procedure: procedureLink(drill ? "run-a-drill" : "write-and-approve-an-alert"),
     types: {
       title: t("typesTitle"),
       hint: t("typesHint"),

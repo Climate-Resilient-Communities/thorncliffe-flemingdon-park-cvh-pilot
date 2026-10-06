@@ -5329,6 +5329,21 @@
         "unreadable": "[EN] The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT."
       }
     },
+    "procedures": {
+      "link": "[EN] Procedure: {title} (opens in a new tab)",
+      "titles": {
+        "write-and-approve-an-alert": "[EN] writing and approving an alert",
+        "correct-or-withdraw": "[EN] correcting or withdrawing an entry",
+        "close-an-alert": "[EN] closing an alert",
+        "run-a-drill": "[EN] running a drill",
+        "pause-and-resume-texts": "[EN] pausing and resuming texts",
+        "resend-failed-texts": "[EN] resending texts that failed",
+        "cap-overrun": "[EN] a spending cap overrun",
+        "health-alert": "[EN] a health alert and who owns the incident",
+        "rotate-secrets": "[EN] rotating secrets (pilot start, departures, pilot end)",
+        "end-of-pilot": "[EN] the end of the pilot"
+      }
+    },
     "oncall": {
       "title": "[EN] On-call numbers",
       "lead": "[EN] The Admins who get a text when sending is stuck or failing, so a problem is fixed before residents miss an alert. A text goes to every number on this list.",
