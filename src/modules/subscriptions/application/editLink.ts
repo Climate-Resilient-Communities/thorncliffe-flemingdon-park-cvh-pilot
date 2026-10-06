@@ -9,11 +9,14 @@
 //    subscriber who no longer receives texts (E09 "Receiving subscriber", subscriberStore's predicate), all answer `expired`.
 //  - `change(...)`: one transaction. The number's lock (the router's and the sign-up's), so a STOP, a menu or a second submission of the
 //    link waits; the neighbourhood and every building and floor checked against places (buildings share-locked as the menus read them), and
-//    a refusal changes and uses nothing; the subscriber's row locked FOR UPDATE (S07.07: every edit of a subscriber); then the link is used
-//    (`used_at` set only while unused and unexpired: of two submissions exactly one gets it, the other answers `expired`) and the change
-//    written in the same transaction: language, neighbourhood, groups (the check-in group kept), places (checkins' `locationChanging` asked
-//    first when they change, as menu 1 does) and muted topics. A confirmation (`smsTexts.editSaved`, in the new language) is queued, and
-//    the check-in request's withdrawal after it when checkins reports one.
+//    a refusal changes and uses nothing; then the link is used (`used_at` set only while unused and unexpired: of two submissions exactly
+//    one gets it, the other answers `expired` having asked and written nothing). When the places change, checkins' `locationChanging` is
+//    asked next, before the subscriber's row is locked here, as menu 1 asks it (E08 locks the round threads' `alert` rows before that row).
+//    Then the edit's row lock (`lockForEdit`, FOR NO KEY UPDATE: S07.07's approval waits for it, a resend still reads the resident as
+//    receiving), the resident's receiving state read again under it (if they no longer receive, all of it is undone, the link's use with
+//    it), and the change written in the same transaction: language, neighbourhood, groups (the check-in group kept), places and muted
+//    topics. A confirmation (`smsTexts.editSaved`, in the new language) is queued, and the check-in request's withdrawal after it when
+//    checkins reports one.
 //  - `delete(token)`: the same lock, the link used, then E07's one deletion (`createNumberDeletion`, the one STOP runs) of everything held
 //    for the number in the same transaction; the link goes with the subscriber. Nothing is texted: the page alone confirms it.
 //
@@ -23,7 +26,7 @@ import { randomBytes } from "node:crypto";
 import { SIGNUP_GROUPS } from "../../../contracts/signup";
 import { EDIT_EXPIRED, isMutableTopic, type EditChange, type EditExpiredBody, type EditViewBody, type SubscriptionEditErrorCode } from "../../../contracts/subscriptionEdit";
 import { isLaunchCode, type LaunchCode } from "../../../i18n/languages";
-import type { ResidentTextName } from "../../../i18n/residentTexts";
+import { residentText, type ResidentTextName } from "../../../i18n/residentTexts";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { sha256Hex } from "../../../platform/hash";
 import { uuidv7 } from "../../../platform/ids";
@@ -35,7 +38,7 @@ import { subscriberStore, type SubscriberStore } from "../adapters/subscriberSto
 import { EDIT_LINK_PURPOSE, editLinkUrl, groupsAfterChange, placeRows, placesOfRows, samePlaces } from "../domain/editLink";
 import { HUB_NUMBER } from "../domain/menus";
 import { createNumberDeletion } from "./deletion";
-import { ReplyNotQueued, noCheckinRequestsYet, noCheckinsYet, residentSms, type CheckinCleanup, type CheckinRequests } from "./inbound";
+import { noCheckinRequestsYet, noCheckinsYet, queueReply, type CheckinCleanup, type CheckinRequests } from "./inbound";
 import type { EditLinkPort } from "./menus";
 
 /** Port: what a change reads of places: the neighbourhoods, and a building's floors (null: no such building), its row share-locked. */
@@ -79,6 +82,9 @@ export const newEditToken = (): string => randomBytes(32).toString("base64url");
 /** The token as stored: its sha256, hex. */
 export const editTokenHash = (token: string): string => sha256Hex(token);
 
+/** Thrown inside a change's transaction to undo all of it (the link's use and checkins' call too) when the resident no longer receives. */
+class NoLongerReceiving extends Error {}
+
 export function createEditLink(deps: EditLinkDeps): EditLink {
   const tokens = deps.stores?.tokens ?? editTokenStore;
   const subscribers = deps.stores?.subscribers ?? subscriberStore;
@@ -89,21 +95,9 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
   const newToken = deps.newToken ?? newEditToken;
   const deletion = createNumberDeletion({ skipRecipientDeliveries: deps.skipRecipientDeliveries, checkins, stores: { pending, subscribers, inbound } });
 
-  /** Queues a text of the link's purpose to the subscriber: normalised and counted as every outbound text is (AD-21). */
+  /** Queues a catalog text of the link's purpose to the subscriber, as the router and the menus queue theirs (`queueReply`). */
   async function text(tx: DbTransaction, subscriberId: string, lang: LaunchCode, nonce: string, name: ResidentTextName, values: Record<string, string> = {}): Promise<void> {
-    const { body, segments } = residentSms(lang, name, values);
-    const queued = await deps.enqueue(tx, {
-      module: "subscriptions",
-      purpose: EDIT_LINK_PURPOSE,
-      recipient: { kind: "subscriber", id: subscriberId },
-      subject: subscriberId,
-      nonce,
-      lang,
-      body,
-      segments,
-      costEstimateCents: Math.ceil(segments * deps.pricePerSegmentCents()),
-    });
-    if (!queued.ok) throw new ReplyNotQueued(queued.error);
+    await queueReply(deps, tx, { purpose: EDIT_LINK_PURPOSE, recipient: { kind: "subscriber", id: subscriberId }, nonce, lang, text: residentText(lang, name, values) });
   }
 
   /**
@@ -163,29 +157,36 @@ export function createEditLink(deps: EditLinkDeps): EditLink {
     },
 
     async change(change) {
-      return deps.db.transaction(async (tx): Promise<EditChangeOutcome> => {
-        const link = await open(tx, change.token);
-        if (link === null) return { kind: "expired" };
-        // A refusal comes before anything is written or used: the link still works for the corrected change.
-        const refusal = await checkPlaces(tx, change);
-        if (refusal !== null) return { kind: "refused", code: refusal };
-        const id = link.subscriberId;
-        if (!(await subscribers.lock(tx, id)) || !(await subscribers.receivesShared(tx, id))) return { kind: "expired" };
-        if (!(await tokens.consume(tx, link.id))) return { kind: "expired" };
-        // Read under the row's lock, which this transaction holds: the subscriber is there.
-        const before = (await subscribers.editView(tx, id))!;
-        const rows = placeRows(change.places);
-        const withdrawal = samePlaces(before.places, rows) ? "none" : await checkins.locationChanging(id, rows, tx);
-        await subscribers.replacePlaces(tx, id, rows.map((row) => ({ id: newId(), ...row })));
-        await subscribers.setNeighbourhood(tx, id, change.neighbourhood);
-        await subscribers.setLang(tx, id, change.lang);
-        await subscribers.setGroups(tx, id, groupsAfterChange(before.groups, change.groups));
-        await subscribers.replaceTopics(tx, id, change.mutedTopics);
-        // The confirmation in the language the texts now come in (as menu 2's), then the request's withdrawal (as menu 1's).
-        await text(tx, id, change.lang, `${link.id}.saved`, "editSaved", { hub: HUB_NUMBER });
-        if (withdrawal === "withdrawn") await text(tx, id, change.lang, `${link.id}.checkin`, "checkinWithdrawn");
-        return { kind: "changed" };
-      });
+      try {
+        return await deps.db.transaction(async (tx): Promise<EditChangeOutcome> => {
+          const link = await open(tx, change.token);
+          if (link === null) return { kind: "expired" };
+          // A refusal comes before anything is written or used: the link still works for the corrected change.
+          const refusal = await checkPlaces(tx, change);
+          if (refusal !== null) return { kind: "refused", code: refusal };
+          // Used first: a second submission, lined up behind this one by the number's lock, finds it used and asks or writes nothing.
+          if (!(await tokens.consume(tx, link.id))) return { kind: "expired" };
+          const id = link.subscriberId;
+          // Read under the number's lock, with the link used: the subscriber is there (a deletion waits for that lock, and takes the link).
+          const before = (await subscribers.editView(tx, id))!;
+          const rows = placeRows(change.places);
+          // E08 first, before the subscriber's row is locked here (as menu 1): it locks the round threads' `alert` rows before that row.
+          const withdrawal = samePlaces(before.places, rows) ? "none" : await checkins.locationChanging(id, rows, tx);
+          if (!(await subscribers.lockForEdit(tx, id)) || !(await subscribers.receivesShared(tx, id))) throw new NoLongerReceiving();
+          await subscribers.replacePlaces(tx, id, rows.map((row) => ({ id: newId(), ...row })));
+          await subscribers.setNeighbourhood(tx, id, change.neighbourhood);
+          await subscribers.setLang(tx, id, change.lang);
+          await subscribers.setGroups(tx, id, groupsAfterChange(before.groups, change.groups));
+          await subscribers.replaceTopics(tx, id, change.mutedTopics);
+          // The confirmation in the language the texts now come in (as menu 2's), then the request's withdrawal (as menu 1's).
+          await text(tx, id, change.lang, `${link.id}.saved`, "editSaved", { hub: HUB_NUMBER });
+          if (withdrawal === "withdrawn") await text(tx, id, change.lang, `${link.id}.checkin`, "checkinWithdrawn");
+          return { kind: "changed" };
+        });
+      } catch (error) {
+        if (error instanceof NoLongerReceiving) return { kind: "expired" };
+        throw error;
+      }
     },
 
     async delete(token) {

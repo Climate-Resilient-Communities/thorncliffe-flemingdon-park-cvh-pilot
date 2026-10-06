@@ -53,7 +53,7 @@ export const subscriberStore = {
   },
 
   /**
-   * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus); false when it is gone. It waits for an approval that holds
+   * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus, S07.06's page); false when it is gone. It waits for an approval that holds
    * the row FOR SHARE while capturing recipients (S07.07), but not for a resend's FOR KEY SHARE (`receivesShared`), which only a deletion's
    * FOR UPDATE stops: a resident changing their building is still receiving.
    */
@@ -115,8 +115,8 @@ export const subscriberStore = {
 
   /**
    * Whether the subscriber exists and is in a receiving state (`phoneOf`'s and `receivesShared`'s predicate), read without a lock: S07.06's
-   * read-only view, which a row someone holds `FOR UPDATE` for an ordinary edit (a menu's save, a change from another tab) must not turn
-   * into "does not receive". No number is read.
+   * read-only view, which takes no lock and waits for none, so a row someone holds for an edit (a menu's save, a change from another tab)
+   * is read as it was. No number is read.
    */
   async receives(executor: DbExecutor, id: string): Promise<boolean> {
     const rows = await executor
@@ -194,12 +194,12 @@ export const subscriberStore = {
     return { ...row, places, mutedTopics: topics.map((topic) => topic.topic) };
   },
 
-  /** Sets the subscriber's groups (S07.06's page); the caller holds the subscriber's row lock. */
+  /** Sets the subscriber's groups (S07.06's page); the caller holds the subscriber's row lock (`lockForEdit`). */
   async setGroups(tx: DbTransaction, subscriberId: string, groups: readonly string[]): Promise<void> {
     await tx.update(subscriber).set({ groups: [...groups] }).where(eq(subscriber.id, subscriberId));
   },
 
-  /** Replaces the subscriber's muted topics with these (S07.06's page); the caller holds the subscriber's row lock. */
+  /** Replaces the subscriber's muted topics with these (S07.06's page); the caller holds the subscriber's row lock (`lockForEdit`). */
   async replaceTopics(tx: DbTransaction, subscriberId: string, topics: readonly string[]): Promise<void> {
     await tx.delete(subscriberTopicOptout).where(eq(subscriberTopicOptout.subscriberId, subscriberId));
     if (topics.length > 0) await tx.insert(subscriberTopicOptout).values(topics.map((topic) => ({ subscriberId, topic })));

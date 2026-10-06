@@ -3,7 +3,8 @@
 // `/{lang}/subscription/{token}`; the page's view (reads only), its change (the link used in the same transaction, a confirmation queued) and
 // its deletion (E07's one deletion, nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; a link
 // preview's GET of the page (the page module as the server renders it) and two submissions of one link at once through the change route make
-// exactly one change; the grants and the guard. Every number is fictional (555-01xx) and nothing reaches Twilio.
+// exactly one change; the change's locks (checkins asked before the subscriber's row is locked, then an edit's lock, under which a resend
+// still finds the resident receiving); the grants and the guard. Every number is fictional (555-01xx) and nothing reaches Twilio.
 import { randomBytes } from "node:crypto";
 import { createTranslator, type AbstractIntlMessages } from "next-intl";
 import postgres from "postgres";
@@ -28,7 +29,9 @@ import {
   type EditLink,
   type InboundOutcome,
   type MenuPlaces,
+  subscriberReceives,
 } from "../../src/modules/subscriptions";
+import { subscriberStore, type SubscriberStore } from "../../src/modules/subscriptions/adapters/subscriberStore";
 import { createDb, type Db } from "../../src/platform/db";
 import { BASE_URL, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
@@ -125,18 +128,26 @@ const checkins: CheckinRequests & CheckinCleanup = {
   deleteForSubscriber: async (subscriberId) => void cleaned.push(subscriberId),
 };
 
-/** The edit link as src/app/subscriptionEdit.ts composes it, with places' real readers and a token seam that records each token. */
-function editLinkOn(): EditLink {
+/**
+ * The edit link as src/app/subscriptionEdit.ts composes it, with places' real readers and a token seam that records each token; checkins'
+ * ports and the subscriber store can be swapped, and `onText` is called with each text's body before it is queued, inside the transaction
+ * that queues it (what other sessions see then).
+ */
+function editLinkOn(seams: { checkins?: CheckinRequests & CheckinCleanup; subscribers?: SubscriberStore; onText?: (body: string) => Promise<void> } = {}): EditLink {
   const queue = createDeliveryQueue();
   return createEditLink({
     db: app,
-    enqueue: (tx, input) => queue.enqueueTransactional(tx, input),
+    enqueue: async (tx, input) => {
+      await seams.onText?.(input.body);
+      return queue.enqueueTransactional(tx, input);
+    },
     skipRecipientDeliveries: (tx, recipient) => queue.skipRecipientDeliveries(tx, recipient),
     places: {
       neighbourhoodIds: (executor) => neighbourhoodIds(executor),
       floorIdsOf: async (tx, rsn, options) => (await floorsOfBuilding(tx, rsn, options))?.map((floor) => floor.id) ?? null,
     },
-    checkins,
+    checkins: seams.checkins ?? checkins,
+    ...(seams.subscribers ? { stores: { subscribers: seams.subscribers } } : {}),
     publicBaseUrl: () => `${BASE_URL}/`,
     pricePerSegmentCents: () => 1.5,
     newToken: () => {
@@ -210,6 +221,19 @@ const tokenRows = async () => (await owner`select id, subscriber_id, token_hash,
 const subscriberRow = async (id: string) => (await owner`select lang, neighbourhood_id, groups from subscriber where id = ${id}`)[0] ?? null;
 const placesOf = async (id: string) => (await owner`select rsn, floor_id from subscriber_place where subscriber_id = ${id} order by rsn, floor_id nulls first`).map((row) => ({ rsn: row.rsn as string, floorId: row.floor_id as string | null }));
 const mutedOf = async (id: string) => (await owner`select topic from subscriber_topic_optout where subscriber_id = ${id} order by topic`).map((row) => row.topic as string);
+/**
+ * How the subscriber's row is locked, as another session finds it at once (NOWAIT): "free" when nothing holds it; "edit" when it is held
+ * FOR NO KEY UPDATE (an approval's FOR SHARE capture would wait, a resend's FOR KEY SHARE would not); "delete" when it is held FOR UPDATE.
+ */
+async function rowLock(id: string): Promise<"free" | "edit" | "delete"> {
+  const takes = (strength: string) =>
+    owner.unsafe(`select id from subscriber where id = $1 for ${strength} nowait`, [id]).then(
+      () => true,
+      (error: { code?: string }) => (error.code === "55P03" ? false : Promise.reject(error as Error)),
+    );
+  if (await takes("share")) return "free";
+  return (await takes("key share")) ? "edit" : "delete";
+}
 /** Moves every link's 30 minutes back, as if it had been made `minutes` ago. */
 const age = (minutes: number) =>
   owner`alter table subscription_edit_token disable trigger subscription_edit_token_guard`
@@ -352,14 +376,16 @@ describe("the page's view", () => {
     expect((await tokenRows())[0]!.used_at).toBeNull();
   });
 
-  it("is not turned to expired while another transaction holds the subscriber's row for an ordinary edit (a menu's save, another tab)", async () => {
+  it("is not turned to expired, and does not wait, while another transaction holds the subscriber's row (a menu's save, another tab)", async () => {
     const id = await subscriber();
     const token = await linkFor(id);
-    const view = await owner.begin(async (sql) => {
-      await sql`select id from subscriber where id = ${id} for update`;
-      return editLinkOn().view(token);
-    });
-    expect(view).toMatchObject({ v: 1, status: "ok", subscription: { lang: "en", phone_last2: "71" } });
+    for (const strength of ["no key update", "update"]) {
+      const view = await owner.begin(async (sql) => {
+        await sql.unsafe(`select id from subscriber where id = $1 for ${strength}`, [id]);
+        return editLinkOn().view(token);
+      });
+      expect(view, strength).toMatchObject({ v: 1, status: "ok", subscription: { lang: "en", phone_last2: "71" } });
+    }
   });
 
   it("answers expired for a token never made, a used link and one past its 30 minutes", async () => {
@@ -407,6 +433,60 @@ describe("a change", () => {
     expect(located).toHaveLength(1);
     expect((await texts()).at(-1)!.body).toBe("Your check-in request is withdrawn.");
     expect(await subscriberRow(id)).toMatchObject({ neighbourhood_id: "FP" });
+  });
+
+  it("asks checkins before it locks the subscriber's row (E08's lock order), then saves under an edit's lock: a resend still finds the resident receiving", async () => {
+    const id = await subscriber();
+    const token = await linkFor(id);
+    const seen: { at: string; row: string; placesThen?: string[]; receives?: boolean }[] = [];
+    const editLink = editLinkOn({
+      checkins: {
+        ...checkins,
+        // E08's request lock order puts the round threads' `alert` rows before the subscriber row: the change has not locked it yet, and
+        // the old places are still there to read.
+        locationChanging: async (subscriberId, _places, tx) => {
+          const placesThen = [...(await tx.execute(`select rsn from subscriber_place where subscriber_id = '${subscriberId}'`))].map((r) => (r as { rsn: string }).rsn);
+          seen.push({ at: "checkins", row: await rowLock(subscriberId), placesThen });
+          return "none";
+        },
+      },
+      // The confirmation is queued after every write, in the change's transaction: another session then finds the row held for an edit
+      // (an approval's FOR SHARE capture would wait for it) and the resident still receiving (the resend's check, FOR KEY SHARE SKIP LOCKED).
+      onText: async () => {
+        const receives = await app.transaction((other) => subscriberReceives(other, id));
+        seen.push({ at: "confirmation", row: await rowLock(id), receives });
+      },
+    });
+    expect(await editLink.change(change(token))).toEqual({ kind: "changed" });
+    expect(seen).toEqual([
+      { at: "checkins", row: "free", placesThen: [RSN_21] },
+      { at: "confirmation", row: "edit", receives: true },
+    ]);
+    // Nothing holds the row once the change's transaction is over.
+    expect(await rowLock(id)).toBe("free");
+  });
+
+  it("undoes all of it, the link's use and what checkins did, when the resident no longer receives once the row is locked", async () => {
+    const id = await subscriber();
+    const token = await linkFor(id);
+    // E09's re-check under the edit's lock answers no (a retention change committed while the change waited; no state is non-receiving yet,
+    // so the store answers it here). What checkins writes in the change's transaction stands for E08's withdrawal.
+    const editLink = editLinkOn({
+      checkins: {
+        ...checkins,
+        locationChanging: async (subscriberId, _places, tx) => {
+          await subscriberStore.openNewPrompt(tx, subscriberId, "checkins_wrote_this", 60_000);
+          return "withdrawn";
+        },
+      },
+      subscribers: { ...subscriberStore, receivesShared: async () => false },
+    });
+    expect(await editLink.change(change(token))).toEqual({ kind: "expired" });
+    expect(await subscriberRow(id)).toEqual({ lang: "en", neighbourhood_id: "TP", groups: ["seniors"] });
+    expect(await placesOf(id)).toEqual([{ rsn: RSN_21, floorId: FLOOR_1 }]);
+    expect(await owner`select 1 from sms_prompt`).toHaveLength(0);
+    expect((await tokenRows())[0]!.used_at).toBeNull();
+    expect((await texts()).filter((text) => !text.body.includes("/subscription/"))).toEqual([]);
   });
 
   it("refused (a building or floor that is not on the list, a neighbourhood that is not the pilot's) changes and uses nothing", async () => {
@@ -472,6 +552,8 @@ describe("two submissions of one link at once, after a link preview", () => {
     expect(await placesOf(id)).toEqual(winner.lang === "ur" ? [{ rsn: RSN_21, floorId: FLOOR_2 }] : [{ rsn: RSN_23, floorId: null }]);
     expect((await tokenRows())[0]!.used_at).not.toBeNull();
     expect((await texts()).filter((text) => text.purpose === "edit_link" && text.lang === winner.lang && !text.body.includes("/subscription/"))).toHaveLength(1);
+    // Both moved the resident, but only the winner asked checkins: the other found the link used before it asked anything.
+    expect(located).toEqual([{ subscriberId: id, places: winner.lang === "ur" ? [{ rsn: RSN_21, floorId: FLOOR_2 }] : [{ rsn: RSN_23, floorId: null }] }]);
   });
 
   it("a change and a deletion at once: exactly one of them happens", async () => {
