@@ -213,17 +213,20 @@ describe("the committed starter set", () => {
 });
 
 describe("the evaluation subset", () => {
-  // Pinned on purpose: the official evaluation set comes from ambassadors (S03.08). Until then it holds only
-  // the S03.01 starter questions below, so any new evaluation question fails here until this list is
-  // deliberately updated.
+  // The S03.01 starter questions that were put in evaluation before S03.08. Since S03.08 the evaluation subset is
+  // data/search-test-set/subsets.json, drawn by the committed seed (test/search-test-set-launch.test.ts checks it agrees with
+  // questions.jsonl); a question already assigned never moves, so these stay in evaluation and none of them ever goes to tuning.
   const STARTER_EVALUATION_IDS = [
     "en-02", "ur-02", "ur-04", "ps-01", "tl-02", "prs-02", "gu-02", "ta-02",
     "el-02", "sk-02", "bn-02", "hi-02", "pa-02", "zh-02", "es-02", "fr-02",
   ];
 
-  it("is exactly the starter evaluation questions", () => {
+  it("keeps the starter evaluation questions, and holds only what subsets.json draws", () => {
     const { questions } = parseQuestions(REAL, IDS);
-    expect(questions.filter((q) => q.split === "evaluation").map((q) => q.id)).toEqual(STARTER_EVALUATION_IDS);
+    const subsets = JSON.parse(readFileSync(path.join(ROOT, "data", "search-test-set", "subsets.json"), "utf8")) as { evaluation: string[] };
+    const evaluation = questions.filter((q) => q.split === "evaluation").map((q) => q.id);
+    expect(evaluation).toEqual(expect.arrayContaining(STARTER_EVALUATION_IDS));
+    expect([...evaluation].sort()).toEqual(subsets.evaluation);
   });
 });
 

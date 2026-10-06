@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "approvedBy": null,
+  "approvedOn": null,
+  "minimums": {
+    "hitRate": {},
+    "noMatchAccuracy": 0,
+    "emergencyAccuracy": 0
+  }
+}
