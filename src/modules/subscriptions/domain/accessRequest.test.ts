@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deletionSummary, heldRecordLines, menuStepWords, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
+import { checkinRowWords, deletionSummary, heldRecordLines, menuStepWords, nothingHeld, openRequests, standingOf, torontoTime, wholeDays, type HeldRecord, type RequestRecord } from "./accessRequest";
 
 const DAY = 86_400_000;
 const NOW = new Date("2026-10-30T16:00:00Z");
@@ -80,6 +80,7 @@ describe("heldRecordLines", () => {
         mutedTopics: [],
         prompt: { kind: "delete_confirm", since: new Date("2026-10-06T13:30:00Z"), until: new Date("2026-10-06T13:40:00Z"), step: null },
         editLink: { since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z"), expired: false, usedAt: new Date("2026-10-06T13:12:00Z") },
+        checkinRequest: { method: "call", place: { rsn: "9100011", address: "11 Sample Road", floor: "2" }, consentVersion: "2026-10-06.1" },
       },
       texts: [
         { createdAt: new Date("2026-10-01T14:01:00Z"), kind: "alert", purpose: null, lang: "ur", state: "undelivered", segments: 3, resendN: 1, providerErrorCode: 30003 },
@@ -101,6 +102,9 @@ describe("heldRecordLines", () => {
     expect(lines).toContain("  Retention state: active");
     expect(lines).toContain("  Open prompt: asked to reply 0 again to delete the subscription (delete_confirm), sent 2026-10-06 09:30, kept until 2026-10-06 09:40");
     expect(lines).toContain("  Edit link (texted to change or delete the subscription on the web): asked for 2026-10-06 09:00, valid until 2026-10-06 09:30, used 2026-10-06 09:12");
+    expect(lines).toContain(
+      "  Check-in request (an ambassador on the floor sees the number and the floor): by a call, where I live: 11 Sample Road (register number 9100011), floor 2; check-in consent version 2026-10-06.1",
+    );
     expect(lines).toContain("Texts (1; the words are not kept here and are not read out):");
     expect(lines).toContain("  2026-10-01 10:01  alert in ur, 3 segments, undelivered, resend 1, provider error 30003");
     expect(lines).toContain(
@@ -123,6 +127,7 @@ describe("heldRecordLines", () => {
       mutedTopics: [],
       prompt: null,
       editLink: { since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z"), expired: true, usedAt: null },
+      checkinRequest: null,
     };
 
     expect(heldRecordLines({ ...NOTHING, subscriber })).toContain(
@@ -144,6 +149,7 @@ describe("heldRecordLines", () => {
       mutedTopics: [],
       prompt: { kind: "reconsent", since: new Date("2026-11-05T15:00:00Z"), until: new Date("2026-12-06T05:00:00Z"), step: null },
       editLink: null,
+      checkinRequest: null,
     };
 
     const asked = heldRecordLines({ ...NOTHING, subscriber });
@@ -195,16 +201,34 @@ describe("heldRecordLines", () => {
         topics: ["heat"],
         consentVersion: "2026-10-02.1",
         startedBy: "web",
-        places: [],
+        places: [{ rsn: "9100011", address: "11 Sample Road", floor: "3" }],
+        checkinRequest: { method: "text", place: { rsn: "9100011", address: "11 Sample Road", floor: "3" }, consentVersion: "2026-10-06.1" },
       },
       replies: [{ since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z") }],
     });
 
     expect(lines).toContain("Pending sign-up (waiting for YES, expired: the purge deletes it within 15 minutes):");
     expect(lines).toContain("  Started: 2026-10-05 10:00, on the web; YES accepted until 2026-10-07 10:00");
-    expect(lines).toContain("  Places: none");
+    expect(lines).toContain("    11 Sample Road (register number 9100011), floor 3");
+    expect(lines).toContain(
+      "  Check-in request (saved with the sign-up until YES): by a text, where I live: 11 Sample Road (register number 9100011), floor 3; check-in consent version 2026-10-06.1",
+    );
     expect(lines).toContain("  Muted topics: heat");
     expect(lines).toContain("Waiting reply to a number with no subscription: 1 (each deleted when its reply goes, or after 30 minutes)");
+  });
+
+  it("reads out a check-in row that names the subscriber by its round's thread, place, method and where it stands (S08.05), and a kept one", () => {
+    const at = { rsn: "9100011", address: "11 Sample Road", floor: "2" };
+    const thread = "0190f000-0000-7000-8000-00000000a0a0";
+    expect(checkinRowWords({ alertId: thread, method: "call", status: "pending", outcome: null }, at)).toBe(
+      `in the check-in round of alert thread ${thread}, at 11 Sample Road (register number 9100011), floor 2, by a call: not checked on yet`,
+    );
+    expect(checkinRowWords({ alertId: thread, method: "text", status: "not_reached", outcome: "not_reached" }, at)).toBe(
+      `in the check-in round of alert thread ${thread}, at 11 Sample Road (register number 9100011), floor 2, by a text: not reached; the round has closed and the row is kept for the Hub's follow-up`,
+    );
+    const lines = heldRecordLines({ ...NOTHING, checkins: { kind: "rows", rows: [{ at: new Date("2026-10-06T13:00:00Z"), description: "in the check-in round" }] } });
+    expect(lines).toContain("Check-in records (1):");
+    expect(lines).toContain("  2026-10-06 09:00  in the check-in round");
   });
 
   it("says when nothing is held, and never calls a check-in table it cannot read nothing", () => {
@@ -247,6 +271,7 @@ describe("deletionSummary", () => {
         mutedTopics: [],
         prompt: null,
         editLink: null,
+        checkinRequest: null,
       },
       replies: [{ since: NOW, expiresAt: NOW }],
       texts: [{ createdAt: NOW, kind: "transactional", purpose: "welcome", lang: "ur", state: "delivered", segments: 1, resendN: null, providerErrorCode: null }],

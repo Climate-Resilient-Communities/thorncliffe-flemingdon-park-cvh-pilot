@@ -21,10 +21,16 @@
 // `access_request.closed`, with the Admin as the actor, and the weekly review flags one open longer than 25 days.
 import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
+import { roundThreads } from "../../src/modules/alerting";
+import { createCheckinRequests } from "../../src/modules/checkins";
+import { createAssignments } from "../../src/modules/identity";
+import { floorsOfBuilding } from "../../src/modules/places";
 import {
   ACCESS_REQUEST_FLAG_DAYS,
   ACCESS_REQUEST_LIMIT_DAYS,
   CLOSING_OUTCOMES,
+  checkinRequestStore,
+  checkinRowRecords,
   createAccessRequests,
   deletionSummary,
   heldRecordLines,
@@ -80,8 +86,8 @@ const USAGE =
   "  delete --id <request id> --admin <username> --verified-control\n" +
   "      Only after verified control. Asks for the number, shows what is held for it (its last four digits, the subscriber, the pending sign-up),\n" +
   "      asks for the number again and for DELETE, and deletes everything held for it: the deletion a STOP from the number runs (subscriber,\n" +
-  "      places, muted topics, prompts, pending sign-up, waiting replies; waiting texts are stopped). It cannot be undone (the pilot keeps no\n" +
-  "      backups). The request is closed as deleted in the same transaction.\n" +
+  "      places, muted topics, prompts, check-in request and check-in rows, pending sign-up, waiting replies; waiting texts are stopped). It\n" +
+  "      cannot be undone (the pilot keeps no backups). The request is closed as deleted in the same transaction.\n" +
   `  close --id <request id> --admin <username> --outcome <${CLOSING_OUTCOMES.join("|")}>\n` +
   "      answered: what is held was read back (and a correction explained); not_verified: control of the number could not be shown, so nothing\n" +
   "      was revealed or deleted; withdrawn: the resident withdrew the request.\n\n" +
@@ -111,7 +117,22 @@ function connectToProduction(env: Env): Connection {
   // parseEnv requires both in production.
   const db = createDb(env.databaseUrl as string, { max: 1 });
   const key = rateLimitKeyFromSecret(env.supabaseSecretKey as string);
-  return { requests: createAccessRequests({ db, numberKey: () => key }), close: () => db.$client.end({ timeout: 5 }) };
+  // S08.05: checkins' real ports, composed as src/app/checkins.ts composes them: the deletion locks the resident's round threads first and closes their check-in
+  // rows into stubs (E08 "Request lock order"), and the lookup reads the rows that still name them.
+  const checkins = createCheckinRequests({
+    requests: checkinRequestStore(),
+    threads: roundThreads,
+    coversFloor: (rsn, floorId, executor) => createAssignments({ db, floors: { floorsOf: floorsOfBuilding } }).coversFloor(rsn, floorId, executor),
+  });
+  return {
+    requests: createAccessRequests({
+      db,
+      numberKey: () => key,
+      checkins: { lockRounds: (id, tx) => checkins.lockRounds(id, tx), deleteForSubscriber: (id, tx) => checkins.deleteForSubscriber(id, tx) },
+      checkinRecords: checkinRowRecords,
+    }),
+    close: () => db.$client.end({ timeout: 5 }),
+  };
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

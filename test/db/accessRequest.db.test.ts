@@ -4,11 +4,12 @@
 //  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt, S07.06's edit link
 //    (never its hash); a pending sign-up; a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound
 //    limit's mute row and S07.05's menu limit included; where the resident is in a text menu (S07.05); the end of the pilot's question and its text
-//    (S09.07); check-in records), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that holds a
+//    (S09.07); S08.05's check-in request and the check-in rows that name the subscriber), in a transaction Postgres keeps read-only, and only for an open
+//    request; a column or a table added since that holds a
 //    number's records, or a prompt's step it cannot read, is reported as not read, so a request is never answered as complete without it;
 //  - the deletion on the resident's behalf is the full E07 deletion (the one STOP, the edit page and the end-of-pilot purge run) and closes the request in
-//    the same transaction, a subscriber being asked at the end of the pilot included; a failed audit record undoes the deletion; a `checkin` table with E08's
-//    port not wired refuses it; a request is closed once, even by two runs at once;
+//    the same transaction, a subscriber being asked at the end of the pilot included, their check-in rows closed into stubs by checkins' real port (S08.05);
+//    a failed audit record undoes the deletion; a `checkin` table with E08's port not wired refuses it; a request is closed once, even by two runs at once;
 //  - the weekly review (S09.04's `weekly_review`, and scripts/export-weekly's CSV) flags a request open longer than 25 days, a rehearsal's apart, and the
 //    script's own output and the audit trail never hold the number.
 // Every number is fictional (555-01xx). Nothing reaches Twilio: no text is sent.
@@ -19,18 +20,25 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { runAccessRequest } from "../../scripts/subscriptions/access-request";
 import { runExportWeekly } from "../../scripts/ops/export-weekly";
 import { migrate } from "../../scripts/db/migrate.mjs";
+import { CHECKIN_CONSENT_VERSION } from "../../src/contracts/checkin";
+import { roundThreads } from "../../src/modules/alerting";
 import { record, recordRefusal } from "../../src/modules/audit";
+import { createCheckinRequests } from "../../src/modules/checkins";
+import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { readWeeklyReview } from "../../src/modules/ops";
 import { floorsOfBuilding, listBuildings, neighbourhoodIds } from "../../src/modules/places";
 import {
   MENU_SCOPE,
+  checkinRequestStore,
+  checkinRowRecords,
   createAccessRequests,
   createCampaigns,
   createInboundRouter,
   createMenus,
   createRateLimiter,
   createSignup,
+  heldRecordLines,
   noCheckinsYet,
   subscriberLookup,
   type AccessRequestDeps,
@@ -89,6 +97,8 @@ beforeAll(async () => {
 });
 
 async function resetAll() {
+  await owner`delete from checkin`;
+  await owner`delete from checkin_tally`;
   await owner`delete from subscriber`;
   await owner`delete from pending_signup`;
   await owner`delete from inbound_reply`;
@@ -105,9 +115,9 @@ async function resetAll() {
     await tx`delete from audit_event where id > ${auditBaseline}`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
   });
-  await owner`drop table if exists checkin`;
+  // What a test adds as a later story might (the real `checkin` table and the check-in request's columns are S08.05's and stay).
   await owner`drop table if exists checkin_request`;
-  await owner`alter table subscriber drop column if exists checkin_method`;
+  await owner`alter table subscriber drop column if exists preferred_name`;
   await owner`alter table if exists subscription_edit_token drop column if exists sent_to`;
   checkinCalls.length = 0;
 }
@@ -125,8 +135,29 @@ afterAll(async () => {
   await owner.end({ timeout: 5 });
 });
 
+/**
+ * The use case as scripts/access-request composes it: checkins' real ports (S08.05, as src/app/checkins.ts composes them), the deletions they are asked for
+ * recorded, and checkins' reader of the rows that name a subscriber.
+ */
 function requests(over: Partial<AccessRequestDeps> = {}) {
-  return createAccessRequests({ db: app, numberKey: () => KEY, checkins: { deleteForSubscriber: async (id) => void checkinCalls.push(id) }, ...over });
+  const checkins = createCheckinRequests({
+    requests: checkinRequestStore(),
+    threads: roundThreads,
+    coversFloor: (rsn, floorId, executor) => createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } }).coversFloor(rsn, floorId, executor),
+  });
+  return createAccessRequests({
+    db: app,
+    numberKey: () => KEY,
+    checkins: {
+      lockRounds: (id, tx) => checkins.lockRounds(id, tx),
+      deleteForSubscriber: async (id, tx) => {
+        checkinCalls.push(id);
+        await checkins.deleteForSubscriber(id, tx);
+      },
+    },
+    checkinRecords: checkinRowRecords,
+    ...over,
+  });
 }
 
 /** The router as src/app/inbound.ts composes it (the welcome, STOP, the sign-up link and S07.05's text menus go through it). */
@@ -218,6 +249,13 @@ async function editLink(subscriberId: string, minutesAgo = 0): Promise<string> {
   await owner`insert into subscription_edit_token (id, subscriber_id, token_hash, created_at, expires_at)
               values (${randomUUID()}, ${subscriberId}, ${hash}, now() - make_interval(mins => ${minutesAgo}), now() - make_interval(mins => ${minutesAgo}) + interval '30 minutes')`;
   return hash;
+}
+
+/** S08.05's check-in request on the subscriber (by id) or on the number's pending sign-up: by a call, where the resident lives on floor 2. */
+async function withCheckinRequest(table: "subscriber" | "pending_signup", key: string) {
+  const request = owner`checkin_method = 'call', checkin_consent_version = ${CHECKIN_CONSENT_VERSION}, where_i_live_rsn = ${RSN}, where_i_live_floor_id = ${FLOOR_2}`;
+  if (table === "subscriber") await owner`update subscriber set ${request} where id = ${key}`;
+  else await owner`update pending_signup set ${request} where phone = ${key}`;
 }
 
 const auditRows = () => owner`select action, actor_staff_id, subject_type, subject_id, outcome, is_drill, meta from audit_event where id > ${auditBaseline} order by id`;
@@ -337,7 +375,8 @@ describe("the lookup", () => {
       ["transactional", "prompt_reply", "ur"],
     ]);
     expect(held.hashes.map((h) => [h.scope, h.count])).toEqual([["inbound", 1]]);
-    expect(held.checkins).toEqual({ kind: "not_built" });
+    expect(held.subscriber!.checkinRequest).toBeNull();
+    expect(held.checkins).toEqual({ kind: "rows", rows: [] });
     // Every column and table that holds a subscriber's records is read, S07.06's edit links included: a story that adds one adds it to the lookup
     // (accessRequestStore's LOOKUP_COLUMNS).
     expect(held.unread).toEqual([]);
@@ -441,14 +480,14 @@ describe("the lookup", () => {
     const id = await received();
     await subscribed();
     await signUp(OTHER);
-    // As E08 might add them: the check-in method on the subscriber, and a table of requests that refers to the subscriber; and a column of an edit link.
-    await owner`alter table subscriber add column checkin_method text`;
+    // As a later story might add them: a column on the subscriber, a table of requests that refers to the subscriber, and a column of an edit link.
+    await owner`alter table subscriber add column preferred_name text`;
     await owner`create table checkin_request (id uuid primary key, subscriber_id uuid not null references subscriber (id) on delete cascade)`;
     await owner`alter table subscription_edit_token add column sent_to text`;
 
     const result = await requests().lookUp({ id, number: NUMBER });
     if (!result.ok) throw new Error(result.error);
-    expect(result.value.unread).toEqual(["subscriber.checkin_method", "subscription_edit_token.sent_to", "the table checkin_request (it refers to subscriber)"]);
+    expect(result.value.unread).toEqual(["subscriber.preferred_name", "subscription_edit_token.sent_to", "the table checkin_request (it refers to subscriber)"]);
     // A number with only a pending sign-up holds nothing in either.
     expect(await requests().lookUp({ id, number: OTHER })).toMatchObject({ ok: true, value: { unread: [] } });
 
@@ -464,7 +503,7 @@ describe("the lookup", () => {
     });
     expect(code).toBe(0);
     expect(out.join("\n")).toContain(
-      "NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (subscriber.checkin_method; subscription_edit_token.sent_to; the table checkin_request (it refers to subscriber))",
+      "NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (subscriber.preferred_name; subscription_edit_token.sent_to; the table checkin_request (it refers to subscriber))",
     );
   });
 
@@ -494,16 +533,47 @@ describe("the lookup", () => {
     expect(await owner`select id from subscriber`).toHaveLength(1);
   });
 
-  it("reports a check-in table it cannot read yet, so a request is never answered as complete while one goes unread", async () => {
+  it("reports the check-in table as unreadable where checkins' reader is not wired, so a request is never answered as complete while one goes unread", async () => {
     const id = await received();
     await subscribed();
-    await owner`create table checkin (id uuid primary key, subscriber_id uuid)`;
 
-    const result = await requests().lookUp({ id, number: NUMBER });
+    const result = await requests({ checkinRecords: undefined }).lookUp({ id, number: NUMBER });
     expect(result).toMatchObject({ ok: true, value: { checkins: { kind: "unreadable" } } });
 
-    const wired = await requests({ checkinRecords: { recordsOf: async () => ({ kind: "rows", rows: [{ at: new Date(), description: "heat round, done" }] }) } }).lookUp({ id, number: NUMBER });
-    expect(wired).toMatchObject({ ok: true, value: { checkins: { kind: "rows", rows: [{ description: "heat round, done" }] } } });
+    const wired = await requests().lookUp({ id, number: NUMBER });
+    expect(wired).toMatchObject({ ok: true, value: { checkins: { kind: "rows", rows: [] } } });
+  });
+
+  it("shows S08.05's check-in request, on the subscriber and on a pending sign-up, and the check-in rows that name the subscriber, never a stub", async () => {
+    const id = await received();
+    const subscriberId = await subscribed();
+    await withCheckinRequest("subscriber", subscriberId);
+    const thread = (await world.fx.entry("approved", { types: ["heat"], kind: "update" })).alertId;
+    const closed = (await world.fx.entry("approved", { types: ["power"], kind: "update" })).alertId;
+    await owner`insert into checkin (id, alert_id, subscriber_id, rsn, floor_id, method) values (${randomUUID()}, ${thread}, ${subscriberId}, ${RSN}, ${FLOOR_2}, 'call'),
+                (${randomUUID()}, ${closed}, ${subscriberId}, ${RSN}, ${FLOOR_2}, 'call')`;
+    // A row that has left its round is a stub that names no one: it is not the resident's.
+    await owner`update checkin set outcome = 'withdrawn', tallied_at = now(), subscriber_id = null, method = null, closed_at = now() where alert_id = ${closed}`;
+    await signUp(OTHER);
+    await withCheckinRequest("pending_signup", OTHER);
+
+    const result = await requests().lookUp({ id, number: NUMBER });
+    if (!result.ok) throw new Error(result.error);
+    const request = { method: "call", consentVersion: CHECKIN_CONSENT_VERSION, place: { rsn: RSN, address: "31 Sample Road", floor: "2" } };
+    expect(result.value.subscriber!.checkinRequest).toEqual(request);
+    expect(result.value.checkins).toEqual({
+      kind: "rows",
+      rows: [{ at: expect.any(Date), description: `in the check-in round of alert thread ${thread}, at 31 Sample Road (register number 9100031), floor 2, by a call: not checked on yet` }],
+    });
+    expect(result.value.unread).toEqual([]);
+    const lines = heldRecordLines(result.value).join("\n");
+    expect(lines).toContain(
+      `  Check-in request (an ambassador on the floor sees the number and the floor): by a call, where I live: 31 Sample Road (register number 9100031), floor 2; check-in consent version ${CHECKIN_CONSENT_VERSION}`,
+    );
+    expect(lines).toContain("Check-in records (1):");
+
+    const pending = await requests().lookUp({ id, number: OTHER });
+    expect(pending).toMatchObject({ ok: true, value: { pending: { checkinRequest: request }, checkins: { kind: "rows", rows: [] }, unread: [] } });
   });
 });
 
@@ -512,6 +582,9 @@ describe("the deletion on the resident's behalf", () => {
     const id = await received("deletion");
     const subscriberId = await subscribed();
     await editLink(subscriberId);
+    await withCheckinRequest("subscriber", subscriberId);
+    const round = (await world.fx.entry("approved", { types: ["heat"], kind: "update" })).alertId;
+    await owner`insert into checkin (id, alert_id, subscriber_id, rsn, floor_id, method) values (${randomUUID()}, ${round}, ${subscriberId}, ${RSN}, ${FLOOR_2}, 'call')`;
     await signUp(OTHER);
     // The welcome and the "reply 0 again" prompt are still queued (nothing sends in this test): the deletion stops them.
     const waiting = (await owner`select id from delivery where recipient_kind = 'subscriber' and recipient_id = ${subscriberId} and state = 'queued'`).map((row) => row.id as string);
@@ -527,6 +600,10 @@ describe("the deletion on the resident's behalf", () => {
     expect(await owner`select 1 from sms_prompt`).toHaveLength(0);
     expect(await owner`select 1 from subscription_edit_token`).toHaveLength(0);
     expect(checkinCalls).toEqual([subscriberId]);
+    // checkins' real port closed the resident's check-in row into a stub, tallied once (S08.05).
+    expect(await owner`select subscriber_id, method, outcome, closed_at is not null as closed from checkin where alert_id = ${round}`).toEqual([
+      { subscriber_id: null, method: null, outcome: "withdrawn", closed: true },
+    ]);
     // Every text of the subscriber forgot them (AD-8): none names the deleted id any more.
     expect(await owner`select 1 from delivery where recipient_id = ${subscriberId}`).toHaveLength(0);
     // The other number is untouched.
@@ -568,7 +645,6 @@ describe("the deletion on the resident's behalf", () => {
   it("is refused while a check-in table exists and E08's deletion port is not wired, before deleting or recording anything", async () => {
     const id = await received("deletion");
     await subscribed();
-    await owner`create table checkin (id uuid primary key, subscriber_id uuid)`;
     const before = (await auditRows()).length;
 
     expect(await requests({ checkins: undefined }).deleteForResident({ id, number: NUMBER, admin: staff.admin.username })).toEqual({ ok: false, error: "checkins_not_wired" });
@@ -577,7 +653,7 @@ describe("the deletion on the resident's behalf", () => {
     expect((await auditRows()).length).toBe(before);
     expect((await requests().open()).map((r) => r.id)).toEqual([id]);
 
-    // With the port wired (as E08 will), it runs.
+    // With the port wired (as scripts/access-request wires it, S08.05), it runs.
     expect(await requests().deleteForResident({ id, number: NUMBER, admin: staff.admin.username })).toMatchObject({ ok: true, value: { subscriber: true } });
     expect(checkinCalls).toHaveLength(1);
   });

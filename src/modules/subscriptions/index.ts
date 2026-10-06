@@ -128,6 +128,7 @@ export {
 // one read-only transaction; and the deletion on the resident's behalf, which is the one E07 deletion STOP runs (deletion.ts).
 export {
   ACCESS_REQUEST_SUBJECT,
+  checkinRowRecords,
   checkinTableCheck,
   createAccessRequests,
   type AccessRequestDeps,

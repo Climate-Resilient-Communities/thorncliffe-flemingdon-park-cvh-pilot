@@ -35,12 +35,13 @@ const HELD: HeldRecord = {
     mutedTopics: ["heat"],
     prompt: null,
     editLink: null,
+    checkinRequest: null,
   },
   pending: null,
   replies: [],
   texts: [{ createdAt: new Date("2026-10-01T14:01:00Z"), kind: "transactional", purpose: "welcome", lang: "ur", state: "delivered", segments: 2, resendN: null, providerErrorCode: null }],
   hashes: [],
-  checkins: { kind: "not_built" },
+  checkins: { kind: "rows", rows: [] },
   unread: [],
 };
 

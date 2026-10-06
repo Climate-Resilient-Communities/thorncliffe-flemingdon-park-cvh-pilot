@@ -15,7 +15,33 @@ export interface NewCheckinRow {
   method: CheckinMethod;
 }
 
+/** A row that still names its subscriber, as a resident's access request reads it back (S09.03): never a round_ref, never anyone else. */
+export interface SubscriberCheckinRow {
+  createdAt: Date;
+  alertId: string;
+  rsn: string;
+  floorId: string;
+  method: string;
+  status: string;
+  /** Recorded when the row was tallied (a row kept after a close for the Hub's follow-up, S08.08); null while it is live. */
+  outcome: string | null;
+}
+
 export const checkinStore = {
+  /**
+   * The rows that name the subscriber: live, or kept after a close for the Hub's follow-up (a closed stub names no one), oldest first. Read
+   * without a lock (the access request's read-only lookup).
+   */
+  async subscriberRows(executor: DbExecutor, subscriberId: string): Promise<SubscriberCheckinRow[]> {
+    const rows = await executor
+      .select({ createdAt: checkin.createdAt, alertId: checkin.alertId, rsn: checkin.rsn, floorId: checkin.floorId, method: checkin.method, status: checkin.status, outcome: checkin.outcome })
+      .from(checkin)
+      .where(and(eq(checkin.subscriberId, subscriberId), isNull(checkin.closedAt)))
+      .orderBy(asc(checkin.createdAt), asc(checkin.id));
+    // A row that names its subscriber has its method (`checkin_live_or_stub`).
+    return rows.map((row) => ({ ...row, method: row.method ?? "" }));
+  },
+
   /**
    * The threads of the subscriber's rows that still name them: the live rows only (a withdrawal), or also the rows kept after a close for the
    * Hub's follow-up (`withKept`: a deletion leaves nothing). Read without a lock: the request lock order locks these threads first.
