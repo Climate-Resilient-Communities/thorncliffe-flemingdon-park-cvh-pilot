@@ -12,12 +12,13 @@
 //    so an Admin's floor edit waits until the reply is handled and the floor chosen is still there when it is saved.
 //  - The last step changes the subscriber under its row lock (an edit's FOR NO KEY UPDATE, `lockForEdit`: it waits for an approval capturing
 //    recipients, as S07.07 asks of every edit of a subscriber, while a resend still reads the resident as receiving). Menu 1 first asks
-//    checkins (`locationChanging`, E08's "Changed location", a no-op until S08.05) before it takes that lock, so that E08 can lock in its
-//    own order, then replaces every saved place with the building and floor chosen (no floor: the whole building), sets the neighbourhood
+//    checkins (`locationChanging`, E08's "Changed location", S08.05) before it takes that lock, so that checkins locks in its own order
+//    (E08's "Request lock order": the round threads before the subscriber's row), then replaces every saved place with the building and floor chosen (no floor: the whole building), sets the neighbourhood
 //    to the building's, and confirms. When checkins withdrew the request (S08.05), a second text says so and offers the edit link to ask
 //    again for the new floor ("Reply 1", the link's offer prompt; with no link, the plain withdrawal). Menu 2 sets the language and confirms
 //    in the new language.
-//  - Reply 3 asks checkins to withdraw the request (`withdrawRequest`, E08) and says what happened: "You have no check-in request" until E08.
+//  - Reply 3 asks checkins to withdraw the request (`withdrawRequest`, S08.05) and says what happened: the withdrawal's confirmation, or
+//    "You have no check-in request". The router clears a prompt the reply cancels only after this (the request lock order again).
 //
 // Every reply is a catalog text in the subscriber's language that fits one segment (menuTexts.test.ts renders each, and every real page).
 // Nothing here logs, audits or stores a number or a body: the router's log line names the keyword, the state and the action only.

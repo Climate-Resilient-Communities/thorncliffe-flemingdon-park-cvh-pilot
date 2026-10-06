@@ -389,7 +389,10 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
           const limited = await inbound.limitInbound(tx, clientHash(deps.numberKey(), INBOUND_SCOPE, phone), INBOUND_LIMIT);
           if (limited !== "allowed") return { kind: "handled", keyword, state: state.kind, action: "rate_limited", replied: false };
         }
-        if (cancelPrompt && subscriber) await subscribers.clearPrompt(tx, subscriber.id);
+        // S08.05: reply 3 asks checkins first, which locks the round threads before the subscriber's row (E08 "Request lock order"); the prompt
+        // it cancels is cleared after that, never before, so an approval holding a thread and then the row FOR SHARE cannot deadlock with it.
+        const withdrawFirst = action.kind === "menu" && action.choice === "3";
+        if (cancelPrompt && subscriber && !withdrawFirst) await subscribers.clearPrompt(tx, subscriber.id);
 
         let replied = false;
         // S07.05: the menus act for the subscriber with its number's keyed hash (the daily menu limit is per number); an idle menu's reset
@@ -429,6 +432,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
             break;
           case "menu":
             replied = (await menus.start(tx, menuSubscriber(), action.choice)) || replied;
+            if (cancelPrompt && withdrawFirst) await subscribers.clearPrompt(tx, subscriber!.id);
             break;
           case "menu_reply":
             // The reply's digit is all a menu reads of the body.

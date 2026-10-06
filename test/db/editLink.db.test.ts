@@ -1,7 +1,7 @@
 // The one-time web link against a real database (S07.06), as src/app/subscriptionEdit.ts and src/app/inbound.ts compose it: asked for from the
 // menus' offers (the daily limit's, and a menu closed with nothing changed), made as a hashed token valid 30 minutes and texted as
 // `/{lang}/subscription/{token}`; the page's view (reads only), its change (the link used in the same transaction, a confirmation queued) and
-// its deletion (E07's one deletion, nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; a link
+// its deletion (E07's one deletion, against checkins' real deletion port, S08.05; nothing sent); a refused change uses nothing; an unknown, used or run-out link is `expired`; a link
 // preview's GET of the page (the page module as the server renders it) and two submissions of one link at once through the change route make
 // exactly one change; the change's locks (checkins asked before the subscriber's row is locked, then an edit's lock, under which a resend
 // still finds the resident receiving); the grants and the guard. Every number is fictional (555-01xx) and nothing reaches Twilio.
@@ -16,10 +16,14 @@ import SubscriptionEditPage from "../../src/app/[lang]/subscription/[token]/page
 import { subscriptionChangeResponse, subscriptionViewResponse, type SubscriptionRouteDeps } from "../../src/app/api/subscription/handler";
 import { EDIT_LINK_TTL_MS, type EditChange } from "../../src/contracts/subscriptionEdit";
 import en from "../../src/i18n/messages/en.json";
+import { roundThreads } from "../../src/modules/alerting";
+import { createCheckinRequests } from "../../src/modules/checkins";
+import { createAssignments } from "../../src/modules/identity";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { floorsOfBuilding, listBuildings, neighbourhoodIds } from "../../src/modules/places";
 import {
   MENU_SCOPE,
+  checkinRequestStore,
   createEditLink,
   createInboundRouter,
   createMenus,
@@ -120,7 +124,18 @@ afterAll(async () => {
 
 beforeEach(resetAll);
 
-/** checkins' ports as fakes that record what they were asked (E08 implements them). */
+/** checkins' real ports (S08.05, src/app/checkins.ts): E07's deletion runs against them (the round threads locked first, the rows closed). */
+const realCheckins = () =>
+  createCheckinRequests({
+    requests: checkinRequestStore(),
+    threads: roundThreads,
+    coversFloor: (rsn, floorId, executor) => createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } }).coversFloor(rsn, floorId, executor),
+  });
+
+/**
+ * checkins' ports as the edit link sees them, recording what they were asked: the deletion's are the real ones (test/db/checkinRequest.db.test.ts
+ * has a request's rows closed by them), and the request's are fakes whose answer a test sets (the real ones are tested there as well).
+ */
 const checkins: CheckinRequests & CheckinRequestChanges & CheckinCleanup = {
   ...noCheckinRequestsYet,
   withdrawRequest: async () => "none",
@@ -128,7 +143,11 @@ const checkins: CheckinRequests & CheckinRequestChanges & CheckinCleanup = {
     located.push({ subscriberId, places });
     return withdrawal;
   },
-  deleteForSubscriber: async (subscriberId) => void cleaned.push(subscriberId),
+  lockRounds: (subscriberId, tx) => realCheckins().lockRounds(subscriberId, tx),
+  deleteForSubscriber: async (subscriberId, tx) => {
+    cleaned.push(subscriberId);
+    await realCheckins().deleteForSubscriber(subscriberId, tx);
+  },
 };
 
 /**

@@ -55,11 +55,11 @@ export default async function CheckinPage({ params }: PageProps<"/[lang]/ready/c
           <ResidentText as="h1">{t("R33.title")}</ResidentText>
         </Stack>
 
-        <section className="checkin-consent" aria-labelledby="checkin-page-what" data-testid="checkin-page-what">
+        <section className="checkin-consent" aria-labelledby="checkin-page-what-title" data-testid="checkin-page-what">
           <Stack gap="related">
-            <ResidentText as="h2" testId="checkin-page-what-title">
-              {t("R33.whatTitle")}
-            </ResidentText>
+            <h2 id="checkin-page-what-title" data-testid="checkin-page-what-title">
+              <ResidentText>{t("R33.whatTitle")}</ResidentText>
+            </h2>
             <ResidentText as="p">{t("R33.what")}</ResidentText>
             <ResidentText as="p">{t("checkin.isNot")}</ResidentText>
             <ResidentText as="p" className="checkin-consent__sees">
@@ -77,11 +77,11 @@ export default async function CheckinPage({ params }: PageProps<"/[lang]/ready/c
           <p data-testid="checkin-page-coverage" data-tap-exempt="inline-text">{withIsolated((number) => t("checkin.noCoverage", { hub: number }), hubLink)}</p>
         </Stack>
 
-        <section className="ready-section" aria-labelledby="checkin-page-how" data-testid="checkin-page-how">
+        <section className="ready-section" aria-labelledby="checkin-page-how-title" data-testid="checkin-page-how">
           <Stack gap="related">
-            <ResidentText as="h2" testId="checkin-page-how-title">
-              {t("checkin.howTitle")}
-            </ResidentText>
+            <h2 id="checkin-page-how-title" data-testid="checkin-page-how-title">
+              <ResidentText>{t("checkin.howTitle")}</ResidentText>
+            </h2>
             <ResidentText as="p">{t("checkin.howNew")}</ResidentText>
             <div>
               <Link href={`/${lang}/text-alerts`} prefetch={false} className="ready-btn ready-btn--primary tap" data-testid="checkin-page-signup">
