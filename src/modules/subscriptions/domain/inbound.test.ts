@@ -147,3 +147,40 @@ describe("the inbound limit (S07.09, E07 'Inbound order': opt-out events and del
     expect(exemptFromInboundLimit("0", decide("0", { kind: "none" }).action)).toBe(false);
   });
 });
+
+describe("the decision table's re-consent rows (S09.07: a test for every keyword from a subscriber asked to re-consent, and from one past the deadline)", () => {
+  const states: { name: string; state: NumberState }[] = [
+    { name: "asked", state: { kind: "active", prompt: "none", reconsent: true } },
+    { name: "asked, delete prompt open", state: { kind: "active", prompt: "delete_confirm", reconsent: true } },
+    { name: "lapsed", state: { kind: "lapsed" } },
+  ];
+  // [keyword, state name] -> [action, prompt cancelled]
+  const table: Record<InboundKeyword, Record<string, [string, boolean]>> = {
+    stop: { asked: ["delete", false], "asked, delete prompt open": ["delete", false], lapsed: ["delete", false] },
+    start: { asked: ["none", false], "asked, delete prompt open": ["none", false], lapsed: ["none", false] },
+    help: { asked: ["none", false], "asked, delete prompt open": ["none", false], lapsed: ["none", false] },
+    yes: { asked: ["reconsent", false], "asked, delete prompt open": ["reconsent", true], lapsed: ["pilot_ended", false] },
+    "0": { asked: ["ask_delete", false], "asked, delete prompt open": ["delete", false], lapsed: ["none", false] },
+    "1": { asked: ["menu", false], "asked, delete prompt open": ["menu", true], lapsed: ["none", false] },
+    "2": { asked: ["menu", false], "asked, delete prompt open": ["menu", true], lapsed: ["none", false] },
+    "3": { asked: ["menu", false], "asked, delete prompt open": ["menu", true], lapsed: ["none", false] },
+    other: { asked: ["none", false], "asked, delete prompt open": ["none", true], lapsed: ["none", false] },
+  };
+
+  for (const keyword of INBOUND_KEYWORDS) {
+    for (const { name, state } of states) {
+      it(`${keyword} from a subscriber who is ${name}: ${table[keyword][name]![0]}${table[keyword][name]![1] ? ", and the prompt is cancelled" : ""}`, () => {
+        const [action, cancelled] = table[keyword][name]!;
+        const decision = decide(keyword, state);
+        expect(decision.action.kind).toBe(action);
+        expect(decision.cancelPrompt).toBe(cancelled);
+      });
+    }
+  }
+
+  it("limits a YES to the campaign like any YES; a lapsed subscriber's STOP never", () => {
+    expect(exemptFromInboundLimit("yes", decide("yes", { kind: "active", prompt: "none", reconsent: true }).action)).toBe(false);
+    expect(exemptFromInboundLimit("yes", decide("yes", { kind: "lapsed" }).action)).toBe(false);
+    expect(exemptFromInboundLimit("stop", decide("stop", { kind: "lapsed" }).action)).toBe(true);
+  });
+});

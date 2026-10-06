@@ -36,6 +36,14 @@ export const RESIDENT_TEXT_KEYS = {
   signupInfo: "smsTexts.signupInfo",
   /** S07.04: the words for yes a resident may reply with besides YES and Y, comma-separated (not a text that is sent). */
   yesWords: "smsKeywords.yes",
+  /** S09.07: the end-of-pilot campaign text ({date} is the deadline), frozen in the campaign when it starts. */
+  reconsent: "smsTexts.reconsent",
+  /** S09.07: YES to the campaign before the deadline: the subscriber stays. */
+  reconsentKept: "smsTexts.reconsentKept",
+  /** S09.07: YES after the deadline, through `inbound_reply`: "The CVH pilot has ended; your number was not kept." */
+  pilotEnded: "smsTexts.pilotEnded",
+  /** S09.07: what a number with no subscription is told, through `inbound_reply`, while sign-ups are paused (instead of the sign-up link). */
+  signupsPaused: "smsTexts.signupsPaused",
 } as const;
 
 export type ResidentTextName = keyof typeof RESIDENT_TEXT_KEYS;

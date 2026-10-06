@@ -1525,4 +1525,8 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. AI-generated (Claude), not yet checked by native readers: the campaign text is reviewed before the pilot ends. */
+  m(t, {"smsTexts": {"reconsent": "El proyecto piloto CVH termina. Responda YES para seguir recibiendo alertas. Si no responde antes del {date}, borraremos sus datos.", "reconsentKept": "Gracias. Seguirá recibiendo las alertas de CVH.", "pilotEnded": "El proyecto piloto CVH terminó; no se guardó su número.", "signupsPaused": "Las inscripciones a CVH están en pausa mientras termina el piloto."}, "signup": {"error": {"signups_paused": "Las inscripciones están en pausa mientras termina el proyecto piloto."}}});
 })();

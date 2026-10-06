@@ -931,28 +931,7 @@ describe("campaign deliveries", () => {
   };
   const message = /needs a campaign started by an Admin at aal2/;
 
-  /**
-   * Stands in for S09.07, which replaces delivery_campaign_started_by_admin() with a read of the campaign row: in one owner
-   * transaction that is always rolled back, the function answers true, so the rest of the campaign rules can be tried.
-   */
-  async function asIfCampaignStarted<T>(run: (tx: Tx) => PromiseLike<T>): Promise<T> {
-    const rolledBack = "rolled back on purpose";
-    let result: T | undefined;
-    try {
-      await owner.begin(async (tx) => {
-        await tx.unsafe(
-          "create or replace function public.delivery_campaign_started_by_admin(p_campaign_id uuid) returns boolean language sql stable set search_path = '' as $$ select true $$",
-        );
-        result = await run(tx);
-        throw new Error(rolledBack);
-      });
-    } catch (error) {
-      if (!(error instanceof Error) || error.message !== rolledBack) throw error;
-    }
-    return result as T;
-  }
-
-  it("are all refused until S09.07 creates campaigns: nothing the caller states makes a campaign started", async () => {
+  it("are refused for a campaign that does not exist: nothing the caller states makes a campaign started", async () => {
     const admin = await fx.staff("admin");
     const campaignId = randomUUID();
     expect(await refusal(() => asApp((tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
@@ -972,7 +951,7 @@ describe("campaign deliveries", () => {
     expect(await count()).toBe(0);
   });
 
-  it("are refused by a function that answers false for any campaign: the one S09.07 replaces with a read of the campaign row", async () => {
+  it("are refused by the function that reads the campaign row (S09.07): false for a campaign that does not exist, and for none", async () => {
     const [answers] = await appSql`select public.delivery_campaign_started_by_admin(${randomUUID()}::uuid) as started, public.delivery_campaign_started_by_admin(null) as nothing`;
     expect(answers).toEqual({ started: false, nothing: false });
   });
@@ -985,27 +964,8 @@ describe("campaign deliveries", () => {
     expect(await count()).toBe(0);
   });
 
-  it("go to a subscriber and to no other kind of recipient, once a campaign is started", async () => {
-    const campaignId = randomUUID();
-    for (const kind of RECIPIENT_KINDS) {
-      const attempt = () => asIfCampaignStarted((tx) => insertRow(tx, campaignRow(campaignId, { recipient_kind: kind })));
-      if (kind === "subscriber") await expect(attempt(), kind).resolves.toMatchObject({ kind: "campaign", state: "queued", recipient_kind: "subscriber" });
-      else expect(await refusal(attempt), kind).toMatch(/delivery_kind_shape/);
-    }
-    expect(await count()).toBe(0);
-  });
-
-  it("keep the shape and the key of their kind once a campaign is started: a campaign, a purpose, the subscriptions module, no entry, no phone number", async () => {
-    const campaignId = randomUUID();
-    const refused = (over: Row) => refusal(() => asIfCampaignStarted((tx) => insertRow(tx, campaignRow(campaignId, over))));
-    expect(await refused({ campaign_id: null })).toMatch(/delivery_kind_shape/);
-    expect(await refused({ purpose: null, idempotency_key: `campaign:${campaignId}:x:y` })).toMatch(/delivery_kind_shape|kind:subject:purpose:nonce/);
-    expect(await refused({ created_by_module: "ops" })).toMatch(/delivery_kind_shape/);
-    expect(await refused({ idempotency_key: `${campaignId}:${randomUUID()}:sms` })).toMatch(/kind:subject:purpose:nonce/);
-    expect(await refused({ idempotency_key: `campaign:${campaignId}:reconsent:4165550123` })).toMatch(/no part of a key is a phone number/);
-    expect(await refused({ entry_id: (await fx.entry("pending_approval")).entryId })).toMatch(/delivery_kind_shape/);
-    expect(await count()).toBe(0);
-  });
+  // A campaign that exists (S09.07): who started it, at which level, its frozen text, the key, the shape, the recipient and the rehearsal are
+  // test/db/campaign.db.test.ts's.
 });
 
 // --- a deleted recipient -------------------------------------------------------------------------------

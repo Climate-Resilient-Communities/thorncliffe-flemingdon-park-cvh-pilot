@@ -152,10 +152,12 @@ describe("a campaign delivery", () => {
     expect(campaignRefusal({ ...ok, recipient: { kind: "stranger", id: ID } })).toBe("RECIPIENT_NOT_ALLOWED");
   });
 
-  it("goes to a subscriber and to no other kind of recipient (the definitions' sendable rule, and the table's check)", () => {
-    expect(CAMPAIGN_RECIPIENT_KINDS).toEqual(["subscriber"]);
+  it("goes to a subscriber, or to a drill-roster member for a rehearsal (S09.07), and to no other kind of recipient (the table's check)", () => {
+    expect(CAMPAIGN_RECIPIENT_KINDS).toEqual(["subscriber", "roster"]);
     const ok = { purpose: "reconsent", recipient: { kind: "subscriber", id: ID }, campaignId: OTHER };
-    for (const kind of RECIPIENT_KINDS) expect(campaignRefusal({ ...ok, recipient: { kind, id: ID } }), kind).toBe(kind === "subscriber" ? null : "RECIPIENT_NOT_ALLOWED");
+    for (const kind of RECIPIENT_KINDS) {
+      expect(campaignRefusal({ ...ok, recipient: { kind, id: ID } }), kind).toBe(kind === "subscriber" || kind === "roster" ? null : "RECIPIENT_NOT_ALLOWED");
+    }
   });
 });
 

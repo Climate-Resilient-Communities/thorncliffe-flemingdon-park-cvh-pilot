@@ -70,11 +70,17 @@ export function readKeyword(input: { body: string; optOutType: string | null; ye
 /** The prompt a subscriber can have open in S07.04 (S07.05 adds the menus' steps). An expired prompt is no prompt. */
 export type OpenPrompt = "none" | "delete_confirm";
 
-/** The number's state, as the router reads it under the number's lock. A pending sign-up past its `expires_at` is `none` (S07.02 handoff). */
-export type NumberState = { kind: "none" } | { kind: "pending" } | { kind: "active"; prompt: OpenPrompt };
+/**
+ * The number's state, as the router reads it under the number's lock. A pending sign-up past its `expires_at` is `none` (S07.02 handoff).
+ * S09.07: an `active` state carries `reconsent` while the subscriber is asked to re-consent and the campaign's deadline has not passed (their re-consent
+ * prompt is open); `lapsed` is a subscriber who was asked and did not reply by the deadline (they receive nothing until S09.08's purge deletes them).
+ */
+export type NumberState = { kind: "none" } | { kind: "pending" } | { kind: "active"; prompt: OpenPrompt; reconsent?: true } | { kind: "lapsed" };
 
 /**
  * What the router does (E07 "Decision table"):
+ *  - `reconsent` (S09.07): YES resolves to the re-consent prompt: the subscriber stays (`retained`) and is told so;
+ *  - `pilot_ended` (S09.07): YES after the deadline: "The CVH pilot has ended; your number was not kept", through `inbound_reply`;
  *  - `delete`: delete everything held for the number, and send nothing (STOP; the second 0);
  *  - `none`: change nothing and send nothing;
  *  - `confirm`: the pending sign-up becomes a subscriber, and the welcome text is queued;
@@ -84,6 +90,8 @@ export type NumberState = { kind: "none" } | { kind: "pending" } | { kind: "acti
  *  - `signup_info`: the sign-up link, at most once a day per number, through `inbound_reply`.
  */
 export type InboundAction =
+  | { kind: "reconsent" }
+  | { kind: "pilot_ended" }
   | { kind: "delete" }
   | { kind: "none" }
   | { kind: "confirm" }
@@ -108,6 +116,9 @@ export function decide(keyword: InboundKeyword, state: NumberState): Decision {
   if (keyword === "start" || keyword === "help") return keep({ kind: "none" });
 
   switch (state.kind) {
+    case "lapsed":
+      // S09.07: asked to re-consent and past the deadline: nothing is sent to them any more but the answer to YES (through `inbound_reply`).
+      return keep(keyword === "yes" ? { kind: "pilot_ended" } : { kind: "none" });
     case "none":
       // YES with no pending sign-up (or after it expired), and anything else from a number the CVH does not know: the sign-up link.
       return keep({ kind: "signup_info" });
@@ -117,6 +128,8 @@ export function decide(keyword: InboundKeyword, state: NumberState): Decision {
     case "active": {
       const open = state.prompt !== "none";
       if (keyword === "0") return state.prompt === "delete_confirm" ? keep({ kind: "delete" }) : { action: { kind: "ask_delete" }, cancelPrompt: open };
+      // S09.07: YES from a subscriber asked to re-consent, before the deadline, resolves to the re-consent prompt (it cancels a later prompt, as any reply does).
+      if (keyword === "yes" && state.reconsent) return { action: { kind: "reconsent" }, cancelPrompt: open };
       if (keyword === "yes") return { action: { kind: "already_signed_up" }, cancelPrompt: open };
       if (keyword === "1" || keyword === "2" || keyword === "3") return { action: { kind: "menu", choice: keyword }, cancelPrompt: open };
       return { action: { kind: "none" }, cancelPrompt: open };

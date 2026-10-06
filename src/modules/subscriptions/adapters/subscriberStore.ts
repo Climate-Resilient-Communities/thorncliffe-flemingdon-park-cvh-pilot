@@ -1,11 +1,15 @@
 // The statements of subscribers and their prompts (S07.04). Every one runs in the caller's transaction. The number is selected only by
 // `phoneOf` (the ContactResolver's source, at the hand-off point); the router and the web sign-up find a subscriber by number and read back
 // its id, language and prompt, never the number.
-import { and, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
+import { receivingSql } from "./campaignStore";
 import { smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout } from "./schema";
 
-/** The retention states that receive texts (E07 "Matching subscribers"; E09 adds the re-consent deadline to `reconsent_pending`). */
+/**
+ * The retention states that can receive texts (E07 "Matching subscribers"). Which of them do now is `receivingSql` (campaignStore.ts, S09.07): a
+ * `reconsent_pending` subscriber receives only until the campaign's deadline. Every query that selects receiving subscribers uses that one condition.
+ */
 export const RECEIVING_STATES = ["active", "reconsent_pending", "retained"] as const;
 
 /** A subscriber as the router reads it: no number. */
@@ -83,7 +87,7 @@ export const subscriberStore = {
     const [row] = await tx
       .select({ phone: subscriber.phone })
       .from(subscriber)
-      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])));
+      .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)));
     return row?.phone ?? null;
   },
 
@@ -96,7 +100,7 @@ export const subscriberStore = {
     const rows = await tx
       .select({ id: subscriber.id })
       .from(subscriber)
-      .where(and(eq(subscriber.id, id), inArray(subscriber.retentionState, [...RECEIVING_STATES])))
+      .where(and(eq(subscriber.id, id), receivingSql(subscriber.retentionState)))
       .for("key share", { skipLocked: true });
     return rows.length > 0;
   },

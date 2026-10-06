@@ -1525,4 +1525,8 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. AI-generated (Claude), not yet checked by native readers: the campaign text is reviewed before the pilot ends. */
+  m(t, {"smsTexts": {"reconsent": "CVH पायलट खत्म: अलर्ट के लिए {date} तक YES भेजें, वरना नंबर हटेगा।", "reconsentKept": "धन्यवाद। आपको CVH अलर्ट मिलते रहेंगे।", "pilotEnded": "CVH पायलट खत्म हो गया; आपका नंबर नहीं रखा गया।", "signupsPaused": "पायलट खत्म होने तक CVH टेक्स्ट साइन अप बंद हैं।"}, "signup": {"error": {"signups_paused": "पायलट खत्म होने तक साइन अप बंद हैं।"}}});
 })();
