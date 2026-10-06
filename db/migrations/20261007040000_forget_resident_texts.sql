@@ -90,7 +90,7 @@ begin
     new.updated_at := now();
     return new;
   end if;
-  -- A resident's text forgotten before its body was (before 20261007010000): its body is replaced by the placeholder, and nothing else changes.
+  -- A resident's text forgotten before its body was (before 20261007040000): its body is replaced by the placeholder, and nothing else changes.
   if old.recipient_id is null and old.idempotency_key = 'detached:' || old.id::text and personal and new.body = '[deleted]' and old.body <> '[deleted]' then
     if (to_jsonb(new) - 'updated_at' - 'body') is distinct from (to_jsonb(old) - 'updated_at' - 'body') then
       raise exception 'delivery: forgetting a recipient changes nothing else' using errcode = 'check_violation';

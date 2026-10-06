@@ -141,7 +141,7 @@ async function asApp<T>(run: (tx: Tx) => PromiseLike<T>, approving?: string): Pr
   }) as Promise<T>;
 }
 
-/** What a deleted resident's own text says once they are deleted (20261007010000_forget_resident_texts.sql). */
+/** What a deleted resident's own text says once they are deleted (20261007040000_forget_resident_texts.sql). */
 const FORGOTTEN_BODY = "[deleted]";
 
 /** A row without what forgetting a recipient changes (its link, its key and the update time). */
