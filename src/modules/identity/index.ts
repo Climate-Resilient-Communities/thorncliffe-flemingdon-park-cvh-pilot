@@ -215,7 +215,7 @@ export {
   type PolicyEntry,
   type PolicyRule,
 } from "./domain/policy";
-export { readStaffByUsername, readStaffName, readStaffStanding, type StaffStanding } from "./adapters/standing";
+export { isOnDutyAdmin, readOnDutyCandidates, readStaffByUsername, readStaffName, readStaffStanding, type StaffStanding } from "./adapters/standing";
 export { MIN_USABLE_ADMINS } from "./domain/adminFloor";
 export { bootstrapPhase, type BootstrapPhase, type BootstrapState, type StaffIntent } from "./domain/bootstrap";
 export { STAFF_LOGIN_DOMAIN, loginForUsername, type NewAccountInput } from "./domain/newAccount";

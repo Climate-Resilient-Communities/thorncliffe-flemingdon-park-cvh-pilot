@@ -1,7 +1,7 @@
 import { englishText } from "@/i18n/text";
 import type { OncallRefusal, OncallRoster } from "@/modules/ops";
 import type { StaffSession } from "../session";
-import { addedLine, removedLine, skippedLine } from "./view";
+import { addedLine, onDutyDoneLine, removedLine, skippedLine } from "./view";
 
 /**
  * What a press answers. Every text is already resolved from the catalog and none holds a number: a refusal is a code turned into words, and
@@ -48,6 +48,33 @@ export async function removeFromForm(deps: ControlDeps, session: Pick<StaffSessi
     return { status: "done", lines: [removedLine(outcome.label, outcome.size), ...(skipped ? [skipped] : [])] };
   } catch (error) {
     deps.logError("oncall.remove_failed", { error: nameOfError(error) });
+    return { status: "refused", message: t("errors.failed") };
+  }
+}
+
+/**
+ * "Set on duty" (S08.08): the roster entry and the Admin account come from the form, the actor from the session. The use case checks, under the roster's
+ * lock, that the account is an active Admin with an authenticator, and audits the change without the number.
+ */
+export async function setOnDutyFromForm(deps: ControlDeps, session: Pick<StaffSession, "staffId">, form: FormData): Promise<OncallAnswer> {
+  try {
+    const outcome = await deps.roster().setOnDuty({ actorStaffId: session.staffId, id: form.get("id"), staffId: form.get("staff_id") });
+    if (outcome.kind === "refused") return { status: "refused", message: refusalMessage(outcome.problem) };
+    return { status: "done", lines: [onDutyDoneLine("set", outcome.label)] };
+  } catch (error) {
+    deps.logError("oncall.on_duty_failed", { error: nameOfError(error) });
+    return { status: "refused", message: t("errors.failed") };
+  }
+}
+
+/** "Nobody on duty" (S08.08): the on-duty entry goes back to being an on-call number; escalations then go to every number. */
+export async function clearOnDutyFromForm(deps: ControlDeps, session: Pick<StaffSession, "staffId">): Promise<OncallAnswer> {
+  try {
+    const outcome = await deps.roster().clearOnDuty({ actorStaffId: session.staffId });
+    if (outcome.kind === "refused") return { status: "refused", message: refusalMessage(outcome.problem) };
+    return { status: "done", lines: [onDutyDoneLine("cleared", outcome.label)] };
+  } catch (error) {
+    deps.logError("oncall.on_duty_failed", { error: nameOfError(error) });
     return { status: "refused", message: t("errors.failed") };
   }
 }

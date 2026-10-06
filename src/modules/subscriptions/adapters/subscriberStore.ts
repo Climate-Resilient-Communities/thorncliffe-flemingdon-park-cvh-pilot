@@ -2,7 +2,8 @@
 // their page in the prompt's step). Every one runs in the caller's transaction. The number is selected only by
 // `phoneOf` (the ContactResolver's source, at the hand-off point, and S07.06's deletion, which deletes by number); the router and the web
 // sign-up find a subscriber by number and read back its id, language and prompt, never the number; S07.06's edit page reads its last two
-// digits only; S08.07's round page reads the numbers of the requesters in a round (`checkinContactsOf`).
+// digits only; S08.07's round page reads the numbers of the requesters in a round (`checkinContactsOf`); S08.08's escalation page reads the number of
+// the subscriber an escalation's row still names, for an Admin (`escalationNumberOf`).
 import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { receivingSql } from "./campaignStore";
@@ -116,6 +117,12 @@ export const subscriberStore = {
   async delete(tx: DbTransaction, id: string): Promise<boolean> {
     const deleted = await tx.delete(subscriber).where(eq(subscriber.id, id)).returning({ id: subscriber.id });
     return deleted.length > 0;
+  },
+
+  /** S08.08: the number of a subscriber an escalation's check-in row still names, for the Admin following it up; null when the subscriber is gone. */
+  async escalationNumberOf(executor: DbExecutor, id: string): Promise<string | null> {
+    const [row] = await executor.select({ phone: subscriber.phone }).from(subscriber).where(eq(subscriber.id, id));
+    return row?.phone ?? null;
   },
 
   /** The number of a receiving subscriber, for the resolver's source only; null when the subscriber is gone or does not receive texts. */

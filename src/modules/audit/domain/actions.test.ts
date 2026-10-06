@@ -650,6 +650,38 @@ describe("checkin.marked (S08.07)", () => {
   });
 });
 
+describe("checkin.escalation_handled and the on-duty Admin (S08.08)", () => {
+  const ESCALATION = "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d";
+  const ADMIN = "0b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6e";
+  const handled = (meta: Record<string, unknown>) => event({ action: "checkin.escalation_handled", subjectType: "checkin_escalation", subjectId: ESCALATION, meta } as Partial<AuditEvent>);
+
+  it("records the handling's status, whether it was late and whether the kept row closed, never the note or a number", () => {
+    expect(toAuditRecord(handled({ status: "needs_help", late: false, row_closed: true }), "ok")).toMatchObject({
+      action: "checkin.escalation_handled",
+      subjectType: "checkin_escalation",
+      subjectId: ESCALATION,
+      outcome: "ok",
+      meta: { status: "needs_help", late: false, row_closed: true },
+    });
+    expect(() => toAuditRecord(handled({ status: "needs_help", late: false }), "ok")).toThrow("meta is missing row_closed");
+    expect(() => toAuditRecord(handled({ status: "done", late: false, row_closed: false }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(handled({ status: "not_reached", late: false, row_closed: false, note: "Called her back" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(handled({ status: "not_reached", late: false, row_closed: false, phone: "+14165550181" }), "ok")).toThrow(AuditRecordError);
+    for (const reason of ["validation", "not_found", "conflict", "forbidden"]) {
+      expect(toAuditRecord(event({ action: "checkin.escalation_handled", subjectType: "checkin_escalation", subjectId: ESCALATION, meta: { reason } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason });
+    }
+  });
+
+  it("records the on-duty entry with the Admin account it belongs to, and its end with nothing more", () => {
+    const set = (meta: Record<string, unknown>) => event({ action: "oncall.on_duty_set", subjectType: "oncall_roster", subjectId: ESCALATION, meta } as Partial<AuditEvent>);
+    expect(toAuditRecord(set({ staff_id: ADMIN }), "ok").meta).toEqual({ staff_id: ADMIN });
+    expect(() => toAuditRecord(set({}), "ok")).toThrow("meta is missing staff_id");
+    expect(() => toAuditRecord(set({ staff_id: ADMIN, phone: "+14165550181" }), "ok")).toThrow(AuditRecordError);
+    expect(toAuditRecord(event({ action: "oncall.on_duty_cleared", subjectType: "oncall_roster", subjectId: ESCALATION } as Partial<AuditEvent>), "ok").meta).toEqual({});
+    expect(() => toAuditRecord(event({ action: "oncall.on_duty_cleared", subjectType: "oncall_roster", subjectId: ESCALATION, meta: { label: "IT lead" } } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+  });
+});
+
 describe("delivery.resent (S09.02)", () => {
   const resent = (meta: Record<string, unknown>) =>
     event({ action: "delivery.resent", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);

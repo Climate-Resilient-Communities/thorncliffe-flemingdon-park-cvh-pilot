@@ -88,8 +88,9 @@ describe("the table and its lock-down", () => {
            (values ('select'), ('insert'), ('update'), ('delete'), ('truncate')) as p(privilege)`;
     const allowed = privileges.filter((row) => row.allowed).map((row) => `${row.role}:${row.privilege}`);
     expect(allowed.sort()).toEqual(["cvh_app:delete", "cvh_app:insert", "cvh_app:select"]);
-    const columns = await owner`select count(*)::int as n from information_schema.column_privileges where table_name = 'oncall_roster' and privilege_type = 'UPDATE' and grantee in ('cvh_app', 'anon', 'authenticated', 'service_role')`;
-    expect(columns[0].n).toBe(0);
+    // S08.08: the app may change an entry's role and account (the on-duty Admin), never its label or number.
+    const columns = await owner`select grantee, column_name from information_schema.column_privileges where table_name = 'oncall_roster' and privilege_type = 'UPDATE' and grantee in ('cvh_app', 'anon', 'authenticated', 'service_role') order by column_name`;
+    expect(columns.map((row) => `${row.grantee}:${row.column_name}`)).toEqual(["cvh_app:role", "cvh_app:staff_id"]);
   });
 
   it("has row level security on, and policies for the app's role only", async () => {
@@ -99,6 +100,7 @@ describe("the table and its lock-down", () => {
       ["DELETE", "{cvh_app}"],
       ["INSERT", "{cvh_app}"],
       ["SELECT", "{cvh_app}"],
+      ["UPDATE", "{cvh_app}"],
     ]);
   });
 
@@ -119,7 +121,8 @@ describe("the table and its lock-down", () => {
 
   it("is in the ownership table as ops' (the spine) and carries the delivery trigger that detaches a deleted entry's texts", async () => {
     const triggers = await owner`select tgname from pg_trigger where tgrelid = 'oncall_roster'::regclass and not tgisinternal`;
-    expect(triggers).toEqual([{ tgname: "oncall_roster_forget_deliveries" }]);
+    // S08.08: and the guard that keeps an entry's label and number as written and an on-duty entry an active Admin's with an authenticator.
+    expect(triggers.map((row) => row.tgname).sort()).toEqual(["oncall_roster_forget_deliveries", "oncall_roster_guard"]);
   });
 });
 
@@ -137,7 +140,7 @@ describe("an Admin's 'Add number'", () => {
     const everything = JSON.stringify(await owner`select * from audit_event where id > ${auditBaseline}`);
     expect(everything).not.toContain(DIGITS(NUMBERS[0]));
     expect(everything).not.toContain("IT lead");
-    expect(await roster.list()).toEqual([{ id: (outcome as { id: string }).id, label: "IT lead", masked: "+1 ••• ••• 0123", createdAt: expect.any(Date) }]);
+    expect(await roster.list()).toEqual([{ id: (outcome as { id: string }).id, label: "IT lead", masked: "+1 ••• ••• 0123", createdAt: expect.any(Date), onDuty: false, staffId: null }]);
     expect(JSON.stringify(await roster.list())).not.toContain("416");
   });
 

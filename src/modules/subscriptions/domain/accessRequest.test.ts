@@ -282,6 +282,16 @@ describe("heldRecordLines", () => {
     expect(checkinRowWords({ alertId: thread, method: "text", status: "not_reached", outcome: "not_reached" }, at)).toBe(
       `in the check-in round of alert thread ${thread}, at 11 Sample Road (register number 9100011), floor 2, by a text: not reached; the round has closed and the row is kept for the Hub's follow-up`,
     );
+    // S08.08: the row's escalations, what the Hub was told and how it followed up (the Admin's note read back as it is).
+    const escalations = [
+      { status: "not_reached", createdAt: new Date("2026-10-06T13:05:00Z"), handledAt: new Date("2026-10-06T13:40:00Z"), handledNote: "Called her back, she is fine." },
+      { status: "needs_help", createdAt: new Date("2026-10-06T14:00:00Z"), handledAt: null, handledNote: null },
+    ];
+    expect(checkinRowWords({ alertId: thread, method: "call", status: "needs_help", outcome: "needs_help", escalations }, at)).toBe(
+      `in the check-in round of alert thread ${thread}, at 11 Sample Road (register number 9100011), floor 2, by a call: needs help; the round has closed and the row is kept for the Hub's follow-up` +
+        `; the Hub was told "not reached" 2026-10-06 09:05, handled 2026-10-06 09:40, the Hub's note: "Called her back, she is fine."` +
+        `; the Hub was told "needs help" 2026-10-06 10:00, not handled yet`,
+    );
     const lines = heldRecordLines({ ...NOTHING, checkins: { kind: "rows", rows: [{ at: new Date("2026-10-06T13:00:00Z"), description: "in the check-in round" }] } });
     expect(lines).toContain("Check-in records (1):");
     expect(lines).toContain("  2026-10-06 09:00  in the check-in round");

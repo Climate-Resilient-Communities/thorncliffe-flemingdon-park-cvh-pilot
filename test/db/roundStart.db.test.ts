@@ -391,7 +391,9 @@ describe("an approved acknowledgement, update or correction of a round type star
     await freeze(finalRef, "final", null);
     await approve(finalRef);
     expect((await owner`select status from alert where id = ${heat.alertId}`)[0]).toEqual({ status: "closed" });
-    expect(await subscribersIn(heat.alertId)).toEqual([onA1]);
+    // S08.08: the close tallies the round in the final's approval: the one row it had (unmarked) is now a closed stub, and none was added.
+    expect(await rowsOf(heat.alertId)).toMatchObject([{ subscriber_id: null }]);
+    expect(await tallyOf(heat.alertId)).toEqual({ [`${RSN_A}/${A1}/requested`]: 1, [`${RSN_A}/${A1}/unmarked`]: 1 });
     expect(await liveRowsOf(since)).toHaveLength(0);
   });
 

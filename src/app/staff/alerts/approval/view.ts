@@ -137,6 +137,11 @@ export interface ApprovalScreen {
    */
   capNotice?: string | null;
   /**
+   * S08.08: "Nobody is on duty for check-ins ..." when approving this entry starts or adds to a check-in round and no on-duty Admin is set (its escalations
+   * then go to every on-call number), shown before the approver decides. It informs and never changes or refuses the approval. Absent or null otherwise.
+   */
+  onDutyNotice?: string | null;
+  /**
    * Set for a pending post that residents already read on the web, marked "Not yet verified" (D-1, S08.03): the approver is told so, its texts go out only on approval,
    * and it cannot be returned to its author (a web-published entry never returns to draft). Null for every other entry.
    */
@@ -206,6 +211,8 @@ export interface ApprovalInput {
   pauseNotice?: string | null;
   /** The sentence about the monthly spending cap when this entry would pass it (`capNoticeFor`, S07.08); null or left out when it would not. */
   capNotice?: string | null;
+  /** The sentence when this entry starts or adds to a round while nobody is on duty for check-ins (`onDutyNoticeFor`, S08.08); null or left out otherwise. */
+  onDutyNotice?: string | null;
   /** Whether residents are shown alerts at all (`residentAlertsEnabled()`): the launch switch. Left out, it is on. */
   residentAlertsEnabled?: boolean;
   /** The sending progress of an approved entry (`sendingBlock()`, S06.09); left out, none is shown. */
@@ -472,6 +479,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     pauseNotice: input.pauseNotice && (!locked || entry.status === "approved") ? input.pauseNotice : null,
     // The cap is told before the decision, to the approver deciding: not on an entry that is not waiting for them.
     capNotice: input.capNotice && !locked && entry.status === "pending_approval" ? input.capNotice : null,
+    // Nobody on duty for check-ins (S08.08): told to the approver deciding, as the cap is.
+    onDutyNotice: input.onDutyNotice && !locked && entry.status === "pending_approval" ? input.onDutyNotice : null,
     header: {
       types: entry.content.types.map(typeName).join(", "),
       submitted: entry.submittedAt ? t("submitted", { time: formatTorontoDateTime(entry.submittedAt), version: entry.version }) : "",

@@ -19,7 +19,9 @@ import { needsAuthenticator } from "./setupGate";
  * `buildings.manage` (rename, add and remove floors, confirm a building); each story
  * that adds one of the others names it on its route or action. `provider.manage` (S02.04) is
  * publishing a provider and confirming it. `checkins.round_types` (S08.06) is changing which types
- * of disruption start a check-in round ("editable by an Admin at aal2").
+ * of disruption start a check-in round ("editable by an Admin at aal2"). `checkins.follow_up`
+ * (S08.08) is seeing a resident's number on an escalation and marking it handled: the escalation's
+ * page shows the number only to an Admin whose session is at aal2, and its action asks the same.
  */
 export const PRIVILEGED_ACTIONS = [
   "accounts.manage",
@@ -37,6 +39,7 @@ export const PRIVILEGED_ACTIONS = [
   "delivery.resend",
   "campaign.run",
   "checkins.round_types",
+  "checkins.follow_up",
 ] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];

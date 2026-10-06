@@ -88,6 +88,20 @@ export const AUTHORITY_MATRIX = [
     rules: { ambassador: "assigned_floor", coordinator: "no", director: "no", admin: "yes" },
   },
   {
+    // S08.08: the Hub's list of escalations (O-17) and an escalation's page: the building, floor, status, time and ambassador, never the resident's details.
+    // The Hub follows up, so the roles that see counts see it (a Director read-only); an Ambassador hears from their own round page instead.
+    row: "See escalations (building, floor, ambassador; no resident details)",
+    actions: ["checkins.escalations"],
+    rules: { ambassador: "no", coordinator: "yes", director: "read_only", admin: "yes" },
+  },
+  {
+    // S08.08: the resident's number, floor and method on an escalation, and marking it handled with a note (E08 "Escalation": "Admins only"); privileged,
+    // so it runs at aal2 like every Admin action that reaches personal data.
+    row: "Follow up an escalation: the resident's number, floor and method, and mark it handled",
+    actions: ["checkins.follow_up"],
+    rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
+  },
+  {
     row: "See counts and coverage",
     actions: ["coverage.view"],
     rules: { ambassador: "no", coordinator: "yes", director: "read_only", admin: "yes" },

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { approvalScreen, countChangedView, type ApprovalScreen } from "../../src/app/staff/alerts/approval/view";
 import { incidentsView } from "../../src/app/staff/alerts/incidents/view";
+import { englishText } from "../../src/i18n/text";
 import type { RunningThread } from "../../src/modules/alerting";
 import { APPROVER, OTHER_ALERT, OTHER_ENTRY, PLANS, reviewOf, type ReviewOptions } from "../../test/helpers/approvalReview";
 import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
@@ -231,5 +232,18 @@ for (const width of [390, 1280]) {
     // It informs and takes nothing away: Approve is still on the page, after the notice.
     await expect(page.getByTestId("approve-button")).toBeVisible();
     await expectBaseline(page, `approval-cap-notice-${width}.png`);
+  });
+}
+
+// S08.08: approving a heat or power alert (this one is elevator and power) starts or adds to a check-in round; with nobody on duty for check-ins, the
+// approver is told that its escalations would go to every on-call number (the catalog's sentence, which the app's own onDutyNoticeFor gives).
+const ON_DUTY_NOTICE = englishText("staff.approve.noOnDuty");
+for (const width of [390, 1280]) {
+  test(`the approval view of a power alert while nobody is on duty for check-ins, at ${width}px`, async ({ page }) => {
+    const screen = approvalScreen({ review: reviewOf({ recipients: OPEN }), plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER, onDutyNotice: ON_DUTY_NOTICE });
+    await openApproval(page, width, { screen });
+    await expect(page.getByTestId("on-duty-notice")).toHaveText(ON_DUTY_NOTICE);
+    await expect(page.getByTestId("approve-button")).toBeVisible();
+    await expectBaseline(page, `approval-no-on-duty-${width}.png`);
   });
 }

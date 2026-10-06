@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { OncallState } from "../../src/app/staff/oncall/control";
 import type { OncallLabels, OncallRow } from "../../src/app/staff/oncall/OncallFormsView";
+import { onDutyView, type OnDutyView } from "../../src/app/staff/oncall/view";
 import { healthBannerView } from "../../src/app/staff/healthBannerModel";
 import { englishText } from "../../src/i18n/text";
 import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
@@ -54,10 +55,41 @@ const OTHERS_FAILING = healthBannerView(
   { everything: true },
 );
 
-const props = (rows: OncallRow[], answer: OncallState = IDLE, extra: { unreadable?: boolean; banner?: "sender" | "others" } = {}) => ({
+// S08.08: the on-duty Admin for check-ins, an entry of the list linked to an active Admin account with an authenticator, as the page draws it with the app's
+// own view function: on duty (the entry marked, the choice set to it), and an entry whose Admin can no longer be on duty (escalations go to every number).
+const onDutyLabels = {
+  heading: t("onDuty.heading"),
+  lead: t("onDuty.lead"),
+  badge: t("onDuty.badge"),
+  number: t("onDuty.number"),
+  account: t("onDuty.account"),
+  accountHint: t("onDuty.accountHint"),
+  noAccount: t("onDuty.noAccount"),
+  noNumber: t("onDuty.noNumber"),
+  set: t("onDuty.set"),
+  setting: t("onDuty.setting"),
+  clear: t("onDuty.clear"),
+  clearing: t("onDuty.clearing"),
+};
+const PRIYA = "01900000-0000-7000-8000-0000000000c1";
+const ACCOUNTS = [
+  { id: "01900000-0000-7000-8000-0000000000c2", name: "Daniel Okoro" },
+  { id: PRIYA, name: "Priya Sharma" },
+];
+const onDutyOf = (state: "set" | "stale"): OnDutyView =>
+  onDutyView({
+    entries: ROWS.map((row, index) => ({ id: row.id, label: row.label, onDuty: index === 1, staffId: index === 1 ? PRIYA : null })),
+    state,
+    accounts: state === "set" ? ACCOUNTS : ACCOUNTS.slice(0, 1),
+    onDutyName: "Priya Sharma",
+  });
+
+const props = (rows: OncallRow[], answer: OncallState = IDLE, extra: { unreadable?: boolean; banner?: "sender" | "others"; onDuty?: "set" | "stale" } = {}) => ({
   count: rows.length,
   unreadable: extra.unreadable,
-  form: { rows, labels, answer },
+  form: extra.onDuty
+    ? { rows: rows.map((row, index) => ({ ...row, onDuty: index === 1 })), labels: { ...labels, onDuty: onDutyLabels }, answer, onDuty: onDutyOf(extra.onDuty) }
+    : { rows, labels, answer },
   banner: (extra.banner === "sender" ? SENDER_FAILING : extra.banner === "others" ? OTHERS_FAILING : null) ?? undefined,
 });
 
@@ -70,6 +102,8 @@ const STATES = {
   unreadable: () => props([], IDLE, { unreadable: true }),
   "sender-failing": () => props(ROWS, IDLE, { banner: "sender" }),
   "health-failing": () => props(ROWS, IDLE, { banner: "others" }),
+  "on-duty": () => props(ROWS, { status: "done", at: 1, lines: ["Priya Sharma, Hub Director weekends is now on duty."] }, { onDuty: "set" }),
+  "on-duty-stale": () => props(ROWS, IDLE, { onDuty: "stale" }),
 } as const;
 
 async function open(page: Page, state: keyof typeof STATES, width: number) {
@@ -117,6 +151,18 @@ for (const state of Object.keys(STATES) as (keyof typeof STATES)[]) {
         await expect(page.getByTestId("health-banner")).toContainText("The health check has not run for more than 3 minutes");
       } else {
         await expect(page.getByTestId("health-banner")).toHaveCount(0);
+      }
+      if (state === "on-duty") {
+        await expect(page.getByTestId("oncall-on-duty-state")).toHaveText("On duty: Priya Sharma, Hub Director weekends, Priya Sharma's account.");
+        await expect(page.getByTestId("oncall-row-on-duty")).toHaveCount(1);
+        await expect(page.getByLabel("Admin account")).toHaveValue(PRIYA);
+        const set = page.getByRole("button", { name: "Set on duty" });
+        expect((await set.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        await expect(page.getByRole("button", { name: "Nobody on duty" })).toBeVisible();
+      } else if (state === "on-duty-stale") {
+        await expect(page.getByTestId("oncall-on-duty-state")).toContainText("is no longer an active Admin with an authenticator");
+      } else {
+        await expect(page.getByTestId("oncall-on-duty")).toHaveCount(0);
       }
 
       await expectBaseline(page, `oncall-en-${state}-${width}.png`, { fullPage: true });

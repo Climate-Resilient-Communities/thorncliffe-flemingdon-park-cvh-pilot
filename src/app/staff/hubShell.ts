@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import type { HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
 import { COMPOSE_PAGE, LOG_PAGE } from "./alerts/pages";
+import { ROUNDS_PAGE } from "./rounds/view";
 import type { StaffSession } from "./session";
 
 /**
@@ -43,7 +44,9 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
               { id: "compose", label: englishText("hub.nav.compose"), href: COMPOSE_PAGE, icon: "pencil" as const },
             ]
           : []),
-        { id: "rounds", label: englishText("hub.nav.rounds"), href: null, icon: "person" },
+        // "Check-in rounds" (O-17, S08.08: the escalations to follow up) is `checkins.escalations`: a Coordinator, a Director read-only and an Admin. An
+        // Ambassador's round is their own page, reached from their home (S08.07), so their item stays without a link.
+        { id: "rounds", label: englishText("hub.nav.rounds"), href: can(role, "checkins.escalations") ? ROUNDS_PAGE : null, icon: "person" },
       ],
     },
   ];

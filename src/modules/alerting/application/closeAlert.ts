@@ -9,14 +9,20 @@
 // (`alert.closing_entry_id`, which the sender reads, S06.02). Every later change is refused with ALERT_CLOSED (the entry and thread triggers). The discards and
 // the close are audited in the same transaction.
 //
-// Lock order (AD-18): alert, alert_entry, feed_version, then the delivery rows `cancelQueued` locks. This function locks the thread and then every entry of it
-// before it touches `feed_version` or a delivery row, so called first in a transaction it is in order. A caller that has locked `feed_version` already (an
-// approval raises it before it closes the thread) must have locked every entry of the thread before that (`approveEntry` does, for the entries it may close
-// the thread with) and says so with `feedRaised`, so `feed_version` is raised once in the transaction. The database refuses the close of a thread, with the
-// app's credentials, beside anything but the entry that closes it (db/migrations/20261004050000_alert_close.sql): `resolved` beside an approved `final`,
-// `withdrawn` beside an approved withdrawal (or the system withdrawal of a discarded web-published post, S08.03), `expired` beside a system final (S05.04), each made in this same transaction.
+// Lock order (AD-18): alert, alert_entry, feed_version, then the delivery rows `cancelQueued` locks (then, S08.08, the round's `checkin` rows). This function
+// locks the thread and then every entry of it before it touches `feed_version` or a delivery row, so called first in a transaction it is in order. A caller that
+// has locked `feed_version` already (an approval raises it before it closes the thread) must have locked every entry of the thread before that (`approveEntry`
+// does, for the entries it may close the thread with) and says so with `feedRaised`, so `feed_version` is raised once in the transaction. The database refuses
+// the close of a thread, with the app's credentials, beside anything but the entry that closes it (db/migrations/20261004050000_alert_close.sql): `resolved`
+// beside an approved `final`, `withdrawn` beside an approved withdrawal (or the system withdrawal of a discarded web-published post, S08.03), `expired` beside a
+// system final (S05.04), each made in this same transaction.
+//
+// S08.08: the thread's check-in round ends with it, in the same transaction, after the delivery rows (AD-18: `checkin`, then `checkin_tally`): checkins'
+// `closeRound` tallies every row of the round; `pending` and `done` rows become closed stubs, and a `not_reached` or `needs_help` row the Hub has not handled
+// keeps its subscriber for the follow-up (E08 "Closed stub"). A drill thread has no round (S08.05's insert guard), so it finds nothing.
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
+import { closeRound, type RoundClosed } from "../../checkins";
 import { alert, alertEntry, feedVersion } from "../adapters/schema";
 import { requestTransition } from "../domain/lifecycle";
 import type { EntryStatus } from "../domain/lifecycle";
@@ -42,6 +48,8 @@ export interface CloseAlertDeps {
   audit: AlertAudit;
   /** messaging's `cancelQueued(entryIds, tx)`: stops the entries' texts that are not yet handed to the provider. */
   cancelQueued: (tx: DbTransaction, entryIds: readonly string[]) => Promise<void>;
+  /** checkins' `closeRound(tx, alertId)` (S08.08): the round's rows tallied, in this transaction. The real one unless a test replaces it. */
+  closeRound?: (tx: DbTransaction, alertId: string) => Promise<RoundClosed>;
 }
 
 export interface Closed {
@@ -53,6 +61,8 @@ export interface Closed {
   cancelled: string[];
   /** The feed version after this close raised it; null for a drill (it raises nothing the web shows) or when the caller had raised it (`feedRaised`). */
   feedVersion: number | null;
+  /** S08.08: the round's rows the close tallied, and how many of them it kept for the Hub's follow-up. */
+  round: RoundClosed;
 }
 
 /** The kind and status the entry that closes a thread has, by the reason: the database's rule too. */
@@ -65,6 +75,7 @@ const CLOSING_ENTRY: Record<ClosedReason, { kind: string; status: readonly strin
 
 /** `closeAlert` bound to its seams. The staff member is the one whose use case closes the thread (the actor of the audit records). */
 export function createCloseAlert(deps: CloseAlertDeps) {
+  const endRound = deps.closeRound ?? ((tx: DbTransaction, alertId: string) => closeRound(tx, alertId));
   return async function closeAlert(tx: DbTransaction, actor: { staffId: string | null }, input: CloseAlertInput): Promise<Closed> {
     // The caller holds the thread's lock already; locking again costs nothing and keeps this function safe on its own.
     const [thread] = await tx.select().from(alert).where(eq(alert.id, input.alertId)).for("update");
@@ -128,6 +139,9 @@ export function createCloseAlert(deps: CloseAlertDeps) {
     const cancelled = entries.map((entry) => entry.id).filter((id) => id !== input.keepEntryId);
     await deps.cancelQueued(tx, cancelled);
 
+    // The round ends with the thread (S08.08): its rows after the delivery rows, in AD-18's order.
+    const round = await endRound(tx, thread.id);
+
     await tx
       .update(alert)
       .set({ status: "closed", closedReason: input.reason, closedAt: sql`now()`, closingEntryId: input.keepEntryId ?? null })
@@ -140,7 +154,7 @@ export function createCloseAlert(deps: CloseAlertDeps) {
       isDrill: thread.isDrill,
       meta: { closed_as: input.reason, discarded: discarding.length, ...(input.keepEntryId ? { kept_entry_id: input.keepEntryId } : {}) },
     });
-    return { alertId: thread.id, reason: input.reason, discarded: discarding.map((entry) => entry.id), cancelled, feedVersion: feedVersionNow };
+    return { alertId: thread.id, reason: input.reason, discarded: discarding.map((entry) => entry.id), cancelled, feedVersion: feedVersionNow, round };
   };
 }
 

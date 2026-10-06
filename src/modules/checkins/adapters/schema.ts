@@ -1,6 +1,7 @@
-// Drizzle tables of the checkins module (AD-2), written by hand to match db/migrations (20261006170000_checkin_request.sql, and S08.07's
-// 20261006190000_checkin_marks.sql); the drift test compares them. The grants (the app reads and adds rows and changes only what a round
-// changes; the tally is its trigger's alone), the guards and the tally's trigger live only in the migrations.
+// Drizzle tables of the checkins module (AD-2), written by hand to match db/migrations (20261006170000_checkin_request.sql, S08.07's
+// 20261006190000_checkin_marks.sql and S08.08's 20261006210000_escalations.sql); the drift test compares them. The grants (the app reads and
+// adds rows and changes only what a round changes; the tally is its trigger's alone), the guards and the tally's trigger live only in the
+// migrations.
 import { sql } from "drizzle-orm";
 import { boolean, check, index, integer, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
@@ -95,8 +96,9 @@ export const checkinTally = pgTable(
 /**
  * An escalation (E08 "Escalation", S08.07): one per `round_ref` and status (`not_reached`, `needs_help`), made in the mark's transaction, from a
  * mark on a live row or a late mark on a stub that has not expired: the thread, building and floor, who marked and whether the mark was late;
- * never the subscriber, the method or a phone number. No foreign key to `alert` or `checkin`: it outlives the stub. The Hub's list, the
- * on-duty text and the handling are S08.08's. The app reads and adds them.
+ * never the subscriber, the method or a phone number. No foreign key to `alert` or `checkin`: it outlives the stub. S08.08: the Hub's list
+ * (O-17) reads them, the mark's transaction texts the on-duty Admin, and an Admin marks one handled with a note (the app may set those three
+ * columns, once; the migration's guard keeps the rest as written). The app reads and adds them.
  */
 export const checkinEscalation = pgTable(
   "checkin_escalation",
@@ -114,14 +116,26 @@ export const checkinEscalation = pgTable(
       .references(() => staffKey.id),
     late: boolean().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** S08.08: when an Admin marked it handled, who, and their one-line note (what the Hub did); set together, once. */
+    handledAt: timestamp("handled_at", { withTimezone: true }),
+    handledBy: uuid("handled_by").references(() => staffKey.id),
+    handledNote: text("handled_note"),
   },
   (t) => [
     uniqueIndex("checkin_escalation_round_ref_status_idx").on(t.roundRef, t.status),
     index("checkin_escalation_alert_id_idx").on(t.alertId),
     index("checkin_escalation_raised_by_idx").on(t.raisedBy),
     index("checkin_escalation_rsn_idx").on(t.rsn),
+    index("checkin_escalation_handled_by_idx").on(t.handledBy),
+    index("checkin_escalation_open_idx").on(t.createdAt).where(sql`${t.handledAt} is null`),
     check("checkin_escalation_status_known", sql`${t.status} in ('not_reached', 'needs_help')`),
+    check("checkin_escalation_handled_whole", sql`(${t.handledAt} is null) = (${t.handledBy} is null) and (${t.handledAt} is null) = (${t.handledNote} is null)`),
+    check(
+      "checkin_escalation_note_format",
+      sql`${t.handledNote} is null or (btrim(${t.handledNote}) <> '' and char_length(${t.handledNote}) <= 300 and ${t.handledNote} !~ '[[:cntrl:]]')`,
+    ),
     pgPolicy("checkin_escalation_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("checkin_escalation_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("checkin_escalation_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();
