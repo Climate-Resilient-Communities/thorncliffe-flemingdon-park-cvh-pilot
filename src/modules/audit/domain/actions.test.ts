@@ -603,6 +603,28 @@ describe("spend.cap_set and spend.cap_overrun (S07.08)", () => {
   });
 });
 
+describe("round_types.changed (S08.06)", () => {
+  const changed = (meta: Record<string, unknown>) => event({ action: "round_types.changed", subjectType: "disruption_type", subjectId: null, meta } as Partial<AuditEvent>);
+
+  it("records the round types before and after by id, either of which may be empty, and nothing else", () => {
+    expect(toAuditRecord(changed({ round_types: ["heat"], previous: ["heat", "power"] }), "ok")).toMatchObject({
+      action: "round_types.changed",
+      subjectType: "disruption_type",
+      subjectId: null,
+      outcome: "ok",
+      meta: { round_types: ["heat"], previous: ["heat", "power"] },
+    });
+    expect(toAuditRecord(changed({ round_types: [], previous: ["heat"] }), "ok").meta).toEqual({ round_types: [], previous: ["heat"] });
+    expect(() => toAuditRecord(changed({ round_types: ["heat"] }), "ok")).toThrow("meta is missing previous");
+    expect(() => toAuditRecord(changed({ round_types: ["Heat waves"], previous: [] }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(changed({ round_types: [], previous: [], note: "free text" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("records a refusal with only its reason", () => {
+    for (const reason of ["validation", "conflict"]) expect(toAuditRecord(changed({ reason }), "refused").meta).toEqual({ reason });
+  });
+});
+
 describe("delivery.resent (S09.02)", () => {
   const resent = (meta: Record<string, unknown>) =>
     event({ action: "delivery.resent", subjectType: "alert_entry", subjectId: "9b2e4c1a-7d3f-4a5b-8c6d-1e2f3a4b5c6d", meta } as Partial<AuditEvent>);

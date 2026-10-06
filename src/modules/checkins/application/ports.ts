@@ -33,7 +33,9 @@ export interface RoundThread {
  * Port (alerting implements it, `roundThreads`): the open, non-drill threads whose latest approved, non-superseded substantive entry is an
  * acknowledgement, an update or a correction, with that entry's types and audience (an approval of such an entry starts or adds to the
  * thread's round, S08.06; checkins keeps the ones of a round type).
- *  - `open`: all of them, read without a lock;
+ *  - `open`: the candidates, read without a lock: all of them, and (S08.06) each open, non-drill thread whose acknowledgement, update or
+ *    correction is waiting for approval, as that entry would make it, so a request activated while that approval runs locks its thread
+ *    too and waits for it (a thread may come more than once);
  *  - `lock`: the `alert` rows of these threads locked FOR UPDATE in the order given (AD-18: a thread's lock comes first), then those of them
  *    that are still such threads, read under the lock.
  */

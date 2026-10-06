@@ -1,14 +1,22 @@
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 
-/** The audit actions the places module writes (S01.13); the audit module validates each one's `meta` strictly. */
-export type PlacesAuditAction = "seed.run" | "building.floor_added" | "building.floor_renamed" | "building.floor_removed" | "building.confirmed" | "building.contact_changed";
+/** The audit actions the places module writes (S01.13; S08.06 the round types); the audit module validates each one's `meta` strictly. */
+export type PlacesAuditAction =
+  | "seed.run"
+  | "building.floor_added"
+  | "building.floor_renamed"
+  | "building.floor_removed"
+  | "building.confirmed"
+  | "building.contact_changed"
+  | "round_types.changed";
 
 export interface PlacesAuditEvent {
   action: PlacesAuditAction;
   /** The Admin who acted; null for the seed script (the system). */
   actorStaffId: string | null;
-  subjectType: "building" | "buildings";
-  /** The building's rsn; null for a whole import or when the rsn in a request is not one. */
+  /** S08.06: `disruption_type` (with no id) is the round types. */
+  subjectType: "building" | "buildings" | "disruption_type";
+  /** The building's rsn; null for a whole import, the round types, or when the rsn in a request is not one. */
   subjectId: string | null;
   meta?: Record<string, unknown>;
 }

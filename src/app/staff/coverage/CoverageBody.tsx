@@ -1,11 +1,15 @@
 import { Stack } from "@/ui";
 import { AssignForm, RemoveAssignmentForm, type AssignAction } from "./AssignmentForms";
 import type { AssignState } from "./editAssignments";
+import { RoundTypesForm, type RoundTypesAction } from "./rounds/RoundTypesForm";
+import type { RoundTypesState, RoundTypesView } from "./rounds/roundTypes";
 import type { CoverageBuildingView, CoverageListView, CoverageMissingView, CoverageScreen } from "./view";
 
 export interface CoverageActions {
   assign: AssignAction;
   remove: AssignAction;
+  /** S08.06: "Save round types". */
+  roundTypes: RoundTypesAction;
 }
 
 /** Test seam: forms already in the state they reach after a refusal (the screenshots show them). */
@@ -13,13 +17,32 @@ export interface CoverageInitial {
   assign?: AssignState;
   /** By staff id. */
   remove?: Record<string, AssignState>;
+  /** S08.06: the round types form after a press. */
+  roundTypes?: RoundTypesState;
 }
 
 function Notice({ text }: { text?: string }) {
   return text ? <p role="status">{text}</p> : null;
 }
 
-function List({ view }: { view: CoverageListView }) {
+/**
+ * S08.06: which types of disruption start a check-in round, below the buildings: the types now in words for everyone who sees coverage, and for an Admin
+ * the form to change them; a Coordinator and a Director are told who can.
+ */
+function RoundTypes({ view, action, initial }: { view: RoundTypesView; action: RoundTypesAction; initial?: RoundTypesState }) {
+  return (
+    <section aria-labelledby="round-types-title" data-testid="round-types">
+      <Stack gap="related">
+        <h2 id="round-types-title">{view.heading}</h2>
+        <p>{view.lead}</p>
+        <p data-testid="round-types-current">{view.current}</p>
+        {view.form ? <RoundTypesForm view={view.form} action={action} initialState={initial} /> : <p data-testid="round-types-read-only">{view.readOnly}</p>}
+      </Stack>
+    </section>
+  );
+}
+
+function List({ view, actions, initial }: { view: CoverageListView; actions: CoverageActions; initial?: CoverageInitial }) {
   return (
     <Stack gap="section-hub">
       <Stack gap="related">
@@ -71,6 +94,7 @@ function List({ view }: { view: CoverageListView }) {
           </Stack>
         </section>
       ))}
+      {view.rounds && <RoundTypes view={view.rounds} action={actions.roundTypes} initial={initial?.roundTypes} />}
     </Stack>
   );
 }
@@ -151,7 +175,7 @@ function Missing({ view }: { view: CoverageMissingView }) {
 
 /** The screen's body for a resolved view: the list of buildings, one building's coverage, or a building that is not there. */
 export function CoverageBody({ screen, actions, initial }: { screen: CoverageScreen; actions: CoverageActions; initial?: CoverageInitial }) {
-  if (screen.kind === "list") return <List view={screen} />;
+  if (screen.kind === "list") return <List view={screen} actions={actions} initial={initial} />;
   if (screen.kind === "building") return <Building view={screen} actions={actions} initial={initial} />;
   return <Missing view={screen} />;
 }

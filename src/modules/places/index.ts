@@ -3,9 +3,11 @@
 export { readBuildingsFixtureFile } from "./adapters/buildingsFixture";
 export { readMergeFile, readRegisterFile } from "./adapters/registerFiles";
 export { createBuildingService } from "./application/floors";
-export { addressesOfBuildings, directnessOfTypes, floorsOfBuilding, listBuildings, neighbourhoodIds, neighbourhoodsOfBuildings, roundTypes, type BuildingRecord, type FloorRecord } from "./application/floorReader";
+export { addressesOfBuildings, buildingsOfNeighbourhoods, directnessOfTypes, floorsOfBuilding, listBuildings, neighbourhoodIds, neighbourhoodsOfBuildings, roundTypes, type BuildingRecord, type FloorRecord } from "./application/floorReader";
 export type { BuildingContact, BuildingDetail, BuildingFacts, BuildingFloorPlan, BuildingService, BuildingServiceDeps, BuildingSummary, FloorPlace, FloorPlanFloor, FloorRefusal, FloorResult, FloorView } from "./application/floors";
 export { listBuildingContacts, type BuildingWithContact } from "./application/buildingContacts";
+// S08.06: the round types an Admin changes (`disruption_type.checkin`), audited.
+export { createRoundTypes, type RoundTypeChoice, type RoundTypesRefusal, type RoundTypesResult, type RoundTypesService } from "./application/roundTypes";
 export { readPublicBuilding, type PublicBuilding } from "./application/publicBuilding";
 export { createResidentBuildings, type ResidentBuilding, type ResidentBuildings, type ResidentFloor } from "./application/residentBuildings";
 export { BUILDINGS_SEED_CODE, BuildingImportRefusedError, importBuildings, type ImportCounts, type ImportDeps, type ImportResult } from "./application/importBuildings";

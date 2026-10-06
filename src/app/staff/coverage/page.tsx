@@ -5,14 +5,16 @@ import { Screen } from "@/ui";
 import { assignments } from "../assignments";
 import { checkinRequestsByFloor } from "../checkinRequests";
 import { staffPage } from "../guard";
-import { buildings } from "../places";
+import { buildings, roundTypes } from "../places";
 import { assignAmbassadorAction, removeAssignmentAction } from "./actions";
 import { CoverageBody } from "./CoverageBody";
+import { setRoundTypesAction } from "./rounds/actions";
+import { roundTypesView } from "./rounds/roundTypes";
 import { coverageBuildingView, coverageListView, coverageMissingView, savedNotice, type SavedQuery } from "./view";
 
 export const metadata: Metadata = { title: englishText("staff.coverage.title") };
 
-const actions = { assign: assignAmbassadorAction, remove: removeAssignmentAction };
+const actions = { assign: assignAmbassadorAction, remove: removeAssignmentAction, roundTypes: setRoundTypesAction };
 
 type Query = SavedQuery & { building?: string | string[] };
 
@@ -23,7 +25,9 @@ type Query = SavedQuery & { building?: string | string[] };
  * (`accounts.manage`) is given the forms to assign and remove; the actions refuse everyone else on their own.
  * Staff at the Hub only (the guard sends everyone else to sign-in or their setup gate); an Ambassador sees "Only
  * an Admin, a Coordinator or a Director can see coverage." Responses are no-store. The shell (layout.tsx) owns the <main>. S08.05: how many
- * check-in requests are on floors nobody covers, per building and in all (counts only), so the Hub can assign someone or contact them.
+ * check-in requests are on floors nobody covers, per building and in all (counts only), so the Hub can assign someone or contact them. S08.06:
+ * below the list, which types of disruption start a check-in round; only an Admin (`checkins.round_types`, at aal2 in the action) is given the
+ * form to change them.
  */
 export default staffPage(
   {
@@ -44,7 +48,8 @@ export default staffPage(
     const [plans, all, requests] = await Promise.all([buildings().listFloorPlans(), assignments().allAssignments(), checkinRequestsByFloor()]);
     let screen;
     if (rsn === undefined) {
-      screen = coverageListView(plans, all, notice, requests);
+      const rounds = roundTypesView(await roundTypes().list(), { editable: can(session.role, "checkins.round_types") });
+      screen = { ...coverageListView(plans, all, notice, requests), rounds };
     } else {
       const plan = plans.find((candidate) => candidate.rsn === rsn);
       const ambassadors = plan && can(session.role, "accounts.manage") ? await assignments().ambassadors() : undefined;

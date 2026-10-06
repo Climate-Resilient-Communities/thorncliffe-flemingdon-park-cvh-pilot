@@ -268,6 +268,20 @@ export const subscriberStore = {
     return found;
   },
 
+  /**
+   * S08.06: the receiving subscribers whose check-in request's "where I live" building is one of these, by id, read without a lock: the candidates an
+   * approval passes to checkins' `ensureRound`, which locks them FOR SHARE in id order and reads each request again under the lock. No number is read.
+   */
+  async checkinRequestersIn(executor: DbExecutor, rsns: readonly string[]): Promise<string[]> {
+    if (rsns.length === 0) return [];
+    const rows = await executor
+      .select({ id: subscriber.id })
+      .from(subscriber)
+      .where(and(isNotNull(subscriber.checkinMethod), inArray(subscriber.whereILiveRsn, [...rsns]), receivingSql(subscriber.retentionState)))
+      .orderBy(asc(subscriber.id));
+    return rows.map((row) => row.id);
+  },
+
   /** S08.05: writes the request, or clears it (null); the caller holds the subscriber's row lock. */
   async setCheckin(tx: DbTransaction, id: string, request: SubscriberCheckin | null): Promise<void> {
     await tx

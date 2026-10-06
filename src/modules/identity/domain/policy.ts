@@ -60,9 +60,10 @@ export const AUTHORITY_MATRIX = [
     // `guide.publish` is "publish directory" (S02.05's Publish directory). `provider.manage` (S02.04) is the same
     // authority one step earlier: choosing which loaded providers are published and confirming them is what the
     // directory is published from, so it follows the row's "publish directory" (Admin only, aal2). `campaign.run` (S09.07) is the end-of-pilot
-    // re-consent campaign, its rehearsal on the drill roster and reopening sign-ups: one Admin at aal2 (AD-9 D-7), like a drill.
+    // re-consent campaign, its rehearsal on the drill roster and reopening sign-ups: one Admin at aal2 (AD-9 D-7), like a drill. `checkins.round_types`
+    // (S08.06) is which types of disruption start a check-in round (E08 "Round types": "editable by an Admin at aal2"), a setting of the Hub like the cap.
     row: "Drills, publish directory, accounts, cap, pause",
-    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage", "delivery.resend", "campaign.run"],
+    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage", "delivery.resend", "campaign.run", "checkins.round_types"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {

@@ -4622,7 +4622,27 @@
         "rangeReversed": "The range goes from a higher floor to a lower one. Put the lower floor first."
       },
       "requestsUncovered": "Check-in requests on floors without an ambassador: {n}",
-      "requestsSummary": "Check-in requests on floors without an ambassador, in all buildings: {n}. Assign an ambassador or contact the residents through the Hub."
+      "requestsSummary": "Check-in requests on floors without an ambassador, in all buildings: {n}. Assign an ambassador or contact the residents through the Hub.",
+      "rounds": {
+        "heading": "Check-in rounds",
+        "lead": "When the Hub approves an alert of one of these types, a check-in round starts: the ambassadors check on the residents who asked, on the floors they cover. A drill never starts one.",
+        "current": "Types that start a round now: {types}.",
+        "none": "No type starts a round now, so no alert starts a check-in round.",
+        "legend": "Types that start a round",
+        "hint": "A change applies from the next approval. A round already started keeps everyone in it until its alert closes.",
+        "save": "Save round types",
+        "saving": "Saving",
+        "readOnly": "Only an Admin can change which types start a round.",
+        "done": "Saved. Types that start a round from the next approval: {types}.",
+        "doneNone": "Saved. From the next approval, no alert starts a check-in round.",
+        "errors": {
+          "forbidden": "Only an Admin can change which types start a round.",
+          "aal2Required": "An Admin must sign in with their authenticator code to change which types start a round. Sign in again and enter the code.",
+          "unknownType": "One of those is not a type of disruption. Reload the page and try again.",
+          "noChange": "Nothing to change: those are the round types already.",
+          "failed": "Nothing changed. Try again. If it fails again, tell IT."
+        }
+      }
     },
     "ambassadorHome": {
       "title": "My building",

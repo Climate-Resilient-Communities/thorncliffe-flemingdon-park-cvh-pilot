@@ -1,8 +1,11 @@
 // The alerting module's public interface (AD-2, AD-5): alert threads and their entries, and the one
 // lifecycle they follow. Other modules and the app use only what is exported here.
+import { audienceRsns } from "../../contracts/audience";
 import type { Db, DbTransaction } from "../../platform/db";
+import { isRoundThread, type CheckinRequests } from "../checkins";
 import { readStaffStanding } from "../identity";
-import { addressesOfBuildings, createResidentBuildings, directnessOfTypes, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
+import { addressesOfBuildings, buildingsOfNeighbourhoods, createResidentBuildings, directnessOfTypes, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings, roundTypes } from "../places";
+import { checkinRequestersIn } from "../subscriptions";
 import * as audit from "../audit";
 import { createDeliveryQueue, queuedCostCents, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
@@ -51,6 +54,29 @@ export interface AlertingWiring {
    * is live, src/app/staff/alerts.ts); `hasNumber` defaults to ops' roster. Left out, the rule is off.
    */
   oncall?: { required: () => boolean; hasNumber?: (tx: DbTransaction) => Promise<boolean> };
+  /**
+   * checkins' requests (S08.06; src/app/checkins.ts composes them): their `ensureRound` is what the approval of an acknowledgement, update or correction of a
+   * round type calls in its transaction, with the requesters in the buildings the audience covers (see `roundStarter`). Left out, an approval starts no round.
+   */
+  checkins?: Pick<CheckinRequests, "ensureRound">;
+}
+
+/**
+ * The check-in round of an approval (S08.06, AD-12): when one of the entry's types is a round type (places' `disruption_type.checkin`, read in the approval's
+ * transaction), the candidates are subscriptions' requesters in the buildings the audience covers (a buildings audience: its buildings; a neighbourhood
+ * audience: every building of its neighbourhoods, which places reads), read without a lock and locked FOR SHARE by the approval's capture with its
+ * recipients; checkins' `ensureRound` keeps those whose "where I live" place matches the audience by the one matcher, on a covered floor, under that lock,
+ * and adds a row for each who has none in the thread.
+ */
+function roundStarter(checkins: Pick<CheckinRequests, "ensureRound">): NonNullable<AlertLifecycleDeps["rounds"]> {
+  return {
+    async requesters(tx, thread) {
+      if (!isRoundThread(thread.types, await roundTypes(tx))) return [];
+      const rsns = thread.audience.scope === "buildings" ? audienceRsns(thread.audience) : await buildingsOfNeighbourhoods(tx, thread.audience.neighbourhood_ids);
+      return checkinRequestersIn(tx, rsns);
+    },
+    start: (tx, thread, requesterIds) => checkins.ensureRound(tx, thread, requesterIds),
+  };
 }
 
 export interface AlertSubmitterWiring {
@@ -167,6 +193,9 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     // point (it locks a row and checks it is still `queued`) cannot overtake.
     cancelQueued: wiring.cancelQueued ?? (async (tx, entryIds) => void (await queue.cancelQueued(entryIds, tx))),
     oncall: wiring.oncall && { required: wiring.oncall.required, hasNumber: wiring.oncall.hasNumber ?? hasOncallNumber },
+    // The check-in round (S08.06): an approval of a round type starts it or adds to it in its own transaction, its requesters locked with its recipients,
+    // its rows made after its texts, before the spend cap.
+    rounds: wiring.checkins && roundStarter(wiring.checkins),
     // The monthly spending cap (S07.08): the approval's transaction asks spend how far the month would pass the cap with this entry's texts (the month's
     // spending, the estimates of the texts still waiting to go, and the entry's own). It warns and never blocks: when the cap is passed the overrun is
     // recorded as an ops event in the same transaction (the health job texts the on-call Admins, S09.01) and the use case audits it.

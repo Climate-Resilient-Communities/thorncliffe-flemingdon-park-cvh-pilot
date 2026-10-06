@@ -31,6 +31,7 @@ const HELD: HeldRecord = {
     consentVersion: "2026-10-02.1",
     startedBy: "web",
     retentionState: "active",
+    reconsent: null,
     places: [{ rsn: "9100011", address: "11 Sample Road", floor: "2" }],
     mutedTopics: ["heat"],
     prompt: null,

@@ -17,6 +17,8 @@
 //  - `ensureRound` (S08.06 calls it from an approval that holds its thread's lock): the given requesters whose place matches the thread's
 //    audience, on covered floors, each get one row in the round (`ON CONFLICT DO NOTHING`); their rows are read again under each requester's
 //    FOR SHARE lock, so a withdrawal or a deletion running at the same time either comes first (no row) or comes after (the row is closed).
+//    The approval has already taken those locks, with its recipients', in its capture's one id-ordered statement (AD-18); here they are
+//    taken again, and nothing waits.
 //
 // The request lock order (AD-18): every use case that changes a request first reads the candidate round threads (those of the subscriber's
 // open rows, and the open round threads that match the place asked for), locks their `alert` rows in id order, then (a deletion: the
@@ -104,7 +106,7 @@ export function createCheckinRequests(deps: CheckinRequestsDeps): CheckinRequest
   const places = deps.places ?? placesReaders;
   const newId = deps.newId ?? (() => uuidv7());
 
-  /** The open round threads (read without a lock) that match a place. */
+  /** The open round threads (read without a lock) that match a place, with (S08.06) those an approval waiting would make one that matches. */
   async function matchingRounds(executor: DbExecutor, place: RequestPlace): Promise<string[]> {
     const [types, neighbourhoodId, open] = [await places.roundTypes(executor), await places.neighbourhoodOf(executor, place.rsn), await deps.threads.open(executor)];
     if (neighbourhoodId === null) return [];

@@ -331,6 +331,7 @@ const GENERIC_AAL2_MESSAGE = "This needs a sign-in confirmed with an authenticat
 const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/providers/actions.ts": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.",
   "src/app/staff/coverage/actions.ts": "An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.",
+  "src/app/staff/coverage/rounds/actions.ts": "An Admin must sign in with their authenticator code to change which types start a round. Sign in again and enter the code.",
   "src/app/staff/directory/actions.ts": "An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.",
   "src/app/staff/alerts/approval/actions.ts": "Approving needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",
   "src/app/staff/alerts/correct/actions.ts": "Correcting or withdrawing needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",

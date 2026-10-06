@@ -18,7 +18,8 @@ import { needsAuthenticator } from "./setupGate";
  * remove an Ambassador's assignment, which are part of a staff account) and so has
  * `buildings.manage` (rename, add and remove floors, confirm a building); each story
  * that adds one of the others names it on its route or action. `provider.manage` (S02.04) is
- * publishing a provider and confirming it.
+ * publishing a provider and confirming it. `checkins.round_types` (S08.06) is changing which types
+ * of disruption start a check-in round ("editable by an Admin at aal2").
  */
 export const PRIVILEGED_ACTIONS = [
   "accounts.manage",
@@ -35,6 +36,7 @@ export const PRIVILEGED_ACTIONS = [
   "oncall.manage",
   "delivery.resend",
   "campaign.run",
+  "checkins.round_types",
 ] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];
