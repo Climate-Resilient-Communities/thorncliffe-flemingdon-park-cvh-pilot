@@ -1382,7 +1382,7 @@ Record (one row per run):
 
 ### Story S02.15 — Hub counts install events and directory use without tracking anyone
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 46 min (first commit 2026-10-04 14:25 UTC, merged 17:11 UTC; the start of work was not recorded)
 - **Traces:** FR-M1 (installs), FR-M3 (browsing), AR-26 · **Depends on:** S02.12 · **Branch:** `e02-s15-usage-counts`
 
 As a Hub Director,
@@ -2954,7 +2954,7 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 
 ### Story S06.09 — The first-text spike is replaced, and the Hub sees what went where
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 31 min (first commit 2026-10-04 14:27 UTC, merged 16:58 UTC; the start of work was not recorded)
 - **Traces:** UX-DR16 (O-06), AR-12 · **Depends on:** S06.05, S06.06 (`handedOffLine()`, the pause's wording for texts already handed to the provider) · **Branch:** `e06-s09-remove-spike-progress`
 
 As a Hub Coordinator,
