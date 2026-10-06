@@ -1785,7 +1785,7 @@ So that we launch search knowing how well it works in every language.
 
 ### Story S03.09 — The test set guards every search change
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** — (started 2026-10-06 23:20 UTC)
+- **Size:** S · **Estimate:** 3 h · **Actual:** 37 min (started 2026-10-06 23:20 UTC, built 23:57 UTC); the bar and subset reader is a stand-in for S03.08's module, to be swapped when it merges
 - **Traces:** AR-24, FR-D2-Q · **Depends on:** S03.08 · **Branch:** `e03-s09-test-set-guard`
 
 As a Hub Director,
