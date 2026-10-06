@@ -25,7 +25,7 @@ The health job checks every minute for the failures the CVH knows about. When on
 | The Twilio Messaging Service allows texts to countries other than Canada, or SMS pumping protection is off | As above: pause, IT fixes the setting, runs the check, resume. |
 | Twilio refused the CVH sign-in, so texts are not being sent | IT: the Twilio account (suspended? the auth token rotated?) and `TWILIO_AUTH_TOKEN` in Vercel ([rotating secrets](rotate-secrets.md)). On-call texts may not arrive either. |
 | Many messages from Twilio failed the signature check | IT: a wrong `TWILIO_AUTH_TOKEN` after a rotation, or someone posting to the webhooks. |
-| A scheduled job failed in the last 10 minutes | IT: pg_cron's run history and the job's logs (sending, closing expired alerts, the health check, the reconciliation, the measures). |
+| A scheduled job failed in the last 10 minutes | IT: pg_cron's run history and the job's logs (sending, closing expired alerts, the health check, the reconciliation, the measures, and at the end of the pilot the end of the campaign and the purge: [the end of the pilot](end-of-pilot.md)). |
 | An alert was submitted with a whole language in English | Read the alert in that language on the approval page; if it matters, **Try translation again** or write an update. |
 | The last directory publish failed | Residents still see the previous directory. An Admin publishes again from **Directory**; if it fails again, IT. |
 | More sign-up and reply texts were sent today than the daily limit | Someone may be misusing the sign-up form. IT looks at the sign-up and inbound counts; texts keep sending. |

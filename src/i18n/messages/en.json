@@ -5340,7 +5340,8 @@
         "resend-failed-texts": "resending texts that failed",
         "cap-overrun": "a spending cap overrun",
         "health-alert": "a health alert and who owns the incident",
-        "rotate-secrets": "rotating secrets (pilot start, departures, pilot end)"
+        "rotate-secrets": "rotating secrets (pilot start, departures, pilot end)",
+        "end-of-pilot": "the end of the pilot"
       }
     },
     "oncall": {

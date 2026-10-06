@@ -20,13 +20,14 @@ The pages hold no secret value, phone number or name: they name roles and where 
 | [Changing Messaging Service settings](messaging-service-change.md) | IT lead | No Hub screen: Twilio Console (texts paused first) |
 | [Rotating secrets](rotate-secrets.md) | IT lead | People (someone leaving); otherwise Vercel, Supabase, Twilio, Cohere, GitHub |
 | [A resident access request](access-request.md) | Hub Admin (privacy contact) | No Hub screen: `scripts/access-request` (the screen is the MVP's) |
+| [The end of the pilot](end-of-pilot.md) | Hub Admin lead (with the IT lead) | End of the pilot (`/staff/campaign`, not in the menu) |
 
 Also here:
 
 - [Rehearsal log](rehearsals.md): who rehearsed which procedure, when and with what outcome. The launch rehearsals (a production drill, a pause and resume, a resend, the access-request process) are recorded there before launch.
 - [Weekly reliability notes](weekly-notes/README.md): one file per week, from `scripts/export-weekly`.
 
-The end-of-pilot re-consent campaign and the purge have their own procedures (S09.07, S09.08), not here.
+The end of the pilot (the re-consent campaign, S09.07, and the purge, S09.08) is not one of the launch procedures: it is rehearsed on the drill roster by day 55 and run by day 60, and keeps its own record on its page.
 
 ## Roles used on these pages
 

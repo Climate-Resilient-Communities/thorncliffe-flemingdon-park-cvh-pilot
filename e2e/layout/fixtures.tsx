@@ -28,6 +28,7 @@ import { TextsView } from "@/app/staff/texts/TextsView";
 import type { PausedView } from "@/app/staff/texts/view";
 import { MeasuresView } from "@/app/staff/measures/MeasuresView";
 import type { MeasuresView as MeasuresModel } from "@/app/staff/measures/view";
+import { procedureLink } from "@/app/staff/procedures";
 import { CampaignView } from "@/app/staff/campaign/CampaignView";
 import { CampaignAnswerView, RehearseFormView, ReopenFormView, StartFormView, type CampaignFormLabels } from "@/app/staff/campaign/CampaignFormsView";
 import type { CampaignState } from "@/app/staff/campaign/control";
@@ -1333,6 +1334,7 @@ export function CampaignFixture({
       <Screen surface="staff" testId="screen">
         <CampaignView
           text={text}
+          procedure={procedureLink("end-of-pilot")}
           screen={screen}
           unreadable={unreadable}
           answer={<CampaignAnswerView answer={answer} />}

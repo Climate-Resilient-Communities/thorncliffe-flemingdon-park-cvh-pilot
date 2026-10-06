@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { HealthBanner } from "./HealthBanner";
 import { ProcedureLink } from "./ProcedureLink";
+import { CampaignView } from "./campaign/CampaignView";
+import { campaignPageText } from "./campaign/view";
 import { DrillsView } from "./drills/DrillsView";
 import { drillsView } from "./drills/view";
 import { RosterView } from "./drills/roster/RosterView";
@@ -97,6 +99,7 @@ describe("the link to a procedure", () => {
       "run-a-drill",
     ],
     ["People (someone leaving)", () => <PeopleHeading />, "rotate-secrets"],
+    ["End of the pilot", () => <CampaignView text={campaignPageText()} procedure={procedureLink("end-of-pilot")} screen={null} unreadable />, "end-of-pilot"],
   ] as const)("is drawn on %s", (_, draw, id) => {
     const out = renderToStaticMarkup(draw());
     expect(out.match(/data-testid="procedure-link"/g)).toHaveLength(1);

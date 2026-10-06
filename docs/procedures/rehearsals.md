@@ -39,3 +39,4 @@ A real (non-drill) alert sent only to rehearse, such as the resend rehearsal's. 
 | [Changing Messaging Service settings](messaging-service-change.md) | | | | |
 | [Rotating secrets](rotate-secrets.md) | | | | |
 | [A resident access request](access-request.md) (launch gate) | | | | |
+| [The end of the pilot](end-of-pilot.md) (the campaign on the drill roster, by day 55) | | | | |

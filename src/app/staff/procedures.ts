@@ -16,6 +16,7 @@ export const SCREEN_PROCEDURES = [
   "cap-overrun",
   "health-alert",
   "rotate-secrets",
+  "end-of-pilot",
 ] as const;
 export type ProcedureId = (typeof SCREEN_PROCEDURES)[number];
 

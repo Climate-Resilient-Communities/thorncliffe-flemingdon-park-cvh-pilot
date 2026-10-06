@@ -1787,7 +1787,8 @@
       'resend-failed-texts': 'resending texts that failed',
       'cap-overrun': 'a spending cap overrun',
       'health-alert': 'a health alert and who owns the incident',
-      'rotate-secrets': 'rotating secrets (pilot start, departures, pilot end)' } } } });
+      'rotate-secrets': 'rotating secrets (pilot start, departures, pilot end)',
+      'end-of-pilot': 'the end of the pilot' } } } });
   /* The on-call roster, the stuck-queue alert and the Hub's sender banner (S06.07). Not a prototype screen: the Hub's list-and-form page, in the Pause texts
      page's words. The texts to on-call Admins hold counts only, never a number or a name; each fits one text message segment (GSM-7). */
   m(en, { hub: { nav: { oncall: 'On-call numbers' } },

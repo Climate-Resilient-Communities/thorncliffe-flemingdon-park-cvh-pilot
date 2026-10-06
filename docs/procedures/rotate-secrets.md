@@ -39,10 +39,12 @@ After any rotation: check `GET /api/health/heartbeat` answers 200, the Hub shows
 
 ## At pilot end (IT lead, after the purge, S09.08)
 
+After the purge has completed ([the end of the pilot](end-of-pilot.md), "The deadline and the purge"):
+
 1. Rotate or revoke every secret in the table. If the CVH continues to the MVP, new values; if it stops, revoke the keys and tokens (Twilio, Cohere, Supabase, Vercel) and stop the pg_cron jobs.
 2. Reset the password and authenticator of every staff account that does not continue.
 3. Review the account holders as at pilot start.
-4. Record it below, and in the final report (S09.08).
+4. Record it below, in the end-of-pilot record and in the final report ([the end of the pilot](end-of-pilot.md)).
 
 ## Rotation record
 

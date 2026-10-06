@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { Screen, Stack } from "@/ui";
 import { staffPage } from "../guard";
+import { ProcedureLink } from "../ProcedureLink";
+import { procedureLink } from "../procedures";
 import { campaignService, logCampaignError, staffName, textCounts } from "../campaignSeam";
 import { capNoticeFor } from "../spendSeam";
 import { CampaignForms } from "./CampaignForms";
@@ -22,6 +24,7 @@ function Heading() {
     <Stack gap="related">
       <h1>{t("title")}</h1>
       <p>{t("lead")}</p>
+      <ProcedureLink link={procedureLink("end-of-pilot")} />
     </Stack>
   );
 }
@@ -82,6 +85,7 @@ export default staffPage(
       <Screen surface="staff">
         <CampaignForms
           text={campaignPageText()}
+          procedure={procedureLink("end-of-pilot")}
           screen={screen}
           rehearseKey={randomUUID()}
           startKey={randomUUID()}
