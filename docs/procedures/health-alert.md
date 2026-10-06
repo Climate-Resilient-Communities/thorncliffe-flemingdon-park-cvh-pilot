@@ -36,6 +36,10 @@ The health job checks every minute for the failures the CVH knows about. When on
 
 The email names the cause when the monitor includes the response body: `health_job_stale` (the health job has not run for 3 minutes: pg_cron, the job secret, or Vercel), `provider_auth` (Twilio refuses the CVH's sign-in) or `database_unreachable` (Supabase). No answer at all means the app is down. The owner calls IT at once: nothing in the CVH can text anyone about these.
 
+## An escalation text ("Needs help" or "Not reached")
+
+A text "CVH: Needs help: {building}, floor {n}. Open: {link}" (or "Not reached") is not a health alert: an Ambassador's check-in round marked a resident. Open the link, sign in with your authenticator code and follow up from the escalation's page. Once the resident has been helped (or the escalation is marked handled), **delete that text from your phone**: it names where a resident lives. The CVH clears its own copy of the text's words (the building and floor) 23 hours 45 minutes after it was sent, the same run that removes the resident from the check-in records.
+
 ## When it clears
 
 The health job records the recovery and the banner goes. The owner checks **See sending progress** of any alert sent during the incident and resends what needs it.
