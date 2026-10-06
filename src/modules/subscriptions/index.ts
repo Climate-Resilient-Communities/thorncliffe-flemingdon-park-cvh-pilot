@@ -184,3 +184,8 @@ export {
   type CampaignState,
   type CampaignTexts,
 } from "./domain/campaign";
+
+// S09.08: the end-of-pilot purge (composed in src/app/purge.ts, run by /api/jobs/end-of-pilot-purge): every subscriber still asked after the deadline deleted
+// with the E07 deletion (the inbound router's `SubscriberDeletion`), the completion recorded once, and the day it completed for the terms page.
+export { PURGE_BUDGET_MS, PURGE_PAGE, createEndOfPilotPurge, residentDataDeletedOn, type EndOfPilotPurge, type PurgeDeps, type PurgeLog, type PurgeReport } from "./application/purge";
+export type { SubscriberDeletion } from "./application/inbound";

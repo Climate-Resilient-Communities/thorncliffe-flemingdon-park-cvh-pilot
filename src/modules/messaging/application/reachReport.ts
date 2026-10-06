@@ -3,6 +3,10 @@
 // original with the S06.08 definitions (src/modules/messaging/domain/deliveryMeasures.ts): attempted reach is the original's recipients whose text of the
 // entry was handed to the provider, confirmed reach those whose text is delivered. The view applies the small-number rule and holds no personal data (only
 // counts and the ids of alert entries). Drills are reported apart: the view flags them and they are returned in a list of their own.
+//
+// The end-of-pilot purge (S09.08) deletes most subscribers, and the deletion clears the recipient ids the view matches on: the rows the view showed when the
+// purge began are kept in `correction_reach_kept` (a trigger on the purge's record, before its first deletion), and an entry kept there is read from there,
+// so the pilot's measure stays as it was (the E09 acceptance: the aggregate measures are kept for the MVP). Any other entry is read live from the view.
 import { sql } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
 
@@ -49,14 +53,20 @@ type ViewRow = {
 
 const isKind = (value: string): value is CorrectionReachKind => (CORRECTION_REACH_KINDS as readonly string[]).includes(value);
 
-/** The latest `limit` measured entries of real alerts and the latest `limit` of drills (newest approval first). */
+const COLUMNS = sql.raw(`entry_id, alert_id, kind, is_drill, approved_at, original_recipients, original_recipients_shown, attempted_reach, attempted_reach_shown,
+           confirmed_reach, confirmed_reach_shown, attempted_percent, confirmed_percent`);
+
+/** The latest `limit` measured entries of real alerts and the latest `limit` of drills (newest approval first); an entry kept through the purge as kept. */
 export async function readCorrectionReach(executor: DbExecutor, limit = 20): Promise<CorrectionReachReport> {
   const rows = await executor.execute<ViewRow>(sql`
-    select entry_id, alert_id, kind, is_drill, approved_at, original_recipients, original_recipients_shown, attempted_reach, attempted_reach_shown,
-           confirmed_reach, confirmed_reach_shown, attempted_percent, confirmed_percent
+    select ${COLUMNS}
     from (
       select r.*, row_number() over (partition by r.is_drill order by r.approved_at desc nulls last, r.entry_id) as position
-      from correction_reach r
+      from (
+        select ${COLUMNS} from correction_reach_kept
+        union all
+        select ${COLUMNS} from correction_reach v where not exists (select 1 from correction_reach_kept k where k.entry_id = v.entry_id)
+      ) r
     ) latest
     where position <= ${limit}
     order by approved_at desc nulls last, entry_id`);

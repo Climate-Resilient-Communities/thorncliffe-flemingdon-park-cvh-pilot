@@ -12,7 +12,10 @@
    "draftTitle": "Προσχέδιο: δεν έχει δημοσιευτεί ακόμη",
    "draftBody": "Αυτό το κείμενο δεν έχει εγκριθεί ακόμη. Δεν είναι οι τελικοί όροι. Μην εγγραφείτε με βάση αυτό.",
    "draftWhy": "Δεν δημοσιεύτηκε επειδή:",
-   "translationNote": "Κάποια μέρη αυτής της σελίδας δεν έχουν μεταφραστεί ακόμη στα {lang}. Αυτά τα μέρη εμφανίζονται στα αγγλικά."
+   "translationNote": "Κάποια μέρη αυτής της σελίδας δεν έχουν μεταφραστεί ακόμη στα {lang}. Αυτά τα μέρη εμφανίζονται στα αγγλικά.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Διαγραφή δεδομένων κατοίκων",
+   "dataDeletedNote": "Το πιλοτικό CVH έληξε. Εκείνη την ημερομηνία διαγράψαμε τον αριθμό τηλεφώνου και τις επιλογές όλων όσων δεν απάντησαν YES για να συνεχίσουν να λαμβάνουν ειδοποιήσεις."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

@@ -16,7 +16,10 @@ window.CVH_STRINGS.en = {
   draftTitle: 'Draft: not yet published',
   draftBody: 'This text has not been approved yet. It is not the final terms. Do not sign up on the strength of it.',
   draftWhy: 'Not published because:',
-  translationNote: 'Some of this page has not been translated into {lang} yet. Those parts show in English.'
+  translationNote: 'Some of this page has not been translated into {lang} yet. Those parts show in English.',
+  /* S09.08: shown once the end-of-pilot purge has completed, with the day it did (YYYY-MM-DD, like the last-updated date). */
+  dataDeleted: 'Resident data deleted',
+  dataDeletedNote: 'The CVH pilot has ended. On that date we deleted the phone number and choices of everyone who did not reply YES to keep getting alerts.'
  },
 
  /* ------------------------------------------------ Shell (resident and ambassador app) */

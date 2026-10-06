@@ -39,7 +39,7 @@ import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type Subs
 import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
 import { MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
 import { createSignupGate } from "./campaignGate";
-import { createNumberDeletion } from "./deletion";
+import { createNumberDeletion, type Deleted } from "./deletion";
 import { clientHash } from "./rateLimit";
 import type { SignupPlaces, SubscriberLookup } from "./webSignup";
 
@@ -224,9 +224,19 @@ export function signupLink(publicBaseUrl: string, lang: LaunchCode): string {
   return `${publicBaseUrl.replace(/\/+$/, "")}/${lang}/text-alerts`;
 }
 
+/**
+ * S09.08: the E07 deletion (`deleteNumber` in the router, the very steps STOP runs) for the end-of-pilot purge, in the purge's transaction, which holds the
+ * number's lock and has locked the subscriber's row after checking again that the purge deletes them. Everything held for the number goes: the subscriber, a
+ * pending sign-up of the number if one exists, and its `inbound_reply` rows. The number comes from the purge and never leaves this call. (Once the deletion is
+ * its own `createNumberDeletion`, S09.03 and S07.06, the purge calls that instead.)
+ */
+export interface SubscriberDeletion {
+  deleteSubscriber(tx: DbTransaction, phone: string, subscriber: SubscriberRow): Promise<Deleted>;
+}
+
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
 
-export function createInboundRouter(deps: InboundDeps): InboundRouter {
+export function createInboundRouter(deps: InboundDeps): InboundRouter & SubscriberDeletion {
   const pending = deps.stores?.pending ?? pendingSignupStore;
   const subscribers = deps.stores?.subscribers ?? subscriberStore;
   const inbound = deps.stores?.inbound ?? inboundStore;
@@ -402,6 +412,8 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
       else deps.log?.info("inbound.handled", { keyword: outcome.keyword, state: outcome.state, action: outcome.action, replied: outcome.replied });
       return outcome;
     },
+    // S09.08: the end-of-pilot purge's call of the one deletion (SubscriberDeletion above).
+    deleteSubscriber: async (tx, phone, subscriber) => deleteNumber(tx, phone, { subscriber, pending: await pending.ofNumber(tx, phone) }),
   };
 }
 

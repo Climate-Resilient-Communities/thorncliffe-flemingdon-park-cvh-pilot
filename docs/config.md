@@ -16,7 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 that residents are told to text START to (R-06, S07.02). The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`, `/api/jobs/subscriber-measures`, `/api/jobs/campaign-end`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`, `/api/jobs/subscriber-measures`, `/api/jobs/campaign-end`, `/api/jobs/end-of-pilot-purge`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. The code lock is released as of E05 (`RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is true), so `true` now starts in production and turns the gate on. The switch is only this Vercel variable: an Admin sets it with a production redeploy and records it in the launch-readiness checklist. Previews and local development run with it on unless it is `false` | default (off) |
@@ -420,6 +420,36 @@ select cron.schedule('cvh-campaign-end', '*/15 * * * *', $$
   );
 $$);
 ```
+
+## The end-of-pilot purge (S09.08)
+
+`/api/jobs/end-of-pilot-purge` deletes, after the campaign's deadline, every subscriber who did not reply YES. It adds no environment variable besides the
+job secret, sends no text and reads no Twilio credential. What it does and fixes:
+
+| What | Where | Value |
+|---|---|---|
+| When | pg_cron job below, every 15 minutes, 5 minutes after the end job (`5,20,35,50 * * * *`) | Nothing until the real campaign's deadline (`campaign.deadline`: the end of the Toronto day its text names, the 30th day after the start) has passed by the database's clock and the end job has ended the campaign (its `campaign.ended` audit counts who stayed and who did not reply before anyone is deleted; the database refuses the purge's record earlier), and nothing for a cancelled campaign. The first run after the end begins the purge, about 5 minutes after the deadline. |
+| Who | `purgeableSql` in `src/modules/subscriptions/adapters/purgeStore.ts` | Subscribers still `reconsent_pending`. `retained` (said YES) and `active` (joined after the start) subscribers are never selected. |
+| How | `src/modules/subscriptions/application/purge.ts` | One short transaction per subscriber, 100 ids read at a time: the number's lock, the waiting texts skipped, the row locked and the state and deadline checked again under the lock by the database's clock (a YES that won keeps them), then the full deletion STOP runs (the row, a pending sign-up, the number's `inbound_reply` rows; texts already sent forget the subscriber). A run starts new deletions for 40 seconds (`PURGE_BUDGET_MS`), and the next run goes on. |
+| Record | `campaign_purge` | `deleted` (raised with each deletion), and once none is left `completed_at` and `retained`, with the one ops event `campaign.purge_completed` (`deleted`, `retained`: counts only). A run with a subscriber whose deletion failed answers 500, so the health job's `job_failed` texts the on-call Admins; that subscriber is tried again at the next run, and the purge completes only once none is left. |
+| The terms page | `/{lang}/terms`, `src/app/pilotEnd.ts` | Once the purge has completed, the page states "Resident data deleted" with the Toronto day it completed, in every language (AI-generated translations, not yet checked by native readers). The page now renders on request; the day is read from `campaign_purge` through Next's data cache (an hour, expired by the run that completes the purge). `CVH_FAKE_RESIDENT_DATA_DELETED_ON=YYYY-MM-DD` stands in for it in local development only (the resident page tests); start-up refuses it on Vercel. |
+| Kept | `correction_reach_kept` | The staff audit trail, `subscriber_measure`, `subscriber_event_count` (the deletions are counted there), `usage_count`, the weekly review, the spend views and the delivery rows of texts already sent (no longer naming anyone). The correction reach (S07.10's `correction_reach`) counts from the recipient ids the deletions clear, so the purge keeps it as it stood when it began: the database copies the view's rows into `correction_reach_kept` in the transaction that begins the purge, and the Hub's Measures page reads a kept entry from there (an entry measured later is read live). |
+
+The purge job, which the owner runs once in production's Supabase SQL editor as `postgres` (nothing in the repository or CI runs it), before the campaign starts:
+
+```sql
+select cron.schedule('cvh-end-of-pilot-purge', '5,20,35,50 * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/end-of-pilot-purge',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+```
+
+Once `campaign.purge_completed` is in `ops_event` (`select at, detail from ops_event where kind = 'campaign.purge_completed'`), the job has nothing left to
+do: `select cron.unschedule('cvh-end-of-pilot-purge')` and `select cron.unschedule('cvh-campaign-end')` are part of the end-of-pilot procedure
+(docs/procedures/end-of-pilot.md).
 
 ## Web sign-up for text alerts (S07.02)
 

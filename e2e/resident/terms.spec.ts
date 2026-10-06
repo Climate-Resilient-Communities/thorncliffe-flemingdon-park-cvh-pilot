@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ALERTS_URL, RESIDENT_DATA_DELETED_ON } from "./alerts-server";
 import { HEIGHTS, LANGUAGES, WIDTHS, expectBaseline, openResident } from "./helpers";
 
 // S07.01: /{lang}/terms inside the resident shell. Run against a local build (not production), so the terms, which are
@@ -55,6 +56,9 @@ test("/en/terms states in plain words everything the terms must say, with versio
   await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-02");
   await expect(page.getByTestId("terms-owner")).toContainText("PLACEHOLDER");
   await expect(page.getByTestId("terms-contact")).toContainText("PLACEHOLDER");
+  // No end-of-pilot purge has completed for this server: the page says nothing about deleted data (S09.08).
+  await expect(page.getByTestId("terms-deleted")).toHaveCount(0);
+  await expect(page.getByTestId("terms-deleted-note")).toHaveCount(0);
 });
 
 test("terms that are not published are never shown as final: the page is marked as a draft, and kept from search", async ({ page }) => {
@@ -187,3 +191,51 @@ for (const code of ["en", "ur"]) {
     });
   }
 }
+
+// S09.08: once the end-of-pilot purge has completed, the page states the day the pilot's resident data was deleted. The second server (alerts-server.ts) has
+// that day (CVH_FAKE_RESIDENT_DATA_DELETED_ON, standing in for the purge's record in the database); the first server's page never shows it, as above.
+const deletedLabel = (page: Page) => page.locator(".terms-facts__item", { has: page.getByTestId("terms-deleted") }).locator("dt");
+
+test.describe("after the end-of-pilot purge", () => {
+  test.use({
+    baseURL: ALERTS_URL,
+    storageState: { cookies: [], origins: [{ origin: ALERTS_URL, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] },
+  });
+
+  for (const language of LANGUAGES) {
+    test(`/${language.code}/terms states the day resident data was deleted, in its own language`, async ({ page }) => {
+      await openResident(page, `/${language.code}/terms`, 390);
+
+      // The day is a left-to-right run, like the last-updated date, beside the facts; the sentence below them says what was deleted.
+      await expect(page.getByTestId("terms-deleted")).toHaveText(RESIDENT_DATA_DELETED_ON);
+      await expect(page.getByTestId("terms-deleted")).toHaveAttribute("dir", "ltr");
+      const note = page.getByTestId("terms-deleted-note");
+      await expect(note).toBeVisible();
+      await expect(note).toContainText("CVH");
+      // Translated in every language: no English stands in for it.
+      await expect(note).not.toHaveAttribute("lang", "en");
+      expect(await note.innerText()).not.toMatch(/^\[EN\]/);
+      await expect(deletedLabel(page)).not.toHaveAttribute("lang", "en");
+    });
+  }
+
+  test("the English page says it in plain words", async ({ page }) => {
+    await openResident(page, "/en/terms", 390);
+
+    await expect(deletedLabel(page)).toHaveText("Resident data deleted");
+    await expect(page.getByTestId("terms-deleted-note")).toHaveText(
+      "The CVH pilot has ended. On that date we deleted the phone number and choices of everyone who did not reply YES to keep getting alerts.",
+    );
+  });
+
+  for (const code of ["en", "ur"]) {
+    for (const width of WIDTHS) {
+      test(`/${code}/terms after the purge matches its baseline screenshot at ${width}px`, async ({ page }) => {
+        await openResident(page, `/${code}/terms`, width);
+        await showWholePage(page, width);
+
+        await expectBaseline(page, `terms-deleted-${code}-${width}.png`);
+      });
+    }
+  }
+});

@@ -12,7 +12,10 @@
    "draftTitle": "Návrh: zatiaľ nezverejnené",
    "draftBody": "Tento text ešte nebol schválený. Nie sú to konečné podmienky. Neprihlasujte sa na základe tohto textu.",
    "draftWhy": "Nezverejnené, pretože:",
-   "translationNote": "Časť tejto stránky ešte nie je preložená do jazyka {lang}. Tieto časti sa zobrazujú po anglicky."
+   "translationNote": "Časť tejto stránky ešte nie je preložená do jazyka {lang}. Tieto časti sa zobrazujú po anglicky.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Údaje obyvateľov vymazané",
+   "dataDeletedNote": "Pilot CVH sa skončil. V ten deň sme vymazali telefónne číslo a voľby všetkých, ktorí neodpovedali YES, aby dostávali upozornenia aj naďalej."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

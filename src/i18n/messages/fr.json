@@ -38,7 +38,9 @@
     "draftTitle": "Ébauche : pas encore publiée",
     "draftBody": "Ce texte n'a pas encore été approuvé. Ce ne sont pas les conditions finales. Ne vous inscrivez pas en vous fiant à ce texte.",
     "draftWhy": "Pas publié parce que :",
-    "translationNote": "Une partie de cette page n'a pas encore été traduite en {lang}. Ces parties s'affichent en anglais."
+    "translationNote": "Une partie de cette page n'a pas encore été traduite en {lang}. Ces parties s'affichent en anglais.",
+    "dataDeleted": "Données des résidents supprimées",
+    "dataDeletedNote": "Le projet pilote CVH est terminé. À cette date, nous avons supprimé le numéro de téléphone et les choix de toutes les personnes qui n'ont pas répondu YES pour continuer à recevoir les alertes."
   },
   "shell": {
     "cvhName": "Carrefour virtuel communautaire",

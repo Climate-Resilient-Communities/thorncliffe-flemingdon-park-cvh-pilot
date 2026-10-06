@@ -12,7 +12,10 @@
    "draftTitle": "Draft: hindi pa nailalathala",
    "draftBody": "Hindi pa naaaprubahan ang tekstong ito. Hindi pa ito ang huling mga tuntunin. Huwag mag-sign up dahil lang dito.",
    "draftWhy": "Hindi nailathala dahil:",
-   "translationNote": "May ilang bahagi ng pahinang ito na hindi pa naisasalin sa {lang}. Sa English lumalabas ang mga bahaging iyon."
+   "translationNote": "May ilang bahagi ng pahinang ito na hindi pa naisasalin sa {lang}. Sa English lumalabas ang mga bahaging iyon.",
+   /* S09.08: the day the pilot's resident data was deleted, shown once the end-of-pilot purge has completed. AI-generated (Claude), not yet checked by native readers. */
+   "dataDeleted": "Binura ang datos ng mga residente",
+   "dataDeletedNote": "Tapos na ang pilot ng CVH. Sa petsang iyon, binura namin ang numero ng telepono at mga pinili ng lahat ng hindi nag-reply ng YES para patuloy na makatanggap ng alerto."
   },
   "shell": {
    "hubName": "Thorncliffe Park Community Hub",

@@ -1,7 +1,8 @@
 // Drizzle tables of the messaging module (AD-2), written by hand to match
 // db/migrations/20261002220000_sms_test_send.sql (the first-text spike's ledger), db/migrations/20261003400000_delivery_outbox.sql
 // (the outbox), db/migrations/20261003410000_dispatcher.sql (the sender lease, the pause switch and the claim order) and
-// db/migrations/20261003430000_messaging_pause.sql (the app's update of the pause) and db/migrations/20261006120000_resend.sql (a resend's two columns); the drift test compares them.
+// db/migrations/20261003430000_messaging_pause.sql (the app's update of the pause), db/migrations/20261006120000_resend.sql (a resend's two columns) and
+// db/migrations/20261006160000_end_of_pilot_purge.sql (the correction reach kept through the purge); the drift test compares them.
 // The grants, the functions and the triggers live only in the migrations.
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, foreignKey, index, integer, pgPolicy, pgRole, pgTable, smallint, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
@@ -213,4 +214,31 @@ export const messagingControl = pgTable(
     pgPolicy("messaging_control_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("messaging_control_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
+).enableRLS();
+
+/**
+ * The correction reach measure (S07.10's view `correction_reach`, FR-M4) as it stood when the end-of-pilot purge began (S09.08): the view's rows, copied by
+ * a trigger on subscriptions' `campaign_purge` in the transaction that makes it, before the first deletion, because the E07 deletion clears the recipient
+ * ids the view matches on. `readCorrectionReach` reads a kept entry here instead of the view. The app only reads it; the copy is the migration's function.
+ * `entryId` is a plain id, not a reference: a kept row is a frozen copy, and a foreign key would make every `truncate alert_entry` name this table.
+ */
+export const correctionReachKept = pgTable(
+  "correction_reach_kept",
+  {
+    entryId: uuid("entry_id").primaryKey(),
+    alertId: uuid("alert_id").notNull(),
+    kind: text().notNull(),
+    isDrill: boolean("is_drill").notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    originalRecipients: integer("original_recipients"),
+    originalRecipientsShown: text("original_recipients_shown").notNull(),
+    attemptedReach: integer("attempted_reach"),
+    attemptedReachShown: text("attempted_reach_shown").notNull(),
+    confirmedReach: integer("confirmed_reach"),
+    confirmedReachShown: text("confirmed_reach_shown").notNull(),
+    attemptedPercent: integer("attempted_percent"),
+    confirmedPercent: integer("confirmed_percent"),
+    keptAt: timestamp("kept_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  () => [pgPolicy("correction_reach_kept_app_select", { for: "select", to: cvhApp, using: sql`true` })],
 ).enableRLS();
