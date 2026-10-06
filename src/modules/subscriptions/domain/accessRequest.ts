@@ -1,6 +1,7 @@
 // A resident's access request (S09.03, E09 "Access request", PIPEDA): the rules that need no database. A request is kept only as two audit records, `received`
 // and `closed`, with the request as the subject (no table, no number); this file pairs them into the requests still open, says which are past 25 days of the
 // 30-day limit, and writes what the CVH holds for a number as the lines IT reads out on screen. Nothing here is saved anywhere.
+import { RECONSENT_PROMPT_KIND } from "./campaign";
 import type { Menu } from "./menus";
 
 /** What a resident may ask for (audit's ACCESS_REQUEST_KINDS). */
@@ -124,6 +125,14 @@ export interface HeldCheckinRequest {
   consentVersion: string;
 }
 
+/**
+ * Where a `reconsent_pending` subscriber stands in the end-of-pilot campaign (S09.07), by the database's clock: asked before its deadline (a YES keeps them,
+ * and without one they are deleted after it), past the deadline (lapsed: they receive nothing, S09.08's purge deletes them, and a YES changes nothing), or
+ * asked by a campaign the owner cancelled (docs/config.md "Cancelling": they keep receiving and nothing is deleted because of it). `deadlineDate` is the
+ * Toronto day the campaign's text names (`YYYY-MM-DD`); the deadline is the end of it.
+ */
+export type HeldReconsent = { kind: "open"; deadlineDate: string } | { kind: "lapsed"; deadlineDate: string } | { kind: "cancelled" };
+
 /** Check-in records (E08): not built yet, built and read, or a table this script cannot read yet (then nothing may be answered as complete). */
 export type HeldCheckins = { kind: "not_built" } | { kind: "unreadable" } | { kind: "rows"; rows: readonly { at: Date; description: string }[] };
 
@@ -139,6 +148,8 @@ export interface HeldRecord {
     consentVersion: string;
     startedBy: string;
     retentionState: string;
+    /** Where a `reconsent_pending` subscriber stands in the campaign; null for any other retention state. */
+    reconsent: HeldReconsent | null;
     places: readonly HeldPlace[];
     mutedTopics: readonly string[];
     prompt: HeldPrompt | null;
@@ -200,28 +211,57 @@ const place = (p: HeldPlace) => `${p.address ?? "a building no longer in the reg
 const checkinRequestLine = (request: HeldCheckinRequest | null) =>
   request === null ? "none" : `by ${request.method === "call" ? "a call" : "a text"}, where I live: ${place(request.place)}; check-in consent version ${request.consentVersion}`;
 
-/** What each kind of prompt asks, as it is read out; a kind not listed here is read out by its code. */
+/** What each kind of prompt asks, as it is read out; a kind not listed here is read out by its code (the end of the pilot's question: `reconsentPromptWords`). */
 const PROMPT_WORDS: Readonly<Record<string, string>> = {
   delete_confirm: "asked to reply 0 again to delete the subscription",
   menu_building: "the building menu (reply 1)",
   menu_language: "the language menu (reply 2)",
   edit_link_offer: "offered a link to make changes online (reply 1)",
-  reconsent: "asked at the end of the pilot whether to keep getting alerts (reply YES to stay)",
 };
 
-/** The retention states (AR-13) as they are read out. */
+/**
+ * The end of the pilot's question (S09.07's `reconsent` prompt), in words: what a YES does depends on where the campaign stands. Before the deadline it
+ * keeps them; after it the router answers "The CVH pilot has ended" and changes nothing; once the owner cancelled the campaign it is answered as any
+ * subscriber's YES. The row stays until it is replaced or the subscriber is deleted, so it is held past its deadline too.
+ */
+function reconsentPromptWords(reconsent: HeldReconsent | null): string {
+  const asked = "asked at the end of the pilot whether to keep getting alerts";
+  if (reconsent === null) return asked;
+  if (reconsent.kind === "open") return `${asked} (reply YES to stay)`;
+  if (reconsent.kind === "lapsed") return `${asked} (its deadline has passed: a YES no longer keeps them)`;
+  return `${asked} (the campaign was cancelled: a YES changes nothing)`;
+}
+
+/** The retention states (AR-13) as they are read out (`reconsent_pending`: `reconsentPendingWords`). */
 const RETENTION_WORDS: Readonly<Record<string, string>> = {
   active: "active",
-  reconsent_pending:
-    "asked at the end of the pilot whether to stay (reconsent_pending): deleted with everything held for the number after the campaign's deadline unless they reply YES",
   retained: "replied YES at the end of the pilot and stays (retained)",
 };
+
+/**
+ * A `reconsent_pending` subscriber's retention state, in words, by where the campaign stands (S09.07): deleted after its deadline unless they reply YES
+ * before it; past the deadline, deleted by the end-of-pilot purge (S09.08) whatever they reply; or asked by a campaign the owner cancelled, which deletes
+ * nothing. With no campaign to read, nothing is said of what happens next.
+ */
+function reconsentPendingWords(reconsent: HeldReconsent | null): string {
+  const asked = "asked at the end of the pilot whether to stay (reconsent_pending)";
+  if (reconsent === null) return asked;
+  if (reconsent.kind === "open") {
+    return `${asked}: deleted with everything held for the number after the campaign's deadline, the end of ${reconsent.deadlineDate}, unless they reply YES before it`;
+  }
+  if (reconsent.kind === "lapsed") {
+    return `${asked}: the campaign's deadline, the end of ${reconsent.deadlineDate}, has passed without a YES: they get no texts, the end-of-pilot purge deletes them with everything held for the number, and a YES no longer keeps them`;
+  }
+  return `${asked}, by a campaign the owner cancelled: they keep getting alerts, and nothing is deleted because of it`;
+}
 
 /** What the keyed hashes under each scope count; a scope not listed here is read out by its name only. */
 const HASH_SCOPE_WORDS: Readonly<Record<string, string>> = {
   inbound: "texts received from the number",
   inbound_mute: "the number muted for the rest of the day",
-  signup_info: "the sign-up link sent to it",
+  // One a day to a number (inbound.ts's `signupInfo`): to one with no subscription, and to a lapsed subscriber's YES (`pilot_ended`).
+  signup_info:
+    "replies to a number with no subscription or to a YES after the end-of-pilot deadline (the sign-up link or, while the pilot ends, that sign-ups are paused or that the pilot has ended)",
   sms_menu: "text menus started",
 };
 
@@ -262,8 +302,9 @@ export function menuStepWords(menu: Menu, address: (rsn: string) => string | nul
   }
 }
 
-function promptLine(prompt: HeldPrompt): string {
-  const what = PROMPT_WORDS[prompt.kind] ? `${PROMPT_WORDS[prompt.kind]} (${prompt.kind})` : prompt.kind;
+function promptLine(prompt: HeldPrompt, reconsent: HeldReconsent | null): string {
+  const words = prompt.kind === RECONSENT_PROMPT_KIND ? reconsentPromptWords(reconsent) : PROMPT_WORDS[prompt.kind];
+  const what = words ? `${words} (${prompt.kind})` : prompt.kind;
   return `${what}, sent ${torontoTime(prompt.since)}, kept until ${torontoTime(prompt.until)}${prompt.step === null ? "" : `; ${prompt.step}`}`;
 }
 
@@ -294,7 +335,7 @@ export function heldRecordLines(record: HeldRecord): string[] {
   if (record.subscriber) {
     const s = record.subscriber;
     lines.push(
-      "Subscriber (gets text alerts):",
+      s.reconsent?.kind === "lapsed" ? "Subscriber (no longer gets text alerts: past the end-of-pilot deadline):" : "Subscriber (gets text alerts):",
       `  Signed up: ${torontoTime(s.since)}, ${s.startedBy === "staff" ? "with a staff member's help" : "on the web"}`,
       `  Language: ${s.lang}`,
       `  Neighbourhood: ${s.neighbourhood}`,
@@ -303,8 +344,8 @@ export function heldRecordLines(record: HeldRecord): string[] {
       ...s.places.map((p) => `    ${place(p)}`),
       `  Muted topics: ${list(s.mutedTopics)}`,
       `  Terms accepted (consent version): ${s.consentVersion}`,
-      `  Retention state: ${RETENTION_WORDS[s.retentionState] ?? s.retentionState}`,
-      `  Open prompt: ${s.prompt === null ? "none" : promptLine(s.prompt)}`,
+      `  Retention state: ${s.retentionState === "reconsent_pending" ? reconsentPendingWords(s.reconsent) : (RETENTION_WORDS[s.retentionState] ?? s.retentionState)}`,
+      `  Open prompt: ${s.prompt === null ? "none" : promptLine(s.prompt, s.reconsent)}`,
       `  Edit link (texted to change or delete the subscription on the web): ${s.editLink === null ? "none" : editLinkLine(s.editLink)}`,
       `  Check-in request (an ambassador on the floor sees the number and the floor): ${checkinRequestLine(s.checkinRequest)}`,
     );
