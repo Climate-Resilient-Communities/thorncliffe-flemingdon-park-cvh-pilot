@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { LAUNCH_CODES } from "../../../i18n/languages";
 import { RECONSENT_DAYS, campaignTexts, deadlineDateOf, deadlineForStaff, deadlineInText, estimateCampaign, isDeadlineDate, textCostCents } from "./campaign";
+
+/** A day of every month, single and double digits. */
+const DAYS = Array.from({ length: 12 }, (_, month) => `2027-${String(month + 1).padStart(2, "0")}-${month % 2 === 0 ? "07" : "28"}`);
 
 describe("the campaign's deadline (S09.07: the end of the Toronto day 30 days after the start)", () => {
   it("is 30 days after today in Toronto, whatever the hour in UTC", () => {
@@ -19,12 +22,30 @@ describe("the campaign's deadline (S09.07: the end of the Toronto day 30 days af
   it("is written in each language's own way, on the Gregorian calendar, with no year; and for the Hub's staff in full", () => {
     expect(deadlineInText("2026-12-05", "en")).toBe("December 5");
     expect(deadlineInText("2026-12-05", "fr")).toBe("5 décembre");
+    expect(deadlineInText("2026-08-05", "fr")).toBe("5 aout");
     expect(deadlineInText("2026-12-05", "es")).toBe("5 de diciembre");
-    // Dari and Pashto: December, not the Persian calendar's month.
-    expect(deadlineInText("2026-12-05", "prs")).not.toMatch(/قوس|آذر/u);
+    expect(deadlineInText("2026-12-05", "sk")).toBe("5. decembra");
+    expect(deadlineInText("2026-12-25", "zh")).toBe("12月25日");
+    // Dari and Pashto: December, not the Persian calendar's month, and the day in their own numerals; Bengali in its own.
+    expect(deadlineInText("2026-12-25", "prs")).toBe("دسمبر ۲۵");
+    expect(deadlineInText("2026-12-25", "ps")).toBe("دسمبر ۲۵");
+    expect(deadlineInText("2026-12-25", "bn")).toBe("২৫ ডিসে");
     // The month abbreviated where the text fits one text message only that way.
     expect(deadlineInText("2026-09-28", "ta")).toBe("28 செப்.");
     expect(deadlineForStaff("2026-12-05")).toBe("Saturday, December 5, 2026");
+  });
+
+  it("is the catalog's words, whatever the runtime's Intl data say: the frozen text is the same on every Node version", () => {
+    const expected = Object.fromEntries(LAUNCH_CODES.map((lang) => [lang, DAYS.map((day) => deadlineInText(day, lang))]));
+    // A runtime whose Intl writes dates differently (or not at all) changes nothing.
+    const format = vi.spyOn(Intl, "DateTimeFormat").mockImplementation(() => {
+      throw new Error("the campaign text must not ask the runtime's Intl");
+    });
+    try {
+      for (const lang of LAUNCH_CODES) expect(DAYS.map((day) => deadlineInText(day, lang)), lang).toEqual(expected[lang]);
+    } finally {
+      format.mockRestore();
+    }
   });
 });
 

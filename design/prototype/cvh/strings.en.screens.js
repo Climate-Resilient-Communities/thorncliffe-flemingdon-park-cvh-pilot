@@ -2365,9 +2365,16 @@
   /* The end-of-pilot re-consent campaign (S09.07). The texts subscribers get: the campaign text (a frozen catalog string, reviewed before the pilot, with
      the deadline filled in as {date}), the confirmation after YES, the answer to a YES after the deadline and, while sign-ups are paused, the answer to a
      number the CVH does not know. YES, STOP and CVH stay in English in every language. Each fits one text in every language with the longest date
-     (src/modules/subscriptions/application/campaignTexts.test.ts). The sign-up form's and the staff sign-up's refusal while sign-ups are paused, and the
-     Hub's End of the pilot page (English, like every staff screen). */
+     (src/modules/subscriptions/application/campaignTexts.test.ts). smsDate is how a text writes the deadline: the twelve month names, `dayMonth` the
+     order of the day and the month ({day} and {month}), and `digits` the numerals 0 to 9 the day is written with. They are fixed here (taken from
+     CLDR 47) rather than asked of the runtime's Intl, whose data differ between Node versions, so the frozen text is the one reviewed and measured
+     on every runtime; a language whose text fits one message only with the month abbreviated has it abbreviated here. The sign-up form's and the
+     staff sign-up's refusal while sign-ups are paused, and the Hub's End of the pilot page (English, like every staff screen). */
   m(en, {
+    smsDate: {
+      months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      dayMonth: '{month} {day}',
+      digits: '0123456789' },
     smsTexts: {
       reconsent: 'The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted.',
       reconsentKept: 'Thank you. You will keep getting CVH alerts.',

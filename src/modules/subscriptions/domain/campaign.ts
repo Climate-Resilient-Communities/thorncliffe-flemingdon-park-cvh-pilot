@@ -4,7 +4,8 @@
 // (`smsTexts.reconsent`, reviewed before the pilot) with the deadline filled in; the deadline is the end of the Toronto day 30 days after the start
 // (`RECONSENT_DAYS`), the same rule the database checks (`campaign_guard()`), so S09.08's purge deletes everyone who did not say YES "when we said".
 // It is rehearsed on the drill roster first (S06.05: staff phones only), with exactly the text subscribers will get.
-import { LAUNCH_CODES, languageOf, type LaunchCode } from "../../../i18n/languages";
+import { LAUNCH_CODES, type LaunchCode } from "../../../i18n/languages";
+import { smsDateWords } from "../../../i18n/residentTexts";
 
 /** How long subscribers have to reply YES: the deadline is the end of the Toronto day this many days after the start. */
 export const RECONSENT_DAYS = 30;
@@ -27,24 +28,18 @@ export function isDeadlineDate(value: unknown): value is string {
 }
 
 /**
- * The languages whose deadline is written with the month abbreviated: their text fits one text message (70 characters in UCS-2) only that way, with the
- * longest month (AD-21; `campaignTexts.test.ts` checks every month). The others write the month in full.
- */
-const SHORT_MONTH: ReadonlySet<LaunchCode> = new Set(["gu", "ta", "el", "bn"]);
-
-/**
- * The deadline as the campaign text writes it: the day and the month in the language's own way, on the Gregorian calendar (Pashto and Dari would
- * otherwise use the Persian one), with no year (it is at most 31 days away).
+ * The deadline as the campaign text writes it: the day and the month in the language's own way, on the Gregorian calendar, with no year (it is at most 31
+ * days away). The words are the catalog's `smsDate` (src/i18n/residentTexts.ts), never the runtime's `Intl`: its data differ between Node versions (Tamil
+ * puts the month first in one and the day first in another), and the frozen text must be the one reviewed and measured at one segment on every runtime.
+ * The catalog abbreviates the month where a text fits one message (70 characters in UCS-2) only that way (Gujarati, Tamil, Greek, Bengali), and French
+ * writes August "aout", the 1990 spelling every reader knows ("û" is not in GSM-7, and that one letter would make the whole text three messages).
  */
 export function deadlineInText(deadlineDate: string, lang: LaunchCode): string {
-  const date = new Intl.DateTimeFormat(languageOf(lang).bcp47, {
-    day: "numeric",
-    month: SHORT_MONTH.has(lang) ? "short" : "long",
-    timeZone: "America/Toronto",
-    calendar: "gregory",
-  }).format(new Date(`${deadlineDate}T12:00:00Z`));
-  // French writes August "aout", the 1990 spelling every reader knows: "û" is not in GSM-7, and that one letter would make the whole text three messages.
-  return lang === "fr" ? date.replace("û", "u") : date;
+  const words = smsDateWords(lang);
+  const [, month, day] = deadlineDate.split("-").map(Number);
+  const dayText = String(day).replace(/[0-9]/g, (digit) => words.digits[Number(digit)]!);
+  // One pass, so a month name that happens to contain "{day}" (none does) could not be rewritten.
+  return words.dayMonth.replace(/\{(day|month)\}/g, (_, part: string) => (part === "day" ? dayText : words.months[month! - 1]!));
 }
 
 /** The deadline as the Hub's staff read it: "Thursday, November 5, 2026". */

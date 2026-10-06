@@ -7,16 +7,16 @@
 --    names, 30 days after the start; `deadline`, the end of that day in Toronto, the instant a YES stops counting), who started it, from which
 --    session, at which assurance level, and the Admin's idempotency key (a retried request finds its row). States `started -> ended` (the end job,
 --    once the deadline has passed by the database's clock); `cancelled` exists so that the sender can be told to stop a campaign's texts, and only the
---    owner sets it (nothing in the app cancels). Sign-ups stay closed from the real campaign's start until an Admin reopens them for the MVP, after it
---    ended (`signups_reopened_at`, `signups_reopened_by`).
+--    owner sets it (the guard refuses it from the app's logins; nothing in the app cancels). Sign-ups stay closed from the real campaign's start until an
+--    Admin reopens them for the MVP, after it ended (`signups_reopened_at`, `signups_reopened_by`).
 --
 -- What the database refuses, whoever asks (the app's code, a script, the owner), in `campaign_guard()`:
 --  - a campaign not started by an active Admin from that Admin's own unrevoked session that reached aal2 (S01.10's `staff_session.aal2_at`): the
 --    database reads the session itself and records `started_aal` from it, so nothing the caller states about an account or a level is believed;
 --  - a deadline that is not 30 days after the start, in Toronto, by the database's clock; a frozen text missing for one of the 15 languages;
 --  - a real campaign with no rehearsal before it, and a second real campaign (the unique index);
---  - a change to anything frozen at the start; a state change other than `started -> ended` after the deadline or `started -> cancelled`; sign-ups
---    reopened before the real campaign ended, by anyone but an active Admin, or twice.
+--  - a change to anything frozen at the start; a state change other than `started -> ended` after the deadline or `started -> cancelled` by the table's
+--    owner; sign-ups reopened before the real campaign ended, by anyone but an active Admin, or twice.
 --
 -- The outbox (messaging, S06.01) reads campaigns from here:
 --  - `delivery_campaign_started_by_admin(uuid)` now reads the row: started at aal2 by an Admin who is still active, and not cancelled (it answered
@@ -68,7 +68,7 @@ create index campaign_started_by_idx on campaign (started_by);
 create index campaign_signups_reopened_by_idx on campaign (signups_reopened_by);
 alter table campaign enable row level security;
 revoke all on table campaign from public, anon, authenticated, service_role;
--- The app starts campaigns and rehearsals, ends them (the job) and reopens sign-ups; it never deletes one or changes what was frozen.
+-- The app starts campaigns and rehearsals, ends them (the job) and reopens sign-ups; it never deletes one, cancels one (the guard) or changes what was frozen.
 grant select, insert on table campaign to cvh_app;
 grant update (state, signups_reopened_by) on table campaign to cvh_app;
 create policy campaign_app_select on campaign for select to cvh_app using (true);
@@ -149,6 +149,13 @@ begin
     end if;
     if new.state = 'ended' and now() < old.deadline then
       raise exception 'campaign: a campaign ends once its deadline has passed' using errcode = 'check_violation';
+    end if;
+    -- Only the owner cancels (docs/config.md): every login of the app is refused (a jobs worker's, a renamed pooler role's), not one login by name; only
+    -- the table's owner (the SQL editor, the migrator's tools, the tests' fixtures) and a superuser are not the app.
+    if new.state = 'cancelled'
+       and session_user <> (select pg_catalog.pg_get_userbyid(c.relowner) from pg_catalog.pg_class c where c.oid = 'public.campaign'::regclass)
+       and not exists (select 1 from pg_catalog.pg_roles r where r.rolname = session_user and r.rolsuper) then
+      raise exception 'campaign: only the owner cancels a campaign' using errcode = 'check_violation';
     end if;
     new.ended_at := case when new.state = 'ended' then now() else null end;
   elsif new.ended_at is distinct from old.ended_at then

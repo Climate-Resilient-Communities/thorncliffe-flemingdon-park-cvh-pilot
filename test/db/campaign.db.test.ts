@@ -4,9 +4,11 @@
 // campaign rule (S06.01's seam: accepted only for a real campaign started by an Admin at aal2 who is still one, not cancelled, and refused for one started at
 // aal1, by a Coordinator, a Director or an Ambassador, by a suspended or removed Admin, or cancelled; the frozen text, the key, the recipient; the rehearsal
 // only to the drill roster); the rehearsal; the start in one transaction (every active subscriber asked in their language with a prompt and one text, every
-// pending sign-up deleted, sign-ups closed, audited with counts; a retried request and a second start change nothing; a sign-up under way finishes first);
-// YES before and after the deadline; who receives texts before and after it (the fan-out, the hand-off's number, a resend's check, the measures); the sender
-// at the hand-off; and the end job. Every number is fictitious (the 555 exchange); nothing reaches Twilio.
+// pending sign-up deleted, sign-ups closed, audited with counts; a retried request and a second start change nothing; a sign-up under way finishes first, a
+// YES to a pending sign-up read before it confirms nothing after it; a reply 0 under way or coming meanwhile waits on the subscriber's row, not on the
+// prompt's key); the spend cap judged with the campaign's texts counted once; YES before and after the deadline; who receives texts before and after it (the
+// fan-out, the hand-off's number, a resend's check, the measures), and after the owner cancels; the sender at the hand-off; and the end job. Every number is
+// fictitious (the 555 exchange); nothing reaches Twilio.
 import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -16,6 +18,7 @@ import { ownerSources, wireContactResolver } from "../../src/app/messaging";
 import { record, recordRefusal } from "../../src/modules/audit";
 import { createDeliveryQueue } from "../../src/modules/messaging";
 import { floorsOfBuilding, neighbourhoodIds } from "../../src/modules/places";
+import { monthSpentCents } from "../../src/modules/spend";
 import {
   campaignStandingReader,
   createCampaigns,
@@ -31,6 +34,7 @@ import {
   type Campaigns,
   type InboundOutcome,
 } from "../../src/modules/subscriptions";
+import { pendingSignupStore } from "../../src/modules/subscriptions/adapters/pendingSignupStore";
 import { recipientStore } from "../../src/modules/subscriptions/adapters/recipientStore";
 import { campaignTexts } from "../../src/modules/subscriptions/domain/campaign";
 import { createDb, type Db } from "../../src/platform/db";
@@ -55,7 +59,7 @@ const GATE = "hashtextextended('subscriptions:signup_gate', 7302118450)";
 
 const auditTrail = { record: (tx: Parameters<typeof record>[0], event: Parameters<typeof record>[1]) => record(tx, event), recordRefusal: (db: Db, event: Parameters<typeof recordRefusal>[1]) => recordRefusal(db, event) };
 
-function service(): Campaigns {
+function service(over: Partial<Parameters<typeof createCampaigns>[0]> = {}): Campaigns {
   const queue = createDeliveryQueue();
   return createCampaigns({
     db: app,
@@ -65,8 +69,27 @@ function service(): Campaigns {
     pricePerSegmentCents: () => 1.5,
     audit: auditTrail as never,
     spendCap: campaignSpendCap,
+    ...over,
   });
 }
+
+/** A point a use case stops at until the test lets it go on: `reached` settles when it gets there, `release` lets it (and every later arrival) through. */
+function pausePoint() {
+  let arrive!: () => void;
+  let go!: () => void;
+  const reached = new Promise<void>((resolve) => (arrive = resolve));
+  const released = new Promise<void>((resolve) => (go = resolve));
+  return {
+    reached,
+    release: () => go(),
+    async wait() {
+      arrive();
+      await released;
+    },
+  };
+}
+
+const settleAfter = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 beforeAll(async () => {
   owner = connect(serverUrl());
@@ -99,6 +122,8 @@ async function resetAll() {
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
   });
   await owner`delete from ops_event where kind = 'spend.cap_overrun'`;
+  // The cap names a staff account, so it is cleared before the fixtures delete theirs.
+  await owner`update spend_cap set monthly_cents = null, set_by = null, set_at = null where id = 1`;
   await world.reset();
 }
 
@@ -157,7 +182,7 @@ function signUp(phone = "+14165550177") {
 }
 
 /** The inbound router as src/app/inbound.ts composes it. */
-function router() {
+function router(over: Partial<Parameters<typeof createInboundRouter>[0]> = {}) {
   return createInboundRouter({
     db: app,
     places: { floorIdsOf: async (executor, rsn) => (await floorsOfBuilding(executor, rsn))?.map((f) => f.id) ?? null },
@@ -166,6 +191,7 @@ function router() {
     numberKey: () => KEY,
     publicBaseUrl: () => BASE_URL,
     pricePerSegmentCents: () => 1.5,
+    ...over,
   });
 }
 const nextSid = () => `SM${(++sid).toString(16).padStart(32, "0")}`;
@@ -345,6 +371,9 @@ describe("the campaign table", () => {
     expect(await refusal(() => appSql`update campaign set state = 'ended' where id = ${id}`)).toMatch(/ends once its deadline has passed/);
     expect(await refusal(() => appSql`update campaign set signups_reopened_by = ${admin.id} where id = ${id}`)).toMatch(/after the campaign ended/);
     expect(await refusal(() => appSql`update campaign set texts = '{}'::jsonb where id = ${id}`)).toMatch(/permission denied/);
+    // Only the owner cancels (the SQL editor, docs/config.md): the app's login cannot, whatever its grants.
+    expect(await refusal(() => appSql`update campaign set state = 'cancelled' where id = ${id}`)).toMatch(/only the owner cancels a campaign/);
+    expect(await refusal(() => appSql`update campaign set state = 'cancelled' where id = ${rehearsal.id as string}`)).toMatch(/only the owner cancels a campaign/);
     await pastDeadline(id);
     await appSql`update campaign set state = 'ended' where id = ${id}`;
     const [ended] = await owner`select state, ended_at is not null as stamped from campaign where id = ${id}`;
@@ -482,6 +511,30 @@ describe("the rehearsal on the drill roster", () => {
     expect(await signUp("+14165550178")).toEqual({ kind: "accepted" });
   });
 
+  it("sent twice at once with one key (a double submit) is made once: the second waits for the first, finds it and changes nothing", async () => {
+    const admin = await staff("admin");
+    await world.fx.rosterMember();
+    const request = { actorStaffId: admin.id, sessionId: admin.session, idempotencyKey: randomUUID(), deadlineSeen: await deadlineNow() };
+    // The first stops at its text: its rehearsal written, not committed; the second comes meanwhile.
+    const pause = pausePoint();
+    const queue = createDeliveryQueue();
+    const first = service({
+      enqueue: async (tx, input) => {
+        await pause.wait();
+        return queue.enqueueCampaignDelivery(tx, input);
+      },
+    }).rehearse(request);
+    await pause.reached;
+    const second = service().rehearse(request);
+    await settleAfter(400);
+    pause.release();
+    expect(await first).toMatchObject({ kind: "rehearsed", texts: 1, replayed: false });
+    expect(await second).toMatchObject({ kind: "rehearsed", replayed: true });
+    expect(await owner`select count(*)::int as n from campaign`).toEqual([{ n: 1 }]);
+    expect(await owner`select count(*)::int as n from delivery where kind = 'campaign'`).toEqual([{ n: 1 }]);
+    expect((await auditOf("campaign.rehearsed")).map((row) => row.outcome)).toEqual(["ok"]);
+  });
+
   it("is not made while the roster is empty: it would reach nobody", async () => {
     const admin = await staff("admin");
     expect(await service().rehearse({ actorStaffId: admin.id, sessionId: admin.session, idempotencyKey: randomUUID(), deadlineSeen: await deadlineNow() })).toEqual({ kind: "refused", reason: "roster_empty" });
@@ -597,6 +650,115 @@ describe("the start", () => {
     expect(await owner`select count(*)::int as n from pending_signup`).toEqual([{ n: 0 }]);
     expect(await signUp("+14165550189")).toEqual({ kind: "refused", code: "signups_paused" });
   });
+
+  it("leaves a YES to a pending sign-up it deleted under way confirming nothing: no subscriber, no welcome, and 'sign-ups are paused' through inbound_reply", async () => {
+    const admin = await staff("admin");
+    await rehearse(admin);
+    const phone = "+14165550194";
+    expect(await signUp(phone)).toEqual({ kind: "accepted" });
+    // The router stops right after it read the pending sign-up, before it holds the sign-up gate; the campaign starts and commits meanwhile.
+    const pause = pausePoint();
+    const pending = {
+      ...pendingSignupStore,
+      async ofNumber(tx: Parameters<typeof pendingSignupStore.ofNumber>[0], number: string) {
+        const row = await pendingSignupStore.ofNumber(tx, number);
+        await pause.wait();
+        return row;
+      },
+    };
+    const replying = router({ stores: { pending } }).handle({ messageSid: nextSid(), from: phone, body: "Oui", optOutType: null });
+    await pause.reached;
+    expect(await start(admin)).toMatchObject({ kind: "started", pendingDeleted: 1 });
+    pause.release();
+    expect(await replying).toMatchObject({ state: "pending", action: "confirm", replied: true });
+    expect(await owner`select count(*)::int as n from subscriber where phone = ${phone}`).toEqual([{ n: 0 }]);
+    expect(await owner`select count(*)::int as n from delivery where purpose = 'welcome'`).toEqual([{ n: 0 }]);
+    expect(await owner`select recipient_kind, lang, body from delivery where purpose = 'signup_info'`).toEqual([
+      { recipient_kind: "inbound_reply", lang: "fr", body: residentSms("fr", "signupsPaused").body },
+    ]);
+    expect(await owner`select count(*)::int as n from inbound_reply`).toEqual([{ n: 1 }]);
+  });
+
+  it("waits for a prompt the inbound router is opening (a reply 0 under way), then replaces it with the re-consent prompt", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await rehearse(admin);
+    // The router stops after it opened the deletion's confirmation and before it queues its answer: its prompt is written, not committed.
+    const pause = pausePoint();
+    const queue = createDeliveryQueue();
+    const replying = router({
+      enqueue: async (tx, input) => {
+        await pause.wait();
+        return queue.enqueueTransactional(tx, input);
+      },
+    }).handle({ messageSid: nextSid(), from: en.phone, body: "0", optOutType: null });
+    await pause.reached;
+    let settled = false;
+    const starting = start(admin).then((outcome) => ((settled = true), outcome));
+    await settleAfter(400);
+    expect(settled).toBe(false);
+    pause.release();
+    expect(await replying).toMatchObject({ action: "ask_delete", replied: true });
+    expect(await starting).toMatchObject({ kind: "started", asked: 1, texts: 1 });
+    expect(await owner`select kind from sms_prompt where subscriber_id = ${en.id}`).toEqual([{ kind: "reconsent" }]);
+  });
+
+  it("holds a reply 0 that comes while it runs until it has committed; the router then replaces the re-consent prompt with the deletion's confirmation", async () => {
+    const admin = await staff("admin");
+    const en = await subscriber("en");
+    await rehearse(admin);
+    // The start stops at its first campaign text: the subscriber asked and the re-consent prompt written, nothing committed.
+    const pause = pausePoint();
+    const queue = createDeliveryQueue();
+    const starting = service({
+      enqueue: async (tx, input) => {
+        await pause.wait();
+        return queue.enqueueCampaignDelivery(tx, input);
+      },
+    }).start({ actorStaffId: admin.id, sessionId: admin.session, idempotencyKey: randomUUID(), deadlineSeen: await deadlineNow(), confirmed: true });
+    await pause.reached;
+    let settled = false;
+    const replying = textFrom(en.phone, "0").then((outcome) => ((settled = true), outcome));
+    await settleAfter(400);
+    expect(settled).toBe(false);
+    pause.release();
+    expect(await starting).toMatchObject({ kind: "started", asked: 1, texts: 1 });
+    expect(await replying).toMatchObject({ action: "ask_delete", replied: true });
+    expect(await owner`select kind from sms_prompt where subscriber_id = ${en.id}`).toEqual([{ kind: "delete_confirm" }]);
+    expect(await statesOf()).toEqual({ [en.id]: "reconsent_pending" });
+  });
+});
+
+describe("the spend cap at the start", () => {
+  const capAt = (admin: { id: string }, cents: number) => owner`update spend_cap set monthly_cents = ${cents}, set_by = ${admin.id}, set_at = now() where id = 1`;
+  const overruns = () => owner`select subject_type, subject_id, detail from ops_event where kind = 'spend.cap_overrun' order by id`;
+
+  it("counts the campaign's own texts once: a campaign that fits under the cap with the month's spending and the texts waiting raises nothing", async () => {
+    const admin = await staff("admin");
+    for (let n = 0; n < 3; n += 1) await subscriber("en");
+    // The rehearsal's text (2 cents) still waits; the campaign's three texts are 2 cents each: the month reaches the cap exactly.
+    await rehearse(admin);
+    await capAt(admin, (await monthSpentCents(app, new Date())) + 8);
+    expect(await start(admin)).toMatchObject({ kind: "started", costCents: 6, overrun: null });
+    expect(await overruns()).toEqual([]);
+    expect(await auditOf("spend.cap_overrun")).toEqual([]);
+  });
+
+  it("past the cap records the real excess, never refusing: the ops event the health job texts the on-call Admins about, and the audit record, on the campaign", async () => {
+    const admin = await staff("admin");
+    for (let n = 0; n < 3; n += 1) await subscriber("en");
+    await rehearse(admin);
+    // 2 cents waiting and 6 for the campaign: 3 cents past the cap.
+    const cap = (await monthSpentCents(app, new Date())) + 5;
+    await capAt(admin, cap);
+    const outcome = await start(admin);
+    expect(outcome).toMatchObject({ kind: "started", asked: 3, costCents: 6, overrun: { overCents: 3, capCents: cap } });
+    const id = outcome.kind === "started" ? outcome.campaign.id : "";
+    expect(await overruns()).toEqual([{ subject_type: "campaign", subject_id: id, detail: { over_cents: 3 } }]);
+    expect(await auditOf("spend.cap_overrun")).toEqual([
+      { actor_staff_id: admin.id, subject_type: "campaign", subject_id: id, outcome: "ok", meta: { over_cents: 3, cap_cents: cap, entry_cents: 6 } },
+    ]);
+  });
 });
 
 // --- YES ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -685,6 +847,28 @@ describe("receiving subscribers", () => {
       (await owner`select measure, sum(n)::int as n from subscriber_measure where measure like 'receiving_%' group by measure`).map((row) => [row.measure as string, row.n as number]),
     );
     expect(measured).toEqual({ receiving_active: 1, receiving_reconsent_pending: 0, receiving_retained: 1 });
+  });
+
+  it("after the owner cancels the campaign, the asked keep receiving before and after its deadline: never lapsed (not S09.08's to delete), and YES is answered as any subscriber's", async () => {
+    const admin = await staff("admin");
+    const asked = await subscriber("en");
+    const { campaign } = await started(admin);
+    await owner`update campaign set state = 'cancelled' where id = ${campaign.id}`;
+    const audience = { scope: "neighbourhood", neighbourhood_ids: ["TP"], buildings: [], types: ["power"], groups: [] } as never;
+    const reached = async () => (await recipientStore.reached(app, audience)).map((row) => row.id);
+    expect(await textFrom(asked.phone, "YES")).toMatchObject({ state: "active", action: "already_signed_up", replied: true });
+
+    await pastDeadline(campaign.id);
+    expect(await reached()).toEqual([asked.id]);
+    expect(await app.transaction((tx) => subscriberNumberSource().numberOf(tx, asked.id))).toBe(asked.phone);
+    expect(await app.transaction((tx) => subscriberReceives(tx, asked.id))).toBe(true);
+    expect(await textFrom(asked.phone, "YES")).toMatchObject({ state: "active", action: "already_signed_up", replied: true });
+    expect((await service().overview()).counts).toEqual({ asked: 1, kept: 0, active: 0, lapsed: 0 });
+    expect(await statesOf()).toEqual({ [asked.id]: "reconsent_pending" });
+    // Sign-ups are open again: a number the CVH does not know is sent the link.
+    expect(await textFrom("+14165550196", "hello")).toMatchObject({ state: "none", action: "signup_info", replied: true });
+    const [link] = await owner`select body from delivery where purpose = 'signup_info'`;
+    expect(link!.body).toContain("/en/text-alerts");
   });
 });
 

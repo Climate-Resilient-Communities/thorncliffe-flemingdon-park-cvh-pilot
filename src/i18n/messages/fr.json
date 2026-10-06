@@ -5918,5 +5918,23 @@
     "body": "Elle n'a pas encore été ouverte sur ce téléphone avec du réseau, elle a donc besoin de réseau. Les numéros sont toujours enregistrés sur votre téléphone.",
     "available": "Vous pouvez lire ceci sans réseau",
     "none": "Rien d'autre n'est encore enregistré sur ce téléphone. Les pages que vous ouvrez avec du réseau sont enregistrées pour plus tard."
+  },
+  "smsDate": {
+    "months": [
+      "janvier",
+      "février",
+      "mars",
+      "avril",
+      "mai",
+      "juin",
+      "juillet",
+      "aout",
+      "septembre",
+      "octobre",
+      "novembre",
+      "décembre"
+    ],
+    "dayMonth": "{day} {month}",
+    "digits": "0123456789"
   }
 }

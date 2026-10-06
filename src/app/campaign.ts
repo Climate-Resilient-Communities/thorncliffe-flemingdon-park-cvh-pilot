@@ -15,10 +15,15 @@ import { currentSignupConsentVersion } from "./signup";
 /**
  * The monthly cap's check of the campaign's texts (S07.08): the assessment an approval makes (the cap row locked last, the month's spending and the texts still
  * waiting against the cap), with the same consequence, a warning and never a refusal: an overrun is recorded as the ops event the health job texts the on-call
- * Admins about, on the campaign, and the use case audits it.
+ * Admins about, on the campaign, and the use case audits it. The start has queued the campaign's texts in this transaction already, so the texts waiting
+ * leave them out (`exceptCampaignId`, as an approval leaves out its entry's): they are counted once, as the estimate.
  */
 export const campaignSpendCap: CampaignSpendCap = async (tx, input) => {
-  const assessment = await assessApproval(tx, { estimateCents: input.estimateCents, queuedCents: () => queuedCostCents(tx), now: input.now });
+  const assessment = await assessApproval(tx, {
+    estimateCents: input.estimateCents,
+    queuedCents: () => queuedCostCents(tx, { exceptCampaignId: input.campaignId }),
+    now: input.now,
+  });
   if (assessment.capCents === null || assessment.overCents === 0) return null;
   await recordOpsEvent(tx, { kind: "spend.cap_overrun", subjectType: "campaign", subjectId: input.campaignId, detail: { over_cents: assessment.overCents } });
   return { overCents: assessment.overCents, capCents: assessment.capCents };

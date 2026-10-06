@@ -61,7 +61,10 @@ export interface CampaignAudit {
   recordRefusal(db: Db, event: { action: CampaignAction; actorStaffId: string | null; subjectType: string; subjectId: string | null; meta: { reason: RefusalReason } }): Promise<unknown>;
 }
 
-/** The spend cap's check of the campaign's texts (S07.08, wired to spend's assessment): how far they take the month past the cap, or null. It never refuses. */
+/**
+ * The spend cap's check of the campaign's texts (S07.08, wired to spend's assessment): how far they take the month past the cap, or null. It never refuses.
+ * It is asked after the texts are queued in the same transaction, so it must not count them again among the texts waiting (`estimateCents` holds them).
+ */
 export type CampaignSpendCap = (tx: DbTransaction, input: { campaignId: string; estimateCents: number; now: Date }) => Promise<{ overCents: number; capCents: number } | null>;
 
 export interface CampaignDeps {
@@ -241,6 +244,8 @@ export function createCampaigns(deps: CampaignDeps): Campaigns {
       }
       try {
         return await db.transaction(async (tx): Promise<RehearseOutcome> => {
+          // The request's key locked first: the same request twice at once runs once, and the second finds the first's rehearsal.
+          await store.lockKey(tx, idempotencyKey);
           const replay = await store.byKey(tx, idempotencyKey);
           if (replay) {
             if (!replay.rehearsal) throw new Refused("key_invalid");
@@ -298,7 +303,8 @@ export function createCampaigns(deps: CampaignDeps): Campaigns {
             await deps.skipRecipientDeliveries(tx, { kind: "pending_signup", id });
             if (await store.deletePendingSignup(tx, id)) pendingDeleted += 1;
           }
-          // 6. The spend cap, last in the lock order (AD-18): it warns, never refuses.
+          // 6. The spend cap, last in the lock order (AD-18): it warns, never refuses. The texts just queued are the estimate, counted once (the texts
+          //    waiting that it adds leave this campaign's out).
           const overrun = deps.spendCap ? await deps.spendCap(tx, { campaignId: campaign.id, estimateCents: costCents, now: now() }) : null;
           await audit.record(tx, {
             action: "campaign.started",

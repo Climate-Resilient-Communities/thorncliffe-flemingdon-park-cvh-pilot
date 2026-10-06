@@ -1503,6 +1503,8 @@
   });
   /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
      while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
-     with the longest date. AI-generated (Claude), not yet checked by native readers: the campaign text is reviewed before the pilot ends. */
-  m(t, {"smsTexts": {"reconsent": "Λήξη πιλοτικού CVH. Στείλτε YES έως {date}, αλλιώς διαγραφή αριθμού.", "reconsentKept": "Ευχαριστούμε. Θα συνεχίσετε να λαμβάνετε ειδοποιήσεις CVH.", "pilotEnded": "Το πιλοτικό CVH έληξε· ο αριθμός σας δεν κρατήθηκε.", "signupsPaused": "Οι εγγραφές CVH έχουν ανασταλεί έως τη λήξη του πιλοτικού."}, "signup": {"error": {"signups_paused": "Οι εγγραφές έχουν ανασταλεί έως τη λήξη του πιλοτικού."}}});
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["Ιαν","Φεβ","Μαρ","Απρ","Μαΐ","Ιουν","Ιουλ","Αυγ","Σεπ","Οκτ","Νοε","Δεκ"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "Λήξη πιλοτικού CVH. Στείλτε YES έως {date}, αλλιώς διαγραφή αριθμού.", "reconsentKept": "Ευχαριστούμε. Θα συνεχίσετε να λαμβάνετε ειδοποιήσεις CVH.", "pilotEnded": "Το πιλοτικό CVH έληξε· ο αριθμός σας δεν κρατήθηκε.", "signupsPaused": "Οι εγγραφές CVH έχουν ανασταλεί έως τη λήξη του πιλοτικού."}, "signup": {"error": {"signups_paused": "Οι εγγραφές έχουν ανασταλεί έως τη λήξη του πιλοτικού."}}});
 })();

@@ -1527,6 +1527,8 @@
   });
   /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
      while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
-     with the longest date. AI-generated (Claude), not yet checked by native readers: the campaign text is reviewed before the pilot ends. */
-  m(t, {"smsTexts": {"reconsent": "CVH சோதனை முடிகிறது. தொடர {date}க்குள் YES; இல்லையேல் எண் நீக்கம்.", "reconsentKept": "நன்றி. CVH எச்சரிக்கைகள் தொடர்ந்து வரும்.", "pilotEnded": "CVH சோதனை முடிந்தது; உங்கள் எண் வைக்கப்படவில்லை.", "signupsPaused": "சோதனை முடியும்வரை CVH பதிவு நிறுத்தப்பட்டுள்ளது."}, "signup": {"error": {"signups_paused": "சோதனை முடியும்வரை பதிவு நிறுத்தப்பட்டுள்ளது."}}});
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["ஜன.","பிப்.","மார்.","ஏப்.","மே","ஜூன்","ஜூலை","ஆக.","செப்.","அக்.","நவ.","டிச."],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH சோதனை முடிகிறது. தொடர {date}க்குள் YES; இல்லையேல் எண் நீக்கம்.", "reconsentKept": "நன்றி. CVH எச்சரிக்கைகள் தொடர்ந்து வரும்.", "pilotEnded": "CVH சோதனை முடிந்தது; உங்கள் எண் வைக்கப்படவில்லை.", "signupsPaused": "சோதனை முடியும்வரை CVH பதிவு நிறுத்தப்பட்டுள்ளது."}, "signup": {"error": {"signups_paused": "சோதனை முடியும்வரை பதிவு நிறுத்தப்பட்டுள்ளது."}}});
 })();

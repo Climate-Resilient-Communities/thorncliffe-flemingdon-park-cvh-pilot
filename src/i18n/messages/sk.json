@@ -5918,5 +5918,23 @@
     "body": "V tomto telefóne ešte nebola otvorená so signálom, preto potrebuje signál. Čísla sú vo vašom telefóne uložené vždy.",
     "available": "Toto si môžete prečítať bez signálu",
     "none": "V tomto telefóne zatiaľ nie je uložené nič iné. Stránky, ktoré otvoríte so signálom, sa uložia na neskôr."
+  },
+  "smsDate": {
+    "months": [
+      "januára",
+      "februára",
+      "marca",
+      "apríla",
+      "mája",
+      "júna",
+      "júla",
+      "augusta",
+      "septembra",
+      "októbra",
+      "novembra",
+      "decembra"
+    ],
+    "dayMonth": "{day}. {month}",
+    "digits": "0123456789"
   }
 }
