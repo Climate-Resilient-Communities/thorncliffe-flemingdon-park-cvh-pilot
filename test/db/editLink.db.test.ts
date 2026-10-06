@@ -266,7 +266,8 @@ describe("the table and its grants", () => {
                                         has_column_privilege('cvh_app', 'subscriber', 'groups', 'update') as groups,
                                         has_column_privilege('cvh_app', 'subscriber', 'phone', 'update') as phone,
                                         has_column_privilege('cvh_app', 'subscriber', 'consent_version', 'update') as consent`;
-    expect(rights).toEqual({ sel: true, ins: true, del: true, used: true, hash: false, expires: false, anon: false, authenticated: false, groups: true, phone: false, consent: false });
+    // consent_version: S09.07's re-consent sets it to the campaign's terms version (20261006155000_reconsent_campaign.sql), never the page.
+    expect(rights).toEqual({ sel: true, ins: true, del: true, used: true, hash: false, expires: false, anon: false, authenticated: false, groups: true, phone: false, consent: true });
     const [rls] = await owner`select relrowsecurity from pg_class where relname = 'subscription_edit_token'`;
     expect(rls!.relrowsecurity).toBe(true);
   });
@@ -469,8 +470,9 @@ describe("a change", () => {
   it("undoes all of it, the link's use and what checkins did, when the resident no longer receives once the row is locked", async () => {
     const id = await subscriber();
     const token = await linkFor(id);
-    // E09's re-check under the edit's lock answers no (a retention change committed while the change waited; no state is non-receiving yet,
-    // so the store answers it here). What checkins writes in the change's transaction stands for E08's withdrawal.
+    // E09's re-check under the edit's lock answers no (the re-consent campaign's deadline passing while the change waited, S09.07: the store
+    // answers it here; test/db/campaign.db.test.ts has a lapsed subscriber's link). What checkins writes in the change's transaction stands for
+    // E08's withdrawal.
     const editLink = editLinkOn({
       checkins: {
         ...checkins,

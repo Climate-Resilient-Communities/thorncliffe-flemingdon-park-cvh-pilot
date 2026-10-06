@@ -59,9 +59,10 @@ export const AUTHORITY_MATRIX = [
   {
     // `guide.publish` is "publish directory" (S02.05's Publish directory). `provider.manage` (S02.04) is the same
     // authority one step earlier: choosing which loaded providers are published and confirming them is what the
-    // directory is published from, so it follows the row's "publish directory" (Admin only, aal2).
+    // directory is published from, so it follows the row's "publish directory" (Admin only, aal2). `campaign.run` (S09.07) is the end-of-pilot
+    // re-consent campaign, its rehearsal on the drill roster and reopening sign-ups: one Admin at aal2 (AD-9 D-7), like a drill.
     row: "Drills, publish directory, accounts, cap, pause",
-    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage", "delivery.resend"],
+    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage", "oncall.manage", "delivery.resend", "campaign.run"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {

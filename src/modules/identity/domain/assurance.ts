@@ -34,6 +34,7 @@ export const PRIVILEGED_ACTIONS = [
   "buildings.manage",
   "oncall.manage",
   "delivery.resend",
+  "campaign.run",
 ] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];

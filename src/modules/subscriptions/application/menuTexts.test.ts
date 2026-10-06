@@ -44,7 +44,11 @@ const LONGEST = new Map<string, MenuFloor[]>([...SEEDED].map(([rsn, floors]) => 
 const LONGEST_ADDRESS = BUILDINGS.map((building) => building.address).sort((a, b) => b.length - a.length)[0]!;
 const FILL = { building: LONGEST_ADDRESS, floor: "PH-LEVEL", hub: HUB_NUMBER, n: String(BUILDINGS.length) };
 
-/** Every menu and prompt text the inbound router and the menus send, with the values it is sent with (S07.04's prompts included). */
+/**
+ * Every menu and prompt text the inbound router and the menus send, with the values it is sent with (S07.04's prompts included, and S09.07's
+ * answers to YES during and after the end-of-pilot campaign and to a number while sign-ups are paused). The re-consent prompt's own text
+ * (`reconsent`, with its deadline) is the campaign's, checked with every month's longest date in campaignTexts.test.ts.
+ */
 const PROMPT_TEXTS: ResidentTextName[] = [
   "menuWarn",
   "menuHub",
@@ -60,6 +64,9 @@ const PROMPT_TEXTS: ResidentTextName[] = [
   "checkinWithdrawn",
   "deletePrompt",
   "alreadySignedUp",
+  "reconsentKept",
+  "pilotEnded",
+  "signupsPaused",
 ];
 
 /** The text as it is sent, its segments counted by messaging's encoder. */

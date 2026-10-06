@@ -201,12 +201,12 @@ describe("campaign deliveries", () => {
     ]);
   });
 
-  it("are refused for a bad purpose, an id that is not a lowercase UUID, or a recipient who is not a subscriber", async () => {
+  it("are refused for a bad purpose, an id that is not a lowercase UUID, or a recipient who is neither a subscriber nor (for a rehearsal) a roster member", async () => {
     const { queue, calls } = queueOf();
     expect(await queue.enqueueCampaignDelivery(tx, campaignText({ purpose: "Re Consent" }))).toEqual({ ok: false, error: "CAMPAIGN_PURPOSE_INVALID" });
     expect(await queue.enqueueCampaignDelivery(tx, campaignText({ campaignId: "x" }))).toEqual({ ok: false, error: "ID_INVALID" });
     expect(await queue.enqueueCampaignDelivery(tx, campaignText({ campaignId: CAMPAIGN.toUpperCase() }))).toEqual({ ok: false, error: "ID_INVALID" });
-    for (const kind of ["pending_signup", "roster", "staff", "oncall", "inbound_reply"] as const) {
+    for (const kind of ["pending_signup", "staff", "oncall", "inbound_reply"] as const) {
       expect(await queue.enqueueCampaignDelivery(tx, campaignText({ recipient: { kind, id: ID } })), kind).toEqual({ ok: false, error: "RECIPIENT_NOT_ALLOWED" });
     }
     expect(calls.inserted).toEqual([]);

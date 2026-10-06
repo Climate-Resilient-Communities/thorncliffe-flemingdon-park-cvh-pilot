@@ -148,3 +148,39 @@ export {
   type SubscriberMeasure,
   type SubscriberMeasuresDay,
 } from "./domain/subscriberMeasures";
+
+// S09.07: the end-of-pilot re-consent campaign (composed in src/app/campaign.ts): its rehearsal on the drill roster, the start, reopening sign-ups, the end job,
+// the sender's check of a campaign text at the hand-off point, and the one condition of who receives texts (`receivingSql`; `lapsedSql` is whom S09.08's purge
+// deletes).
+export {
+  campaignStandingReader,
+  createCampaigns,
+  renderCampaignText,
+  type CampaignAudit,
+  type CampaignDeps,
+  type CampaignOverview,
+  type CampaignSpendCap,
+  type CampaignSummary,
+  type Campaigns,
+  type EndReport as CampaignEndReport,
+  type ReopenOutcome as CampaignReopenOutcome,
+  type RehearseOutcome as CampaignRehearseOutcome,
+  type StartInput as CampaignStartInput,
+  type StartOutcome as CampaignStartOutcome,
+} from "./application/campaign";
+export { campaignSignupGate, createSignupGate, signupsAlwaysOpen, type SignupGate } from "./application/campaignGate";
+export { lapsedSql, receivingSql } from "./adapters/campaignStore";
+export {
+  CAMPAIGN_REFUSALS,
+  RECONSENT_DAYS,
+  RECONSENT_PROMPT_KIND,
+  RECONSENT_PURPOSE,
+  deadlineForStaff,
+  deadlineInText,
+  estimateCampaign,
+  isDeadlineDate,
+  type CampaignEstimate,
+  type CampaignRefusal,
+  type CampaignState,
+  type CampaignTexts,
+} from "./domain/campaign";

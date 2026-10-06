@@ -5705,7 +5705,90 @@
         "rate_limited": "[EN] You have started 40 sign-ups in the last 24 hours, the most one staff account can. Ask another staff member to continue.",
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
-        "nothingChanged": "[EN] Nothing was sent."
+        "nothingChanged": "[EN] Nothing was sent.",
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+      }
+    },
+    "campaign": {
+      "title": "[EN] End of the pilot",
+      "lead": "[EN] Ask every subscriber whether to keep getting texts after the pilot. Subscribers who do not reply YES by the deadline are deleted after it.",
+      "rehearsal": {
+        "heading": "[EN] Rehearse on the drill roster",
+        "lead": "[EN] Send the campaign text, exactly as subscribers will get it, to the staff phones on the drill roster. Check that it arrives in each language before the campaign starts.",
+        "roster": "[EN] Phones on the drill roster: {n}",
+        "rosterOne": "[EN] Phones on the drill roster: 1",
+        "emptyRoster": "[EN] The drill roster is empty, so a rehearsal reaches nobody. Add the staff phones on the drill roster first.",
+        "none": "[EN] No rehearsal yet.",
+        "last": "[EN] Last rehearsal: {when}, by {name}.",
+        "texts": "[EN] Its texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome.",
+        "button": "[EN] Rehearse on the drill roster",
+        "sending": "[EN] Sending"
+      },
+      "start": {
+        "heading": "[EN] Start the campaign",
+        "needsRehearsal": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "deadlineHint": "[EN] Subscribers who have not replied YES by then receive nothing more and are deleted.",
+        "asked": "[EN] Subscribers who will be asked: {n}",
+        "languagesHeading": "[EN] Subscribers by language",
+        "noSubscribers": "[EN] There are no subscribers to ask.",
+        "cost": "[EN] Estimated cost: {cost} for {n} texts.",
+        "capNotice": "[EN] With this campaign, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still start it: the texts are sent, the overrun is recorded and the on-call Admins are told.",
+        "what": "[EN] Starting the campaign does all of this at once: every subscriber is asked to reply YES and gets the text in their language; every pending sign-up is deleted; new sign-ups are paused until an Admin reopens them after the campaign.",
+        "textHeading": "[EN] The text, in English:",
+        "confirm": "[EN] I have checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "button": "[EN] Start the campaign",
+        "starting": "[EN] Starting"
+      },
+      "running": {
+        "heading": "[EN] The campaign is running",
+        "started": "[EN] Started {when} by {name}.",
+        "deadline": "[EN] Deadline: {date}, end of day in Toronto.",
+        "asked": "[EN] Asked and not yet replied: {n}",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "texts": "[EN] Campaign texts: {waiting} waiting, {handedOff} handed to the provider, {delivered} delivered, {notDelivered} not delivered, {unknown} with an unknown outcome."
+      },
+      "ended": {
+        "heading": "[EN] The campaign has ended",
+        "when": "[EN] Ended {when}; the deadline was {date}.",
+        "kept": "[EN] Replied YES and stay: {n}",
+        "lapsed": "[EN] Did not reply, to be deleted: {n}",
+        "purge": "[EN] Subscribers who did not reply receive nothing and are deleted by the end-of-pilot purge."
+      },
+      "signups": {
+        "heading": "[EN] Sign-ups",
+        "open": "[EN] Sign-ups are open.",
+        "paused": "[EN] Sign-ups are paused while the pilot ends: the web form, the staff sign-up and replies by text all say so.",
+        "reopenHint": "[EN] Reopen them when the MVP is ready to take new subscribers.",
+        "reopened": "[EN] Sign-ups were reopened {when} by {name}.",
+        "button": "[EN] Reopen sign-ups for the MVP",
+        "reopening": "[EN] Reopening"
+      },
+      "someone": "[EN] an Admin",
+      "done": {
+        "rehearsed": "[EN] The rehearsal text is queued for {n} staff phones.",
+        "rehearsedOne": "[EN] The rehearsal text is queued for 1 staff phone.",
+        "rehearsedNone": "[EN] The rehearsal is recorded, but the drill roster is empty: no text was queued.",
+        "rehearsedAlready": "[EN] This rehearsal was already sent. Nothing changed.",
+        "started": "[EN] The campaign has started: {asked} subscribers are asked, {texts} texts are queued and {deleted} pending sign-ups were deleted. Sign-ups are paused.",
+        "alreadyStarted": "[EN] The campaign had already started. Nothing changed.",
+        "reopened": "[EN] Sign-ups are open again."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can run the end of the pilot.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to run the end of the pilot. Sign in again and enter the code.",
+        "key_invalid": "[EN] This page is out of date. Reload it and try again.",
+        "deadline_changed": "[EN] The deadline has changed since this page was opened: it is now {date}. Check it, then start again.",
+        "terms_unavailable": "[EN] The terms are not published, so there is nothing to re-consent to. Publish the terms first.",
+        "rehearsal_needed": "[EN] Rehearse on the drill roster first: the campaign starts only after a rehearsal.",
+        "roster_empty": "[EN] The drill roster is empty, so a rehearsal would reach nobody. Add the staff phones on the drill roster first.",
+        "already_started": "[EN] The campaign has already started. Nothing changed.",
+        "not_confirmed": "[EN] Tick the box to confirm you checked the rehearsal, the deadline, the number of subscribers and the cost.",
+        "not_ended": "[EN] Sign-ups can be reopened only after the campaign has ended.",
+        "already_reopened": "[EN] Sign-ups are already open.",
+        "no_campaign": "[EN] There is no campaign yet, so sign-ups are open.",
+        "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the campaign. Reload the page. If this stays, tell IT."
       }
     }
   },
@@ -5812,7 +5895,8 @@
       "place_unknown": "તમારું કોઈ બિલ્ડિંગ કે માળ હવે યાદીમાં નથી. તમારાં બિલ્ડિંગ તપાસો અને ફરી પ્રયત્ન કરો.",
       "rate_limited": "આ કનેક્શન પરથી ઘણાં બધાં સાઇન અપ આવ્યાં છે. એક કલાક પછી ફરી પ્રયત્ન કરો.",
       "signup_unavailable": "ટેક્સ્ટ માટે સાઇન અપ હમણાં ઉપલબ્ધ નથી. પછીથી ફરી પ્રયત્ન કરો.",
-      "network": "અમે CVH સુધી પહોંચી શક્યા નહીં. તમારું કનેક્શન તપાસો અને ફરી પ્રયત્ન કરો."
+      "network": "અમે CVH સુધી પહોંચી શક્યા નહીં. તમારું કનેક્શન તપાસો અને ફરી પ્રયત્ન કરો.",
+      "signups_paused": "પાયલટ પૂરો થાય ત્યાં સુધી સાઇન અપ બંધ છે."
     }
   },
   "smsTexts": {
@@ -5841,7 +5925,11 @@
     "checkinWithdrawn": "તમારી ખબર પૂછવાની વિનંતી પાછી ખેંચાઈ ગઈ.",
     "menuClosedLink": "મેનૂ બંધ થયું. કંઈ બદલાયું નથી. વેબ લિંક માટે 1 મોકલો.",
     "editLink": "તમારી CVH ટેક્સ્ટ ચેતવણીઓ અહીં બદલો અથવા કાઢી નાખો: {link} આ લિંક એક જ વાર, 30 મિનિટ માટે ચાલે છે.",
-    "editSaved": "તમારી CVH ચેતવણીની પસંદગીઓ વેબ પેજ પર બદલાઈ. તમે નથી બદલી? હબને ફોન કરો: {hub}"
+    "editSaved": "તમારી CVH ચેતવણીની પસંદગીઓ વેબ પેજ પર બદલાઈ. તમે નથી બદલી? હબને ફોન કરો: {hub}",
+    "reconsent": "CVH પાયલટ પૂરો. ચેતવણી માટે {date} સુધી YES મોકલો, નહીં તો નંબર રદ.",
+    "reconsentKept": "આભાર. તમને CVH ચેતવણીઓ મળતી રહેશે.",
+    "pilotEnded": "CVH પાયલટ પૂરો થયો; તમારો નંબર રાખવામાં આવ્યો નથી.",
+    "signupsPaused": "પાયલટ પૂરો થાય ત્યાં સુધી CVH ટેક્સ્ટ સાઇન અપ બંધ છે."
   },
   "smsKeywords": {
     "yes": "હા, હાં"
@@ -5883,5 +5971,23 @@
     "body": "આ પેજ આ ફોન પર હજી સિગ્નલ સાથે ખોલાયું નથી, એટલે તેને સિગ્નલની જરૂર છે. નંબરો હંમેશા તમારા ફોન પર સાચવેલા રહે છે.",
     "available": "તમે આ સિગ્નલ વિના વાંચી શકો છો",
     "none": "આ ફોન પર હજી બીજું કંઈ સાચવેલું નથી. તમે સિગ્નલ સાથે ખોલો તે પેજ પછી માટે સચવાય છે."
+  },
+  "smsDate": {
+    "months": [
+      "જાન્યુ",
+      "ફેબ્રુ",
+      "માર્ચ",
+      "એપ્રિલ",
+      "મે",
+      "જૂન",
+      "જુલાઈ",
+      "ઑગસ્ટ",
+      "સપ્ટે",
+      "ઑક્ટો",
+      "નવે",
+      "ડિસે"
+    ],
+    "dayMonth": "{day} {month}",
+    "digits": "0123456789"
   }
 }

@@ -1521,4 +1521,10 @@
     }
    }
   });
+  /* S09.07: the end-of-pilot re-consent texts (the campaign text with {date}, the confirmation after YES, the answer after the deadline, the answer
+     while sign-ups are paused) and the sign-up form's refusal while sign-ups are paused. YES and CVH stay in English. Each text fits one text message
+     with the longest date. smsDate is how a text writes the deadline (the month names, the order of day and month, the numerals), fixed here
+     from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
+     date words are reviewed before launch (Launch Readiness). */
+  m(t, {"smsDate": {"months":["জানু","ফেব","মার্চ","এপ্রি","মে","জুন","জুল","আগ","সেপ","অক্টো","নভে","ডিসে"],"dayMonth":"{day} {month}","digits":"০১২৩৪৫৬৭৮৯"}, "smsTexts": {"reconsent": "CVH পাইলট শেষ: সতর্কতা পেতে {date}-এর মধ্যে YES দিন নইলে নম্বর মুছবে", "reconsentKept": "ধন্যবাদ। আপনি CVH সতর্কবার্তা পেতে থাকবেন।", "pilotEnded": "CVH পাইলট শেষ হয়েছে; আপনার নম্বর রাখা হয়নি।", "signupsPaused": "পাইলট শেষ না হওয়া পর্যন্ত CVH টেক্সট সাইন আপ বন্ধ।"}, "signup": {"error": {"signups_paused": "পাইলট শেষ না হওয়া পর্যন্ত সাইন আপ বন্ধ।"}}});
 })();

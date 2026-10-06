@@ -19,6 +19,12 @@
 //
 // The number is never logged, audited, put in an `ops_event` or a `delivery` row, or put in an error: log lines carry the keyword, the
 // state and the action only.
+//
+// S09.07, the end-of-pilot campaign: a subscriber asked to re-consent is `active` with `reconsent` until the deadline, and YES (outside a menu) makes them
+// `retained` under the campaign's terms version and is answered "You will keep getting CVH alerts" (`campaignStore.retain`, one statement under the
+// subscriber's row lock, by the database's clock); after the deadline they are `lapsed`, and YES is answered "The CVH pilot has ended; your number was not
+// kept" through `inbound_reply`. While sign-ups are paused a YES to a pending sign-up confirms nothing (the sign-up gate, campaignGate.ts) and a number the
+// CVH does not know is told that sign-ups are paused instead of being sent the link (after the deadline, YES is told the pilot has ended).
 import { createHash } from "node:crypto";
 import { canadianNumber } from "../../../contracts/signup";
 import type { LaunchCode } from "../../../i18n/languages";
@@ -26,11 +32,13 @@ import { residentText, type ResidentTextName } from "../../../i18n/residentTexts
 import type { Db, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { countSms, normaliseSms, type DeliveryResult, type Enqueued, type RecipientKind, type SkippedForRecipient, type TransactionalInput } from "../../messaging";
+import { campaignStore, type CampaignStore } from "../adapters/campaignStore";
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { pendingSignupStore, type PendingSignupRow, type PendingSignupStore } from "../adapters/pendingSignupStore";
 import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type SubscriberStore } from "../adapters/subscriberStore";
 import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
 import { MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
+import { createSignupGate } from "./campaignGate";
 import { createNumberDeletion } from "./deletion";
 import { clientHash } from "./rateLimit";
 import type { SignupPlaces, SubscriberLookup } from "./webSignup";
@@ -123,7 +131,7 @@ export interface InboundDeps {
   publicBaseUrl: () => string;
   pricePerSegmentCents: () => number;
   log?: InboundLog;
-  stores?: { pending?: PendingSignupStore; subscribers?: SubscriberStore; inbound?: InboundStore };
+  stores?: { pending?: PendingSignupStore; subscribers?: SubscriberStore; inbound?: InboundStore; campaigns?: CampaignStore };
   newId?: () => string;
 }
 
@@ -222,6 +230,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
   const pending = deps.stores?.pending ?? pendingSignupStore;
   const subscribers = deps.stores?.subscribers ?? subscriberStore;
   const inbound = deps.stores?.inbound ?? inboundStore;
+  const campaigns = deps.stores?.campaigns ?? campaignStore;
   const checkins = deps.checkins ?? noCheckinsYet;
   const menus = deps.menus ?? noMenus;
   const newId = deps.newId ?? (() => uuidv7());
@@ -262,13 +271,24 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
     await queue(tx, { purpose: "welcome", recipient: { kind: "subscriber", id }, nonce: "yes", lang, name: "welcome" });
   }
 
-  /** The sign-up link, through a new `inbound_reply` row, unless the number already got one in the last 24 hours. */
-  async function signupInfo(tx: DbTransaction, phone: string, lang: LaunchCode): Promise<boolean> {
+  /** What a number with no subscription is told (S09.07): the sign-up link; while sign-ups are paused, that they are; YES after the deadline, that the pilot ended. */
+  async function replyToUnknownNumber(tx: DbTransaction, keyword: InboundKeyword): Promise<ResidentTextName> {
+    if (!(await campaigns.signupsClosed(tx))) return "signupInfo";
+    return keyword === "yes" && (await campaigns.pastDeadline(tx)) ? "pilotEnded" : "signupsPaused";
+  }
+
+  /**
+   * The sign-up link, through a new `inbound_reply` row, unless the number already got one in the last 24 hours. S09.07: while sign-ups are paused the
+   * reply says so instead (`signupsPaused`), and YES once the campaign's deadline has passed is told the pilot has ended (`pilotEnded`, also what a
+   * `lapsed` subscriber's YES gets): one reply a day to a number either way.
+   */
+  async function signupInfo(tx: DbTransaction, phone: string, lang: LaunchCode, keyword: InboundKeyword, name?: ResidentTextName): Promise<boolean> {
     if (!(await inbound.allowOncePerDay(tx, SIGNUP_INFO_SCOPE, clientHash(deps.numberKey(), SIGNUP_INFO_SCOPE, phone)))) return false;
+    const text = name ?? (await replyToUnknownNumber(tx, keyword));
     const reply = await inbound.insertReply(tx, newId(), phone);
     await queue(
       tx,
-      { purpose: "signup_info", recipient: { kind: "inbound_reply", id: reply.id }, nonce: "info", lang, name: "signupInfo", values: { link: signupLink(deps.publicBaseUrl(), lang) } },
+      { purpose: "signup_info", recipient: { kind: "inbound_reply", id: reply.id }, nonce: "info", lang, name: text, values: text === "signupInfo" ? { link: signupLink(deps.publicBaseUrl(), lang) } : {} },
       { at: reply.expiresAt, now: reply.now },
     );
     return true;
@@ -295,10 +315,18 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
         // A number that is not Canadian: nothing is held for it and nothing can be sent to it.
         if (phone === null) return { kind: "handled", keyword, state: "none", action: "none", replied: false };
 
-        // S07.05: the prompt row with its step (a menu's page) and whether it is idle (a menu 10 minutes old has reset).
-        const promptRow = subscriber ? await subscribers.promptOf(tx, subscriber.id, MENU_IDLE_MS) : null;
+        // S09.07: where the subscriber stands in the end-of-pilot campaign (asked before the deadline, or past it), by the database's clock.
+        // `lapsed` is exactly the subscriber `receivingSql` leaves out (`reconsent_pending` past the deadline): they get no menu, no page and
+        // no reply but YES's, so S07.05's menus only ever serve a receiving subscriber.
+        const reconsent = subscriber ? await campaigns.reconsentOf(tx, subscriber.id) : null;
+        // S07.05: the prompt row with its step (a menu's page) and whether it is idle (a menu 10 minutes old has reset). One row per
+        // subscriber, the latest written (AD-9): the re-consent prompt the campaign's start wrote, or a menu, the edit link's offer or the
+        // deletion's confirmation opened after it.
+        const promptRow = subscriber && reconsent !== "lapsed" ? await subscribers.promptOf(tx, subscriber.id, MENU_IDLE_MS) : null;
         const state: NumberState = subscriber
-          ? { kind: "active", prompt: openPromptOf(promptRow) }
+          ? reconsent === "lapsed"
+            ? { kind: "lapsed" }
+            : { kind: "active", prompt: openPromptOf(promptRow), ...(reconsent === "open" ? { reconsent: true as const } : {}) }
           : pendingRow && !pendingRow.expired
             ? { kind: "pending" }
             : { kind: "none" };
@@ -320,9 +348,23 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
           case "delete":
             await deleteNumber(tx, phone, { subscriber, pending: pendingRow });
             break;
+          case "reconsent":
+            // S09.07: the subscriber stays, unless the deadline passed in the meantime (then nothing changes and nothing is said).
+            if (await campaigns.retain(tx, subscriber!.id)) {
+              await queue(tx, { purpose: "prompt_reply", recipient: { kind: "subscriber", id: subscriber!.id }, nonce: newId(), lang: subscriber!.lang as LaunchCode, name: "reconsentKept" });
+              replied = true;
+            }
+            break;
+          case "pilot_ended":
+            replied = await signupInfo(tx, phone, subscriber!.lang as LaunchCode, keyword, "pilotEnded");
+            break;
           case "confirm":
-            await confirm(tx, phone, pendingRow!);
-            replied = true;
+            // S09.07: under the sign-up gate. Paused since the state was read (the campaign started and deleted the pending sign-up): no subscriber is made,
+            // and the number is answered as one the CVH does not know.
+            if (await createSignupGate(campaigns).holdOpen(tx)) {
+              await confirm(tx, phone, pendingRow!);
+              replied = true;
+            } else replied = await signupInfo(tx, phone, lang ?? "en", keyword);
             break;
           case "already_signed_up":
             await queue(tx, { purpose: "prompt_reply", recipient: { kind: "subscriber", id: subscriber!.id }, nonce: newId(), lang: subscriber!.lang as LaunchCode, name: "alreadySignedUp" });
@@ -349,7 +391,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter {
               await skip(tx, "pending_signup", pendingRow.id);
               await pending.delete(tx, pendingRow.id);
             }
-            replied = await signupInfo(tx, phone, lang ?? "en");
+            replied = await signupInfo(tx, phone, lang ?? "en", keyword);
             break;
           case "none":
             break;

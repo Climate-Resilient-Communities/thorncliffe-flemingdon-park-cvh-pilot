@@ -58,6 +58,9 @@ export const smsTestSend = pgTable(
  */
 const alertEntryKey = pgTable("alert_entry", { id: uuid().primaryKey() });
 
+/** subscriptions' campaign (S09.07), named here only for `delivery.campaign_id`'s foreign key (AD-2). Not exported; the real definition is subscriptions' schema. */
+const campaignKey = pgTable("campaign", { id: uuid().primaryKey() });
+
 /**
  * The outbox (S06.01, AD-8): one row per text to one recipient, written before it is sent and never holding a phone
  * number. The triggers (the transition table, the frozen columns, the alert, transactional and campaign insert rules, the
@@ -72,7 +75,7 @@ export const delivery = pgTable(
     /** The id of the recipient in the table `recipientKind` names (so not a foreign key); null once the recipient was deleted. */
     recipientId: uuid("recipient_id"),
     entryId: uuid("entry_id").references(() => alertEntryKey.id),
-    campaignId: uuid("campaign_id"),
+    campaignId: uuid("campaign_id").references(() => campaignKey.id),
     createdByModule: text("created_by_module").notNull(),
     purpose: text(),
     channel: text().notNull().default("sms"),
@@ -136,7 +139,7 @@ export const delivery = pgTable(
         and ${t.createdByModule} = 'alerting' and ${t.recipientKind} in ('subscriber', 'roster'))
         or (${t.kind} = 'transactional' and ${t.entryId} is null and ${t.campaignId} is null and ${t.purpose} is not null and ${t.sendBy} is not null)
         or (${t.kind} = 'campaign' and ${t.entryId} is null and ${t.campaignId} is not null and ${t.purpose} is not null and ${t.createdByModule} = 'subscriptions'
-        and ${t.recipientKind} = 'subscriber')`,
+        and ${t.recipientKind} in ('subscriber', 'roster'))`,
     ),
     check("delivery_send_by_after_creation", sql`${t.sendBy} is null or ${t.sendBy} > ${t.createdAt}`),
     check(

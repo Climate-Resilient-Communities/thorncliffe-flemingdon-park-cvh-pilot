@@ -162,7 +162,7 @@ async function rowLock(id: string): Promise<"free" | "edit" | "delete"> {
 const idle = (minutes: number) => owner`update sms_prompt set sent_at = sent_at - ${minutes} * interval '1 minute', expires_at = expires_at - ${minutes} * interval '1 minute'`;
 
 describe("the grants the menus need", () => {
-  it("let the app change a subscriber's language and neighbourhood, and nothing else of it but the retention state", async () => {
+  it("let the app change a subscriber's language and neighbourhood, and nothing else of it but the retention state, the groups (S07.06's page) and the terms version (S09.07's YES)", async () => {
     const [rights] = await owner`select has_column_privilege('cvh_app', 'subscriber', 'lang', 'update') as lang,
                                         has_column_privilege('cvh_app', 'subscriber', 'neighbourhood_id', 'update') as neighbourhood,
                                         has_column_privilege('cvh_app', 'subscriber', 'retention_state', 'update') as retention,
@@ -170,8 +170,9 @@ describe("the grants the menus need", () => {
                                         has_column_privilege('cvh_app', 'subscriber', 'groups', 'update') as groups,
                                         has_column_privilege('cvh_app', 'subscriber', 'consent_version', 'update') as consent,
                                         has_column_privilege('cvh_app', 'subscriber', 'started_by', 'update') as started`;
-    // S07.06's edit page changes the groups too (20261006150000_subscription_edit_token.sql).
-    expect(rights).toEqual({ lang: true, neighbourhood: true, retention: true, phone: false, groups: true, consent: false, started: false });
+    // S07.06's edit page changes the groups too (20261006150000_subscription_edit_token.sql); S09.07's re-consent (`campaignStore.retain`) sets
+    // consent_version to the campaign's terms version.
+    expect(rights).toEqual({ lang: true, neighbourhood: true, retention: true, phone: false, groups: true, consent: true, started: false });
     for (const role of ["anon", "authenticated"]) {
       const [any] = await owner`select has_column_privilege(${role}, 'subscriber', 'lang', 'update') as lang`;
       expect(any!.lang, role).toBe(false);
