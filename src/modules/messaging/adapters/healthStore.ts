@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNotNull, ne, notInArray, or, sql } from "drizzle-orm";
 import {
   STUCK_QUEUE_AFTER_MS,
   UNKNOWN_IDS_LIMIT,
@@ -6,6 +6,7 @@ import {
   UNSETTLED_HAND_OFF_AFTER_MS,
   type SenderHealthReader,
 } from "../application/senderHealth";
+import { CEILING_EXEMPT_PURPOSES } from "../domain/deliveryRules";
 import { delivery, dispatcherLease, messagingControl } from "./schema";
 
 const behind = (ms: number) => sql`(now() - ${Math.trunc(ms)}::double precision * interval '1 millisecond')`;
@@ -44,6 +45,8 @@ export const drizzleSenderHealth: SenderHealthReader = {
         and(
           eq(delivery.kind, "transactional"),
           ne(delivery.recipientKind, "oncall"),
+          // S09.07: the replies to a campaign YES are the campaign working, not misuse (CEILING_EXEMPT_PURPOSES).
+          notInArray(delivery.purpose, [...CEILING_EXEMPT_PURPOSES]),
           gte(delivery.createdAt, sql`(date_trunc('day', now() at time zone 'America/Toronto') at time zone 'America/Toronto')`),
         ),
       );

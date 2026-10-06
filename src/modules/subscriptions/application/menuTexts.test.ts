@@ -29,6 +29,7 @@ import {
   type MenuMove,
   type MenuWorld,
 } from "../domain/menus";
+import { EDIT_LINKS_PER_DAY, editLinkUrl } from "../domain/editLink";
 import { fitsOneText } from "./menus";
 
 const ROOT = path.resolve(__dirname, "../../../..");
@@ -96,6 +97,28 @@ function allPages(first: MenuMove, world: MenuWorld): Extract<MenuMove, { kind: 
 }
 
 const optionsOf = (menu: Menu) => (menu.kind === "menu_language" ? menu.step.options : "options" in menu.step ? menu.step.options : []);
+
+/**
+ * The edit link's text (S07.06) cannot fit one segment: the link alone is the public origin, the language, `/subscription/` and a 43-character token.
+ * Its size is bounded instead, with the production origin (docs/config.md) and a longer custom domain the CVH might move to, so the cost of the 3 links a
+ * number may be sent a day (`EDIT_LINKS_PER_DAY`) is known: at most 4 segments a link in every language.
+ */
+const EDIT_LINK_ORIGINS = ["https://project-6qcs4.vercel.app", "https://alerts.thorncliffe-flemingdon-park.example.ca"];
+const EDIT_LINK_MAX_SEGMENTS = 4;
+
+describe("the edit link's text (S07.06), with a real link", () => {
+  it(`takes at most ${EDIT_LINK_MAX_SEGMENTS} segments in every language, with the production origin and a 53-character one`, () => {
+    for (const origin of EDIT_LINK_ORIGINS) {
+      for (const lang of LAUNCH_CODES) {
+        const link = editLinkUrl(origin, lang, "A".repeat(43));
+        const counted = count(residentText(lang, "editLink", { link }));
+        expect(counted.segments, `editLink in ${lang} with ${origin}: ${counted.segments} segments (${counted.encoding}, ${counted.units} units)`).toBeLessThanOrEqual(EDIT_LINK_MAX_SEGMENTS);
+        expect(normaliseSms(residentText(lang, "editLink", { link })), lang).toContain(link);
+      }
+    }
+    expect(EDIT_LINKS_PER_DAY * EDIT_LINK_MAX_SEGMENTS).toBe(12);
+  });
+});
 
 describe("the menus' one-segment fixture (every menu and prompt text, every language, the real encoder)", () => {
   it("renders every prompt and reply of the menus, filled with its longest values, to one segment", () => {

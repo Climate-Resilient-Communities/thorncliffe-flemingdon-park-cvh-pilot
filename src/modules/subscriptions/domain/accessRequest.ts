@@ -263,6 +263,7 @@ const HASH_SCOPE_WORDS: Readonly<Record<string, string>> = {
   signup_info:
     "replies to a number with no subscription or to a YES after the end-of-pilot deadline (the sign-up link or, while the pilot ends, that sign-ups are paused or that the pilot has ended)",
   sms_menu: "text menus started",
+  sms_edit_link: "links to change the subscription sent by text",
 };
 
 /** Where a check-in row stands (S08.05's statuses, S08.07's marks), as it is read out. */

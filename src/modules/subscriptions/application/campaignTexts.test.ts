@@ -35,6 +35,14 @@ describe("the end-of-pilot texts", () => {
     }
   });
 
+  it("say the deadline day is included (YES is taken until the end of it), never 'before' it", () => {
+    // The words around {date} in the languages a review found saying "before": until (tl), until the end of (es), before the end of (zh).
+    expect(residentText("tl", "reconsent")).toContain("hanggang {date}");
+    expect(residentText("es", "reconsent")).toContain("hasta el final del {date}");
+    expect(residentText("zh", "reconsent")).toContain("{date}结束前");
+    for (const [lang, before] of [["tl", "bago ang {date}"], ["es", "antes del {date}"], ["zh", "{date}前"]] as const) expect(residentText(lang, "reconsent"), lang).not.toContain(before);
+  });
+
   it("say in English what the story says", () => {
     expect(renderCampaignText("en", "December 5").body).toBe("The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by December 5, your number will be deleted.");
     expect(residentSms("en", "pilotEnded").body).toBe("The CVH pilot has ended; your number was not kept.");

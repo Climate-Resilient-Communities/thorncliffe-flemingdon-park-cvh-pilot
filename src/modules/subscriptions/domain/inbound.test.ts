@@ -239,8 +239,16 @@ describe("the decision table's re-consent rows (S09.07: a test for every keyword
     }
   }
 
-  it("limits a YES to the campaign like any YES; a lapsed subscriber's STOP never", () => {
-    expect(exemptFromInboundLimit("yes", decide("yes", { kind: "active", prompt: "none", reconsent: true }).action)).toBe(false);
+  it("never limits a YES to the campaign (it keeps the subscriber, once); a lapsed subscriber's YES is limited, and their STOP never", () => {
+    // Asked and not yet kept, outside a menu, whatever other prompt is open: the YES is the re-consent and is decided before the limit.
+    for (const prompt of ["none", "delete_confirm", "edit_link_offer", "menu_idle"] as const) {
+      const { action } = decide("yes", { kind: "active", prompt, reconsent: true });
+      expect(action.kind, prompt).toBe("reconsent");
+      expect(exemptFromInboundLimit("yes", action), prompt).toBe(true);
+    }
+    // Inside an open menu YES is the menu's (the page again), limited as any menu reply; once kept, a YES is an ordinary reply.
+    expect(exemptFromInboundLimit("yes", decide("yes", { kind: "active", prompt: "menu", reconsent: true }).action)).toBe(false);
+    expect(exemptFromInboundLimit("yes", decide("yes", { kind: "active", prompt: "none" }).action)).toBe(false);
     expect(exemptFromInboundLimit("yes", decide("yes", { kind: "lapsed" }).action)).toBe(false);
     expect(exemptFromInboundLimit("stop", decide("stop", { kind: "lapsed" }).action)).toBe(true);
   });

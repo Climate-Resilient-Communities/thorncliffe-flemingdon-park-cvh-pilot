@@ -6339,7 +6339,7 @@
     "editSaved": "您的 CVH 警报选择已在网页上更改。不是您本人？请致电 Hub：{hub}",
     "checkinMoved": "您的楼层已更改，探望申请已撤回。回复 1 获取链接重新申请。",
     "checkinUncoveredNow": "您的楼层目前没有楼层联络员。请致电 Hub：{hub}",
-    "reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}前未回复，您的号码将被删除。",
+    "reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}结束前未回复，您的号码将被删除。",
     "reconsentKept": "谢谢。您将继续收到CVH提醒。",
     "pilotEnded": "CVH试点已结束；您的号码未被保留。",
     "signupsPaused": "试点结束期间，CVH短信登记已暂停。"

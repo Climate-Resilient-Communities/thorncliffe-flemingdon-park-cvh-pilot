@@ -41,6 +41,7 @@ import { campaignStore, type CampaignStore } from "../adapters/campaignStore";
 import { inboundStore, type InboundStore } from "../adapters/inboundStore";
 import { pendingSignupStore, type PendingSignupRow, type PendingSignupStore } from "../adapters/pendingSignupStore";
 import { subscriberStore, type NewSubscriberPlace, type SubscriberRow, type SubscriberStore } from "../adapters/subscriberStore";
+import { RECONSENT_KEPT_PURPOSE } from "../domain/campaign";
 import { DELETE_CONFIRM_MS, INBOUND_LIMIT, INBOUND_SCOPE, decide, exemptFromInboundLimit, readKeyword, yesWordsOf, type InboundAction, type InboundKeyword, type NumberState } from "../domain/inbound";
 import { HUB_NUMBER, MENU_IDLE_MS, MENU_SCOPE, menuDigit, openPromptOf } from "../domain/menus";
 import { createSignupGate } from "./campaignGate";
@@ -284,7 +285,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
 
   async function queue(
     tx: DbTransaction,
-    text: { purpose: "welcome" | "prompt_reply" | "signup_info"; recipient: { kind: RecipientKind; id: string }; nonce: string; lang: LaunchCode; name: ResidentTextName; values?: Record<string, string> },
+    text: { purpose: "welcome" | "prompt_reply" | "signup_info" | typeof RECONSENT_KEPT_PURPOSE; recipient: { kind: RecipientKind; id: string }; nonce: string; lang: LaunchCode; name: ResidentTextName; values?: Record<string, string> },
     sendBy?: { at: Date; now: Date },
   ): Promise<void> {
     const { name, values, ...reply } = text;
@@ -407,7 +408,7 @@ export function createInboundRouter(deps: InboundDeps): InboundRouter & Subscrib
           case "reconsent":
             // S09.07: the subscriber stays, unless the deadline passed in the meantime (then nothing changes and nothing is said).
             if (await campaigns.retain(tx, subscriber!.id)) {
-              await queue(tx, { purpose: "prompt_reply", recipient: { kind: "subscriber", id: subscriber!.id }, nonce: newId(), lang: subscriber!.lang as LaunchCode, name: "reconsentKept" });
+              await queue(tx, { purpose: RECONSENT_KEPT_PURPOSE, recipient: { kind: "subscriber", id: subscriber!.id }, nonce: newId(), lang: subscriber!.lang as LaunchCode, name: "reconsentKept" });
               replied = true;
             }
             break;

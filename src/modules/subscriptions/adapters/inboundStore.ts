@@ -4,7 +4,9 @@
 // Every statement runs in the caller's transaction.
 import { and, count, eq, gt, gte, lt, sql } from "drizzle-orm";
 import type { DbTransaction } from "../../../platform/db";
+import { EDIT_LINK_SCOPE } from "../domain/editLink";
 import { INBOUND_SCOPE } from "../domain/inbound";
+import { MENU_SCOPE } from "../domain/menus";
 import { inboundKeywordCount, inboundLimitedCount, inboundReply, inboundSeen, rateLimit } from "./schema";
 
 /** The day a keyword is counted under: the date in Toronto, by the database's clock. */
@@ -15,11 +17,14 @@ export const INBOUND_MUTE_SCOPE = "inbound_mute";
 
 /**
  * The scope a keyed hash stored under `scope` in `rate_limit` was made with. Every hash is made under its own scope, except the inbound limit's mute row,
- * which holds the hash of the counted messages (made under `inbound`), so one hash finds both. A reader that looks a number's hashes up (S09.03's access
+ * which holds the hash of the counted messages (made under `inbound`), so one hash finds both, and the edit links' count, which holds the menus' hash. A reader that looks a number's hashes up (S09.03's access
  * request) hashes each scope it finds this way.
  */
 export function hashScopeOf(scope: string): string {
-  return scope === INBOUND_MUTE_SCOPE ? INBOUND_SCOPE : scope;
+  if (scope === INBOUND_MUTE_SCOPE) return INBOUND_SCOPE;
+  // The edit links sent by text (S07.06) are counted with the hash the menus are given (made under the menu limit's scope).
+  if (scope === EDIT_LINK_SCOPE) return MENU_SCOPE;
+  return scope;
 }
 
 /** Midnight in Toronto that began today, by the database's clock. */
