@@ -2691,6 +2691,8 @@
     save: 'Save round types',
     saving: 'Saving',
     readOnly: 'Only an Admin can change which types start a round.',
+    residentTexts: 'Residents are told, in every language, that check-ins are for heat warnings and power outages (the check-in page, sign-up, Get ready and the round page). Untick Heat or Power and those texts are inaccurate until they are changed: see "Changing which types start a round" in docs/config.md.',
+    confirm: 'I understand: the residents\' texts still name heat warnings and power outages until they are changed.',
     done: 'Saved. Types that start a round from the next approval: {types}.',
     doneNone: 'Saved. From the next approval, no alert starts a check-in round.',
     errors: {
@@ -2698,6 +2700,7 @@
       aal2Required: 'An Admin must sign in with their authenticator code to change which types start a round. Sign in again and enter the code.',
       unknownType: 'One of those is not a type of disruption. Reload the page and try again.',
       noChange: 'Nothing to change: those are the round types already.',
+      confirmNeeded: 'Nothing changed. Heat or Power is unticked, so the residents\' check-in texts would be inaccurate. Tick the box to confirm, then save again.',
       failed: 'Nothing changed. Try again. If it fails again, tell IT.' } } } } });
   /* S08.07: "My round" (A-04), the pilot's version: the check-ins asked for on the floors an ambassador covers, each with its number, floor and method
      as a call or text link, marked in one tap; counts only for anyone else (an Admin sees every request). The round lives in the open page only: marks

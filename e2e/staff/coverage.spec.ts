@@ -298,14 +298,24 @@ test("an Admin changes which types start a check-in round, audited with the type
     await page.goto("/staff/coverage");
     const rounds = page.getByTestId("round-types");
     await expect(rounds.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat, Power.");
-    await rounds.getByRole("checkbox", { name: "Power" }).uncheck();
+    await rounds.getByRole("checkbox", { name: "Power", exact: true }).uncheck();
+    // The residents' texts name heat and power: leaving Power unticked needs the confirmation box, and without it nothing changes.
+    await expect(rounds.getByTestId("round-types-resident-texts")).toContainText("check-ins are for heat warnings and power outages");
+    await rounds.getByRole("button", { name: "Save round types" }).click();
+    await expect(rounds.getByTestId("round-types-error")).toHaveText(
+      "Nothing changed. Heat or Power is unticked, so the residents' check-in texts would be inaccurate. Tick the box to confirm, then save again.",
+    );
+    expect((await sql`select id from disruption_type where checkin order by id`).map((row) => row.id)).toEqual(["heat", "power"]);
+    await rounds.getByRole("checkbox", { name: "Power", exact: true }).uncheck();
+    await rounds.getByTestId("round-types-confirm").check();
     await rounds.getByRole("button", { name: "Save round types" }).click();
     await expect(rounds.getByTestId("round-types-answer")).toHaveText("Saved. Types that start a round from the next approval: Heat.");
     await expect(rounds.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat.");
     expect((await sql`select id from disruption_type where checkin order by id`).map((row) => row.id)).toEqual(["heat"]);
     const [audit] = await sql`select outcome, subject_type, meta from audit_event where action = 'round_types.changed' and actor_staff_id = ${admin.id} order by id desc limit 1`;
     expect(audit).toMatchObject({ outcome: "ok", subject_type: "disruption_type", meta: { round_types: ["heat"], previous: ["heat", "power"] } });
-    // The same again changes nothing, and says so.
+    // The same again (confirmed) changes nothing, and says so.
+    await rounds.getByTestId("round-types-confirm").check();
     await rounds.getByRole("button", { name: "Save round types" }).click();
     await expect(rounds.getByTestId("round-types-error")).toHaveText("Nothing to change: those are the round types already.");
 

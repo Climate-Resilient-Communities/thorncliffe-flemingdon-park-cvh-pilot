@@ -80,10 +80,10 @@ async function open(page: Page, width: number, props: Omit<Parameters<typeof mou
 
 for (const width of [390, 1280]) {
   test(`coverage list at ${width}px`, async ({ page }) => {
-    await open(page, width, { screen: listWithRounds(coverageListView(PLANS, ASSIGNMENTS)) }, width === 390 ? 2000 : 1600);
+    await open(page, width, { screen: listWithRounds(coverageListView(PLANS, ASSIGNMENTS)) }, width === 390 ? 2000 : 1900);
     await expect(page.getByTestId("screen")).toContainText("Buildings with every floor covered: 1 of 6.");
     await expect(page.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat, Power.");
-    await expect(page.getByRole("checkbox", { name: "Heat" })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: "Heat", exact: true })).toBeChecked();
     await expect(page.getByRole("checkbox", { name: "Water" })).not.toBeChecked();
     await expectBaseline(page, `coverage-list-${width}.png`);
   });
@@ -175,11 +175,11 @@ test("the round types as a Director reads them at 390px: words only, no form", a
 
 test("the round types after an Admin saved them, and after a refusal, at 390px", async ({ page }) => {
   const screen = listWithRounds(coverageListView(PLANS.slice(0, 1), ASSIGNMENTS));
-  await open(page, 390, { screen, initial: { roundTypes: { status: "done", line: "Saved. Types that start a round from the next approval: Heat, Power.", at: 1 } } }, 1150);
+  await open(page, 390, { screen, initial: { roundTypes: { status: "done", line: "Saved. Types that start a round from the next approval: Heat, Power.", at: 1 } } }, 1450);
   await expect(page.getByTestId("round-types-answer")).toHaveText("Saved. Types that start a round from the next approval: Heat, Power.");
   await expectBaseline(page, "coverage-rounds-saved-390.png");
 
-  await open(page, 390, { screen, initial: { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } } }, 1150);
+  await open(page, 390, { screen, initial: { roundTypes: { status: "refused", message: "Nothing to change: those are the round types already.", at: 1 } } }, 1450);
   await expect(page.getByTestId("round-types-error")).toHaveText("Nothing to change: those are the round types already.");
   await expectBaseline(page, "coverage-rounds-refused-390.png");
 });
