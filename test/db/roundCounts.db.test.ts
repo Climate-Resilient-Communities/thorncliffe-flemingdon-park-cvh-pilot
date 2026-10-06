@@ -8,16 +8,19 @@
 //    deleted outside it, through the foreign key's cascade: S08.09's trigger), a close; a kept row's handling and purge, and a stub's deletion, count
 //    nothing again. Each is counted in the transaction that moves the row (rolled back, nothing is counted), and after the close, at every place,
 //    `requested` is the sum of the outcomes;
-//  - the live counts during the round come from the rows as they are now (the Hub's view and "My round"), not from the tally;
-//  - the page, as a Coordinator, a Director and an Admin: the counts by building and floor and never a phone number; an Ambassador is refused;
+//  - the live counts during the round come from the rows as they are now (the Hub's view and "My round"), not from the tally; the rounds closed in the
+//    last 7 days, and what the page says when more threads closed than it reads;
+//  - the page, as a Coordinator, a Director and an Admin: the counts by building and floor, read again every 15 seconds, and never a phone number; an
+//    Ambassador is refused;
 //  - the pilot measures (S09.05's `checkin_round_count`): a closed round's tally by thread, building and floor, nothing of an open one, no identifier.
 import { randomBytes, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import postgres from "postgres";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { ReactElement } from "react";
+import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
+import { AutoRefresh } from "../../src/app/staff/alerts/sending/AutoRefresh";
 import { createRoundReads } from "../../src/app/staff/ambassador/round/load";
 import { loadRoundProgress } from "../../src/app/staff/rounds/load";
 import { CHECKIN_CONSENT_VERSION } from "../../src/contracts/checkin";
@@ -60,7 +63,7 @@ vi.mock("../../src/app/staff/rounds/load", async (importOriginal) => {
   return {
     ...real,
     loadRounds: () => real.loadRounds(wired.db as Db),
-    loadRoundProgress: (db?: Db, now?: Date) => real.loadRoundProgress(db ?? (wired.db as Db), now),
+    loadRoundProgress: (db?: Db, now?: Date, closedRead?: number) => real.loadRoundProgress(db ?? (wired.db as Db), now, closedRead),
   };
 });
 // The page's 15-second reload (S06.09's AutoRefresh) asks for the router; drawn on the server here, it is never started.
@@ -87,6 +90,7 @@ let fixtures: ReturnType<typeof deliveryFixtures>;
 let marks: Marks;
 let requests: CheckinRequests;
 let auditBaseline = 0;
+let opsBaseline = 0;
 const madeNeighbourhoods: string[] = [];
 const staffIds: string[] = [];
 
@@ -194,6 +198,7 @@ beforeAll(async () => {
   const coverage = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
   requests = createCheckinRequests({ requests: checkinRequestStore(), threads: roundThreads, coversFloor: (rsn, floor, executor) => coverage.coversFloor(rsn, floor, executor) });
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
+  [{ max: opsBaseline }] = await owner`select coalesce(max(id), 0)::int as max from ops_event`;
   if ((await owner`select 1 from neighbourhood where id = 'TP'`).length === 0) {
     await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H')`;
     madeNeighbourhoods.push("TP");
@@ -213,6 +218,8 @@ async function resetAll() {
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
   });
   await owner`delete from checkin_escalation`;
+  // An overdue round's close is a late expiry, which the expire job records (as the expiry tests clear them).
+  await owner`delete from ops_event where kind in ('alert.expire_failed', 'alert.expire_late')`;
   // The expire job's system finals are no fixture's: the threads go whole, as the expiry tests clear them.
   await owner.unsafe("truncate checkin_tally, checkin, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   await owner`delete from subscriber`;
@@ -225,6 +232,8 @@ beforeEach(resetAll);
 
 afterAll(async () => {
   await resetAll();
+  // The files after this one read every ops event (statusCallbacks' `allEvents()`): the reset leaves none of this file's behind.
+  const leftOps = await owner`select kind from ops_event where id > ${opsBaseline} order by id`;
   await owner`delete from building_floor where rsn in ${owner([RSN, RSN_B])}`;
   await owner`delete from building where rsn in ${owner([RSN, RSN_B])}`;
   for (const id of madeNeighbourhoods) await owner`delete from neighbourhood where id = ${id}`;
@@ -232,6 +241,7 @@ afterAll(async () => {
   await appSql.end({ timeout: 5 });
   await owner.unsafe("alter role cvh_app_login password null");
   await owner.end({ timeout: 5 });
+  expect(leftOps).toEqual([]);
 });
 
 describe("the round tally: each row counted once, when it leaves its round (E08 'Round tally')", () => {
@@ -274,9 +284,9 @@ describe("the round tally: each row counted once, when it leaves its round (E08 
   });
 
   it("counts a change of where the resident lives as withdrawn where she lived, and her request asked again on her new floor as a new request there", async () => {
-    await person("ambassador");
-    const [byText, onThePage] = [await requester(F1), await requester(F1)];
-    const { alertId } = await round([byText, onThePage], { overdue: true });
+    const ambassador = await person("ambassador");
+    const [byText, onThePage, marked] = [await requester(F1), await requester(F1), await requester(F2)];
+    const { alertId, refs } = await round([byText, onThePage, marked], { overdue: true });
 
     // Menu 1: she moved to floor 2 of the same building (the places that replace her saved ones).
     expect(await app.transaction((tx) => requests.locationChanging(byText.id, [{ rsn: RSN, floorId: F2 }], tx))).toBe("withdrawn");
@@ -286,11 +296,15 @@ describe("the round tally: each row counted once, when it leaves its round (E08 
       requests.changeRequest(onThePage.id, { places: [{ rsn: RSN, floorId: F3 }], request: { rsn: RSN, floorId: F3, method: "text", consentVersion: CHECKIN_CONSENT_VERSION } }, tx),
     );
     expect(done).toEqual({ withdrawn: false, answer: "requested" });
-    expect(await tallyOf(alertId)).toEqual({ "1": { requested: 2, withdrawn: 2 }, "3": { requested: 1 } });
+    // Marked first, then she moved (menu 1, to 3 Count Street): her old floor counts the mark (decision 4), not withdrawn, once.
+    await mark(ambassador, refs[2]!, "not_reached");
+    expect(await app.transaction((tx) => requests.locationChanging(marked.id, [{ rsn: RSN_B, floorId: B1 }], tx))).toBe("withdrawn");
+    expect(await rowOf(refs[2]!)).toMatchObject({ subscriber_id: null, outcome: "not_reached", closed: true });
+    expect(await tallyOf(alertId)).toEqual({ "1": { requested: 2, withdrawn: 2 }, "2": { requested: 1, not_reached: 1 }, "3": { requested: 1 } });
 
     await expire();
-    expect(await tallyOf(alertId)).toEqual({ "1": { requested: 2, withdrawn: 2 }, "3": { requested: 1, unmarked: 1 } });
-    expect(await stillInRoundOf(alertId)).toEqual({ "1": 0, "3": 0 });
+    expect(await tallyOf(alertId)).toEqual({ "1": { requested: 2, withdrawn: 2 }, "2": { requested: 1, not_reached: 1 }, "3": { requested: 1, unmarked: 1 } });
+    expect(await stillInRoundOf(alertId)).toEqual({ "1": 0, "2": 0, "3": 0 });
   });
 
   it("counts a deletion during the round once, as the mark or withdrawn; a subscriber row deleted outside the app's deletion counts too (S08.09)", async () => {
@@ -449,14 +463,40 @@ describe("the live counts during the round come from the rows as they are now, n
     // Seven days later it is no longer listed (the measures keep it).
     expect((await loadRoundProgress(app, new Date(Date.now() + 8 * 24 * HOUR))).closed).toEqual([]);
   });
+
+  it("lists every round closed in the last 7 days unless more threads closed than it reads, and then says from when the list is whole", async () => {
+    const [older, newer] = [await round([await requester(F1)], { overdue: true }), await round([await requester(F2)], { overdue: true })];
+    await expire();
+    // Closed two days ago (the thread's guard, which keeps a closed thread as it is, is off for the fixture only).
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table alert disable trigger alert_guard");
+      await tx`update alert set closed_at = now() - interval '2 days' where id = ${older.alertId}`;
+      await tx.unsafe("alter table alert enable trigger alert_guard");
+    });
+    const whole = await loadRoundProgress(app);
+    expect(whole.closed.map((closed) => closed.alertId)).toEqual([newer.alertId, older.alertId]);
+    expect(whole.closedCut).toBeNull();
+
+    // Read one thread at a time (CLOSED_THREADS_READ is 500): the newer round only, and the page says a round closed before it may be missing.
+    const cut = await loadRoundProgress(app, new Date(), 1);
+    expect(cut.closed.map((closed) => closed.alertId)).toEqual([newer.alertId]);
+    expect(cut.closedCut).toMatch(/^More alerts closed in the last 7 days than the Hub reads at once \(500\): a round that closed before .+ may be missing here\.$/);
+  });
 });
 
 describe("the round progress view as each person (the page /staff/rounds, direct requests through its guard)", () => {
-  /** The page drawn for this person's session (at the Hub, at aal2 as an Admin is there). */
-  async function pageAs(who: Person): Promise<string> {
+  /** The page this person's session gets (at the Hub, at aal2 as an Admin is there), as the element it returns before it is drawn. */
+  async function pageElementAs(who: Person): Promise<ReactElement> {
     wired.session = { staffId: who.staffId, username: "caller", firstName: "Amina", lastName: who.role, role: who.role, gate: "hub", sessionId: randomUUID(), aal: "aal2" };
     const { default: page } = await import("../../src/app/staff/rounds/page");
-    return renderToStaticMarkup((await (page as unknown as (props: object) => Promise<ReactElement>)({})) as ReactElement);
+    return (await (page as unknown as (props: object) => Promise<ReactElement>)({})) as ReactElement;
+  }
+  const pageAs = async (who: Person): Promise<string> => renderToStaticMarkup(await pageElementAs(who));
+  /** The elements of a type in what the page returned: a client component such as AutoRefresh draws nothing, so it is found here and not in the HTML. */
+  function elementsOf(node: ReactNode, type: unknown): ReactElement[] {
+    if (Array.isArray(node)) return node.flatMap((child: ReactNode) => elementsOf(child, type));
+    if (!isValidElement<{ children?: ReactNode }>(node)) return [];
+    return [...(node.type === type ? [node] : []), ...elementsOf(node.props.children, type)];
   }
 
   it("shows a Coordinator, a Director and an Admin the counts by building and floor and never a phone number; an Ambassador is refused", async () => {
@@ -470,7 +510,10 @@ describe("the round progress view as each person (the page /staff/rounds, direct
     people.push(closedRequester);
 
     for (const role of ["coordinator", "director", "admin"] as const) {
-      const html = await pageAs(await person(role));
+      const element = await pageElementAs(await person(role));
+      // The counts are read again every 15 seconds: the page mounts S06.09's AutoRefresh (the router's refresh; nothing while the page is hidden).
+      expect(elementsOf(element, AutoRefresh).map((refresh) => refresh.props), role).toEqual([{ seconds: 15 }]);
+      const html = renderToStaticMarkup(element);
       expect(html, role).toContain("Round progress by building and floor");
       expect(html, role).toContain("Rounds closed in the last 7 days");
       expect(html, role).toContain('data-count="needs_help" data-n="1"');

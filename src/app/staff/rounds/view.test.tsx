@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { EscalationBody } from "./escalation/EscalationBody";
 import { HandleFormView } from "./escalation/HandleFormView";
 import { RoundsBody } from "./RoundsBody";
-import { escalationScreen, residentView, roundsScreen, unreadableRounds, type DescribedEscalation, type ResidentFacts } from "./view";
+import { ROUNDS_REFRESH_SECONDS, escalationScreen, residentView, roundsScreen, unreadableRounds, type DescribedEscalation, type ResidentFacts } from "./view";
 
 const AT = new Date("2026-10-06T15:05:00Z");
 const PHONE = "+14165550181";
@@ -52,6 +52,10 @@ describe("Check-in rounds (O-17): the escalations to follow up", () => {
     expect(html).toContain("Handled in the last 7 days");
     expect(html).toContain("This page updates every 15 seconds.");
     expect(html).not.toMatch(/\+1\d{10}/);
+  });
+
+  it("renders again every 15 seconds, as its words say (the page mounts S06.09's AutoRefresh with it; the page's test checks that)", () => {
+    expect(ROUNDS_REFRESH_SECONDS).toBe(15);
   });
 
   it("says when none is waiting, and when the list cannot be read", () => {

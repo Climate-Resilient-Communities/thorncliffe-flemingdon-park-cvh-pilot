@@ -6143,6 +6143,7 @@
         "closedHeading": "[EN] Rounds closed in the last 7 days",
         "closedLead": "[EN] The final counts of each round, kept after its records are deleted. Each check-in asked for ends as one of the outcomes. Withdrawn includes a resident who moved floors or stopped texts during the round.",
         "closedNone": "[EN] No round closed in the last 7 days.",
+        "closedCut": "[EN] More alerts closed in the last 7 days than the Hub reads at once ({n}): a round that closed before {time} may be missing here.",
         "closedTitle": "[EN] {types}: round closed {time}",
         "tally": {
           "requested": "[EN] Asked",

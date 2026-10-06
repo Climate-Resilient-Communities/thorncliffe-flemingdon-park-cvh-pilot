@@ -2767,6 +2767,7 @@
       closedHeading: 'Rounds closed in the last 7 days',
       closedLead: 'The final counts of each round, kept after its records are deleted. Each check-in asked for ends as one of the outcomes. Withdrawn includes a resident who moved floors or stopped texts during the round.',
       closedNone: 'No round closed in the last 7 days.',
+      closedCut: 'More alerts closed in the last 7 days than the Hub reads at once ({n}): a round that closed before {time} may be missing here.',
       closedTitle: '{types}: round closed {time}',
       tally: { requested: 'Asked', done: 'Done', not_reached: 'Not reached', needs_help: 'Needs help', withdrawn: 'Withdrawn', unmarked: 'Not marked' },
       unreadable: 'The Hub could not read the round counts. Reload the page. If this stays, tell IT.' },

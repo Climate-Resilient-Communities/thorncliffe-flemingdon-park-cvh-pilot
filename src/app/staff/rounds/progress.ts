@@ -4,8 +4,9 @@
 //    reached, needs help. Never the tally: a row adds its outcome there only when it leaves the round, so the tally cannot say how a round is going.
 //  - A round closed in the last 7 days: its tally, kept after its rows are gone: asked, then each outcome (done, not reached, needs help, withdrawn, not
 //    marked), which add up to what was asked at every place.
-// Counts only: no row, `round_ref`, subscriber or number is read for this view, so none can be shown, whoever looks. Only types come from the checkins
-// module, so the screenshots' fixtures draw it without the server's code.
+// Counts only: the loader reads the live rows on the server as "My round" does (no number is read) and hands this view each row's thread, place and
+// latest mark only, so nothing personal can be shown, whoever looks. Only types come from the checkins module, so the screenshots' fixtures draw it
+// without the server's code.
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
 import type { PlaceCounts, TallyStatus } from "@/modules/checkins";
@@ -15,6 +16,11 @@ import type { RoundPlan } from "../ambassador/round/compose";
 
 /** How long a closed round's counts stay on the page, in days (the escalations handled are listed as long). */
 export const CLOSED_ROUNDS_DAYS = 7;
+/**
+ * At most this many threads closed in those days are read, the most recently closed first (alerting's `closedThreads`; drills and threads of types that
+ * start no round count towards it): far more than the pilot closes in a week. Were it reached, the page says from when its list is whole.
+ */
+export const CLOSED_THREADS_READ = 500;
 
 /** The tally's statuses, in the order the page lists them: what was asked, then the outcomes (checkins' TALLY_STATUSES; a test compares them). */
 export const TALLY_COUNTS = ["requested", "done", "not_reached", "needs_help", "withdrawn", "unmarked"] as const satisfies readonly TallyStatus[];
@@ -55,6 +61,8 @@ export interface ProgressSources {
   headlines: ReadonlyMap<string, string>;
   /** The threads closed in the last CLOSED_ROUNDS_DAYS, the most recently closed first. */
   closed: readonly ClosedRoundThread[];
+  /** When the read of closed threads reached CLOSED_THREADS_READ: the close of the oldest one read (a round closed before it may be missing); else null. */
+  closedCutAt: Date | null;
   /** The tally of those threads by place (checkins' `roundTallies`, gathered by `countsByPlace`). */
   closedPlaces: readonly ClosedPlace[];
   /** The buildings of the rows and tallies, by address, with their floors in the building's own order. */
@@ -90,11 +98,13 @@ export interface ProgressRound {
 export interface ProgressScreen {
   open: ProgressRound[];
   closed: ProgressRound[];
+  /** The closed threads read were cut at CLOSED_THREADS_READ: the sentence that says from when the list is whole; else null. */
+  closedCut: string | null;
   /** The counts could not be read: the page says so. */
   unreadable: boolean;
 }
 
-export const unreadableProgress = (): ProgressScreen => ({ open: [], closed: [], unreadable: true });
+export const unreadableProgress = (): ProgressScreen => ({ open: [], closed: [], closedCut: null, unreadable: true });
 
 const liveLabel = (status: LiveCount) => t(`live.${status}`);
 const countOf = (status: string, label: string, n: number): ProgressCount => ({ status, n, text: t("count", { label, n }) });
@@ -176,5 +186,6 @@ function closedRounds(sources: ProgressSources): ProgressRound[] {
 
 /** The counts the page shows: the open rounds' live counts, then the counts kept of the rounds closed lately. */
 export function progressScreen(sources: ProgressSources): ProgressScreen {
-  return { open: openRounds(sources), closed: closedRounds(sources), unreadable: false };
+  const closedCut = sources.closedCutAt === null ? null : t("closedCut", { n: CLOSED_THREADS_READ, time: formatTorontoDateTime(sources.closedCutAt) });
+  return { open: openRounds(sources), closed: closedRounds(sources), closedCut, unreadable: false };
 }

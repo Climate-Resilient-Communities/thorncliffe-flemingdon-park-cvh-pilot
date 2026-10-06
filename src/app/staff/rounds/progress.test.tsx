@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { TALLY_STATUSES, countsByPlace, type TallyCount } from "@/modules/checkins";
-import { TALLY_COUNTS, progressScreen, unreadableProgress, type ProgressRound, type ProgressSources } from "./progress";
+import { CLOSED_THREADS_READ, TALLY_COUNTS, progressScreen, unreadableProgress, type ProgressRound, type ProgressSources } from "./progress";
 import { RoundProgress } from "./RoundProgress";
 import { RoundsBody } from "./RoundsBody";
 import { roundsScreen } from "./view";
@@ -14,7 +14,7 @@ const PLANS = [
   { rsn: "7002", address: "4 Milepost Pl", floors: [{ id: "m1", label: "1" }] },
   { rsn: "7001", address: "85 Thorncliffe Park Dr", floors: [{ id: "t1", label: "1" }, { id: "t2", label: "2" }, { id: "t12", label: "12" }] },
 ];
-// The rows as the app reads them carry the subscriber's id and the round_ref; the counts never show either.
+// The live rows are read with the subscriber's id and the round_ref; the loader passes on neither, and given them, the counts never show either.
 const row = (alertId: string, rsn: string, floorId: string, status: "pending" | "done" | "not_reached" | "needs_help", n: number) => ({
   alertId,
   rsn,
@@ -45,6 +45,7 @@ const SOURCES: ProgressSources = {
     { alertId: CLOSED, types: ["power"], closedAt: new Date("2026-10-05T22:10:00Z") },
     { alertId: QUIET, types: ["water"], closedAt: new Date("2026-10-04T12:00:00Z") },
   ],
+  closedCutAt: null,
   closedPlaces: countsByPlace([
     tally("7001", "t2", "requested", 3),
     tally("7001", "t2", "done", 1),
@@ -99,6 +100,17 @@ describe("the rounds' counts by building and floor (O-17, S08.09)", () => {
     expect(html).toContain('data-count="needs_help" data-n="1"');
     expect(html.match(/data-testid="progress-floor"/g)).toHaveLength(7);
     expect(html).not.toMatch(/subscriber-|4a1f0c2e|\+1\d{10}/);
+  });
+
+  it("says when the closed threads read were cut, from when the list is whole, and nothing when they were not", () => {
+    expect(screen.closedCut).toBeNull();
+    expect(renderToStaticMarkup(<RoundProgress progress={screen} />)).not.toContain("progress-closed-cut");
+    const cut = progressScreen({ ...SOURCES, closedCutAt: new Date("2026-10-04T12:00:00Z") });
+    expect(cut.closedCut).toBe(
+      `More alerts closed in the last 7 days than the Hub reads at once (${CLOSED_THREADS_READ}): a round that closed before Sunday, October 4, 2026 at 8:00 a.m. EDT may be missing here.`,
+    );
+    expect(renderToStaticMarkup(<RoundProgress progress={cut} />)).toContain('data-testid="progress-closed-cut"');
+    expect(unreadableProgress().closedCut).toBeNull();
   });
 
   it("says when no round is running or closed lately, and when the counts cannot be read", () => {

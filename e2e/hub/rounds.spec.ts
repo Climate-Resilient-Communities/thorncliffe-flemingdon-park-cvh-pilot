@@ -11,8 +11,9 @@ import { expectBaseline } from "./helpers";
 // (the resident's fictional number as a call link, the floor and the method, and "Mark handled"), as a Coordinator sees it (no number), a late mark's
 // (building, floor and ambassador only) and a handled one. S08.09: below the escalations, the rounds' counts by building and floor: an open heat round's
 // live counts in two buildings and a power round closed with its tally ("list"); no round running and none closed ("none-waiting"); counts that could not
-// be read ("counts-unreadable"). The screens are the app's own view functions' output; the behaviour is asserted in src/app/staff/rounds,
-// test/db/escalations.db.test.ts and test/db/roundCounts.db.test.ts. These pictures show what it looks like.
+// be read ("counts-unreadable"); more threads closed in 7 days than the page reads, so it says before when a round may be missing ("closed-cut"). The
+// screens are the app's own view functions' output; the behaviour is asserted in src/app/staff/rounds, test/db/escalations.db.test.ts and
+// test/db/roundCounts.db.test.ts. These pictures show what it looks like.
 const brand = hubBrand();
 const HEIGHT = 844;
 const PHONE = "+14165550181";
@@ -71,6 +72,7 @@ const COUNTS: ProgressSources = {
   ],
   headlines: new Map([[HEAT, "Extreme heat warning. Cooling centres are open until 11 p.m."]]),
   closed: [{ alertId: POWER, types: ["power"], closedAt: at("2026-07-13T23:40:00Z") }],
+  closedCutAt: null,
   closedPlaces: [
     closedAt("7001", "t7", { requested: 4, done: 2, not_reached: 1, withdrawn: 1 }),
     closedAt("7001", "t12", { requested: 3, done: 1, needs_help: 1, unmarked: 1 }),
@@ -83,6 +85,7 @@ const LISTS = {
   list: () => ({ screen: roundsScreen([LATE, HELP, HANDLED]), progress: progressScreen(COUNTS) }),
   "none-waiting": () => ({ screen: roundsScreen([HANDLED]), progress: progressScreen({ ...COUNTS, rows: [], closedPlaces: [] }) }),
   "counts-unreadable": () => ({ screen: roundsScreen([HELP]), progress: unreadableProgress() }),
+  "closed-cut": () => ({ screen: roundsScreen([HANDLED]), progress: progressScreen({ ...COUNTS, rows: [], closedCutAt: at("2026-07-13T23:40:00Z") }) }),
 } as const;
 
 const PAGES = {
@@ -121,6 +124,9 @@ for (const state of Object.keys(LISTS) as (keyof typeof LISTS)[]) {
         await expect(page.getByTestId("escalations-none")).toHaveText("None waiting. Every escalation has been handled.");
         await expect(page.getByTestId("progress-none")).toContainText("No check-in round is running now.");
         await expect(page.getByTestId("progress-closed-none")).toHaveText("No round closed in the last 7 days.");
+      } else if (state === "closed-cut") {
+        await expect(page.getByTestId("progress-closed-cut")).toContainText("a round that closed before Monday, July 13, 2026 at 7:40 p.m. EDT may be missing here.");
+        await expect(page.getByTestId("progress-closed-round")).toContainText("Power: round closed");
       } else {
         await expect(page.getByTestId("progress-unreadable")).toContainText("The Hub could not read the round counts.");
         await expect(page.getByTestId("escalations-open").getByTestId("escalation-item")).toHaveCount(1);

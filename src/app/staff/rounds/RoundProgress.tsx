@@ -85,6 +85,11 @@ export function RoundProgress({ progress }: { progress: ProgressScreen }) {
               {t("closedHeading")}
             </h2>
             <p className="hub-wrap">{t("closedLead")}</p>
+            {progress.closedCut !== null && (
+              <p className="hub-wrap" data-testid="progress-closed-cut">
+                {progress.closedCut}
+              </p>
+            )}
             {progress.closed.length === 0 ? (
               <p className="hub-wrap" data-testid="progress-closed-none">
                 {t("closedNone")}
