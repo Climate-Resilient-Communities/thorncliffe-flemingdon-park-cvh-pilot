@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { EscalationBody } from "./escalation/EscalationBody";
 import { HandleFormView } from "./escalation/HandleFormView";
 import { RoundsBody } from "./RoundsBody";
-import { escalationScreen, residentView, roundsScreen, unreadableRounds, type DescribedEscalation, type ResidentFacts } from "./view";
+import { ROUNDS_REFRESH_SECONDS, escalationScreen, residentView, roundsScreen, unreadableRounds, type DescribedEscalation, type ResidentFacts } from "./view";
 
 const AT = new Date("2026-10-06T15:05:00Z");
 const PHONE = "+14165550181";
@@ -25,7 +25,7 @@ const COORDINATOR = { followUp: false, aal2: false };
 
 describe("Check-in rounds (O-17): the escalations to follow up", () => {
   const screen = roundsScreen([base, handled, late]);
-  const html = renderToStaticMarkup(<RoundsBody screen={screen} />);
+  const html = renderToStaticMarkup(<RoundsBody screen={screen} progress={null} />);
 
   it("puts the open escalations first and the handled ones after, each with status, building, floor, when and the ambassador", () => {
     expect(screen.open.map((item) => item.id)).toEqual([base.id, late.id]);
@@ -50,13 +50,17 @@ describe("Check-in rounds (O-17): the escalations to follow up", () => {
   it("draws both lists and never a number", () => {
     expect(html).toContain("To follow up");
     expect(html).toContain("Handled in the last 7 days");
-    expect(html).toContain("This list updates every 15 seconds.");
+    expect(html).toContain("This page updates every 15 seconds.");
     expect(html).not.toMatch(/\+1\d{10}/);
   });
 
+  it("renders again every 15 seconds, as its words say (the page mounts S06.09's AutoRefresh with it; the page's test checks that)", () => {
+    expect(ROUNDS_REFRESH_SECONDS).toBe(15);
+  });
+
   it("says when none is waiting, and when the list cannot be read", () => {
-    expect(renderToStaticMarkup(<RoundsBody screen={roundsScreen([])} />)).toContain("None waiting. Every escalation has been handled.");
-    expect(renderToStaticMarkup(<RoundsBody screen={unreadableRounds()} />)).toContain("The Hub could not read the escalations.");
+    expect(renderToStaticMarkup(<RoundsBody screen={roundsScreen([])} progress={null} />)).toContain("None waiting. Every escalation has been handled.");
+    expect(renderToStaticMarkup(<RoundsBody screen={unreadableRounds()} progress={null} />)).toContain("The Hub could not read the escalations.");
   });
 
   it("names a staff member whose account is gone in plain words", () => {

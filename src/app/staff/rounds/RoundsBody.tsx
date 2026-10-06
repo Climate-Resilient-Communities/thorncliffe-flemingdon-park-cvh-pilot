@@ -1,8 +1,11 @@
 // "Check-in rounds" as it is drawn (O-17, S08.08): the escalations to follow up first, each with its status, building and floor, when it was marked and by
-// which ambassador (a late mark's says to call the ambassador), then those handled in the last 7 days. Pure: the screenshots and the tests render it on a
-// screen they built, and the page on the escalations read now. No resident's number is on this page.
+// which ambassador (a late mark's says to call the ambassador), then those handled in the last 7 days; S08.09: then the rounds' counts by building and
+// floor (RoundProgress), for the roles that see counts. Pure: the screenshots and the tests render it on a screen they built, and the page on the escalations
+// and counts read now. No resident's number is on this page.
 import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
+import type { ProgressScreen } from "./progress";
+import { RoundProgress } from "./RoundProgress";
 import type { EscalationItemView, RoundsScreen } from "./view";
 
 const t = (key: string) => englishText(`staff.rounds.${key}`);
@@ -32,7 +35,8 @@ function Item({ item }: { item: EscalationItemView }) {
   );
 }
 
-export function RoundsBody({ screen }: { screen: RoundsScreen }) {
+/** `progress`: the rounds' counts (S08.09), or null for a role that does not see counts (`coverage.view`). */
+export function RoundsBody({ screen, progress }: { screen: RoundsScreen; progress: ProgressScreen | null }) {
   return (
     <Stack gap="section-hub">
       <Stack gap="related">
@@ -82,10 +86,13 @@ export function RoundsBody({ screen }: { screen: RoundsScreen }) {
               )}
             </Stack>
           </section>
-          <p>
-            <small>{t("numberNote")}</small>
-          </p>
         </>
+      )}
+      {progress !== null && <RoundProgress progress={progress} />}
+      {!screen.unreadable && (
+        <p>
+          <small>{t("numberNote")}</small>
+        </p>
       )}
     </Stack>
   );

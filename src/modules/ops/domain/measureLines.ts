@@ -538,7 +538,7 @@ export const CHECKIN_STATUSES = ["requested", "done", "not_reached", "needs_help
  * to their place's requests and to the outcome's total over the places: a table with two paths between its figures, where a reader could work out a hidden
  * count (a floor's "fewer than 5" who need help, as its requests less its other outcomes) that the rule cannot follow. The outcomes are therefore given for
  * the pilot to date, their one split, and each round by where its requests were; `checkin_round_count` still holds every round's outcomes by building and
- * floor for the Hub (S08.09). A request a close has not tallied yet (a round closed before its rows were tallied) is the outcome "not tallied", so the
+ * floor (the Hub's "Check-in rounds" reads a closed round's from `checkin_tally` itself for 7 days, S08.09). A request a close has not tallied yet (a round closed before its rows were tallied) is the outcome "not tallied", so the
  * outcomes always add up to the requests.
  */
 function checkinLines(rows: readonly CheckinRow[]): MeasureLine[] {

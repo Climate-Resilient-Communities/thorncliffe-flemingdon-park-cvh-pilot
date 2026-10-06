@@ -119,12 +119,13 @@ vi.mock("../../src/app/staff/messagingPause", () => ({
 }));
 // The On-call numbers page and its actions (S06.07) run the roster on the app's own connection; S08.08's on-duty choice lists no account here.
 vi.mock("../../src/app/oncall", () => ({ oncallRoster: () => wired.oncall, onDutyCandidates: async () => [], onDutyName: async () => null }));
-// "Check-in rounds" and an escalation's page and action (S08.08) read and handle on the app's own connection.
+// "Check-in rounds" and an escalation's page and action (S08.08) read and handle on the app's own connection, and so do the rounds' counts (S08.09).
 vi.mock("../../src/app/staff/rounds/load", async (importOriginal) => {
   const real = await importOriginal<typeof import("../../src/app/staff/rounds/load")>();
   return {
     ...real,
     loadRounds: () => real.loadRounds(wired.db as Db),
+    loadRoundProgress: () => real.loadRoundProgress(wired.db as Db),
     loadEscalation: (id: unknown, viewer: Parameters<typeof real.loadEscalation>[1]) => real.loadEscalation(id, viewer, wired.db as Db),
   };
 });
