@@ -121,12 +121,15 @@ async function round(people: { id: string }[], options: { overdue?: boolean } = 
 }
 
 let rosterSerial = 10;
+/** Each roster entry's fictional number, by entry id, for the checks that an audit never holds one. */
+const rosterPhones = new Map<string, string>();
 /** A number on the on-call roster (as the owner writes it); `onDutyFor` makes it the on-duty entry of that Admin. */
 async function oncallEntry(label: string, options: { onDutyFor?: string } = {}): Promise<string> {
   const id = randomUUID();
   const adder = staffIds[0] ?? (await person("admin")).staffId;
   const phone = `+1647555${String((rosterSerial += 1)).padStart(4, "0")}`;
   await owner`insert into oncall_roster (id, label, phone, added_by, role, staff_id) values (${id}, ${label}, ${phone}, ${adder}, ${options.onDutyFor ? "on_duty" : "oncall"}, ${options.onDutyFor ?? null})`;
+  rosterPhones.set(id, phone);
   return id;
 }
 
@@ -550,7 +553,9 @@ describe("an Admin marks an escalation handled", () => {
       { actor_staff_id: admin.staffId, outcome: "ok", subject_type: "checkin_escalation", subject_id: first!.id, meta: { status: "not_reached", late: false, row_closed: false } },
       { actor_staff_id: admin.staffId, outcome: "ok", subject_type: "checkin_escalation", subject_id: second!.id, meta: { status: "needs_help", late: false, row_closed: true } },
     ]);
-    expect(JSON.stringify(records)).not.toMatch(/Called|son|555/);
+    // Her number's own digits, not a bare "555": a random id in the records can hold those digits.
+    expect(JSON.stringify(records)).not.toMatch(/Called|son/);
+    expect(JSON.stringify(records)).not.toContain(her.phone.slice(2));
   });
 
   it("refuses a second handling, a note with no words, and anyone but an active Admin, each audited with its reason only", async () => {
@@ -795,7 +800,8 @@ describe("the on-duty roster (ops, with identity's check)", () => {
       ["oncall.on_duty_cleared", "refused", { reason: "not_found" }],
       ["oncall.on_duty_set", "ok", { staff_id: admin.staffId }],
     ]);
-    expect(JSON.stringify(records)).not.toContain("555");
+    // The entries' own digits, not a bare "555": a random id in the records can hold those digits.
+    for (const id of [a, b]) expect(JSON.stringify(records)).not.toContain(rosterPhones.get(id)!.slice(2));
   });
 
   it("warns the approver of a round type's entry while nobody is on duty, and not once an Admin is", async () => {
