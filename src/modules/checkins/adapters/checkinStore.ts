@@ -3,6 +3,7 @@
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { CheckinMethod } from "../../../contracts/checkin";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
+import { escalationStore } from "./escalationStore";
 import { checkin } from "./schema";
 
 /** A row a round gets: the requester, the place and the method. `round_ref` is the database's random UUID (version 4). */
@@ -25,6 +26,8 @@ export interface SubscriberCheckinRow {
   status: string;
   /** Recorded when the row was tallied (a row kept after a close for the Hub's follow-up, S08.08); null while it is live. */
   outcome: string | null;
+  /** S08.08: the row's escalations (not reached, needs help): when the Hub was told, and when and how it handled them (the Admin's note). */
+  escalations: { status: "not_reached" | "needs_help"; createdAt: Date; handledAt: Date | null; handledNote: string | null }[];
 }
 
 export const checkinStore = {
@@ -34,12 +37,23 @@ export const checkinStore = {
    */
   async subscriberRows(executor: DbExecutor, subscriberId: string): Promise<SubscriberCheckinRow[]> {
     const rows = await executor
-      .select({ createdAt: checkin.createdAt, alertId: checkin.alertId, rsn: checkin.rsn, floorId: checkin.floorId, method: checkin.method, status: checkin.status, outcome: checkin.outcome })
+      .select({
+        roundRef: checkin.roundRef,
+        createdAt: checkin.createdAt,
+        alertId: checkin.alertId,
+        rsn: checkin.rsn,
+        floorId: checkin.floorId,
+        method: checkin.method,
+        status: checkin.status,
+        outcome: checkin.outcome,
+      })
       .from(checkin)
       .where(and(eq(checkin.subscriberId, subscriberId), isNull(checkin.closedAt)))
       .orderBy(asc(checkin.createdAt), asc(checkin.id));
+    // S08.08: the escalations of those rows (by `round_ref`, which stays here: the reader never shows it).
+    const escalations = rows.length === 0 ? new Map() : await escalationStore.ofSubscriberRows(executor, subscriberId);
     // A row that names its subscriber has its method (`checkin_live_or_stub`).
-    return rows.map((row) => ({ ...row, method: row.method ?? "" }));
+    return rows.map(({ roundRef, ...row }) => ({ ...row, method: row.method ?? "", escalations: escalations.get(roundRef) ?? [] }));
   },
 
   /**

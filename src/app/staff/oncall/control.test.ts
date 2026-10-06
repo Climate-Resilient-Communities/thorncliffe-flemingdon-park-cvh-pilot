@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AddOutcome, OncallRoster, RemoveOutcome } from "@/modules/ops";
-import { addFromForm, removeFromForm, type ControlDeps } from "./control";
+import type { AddOutcome, OnDutyOutcome, OncallRoster, RemoveOutcome } from "@/modules/ops";
+import { addFromForm, clearOnDutyFromForm, removeFromForm, setOnDutyFromForm, type ControlDeps } from "./control";
 
 const ADMIN = { staffId: "01900000-0000-7000-8000-0000000000a1" };
 const ENTRY = "01900000-0000-7000-8000-0000000000b1";
@@ -12,7 +12,7 @@ const form = (fields: Record<string, string>) => {
   return data;
 };
 
-function world(options: { add?: AddOutcome | Error; remove?: RemoveOutcome | Error } = {}) {
+function world(options: { add?: AddOutcome | Error; remove?: RemoveOutcome | Error; onDuty?: OnDutyOutcome | Error } = {}) {
   const calls: string[] = [];
   const logged: { event: string; fields: Record<string, string> }[] = [];
   const roster = {
@@ -28,6 +28,17 @@ function world(options: { add?: AddOutcome | Error; remove?: RemoveOutcome | Err
       if (options.remove instanceof Error) throw options.remove;
       return options.remove ?? { kind: "removed" as const, label: "IT lead", size: 0, skippedTexts: 0 };
     }),
+    setOnDuty: vi.fn(async (input: { actorStaffId: string; id: unknown; staffId: unknown }) => {
+      calls.push(`on duty ${input.actorStaffId} ${JSON.stringify(input.id)} ${JSON.stringify(input.staffId)}`);
+      if (options.onDuty instanceof Error) throw options.onDuty;
+      return options.onDuty ?? { kind: "set" as const, label: "IT lead" };
+    }),
+    clearOnDuty: vi.fn(async (input: { actorStaffId: string }) => {
+      calls.push(`nobody on duty ${input.actorStaffId}`);
+      if (options.onDuty instanceof Error) throw options.onDuty;
+      return options.onDuty ?? { kind: "cleared" as const, label: "IT lead" };
+    }),
+    onDutyState: vi.fn(),
   } satisfies OncallRoster;
   const deps: ControlDeps = { roster: () => roster, logError: (event, fields) => void logged.push({ event, fields }) };
   return { deps, calls, logged, roster };
@@ -100,5 +111,44 @@ describe("pressing 'Remove'", () => {
     const w = world({ remove: new Error("deadlock detected") });
     expect(await removeFromForm(w.deps, ADMIN, form({ id: ENTRY }))).toEqual({ status: "refused", message: "The list was not changed. Try again. If it fails again, tell IT." });
     expect(w.logged).toEqual([{ event: "oncall.remove_failed", fields: { error: "Error" } }]);
+  });
+});
+
+describe("the on-duty Admin (S08.08)", () => {
+  const STAFF = "01900000-0000-7000-8000-0000000000c1";
+
+  it("'Set on duty' sets the entry and Admin account the form names, as the signed-in Admin, and says who is on duty without the number", async () => {
+    const w = world({ onDuty: { kind: "set", label: "IT lead" } });
+    const answer = await setOnDutyFromForm(w.deps, ADMIN, form({ id: ENTRY, staff_id: STAFF }));
+    expect(w.calls).toEqual([`on duty ${ADMIN.staffId} "${ENTRY}" "${STAFF}"`]);
+    expect(answer).toEqual({ status: "done", lines: ["IT lead is now on duty."] });
+  });
+
+  it("turns a refusal into words: an account that is not an active Admin with an authenticator, an entry gone, nobody on duty", async () => {
+    expect(await setOnDutyFromForm(world({ onDuty: { kind: "refused", problem: "not_admin" } }).deps, ADMIN, form({ id: ENTRY, staff_id: STAFF }))).toEqual({
+      status: "refused",
+      message: "That account is not an active Admin with an authenticator. Choose another.",
+    });
+    expect(await setOnDutyFromForm(world({ onDuty: { kind: "refused", problem: "not_found" } }).deps, ADMIN, form({ id: ENTRY, staff_id: STAFF }))).toEqual({
+      status: "refused",
+      message: "That number is no longer on the list. Reload the page.",
+    });
+    expect(await clearOnDutyFromForm(world({ onDuty: { kind: "refused", problem: "not_on_duty" } }).deps, ADMIN)).toEqual({ status: "refused", message: "Nobody is on duty. Reload the page." });
+  });
+
+  it("'Nobody on duty' ends it and says the number stays on the list", async () => {
+    const w = world();
+    expect(await clearOnDutyFromForm(w.deps, ADMIN)).toEqual({ status: "done", lines: ["Nobody is on duty now. IT lead stays on the list."] });
+    expect(w.calls).toEqual([`nobody on duty ${ADMIN.staffId}`]);
+  });
+
+  it("says nothing changed when the use case fails, and logs the error's name only", async () => {
+    const w = world({ onDuty: new RangeError("boom") });
+    expect(await setOnDutyFromForm(w.deps, ADMIN, form({ id: ENTRY, staff_id: STAFF }))).toEqual({ status: "refused", message: "The list was not changed. Try again. If it fails again, tell IT." });
+    expect(await clearOnDutyFromForm(w.deps, ADMIN)).toEqual({ status: "refused", message: "The list was not changed. Try again. If it fails again, tell IT." });
+    expect(w.logged).toEqual([
+      { event: "oncall.on_duty_failed", fields: { error: "RangeError" } },
+      { event: "oncall.on_duty_failed", fields: { error: "RangeError" } },
+    ]);
   });
 });

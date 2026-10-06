@@ -219,6 +219,12 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           {screen.capNotice}
         </p>
       )}
+      {/* Before the decision (S08.08): this approval starts or adds to a check-in round and nobody is on duty for its escalations. It informs; Approve works as always. */}
+      {screen.onDutyNotice && (
+        <p role="note" className="hub-flag hub-wrap" data-testid="on-duty-notice">
+          {screen.onDutyNotice}
+        </p>
+      )}
       <Problem id="approval-error" message={problem} />
       {changed && (
         <section aria-labelledby="count-title" aria-live="polite" data-testid="count-changed">

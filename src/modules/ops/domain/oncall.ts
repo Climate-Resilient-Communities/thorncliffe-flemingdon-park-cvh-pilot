@@ -6,8 +6,11 @@ export const ONCALL_LABEL_MAX_CHARS = 40;
 /** The most numbers on the roster: it is for a few Admins, and a text goes to each, so the cost of one alert is bounded. */
 export const ONCALL_MAX_NUMBERS = 10;
 
-/** Why an entry is refused before anything is written (a code; the screen turns it into words). */
-export type OncallRefusal = "label_missing" | "label_too_long" | "number_invalid" | "number_duplicate" | "roster_full" | "not_found";
+/**
+ * Why an entry is refused before anything is written (a code; the screen turns it into words). S08.08: `not_admin`, an on-duty entry for an account that is not
+ * an active Admin with an authenticator; `not_on_duty`, clearing the on-duty entry when none is set.
+ */
+export type OncallRefusal = "label_missing" | "label_too_long" | "number_invalid" | "number_duplicate" | "roster_full" | "not_found" | "not_admin" | "not_on_duty";
 
 /** A label as stored: leading and trailing space removed, runs of spaces made one, a control character taken out (it becomes a space); refused when empty or over the limit. */
 export function parseOncallLabel(input: unknown): { ok: true; label: string } | { ok: false; problem: "label_missing" | "label_too_long" } {

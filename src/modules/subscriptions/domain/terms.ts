@@ -102,6 +102,8 @@ export const REQUIRED_FACTS: readonly { fact: string; pattern: RegExp }[] = [
   { fact: "the privacy contact", pattern: /privacy contact/i },
   { fact: "that Hub staff check messages", pattern: /Hub staff check/i },
   { fact: "that a message may not be sent overnight", pattern: /overnight/i },
+  // S08.08 (E08 "Closed stub", AD-12): stated before check-ins launch.
+  { fact: "that the Hub keeps the number and floor of someone not reached or needing help for up to 24 hours", pattern: /keeps your number and floor to follow up\. It keeps them for up to 24 hours after the alert ends/i },
 ];
 
 /** Strings a translation must keep where the English has them: they are what a resident acts on or can check. */

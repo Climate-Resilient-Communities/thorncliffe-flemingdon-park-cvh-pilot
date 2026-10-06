@@ -277,10 +277,28 @@ const CHECKIN_STATUS_WORDS: Readonly<Record<string, string>> = {
  * A check-in row that still names the subscriber (S08.05), in words: the round's alert thread, the place, the method and where it stands; a row kept after
  * the round closed for the Hub's follow-up (S08.08) says so. Never a round's reference and never anyone else.
  */
-export function checkinRowWords(row: { alertId: string; method: string; status: string; outcome: string | null }, at: HeldPlace): string {
+export function checkinRowWords(
+  row: { alertId: string; method: string; status: string; outcome: string | null; escalations?: readonly HeldEscalation[] },
+  at: HeldPlace,
+): string {
   const status = CHECKIN_STATUS_WORDS[row.status] ?? row.status;
   const kept = row.outcome === null ? "" : "; the round has closed and the row is kept for the Hub's follow-up";
-  return `in the check-in round of alert thread ${row.alertId}, at ${place(at)}, by ${row.method === "call" ? "a call" : "a text"}: ${status}${kept}`;
+  const told = (row.escalations ?? []).map(escalationWords).join("");
+  return `in the check-in round of alert thread ${row.alertId}, at ${place(at)}, by ${row.method === "call" ? "a call" : "a text"}: ${status}${kept}${told}`;
+}
+
+/** An escalation of a check-in row (S08.08): what the Hub was told and when, and whether and how it followed up (the Admin's note, read back as it is). */
+export interface HeldEscalation {
+  status: string;
+  createdAt: Date;
+  handledAt: Date | null;
+  handledNote: string | null;
+}
+
+function escalationWords(escalation: HeldEscalation): string {
+  const what = CHECKIN_STATUS_WORDS[escalation.status] ?? escalation.status;
+  const handled = escalation.handledAt === null ? "not handled yet" : `handled ${torontoTime(escalation.handledAt)}, the Hub's note: "${escalation.handledNote ?? ""}"`;
+  return `; the Hub was told "${what}" ${torontoTime(escalation.createdAt)}, ${handled}`;
 }
 
 /**

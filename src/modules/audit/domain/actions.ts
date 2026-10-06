@@ -302,6 +302,11 @@ export const AUDIT_META = {
   // `conflict`: the roster is full; `not_found`: the entry was already removed).
   "oncall.added": meta({ roster_size: count.optional() }),
   "oncall.removed": meta({ roster_size: count.optional() }),
+  // The on-duty Admin (S08.08, E08 "On-duty Admin"): an Admin at aal2 makes a roster entry the on-duty one, linked to an active Admin account with an
+  // authenticator (`staff_id`, that account), or ends it. The subject is the roster row; never the number or the label. A refusal holds only its reason
+  // (`validation`: the account is not an active Admin with an authenticator; `not_found`: no such entry, or nobody was on duty).
+  "oncall.on_duty_set": meta({ staff_id: id.optional() }),
+  "oncall.on_duty_cleared": meta({}),
 
   // The monthly cap on text message spending (S07.08). `spend.cap_set`: an Admin at aal2 sets or changes the cap; the subject is the one cap row
   // (type `spend_cap`, id 1), `cap_cents` the cap afterwards and `previous_cents` the one it replaced (absent when none was set). Amounts are cents CAD.
@@ -323,6 +328,12 @@ export const AUDIT_META = {
   // recorded. A refusal (type `checkin`, no id) holds only its reason (`round_ended`: an unknown or purged `round_ref`, or an expired stub;
   // `out_of_scope`: the floor is not the person's now).
   "checkin.marked": meta({ status: z.enum(["done", "not_reached", "needs_help"]).optional(), late: flag.optional(), escalated: flag.optional() }),
+
+  // An escalation handled (S08.08, E08 "Escalation"): an Admin at aal2 marks it handled with a note. The subject is the escalation (type
+  // `checkin_escalation`, its id): `status` and `late` are the escalation's, `row_closed` whether the row kept for the Hub's follow-up became a closed stub
+  // with it (its every escalation handled). Never the note (free text, kept on the escalation), the resident's number or the subscriber. A refusal holds
+  // only its reason (`validation`: no note, or one too long; `not_found`; `conflict`: already handled; `forbidden`: no longer an active Admin).
+  "checkin.escalation_handled": meta({ status: z.enum(["not_reached", "needs_help"]).optional(), late: flag.optional(), row_closed: flag.optional() }),
 
   // A resend (S09.02): an Admin at aal2 resends one text, or all the failed and undelivered texts of an entry in one language. The subject is the alert entry
   // (type `alert_entry`); `scope` is `one` or `language`, `lang` the language of a "resend all", `resent` how many new texts were made, `not_resent` how many
@@ -394,10 +405,12 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "sending.resumed": ["waiting"],
   "oncall.added": ["roster_size"],
   "oncall.removed": ["roster_size"],
+  "oncall.on_duty_set": ["staff_id"],
   "spend.cap_set": ["cap_cents"],
   "spend.cap_overrun": ["over_cents", "cap_cents", "entry_cents"],
   "round_types.changed": ["round_types", "previous"],
   "checkin.marked": ["status", "late", "escalated"],
+  "checkin.escalation_handled": ["status", "late", "row_closed"],
   "delivery.resent": ["scope", "resent"],
   "campaign.rehearsed": ["queued"],
   "campaign.started": ["asked", "queued", "pending_deleted"],

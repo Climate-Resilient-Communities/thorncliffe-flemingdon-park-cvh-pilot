@@ -4,6 +4,7 @@ import { englishText } from "@/i18n/text";
 import type { OncallState } from "./control";
 import { OncallFormsView, latestAnswer, type OncallLabels, type OncallRow } from "./OncallFormsView";
 import { OncallView } from "./OncallView";
+import { onDutyView, type OnDutyEntry } from "./view";
 
 const t = (key: string) => englishText(`staff.oncall.${key}`);
 const labels: OncallLabels = {
@@ -117,5 +118,79 @@ describe("what a press leaves", () => {
     expect(html).toContain("Adding number");
     expect(html).toContain("Removing");
     expect(html).toContain("disabled");
+  });
+});
+
+describe("the on-duty Admin for check-ins (S08.08)", () => {
+  const onDutyLabels = {
+    heading: t("onDuty.heading"),
+    lead: t("onDuty.lead"),
+    badge: t("onDuty.badge"),
+    number: t("onDuty.number"),
+    account: t("onDuty.account"),
+    accountHint: t("onDuty.accountHint"),
+    noAccount: t("onDuty.noAccount"),
+    noNumber: t("onDuty.noNumber"),
+    set: t("onDuty.set"),
+    setting: t("onDuty.setting"),
+    clear: t("onDuty.clear"),
+    clearing: t("onDuty.clearing"),
+  };
+  const ADMIN = "01900000-0000-7000-8000-0000000000c1";
+  const entries = (onDuty: boolean): OnDutyEntry[] => [
+    { id: rows[0]!.id, label: "IT lead", onDuty: false, staffId: null },
+    { id: rows[1]!.id, label: "Priya", onDuty, staffId: onDuty ? ADMIN : null },
+  ];
+  const accounts = [{ id: ADMIN, name: "Priya Sharma" }];
+  const draw = (state: "set" | "none" | "stale", list: OncallRow[] = rows, choices = accounts) =>
+    renderToStaticMarkup(
+      <OncallFormsView
+        rows={list.map((row, index) => ({ ...row, onDuty: state !== "none" && index === 1 }))}
+        labels={{ ...labels, onDuty: onDutyLabels }}
+        answer={IDLE}
+        onDuty={onDutyView({ entries: list.length === 0 ? [] : entries(state !== "none"), state, accounts: choices, onDutyName: "Priya Sharma" })}
+      />,
+    );
+
+  it("says who is on duty, marks the entry, and chooses them in the form", () => {
+    const html = draw("set");
+    expect(html).toContain("On duty: Priya, Priya Sharma&#x27;s account.");
+    expect(html).toContain('data-testid="oncall-row-on-duty"');
+    expect(html).toMatch(/<option value="01900000-0000-7000-8000-0000000000b2" selected="">Priya<\/option>/);
+    expect(html).toMatch(/<option value="01900000-0000-7000-8000-0000000000c1" selected="">Priya Sharma<\/option>/);
+    expect(html).toContain("Nobody on duty");
+    expect(html).toContain("Only an active Admin with an authenticator can be on duty");
+  });
+
+  it("says when nobody is on duty that escalations go to every number, with no button to end it", () => {
+    const html = draw("none");
+    expect(html).toContain("Nobody is on duty. Escalations go to every on-call number.");
+    expect(html).not.toContain('data-testid="oncall-row-on-duty"');
+    expect(html).not.toContain(">Nobody on duty<");
+  });
+
+  it("says when the entry's account can no longer be on duty, in the flag style", () => {
+    const html = draw("stale");
+    expect(html).toContain("Priya is on duty, but Priya Sharma&#x27;s account is no longer an active Admin with an authenticator.");
+    expect(html).toMatch(/class="hub-flag hub-wrap"[^>]*data-state="stale"/);
+  });
+
+  it("offers no choice without a number on the list or an Admin with an authenticator", () => {
+    expect(draw("none", [])).toContain("Add a number above first.");
+    expect(draw("none", rows, [])).toContain("No Admin has an authenticator yet, so nobody can be on duty.");
+    expect(draw("none", rows, [])).not.toContain("Set on duty");
+  });
+
+  it("never shows a whole number in the section", () => {
+    const html = draw("set");
+    const section = html.slice(html.indexOf('data-testid="oncall-on-duty"'), html.indexOf("</section>"));
+    expect(section).not.toContain("0123");
+  });
+
+  it("shows the latest of all the forms' answers", () => {
+    const one: OncallState = { status: "done", at: 1, lines: ["a"] };
+    const two: OncallState = { status: "done", at: 2, lines: ["b"] };
+    expect(latestAnswer(IDLE, one, two, IDLE)).toBe(two);
+    expect(latestAnswer(IDLE, IDLE, IDLE, IDLE)).toEqual(IDLE);
   });
 });

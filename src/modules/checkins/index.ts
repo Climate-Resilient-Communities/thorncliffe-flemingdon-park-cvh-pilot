@@ -1,6 +1,7 @@
 // The check-in rounds module's public interface (AD-2). S08.01 gives the Ambassador's home the one question it asks of a round; S08.05 the
 // requests (E07's ports `withdrawRequest`, `locationChanging` and `deleteForSubscriber`, the edit page's and YES's request, `joinActiveRounds`),
-// the round rows and their tally, and the `ensureRound` an approval calls (S08.06); S08.07 the round page's reads and the marks.
+// the round rows and their tally, and the `ensureRound` an approval calls (S08.06); S08.07 the round page's reads and the marks; S08.08 the
+// close's tally, the escalations' text, list and handling; S08.09 the tally read back for the Hub's counts.
 export { NO_OPEN_ROUNDS, type RoundAssignment, type RoundSummary, type RoundSummaryReader } from "./application/roundSummary";
 export {
   createCheckinRequests,
@@ -32,3 +33,35 @@ export {
   type MarksDeps,
 } from "./application/marks";
 export { MARK_IDS_KEPT, STUB_LIFETIME_HOURS, decideMark, type MarkDecision, type MarkTarget } from "./domain/marks";
+// S08.08: a thread's close tallies its round (alerting's `closeAlert` calls `closeRound`), an escalation texts the on-duty Admin (the marks' seam), the Hub
+// lists the escalations and an Admin marks one handled.
+export { type EscalatedRow, type EscalationRow, type RoundClosed } from "./adapters/escalationStore";
+export {
+  ESCALATIONS_LISTED,
+  HANDLED_SHOWN_MS,
+  closeRound,
+  createEscalationHandling,
+  createEscalationTexts,
+  escalationList,
+  escalationOf,
+  subscriberEscalations,
+  type EscalationHandling,
+  type EscalationHandlingDeps,
+  type EscalationPlace,
+  type EscalationRecipients,
+  type EscalationTextsDeps,
+  type HandleOutcome,
+} from "./application/escalations";
+export {
+  HANDLED_NOTE_MAX_CHARS,
+  KEPT_ROW_HOURS,
+  keptAtClose,
+  outcomeAtClose,
+  parseHandledNote,
+  residentShown,
+  type EscalationStatus,
+  type HandleRefusal,
+} from "./domain/escalations";
+// S08.09: the Hub's counts (O-17): a closed round's tally by building and floor (an open round's counts are its live rows, `liveRoundRows`).
+export { roundTallies } from "./application/tally";
+export { TALLY_OUTCOMES, TALLY_STATUSES, countsByPlace, noCounts, stillInRound, type PlaceCounts, type TallyCount, type TallyOutcome, type TallyStatus } from "./domain/tally";

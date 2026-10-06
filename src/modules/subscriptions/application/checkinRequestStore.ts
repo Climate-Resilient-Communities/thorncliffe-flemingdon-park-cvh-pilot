@@ -43,3 +43,12 @@ export function checkinAskersAmong(executor: DbExecutor, subscriberIds: readonly
 export function checkinContactsOf(executor: DbExecutor, subscriberIds: readonly string[], store: SubscriberStore = subscriberStore): Promise<Map<string, string>> {
   return store.checkinContactsOf(executor, subscriberIds);
 }
+
+/**
+ * S08.08: the phone number of the subscriber an escalation's row still names, for the Admin following it up (E08 "Escalation": the Hub keeps the number
+ * until the escalation is handled, or 24 hours after the alert ends). Whatever the request is now: a resident who withdrew it after the round still gets
+ * the Hub's call. Null when there is no such subscriber. The app shows it to an Admin at aal2 only, no-store.
+ */
+export function escalationNumberOf(executor: DbExecutor, subscriberId: string, store: SubscriberStore = subscriberStore): Promise<string | null> {
+  return store.escalationNumberOf(executor, subscriberId);
+}

@@ -5179,7 +5179,8 @@
       "closingTitle": "[EN] What approving does",
       "closingReach": "[EN] This goes to everyone who got any entry of this alert, on the channels they got it on, and to everyone in the audience above.",
       "closingCloses": "[EN] Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top.",
-      "capNotice": "[EN] With this alert, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still approve it: the texts are sent, the overrun is recorded and the on-call Admins are told."
+      "capNotice": "[EN] With this alert, text spending this month would be about {projected}, which is {over} over the monthly cap of {cap}. You can still approve it: the texts are sent, the overrun is recorded and the on-call Admins are told.",
+      "noOnDuty": "[EN] Nobody is on duty for check-ins. If an ambassador on this round cannot reach someone or finds them needing help, the text goes to every on-call number. Set the on-duty Admin on the On-call numbers page."
     },
     "incidents": {
       "waitingTitle": "[EN] Waiting for your approval",
@@ -5616,7 +5617,31 @@
         "forbidden": "[EN] Only an Admin can change the on-call numbers.",
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.",
         "failed": "[EN] The list was not changed. Try again. If it fails again, tell IT.",
-        "unreadable": "[EN] The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT."
+        "unreadable": "[EN] The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT.",
+        "not_admin": "[EN] That account is not an active Admin with an authenticator. Choose another.",
+        "not_on_duty": "[EN] Nobody is on duty. Reload the page."
+      },
+      "onDuty": {
+        "heading": "[EN] On duty for check-ins",
+        "lead": "[EN] The on-duty Admin gets a text for each check-in escalation: someone an ambassador could not reach or found needing help. With nobody on duty, the text goes to every number on this list.",
+        "isOnDuty": "[EN] On duty: {label}, {name}'s account.",
+        "nobody": "[EN] Nobody is on duty. Escalations go to every on-call number.",
+        "stale": "[EN] {label} is on duty, but {name}'s account is no longer an active Admin with an authenticator. Escalations go to every on-call number. Choose someone else.",
+        "badge": "[EN] On duty",
+        "number": "[EN] Number",
+        "account": "[EN] Admin account",
+        "accountHint": "[EN] Only an active Admin with an authenticator can be on duty, so they can sign in and see the resident's number.",
+        "noAccount": "[EN] No Admin has an authenticator yet, so nobody can be on duty.",
+        "noNumber": "[EN] Add a number above first.",
+        "set": "[EN] Set on duty",
+        "setting": "[EN] Setting on duty",
+        "clear": "[EN] Nobody on duty",
+        "clearing": "[EN] Ending on duty",
+        "someone": "[EN] an Admin",
+        "done": {
+          "set": "[EN] {label} is now on duty.",
+          "cleared": "[EN] Nobody is on duty now. {label} stays on the list."
+        }
       }
     },
     "health": {
@@ -6075,6 +6100,102 @@
       "reloadButton": "[EN] Reload my round",
       "signedOut": "[EN] You were signed out, so marks are not being sent. Sign in again with signal, then open your round again.",
       "loadFailed": "[EN] Your round could not be loaded. Try again with signal."
+    },
+    "rounds": {
+      "title": "[EN] Check-in rounds",
+      "lead": "[EN] Anyone an ambassador could not reach, or found needing help, appears here as soon as it is marked. The on-duty Admin gets a text.",
+      "refresh": "[EN] This page updates every 15 seconds.",
+      "followUp": "[EN] To follow up",
+      "noneWaiting": "[EN] None waiting. Every escalation has been handled.",
+      "handledHeading": "[EN] Handled in the last 7 days",
+      "noneHandled": "[EN] None handled in the last 7 days.",
+      "status": {
+        "needs_help": "[EN] Needs help",
+        "not_reached": "[EN] Not reached"
+      },
+      "where": "[EN] {building}, floor {floor}",
+      "marked": "[EN] Marked {time}",
+      "from": "[EN] From {name}, floor ambassador",
+      "late": "[EN] Marked after the round ended: call the ambassador to follow up.",
+      "handledBy": "[EN] Handled by {name}, {time}",
+      "open": "[EN] Open",
+      "openFor": "[EN] Open {status}, {where}",
+      "numberNote": "[EN] Only an Admin sees a resident's number, on the escalation's own page.",
+      "someone": "[EN] a staff member",
+      "unreadable": "[EN] The Hub could not read the escalations. Reload the page. If this stays, tell IT.",
+      "forbidden": "[EN] Only the Hub's Coordinators, Directors and Admins see the check-in escalations.",
+      "progress": {
+        "heading": "[EN] Round progress by building and floor",
+        "lead": "[EN] Counts only. Each open round's check-ins as they are now, by what the ambassador marked last. A request that is withdrawn leaves these counts.",
+        "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
+        "forAlert": "[EN] Round for: {headline}",
+        "floor": "[EN] Floor {floor}",
+        "floorGone": "[EN] A floor removed since",
+        "total": "[EN] In all",
+        "count": "{label}: {n}",
+        "live": {
+          "requests": "[EN] Asked now",
+          "pending": "[EN] Still to do",
+          "done": "[EN] Done",
+          "not_reached": "[EN] Not reached",
+          "needs_help": "[EN] Needs help"
+        },
+        "closedHeading": "[EN] Rounds closed in the last 7 days",
+        "closedLead": "[EN] The final counts of each round, kept after its records are deleted. Each check-in asked for ends as one of the outcomes. Withdrawn includes a resident who moved floors or stopped texts during the round.",
+        "closedNone": "[EN] No round closed in the last 7 days.",
+        "closedCut": "[EN] More alerts closed in the last 7 days than the Hub reads at once ({n}): a round that closed before {time} may be missing here.",
+        "closedTitle": "[EN] {types}: round closed {time}",
+        "tally": {
+          "requested": "[EN] Asked",
+          "done": "[EN] Done",
+          "not_reached": "[EN] Not reached",
+          "needs_help": "[EN] Needs help",
+          "withdrawn": "[EN] Withdrawn",
+          "unmarked": "[EN] Not marked"
+        },
+        "unreadable": "[EN] The Hub could not read the round counts. Reload the page. If this stays, tell IT."
+      },
+      "escalation": {
+        "title": "{status}: {where}",
+        "back": "[EN] Back to check-in rounds",
+        "marked": "[EN] Marked {time} by {name}, floor ambassador.",
+        "late": "[EN] Marked after the round ended. Only the building, floor and ambassador are known. Call the ambassador to follow up.",
+        "residentHeading": "[EN] The resident",
+        "phone": "[EN] Phone",
+        "call": "[EN] Call {phone}",
+        "floor": "[EN] Floor",
+        "method": "[EN] Asked to be checked on by",
+        "methods": {
+          "call": "[EN] a call",
+          "text": "[EN] a text"
+        },
+        "residentNote": "[EN] Only Admins see this. The Hub keeps it until the escalation is handled, or for 24 hours after the alert ends.",
+        "residentGone": "[EN] The resident's number is no longer kept: the escalation was handled, the request was withdrawn or deleted, or 24 hours passed after the alert ended.",
+        "adminOnly": "[EN] Only an Admin sees the resident's number. Ask the on-duty Admin to follow up.",
+        "aal2": "[EN] Sign in again with your authenticator code to see the resident's number.",
+        "handledHeading": "[EN] Handled",
+        "handled": "[EN] Handled by {name}, {time}.",
+        "handledNote": "[EN] What the Hub did: {note}",
+        "markHeading": "[EN] Mark handled",
+        "note": "[EN] What the Hub did",
+        "noteHint": "[EN] One line, up to 300 characters. Do not write the resident's name, number or health details.",
+        "mark": "[EN] Mark handled",
+        "marking": "[EN] Marking handled",
+        "adminMarks": "[EN] An Admin marks it handled.",
+        "done": "[EN] Marked handled.",
+        "doneClosed": "[EN] Marked handled. The resident's number is no longer kept.",
+        "missing": "[EN] This escalation is not there. Go back to the list.",
+        "errors": {
+          "note_missing": "[EN] Write what the Hub did.",
+          "note_too_long": "[EN] The note can have at most 300 characters.",
+          "not_found": "[EN] This escalation is not there. Reload the page.",
+          "already_handled": "[EN] Someone marked it handled already. Reload the page.",
+          "not_admin": "[EN] Only an Admin can mark an escalation handled.",
+          "forbidden": "[EN] Only an Admin can mark an escalation handled.",
+          "aal2Required": "[EN] An Admin must sign in with their authenticator code to mark an escalation handled. Sign in again and enter the code.",
+          "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT."
+        }
+      }
     }
   },
   "building": {
@@ -6154,6 +6275,10 @@
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub.",
         "messaging_settings": "[EN] CVH: the Twilio Messaging Service allows countries other than Canada, or SMS pumping protection is off. Fix it in Twilio.",
         "provider_auth": "[EN] CVH: Twilio refused the CVH sign-in, so texts are not being sent. Refusals in 24 hours: {count}. If this text reached you, it works again. Check the Hub."
+      },
+      "escalation": {
+        "needs_help": "[EN] CVH: Needs help: {building}, floor {floor}. Open: {link}",
+        "not_reached": "[EN] CVH: Not reached: {building}, floor {floor}. Open: {link}"
       }
     }
   },

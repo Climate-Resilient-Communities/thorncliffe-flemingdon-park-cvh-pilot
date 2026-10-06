@@ -119,6 +119,7 @@ const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
+const ESCALATION_ACTIONS = "src/app/staff/rounds/escalation/actions.ts";
 const SPEND_ACTIONS = "src/app/staff/spend/actions.ts";
 const RESEND_ACTIONS = "src/app/staff/alerts/sending/texts/actions.ts";
 const DRILL_ROSTER_ACTIONS = "src/app/staff/drills/roster/actions.ts";
@@ -190,6 +191,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/oncall", kind: "page", file: "src/app/staff/oncall/page.tsx", export: "default", route: "/staff/oncall", action: "oncall.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  // S08.08: "Check-in rounds" (O-17, the escalations) and an escalation's page are `checkins.escalations`: a Coordinator, a Director read-only and an Admin.
+  // Only an Admin at aal2 sees a resident's number there (the page's own decision; test/db/escalations.db.test.ts asks as each person).
+  { id: "page /staff/rounds", kind: "page", file: "src/app/staff/rounds/page.tsx", export: "default", route: "/staff/rounds", action: "checkins.escalations", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
+  {
+    id: "page /staff/rounds/escalation",
+    kind: "page",
+    file: "src/app/staff/rounds/escalation/page.tsx",
+    export: "default",
+    route: "/staff/rounds/escalation",
+    action: "checkins.escalations",
+    writes: "none",
+    gate: "hub",
+    expected: COVERAGE_VIEWERS,
+  },
   { id: "page /staff/spend", kind: "page", file: "src/app/staff/spend/page.tsx", export: "default", route: "/staff/spend", action: "spend.view", writes: "none", gate: "hub", expected: SPEND_VIEWERS },
   { id: "page /staff/text-signup", kind: "page", file: "src/app/staff/text-signup/page.tsx", export: "default", route: "/staff/text-signup", action: "signup.assist", writes: "none", gate: "hub", expected: SIGNUP_HELPERS },
   { id: "page /staff/drills", kind: "page", file: "src/app/staff/drills/page.tsx", export: "default", route: "/staff/drills", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
@@ -711,6 +726,46 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { id: "01900000-0000-7000-8000-0000000000e9" },
+    expected: ADMIN_ONLY,
+  },
+  // S08.08: "Set on duty" and "Nobody on duty" (the same policy action, Admins at aal2). Called as an allowed Admin, both are refused by the use case (no such
+  // entry; nobody on duty), and nothing changes.
+  {
+    id: `action ${ONCALL_ACTIONS}#setOnDutyAction`,
+    kind: "action",
+    file: ONCALL_ACTIONS,
+    export: "setOnDutyAction",
+    route: "/staff/oncall",
+    action: "oncall.manage",
+    writes: "business",
+    gate: "hub",
+    form: { id: "01900000-0000-7000-8000-0000000000e9", staff_id: "01900000-0000-7000-8000-0000000000ea" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${ONCALL_ACTIONS}#clearOnDutyAction`,
+    kind: "action",
+    file: ONCALL_ACTIONS,
+    export: "clearOnDutyAction",
+    route: "/staff/oncall",
+    action: "oncall.manage",
+    writes: "business",
+    gate: "hub",
+    form: {},
+    expected: ADMIN_ONLY,
+  },
+  // S08.08: "Mark handled" on an escalation (policy action `checkins.follow_up`, Admins at aal2). Called as an allowed Admin it is refused by the use case: the
+  // escalation it names is not there.
+  {
+    id: `action ${ESCALATION_ACTIONS}#markHandledAction`,
+    kind: "action",
+    file: ESCALATION_ACTIONS,
+    export: "markHandledAction",
+    route: "/staff/rounds/escalation",
+    action: "checkins.follow_up",
+    writes: "business",
+    gate: "hub",
+    form: { id: "01900000-0000-7000-8000-0000000000eb", note: "Called the ambassador." },
     expected: ADMIN_ONLY,
   },
   // S07.08: "Save cap" (policy action `spend.cap`, Admins at aal2). Called as an allowed Admin, the save really sets the cap (test/db/permissions.db.test.ts

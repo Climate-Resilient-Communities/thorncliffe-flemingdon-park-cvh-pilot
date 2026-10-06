@@ -10,6 +10,11 @@ import { HealthBanner } from "@/app/staff/HealthBanner";
 import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
+import { EscalationBody } from "@/app/staff/rounds/escalation/EscalationBody";
+import { HandleFormView } from "@/app/staff/rounds/escalation/HandleFormView";
+import { RoundsBody } from "@/app/staff/rounds/RoundsBody";
+import type { EscalationScreen, RoundsScreen } from "@/app/staff/rounds/view";
+import type { ProgressScreen } from "@/app/staff/rounds/progress";
 import { CapFormView } from "@/app/staff/spend/CapFormView";
 import { SpendBody } from "@/app/staff/spend/SpendBody";
 import type { SpendScreen } from "@/app/staff/spend/view";
@@ -1002,6 +1007,55 @@ export function OncallFixture({
         <OncallView count={count} unreadable={unreadable} forms={<OncallFormsView {...form} />} />
       </Screen>
     </HubShell>
+  );
+}
+
+/**
+ * "Check-in rounds" (O-17, S08.08) inside the Hub shell: the real body (RoundsBody) on a screen the app's own view function built (e2e/hub/rounds.spec.ts),
+ * drawn without the 15 second reload; S08.09: with the rounds' counts by building and floor the app's own `progressScreen` built. Statuses, places, times,
+ * names and counts: nothing here is a phone number.
+ */
+export function RoundsFixture({
+  texts,
+  brand,
+  screen,
+  progress,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: RoundsScreen;
+  progress: ProgressScreen | null;
+}) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/rounds">
+      <Screen surface="staff" testId="screen">
+        <RoundsBody screen={screen} progress={progress} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * An escalation's page (S08.08) inside the Hub shell: the real body (EscalationBody) on a screen the app's own view function built for an Admin at aal2 (the
+ * resident's fictional number) or anyone else (no number), with the real, behaviour-free "Mark handled" form (HandleFormView) for an Admin.
+ */
+export function EscalationFixture({
+  texts,
+  brand,
+  screen,
+  form,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: EscalationScreen;
+  form?: ComponentProps<typeof HandleFormView>;
+}) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/rounds/escalation">
+      <Screen surface="staff" testId="screen">
+        <EscalationBody screen={screen} form={form ? <HandleFormView {...form} /> : null} />
+      </Screen>
+    </AroundTheScreen>
   );
 }
 

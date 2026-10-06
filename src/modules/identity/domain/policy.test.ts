@@ -144,6 +144,10 @@ const CASES: { actions: readonly string[]; situation: string; context: PolicyCon
   { actions: ["checkins.mark"], situation: "an unassigned floor of an assigned building", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-9" } }, expected: roles(false, false, false, true) },
   { actions: ["checkins.mark"], situation: "a building and no floor", context: { assignments: [{ rsn: "7001", floorIds: null }], target: { rsn: "7001" } }, expected: roles(false, false, false, true) },
   { actions: ["checkins.mark"], situation: "no row found (no target)", context: { assignments: [ASSIGNED] }, expected: roles(false, false, false, true) },
+  // See escalations (S08.08): no | yes | yes (read-only) | yes.
+  { actions: ["checkins.escalations"], situation: "any context", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-3" } }, expected: roles(false, true, true, true) },
+  // Follow up an escalation with the resident's details (S08.08): no | no | no | yes.
+  { actions: ["checkins.follow_up"], situation: "any context", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-3" } }, expected: roles(false, false, false, true) },
   // See counts and coverage: no | yes | yes (read-only) | yes.
   { actions: ["coverage.view"], situation: "any context", context: {}, expected: roles(false, true, true, true) },
   // See spend: no | no | yes (read-only) | yes.
