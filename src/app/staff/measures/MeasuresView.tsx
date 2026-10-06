@@ -1,10 +1,12 @@
 import { Stack } from "@/ui";
+import { ProcedureLink } from "../ProcedureLink";
 import type { CostView, MeasuresView as MeasuresViewModel, ReachEntryView, ReachView, SubscribersView } from "./view";
 
 /**
  * The Hub's pilot measures page (S07.10), as it is drawn: the subscribers the daily job counted, how far corrections, withdrawals and finals reached, and (for an
  * Admin or a Director, AD-4) what each alert cost. Counts only, read-only and with no control: the view model carries every word, so the tests and the screenshots
- * draw this very markup. Drills have a list of their own in each section.
+ * draw this very markup. Drills have a list of their own in each section. Under the lead (S09.05): where the full set of measures is, the export an Admin writes,
+ * and the link to its procedure, the page's one link.
  */
 
 function Entries({ items, testId }: { items: ReachEntryView[]; testId: string }) {
@@ -99,6 +101,8 @@ export function MeasuresView({ view }: { view: MeasuresViewModel }) {
         <h1>{view.title}</h1>
         <p>{view.lead}</p>
         <p data-testid="measures-privacy">{view.privacy}</p>
+        <p data-testid="measures-export">{view.exportNote}</p>
+        <ProcedureLink link={view.procedure} />
       </Stack>
       <Subscribers view={view.subscribers} />
       <Reach view={view.reach} />

@@ -8,6 +8,7 @@ import { readCorrectionReach } from "@/modules/messaging";
 import { readAlertCost, readCohereShare } from "@/modules/spend";
 import { readSubscriberMeasures } from "@/modules/subscriptions";
 import { getDb } from "@/platform/db";
+import { procedureLink } from "../procedures";
 import { costView, measuresText, reachView, subscribersView, type MeasuresView } from "./view";
 
 /** How many alerts the page lists in each of its two lists (real, and drills). */
@@ -23,6 +24,8 @@ export async function loadMeasures(role: StaffRole): Promise<MeasuresView> {
     title: t("title"),
     lead: t("lead"),
     privacy: t("privacy"),
+    exportNote: t("exportNote"),
+    procedure: procedureLink("export-measures"),
     subscribers: subscribersView(subscribers, t),
     reach: reachView(reach, t),
     cost,

@@ -21,11 +21,13 @@ The pages hold no secret value, phone number or name: they name roles and where 
 | [Rotating secrets](rotate-secrets.md) | IT lead | People (someone leaving); otherwise Vercel, Supabase, Twilio, Cohere, GitHub |
 | [A resident access request](access-request.md) | Hub Admin (privacy contact) | No Hub screen: `scripts/access-request` (the screen is the MVP's) |
 | [The end of the pilot](end-of-pilot.md) | Hub Admin lead (with the IT lead) | End of the pilot (`/staff/campaign`, not in the menu) |
+| [Exporting the pilot measures](export-measures.md) | Hub Admin lead (the survey: Hub Coordinator) | Pilot measures (`/staff/measures`); the export is `scripts/export-measures` |
 
 Also here:
 
 - [Rehearsal log](rehearsals.md): who rehearsed which procedure, when and with what outcome. The launch rehearsals (a production drill, a pause and resume, a resend, the access-request process) are recorded there before launch.
 - [Weekly reliability notes](weekly-notes/README.md): one file per week, from `scripts/export-weekly`.
+- [Translation survey results](survey-results.csv): the counts of the translation-understood survey, one line per language and round, recorded by Coordinators and read by `scripts/export-measures` ([exporting the pilot measures](export-measures.md)).
 
 The end of the pilot (the re-consent campaign, S09.07, and the purge, S09.08) is not one of the launch procedures: it is rehearsed on the drill roster by day 55 and run by day 60, and keeps its own record on its page.
 

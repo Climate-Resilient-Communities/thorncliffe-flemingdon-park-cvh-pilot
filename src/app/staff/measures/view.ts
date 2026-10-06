@@ -9,6 +9,7 @@ import type { AlertCost, AlertCostReport, AlertCostRow, CohereEntryShare, Cohere
 import { SUBSCRIBER_NOT_SHOWN, type ShownCount, type SubscriberMeasuresDay } from "@/modules/subscriptions";
 import { formatTorontoDate } from "@/platform/clock";
 import { languageLabel } from "../alerts/sending/view";
+import type { ProcedureLinkView } from "../procedures";
 
 /** The Hub's pilot measures page. */
 export const MEASURES_PAGE = "/staff/measures";
@@ -224,6 +225,10 @@ export interface MeasuresView {
   title: string;
   lead: string;
   privacy: string;
+  /** S09.05: where the full set of measures is (the export an Admin writes, in two editions), and that nobody changes a measure. */
+  exportNote: string;
+  /** S09.05: the procedure for writing the export, docs/procedures/export-measures.md (S09.03's link). */
+  procedure: ProcedureLinkView;
   subscribers: SubscribersView;
   reach: ReachView;
   /** Null for a role that does not see spend (AD-4): a Coordinator. */
