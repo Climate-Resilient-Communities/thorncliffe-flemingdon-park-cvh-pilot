@@ -34,6 +34,7 @@ const HELD: HeldRecord = {
     places: [{ rsn: "9100011", address: "11 Sample Road", floor: "2" }],
     mutedTopics: ["heat"],
     prompt: null,
+    editLink: null,
   },
   pending: null,
   replies: [],

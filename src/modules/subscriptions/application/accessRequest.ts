@@ -6,9 +6,10 @@
 //   receive            records a new request (what the resident asked for); a rehearsal's is marked as a drill, so the review reports it apart.
 //   open               the requests still open, oldest first, with the days each has been open (by the database's clock, as the weekly review counts).
 //   lookUp             everything held for the number, in ONE read-only transaction (Postgres refuses any write in it), for an open request only: the
-//                      subscriber, places, groups, muted topics, consent version, retention state and prompt; a pending sign-up; waiting replies; the texts
-//                      held for those records (never their words); the keyed hashes of the number in `rate_limit`; check-in records (E08's, through a
-//                      port); and what holds the number's records that it cannot read yet (a column or a table added since). Nothing is recorded or changed.
+//                      subscriber, places, groups, muted topics, consent version, retention state, prompt and edit link (S07.06's, where it is built);
+//                      a pending sign-up; waiting replies; the texts held for those records (never their words); the keyed hashes of the number in
+//                      `rate_limit`; check-in records (E08's, through a port); and what holds the number's records that it cannot read yet (a column or
+//                      a table added since). Nothing is recorded or changed.
 //   deleteForResident  after verified control, the one E07 deletion (deletion.ts, the steps STOP runs) and the request's `closed` record (`deleted`), in one
 //                      transaction: both commit or neither does. Refused while a `checkin` table exists and E08's deletion port is not wired here.
 //   close              the request's `closed` record with how it ended (answered, not verified, withdrawn).
@@ -188,6 +189,7 @@ export function createAccessRequests(deps: AccessRequestDeps): AccessRequests {
             places: await placesOf(tx, await store.placesOf(tx, sub.id)),
             mutedTopics: await store.mutedTopicsOf(tx, sub.id),
             prompt: await store.promptOf(tx, sub.id),
+            editLink: await store.editLinkOf(tx, sub.id),
           }
         : null,
       pending: pending

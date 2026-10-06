@@ -1,10 +1,10 @@
 // A resident's access request against a real database (S09.03, E09 "Access request"), as the app's own role (cvh_app_login), which is what
 // scripts/access-request connects as:
 //  - a request is two audit records with the Admin as the actor and the request as the subject, holding no number; only an active Admin can be named;
-//  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt; a pending sign-up;
-//    a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound limit's mute row included; check-in
-//    records), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that holds a number's records is
-//    reported as not read, so a request is never answered as complete without it;
+//  - the lookup shows everything held for a number (subscriber, places, groups, muted topics, consent version, retention state, prompt, edit link; a
+//    pending sign-up; a waiting reply; the texts, never their words; the keyed hashes of the number under every scope, the inbound limit's mute row
+//    included; check-in records), in a transaction Postgres keeps read-only, and only for an open request; a column or a table added since that holds a
+//    number's records is reported as not read, so a request is never answered as complete without it;
 //  - the deletion on the resident's behalf is the full E07 deletion (the one STOP runs) and closes the request in the same transaction; a failed audit record
 //    undoes the deletion; a `checkin` table with E08's port not wired refuses it; a request is closed once, even by two runs at once;
 //  - the weekly review (S09.04's `weekly_review`, and scripts/export-weekly's CSV) flags a request open longer than 25 days, a rehearsal's apart, and the
@@ -59,10 +59,25 @@ const staff: Record<"admin" | "admin2" | "coordinator" | "suspended", { id: stri
 };
 const checkinCalls: string[] = [];
 let sid = 0;
+/** Whether this file made S07.06's `subscription_edit_token` (S07.06 is built on its own branch; once it is merged, its migration makes the table). */
+let madeEditLinks = false;
 
 beforeAll(async () => {
   owner = connect(serverUrl());
   await migrate({ sql: owner, log: () => {} });
+  // The lookup must read S07.06's edit links whichever story is merged first: until its migration is here, the table is made as it makes it.
+  const [{ found }] = await owner`select to_regclass('public.subscription_edit_token') is not null as found`;
+  if (!found) {
+    madeEditLinks = true;
+    await owner`create table subscription_edit_token (
+                  id uuid primary key,
+                  subscriber_id uuid not null references subscriber (id) on delete cascade,
+                  token_hash text not null,
+                  created_at timestamptz not null default now(),
+                  expires_at timestamptz not null default now() + interval '30 minutes',
+                  used_at timestamptz)`;
+    await owner`grant select, insert, delete on table subscription_edit_token to cvh_app`;
+  }
   const password = randomBytes(18).toString("hex");
   await owner.unsafe(`alter role cvh_app_login password '${password}'`);
   const url = new URL(serverUrl());
@@ -97,6 +112,7 @@ async function resetAll() {
   await owner`drop table if exists checkin`;
   await owner`drop table if exists checkin_request`;
   await owner`alter table subscriber drop column if exists checkin_method`;
+  await owner`alter table if exists subscription_edit_token drop column if exists sent_to`;
   checkinCalls.length = 0;
 }
 
@@ -104,6 +120,7 @@ beforeEach(resetAll);
 
 afterAll(async () => {
   await resetAll();
+  if (madeEditLinks) await owner`drop table subscription_edit_token`;
   for (const account of Object.values(staff)) await owner`delete from staff_account where id = ${account.id}`;
   await owner`delete from building_floor where rsn = ${RSN}`;
   await owner`delete from building where rsn = ${RSN}`;
@@ -169,6 +186,14 @@ async function subscribed() {
   await owner`insert into subscriber_topic_optout (subscriber_id, topic) values (${row!.id}, 'power')`;
   await router().handle(inbound("0"));
   return row!.id as string;
+}
+
+/** An edit link of the subscriber, as S07.06 makes one (only its hash is kept); `minutesAgo` 31 makes one that has run out. Returns the hash. */
+async function editLink(subscriberId: string, minutesAgo = 0): Promise<string> {
+  const hash = randomBytes(32).toString("hex");
+  await owner`insert into subscription_edit_token (id, subscriber_id, token_hash, created_at, expires_at)
+              values (${randomUUID()}, ${subscriberId}, ${hash}, now() - make_interval(mins => ${minutesAgo}), now() - make_interval(mins => ${minutesAgo}) + interval '30 minutes')`;
+  return hash;
 }
 
 const auditRows = () => owner`select action, actor_staff_id, subject_type, subject_id, outcome, is_drill, meta from audit_event where id > ${auditBaseline} order by id`;
@@ -262,7 +287,8 @@ describe("a request in the audit trail", () => {
 describe("the lookup", () => {
   it("shows everything held for a subscriber, with no message words, for an open request", async () => {
     const id = await received();
-    await subscribed();
+    const subscriberId = await subscribed();
+    const tokenHash = await editLink(subscriberId);
     // The inbound limit (S07.09) counted a text from the number, which leaves a keyed hash of it in rate_limit.
     const result = await requests().lookUp({ id, number: TYPED });
     if (!result.ok) throw new Error(result.error);
@@ -279,6 +305,7 @@ describe("the lookup", () => {
       places: [{ rsn: RSN, address: "31 Sample Road", floor: "2" }],
       mutedTopics: ["power"],
       prompt: { kind: "delete_confirm" },
+      editLink: { expired: false, usedAt: null },
     });
     expect(held.pending).toBeNull();
     expect(held.texts.map((t) => [t.kind, t.purpose, t.lang])).toEqual([
@@ -287,7 +314,8 @@ describe("the lookup", () => {
     ]);
     expect(held.hashes.map((h) => [h.scope, h.count])).toEqual([["inbound", 1]]);
     expect(held.checkins).toEqual({ kind: "not_built" });
-    // Every column and table that holds a subscriber's records is read: a story that adds one adds it to the lookup (accessRequestStore's LOOKUP_COLUMNS).
+    // Every column and table that holds a subscriber's records is read, S07.06's edit links included: a story that adds one adds it to the lookup
+    // (accessRequestStore's LOOKUP_COLUMNS).
     expect(held.unread).toEqual([]);
     // The confirmation went to the pending sign-up, which YES deleted: its text forgot it (AD-8), so it is not the subscriber's.
     const bodies = (await owner`select body from delivery`).map((row) => row.body as string);
@@ -295,6 +323,21 @@ describe("the lookup", () => {
     const shown = JSON.stringify(held);
     for (const body of bodies) expect(shown).not.toContain(body);
     expect(shown).not.toContain("5550131");
+    expect(shown).not.toContain(tokenHash);
+  });
+
+  it("shows an edit link that was used, and one that has run out and waits for the purge", async () => {
+    const id = await received();
+    const subscriberId = await subscribed();
+    await editLink(subscriberId, 31);
+
+    expect(await requests().lookUp({ id, number: NUMBER })).toMatchObject({ ok: true, value: { subscriber: { editLink: { expired: true, usedAt: null } }, unread: [] } });
+
+    await owner`delete from subscription_edit_token`;
+    await editLink(subscriberId);
+    await owner`update subscription_edit_token set used_at = now()`;
+    const used = await requests().lookUp({ id, number: NUMBER });
+    expect(used).toMatchObject({ ok: true, value: { subscriber: { editLink: { expired: false, usedAt: expect.any(Date) } } } });
   });
 
   it("shows a pending sign-up, and a reply waiting for a number with no subscription", async () => {
@@ -337,13 +380,14 @@ describe("the lookup", () => {
     const id = await received();
     await subscribed();
     await signUp(OTHER);
-    // As E08 might add them: the check-in method on the subscriber, and a table of requests that refers to the subscriber.
+    // As E08 might add them: the check-in method on the subscriber, and a table of requests that refers to the subscriber; and a column of an edit link.
     await owner`alter table subscriber add column checkin_method text`;
     await owner`create table checkin_request (id uuid primary key, subscriber_id uuid not null references subscriber (id) on delete cascade)`;
+    await owner`alter table subscription_edit_token add column sent_to text`;
 
     const result = await requests().lookUp({ id, number: NUMBER });
     if (!result.ok) throw new Error(result.error);
-    expect(result.value.unread).toEqual(["subscriber.checkin_method", "the table checkin_request (it refers to subscriber)"]);
+    expect(result.value.unread).toEqual(["subscriber.checkin_method", "subscription_edit_token.sent_to", "the table checkin_request (it refers to subscriber)"]);
     // A number with only a pending sign-up holds nothing in either.
     expect(await requests().lookUp({ id, number: OTHER })).toMatchObject({ ok: true, value: { unread: [] } });
 
@@ -358,7 +402,9 @@ describe("the lookup", () => {
       connect: () => ({ requests: requests(), close: async () => {} }),
     });
     expect(code).toBe(0);
-    expect(out.join("\n")).toContain("NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (subscriber.checkin_method; the table checkin_request (it refers to subscriber))");
+    expect(out.join("\n")).toContain(
+      "NOT SHOWN: THE CVH HOLDS MORE FOR THIS NUMBER THAN THIS SCRIPT CAN READ YET (subscriber.checkin_method; subscription_edit_token.sent_to; the table checkin_request (it refers to subscriber))",
+    );
   });
 
   it("finds nothing for a number the CVH does not hold, and refuses a closed or unknown request and a number that is not Canadian", async () => {
@@ -404,6 +450,7 @@ describe("the deletion on the resident's behalf", () => {
   it("is the full E07 deletion, and closes the request as deleted in the same transaction", async () => {
     const id = await received("deletion");
     const subscriberId = await subscribed();
+    await editLink(subscriberId);
     await signUp(OTHER);
     // The welcome and the "reply 0 again" prompt are still queued (nothing sends in this test): the deletion stops them.
     const waiting = (await owner`select id from delivery where recipient_kind = 'subscriber' and recipient_id = ${subscriberId} and state = 'queued'`).map((row) => row.id as string);
@@ -417,6 +464,7 @@ describe("the deletion on the resident's behalf", () => {
     expect(await owner`select 1 from subscriber_place`).toHaveLength(0);
     expect(await owner`select 1 from subscriber_topic_optout`).toHaveLength(0);
     expect(await owner`select 1 from sms_prompt`).toHaveLength(0);
+    expect(await owner`select 1 from subscription_edit_token`).toHaveLength(0);
     expect(checkinCalls).toEqual([subscriberId]);
     // Every text of the subscriber forgot them (AD-8): none names the deleted id any more.
     expect(await owner`select 1 from delivery where recipient_id = ${subscriberId}`).toHaveLength(0);

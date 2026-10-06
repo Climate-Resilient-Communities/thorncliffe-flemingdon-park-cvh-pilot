@@ -13,8 +13,10 @@ export type HoldingOwner = "subscriber" | "pending_signup" | "inbound_reply";
 
 /**
  * Every column of the tables that hold a number's records, as the lookup accounts for it: shown on screen, or the number itself, a row's id, a link between
- * rows, or a prompt's own place in its steps. A column a later story adds (E08's check-in request on the subscriber, the pending sign-up or a place, for
- * example) is not here until the lookup shows it, and `unreadHoldings` reports it, so a request is never answered as complete while part of it goes unread.
+ * rows, a prompt's own place in its steps, or an edit link's token hash (a credential, never shown). A column a later story adds (E08's check-in request on
+ * the subscriber, the pending sign-up or a place, for example) is not here until the lookup shows it, and `unreadHoldings` reports it, so a request is never
+ * answered as complete while part of it goes unread. `subscription_edit_token` is S07.06's, built on its own branch: listed here and read where it exists
+ * (`editLinkOf`), so the lookup is complete whichever of the two stories is merged first.
  */
 export const LOOKUP_COLUMNS: Readonly<Record<string, { owner: HoldingOwner; columns: readonly string[] }>> = {
   subscriber: { owner: "subscriber", columns: ["id", "phone", "lang", "neighbourhood_id", "groups", "consent_version", "started_by", "retention_state", "created_at"] },
@@ -26,6 +28,7 @@ export const LOOKUP_COLUMNS: Readonly<Record<string, { owner: HoldingOwner; colu
     columns: ["id", "phone", "lang", "neighbourhood_id", "places", "groups", "topics", "consent_version", "started_by", "created_at", "expires_at"],
   },
   inbound_reply: { owner: "inbound_reply", columns: ["id", "phone", "created_at", "expires_at"] },
+  subscription_edit_token: { owner: "subscriber", columns: ["id", "subscriber_id", "token_hash", "created_at", "expires_at", "used_at"] },
 };
 
 /** A table that refers to one of those and is read anyway: E08's check-ins, through the lookup's `CheckinRecords` port (or reported unreadable). */
@@ -40,6 +43,13 @@ export interface HeldSubscriberRow {
   consentVersion: string;
   startedBy: string;
   retentionState: string;
+}
+
+export interface HeldEditLinkRow {
+  since: Date;
+  expiresAt: Date;
+  expired: boolean;
+  usedAt: Date | null;
 }
 
 export interface HeldPendingRow {
@@ -101,6 +111,20 @@ export const accessRequestStore = {
   async promptOf(executor: DbExecutor, subscriberId: string): Promise<{ kind: string; until: Date } | null> {
     const [row] = await executor.select({ kind: smsPrompt.kind, until: smsPrompt.expiresAt }).from(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
     return row ?? null;
+  },
+
+  /**
+   * The subscriber's edit link (S07.06: at most one, asked for by text, valid 30 minutes, used once), or null; never its token hash. One that has run out
+   * waits for the purge and is still held, so it is listed. Read only where the table exists (a catalog read first), as S07.06 may not be merged yet.
+   */
+  async editLinkOf(executor: DbExecutor, subscriberId: string): Promise<HeldEditLinkRow | null> {
+    if (!(await accessRequestStore.tableExists(executor, "subscription_edit_token"))) return null;
+    const [row] = await executor.execute<{ since: Date | string; expires_at: Date | string; used_at: Date | string | null; expired: boolean }>(sql`
+      select created_at as since, expires_at, used_at, expires_at <= now() as expired
+        from subscription_edit_token
+       where subscriber_id = ${subscriberId}`);
+    if (!row) return null;
+    return { since: new Date(row.since), expiresAt: new Date(row.expires_at), expired: row.expired, usedAt: row.used_at === null ? null : new Date(row.used_at) };
   },
 
   /** The number's pending sign-up, expired or not (an expired one is held until the purge). */

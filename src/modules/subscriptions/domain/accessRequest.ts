@@ -120,6 +120,8 @@ export interface HeldRecord {
     places: readonly HeldPlace[];
     mutedTopics: readonly string[];
     prompt: { kind: string; until: Date } | null;
+    /** The link texted to change or delete the subscription on the web (S07.06), or none; its token is never held, and its hash is never shown. */
+    editLink: { since: Date; expiresAt: Date; expired: boolean; usedAt: Date | null } | null;
   } | null;
   pending: {
     since: Date;
@@ -170,6 +172,12 @@ export function torontoTime(at: Date): string {
 const list = (items: readonly string[]) => (items.length === 0 ? "none" : items.join(", "));
 const place = (p: HeldPlace) => `${p.address ?? "a building no longer in the register"} (register number ${p.rsn}), ${p.floor === null ? "no floor" : `floor ${p.floor}`}`;
 
+function editLinkLine(link: NonNullable<NonNullable<HeldRecord["subscriber"]>["editLink"]>): string {
+  const used = link.usedAt === null ? "not used" : `used ${torontoTime(link.usedAt)}`;
+  const expired = link.expired ? "; expired: the purge deletes it within 15 minutes" : "";
+  return `asked for ${torontoTime(link.since)}, valid until ${torontoTime(link.expiresAt)}, ${used}${expired}`;
+}
+
 function textLine(text: HeldText): string {
   const what = text.kind === "alert" ? "alert" : `${text.kind} text (${text.purpose ?? "no purpose"})`;
   const resend = text.resendN === null ? "" : `, resend ${text.resendN}`;
@@ -197,6 +205,7 @@ export function heldRecordLines(record: HeldRecord): string[] {
       `  Terms accepted (consent version): ${s.consentVersion}`,
       `  Retention state: ${s.retentionState}`,
       `  Open prompt: ${s.prompt === null ? "none" : `${s.prompt.kind}, until ${torontoTime(s.prompt.until)}`}`,
+      `  Edit link (texted to change or delete the subscription on the web): ${s.editLink === null ? "none" : editLinkLine(s.editLink)}`,
     );
   } else {
     lines.push("Subscriber: none");

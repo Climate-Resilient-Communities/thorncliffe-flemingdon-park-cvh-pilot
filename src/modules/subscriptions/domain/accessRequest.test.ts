@@ -79,6 +79,7 @@ describe("heldRecordLines", () => {
         ],
         mutedTopics: [],
         prompt: { kind: "delete_confirm", until: new Date("2026-10-06T13:40:00Z") },
+        editLink: { since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z"), expired: false, usedAt: new Date("2026-10-06T13:12:00Z") },
       },
       texts: [
         { createdAt: new Date("2026-10-01T14:01:00Z"), kind: "alert", purpose: null, lang: "ur", state: "undelivered", segments: 3, resendN: 1, providerErrorCode: 30003 },
@@ -95,11 +96,33 @@ describe("heldRecordLines", () => {
     expect(lines).toContain("  Terms accepted (consent version): 2026-10-02.1");
     expect(lines).toContain("  Retention state: active");
     expect(lines).toContain("  Open prompt: delete_confirm, until 2026-10-06 09:40");
+    expect(lines).toContain("  Edit link (texted to change or delete the subscription on the web): asked for 2026-10-06 09:00, valid until 2026-10-06 09:30, used 2026-10-06 09:12");
     expect(lines).toContain("Texts (1; the words are not kept here and are not read out):");
     expect(lines).toContain("  2026-10-01 10:01  alert in ur, 3 segments, undelivered, resend 1, provider error 30003");
     expect(lines).toContain("Keyed hashes of the number (rate limits, each deleted after 24 hours): inbound 2, latest 2026-10-06 09:00");
     expect(lines).toContain("Pending sign-up: none");
     expect(lines).not.toContain("Nothing is held");
+  });
+
+  it("reads out an edit link by its dates only, an unused one that has run out as waiting for the purge, and none", () => {
+    const subscriber: NonNullable<HeldRecord["subscriber"]> = {
+      since: new Date("2026-10-01T14:00:00Z"),
+      lang: "en",
+      neighbourhood: "Flemingdon Park (FP)",
+      groups: [],
+      consentVersion: "2026-10-02.1",
+      startedBy: "web",
+      retentionState: "active",
+      places: [],
+      mutedTopics: [],
+      prompt: null,
+      editLink: { since: new Date("2026-10-06T13:00:00Z"), expiresAt: new Date("2026-10-06T13:30:00Z"), expired: true, usedAt: null },
+    };
+
+    expect(heldRecordLines({ ...NOTHING, subscriber })).toContain(
+      "  Edit link (texted to change or delete the subscription on the web): asked for 2026-10-06 09:00, valid until 2026-10-06 09:30, not used; expired: the purge deletes it within 15 minutes",
+    );
+    expect(heldRecordLines({ ...NOTHING, subscriber: { ...subscriber, editLink: null } })).toContain("  Edit link (texted to change or delete the subscription on the web): none");
   });
 
   it("reads out a pending sign-up and the replies waiting for a number with no subscription", () => {
@@ -166,6 +189,7 @@ describe("deletionSummary", () => {
         places: [],
         mutedTopics: [],
         prompt: null,
+        editLink: null,
       },
       replies: [{ since: NOW, expiresAt: NOW }],
       texts: [{ createdAt: NOW, kind: "transactional", purpose: "welcome", lang: "ur", state: "delivered", segments: 1, resendN: null, providerErrorCode: null }],
