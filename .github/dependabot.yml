@@ -15,6 +15,12 @@ updates:
       # The Playwright version is also the tag of the pinned browser image in scripts/*-docker.sh (test/resident-image.test.ts keeps
       # them equal) and the screenshot baselines belong to its Chromium: it is bumped by hand, with the image tag and baselines.
       - dependency-name: "@playwright/test"
+      # Majors the lint stack cannot run yet (2026-10): typescript-eslint refuses TypeScript 7 ("does not support TS 7.0") and
+      # eslint-plugin-react's rules fail to load on ESLint 10 (getFilename was removed). Remove each entry once its plugin supports it.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
     labels: [dependencies]
 
   - package-ecosystem: github-actions
