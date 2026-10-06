@@ -198,7 +198,8 @@ describe("menu 2 (language)", () => {
     expect(first.text.split("\n")).toEqual(["Your language:", "1) اردو", "2) پښتو", "3) Tagalog", "4) دری", "5) ગુજરાતી", "6) தமிழ்", "7) Ελληνικά", "0 Back 8 More 9 Hub"]);
     const second = shown(answerMenu(first.menu, MORE, world()));
     const third = shown(answerMenu(second.menu, MORE, world()));
-    expect([...first.menu.step.options, ...second.menu.step.options, ...third.menu.step.options]).toEqual(LAUNCH_LANGUAGES.map((language) => language.code));
+    const optionsOf = (menu: Menu) => (menu.kind === "menu_language" ? menu.step.options : []);
+    expect([first, second, third].flatMap((page) => optionsOf(page.menu))).toEqual(LAUNCH_LANGUAGES.map((language) => language.code));
     expect(third.text).toBe("Your language:\n1) English\n0 Back 9 Hub");
     expect(answerMenu(third.menu, 1, world())).toEqual({ kind: "save_language", lang: "en" });
     expect(answerMenu(first.menu, 4, world())).toEqual({ kind: "save_language", lang: "prs" });
