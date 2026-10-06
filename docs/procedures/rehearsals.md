@@ -40,3 +40,4 @@ A real (non-drill) alert sent only to rehearse, such as the resend rehearsal's. 
 | [Rotating secrets](rotate-secrets.md) | | | | |
 | [A resident access request](access-request.md) (launch gate) | | | | |
 | [The end of the pilot](end-of-pilot.md) (the campaign on the drill roster, by day 55) | | | | |
+| [Exporting the pilot measures](export-measures.md) (both editions, before week 8) | | | | |
