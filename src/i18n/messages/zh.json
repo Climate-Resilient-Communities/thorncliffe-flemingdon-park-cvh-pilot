@@ -5817,10 +5817,28 @@
   },
   "smsTexts": {
     "confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。",
-    "welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 0 停止并删除订阅。回复 STOP 停止。",
+    "welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 1 更改楼宇或楼层，回复 2 更改语言，回复 3 撤回探望申请，回复 0 停止并删除订阅。回复 STOP 停止。",
     "alreadySignedUp": "您已订阅 CVH 警报。",
     "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。",
-    "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"
+    "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。",
+    "menuStreet": "街道：",
+    "menuBuilding": "楼宇：",
+    "menuFloor": "楼层：",
+    "menuWholeBuilding": "整栋楼",
+    "menuLanguage": "语言：",
+    "menuNav": "0 返回 9 Hub",
+    "menuNavMore": "0 返回 8 更多 9 Hub",
+    "menuWarn": "这将替换您已保存的 {n} 栋楼宇。1 继续，0 返回",
+    "menuHub": "请致电 Hub：{hub}",
+    "menuClosed": "菜单已关闭，未作任何更改。",
+    "menuReset": "您的菜单因 10 分钟未回复已关闭，未作任何更改。",
+    "menuLimit": "您今天的 5 次菜单已用完。请明天再试，或致电 Hub：{hub}",
+    "menuLimitLink": "您今天的 5 次菜单已用完。回复 1 获取在线修改链接，或致电 Hub：{hub}",
+    "buildingSaved": "已保存。您的楼宇现为 {building}，{floor} 层。",
+    "buildingSavedWhole": "已保存。您的楼宇现为 {building}。",
+    "languageSaved": "已保存。今后您将收到中文短信。",
+    "noCheckinRequest": "您没有探望申请。",
+    "checkinWithdrawn": "您的探望申请已撤回。"
   },
   "smsKeywords": {
     "yes": "是, 是的, 好"

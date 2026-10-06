@@ -78,8 +78,9 @@ export {
   SIGNUP_INFO_SCOPE,
   createInboundRouter,
   inboundReplyNumberSource,
+  noCheckinRequestsYet,
   noCheckinsYet,
-  noMenusYet,
+  noMenus,
   residentSms,
   signupLink,
   subscriberLookup,
@@ -87,6 +88,8 @@ export {
   subscriberReceives,
   yesWordsFor,
   type CheckinCleanup,
+  type CheckinRequests,
+  type CheckinWithdrawal,
   type Deleted,
   type InboundDeps,
   type InboundLog,
@@ -94,7 +97,12 @@ export {
   type InboundOutcome,
   type InboundRouter,
   type MenuPort,
+  type MenuSubscriber,
 } from "./application/inbound";
+// The numbered text menus (S07.05) behind the router's MenuPort: reply 1 (building or floor), 2 (language) and 3 (withdraw a check-in
+// request), with the edit link's port (S07.06) and the rules of their pages.
+export { createMenus, fitsOneText, noEditLinkYet, placesForMenus, type EditLinkPort, type MenuDeps, type MenuPlaces } from "./application/menus";
+export { HUB_NUMBER, MENUS_PER_DAY, MENU_IDLE_MS, MENU_SCOPE, MenuPageTooLong, menuDigit, paginate } from "./domain/menus";
 export { createInboundWebhook, type InboundRequest, type InboundResult, type InboundWebhook, type InboundWebhookDeps, type SignatureRefusal } from "./application/inboundWebhook";
 export {
   DELETE_CONFIRM_MS,

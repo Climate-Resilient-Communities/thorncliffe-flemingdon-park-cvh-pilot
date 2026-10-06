@@ -1,7 +1,8 @@
-// The statements of subscribers and their prompts (S07.04). Every one runs in the caller's transaction. The number is selected only by
+// The statements of subscribers and their prompts (S07.04; S07.05's menus change the language, the places and the neighbourhood, and keep
+// their page in the prompt's step). Every one runs in the caller's transaction. The number is selected only by
 // `phoneOf` (the ContactResolver's source, at the hand-off point); the router and the web sign-up find a subscriber by number and read back
 // its id, language and prompt, never the number.
-import { and, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, countDistinct, eq, gt, inArray, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { smsPrompt, subscriber, subscriberPlace, subscriberTopicOptout } from "./schema";
 
@@ -50,6 +51,16 @@ export const subscriberStore = {
     return rows.length > 0;
   },
 
+  /**
+   * Locks the subscriber's row FOR NO KEY UPDATE, an edit's lock (S07.05's menus); false when it is gone. It waits for an approval that holds
+   * the row FOR SHARE while capturing recipients (S07.07), but not for a resend's FOR KEY SHARE (`receivesShared`), which only a deletion's
+   * FOR UPDATE stops: a resident changing their building is still receiving.
+   */
+  async lockForEdit(tx: DbTransaction, id: string): Promise<boolean> {
+    const rows = await tx.select({ id: subscriber.id }).from(subscriber).where(eq(subscriber.id, id)).for("no key update");
+    return rows.length > 0;
+  },
+
   async insert(tx: DbTransaction, row: NewSubscriber): Promise<void> {
     await tx.insert(subscriber).values(row);
   },
@@ -90,7 +101,7 @@ export const subscriberStore = {
   /**
    * Whether the subscriber exists and is in a receiving state, their row locked `FOR KEY SHARE` (it conflicts only with a deletion, not an ordinary update) for the caller's transaction (no number is read). The lock is taken
    * without waiting (`SKIP LOCKED`): a row someone holds `FOR UPDATE` is being deleted (STOP, reply 0), which reads as "does not receive", so a resend never waits
-   * on a deletion that is itself waiting for the delivery rows the resend holds.
+   * on a deletion that is itself waiting for the delivery rows the resend holds. An edit's lock (`lockForEdit`) does not conflict with it.
    */
   async receivesShared(tx: DbTransaction, id: string): Promise<boolean> {
     const rows = await tx
@@ -110,10 +121,43 @@ export const subscriberStore = {
     return row?.kind ?? null;
   },
 
-  /** Opens a prompt, replacing any other, open for `ms` from the database's now(). */
-  async openNewPrompt(tx: DbTransaction, subscriberId: string, kind: string, ms: number): Promise<void> {
+  /**
+   * The subscriber's prompt that has not run out (by the database's clock), or null: its kind, its step (S07.05's menu page), and whether
+   * it is idle, its message sent `idleMs` or more ago (a menu's row outlives its 10 minutes so that a late reply can be told it reset).
+   */
+  async promptOf(tx: DbTransaction, subscriberId: string, idleMs: number): Promise<{ kind: string; step: unknown; idle: boolean } | null> {
+    const [row] = await tx
+      .select({ kind: smsPrompt.kind, step: smsPrompt.step, idle: sql<boolean>`${smsPrompt.sentAt} <= now() - ${`${Math.trunc(idleMs)} milliseconds`}::interval` })
+      .from(smsPrompt)
+      .where(and(eq(smsPrompt.subscriberId, subscriberId), gt(smsPrompt.expiresAt, sql`now()`)));
+    return row ?? null;
+  },
+
+  /** Opens a prompt, replacing any other, open for `ms` from the database's now(), with its own state (`step`, S07.05's menu page). */
+  async openNewPrompt(tx: DbTransaction, subscriberId: string, kind: string, ms: number, step: Record<string, unknown> = {}): Promise<void> {
     await tx.delete(smsPrompt).where(eq(smsPrompt.subscriberId, subscriberId));
-    await tx.insert(smsPrompt).values({ subscriberId, kind, expiresAt: sql`now() + ${`${Math.trunc(ms)} milliseconds`}::interval` });
+    await tx.insert(smsPrompt).values({ subscriberId, kind, step, expiresAt: sql`now() + ${`${Math.trunc(ms)} milliseconds`}::interval` });
+  },
+
+  /** How many buildings the subscriber has saved (distinct buildings: a building with two floors is one). */
+  async savedBuildingCount(tx: DbTransaction, subscriberId: string): Promise<number> {
+    const [row] = await tx.select({ n: countDistinct(subscriberPlace.rsn) }).from(subscriberPlace).where(eq(subscriberPlace.subscriberId, subscriberId));
+    return row?.n ?? 0;
+  },
+
+  /** Replaces every saved place of the subscriber with these (S07.05's menu 1). The caller holds the subscriber's row lock (`lockForEdit`). */
+  async replacePlaces(tx: DbTransaction, subscriberId: string, places: readonly NewSubscriberPlace[]): Promise<void> {
+    await tx.delete(subscriberPlace).where(eq(subscriberPlace.subscriberId, subscriberId));
+    if (places.length > 0) await tx.insert(subscriberPlace).values(places.map((place) => ({ ...place, subscriberId })));
+  },
+
+  /** Sets the subscriber's language (menu 2) or neighbourhood (menu 1); the caller holds the subscriber's row lock (`lockForEdit`). */
+  async setLang(tx: DbTransaction, subscriberId: string, lang: string): Promise<void> {
+    await tx.update(subscriber).set({ lang }).where(eq(subscriber.id, subscriberId));
+  },
+
+  async setNeighbourhood(tx: DbTransaction, subscriberId: string, neighbourhoodId: string): Promise<void> {
+    await tx.update(subscriber).set({ neighbourhoodId }).where(eq(subscriber.id, subscriberId));
   },
 
   async clearPrompt(tx: DbTransaction, subscriberId: string): Promise<void> {

@@ -5817,10 +5817,28 @@
   },
   "smsTexts": {
     "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil.",
-    "welcome": "Naka-sign up ka na sa CVH alert. Sinusuri ng staff ng Hub ang bawat mensahe, kaya maaaring hindi maipadala ang alert sa gabi. Sumagot ng 0 para itigil at burahin ang iyong subscription. Sumagot ng STOP para itigil.",
+    "welcome": "Naka-sign up ka na sa CVH alert. Sinusuri ng staff ng Hub ang bawat mensahe, kaya maaaring hindi maipadala ang alert sa gabi. Sumagot ng 1 para palitan ang iyong gusali o palapag, 2 para palitan ang iyong wika, 3 para bawiin ang hiling na pangungumusta, 0 para itigil at burahin ang iyong subscription. Sumagot ng STOP para itigil.",
     "alreadySignedUp": "Naka-sign up ka na sa CVH alert.",
     "deletePrompt": "Sumagot ulit ng 0 sa loob ng 10 minuto para burahin ang subscription. Wala ka nang matatanggap na text.",
-    "signupInfo": "Para makatanggap ng CVH alert sa text, mag-sign up dito: {link} Sumagot ng STOP para itigil."
+    "signupInfo": "Para makatanggap ng CVH alert sa text, mag-sign up dito: {link} Sumagot ng STOP para itigil.",
+    "menuStreet": "Kalye:",
+    "menuBuilding": "Gusali:",
+    "menuFloor": "Palapag:",
+    "menuWholeBuilding": "Buong gusali",
+    "menuLanguage": "Wika:",
+    "menuNav": "0 Balik 9 Hub",
+    "menuNavMore": "0 Balik 8 Iba pa 9 Hub",
+    "menuWarn": "Papalitan nito ang iyong {n} naka-save na gusali. 1 Ituloy, 0 Bumalik",
+    "menuHub": "Tawagan ang Hub sa {hub}.",
+    "menuClosed": "Sarado na ang menu. Walang binago.",
+    "menuReset": "Nagsara ang iyong menu dahil walang sagot sa loob ng 10 minuto. Walang binago.",
+    "menuLimit": "Nagamit mo na ang 5 menu ngayong araw. Subukan bukas, o tawagan ang Hub sa {hub}.",
+    "menuLimitLink": "Nagamit mo na ang 5 menu ngayong araw. Sumagot ng 1 para sa link para magbago online, o tawagan ang Hub sa {hub}.",
+    "buildingSaved": "Na-save. Ang iyong gusali ay {building}, palapag {floor}.",
+    "buildingSavedWhole": "Na-save. Ang iyong gusali ay {building}.",
+    "languageSaved": "Na-save. Tagalog na ang iyong mga text.",
+    "noCheckinRequest": "Wala kang hiling na pangungumusta.",
+    "checkinWithdrawn": "Nabawi na ang iyong hiling na pangungumusta."
   },
   "smsKeywords": {
     "yes": "oo, opo, oho"

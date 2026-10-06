@@ -5817,10 +5817,28 @@
   },
   "smsTexts": {
     "confirmation": "Odpovedzte YES a budete dostávať upozornenia CVH. Odpovedzte STOP a správy skončia.",
-    "welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.",
+    "welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 1 na zmenu budovy alebo poschodia, 2 na zmenu jazyka, 3 na zrušenie žiadosti o kontrolu, 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.",
     "alreadySignedUp": "Na upozornenia CVH ste už prihlásení.",
     "deletePrompt": "Pošlite znova 0 do 10 minút a odber sa vymaže. Potom už nič nepríde.",
-    "signupInfo": "Ak chcete upozornenia CVH v SMS, prihláste sa tu: {link} Odpovedzte STOP a správy skončia."
+    "signupInfo": "Ak chcete upozornenia CVH v SMS, prihláste sa tu: {link} Odpovedzte STOP a správy skončia.",
+    "menuStreet": "Ulica:",
+    "menuBuilding": "Budova:",
+    "menuFloor": "Poschodie:",
+    "menuWholeBuilding": "Celá budova",
+    "menuLanguage": "Jazyk:",
+    "menuNav": "0 Späť 9 Hub",
+    "menuNavMore": "0 Späť 8 Ďalej 9 Hub",
+    "menuWarn": "Toto nahradí vaše uložené budovy ({n}). 1 Pokračovať, 0 Späť",
+    "menuHub": "Zavolajte Hub na {hub}.",
+    "menuClosed": "Menu sa zavrelo. Nič sa nezmenilo.",
+    "menuReset": "Menu sa zavrelo po 10 minútach bez odpovede. Nič sa nezmenilo.",
+    "menuLimit": "Dnes ste využili 5 menu. Skúste zajtra alebo Hub: {hub}",
+    "menuLimitLink": "Dnes ste využili 5 menu. Pošlite 1 pre odkaz alebo Hub: {hub}",
+    "buildingSaved": "Uložené. Vaša budova: {building}, poschodie {floor}.",
+    "buildingSavedWhole": "Uložené. Vaša budova: {building}.",
+    "languageSaved": "Uložené. Správy budete dostávať po slovensky.",
+    "noCheckinRequest": "Nemáte žiadnu žiadosť o kontrolu.",
+    "checkinWithdrawn": "Vaša žiadosť o kontrolu bola zrušená."
   },
   "smsKeywords": {
     "yes": "áno, ano"
