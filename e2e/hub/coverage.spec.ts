@@ -80,7 +80,7 @@ async function open(page: Page, width: number, props: Omit<Parameters<typeof mou
 
 for (const width of [390, 1280]) {
   test(`coverage list at ${width}px`, async ({ page }) => {
-    await open(page, width, { screen: listWithRounds(coverageListView(PLANS, ASSIGNMENTS)) }, width === 390 ? 2000 : 1600);
+    await open(page, width, { screen: listWithRounds(coverageListView(PLANS, ASSIGNMENTS)) }, width === 390 ? 2000 : 1900);
     await expect(page.getByTestId("screen")).toContainText("Buildings with every floor covered: 1 of 6.");
     await expect(page.getByTestId("round-types-current")).toHaveText("Types that start a round now: Heat, Power.");
     await expect(page.getByRole("checkbox", { name: "Heat", exact: true })).toBeChecked();
