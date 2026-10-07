@@ -64,13 +64,17 @@ export { drizzleTranslationCache } from "./adapters/cacheStore";
 export {
   ENGLISH_MARGIN,
   QUESTION_SOURCES,
+  TRANSLATE_FIRST_OFF,
+  TRANSLATE_FIRST_SOURCES,
   TRANSLATE_SPEND_KIND,
   checkTranslation,
   estimateTranslationTokens,
   isEnglish,
+  isTranslateFirstSource,
   normaliseTranslation,
   sourceLanguage,
   type QuestionRoute,
   type QuestionSource,
+  type TranslateFirstSource,
 } from "./domain/questionTranslation";
 export { MAX_OUTPUT_TOKENS, classifyCohereError, cohereTranslator, systemPrompt, type CohereChatClient, type CohereTranslatorOptions } from "./adapters/cohereTranslator";

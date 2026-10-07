@@ -1,7 +1,8 @@
 // Composition root of search for the app (AD-2): the embedding model for questions and the translation model of the
 // translated-question leg (Cohere, only where a key is configured, which is production; the leg's models come from
 // `search_question_route`, SEARCH_QUESTION_ROUTE, and the model it retries with when one is past its limit, per kind of
-// question, from SEARCH_QUESTION_FALLBACK), the private store of the release files, the database, and the rate limiter. Server
+// question, from SEARCH_QUESTION_FALLBACK), the direct route's reranker (SEARCH_RERANK, SEARCH_RERANK_MIN,
+// SEARCH_RERANK_MONTHLY_CALLS; the test-set engine below does not rerank), the private store of the release files, the database, and the rate limiter. Server
 // only. The route src/app/api/search/route.ts uses it. (The search test-set runner against production,
 // scripts/search-test-set/productionEngine.ts, is a script and cannot import this server-only module: it builds the same
 // composition from the same parts and the same settings.)
@@ -13,7 +14,7 @@
 // warns ops when a translation model nears its monthly limit (SEARCH_TRANSLATE_MONTHLY_CALLS).
 import "server-only";
 import { after } from "next/server";
-import { cohereQueryEmbedder, createSearch, type SearchService } from "@/modules/directory";
+import { cohereQueryEmbedder, cohereReranker, createSearch, type SearchService } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
 import { createRateLimiter, rateLimitKeyFromSecret, type RateLimiter } from "@/modules/subscriptions";
 import { cohereTranslator, createQuestionTranslator, type QuestionRoute, type QuestionTranslator } from "@/modules/translation";
@@ -62,6 +63,22 @@ function translateQuota() {
   return quotaWatch;
 }
 
+/**
+ * The direct route's reranker (Cohere rerank-v3.5, interim tuning arm R2), where a key is configured and SEARCH_RERANK is not
+ * `off`, with its relevance bar and monthly limit; nothing otherwise (the direct route then ranks by similarity alone).
+ */
+function directReranker() {
+  const env = getEnv();
+  const { rerank, rerankMin, rerankMonthlyCalls } = env.search;
+  return env.cohereApiKey && rerank ? { reranker: cohereReranker({ apiKey: env.cohereApiKey }), rerankMin, rerankMonthlyCalls } : {};
+}
+
+/** The ranking's settings that are read at search time (the threshold is the release's own). */
+function rankingSettings() {
+  const { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap } = getEnv().search;
+  return { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap };
+}
+
 /** The search use case. Without a Cohere key (every environment but production) every search answers `status: "unavailable"`. */
 export function searchService(): SearchService {
   if (service) return service;
@@ -72,9 +89,11 @@ export function searchService(): SearchService {
     embedder: questionEmbedder(),
     translator: questionTranslator(getEnv().search.questionFallback),
     fallbackMinBudgetMs: getEnv().search.fallbackMinBudgetMs,
+    translateFirstMonthlyCalls: getEnv().search.translateFirstMonthlyCalls,
     defer: deferAfterResponse,
     onSpendWritten: translateQuota(),
-    emergencyThreshold: getEnv().search.emergencyThreshold,
+    ...rankingSettings(),
+    ...directReranker(),
     onFailure: (note) => recordSearchNote(getDb(), note),
   });
   return service;
@@ -93,8 +112,9 @@ export function searchTestSetEngine(options: { translatedLeg?: boolean } = {}): 
     storage: directoryStorage,
     embedder: questionEmbedder(),
     translator: options.translatedLeg === false ? null : questionTranslator(null),
+    translateFirstMonthlyCalls: getEnv().search.translateFirstMonthlyCalls,
     onSpendWritten: translateQuota(),
-    emergencyThreshold: getEnv().search.emergencyThreshold,
+    ...rankingSettings(),
     spendPurpose: "test_set",
     log: false,
   });

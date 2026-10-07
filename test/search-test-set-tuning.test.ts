@@ -7,7 +7,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { emergencyFirst, emergencyInTop, rankLegs, type SearchObservation } from "@/modules/directory";
+import { emergencyFirst, rankLegs, type RankingSettings, type SearchObservation } from "@/modules/directory";
 import { TestSetReportSchema, type SearchV1, type TestQuestion } from "@/contracts/searchTestSet";
 import { TuningReportSchema, ThresholdSuggestionSchema, type VendorFailure, type VendorUsage } from "@/contracts/searchTuning";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
@@ -46,17 +46,23 @@ const emptyKind = () => ({ calls: 0, rate_limited: 0, failed: 0, aborted: 0, tok
 const EMPTY_USAGE: VendorUsage = { embedding: emptyKind(), translation: emptyKind() };
 
 /** What the use case would have seen and answered for a question whose direct leg (and translated leg) have these similarities. */
-function seen(sims: Record<string, number>, o: { translated?: Record<string, number>; threshold?: number; emergency?: string[]; emergencyThreshold?: number } = {}) {
+function seen(
+  sims: Record<string, number>,
+  o: { translated?: Record<string, number>; threshold?: number; emergency?: string[]; emergencyThreshold?: number; route?: "hybrid" | "direct"; boosts?: Record<string, number> } = {},
+) {
   const threshold = o.threshold ?? 0.3;
   const emergencyThreshold = o.emergencyThreshold ?? 0.25;
   const emergencyProviders = new Set(o.emergency ?? ["M002"]);
   const legs: SearchObservation["legs"] = [{ leg: "direct", similarities: new Map(Object.entries(sims)) }];
   if (o.translated) legs.push({ leg: "translated", similarities: new Map(Object.entries(o.translated)) });
   const maps = legs.map((l) => l.similarities);
-  const results = rankLegs(maps, threshold);
-  const emergency = emergencyFirst(results, emergencyProviders) || emergencyInTop(maps, emergencyProviders, Math.min(emergencyThreshold, threshold));
+  const route = o.route ?? "hybrid";
+  const boosts = new Map(Object.entries(o.boosts ?? {}));
+  const settings: RankingSettings = { threshold, emergencyThreshold, directFloor: 0.24, directGap: 0.1, emergencyTopThreshold: 0.14 };
+  const results = rankLegs(maps, route, boosts, settings);
+  const emergency = emergencyFirst(maps, emergencyProviders, settings);
   const answer: SearchV1 = { v: 1, release_v: 7, query_lang: "en", status: results.length === 0 ? "no_clear_match" : "ok", emergency_first: emergency, results };
-  const observation: SearchObservation = { releaseV: 7, threshold, emergencyThreshold, emergencyProviders, translatedLeg: o.translated ? "used" : "not_needed", legs };
+  const observation: SearchObservation = { releaseV: 7, ...settings, route, boosts, emergencyProviders, translatedLeg: o.translated ? "used" : "not_needed", legs, rerank: "not_needed", reranked: null };
   return { answer, observation };
 }
 
@@ -107,8 +113,14 @@ const budget = (max = 1000) => new CallBudget(max);
 // --- the threshold rule ----------------------------------------------------------------------------
 
 /** A scored question for the rule, as the run builds it. */
-function input(id: string, intent: ThresholdInput["intent"], sims: Record<string, number>, expected: string[] = [], over: { unanswerable?: boolean; translated?: Record<string, number>; threshold?: number } = {}): ThresholdInput {
-  const { answer, observation } = seen(sims, { translated: over.translated, threshold: over.threshold });
+function input(
+  id: string,
+  intent: ThresholdInput["intent"],
+  sims: Record<string, number>,
+  expected: string[] = [],
+  over: { unanswerable?: boolean; translated?: Record<string, number>; threshold?: number; route?: "hybrid" | "direct"; boosts?: Record<string, number> } = {},
+): ThresholdInput {
+  const { answer, observation } = seen(sims, { translated: over.translated, threshold: over.threshold, route: over.route, boosts: over.boosts });
   return { id, intent, expected, unanswerable: over.unanswerable ?? false, observation, answer };
 }
 const hit = (id: string, score: number, others: Record<string, number> = {}) => input(id, "normal", { M001: score, M003: 0.05, ...others }, ["M001"]);
@@ -220,7 +232,9 @@ describe("the threshold rule", () => {
   it("counts the emergency flags that stay on: the fail-safe holds an emergency provider in a leg's top three at the emergency-only threshold even when the threshold rises", () => {
     const strong = input("e1", "emergency", { M002: 0.9, M001: 0.1, M003: 0.05 }, ["M002"]);
     const weak = input("e2", "emergency", { M002: 0.27, M001: 0.1, M003: 0.05 }, ["M002"]); // below the release's 0.3, above the emergency-only 0.25
-    const lost = input("e3", "emergency", { M002: 0.2, M001: 0.1, M003: 0.05 }, ["M002"]); // below both: never flagged
+    // Below the emergency-only threshold and not the best match (M001 is): never flagged. (Alone at 0.2 it would be the best
+    // match above the emergency top threshold, 0.14, and flagged since the interim tuning.)
+    const lost = input("e3", "emergency", { M002: 0.2, M001: 0.21, M003: 0.05 }, ["M002"]);
     const s = suggestThreshold([none("n1", 0.5), strong, weak, lost], 0.3);
 
     expect(s.at_release.emergency_on).toBe(2);
@@ -266,37 +280,75 @@ describe("the threshold rule", () => {
     }
   });
 
-  // Raising the threshold is not always harmless to a hit once two legs are fused by rank: a value above one leg's similarity for
-  // a competing provider drops that provider from that leg only, which halves its fused score and can let the expected provider
-  // back into the top five. The expected provider here is Z. A leg's list is its providers' similarities.
+  // Since the interim tuning (2026-10-07) two legs are not fused by rank: each provider is ranked by its best similarity over
+  // them (plus its keyword boost on the hybrid route), a score that does not depend on the threshold. Raising the threshold
+  // only ever drops providers from the bottom of a question's list, so it can only lose hits. (Rank fusion could gain one: a
+  // value above one leg's similarity for a competing provider halved that provider's fused score.) A leg's list is its
+  // providers' similarities; the expected provider here is Z.
   const DIRECT = { A: 0.95, B: 0.94, C: 0.93, Z: 0.925, D: 0.92, P: 0.6 };
   const TRANSLATED = { A: 0.9, B: 0.89, C: 0.88, D: 0.87, P: 0.55, Z: 0.45 };
   const twoLegHit = () => input("h1", "normal", DIRECT, ["Z"], { translated: TRANSLATED });
   const twoLegNoMatch = (highest = 0.49) => input("n1", "no_match", { A: highest, B: 0.1 }, [], { translated: { A: 0.2, B: 0.1 } });
+  const SETTINGS: RankingSettings = { threshold: 0.3, directFloor: 0.24, directGap: 0.1, emergencyThreshold: 0.25, emergencyTopThreshold: 0.14 };
+  const top5 = (legs: readonly Map<string, number>[], t: number) => rankLegs(legs, "hybrid", undefined, { ...SETTINGS, threshold: t }).map((r) => r.provider_id);
 
-  it("with two legs, loses fewer hits at a higher value than at the lowest one that clears the no-match questions, and suggests that one (the lowest value above the highest no-match similarity loses the hit, this ranking is not monotone)", () => {
-    // The real ranking, as the use case does it, for the three values in question.
-    const top5 = (t: number) => rankLegs([new Map(Object.entries(DIRECT)), new Map(Object.entries(TRANSLATED))], t).map((r) => r.provider_id);
-    expect(top5(0.4901)).toEqual(["A", "B", "C", "D", "P"]); // Z lost: P keeps both its legs, Z only the direct one
-    expect(top5(0.5501)).toEqual(["A", "B", "C", "D", "Z"]); // P's translated similarity (0.55) is out: its fused score halves
-    expect(top5(0.56)).toEqual(["A", "B", "C", "D", "Z"]);
-    expect(top5(0.5)).toEqual(["A", "B", "C", "D", "P"]);
+  it("with two legs, ranks by each provider's best similarity, so the lowest value that clears the no-match questions is the one suggested", () => {
+    const legs = [new Map(Object.entries(DIRECT)), new Map(Object.entries(TRANSLATED))];
+    expect(top5(legs, 0.4901)).toEqual(["A", "B", "C", "Z", "D"]); // Z (0.925 direct) is fourth at any value up to it
+    expect(top5(legs, 0.926)).toEqual(["A", "B", "C"]);
 
     const s = suggestThreshold([twoLegNoMatch(), twoLegHit()], 0.3);
 
     expect(s.hits_without_threshold).toBe(1);
     expect(s.highest_no_match).toBe(0.49);
     expect(s.lowest_clearing).toBe(0.4901);
-    expect(s.at_lowest_clearing).toMatchObject({ threshold: 0.4901, hits_kept: 0, hits_lost: 1, lost_ids: ["h1"], no_match_clear: 1 });
-    expect(s.threshold).toBe(0.5501);
-    expect(s.at_suggested).toMatchObject({ threshold: 0.5501, hits_kept: 1, hits_lost: 0, lost_ids: [], no_match_clear: 1 });
+    expect(s.threshold).toBe(0.4901);
+    expect(s.at_suggested).toMatchObject({ threshold: 0.4901, hits_kept: 1, hits_lost: 0, lost_ids: [], no_match_clear: 1 });
+    expect(s.at_lowest_clearing).toEqual(s.at_suggested);
     expect(s.lowest_kept_hit).toBe(0.925);
     expect(s.hit_margin).toBe(0.435);
     expect(ThresholdSuggestionSchema.safeParse(s).success).toBe(true);
   });
 
+  it("compares keyword-boosted scores with the threshold on the hybrid route: the highest no-match score and the hits are similarity plus boost", () => {
+    const noMatch = input("n1", "no_match", { M001: 0.25, M003: 0.05 }, [], { boosts: { M001: 0.04 } });
+    const boosted = input("h1", "normal", { M001: 0.27, M003: 0.05 }, ["M001"], { boosts: { M001: 0.05 } });
+
+    const s = suggestThreshold([noMatch, boosted], 0.3);
+
+    expect(s.highest_no_match).toBe(0.29);
+    expect(s.threshold).toBe(0.2901);
+    expect(s.at_suggested).toMatchObject({ hits_kept: 1, hits_lost: 0, no_match_clear: 1 });
+    expect(s.lowest_kept_hit).toBe(0.32);
+    expect(s.replay_mismatches).toBe(0);
+  });
+
+  it("leaves the direct route to its floor and gap: its no-match questions do not set the highest, and its hits do not change with the threshold", () => {
+    const directNoMatch = input("n2", "no_match", { M001: 0.6, M003: 0.05 }, [], { route: "direct" });
+    const directHit = input("h2", "normal", { M001: 0.26, M003: 0.05 }, ["M001"], { route: "direct" });
+
+    const s = suggestThreshold([none("n1", 0.4), directNoMatch, directHit, hit("h1", 0.9)], 0.3);
+
+    expect(s.highest_no_match).toBe(0.4);
+    expect(s.threshold).toBe(0.4001);
+    // The direct no-match question shows a result at every value (0.6 is over the floor), the direct hit stays a hit.
+    expect(s.at_suggested).toMatchObject({ hits_kept: 2, hits_lost: 0, no_match_clear: 1 });
+    expect(suggestThreshold([directNoMatch, hit("h1", 0.9)], 0.3)).toMatchObject({
+      threshold: null,
+      reason: "no no-match question took the hybrid route, so the threshold does not apply to any of them (the direct route's floor decides)",
+    });
+  });
+
   it("says in words when the suggestion is above the lowest value that clears the no-match questions and what that lower value would lose, and makes no claim that the values in between lose alike", () => {
-    const high = formatSuggestion(suggestThreshold([twoLegNoMatch(), twoLegHit()], 0.3), true, true).join("\n");
+    // The ranking no longer gives such a suggestion (raising the threshold only loses hits), but the report's wording is kept for one that could.
+    const lowest = suggestThreshold([twoLegNoMatch(), twoLegHit()], 0.3);
+    const above = {
+      ...lowest,
+      threshold: 0.5501,
+      at_suggested: { threshold: 0.5501, hits_kept: 1, hits_lost: 0, lost_ids: [], no_match_clear: 1, emergency_on: 0 },
+      at_lowest_clearing: { threshold: 0.4901, hits_kept: 0, hits_lost: 1, lost_ids: ["h1"], no_match_clear: 1, emergency_on: 0 },
+    };
+    const high = formatSuggestion(above, true, true).join("\n");
 
     expect(high).toContain("Suggested threshold: 0.5501 (above the highest no-match similarity 0.4900, over 1 no-match questions; the lowest value that clears them, 0.4901, loses more hits)");
     expect(high).toContain("at 0.5501: 1 hits kept, 0 lost of 1");
@@ -317,30 +369,11 @@ describe("the threshold rule", () => {
     expect(s.at_lowest_clearing).toEqual(s.at_suggested);
   });
 
-  it("breaks a tie in the hits lost by the most hits kept: a value that lets an expected provider into the top five that the ranking without a threshold keeps out is preferred, and among equals the lowest wins", () => {
-    // Z ties with P at no threshold (P wins on id), so it is out of the top five; with P's translated similarity (0.55) below the
-    // threshold, P's fused score halves and Z is in. Nothing is lost at either value (Z was not a hit to begin with).
-    const direct = { A: 0.95, B: 0.94, C: 0.93, D: 0.92, P: 0.91, Z: 0.9 };
-    const translated = { A: 0.9, B: 0.89, C: 0.88, D: 0.87, Z: 0.6, P: 0.55 };
-    const legs = [new Map(Object.entries(direct)), new Map(Object.entries(translated))];
-    expect(rankLegs(legs, -Infinity).map((r) => r.provider_id)).toEqual(["A", "B", "C", "D", "P"]);
-    expect(rankLegs(legs, 0.5501).map((r) => r.provider_id)).toEqual(["A", "B", "C", "D", "Z"]);
-    expect(rankLegs(legs, 0.6001).map((r) => r.provider_id)).toEqual(["A", "B", "C", "D", "P"]);
-
-    const s = suggestThreshold([none("n1", 0.3), input("h1", "normal", direct, ["Z"], { translated }), hit("h2", 0.9)], 0.2);
-
-    expect(s.lowest_clearing).toBe(0.3001);
-    expect(s.at_lowest_clearing).toMatchObject({ hits_kept: 1, hits_lost: 0 });
-    expect(s.threshold).toBe(0.5501);
-    expect(s.at_suggested).toMatchObject({ hits_kept: 2, hits_lost: 0 });
-  });
-
-  it("looks for the best value among every similarity of the answerable questions at or above the highest no-match one, whatever the scores: against every value that clears the no-match questions, on seeded random runs with two legs and several providers", () => {
+  it("finds the best value whatever the scores: against every value that clears the no-match questions, on seeded random runs with two legs and several providers", () => {
     let seed = 20261004;
     const random = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
     const providers = ["P1", "P2", "P3", "P4", "P5", "P6", "P7"];
     const leg = (low: number, high: number) => Object.fromEntries(providers.map((id) => [id, Math.round((low + random() * (high - low)) * 1000) / 1000]));
-    let beatsLowest = 0;
     for (let run = 0; run < 30; run++) {
       const inputs: ThresholdInput[] = [];
       for (let i = 0; i < 4; i++) inputs.push(input(`n${i}`, "no_match", leg(0, 0.4), [], { translated: leg(0, 0.4) }));
@@ -349,29 +382,26 @@ describe("the threshold rule", () => {
       expect(s.threshold, `run ${run}`).not.toBeNull();
 
       // The oracle: every plateau of the ranking (the first four-place value above each three-place similarity), by the use case's rankLegs.
-      const legsOf = (i: ThresholdInput) => i.observation!.legs.map((l) => l.similarities);
-      const baseline = new Set(inputs.filter((i) => i.intent !== "no_match" && rankLegs(legsOf(i), -Infinity).some((r) => i.expected.includes(r.provider_id))).map((i) => i.id));
+      const legsOf = (i: ThresholdInput) => i.observation!.legs.map((l) => new Map(l.similarities));
+      const baseline = new Set(inputs.filter((i) => i.intent !== "no_match" && top5(legsOf(i), -Infinity).some((id) => i.expected.includes(id))).map((i) => i.id));
       let best: { t: number; lost: number; kept: number } | null = null;
       for (let x = 0; x < 1000; x++) {
         const t = Math.round((x / 1000 + 0.0001) * 1e4) / 1e4;
-        if (!inputs.filter((i) => i.intent === "no_match").every((i) => rankLegs(legsOf(i), t).length === 0)) continue;
+        if (!inputs.filter((i) => i.intent === "no_match").every((i) => top5(legsOf(i), t).length === 0)) continue;
         let lost = 0;
         let kept = 0;
         for (const i of inputs.filter((i) => i.intent !== "no_match")) {
-          if (rankLegs(legsOf(i), t).some((r) => i.expected.includes(r.provider_id))) kept += 1;
+          if (top5(legsOf(i), t).some((id) => i.expected.includes(id))) kept += 1;
           else if (baseline.has(i.id)) lost += 1;
         }
         if (best === null || lost < best.lost || (lost === best.lost && kept > best.kept)) best = { t, lost, kept };
       }
       expect(s.threshold, `run ${run}`).toBe(best!.t);
       expect(s.at_suggested, `run ${run}`).toMatchObject({ hits_lost: best!.lost, hits_kept: best!.kept });
-      // It never loses more hits than the lowest value that clears the no-match questions, and clears them all.
-      expect(s.at_suggested!.hits_lost).toBeLessThanOrEqual(s.at_lowest_clearing!.hits_lost);
       expect(s.at_suggested!.no_match_clear).toBe(4);
-      if (s.threshold !== s.lowest_clearing) beatsLowest += 1;
+      // With a score that does not depend on the threshold, the best value is always the lowest that clears the no-match questions.
+      expect(s.threshold, `run ${run}`).toBe(s.lowest_clearing);
     }
-    // The runs do include ones where the lowest value is not the best, or this would only repeat the one-leg test.
-    expect(beatsLowest).toBeGreaterThan(0);
   });
 
   it("gives no threshold when a no-match question lost its translated-question leg (timed out or failed): its similarities are the direct leg's only, and production would see more", () => {
@@ -1176,6 +1206,10 @@ describe("the production command", () => {
       question_fallback: DEFAULT_SEARCH_SETTINGS.questionFallback,
       fallback_min_budget_ms: 800,
       emergency_threshold: 0.25,
+      emergency_top_threshold: 0.14,
+      keyword_weight: 0.15,
+      direct_floor: 0.24,
+      direct_gap: 0.1,
     });
     const generic = TestSetReportSchema.parse(JSON.parse(read(dir, "2026-10-04-embed-v4.0-leg-off-tuning.json")));
     expect(generic).toMatchObject({ release: "7", translated_leg: false, question_count: 2, subsets: { evaluation: null } });

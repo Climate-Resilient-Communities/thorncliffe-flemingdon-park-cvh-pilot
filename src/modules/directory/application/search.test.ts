@@ -6,9 +6,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
-import { QuestionTranslationError, TranslateError, createQuestionTranslator, type QuestionRoute, type QuestionTranslator, type TranslateErrorCode, type Translator } from "@/modules/translation";
+import { QuestionTranslationError, TRANSLATE_FIRST_OFF, TranslateError, createQuestionTranslator, type QuestionRoute, type QuestionTranslator, type TranslateErrorCode, type Translator } from "@/modules/translation";
 import type { SpendEventInput } from "@/modules/spend";
 import { detect } from "../domain/questionLanguage";
+import { buildKeywordIndex } from "../domain/searchKeywords";
 import { QueryEmbedError, type QueryEmbedder } from "./ports";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
 import { SafeDetailError } from "@/platform/safeError";
@@ -26,6 +27,7 @@ import {
   type SearchDeps,
   type SearchFailureNote,
   type SearchLogRow,
+  type SearchObservation,
   type SearchService,
   type SearchSnapshot,
   type SearchWriter,
@@ -38,6 +40,7 @@ const ROUTE: QuestionRoute = {
   ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_OFF,
 };
 
 // Four providers, one per axis (the fifth axis is "nothing in particular"); P2 is an emergency provider.
@@ -81,11 +84,18 @@ const VECTORS: Record<string, number[]> = {
   "I need a lawyer": [1, 0, 0, 0, 0],
   // The emergency fail-safe: P2 is the emergency provider, the threshold is 0.3, the emergency-only threshold 0.25.
   "em just below": unit([0, 0.27, 0, 0]), // emergency 0.27: no clear match, but an emergency provider is first
-  "em too low": unit([0, 0.24, 0, 0]), // emergency 0.24: below the emergency-only threshold
+  "em too low": unit([0, 0.24, 0, 0]), // emergency 0.24: below the emergency-only threshold, but the best match (above 0.14)
+  "em lowest": unit([0, 0.13, 0, 0]), // emergency 0.13, the best match: below the emergency top threshold (0.14) too
+  "em second": unit([0.3, 0.27, 0, 0]), // emergency 0.27, second to P1: the top-3 fail-safe alone can set the flag
+  "em second too low": unit([0.3, 0.24, 0, 0]), // emergency 0.24, second: below the emergency-only threshold, and not the best match
   "other just below": unit([0, 0, 0.27, 0]), // P3 (not emergency) 0.27
   "em fourth": unit([0.28, 0.27, 0.28, 0.28]), // emergency 0.27, but fourth: three others are above it
   "em fourth and clear": unit([0.5, 0.35, 0.5, 0.5]), // emergency 0.35 qualifies as a result, though fourth in the leg
   "I need an ambulance": unit([0, 0.27, 0, 0]),
+  // The ranking's routes: a food question that misses the threshold on its similarity alone, and Spanish ones (the direct route).
+  "food bank near me": unit([0, 0, 0.25, 0.05]), // P3 0.25: below 0.3 alone, over it with the keyword boost
+  "necesito un abogado gratis": unit([0.26, 0.2, 0.1, 0.18]), // P1 0.26 over the direct floor; P2 0.2 and P4 0.18 within 0.10; P3 not
+  "necesito ayuda con algo": unit([0.23, 0, 0, 0]), // P1 0.23: below the direct floor
 };
 
 interface Call {
@@ -169,6 +179,7 @@ describe("the translated-question leg", () => {
     /** The request snapshot instead of SNAPSHOT (a read that fails). */
     snapshot?: () => Promise<SearchSnapshot>;
     emergencyThreshold?: number;
+    emergencyTopThreshold?: number;
   }) {
     return createSearch({
       db: () => {
@@ -188,6 +199,7 @@ describe("the translated-question leg", () => {
           return SNAPSHOT;
         }),
       emergencyThreshold: parts.emergencyThreshold,
+      emergencyTopThreshold: parts.emergencyTopThreshold,
       writer: {
         log: async (row) => void logs.push(row),
         spend: async (event) => void spends.push(event),
@@ -215,7 +227,7 @@ describe("the translated-question leg", () => {
   }
 
   describe("which questions get it", () => {
-    it("is run for Pashto, Dari, native-script Urdu, romanized or mixed, and ambiguous Arabic script, and for no other question", () => {
+    it("is run for Pashto, Dari, native-script Urdu, romanized or mixed, and ambiguous Arabic script; another launch language is a translate-first kind of its own, and English none", () => {
       const of = (q: string, page: "en" | "ur" = "en") => questionSourceOf(detect(q, page), q);
       expect(of(PASHTO)).toBe("ps");
       expect(of("کلینیک صحی رایگان بدون کارت صحی کجا است؟")).toBe("prs");
@@ -225,10 +237,12 @@ describe("the translated-question leg", () => {
       expect(of("I need a lawyer")).toBeNull();
       expect(of(URDU)).toBe("ur"); // confident Urdu (owner decision 40)
       expect(of(URDU, "ur")).toBe("ur");
-      expect(of("Necesito un abogado")).toBeNull();
+      // Translate-first: translated only where the route names a model for the language (by default Tamil and Punjabi).
+      expect(of("Necesito un abogado")).toBe("es");
+      expect(of("எனக்கு உணவு எங்கே கிடைக்கும்?")).toBe("ta");
     });
 
-    it("matches the test set's native-script questions: every Pashto, Dari and Urdu one gets it, and none of the other scripts' (Latin-letter questions are the detector's, tuned in S03.07)", () => {
+    it("matches the test set's native-script questions: every Pashto, Dari and Urdu one gets it, and the other scripts' are their own translate-first kind (Latin-letter questions are the detector's, tuned in S03.07)", () => {
       const lines = readFileSync(path.join(process.cwd(), "data/search-test-set/questions.jsonl"), "utf8").split("\n").filter((l) => l.trim() !== "");
       const questions = lines.map((l) => JSON.parse(l) as { id: string; lang: string; q: string; form: string });
       const arabic = questions.filter((x) => x.form === "native" && ["ps", "prs", "ur"].includes(x.lang));
@@ -237,7 +251,7 @@ describe("the translated-question leg", () => {
       expect(otherScripts.length).toBeGreaterThan(0);
       // The page language is English: the leg depends on how the question is written, not the page.
       for (const x of arabic) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBe(x.lang);
-      for (const x of otherScripts) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBeNull();
+      for (const x of otherScripts) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBe(x.lang === "zh-Hant" ? "zh" : x.lang);
     });
 
     it("is not run, and is logged not_needed, for an English question", async () => {
@@ -316,17 +330,17 @@ describe("the translated-question leg", () => {
       expect(logs).toMatchObject([{ translatedLeg: "used" }]);
     });
 
-    it("ranks over both legs: threshold first, then reciprocal rank fusion of the qualifying providers, never by an RRF score against the threshold", async () => {
+    it("ranks over both legs by each provider's best similarity over them (the interim tuning replaced reciprocal rank fusion), threshold on that score", async () => {
       const { result } = await ask(service({ embedder: fakeEmbedder().embedder, translator: fakeTranslator().translator }), ROMANIZED);
 
-      // By similarity alone P1 (0.80) would be first; RRF puts P2 (2nd direct, 1st translated) and P3 (3rd, 2nd) above it.
-      // P4 is below the threshold in the translated leg and absent from the direct one: it is never added.
+      // P1 is best in the direct leg (0.80), P2 and P3 in the translated one (0.74, 0.66). Rank fusion put P2 and P3 above P1;
+      // by best similarity P1 is first. P4 (0.15, translated only) is below the threshold and never added. P2, an emergency
+      // provider, is the translated leg's best match: emergency_first.
       expect(result).toMatchObject({ status: "ok", query_lang: "en", emergency_first: true });
       const hits = (result as { results: { provider_id: string; score: number }[] }).results;
-      expect(hits.map((h) => h.provider_id)).toEqual(["P2", "P3", "P1"]);
-      // Each provider's score is its higher similarity from the two legs.
-      expect(hits[0]!.score).toBeCloseTo(0.5 / Math.hypot(0.5, 0.45, 0.1), 5);
-      expect(hits[2]!.score).toBeCloseTo(0.9 / Math.hypot(0.9, 0.5, 0.45), 5);
+      expect(hits.map((h) => h.provider_id)).toEqual(["P1", "P2", "P3"]);
+      expect(hits[0]!.score).toBeCloseTo(0.9 / Math.hypot(0.9, 0.5, 0.45), 5);
+      expect(hits[1]!.score).toBeCloseTo(0.5 / Math.hypot(0.5, 0.45, 0.1), 5);
       expect(logs).toMatchObject([{ translatedLeg: "used", resultCount: 3 }]);
     });
 
@@ -775,7 +789,7 @@ describe("the translated-question leg", () => {
     const translateSpends = () => spends.filter((s) => s.kind === "translate");
     const reasons = (notes: SearchFailureNote[]) => notes.map((n) => n.reason);
     /** The same fallback model for every kind of question. */
-    const everyKind = (model: string): QuestionRoute => ({ ps: model, prs: model, ur: model, romanized_or_mixed: model, ambiguous_arabic: model });
+    const everyKind = (model: string): QuestionRoute => ({ ps: model, prs: model, ur: model, romanized_or_mixed: model, ambiguous_arabic: model, ...TRANSLATE_FIRST_OFF });
     const withFallback = (parts: Parameters<typeof service>[0], fallback: QuestionRoute | null = everyKind(COMMAND)) => service({ ...parts, fallback });
 
     it("retries once with the fallback when the routed model is past its quota, uses its translation, logs used, and bills only the call that answered", async () => {
@@ -1001,7 +1015,7 @@ describe("the translated-question leg", () => {
 
     describe("per kind of question (P2-3, owner decision 45)", () => {
       /** The defaults' shape: Dari and Urdu fall back to Command A, Pashto does not. */
-      const DEFAULTS: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+      const DEFAULTS: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF };
 
       it("retries a Dari question and an Urdu question with Command A when the routed model is past its quota", async () => {
         for (const [q, lang] of [
@@ -1220,8 +1234,15 @@ describe("the translated-question leg", () => {
       expect(result).toMatchObject({ status: "no_clear_match", emergency_first: false, results: [] });
     });
 
-    it("does not set it for an emergency provider below the emergency-only threshold (0.24 against 0.25)", async () => {
-      expect((await run("em too low")).result).toMatchObject({ status: "no_clear_match", emergency_first: false });
+    it("does not set it for an emergency provider below the emergency-only threshold (0.24 against 0.25) that is not the best match", async () => {
+      expect((await run("em second too low")).result).toMatchObject({ emergency_first: false });
+    });
+
+    it("sets it for an emergency provider that is the best match of a leg at the emergency top threshold (0.14), even at 0.24, and not below it", async () => {
+      // Before the interim tuning 0.24 was below every rule; an emergency provider that is the single best match is now enough.
+      expect((await run("em too low")).result).toMatchObject({ status: "no_clear_match", emergency_first: true, results: [] });
+      expect((await run("em lowest")).result).toMatchObject({ status: "no_clear_match", emergency_first: false });
+      expect((await run("em too low", { emergencyTopThreshold: 0.3 })).result).toMatchObject({ emergency_first: false });
     });
 
     it("looks at the top 3 of a leg: an emergency provider fourth at 0.27 does not set it", async () => {
@@ -1242,10 +1263,12 @@ describe("the translated-question leg", () => {
       expect(result).toMatchObject({ status: "no_clear_match", emergency_first: true });
     });
 
-    it("only turns the flag on: an emergency result that qualifies keeps it on though fourth in its leg", async () => {
+    it("no longer sets it for an emergency-category result alone: one shown fourth, not near the top of its leg, leaves it off", async () => {
+      // The interim tuning removed "any result is an emergency provider": the category holds the shelters, which a question
+      // about food lists too, and the 911 block went first for "where can I get food?".
       const { result } = await run("em fourth and clear");
 
-      expect(result).toMatchObject({ status: "ok", emergency_first: true });
+      expect(result).toMatchObject({ status: "ok", emergency_first: false });
       expect((result as { results: { provider_id: string }[] }).results.map((h) => h.provider_id)).toContain("P2");
     });
 
@@ -1254,11 +1277,73 @@ describe("the translated-question leg", () => {
     });
 
     it("takes the emergency-only threshold from config, and never uses one above the release's threshold", async () => {
-      expect((await run("em too low", { emergencyThreshold: 0.2 })).result).toMatchObject({ emergency_first: true });
-      expect((await run("em just below", { emergencyThreshold: 0.28 })).result).toMatchObject({ emergency_first: false });
+      // P2 is second here, so only the top-3 fail-safe can set the flag.
+      expect((await run("em second too low", { emergencyThreshold: 0.2 })).result).toMatchObject({ emergency_first: true });
+      expect((await run("em second")).result).toMatchObject({ emergency_first: true });
+      expect((await run("em second", { emergencyThreshold: 0.28 })).result).toMatchObject({ emergency_first: false });
       // A misconfigured 0.9 is held to the release's 0.3: 0.27 stays below it.
-      expect((await run("em just below", { emergencyThreshold: 0.9 })).result).toMatchObject({ emergency_first: false });
+      expect((await run("em second", { emergencyThreshold: 0.9 })).result).toMatchObject({ emergency_first: false });
     });
+  });
+});
+
+// The ranking's two routes (interim tuning, 2026-10-07): English text gets the keyword boost against the release's threshold;
+// another language with no translated leg is ranked by the direct floor and gap.
+describe("the ranking's route", () => {
+  const KEYWORDS = buildKeywordIndex([
+    { id: "P1", text: "Legal Clinic lawyer advice" },
+    { id: "P2", text: "Fire Station Support & Emergency Services" },
+    { id: "P3", text: "Flemingdon Food Bank free groceries food" },
+    { id: "P4", text: "Public Library" },
+  ]);
+  const WITH_KEYWORDS: SearchSnapshot = { releaseV: 3, data: { ...SNAPSHOT.data!, keywords: KEYWORDS } };
+  let seen: SearchObservation[];
+  beforeEach(() => {
+    vi.useFakeTimers();
+    seen = [];
+  });
+  afterEach(() => vi.useRealTimers());
+
+  async function ask(q: string, lang: "en" | "es", snapshot: SearchSnapshot = WITH_KEYWORDS) {
+    const search = createSearch({
+      db: () => {
+        throw new Error("no database in this test");
+      },
+      storage: () => {
+        throw new Error("no store in this test");
+      },
+      embedder: fakeEmbedder().embedder,
+      snapshot: async () => snapshot,
+      writer: { log: async () => undefined, spend: async () => undefined },
+      observe: (o) => void seen.push(o),
+      clock: () => Date.now(),
+    });
+    const pending = search.search({ q, lang });
+    await vi.advanceTimersByTimeAsync(5000);
+    return pending;
+  }
+
+  it("matches an English question's words against the providers' English text: the keyword boost lifts a provider over the threshold", async () => {
+    const result = await ask("food bank near me", "en");
+
+    expect(result).toMatchObject({ status: "ok", emergency_first: false, results: [{ provider_id: "P3" }] });
+    const score = result.results[0]!.score;
+    expect(score).toBeGreaterThan(0.3);
+    expect(score).toBeLessThan(0.25 + 0.15);
+    expect(seen[0]).toMatchObject({ route: "hybrid", threshold: 0.3, directFloor: 0.24, directGap: 0.1, emergencyTopThreshold: 0.14 });
+    expect([...seen[0]!.boosts.keys()]).toEqual(["P3"]);
+    // The same question on a release without a keyword index (no boost): no clear match.
+    expect(await ask("food bank near me", "en", SNAPSHOT)).toMatchObject({ status: "no_clear_match", results: [] });
+  });
+
+  it("ranks another language with no translated leg by the direct floor and gap, not by the release's threshold", async () => {
+    const result = await ask("necesito un abogado gratis", "es");
+
+    expect(result.query_lang).toBe("es");
+    expect(result.results.map((r) => r.provider_id)).toEqual(["P1", "P2", "P4"]);
+    expect(seen[0]).toMatchObject({ route: "direct" });
+    expect(seen[0]!.boosts.size).toBe(0);
+    expect(await ask("necesito ayuda con algo", "es")).toMatchObject({ status: "no_clear_match", results: [] });
   });
 });
 

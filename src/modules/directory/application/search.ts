@@ -8,7 +8,10 @@
 //    never change), checked against the hash the release recorded.
 //  - The direct leg embeds the question as typed with the snapshot's model as a query (`input_type: search_query`).
 //  - The translated-question leg (S03.05): for Pashto, Dari, native-script Urdu, romanized or mixed (but not one or two plainly
-//    English words), and ambiguous Arabic-script questions, the `translation` module translates the question to English
+//    English words), and ambiguous Arabic-script questions, and (translate-first, 2026-10-07) a question confidently in another
+//    launch language whose kind `search_question_route` names a model for (by default Tamil and Punjabi: the embedding reads
+//    them poorly; with no fallback model, and only while the model's month of translate calls, every purpose, is below
+//    SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS, which leaves alert translation its reserve), the `translation` module translates the question to English
 //    with the model `search_question_route` names and checks that it is English; the translation is then embedded with the
 //    snapshot's model. The translation starts with the request, in parallel with the snapshot read and the direct leg (only
 //    its embedding waits for the snapshot). When the routed model is past a vendor limit (HTTP 429), the kind of question has a
@@ -18,11 +21,32 @@
 //    translation), `timed_out`, or `not_needed` (no leg was run, or the answer was the question itself, already English).
 //    A vendor call that failed while the other leg answered is still told to ops (`answered: true`), once a minute per reason
 //    and model.
-//  - Ranking (domain/searchRanking.ts) over the legs that completed: threshold first, then RRF (k = 60) when both did,
-//    top 5. When the direct leg fails but the translated one completed, the results come from the translated leg alone.
-//  - Emergency fail-safe (owner decision 41): `emergency_first` is also set when an emergency-category provider is in the
-//    top 3 of either completed leg at the emergency-only threshold, even with no clear match (the results then stay empty).
-//    It only ever turns the flag on.
+//  - Ranking (domain/searchRanking.ts, interim tuning of 2026-10-07) over the legs that completed, by a provider's best
+//    similarity over them. A question in English, or one whose translated leg completed, takes the `hybrid` route: the
+//    similarity plus a keyword boost (domain/searchKeywords.ts: BM25 of the question's words, and its English translation's,
+//    against each provider's English name, categories, subcategories and services, indexed when the release's data is
+//    loaded), the top 5 at or above the release's threshold. Any other question takes the `direct` route: the top 5 when the
+//    best similarity reaches the direct floor, less those more than the direct gap below it. When the direct leg fails but
+//    the translated one completed, the results come from the translated leg alone.
+//  - The reranker of the direct route (arm R2 of the interim tuning; SEARCH_RERANK, on unless `off`, and only where a Cohere key
+//    is configured): a question in another language that needs no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…;
+//    a translate-first language whose leg is off, or failed, timed out or was rejected: the search then takes today's route; when
+//    its leg completed the question is on the hybrid route and is not reranked, the measurement showed no gain on top)
+//    whose direct leg completed has its 20 best providers by similarity reranked against their English search texts (the texts
+//    their vectors were made from, rebuilt from the release's English listing) with `rerank-v3.5`: the results are the top 5 with a
+//    relevance of at least SEARCH_RERANK_MIN (0.05), best relevance first, none when no provider reaches it. Each result's `score`
+//    stays its similarity (the relevance orders and filters only), so on this route the scores need not be in descending order.
+//    The call is made only when at least RERANK_MIN_BUDGET_MS (0.3 s) of the leg's 2.2 s is left, and is cut at 1.2 s or at the
+//    deadline, whichever comes first; it is made only while the month's rerank calls (spend_event kind `rerank`, counted beside the
+//    embedding, application/rerank.ts) are below SEARCH_RERANK_MONTHLY_CALLS (900), and not for 5 minutes after a 429. On any
+//    failure, timeout, limit or lack of time the question is ranked by the floor and gap as before, silently for the resident; a
+//    failed or timed-out call, and the monthly limit, are told to ops (`search.leg_failed`, `rerank_failed` / `rerank_quota`, with
+//    the model and a class, never the question). `emergency_first` is decided on the legs' similarities as before, never on the
+//    rerank, so a rerank cannot hide the 911 block.
+//  - `emergency_first` (owner decision 41, as changed by the interim tuning): set when the best match of either completed leg
+//    is an emergency-category provider at the emergency top threshold, or one is in the top 3 of either leg at the
+//    emergency-only threshold, even with no clear match (the results then stay empty). An emergency-category provider among
+//    the results no longer sets it on its own (the category holds the shelters, which a question about food lists too).
 //  - Time: every leg is cancelled and ignored when still running 2.2 s after the request started (its result, should it
 //    arrive later, is never used), and the whole request
 //    answers within 2.5 s. "Started" is when the route took the request (it passes that time in), so reading the body and
@@ -55,7 +79,10 @@ import type { SearchV1 } from "@/contracts/searchTestSet";
 import { recordSpendEvent, type SpendEventInput, type SpendPurpose } from "@/modules/spend";
 import {
   QuestionTranslationError,
+  TRANSLATE_FIRST_SOURCES,
+  TRANSLATE_SPEND_KIND,
   estimateTranslationTokens,
+  isTranslateFirstSource,
   isLimitFailure,
   questionTranslationSpend,
   sourceLanguage,
@@ -69,10 +96,29 @@ import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeEr
 import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
-import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
-import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
+import { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, type KeywordIndex } from "../domain/searchKeywords";
+import { monthlyModelCalls } from "@/modules/spend";
+import {
+  DEFAULT_DIRECT_FLOOR,
+  DEFAULT_DIRECT_GAP,
+  DEFAULT_EMERGENCY_THRESHOLD,
+  DEFAULT_EMERGENCY_TOP_THRESHOLD,
+  DEFAULT_KEYWORD_WEIGHT,
+  DEFAULT_RERANK_MIN,
+  cosine,
+  emergencyFirst,
+  rankLegs,
+  rerankCandidates,
+  rerankedResults,
+  type LegSimilarities,
+  type RankingRoute,
+  type RankingSettings,
+  type SearchHit,
+} from "../domain/searchRanking";
+import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, searchTextsOfListing, type ReleaseSearchRecord } from "../domain/searchData";
 import { VectorsBinaryError, decodeVectorsBinary } from "../domain/vectorsBinary";
-import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache } from "./ports";
+import { QueryEmbedError, RerankError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache, type Reranker } from "./ports";
+import { DEFAULT_RERANK_MONTHLY_CALLS, RERANK_MIN_BUDGET_MS, RERANK_SPEND_KIND, RERANK_TIMEOUT_MS, createRerankQuota, type RerankOutcome, type RerankQuota } from "./rerank";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
 export const SEARCH_SPEND_KIND = "embed";
@@ -146,8 +192,10 @@ export type SearchStageReason = "snapshot_failed" | "embed_failed" | "embed_inva
 /**
  * A vendor call of a leg failed while the search still answered (the other leg completed). `translate_quota`: the
  * translation model is past the vendor's limit; `translate_fallback_used`: the fallback model made the translation instead.
+ * `rerank_failed`: the direct route's rerank failed or timed out (the question was ranked by similarity instead); `rerank_quota`:
+ * the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS, or could not be counted.
  */
-export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used";
+export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used" | "rerank_failed" | "rerank_quota";
 
 /**
  * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
@@ -171,12 +219,24 @@ export interface SearchObservation {
   /** The release's threshold, and the emergency-only threshold as configured (the fail-safe applies it at most as high as the release's). */
   threshold: number;
   emergencyThreshold: number;
+  /** The direct route's floor and gap, and the emergency top threshold, as configured. */
+  directFloor: number;
+  directGap: number;
+  emergencyTopThreshold: number;
+  /** The route the question was ranked by. */
+  route: RankingRoute;
+  /** The keyword boost of each provider that matched a word (empty on the direct route): numbers only, never a word. */
+  boosts: ReadonlyMap<string, number>;
   /** The providers of an emergency category in this release. */
   emergencyProviders: ReadonlySet<string>;
   /** What the translated-question leg did. */
   translatedLeg: TranslatedLeg;
   /** The similarity of every provider of the release in each leg that completed: the direct leg first, then the translated one. */
   legs: { leg: "direct" | "translated"; similarities: ReadonlyMap<string, number> }[];
+  /** What the direct route's reranker did. */
+  rerank: RerankOutcome;
+  /** The results the reranker made (`rerank` is `used`), which are the answer's; null otherwise (the answer is the legs' ranking). */
+  reranked: SearchHit[] | null;
 }
 
 /** One search_log row: counts and codes only. */
@@ -207,6 +267,10 @@ export interface SnapshotData {
   vectors: ArrayLike<number>[];
   known: ReadonlySet<string>;
   emergency: ReadonlySet<string>;
+  /** The keyword index of the release's English listing; absent (a test's snapshot): no keyword boost. */
+  keywords?: KeywordIndex;
+  /** Each provider's English search text (what its vector was made from), which the reranker reads; absent: no rerank. */
+  searchTexts?: ReadonlyMap<string, string>;
 }
 
 /** The request snapshot: the current release (null when there is none) and its search data (null when it has none, or no key is configured). */
@@ -247,6 +311,29 @@ export interface SearchDeps {
    * release's own threshold.
    */
   emergencyThreshold?: number;
+  /** SEARCH_KEYWORD_WEIGHT: the most the keyword match adds to a similarity on the hybrid route; default 0.15. */
+  keywordWeight?: number;
+  /** SEARCH_DIRECT_FLOOR and SEARCH_DIRECT_GAP: the direct route's least best similarity and furthest gap below it; defaults 0.24 and 0.10. */
+  directFloor?: number;
+  directGap?: number;
+  /** SEARCH_EMERGENCY_TOP_THRESHOLD: an emergency provider that is a leg's best match at this similarity sets `emergency_first`; default 0.14. */
+  emergencyTopThreshold?: number;
+  /** The direct route's reranker (SEARCH_RERANK); absent or null: the direct route ranks by similarity alone (floor and gap). */
+  reranker?: Reranker | null;
+  /** SEARCH_RERANK_MIN: the least relevance of a reranked result; default 0.05. */
+  rerankMin?: number;
+  /** SEARCH_RERANK_MONTHLY_CALLS: the rerank calls a calendar month may use before the reranker is no longer called; default 900. */
+  rerankMonthlyCalls?: number;
+  /** Test seam: counts the month's rerank calls of a model (default: spend_event rows of kind `rerank`, every purpose). */
+  rerankCalls?: (model: string, now: Date) => Promise<number>;
+  /**
+   * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: a translate-first question (ta, pa…) is translated only while its model's translate calls
+   * of the calendar month, every purpose (alert translation included), are below this; default 600. Past it the question takes
+   * today's route, so search cannot spend the reserve alert translation needs on the same key.
+   */
+  translateFirstMonthlyCalls?: number;
+  /** Test seam: counts the month's translate calls of a model (default: spend_event rows of kind `translate`, every purpose). */
+  translateCalls?: (model: string, now: Date) => Promise<number>;
   /** Test seams. */
   snapshotFailureTtlMs?: number;
   snapshotLoadTimeoutMs?: number;
@@ -511,6 +598,10 @@ async function loadReleaseData(storage: DirectoryStorage, release: CurrentReleas
     vectors: vectors.vectors,
     known: new Set(vectors.ids),
     emergency,
+    // The keyword half of the ranking reads the same English listing: indexed once per release, here.
+    keywords: buildKeywordIndex(keywordDocumentsOf(listing)),
+    // So does the reranker: the providers' search texts, as the release's vectors were made from them.
+    searchTexts: searchTextsOfListing(listing),
   };
 }
 
@@ -544,12 +635,26 @@ function capped<T>(work: Promise<T>, ms: number): Promise<T> {
   return Promise.race([work, expired]).finally(() => clearTimeout(timer));
 }
 
+/**
+ * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS by default: Cohere allows a model about 1,000 calls a calendar month on a key, and alert
+ * translation (S04.02) uses Command A Translate on the same key; translate-first searches stop at 600 of the model's month, which
+ * leaves alerts a reserve of about 400 calls.
+ */
+export const DEFAULT_TRANSLATE_FIRST_MONTHLY_CALLS = 600;
+
+/** The longest a translate-first question waits for its model's month to be counted (only on a cold instance or every 30 s). */
+const TRANSLATE_GATE_WAIT_MS = 500;
+
 /** Which questions also search through English (the E03 definitions): Pashto, Dari, native-script Urdu, romanized or mixed (unless plainly English), ambiguous Arabic script. */
 export function questionSourceOf(detected: QuestionLanguage, q?: string): QuestionSource | null {
   // A short English word eld cannot tell from a Latin launch language ("lawyer", "rent") needs no translation to English.
   if (detected.confidence === "romanized_or_mixed") return q !== undefined && isClearlyEnglish(q) ? null : detected.confidence;
   if (detected.confidence === "ambiguous_arabic") return detected.confidence;
   if (detected.confidence === "confident" && (detected.lang === "ps" || detected.lang === "prs" || detected.lang === "ur")) return detected.lang;
+  // Translate-first: a question confidently in another launch language is a kind of its own; it is translated only where the
+  // route names a model for it, and searched directly (and reranked) otherwise.
+  const lang = detected.confidence === "confident" ? detected.lang : null;
+  if (lang !== null && (TRANSLATE_FIRST_SOURCES as readonly string[]).includes(lang)) return lang as QuestionSource;
   return null;
 }
 
@@ -560,6 +665,17 @@ export function questionSourceOf(detected: QuestionLanguage, q?: string): Questi
 export function questionLegSource(input: { q: string; lang: LangCode }): QuestionSource | null {
   const parsed = parseSearchRequest(input);
   return parsed.ok ? questionSourceOf(detect(parsed.value.q, parsed.value.lang), parsed.value.q) : null;
+}
+
+/**
+ * Whether a question is read as English for the ranking's hybrid route (its words are matched against the providers' English
+ * text): the detector is confident it is English; or it is Latin text the detector cannot place (`romanized_or_mixed`) asked
+ * on an English page, or one or two plainly English words ("lawyer", "rent") on any page.
+ */
+export function isEnglishQuestion(detected: QuestionLanguage, q: string, pageLang: LangCode): boolean {
+  if (detected.lang === "en") return true;
+  if (detected.lang !== null) return false;
+  return detected.confidence === "romanized_or_mixed" && (pageLang === "en" || isClearlyEnglish(q));
 }
 
 /** How a leg ended: its similarities, or why it has none. */
@@ -591,6 +707,32 @@ export function createSearch(deps: SearchDeps): SearchService {
       await deps.db().insert(searchLog).values(row);
     },
     spend: (event) => recordSpendEvent(deps.db(), event),
+  };
+  // The direct route's reranker and its monthly gate (one per service: an instance counts its own calls between two counts).
+  const reranker = deps.reranker ?? null;
+  const rerankMin = deps.rerankMin ?? DEFAULT_RERANK_MIN;
+  const rerankQuota: RerankQuota | null = reranker
+    ? createRerankQuota({
+        limit: deps.rerankMonthlyCalls ?? DEFAULT_RERANK_MONTHLY_CALLS,
+        clock,
+        count: (now) => (deps.rerankCalls ? deps.rerankCalls(reranker.model, now) : monthlyModelCalls(deps.db(), RERANK_SPEND_KIND, reranker.model, now)),
+      })
+    : null;
+  // The translate-first languages' monthly gate, one per model (the same counting as the reranker's: the month's rows, every
+  // purpose, plus this instance's own calls since the last count).
+  const translateFirstLimit = deps.translateFirstMonthlyCalls ?? DEFAULT_TRANSLATE_FIRST_MONTHLY_CALLS;
+  const translateGates = new Map<string, RerankQuota>();
+  const translateGate = (model: string): RerankQuota => {
+    let gate = translateGates.get(model);
+    if (!gate) {
+      gate = createRerankQuota({
+        limit: translateFirstLimit,
+        clock,
+        count: (now) => (deps.translateCalls ? deps.translateCalls(model, now) : monthlyModelCalls(deps.db(), TRANSLATE_SPEND_KIND, model, now)),
+      });
+      translateGates.set(model, gate);
+    }
+    return gate;
   };
   // Releases whose data failed to load, until when: a bad release is not downloaded again on every search.
   const failedUntil = new Map<number, number>();
@@ -725,6 +867,15 @@ export function createSearch(deps: SearchDeps): SearchService {
     const source = translator ? questionSourceOf(detected, q) : null;
     const translateModel = source && translator ? translator.modelFor(source) : null;
     const translating = source !== null && translateModel !== null && translator !== null;
+    // A translate-first question is translated only within its model's monthly gate (counted beside the snapshot, costing no time).
+    const gated = translating && isTranslateFirstSource(source);
+    if (gated) translateGate(translateModel).refresh();
+    // The reranker is for a question in another language that needs no translated leg (whether or not the leg is configured):
+    // its month's calls are counted now, beside the snapshot and the embedding, so that the count costs the search no time.
+    // A translate-first language is reranked like before when its translated leg is off, fails or is rejected (its route is then direct).
+    const kind = questionSourceOf(detected, q);
+    const mayRerank = reranker !== null && rerankQuota !== null && deps.embedder !== null && (kind === null || isTranslateFirstSource(kind)) && !isEnglishQuestion(detected, q, lang);
+    if (mayRerank) rerankQuota.refresh();
 
     // ---- the request snapshot (read in parallel with the translation)
     const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean; detail: string | undefined } = { snapshot: null, failure: null, repeat: false, detail: undefined };
@@ -779,6 +930,64 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (!deps.onFailure) return;
       const at = { reason, releaseV, ms: elapsed(), answered: true as const, ...(model === undefined ? {} : { model }), ...(error === undefined ? {} : { error }) };
       track(() => deps.onFailure!(at));
+    };
+
+    /**
+     * The direct route's rerank (see the header): its results and what it did, or null results when the question is to be ranked
+     * by the floor and gap instead. Never throws. The call is counted in spend_event (kind `rerank`, one call) when the vendor
+     * answered or the call was cut at its deadline (it may have been billed), not when the vendor refused it.
+     */
+    const rerankDirect = async (legs: readonly LegSimilarities[], texts: ReadonlyMap<string, string>): Promise<{ outcome: RerankOutcome; results: SearchHit[] | null }> => {
+      const model = reranker!.model;
+      const quota = rerankQuota!;
+      if (deadline - clock() < RERANK_MIN_BUDGET_MS) return { outcome: "no_time", results: null };
+      const allowance = await quota.check(deadline - clock() - RERANK_MIN_BUDGET_MS);
+      if (allowance === "limited") return { outcome: "limited", results: null };
+      if (allowance !== "ok") {
+        reportVendorFailure("rerank_quota", model, allowance === "unknown" ? "count_failed" : undefined);
+        return { outcome: "quota", results: null };
+      }
+      const left = deadline - clock();
+      if (left < RERANK_MIN_BUDGET_MS) return { outcome: "no_time", results: null };
+      const candidates = rerankCandidates(legs);
+      const documents = candidates.map((hit) => texts.get(hit.provider_id));
+      if (candidates.length === 0 || documents.some((text) => text === undefined)) return { outcome: "failed", results: null };
+      const controller = new AbortController();
+      const callStarted = clock();
+      const count = () => {
+        quota.used();
+        const event: SpendEventInput = { kind: RERANK_SPEND_KIND, purpose: spendPurpose, model, releaseV, calls: 1, tokens: 0, ms: Math.round(clock() - callStarted) };
+        track(async () => {
+          await writer.spend(event);
+          deps.onSpendWritten?.(event);
+        });
+      };
+      const call = reranker!.rerank({ query: q, documents: documents as string[], signal: controller.signal });
+      call.catch(() => undefined);
+      const timedOut = () => {
+        count();
+        reportVendorFailure("rerank_failed", model, TIMED_OUT);
+        return { outcome: "timed_out" as const, results: null };
+      };
+      try {
+        const raced = await raceTimeout(call, Math.min(RERANK_TIMEOUT_MS, left), () => controller.abort());
+        // A call that rejects as it is aborted can settle the race before the timeout does: both are the timeout.
+        if (raced === "timeout") return timedOut();
+        count();
+        const relevance = new Map<string, number>();
+        for (const { index, relevance: r } of raced.results) {
+          const hit = candidates[index];
+          if (hit) relevance.set(hit.provider_id, r);
+        }
+        return { outcome: "used", results: rerankedResults(candidates, relevance, rerankMin) };
+      } catch (error) {
+        if (controller.signal.aborted) return timedOut();
+        if (error instanceof RerankError && error.vendor === "limited") quota.limited();
+        reportVendorFailure("rerank_failed", model, error instanceof RerankError ? (error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`) : classifyError(error));
+        return { outcome: "failed", results: null };
+      } finally {
+        timings?.record("rerank", clock() - callStarted);
+      }
     };
 
     // ---- the legs: each paid call's usage is recorded once, as the vendor reported it, or estimated when it was cancelled.
@@ -873,6 +1082,9 @@ export function createSearch(deps: SearchDeps): SearchService {
     // What the translation told ops, with the model it concerned: `translate_quota` for a model past its limit, `translate_failed`
     // for any other vendor failure, `translate_fallback_used` when the fallback made the translation.
     const translateNotes: { reason: SearchLegFailureReason; model: string; error?: string }[] = [];
+    // The English translation, once the translated leg has it: only read for the keyword match when the leg completed. Held in
+    // this variable for the length of the request, like the question, and never written anywhere.
+    let english: string | null = null;
     const noteFailure = (error: unknown, model: string) => {
       translateNotes.push({ reason: error instanceof QuestionTranslationError && error.vendor === "quota" ? "translate_quota" : "translate_failed", model, error: classifyTranslation(error) });
     };
@@ -882,6 +1094,17 @@ export function createSearch(deps: SearchDeps): SearchService {
           checkTime(leg);
           /** One translation call with `model`: its usage is recorded as the vendor reported it (a call that failed at the vendor wrote none). */
           const translateWith = async (model: string): Promise<string> => {
+            if (gated) {
+              const gate = translateGate(model);
+              gate.refresh();
+              const allowance = await gate.check(Math.min(TRANSLATE_GATE_WAIT_MS, deadline - clock()));
+              if (allowance !== "ok") {
+                // The month's reserve for alert translation (or a count that could not be made): today's route, told to ops once a minute.
+                translateNotes.push({ reason: "translate_quota", model, error: allowance === "unknown" ? "count_failed" : "search_monthly_limit" });
+                throw new TranslateStageError("translate_failed", "search_monthly_limit");
+              }
+              gate.used();
+            }
             const call = leg.start("translate", model, q, systemPrompt(sourceLanguage(source), "en"));
             try {
               const translated = await translator.toEnglish({ text: q, source, signal: leg.signal, model });
@@ -908,12 +1131,14 @@ export function createSearch(deps: SearchDeps): SearchService {
             return new TranslateStageError(rejected ? "translate_rejected" : "translate_failed", classifyTranslation(error));
           };
 
-          let english: string;
+          let translation: string;
           let rescuedBy: string | null = null;
           try {
-            english = await translateWith(translateModel);
+            translation = await translateWith(translateModel);
           } catch (error) {
             if (leg.signal.aborted) throw new StageError("timed_out");
+            // Past the translate-first gate: no call was made, and there is nothing to retry.
+            if (error instanceof TranslateStageError) throw error;
             const vendor = error instanceof QuestionTranslationError && error.code === "translate_failed" ? error.vendor : undefined;
             const fallback = vendor !== undefined && isLimitFailure(vendor) ? translator.fallbackFor(source, translateModel) : null;
             // Past its limit (or limited for a moment): one retry with the fallback model for this kind of question, with the same
@@ -923,9 +1148,13 @@ export function createSearch(deps: SearchDeps): SearchService {
             // (what a rejection chain adds after that comes too late). The routed model needs someone's attention whatever the fallback does.
             if (vendor === "quota") noteFailure(error, translateModel);
             try {
-              english = await translateWith(fallback);
+              translation = await translateWith(fallback);
               rescuedBy = fallback;
             } catch (second) {
+              if (second instanceof TranslateStageError) {
+                if (vendor !== "quota") noteFailure(error, translateModel);
+                throw second;
+              }
               // A transient limit is told only if the fallback failed too (when it answered, the rescue is all ops hears).
               if (vendor !== "quota") noteFailure(error, translateModel);
               if (leg.signal.aborted) throw new StageError("timed_out");
@@ -936,7 +1165,8 @@ export function createSearch(deps: SearchDeps): SearchService {
           await snapshotKnown;
           const known = state.snapshot;
           if (!known?.data || !deps.embedder) throw new StageError("snapshot_failed");
-          const similarities = await embedAndCompare(leg, known.data, deps.embedder, english);
+          const similarities = await embedAndCompare(leg, known.data, deps.embedder, translation);
+          english = translation;
           // The fallback rescued the question only if the leg completed with its translation: not when the embedding failed or was cut at the deadline.
           if (rescuedBy !== null && !leg.signal.aborted) translateNotes.push({ reason: "translate_fallback_used", model: rescuedBy });
           return similarities;
@@ -981,22 +1211,39 @@ export function createSearch(deps: SearchDeps): SearchService {
     }
     for (const note of vendor) reportVendorFailure(note.reason, note.model, note.error);
 
-    // The ranking sequence over the legs that completed: threshold first, then RRF when there are two.
+    // The ranking over the legs that completed. With English text to match (the question in English, or the translated leg's
+    // English), the hybrid route: similarity plus keyword boost against the release's threshold. Otherwise the direct route.
     const rankStarted = clock();
-    const results = rankLegs(completed, data.threshold);
-    const status = results.length === 0 ? "no_clear_match" : "ok";
-    // The emergency fail-safe (owner decision 41) can only turn the flag on: an emergency provider among the top 3 of either
-    // leg at the emergency-only threshold sets it, even with no clear match (the results then stay empty).
-    const emergencyThreshold = Math.min(deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, data.threshold);
-    const emergency = emergencyFirst(results, data.emergency) || emergencyInTop(completed, data.emergency, emergencyThreshold);
+    const settings: RankingSettings = {
+      threshold: data.threshold,
+      directFloor: deps.directFloor ?? DEFAULT_DIRECT_FLOOR,
+      directGap: deps.directGap ?? DEFAULT_DIRECT_GAP,
+      emergencyThreshold: deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD,
+      emergencyTopThreshold: deps.emergencyTopThreshold ?? DEFAULT_EMERGENCY_TOP_THRESHOLD,
+    };
+    const translatedEnglish = translated?.ok ? english : null;
+    // A translation that came back as the question itself says the question is English.
+    const questionIsEnglish = isEnglishQuestion(detected, q, lang) || (translated !== null && !translated.ok && translated.reason === "translate_identical");
+    const keywordText = translatedEnglish !== null ? `${q} ${translatedEnglish}` : questionIsEnglish ? q : null;
+    const route: RankingRoute = keywordText === null ? "direct" : "hybrid";
+    const boosts = keywordText !== null && data.keywords ? keywordBoosts(data.keywords, keywordText, deps.keywordWeight ?? DEFAULT_KEYWORD_WEIGHT) : new Map<string, number>();
     timings?.record("rank", clock() - rankStarted);
+    // The direct route of a question the reranker is for: its results, when it answered; the floor and gap otherwise.
+    const reranking = mayRerank && route === "direct" && direct.ok && data.searchTexts !== undefined ? await rerankDirect(completed, data.searchTexts) : null;
+    const rerank: RerankOutcome = reranking?.outcome ?? "not_needed";
+    const reranked = reranking?.results ?? null;
+    const results = reranked ?? rankLegs(completed, route, boosts, settings);
+    const status = results.length === 0 ? "no_clear_match" : "ok";
+    // `emergency_first` is decided on the legs, not on what is shown: an emergency provider that is a leg's best match at the
+    // emergency top threshold, or in a leg's top 3 at the emergency-only threshold, sets it, even with no clear match.
+    const emergency = emergencyFirst(completed, data.emergency, settings);
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
     if (deps.observe) {
       const legs: SearchObservation["legs"] = [];
       if (direct.ok) legs.push({ leg: "direct", similarities: direct.similarities });
       if (translated?.ok) legs.push({ leg: "translated", similarities: translated.similarities });
       try {
-        deps.observe({ releaseV: data.releaseV, threshold: data.threshold, emergencyThreshold: deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs });
+        deps.observe({ releaseV: data.releaseV, ...settings, route, boosts, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs, rerank, reranked });
       } catch {
         // A measurement never changes an answer.
       }

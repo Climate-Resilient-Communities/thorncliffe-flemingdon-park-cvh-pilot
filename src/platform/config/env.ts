@@ -105,16 +105,31 @@ import { PRODUCTION_HOST } from "./hosts";
  * SEARCH_EMBED_MODEL   server   optional                 the embedding model a release's search data is made with and every
  *                                                        question is embedded with; default embed-v4.0 (AD-11; a config value
  *                                                        the test set can change)
- * SEARCH_THRESHOLD     server   optional                 the similarity (0 to 1) below which a question has no clear match,
- *                                                        recorded on each release. PROVISIONAL default 0.3: S03.07 chooses it
- *                                                        from the tuning subset; changing it means publishing a new release,
- *                                                        which copies the existing vectors
+ * SEARCH_THRESHOLD     server   optional                 the score (0 to 1) below which a question has no clear match on the
+ *                                                        ranking's hybrid route (English questions and those the translated
+ *                                                        leg answered; the score is the similarity plus the keyword boost),
+ *                                                        recorded on each release. PROVISIONAL default 0.27 (interim tuning,
+ *                                                        2026-10-07, on a mostly machine-drafted test set; S03.08 confirms
+ *                                                        it); changing it means publishing a new release, which copies the
+ *                                                        existing vectors
+ * SEARCH_KEYWORD_WEIGHT
+ *                      server   optional                 the most (0 to 1) the keyword match (BM25 over the providers'
+ *                                                        English text) adds to a similarity on the hybrid route; default
+ *                                                        0.15, 0 switches the boost off. Read at search time
+ * SEARCH_DIRECT_FLOOR, SEARCH_DIRECT_GAP
+ *                      server   optional                 the direct route (other languages, when no translated leg
+ *                                                        completed): results only when the best similarity is at least the
+ *                                                        floor (0 to 1, default 0.24), and none more than the gap (0 to 1,
+ *                                                        default 0.10) below it. Read at search time
  * SEARCH_EMERGENCY_THRESHOLD
  *                      server   optional                 the similarity (0 to 1) at which a provider of an emergency category
  *                                                        among the top 3 of either leg turns `emergency_first` on, even when
- *                                                        no result reaches SEARCH_THRESHOLD (owner decision 41: a fail-safe,
- *                                                        it never turns the flag off); default 0.25, and at most
- *                                                        SEARCH_THRESHOLD. Read at search time, not recorded on a release
+ *                                                        nothing is shown (owner decision 41: a fail-safe); default 0.25, and
+ *                                                        at most SEARCH_THRESHOLD. Read at search time, not recorded on a release
+ * SEARCH_EMERGENCY_TOP_THRESHOLD
+ *                      server   optional                 the similarity (0 to 1) at which a provider of an emergency category
+ *                                                        that is the best match of either leg turns `emergency_first` on;
+ *                                                        default 0.14 (interim tuning, 2026-10-07). Read at search time
  * SEARCH_EMERGENCY_CATEGORIES
  *                      server   optional                 comma-separated English names of the categories whose results put
  *                                                        the 911 block first, recorded on each release; default
@@ -126,23 +141,38 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        kind of question, as comma-separated `kind=model` pairs; a kind left
  *                                                        out keeps its default, `kind=off` switches the leg off for it, and
  *                                                        `off` alone switches it off for all. Kinds: ps, prs, ur,
- *                                                        romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults:
+ *                                                        romanized_or_mixed, ambiguous_arabic, and (translate-first) the
+ *                                                        other launch languages when the question is confidently in one:
+ *                                                        tl, gu, ta, el, sk, bn, hi, pa, zh, es, fr. PROVISIONAL defaults:
  *                                                        north-small-translate-09-2026 for ps, prs and ur (native-script
  *                                                        Urdu, owner decision 40),
  *                                                        command-a-translate-08-2025 for romanized_or_mixed and
  *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
- *                                                        Readiness). It applies only where COHERE_API_KEY is set
+ *                                                        Readiness) and for ta and pa (translate-first, 2026-10-07
+ *                                                        measurement); off for the other translate-first languages (they
+ *                                                        are searched directly, with the reranker, as when a translation
+ *                                                        fails). It applies only where COHERE_API_KEY is set
  * SEARCH_QUESTION_FALLBACK
  *                      server   optional                 the Cohere model the translated-question leg retries once with when
  *                                                        the routed model is past its limit (HTTP 429: quota or rate limit),
  *                                                        per kind of question, in the shape of SEARCH_QUESTION_ROUTE: comma-
  *                                                        separated `kind=model` pairs, a kind left out keeps its default,
- *                                                        `kind=off` means no retry for it, `off` alone for all. Kinds: ps, prs,
- *                                                        ur, romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults (owner
+ *                                                        `kind=off` means no retry for it, `off` alone for all. Kinds: as
+ *                                                        SEARCH_QUESTION_ROUTE. PROVISIONAL defaults (owner
  *                                                        decision 45): command-a-translate-08-2025 for prs, ur,
  *                                                        romanized_or_mixed and ambiguous_arabic (for the last two it only
  *                                                        applies if their route is changed: the routed model is that model),
- *                                                        off for ps (Command A Translate turned Pashto into Dari; S03.07 decides).
+ *                                                        off for ps (Command A Translate turned Pashto into Dari; S03.07 decides);
+ *                                                        off for the translate-first languages (ta and pa included: North
+ *                                                        Small Translate's month is alert translation's).
+ * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS
+ *                      server   optional                 a whole number (default 600): a translate-first question (ta, pa…) is
+ *                                                        translated only while its model's translate calls this calendar
+ *                                                        month (America/Toronto, spend_event, every purpose, alert translation
+ *                                                        included) are below it; past it the question takes the direct route
+ *                                                        with the reranker. Cohere allows ~1,000 a model a month on the key,
+ *                                                        so 600 leaves alert translation (S04.02: Command A Translate first
+ *                                                        for fr, es, zh, el, hi) a reserve of ~400
  *                                                        Never the routed model itself
  * SEARCH_FALLBACK_MIN_BUDGET_MS
  *                      server   optional                 the least time (0 to 2200 ms, default 800) that must be left of the
@@ -155,6 +185,16 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        warning. When translate spend_event rows of a model with a limit
  *                                                        reach 80% of it, ops gets one `search.leg_failed` event
  *                                                        (`translate_quota_near`) per model per month per instance
+ * SEARCH_RERANK         server   optional                 `on` (default) or `off`: whether a question in another language that
+ *                                                        takes no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…)
+ *                                                        has its 20 best providers reranked with Cohere rerank-v3.5 (interim
+ *                                                        tuning, arm R2). It applies only where COHERE_API_KEY is set; on any
+ *                                                        failure the question is ranked by SEARCH_DIRECT_FLOOR and _GAP
+ * SEARCH_RERANK_MIN     server   optional                 the least rerank relevance (0 to 1, default 0.05) of a reranked result
+ * SEARCH_RERANK_MONTHLY_CALLS
+ *                      server   optional                 the rerank calls a calendar month (America/Toronto) may use, counted
+ *                                                        from spend_event (kind rerank); at it the reranker is no longer called
+ *                                                        that month. Default 900: Cohere allows about 1,000 a month per model
  * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
  *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
  *                                                        tokens the directory publish may use in a calendar month
@@ -269,11 +309,19 @@ const rawSchema = z.object({
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_THRESHOLD: optionalText,
+  SEARCH_EMERGENCY_TOP_THRESHOLD: optionalText,
+  SEARCH_KEYWORD_WEIGHT: optionalText,
+  SEARCH_DIRECT_FLOOR: optionalText,
+  SEARCH_DIRECT_GAP: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
   SEARCH_QUESTION_ROUTE: optionalText,
   SEARCH_QUESTION_FALLBACK: optionalText,
   SEARCH_FALLBACK_MIN_BUDGET_MS: optionalText,
   SEARCH_TRANSLATE_MONTHLY_CALLS: optionalText,
+  SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: optionalText,
+  SEARCH_RERANK: optionalText,
+  SEARCH_RERANK_MIN: optionalText,
+  SEARCH_RERANK_MONTHLY_CALLS: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
@@ -284,10 +332,17 @@ type Raw = z.infer<typeof rawSchema>;
 export interface SearchSettings {
   /** The Cohere embedding model id. */
   embedModel: string;
-  /** Similarity below which a question has no clear match (provisional until S03.07). */
+  /** Score below which a question has no clear match on the hybrid route (provisional: interim tuning, confirmed by S03.08). */
   threshold: number;
   /** Similarity at which an emergency provider among the top 3 of a leg sets `emergency_first` without a clear match (owner decision 41); at most `threshold`. */
   emergencyThreshold: number;
+  /** Similarity at which an emergency provider that is a leg's best match sets `emergency_first`. */
+  emergencyTopThreshold: number;
+  /** The most the keyword match adds to a similarity on the hybrid route. */
+  keywordWeight: number;
+  /** The direct route: the least best similarity for any result, and the furthest below it a result may be. */
+  directFloor: number;
+  directGap: number;
   /** English names of the categories that put the 911 block first. */
   emergencyCategories: string[];
   /** Embedding usage the calendar month may reach: calls and input tokens. */
@@ -300,11 +355,55 @@ export interface SearchSettings {
   fallbackMinBudgetMs: number;
   /** The translation calls a model may use in a calendar month, where the vendor limits them (model id to limit); empty: no warning. */
   translateMonthlyCalls: Readonly<Record<string, number>>;
+  /** The translate calls (every purpose) a model's calendar month may reach before translate-first questions are no longer translated. */
+  translateFirstMonthlyCalls: number;
+  /** Whether the direct route reranks (where a Cohere key is configured). */
+  rerank: boolean;
+  /** The least rerank relevance of a reranked result. */
+  rerankMin: number;
+  /** The rerank calls a calendar month may use before the reranker is no longer called. */
+  rerankMonthlyCalls: number;
 }
 
 /** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
-export const QUESTION_ROUTE_KINDS = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic"] as const;
+export const QUESTION_ROUTE_KINDS = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic", "tl", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"] as const;
 export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS)[number], string | null>>;
+
+/**
+ * Translate-first (2026-10-07 measurement, data/search-test-set/reports/2026-10-07-interim-tuning.md, "Translate-first"): the
+ * launch languages the multilingual embedding reads poorly enough that translating the question to English first wins clearly
+ * (hit@3 up at least 10 points, no-match accuracy no worse): Tamil and Punjabi, with Command A Translate (the model the
+ * measurement used) and no fallback model. The others are off (searched directly, with the reranker); a
+ * kind can be switched on or off in SEARCH_QUESTION_ROUTE without a code change.
+ */
+const TRANSLATE_FIRST_ROUTE = {
+  ta: "command-a-translate-08-2025",
+  pa: "command-a-translate-08-2025",
+  tl: null,
+  gu: null,
+  el: null,
+  sk: null,
+  bn: null,
+  hi: null,
+  zh: null,
+  es: null,
+  fr: null,
+} as const;
+// No fallback: North Small Translate's month on the production key is alert translation's (S04.02); a translate-first question
+// whose model fails or is past its limit takes today's route instead.
+const TRANSLATE_FIRST_FALLBACK = {
+  ta: null,
+  pa: null,
+  tl: null,
+  gu: null,
+  el: null,
+  sk: null,
+  bn: null,
+  hi: null,
+  zh: null,
+  es: null,
+  fr: null,
+} as const;
 
 /**
  * PROVISIONAL (the addendum's routing table): North Small Translate for Pashto, Dari and native-script Urdu (owner decision
@@ -316,6 +415,7 @@ export const DEFAULT_QUESTION_ROUTE: QuestionRouteSettings = {
   ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_ROUTE,
 };
 
 /**
@@ -331,6 +431,7 @@ export const DEFAULT_QUESTION_FALLBACK: QuestionRouteSettings = {
   ur: "command-a-translate-08-2025",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_FALLBACK,
 };
 
 /** The longest time the leg has (the E03 search time limit, DEFAULT_LEG_TIMEOUT_MS of the directory module): the most a minimum budget can be. */
@@ -338,14 +439,22 @@ const LEG_BUDGET_MS = 2200;
 
 export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   embedModel: "embed-v4.0",
-  threshold: 0.3,
+  threshold: 0.27,
   emergencyThreshold: 0.25,
+  emergencyTopThreshold: 0.14,
+  keywordWeight: 0.15,
+  directFloor: 0.24,
+  directGap: 0.1,
   emergencyCategories: ["Support & Emergency Services"],
   allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
   questionRoute: DEFAULT_QUESTION_ROUTE,
   questionFallback: DEFAULT_QUESTION_FALLBACK,
   fallbackMinBudgetMs: 800,
   translateMonthlyCalls: {},
+  translateFirstMonthlyCalls: 600,
+  rerank: true,
+  rerankMin: 0.05,
+  rerankMonthlyCalls: 900,
 };
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -717,13 +826,13 @@ function positiveInteger(name: string, value: string | undefined, fallback: numb
 }
 
 const questionKindsProblem = (name: string) =>
-  `${name}: must be \`off\`, or comma-separated kind=model pairs (kinds ps, prs, ur, romanized_or_mixed, ambiguous_arabic; model a model id or off), each kind at most once`;
+  `${name}: must be \`off\`, or comma-separated kind=model pairs (kinds ${QUESTION_ROUTE_KINDS.join(", ")}; model a model id or off), each kind at most once`;
 
 /** A per-kind setting (the route and the fallback share the shape): `off` alone, or `kind=model|off` pairs over the defaults. */
 function parseQuestionKinds(name: string, value: string | undefined, defaults: QuestionRouteSettings, problems: string[]): QuestionRouteSettings {
   if (value === undefined) return defaults;
   const text = value.trim();
-  if (text === "off") return { ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null };
+  if (text === "off") return Object.fromEntries(QUESTION_ROUTE_KINDS.map((kind) => [kind, null])) as unknown as QuestionRouteSettings;
   const settings: Record<string, string | null> = { ...defaults };
   const seen = new Set<string>();
   for (const pair of text.split(",").map((p) => p.trim()).filter((p) => p !== "")) {
@@ -779,6 +888,28 @@ function parseTranslateMonthlyCalls(value: string | undefined, problems: string[
   return limits;
 }
 
+/** SEARCH_RERANK: `on` or `off` (any case); unset is the default (on). */
+function parseRerankSwitch(value: string | undefined, problems: string[]): boolean {
+  if (value === undefined) return DEFAULT_SEARCH_SETTINGS.rerank;
+  const text = value.trim().toLowerCase();
+  if (text === "on") return true;
+  if (text === "off") return false;
+  problems.push("SEARCH_RERANK: must be `on` or `off`");
+  return DEFAULT_SEARCH_SETTINGS.rerank;
+}
+
+/** A search setting from 0 to 1 (the form of SEARCH_THRESHOLD), or its default when unset. */
+function unitNumber(name: string, raw: string | undefined, fallback: number, example: string, problems: string[]): number {
+  if (raw === undefined) return fallback;
+  const text = raw.trim();
+  const value = Number(text);
+  if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) {
+    problems.push(`${name}: must be a number from 0 to 1, such as ${example}`);
+    return fallback;
+  }
+  return value;
+}
+
 function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   const defaults = DEFAULT_SEARCH_SETTINGS;
   const embedModel = raw.SEARCH_EMBED_MODEL?.trim() ?? defaults.embedModel;
@@ -787,7 +918,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   if (raw.SEARCH_THRESHOLD !== undefined) {
     const text = raw.SEARCH_THRESHOLD.trim();
     const value = Number(text);
-    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.3");
+    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.27");
     else threshold = value;
   }
   let emergencyThreshold = defaults.emergencyThreshold;
@@ -798,6 +929,10 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     else emergencyThreshold = value;
   }
   if (emergencyThreshold > threshold) problems.push("SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD");
+  const emergencyTopThreshold = unitNumber("SEARCH_EMERGENCY_TOP_THRESHOLD", raw.SEARCH_EMERGENCY_TOP_THRESHOLD, defaults.emergencyTopThreshold, "0.14", problems);
+  const keywordWeight = unitNumber("SEARCH_KEYWORD_WEIGHT", raw.SEARCH_KEYWORD_WEIGHT, defaults.keywordWeight, "0.15", problems);
+  const directFloor = unitNumber("SEARCH_DIRECT_FLOOR", raw.SEARCH_DIRECT_FLOOR, defaults.directFloor, "0.24", problems);
+  const directGap = unitNumber("SEARCH_DIRECT_GAP", raw.SEARCH_DIRECT_GAP, defaults.directGap, "0.1", problems);
   let emergencyCategories = defaults.emergencyCategories;
   if (raw.SEARCH_EMERGENCY_CATEGORIES !== undefined) {
     const names = [...new Set(raw.SEARCH_EMERGENCY_CATEGORIES.split(",").map((name) => name.trim()).filter((name) => name !== ""))];
@@ -808,6 +943,10 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     embedModel,
     threshold,
     emergencyThreshold,
+    emergencyTopThreshold,
+    keywordWeight,
+    directFloor,
+    directGap,
     emergencyCategories,
     allowance: {
       callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),
@@ -817,6 +956,10 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     questionFallback: parseQuestionKinds("SEARCH_QUESTION_FALLBACK", raw.SEARCH_QUESTION_FALLBACK, DEFAULT_QUESTION_FALLBACK, problems),
     fallbackMinBudgetMs: parseFallbackMinBudget(raw.SEARCH_FALLBACK_MIN_BUDGET_MS, problems),
     translateMonthlyCalls: parseTranslateMonthlyCalls(raw.SEARCH_TRANSLATE_MONTHLY_CALLS, problems),
+    translateFirstMonthlyCalls: positiveInteger("SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS", raw.SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS, defaults.translateFirstMonthlyCalls, problems),
+    rerank: parseRerankSwitch(raw.SEARCH_RERANK, problems),
+    rerankMin: unitNumber("SEARCH_RERANK_MIN", raw.SEARCH_RERANK_MIN, defaults.rerankMin, "0.05", problems),
+    rerankMonthlyCalls: positiveInteger("SEARCH_RERANK_MONTHLY_CALLS", raw.SEARCH_RERANK_MONTHLY_CALLS, defaults.rerankMonthlyCalls, problems),
   };
 }
 

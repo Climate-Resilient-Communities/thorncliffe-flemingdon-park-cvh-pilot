@@ -3,6 +3,7 @@
 // the database and Next are mocked; nothing here reaches a network.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SearchDeps } from "@/modules/directory";
+import { TRANSLATE_FIRST_OFF } from "@/modules/translation";
 import { DEFAULT_SEARCH_SETTINGS, type SearchSettings } from "@/platform/config/env";
 
 const NORTH = "north-small-translate-09-2026";
@@ -71,7 +72,7 @@ describe("search composition (S03.05)", () => {
   });
 
   it("gives the test-set engine no fallback at all, whatever the settings say, so a run measures the routed models and not whichever answered", async () => {
-    const { app, deps } = await load({ questionFallback: { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND } });
+    const { app, deps } = await load({ questionFallback: { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF } });
 
     app.searchTestSetEngine();
 
@@ -137,5 +138,27 @@ describe("search composition (S03.05)", () => {
     await app.recordLimiterFailure(1003, "42501");
 
     expect(mocks.inserted).toEqual([{ kind: "search.unavailable", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "rate_limit_failed", ms: 1003, error: "42501" } }]);
+  });
+
+  it("gives the resident search the direct route's reranker (rerank-v3.5) with its relevance bar and monthly limit, and none when SEARCH_RERANK is off or there is no key", async () => {
+    const on = await load({ rerankMin: 0.07, rerankMonthlyCalls: 500 });
+    on.app.searchService();
+    expect(on.deps().reranker?.model).toBe("rerank-v3.5");
+    expect(on.deps().rerankMin).toBe(0.07);
+    expect(on.deps().rerankMonthlyCalls).toBe(500);
+
+    const off = await load({ rerank: false });
+    off.app.searchService();
+    expect(off.deps().reranker).toBeUndefined();
+
+    const noKey = await load({}, null);
+    noKey.app.searchService();
+    expect(noKey.deps().reranker).toBeUndefined();
+  });
+
+  it("does not rerank in the test-set engine", async () => {
+    const { app, deps } = await load();
+    app.searchTestSetEngine();
+    expect(deps().reranker).toBeUndefined();
   });
 });

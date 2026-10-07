@@ -14,6 +14,7 @@ import {
   searchItems,
   searchPlan,
   searchTextOf,
+  searchTextsOfListing,
   unknownEmergencyCategories,
   vectorsFileBody,
   vectorsProblems,
@@ -286,5 +287,35 @@ describe("the provider ids of a listing file", () => {
     expect(listingProviderIds("not json")).toBeNull();
     expect(listingProviderIds(JSON.stringify({ providers: "M001" }))).toBeNull();
     expect(listingProviderIds(JSON.stringify({ providers: [{ name: "x" }] }))).toBeNull();
+  });
+});
+
+describe("the search texts rebuilt from a release's English listing (the reranker's documents)", () => {
+  it("are the texts the vectors were embedded from: categories in the release's order, contact details scrubbed", () => {
+    const providers = [
+      provider("M001", {
+        categoryIds: ["c-emergency", "c-legal"],
+        subcategories: [{ name: "Tenant rights", labels: {} }],
+        texts: { services: { en: "Free legal help. Call 416-555-0100 or info@example.org." }, emergency_role: { en: "Takes 911 referrals at 1 Overlea Blvd." } },
+      }),
+      provider("M002", { categoryIds: ["c-health"] }),
+    ];
+    const listing = {
+      categories: categories.map((c) => ({ id: c.id, sort_order: c.sortOrder, name: { body: c.labels.en! } })),
+      providers: providers.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category_ids: p.categoryIds,
+        subcategories: p.subcategories.map((s) => ({ body: s.name })),
+        services: { body: p.texts.services!.en! },
+        emergency_role: p.texts.emergency_role?.en ? { body: p.texts.emergency_role.en } : null,
+      })),
+    };
+
+    const texts = searchTextsOfListing(listing);
+
+    for (const item of searchItems(providers, categories, sha256Hex)) expect(texts.get(item.id)).toBe(item.text);
+    expect(texts.get("M001")).toContain("Categories: Legal, Support & Emergency Services");
+    expect(texts.get("M001")).not.toContain("416");
   });
 });

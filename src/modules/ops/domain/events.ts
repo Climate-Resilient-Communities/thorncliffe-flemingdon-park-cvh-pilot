@@ -41,8 +41,11 @@ export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
  * route); `translate_fallback_used`: the fallback model rescued a translation the routed model could not make;
  * `translate_quota_near`: the month's translate calls of a model have reached 80% of the limit configured for it
  * (`SEARCH_TRANSLATE_MONTHLY_CALLS`), a warning before the 429s begin (no search failed: `ms` is 0).
+ * `rerank_failed`: the direct route's rerank failed or timed out (the question was ranked by similarity instead; `error` says how:
+ * `timed_out`, `rerank_failed:limited`); `rerank_quota`: the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS (or could not
+ * be counted: `error` is `count_failed`), so the reranker is not called until the month ends.
  */
-export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used", "translate_quota_near"] as const;
+export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used", "translate_quota_near", "rerank_failed", "rerank_quota"] as const;
 
 /** The launch bar's measures (S03.08's `bar.json`): a language's hit rate, the no-match accuracy and the emergency accuracy (S03.09). */
 export const SEARCH_BAR_MEASURES = ["hit_rate", "no_match_accuracy", "emergency_accuracy"] as const;

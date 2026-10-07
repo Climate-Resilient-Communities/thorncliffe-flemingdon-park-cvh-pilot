@@ -71,6 +71,7 @@ export {
   VectorsFileSchema,
   estimateTokens,
   searchTextOf,
+  searchTextsOfListing,
   type ReleaseSearchRecord,
   type VectorsFile,
 } from "./domain/searchData";
@@ -95,6 +96,7 @@ export {
   SearchFailure,
   createSearch,
   currentSearchFacts,
+  isEnglishQuestion,
   questionLegSource,
   type SearchDeps,
   type SearchFailureCode,
@@ -105,6 +107,38 @@ export {
   type TranslatedLeg,
 } from "./application/search";
 export { recordUsage, usageDay } from "./application/usageCount";
-export { QueryEmbedError, type QueryEmbedder, type ReleaseFileCache } from "./application/ports";
+export { QueryEmbedError, RerankError, type QueryEmbedder, type ReleaseFileCache, type Reranker } from "./application/ports";
 export { cohereQueryEmbedder, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
-export { DEFAULT_EMERGENCY_THRESHOLD, MAX_RESULTS, RRF_K, cosine, emergencyFirst, emergencyInTop, rankLegs, type SearchHit } from "./domain/searchRanking";
+export { RERANK_MODEL, cohereReranker, type CohereRerankClient, type CohereRerankerOptions } from "./adapters/cohereReranker";
+export {
+  DEFAULT_RERANK_MONTHLY_CALLS,
+  RERANK_MIN_BUDGET_MS,
+  RERANK_SPEND_KIND,
+  RERANK_TIMEOUT_MS,
+  createRerankQuota,
+  type RerankOutcome,
+  type RerankQuota,
+} from "./application/rerank";
+export {
+  DEFAULT_DIRECT_FLOOR,
+  DEFAULT_DIRECT_GAP,
+  DEFAULT_EMERGENCY_THRESHOLD,
+  DEFAULT_EMERGENCY_TOP_THRESHOLD,
+  DEFAULT_KEYWORD_WEIGHT,
+  DEFAULT_RERANK_MIN,
+  MAX_RESULTS,
+  RERANK_CANDIDATES,
+  cosine,
+  emergencyFirst,
+  emergencyInTop,
+  emergencyOnTop,
+  rankLegs,
+  rankingScores,
+  rerankCandidates,
+  rerankedResults,
+  resultsOf,
+  type RankingRoute,
+  type RankingSettings,
+  type SearchHit,
+} from "./domain/searchRanking";
+export { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, keywordTokens, type KeywordDocument, type KeywordIndex } from "./domain/searchKeywords";

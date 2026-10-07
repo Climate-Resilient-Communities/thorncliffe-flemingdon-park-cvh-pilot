@@ -628,11 +628,16 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(() => parseEnv({ ...production, COHERE_API_KEY: KEY, NEXT_PUBLIC_ANYTHING: "something else" })).not.toThrow();
   });
 
-  it("has defaults: embed-v4.0, a provisional threshold, the emergency category and a monthly allowance", () => {
+  it("has defaults: embed-v4.0, a provisional threshold, the ranking's interim settings, the emergency category and a monthly allowance", () => {
+    // The threshold was 0.3 until the interim tuning of 2026-10-07 (data/search-test-set/reports/2026-10-07-interim-tuning.md).
     expect(parseEnv(local).search).toEqual({
       embedModel: "embed-v4.0",
-      threshold: 0.3,
+      threshold: 0.27,
       emergencyThreshold: 0.25,
+      emergencyTopThreshold: 0.14,
+      keywordWeight: 0.15,
+      directFloor: 0.24,
+      directGap: 0.1,
       emergencyCategories: ["Support & Emergency Services"],
       allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
       questionRoute: {
@@ -641,6 +646,10 @@ describe("Cohere and the search settings (S03.02)", () => {
         ur: "north-small-translate-09-2026",
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
+        // Translate-first (2026-10-07 measurement): Tamil and Punjabi only.
+        ta: "command-a-translate-08-2025",
+        pa: "command-a-translate-08-2025",
+        tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
       },
       questionFallback: {
         ps: null,
@@ -648,10 +657,26 @@ describe("Cohere and the search settings (S03.02)", () => {
         ur: "command-a-translate-08-2025",
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
+        ta: null,
+        pa: null,
+        tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
       },
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
+      translateFirstMonthlyCalls: 600,
+      rerank: true,
+      rerankMin: 0.05,
+      rerankMonthlyCalls: 900,
     });
+  });
+
+  it("reads the direct route's reranker settings: SEARCH_RERANK on or off, SEARCH_RERANK_MIN from 0 to 1, SEARCH_RERANK_MONTHLY_CALLS a whole number", () => {
+    expect(parseEnv({ ...production, SEARCH_RERANK: " OFF ", SEARCH_RERANK_MIN: "0.08", SEARCH_RERANK_MONTHLY_CALLS: "500" }).search).toMatchObject({ rerank: false, rerankMin: 0.08, rerankMonthlyCalls: 500 });
+    expect(parseEnv({ ...production, SEARCH_RERANK: "on" }).search.rerank).toBe(true);
+    expect(() => parseEnv({ ...production, SEARCH_RERANK: "yes" })).toThrow(/SEARCH_RERANK: must be `on` or `off`/);
+    expect(() => parseEnv({ ...production, SEARCH_RERANK_MIN: "5" })).toThrow(/SEARCH_RERANK_MIN: must be a number from 0 to 1/);
+    expect(() => parseEnv({ ...production, SEARCH_RERANK_MONTHLY_CALLS: "0" })).toThrow(/SEARCH_RERANK_MONTHLY_CALLS: must be a whole number of at least 1/);
+    expect(parseSearchEnv({ SEARCH_RERANK: "off" }).rerank).toBe(false);
   });
 
   it("reads the model, threshold, emergency categories and allowance", () => {
@@ -669,18 +694,35 @@ describe("Cohere and the search settings (S03.02)", () => {
       embedModel: "embed-multilingual-v3.0",
       threshold: 0.42,
       emergencyThreshold: 0.2,
+      emergencyTopThreshold: 0.14,
+      keywordWeight: 0.15,
+      directFloor: 0.24,
+      directGap: 0.1,
       emergencyCategories: ["Support & Emergency Services", "Crisis Lines"],
       allowance: { callsPerMonth: 40, tokensPerMonth: 100000 },
       questionRoute: DEFAULT_QUESTION_ROUTE,
       questionFallback: DEFAULT_QUESTION_FALLBACK,
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
+      translateFirstMonthlyCalls: 600,
+      rerank: true,
+      rerankMin: 0.05,
+      rerankMonthlyCalls: 900,
     });
   });
 
   it("defaults the fallback per kind of question (owner decision 45): Dari and Urdu to Command A Translate, Pashto off, and the kinds routed to Command A have it only if their route changes", () => {
     const fallback = parseEnv(production).search.questionFallback;
-    expect(fallback).toEqual({ ps: null, prs: "command-a-translate-08-2025", ur: "command-a-translate-08-2025", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: "command-a-translate-08-2025" });
+    expect(fallback).toEqual({
+      ps: null,
+      prs: "command-a-translate-08-2025",
+      ur: "command-a-translate-08-2025",
+      romanized_or_mixed: "command-a-translate-08-2025",
+      ambiguous_arabic: "command-a-translate-08-2025",
+      ta: null,
+      pa: null,
+      tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
+    });
     // Never the routed model itself: where the route already is the fallback there is nothing to retry with (the translator skips it).
     for (const kind of ["romanized_or_mixed", "ambiguous_arabic"] as const) expect(DEFAULT_QUESTION_ROUTE[kind]).toBe(fallback[kind]);
     for (const kind of ["prs", "ur"] as const) expect(DEFAULT_QUESTION_ROUTE[kind]).not.toBe(fallback[kind]);
@@ -693,9 +735,12 @@ describe("Cohere and the search settings (S03.02)", () => {
       ur: null,
       romanized_or_mixed: "command-a-translate-08-2025",
       ambiguous_arabic: "command-a-translate-08-2025",
+      ta: null,
+      pa: null,
+      tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
     });
     expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "prs=command-r-translate-01-2027" }).search.questionFallback.prs).toBe("command-r-translate-01-2027");
-    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionFallback).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null });
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionFallback).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null, ta: null, pa: null, tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null });
     // The route is its own setting: changing one leaves the other alone.
     expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionRoute).toEqual(DEFAULT_QUESTION_ROUTE);
     expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionFallback).toEqual(DEFAULT_QUESTION_FALLBACK);
@@ -715,6 +760,18 @@ describe("Cohere and the search settings (S03.02)", () => {
     }
   });
 
+  it("reads SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: 600 by default (alert translation keeps ~400 of a model's ~1,000), a whole number of at least 1", () => {
+    expect(parseEnv(production).search.translateFirstMonthlyCalls).toBe(600);
+    expect(parseEnv({ ...production, SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: "250" }).search.translateFirstMonthlyCalls).toBe(250);
+    for (const bad of ["0", "-1", "lots", "1.5"]) expect(problemsOf({ ...production, SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: bad }).join("\n"), bad).toMatch(/SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS/);
+  });
+
+  it("gives Tamil and Punjabi no fallback model: North Small Translate's month is alert translation's", () => {
+    const { questionRoute, questionFallback } = parseEnv(production).search;
+    expect([questionRoute.ta, questionRoute.pa]).toEqual(["command-a-translate-08-2025", "command-a-translate-08-2025"]);
+    expect([questionFallback.ta, questionFallback.pa]).toEqual([null, null]);
+  });
+
   it("reads SEARCH_TRANSLATE_MONTHLY_CALLS: no limit by default, and model=limit pairs", () => {
     expect(parseEnv(production).search.translateMonthlyCalls).toEqual({});
     expect(parseEnv({ ...production, SEARCH_TRANSLATE_MONTHLY_CALLS: "north-small-translate-09-2026=1000" }).search.translateMonthlyCalls).toEqual({ "north-small-translate-09-2026": 1000 });
@@ -731,8 +788,14 @@ describe("Cohere and the search settings (S03.02)", () => {
       ur: "north-small-translate-09-2026",
       romanized_or_mixed: "command-a-translate-08-2025",
       ambiguous_arabic: null,
+      ta: "command-a-translate-08-2025",
+      pa: "command-a-translate-08-2025",
+      tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
     });
-    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionRoute).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null });
+    // A translate-first language is switched on or off like any kind.
+    const route = parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "tl=command-a-translate-08-2025,ta=off" }).search.questionRoute;
+    expect([route.tl, route.ta, route.pa]).toEqual(["command-a-translate-08-2025", null, "command-a-translate-08-2025"]);
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionRoute).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null, ta: null, pa: null, tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null });
   });
 
   it("routes native-script Urdu to the translated-question leg by default (owner decision 40), and lets config change or switch it off", () => {
@@ -741,8 +804,16 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "ur=off" }).search.questionRoute.ur).toBeNull();
   });
 
+  it("reads the ranking's search-time settings: keyword weight, direct floor and gap, emergency top threshold, each 0 to 1", () => {
+    expect(
+      parseEnv({ ...production, SEARCH_KEYWORD_WEIGHT: "0", SEARCH_DIRECT_FLOOR: " 0.3 ", SEARCH_DIRECT_GAP: "0.05", SEARCH_EMERGENCY_TOP_THRESHOLD: "0.2" }).search,
+    ).toMatchObject({ keywordWeight: 0, directFloor: 0.3, directGap: 0.05, emergencyTopThreshold: 0.2 });
+    // Blank is unset (a workflow's unset variable).
+    expect(parseEnv({ ...production, SEARCH_KEYWORD_WEIGHT: "", SEARCH_DIRECT_GAP: " " }).search).toMatchObject({ keywordWeight: 0.15, directGap: 0.1 });
+  });
+
   it("reads the emergency-only threshold (owner decision 41): 0 to 1, and no greater than SEARCH_THRESHOLD", () => {
-    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.3 " }).search.emergencyThreshold).toBe(0.3); // equal to the default threshold
+    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.27 " }).search.emergencyThreshold).toBe(0.27); // equal to the default threshold (0.27 since the interim tuning)
     expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: "0" }).search.emergencyThreshold).toBe(0);
     expect(parseEnv({ ...production, SEARCH_THRESHOLD: "0.5", SEARCH_EMERGENCY_THRESHOLD: "0.4" }).search.emergencyThreshold).toBe(0.4);
     // A lower SEARCH_THRESHOLD alone leaves the default 0.25 above it.
@@ -758,7 +829,11 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["SEARCH_EMERGENCY_THRESHOLD", "1.5", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_THRESHOLD", "low", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_THRESHOLD", "-0.1", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
-    ["SEARCH_EMERGENCY_THRESHOLD", "0.31", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "0.28", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
+    ["SEARCH_EMERGENCY_TOP_THRESHOLD", "1.5", /SEARCH_EMERGENCY_TOP_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_KEYWORD_WEIGHT", "-0.1", /SEARCH_KEYWORD_WEIGHT: must be a number from 0 to 1/],
+    ["SEARCH_DIRECT_FLOOR", "high", /SEARCH_DIRECT_FLOOR: must be a number from 0 to 1/],
+    ["SEARCH_DIRECT_GAP", "2", /SEARCH_DIRECT_GAP: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_CATEGORIES", " , ", /SEARCH_EMERGENCY_CATEGORIES: must list at least one category name/],
     ["EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", "0", /EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: must be a whole number of at least 1/],
     ["SEARCH_QUESTION_ROUTE", "xx=north-small-translate-09-2026", /SEARCH_QUESTION_ROUTE: must be `off`, or comma-separated kind=model pairs/],

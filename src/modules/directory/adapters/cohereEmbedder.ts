@@ -62,7 +62,7 @@ function statusOf(error: unknown): number | null {
  * timeout or a network failure (fetch's TypeError, the client's timeout, a socket code) is the vendor being unreachable and
  * anything else (a bug) is `other`.
  */
-function vendorFailureOf(error: unknown): QueryEmbedVendorFailure {
+export function vendorFailureOf(error: unknown): QueryEmbedVendorFailure {
   const status = statusOf(error);
   if (status === 429) return "limited";
   if (status === 401 || status === 403) return "auth";
