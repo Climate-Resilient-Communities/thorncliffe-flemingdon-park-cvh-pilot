@@ -4,7 +4,7 @@
 // fake clock. The count over spend_event is in test/db/search.db.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SpendEventInput } from "@/modules/spend";
-import { createQuestionTranslator, type Translator } from "@/modules/translation";
+import { TRANSLATE_FIRST_OFF, createQuestionTranslator, type Translator } from "@/modules/translation";
 import { RerankError, type QueryEmbedder, type Reranker } from "./ports";
 import { RERANK_LIMITED_BACKOFF_MS, RERANK_MIN_BUDGET_MS, RERANK_TIMEOUT_MS } from "./rerank";
 import { createSearch, type SearchFailureNote, type SearchObservation, type SearchSnapshot } from "./search";
@@ -120,7 +120,7 @@ describe("the direct route's reranker", () => {
         throw new Error("no store in this test");
       },
       embedder: fakeEmbedder(parts.embedMs),
-      translator: parts.translator ? createQuestionTranslator({ translator: parts.translator, route: { ps: "north-small-translate-09-2026", prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null } }) : null,
+      translator: parts.translator ? createQuestionTranslator({ translator: parts.translator, route: { ps: "north-small-translate-09-2026", prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null, ...TRANSLATE_FIRST_OFF } }) : null,
       snapshot: async () => SNAPSHOT,
       reranker: parts.reranker ?? null,
       rerankMonthlyCalls: parts.monthly,

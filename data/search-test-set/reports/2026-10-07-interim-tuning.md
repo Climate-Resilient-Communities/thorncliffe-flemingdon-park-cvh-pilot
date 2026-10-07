@@ -413,3 +413,85 @@ searches, after which those searches are ranked as in R1b until the month ends. 
 parameters chosen on the questions they are scored on; S03.08's ambassador questions confirm or revise `SEARCH_RERANK_MIN`. The search
 test-set runner (S03.07 production runs, the S03.09 guard) does not rerank yet: its call plan and vendor meter count embedding and
 translation calls only, so its direct-route numbers are R1b's until it is wired with the rerank model's own allowance.
+
+## 10. Translate-first for languages the embedding model reads poorly (2026-10-07)
+
+**Why.** After R2, live search still answered the Tamil "எனக்கு உணவு எங்கே கிடைக்கும்?" (where can I get food?) with four
+daycares and a clinic (every similarity about 0.11; no food provider in the embedding's top 20, so the reranker cannot find one),
+and the Tagalog "Saan ako makakakuha ng pagkain?" with EarlyON, the TNO Food Collaborative, a daycare, a mosque and TNO. The
+question: does translating such a question to English first (the S03.05 translated-question leg, as for Pashto, Dari and Urdu:
+both legs, best similarity per provider, the English keyword boost) beat embedding it as typed, with #158's reranker?
+
+**How (offline, no production change).** Each test question the use case's detector reads confidently as one of these languages
+was translated to English through production's own code: `cohereTranslator` (system prompt with the source language named,
+temperature 0, 200 tokens), `normaliseTranslation` and `checkTranslation` (English, not too long). The model production routes a
+native-script language to for `ur` is North Small Translate; on the experiment key (key 1, never production's) it answered HTTP 429
+from the first call (its 1,000 calls a month on that key are spent), so **every translation was made by Command A Translate**
+(`command-a-translate-08-2025`), which is also the model the defaults below route to. Romanized Tamil, Punjabi and Tagalog questions
+already take the leg (`romanized_or_mixed`, Command A Translate) and are the same in both arms. The translations were embedded
+(`embed-v4.0`, `search_query`, one batched call) and every question was replayed through the real `createSearch` with the cached
+vectors and #158's cached rerank answers (as sections 8 and 9), arm (a) as on main and arm (b) with the language as a
+translated-question kind. Arm (a) reproduces section 9 exactly (all 193: hit@3 75.6, shown 80.2, no-match 81.0, emergency 68.4).
+
+Vendor calls (key 1): 116 translation calls, of which 25 answered (all Command A Translate) and 91 were refused with 429 (North
+Small Translate every time; Command A Translate for about a minute after 19 calls: its per-minute limit, it answered again after a
+pause); 1 embedding call (87 texts, 884 tokens); no rerank call.
+
+**Decision rule (product owner):** translate-first for a language when (b) raises hit@3 by at least 10 points with no worse
+no-match accuracy.
+
+| lang | n | arm | hit@3 | shown | no-match ok | emergency | false-pos | qualifies |
+|---|---|---|---|---|---|---|---|---|
+| ta | 10 | (a) main (#158) | 55.6 | 55.6 | 0.0 | 0.0 | 10.0 | |
+| ta | 10 | **(b) translate-first** | **88.9** | **88.9** | 0.0 | **100.0** | 10.0 | **yes** (+33.3) |
+| pa | 11 | (a) main (#158) | 70.0 | 100.0 | 0.0 | 100.0 | 18.2 | |
+| pa | 11 | **(b) translate-first** | **80.0** | 100.0 | 0.0 | 100.0 | 18.2 | **yes** (+10.0) |
+| tl | 11 | (a) main (#158) | 70.0 | 70.0 | 100.0 | 0.0 | 0.0 | |
+| tl | 11 | (b) translate-first | 80.0 | 90.0 | **0.0** | 0.0 | 18.2 | no: no-match worse |
+
+Each language has 10 answerable questions and one no-match question, so one question is 10 points of hit@3 and 100 of no-match.
+ta gains ta-01 (free dental), ta-03 (free food: M008, M071, M007 instead of daycares), ta-06 (rent) and the emergency flag on ta-07
+(fire); pa gains pa-01 (free food for children); the no-match questions (ta-10 car repair, pa-10) show something in both arms. tl
+gains tl-11 (Catholic church) and loses its no-match question: "saan pwede umupa ng trak para sa paglipat ng bahay" (rent a truck
+for moving) becomes "where can you rent a truck for moving house", and the hybrid route shows four providers for it (M092 at 0.35),
+where the direct route showed none. Turning tl on would also translate three questions in other languages that the detector reads
+as Tagalog (prs-11, el-03, bn-05 — all three became hits).
+
+**#158's rerank on top of translation** does not help: putting the direct leg's reranked results first and filling with arm (b)'s
+gives ta 88.9, pa 70.0 (worse), tl 80.0; arm (b)'s results filled with the reranked ones gives exactly arm (b). So a translated
+question is not reranked (the hybrid route, as for Pashto); a question whose translation fails, is refused at its limit or is
+rejected takes today's route, the direct leg reranked.
+
+The live examples, as arm (b) answers them (the three translate to "Where can I get food?"): M008, M071, M075, M007, M010, food
+providers all (0.359 to 0.325). Production today (arm a, with the reranker): Tamil four daycares and a clinic, Tagalog EarlyON, TNO Food
+Collaborative, a daycare, a mosque, TNO; Punjabi already food providers.
+
+All 193 questions with Tamil and Punjabi translate-first (as built): hit@3 75.6 → 77.9, shown 80.2 → 82.0, no-match 81.0 (unchanged),
+emergency flag 68.4 → 73.7, false positives 4.7 (unchanged); every other language unchanged.
+
+**Nice to know (not built; hand-written translations, an upper bound).** With the translation budget spent, the other
+languages' questions were translated by hand (as the experiment did for the original leg, section 1) and replayed the same way:
+
+| lang | n | hit@3 (a → b) | no-match ok (a → b) | emergency (a → b) | false-pos (a → b) |
+|---|---|---|---|---|---|
+| bn | 11 | 60.0 → 100.0 | 100 → 100 | 100 → 100 | 0 → 0 |
+| gu | 10 | 88.9 → 100.0 | 100 → 100 | 100 → 100 | 0 → 0 |
+| el | 10 | 55.6 → 77.8 | 100 → 100 | 0 → 0 | 10 → 0 |
+| zh | 10 | 77.8 → 100.0 | 100 → 100 | 100 → 100 | 10 → 0 |
+| sk | 10 | 66.7 → 100.0 | 100 → 0 | 100 → 100 | 0 → 10 |
+| hi | 11 | 100.0 → 100.0 | 100 → 100 | 100 → 100 | 0 → 0 |
+| es | 12 | 72.7 → 63.6 | 100 → 0 | 50 → 50 | 0 → 16.7 |
+| fr | 10 | 75.0 → 75.0 | 100 → 50 | 0 → 0 | 0 → 20 |
+
+bn, gu, el and zh look like candidates; they need a run with the real model (a month with translation calls to spare on a key that
+is not production's) before they are switched on, which is one `SEARCH_QUESTION_ROUTE` entry each (`bn=command-a-translate-08-2025`).
+es and fr should stay direct: the embedding reads them well and translation costs no-match accuracy.
+
+**As built.** The translate-first languages are kinds of the translated-question leg (`QUESTION_SOURCES` / `SEARCH_QUESTION_ROUTE`:
+tl, gu, ta, el, sk, bn, hi, pa, zh, es, fr), translated only where the route names a model: by default `ta` and `pa` with Command A
+Translate, falling back to North Small Translate at a 429 (`SEARCH_QUESTION_FALLBACK`); the others are off. A failed, refused,
+rejected or timed-out translation leaves the question on the direct route with the reranker, as before; the translation is counted
+in `spend_event` (kind `translate`) like the other kinds' and in the S03.07 runner's call plan. **Interim**, as the rest: machine-drafted
+questions, ten per language. Cost: about 1 Command A Translate call per Tamil or Punjabi search, against the model's ~1,000 a month
+on the production key, shared with the romanized and ambiguous Arabic-script questions (`SEARCH_TRANSLATE_MONTHLY_CALLS` warns ops at
+80%).

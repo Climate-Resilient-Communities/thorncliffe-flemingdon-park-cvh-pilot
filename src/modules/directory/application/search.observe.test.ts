@@ -3,14 +3,14 @@
 // leg, so the call plan counts what the run will do) and `currentSearchFacts` (the release, model and threshold a run measures).
 // With fakes only: nothing here waits for real or reaches a vendor.
 import { describe, expect, it } from "vitest";
-import { createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
+import { TRANSLATE_FIRST_OFF, createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
 import { RELEASE_V, releaseDb, releaseRow } from "../../../../test/helpers/searchRelease";
 import { detect } from "../domain/questionLanguage";
 import type { QueryEmbedder } from "./ports";
 import { SearchFailure, createSearch, currentSearchFacts, questionLegSource, questionSourceOf, type SearchObservation, type SearchSnapshot } from "./search";
 
 const MODEL = "embed-v4.0";
-const ROUTE: QuestionRoute = { ps: "north-small", prs: "north-small", ur: "north-small", romanized_or_mixed: "command-a", ambiguous_arabic: "command-a" };
+const ROUTE: QuestionRoute = { ps: "north-small", prs: "north-small", ur: "north-small", romanized_or_mixed: "command-a", ambiguous_arabic: "command-a", ...TRANSLATE_FIRST_OFF };
 
 // P1, P2 (an emergency provider) and P3, one axis each; the fourth axis is "nothing in particular".
 const SNAPSHOT: SearchSnapshot = {

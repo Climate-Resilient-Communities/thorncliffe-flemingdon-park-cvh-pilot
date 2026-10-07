@@ -8,7 +8,9 @@
 //    never change), checked against the hash the release recorded.
 //  - The direct leg embeds the question as typed with the snapshot's model as a query (`input_type: search_query`).
 //  - The translated-question leg (S03.05): for Pashto, Dari, native-script Urdu, romanized or mixed (but not one or two plainly
-//    English words), and ambiguous Arabic-script questions, the `translation` module translates the question to English
+//    English words), and ambiguous Arabic-script questions, and (translate-first, 2026-10-07) a question confidently in another
+//    launch language whose kind `search_question_route` names a model for (by default Tamil and Punjabi: the embedding reads
+//    them poorly), the `translation` module translates the question to English
 //    with the model `search_question_route` names and checks that it is English; the translation is then embedded with the
 //    snapshot's model. The translation starts with the request, in parallel with the snapshot read and the direct leg (only
 //    its embedding waits for the snapshot). When the routed model is past a vendor limit (HTTP 429), the kind of question has a
@@ -26,7 +28,9 @@
 //    best similarity reaches the direct floor, less those more than the direct gap below it. When the direct leg fails but
 //    the translated one completed, the results come from the translated leg alone.
 //  - The reranker of the direct route (arm R2 of the interim tuning; SEARCH_RERANK, on unless `off`, and only where a Cohere key
-//    is configured): a question in another language that needs no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…)
+//    is configured): a question in another language that needs no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…;
+//    a translate-first language whose leg is off, or failed, timed out or was rejected: the search then takes today's route; when
+//    its leg completed the question is on the hybrid route and is not reranked, the measurement showed no gain on top)
 //    whose direct leg completed has its 20 best providers by similarity reranked against their English search texts (the texts
 //    their vectors were made from, rebuilt from the release's English listing) with `rerank-v3.5`: the results are the top 5 with a
 //    relevance of at least SEARCH_RERANK_MIN (0.05), best relevance first, none when no provider reaches it. Each result's `score`
@@ -74,7 +78,9 @@ import type { SearchV1 } from "@/contracts/searchTestSet";
 import { recordSpendEvent, type SpendEventInput, type SpendPurpose } from "@/modules/spend";
 import {
   QuestionTranslationError,
+  TRANSLATE_FIRST_SOURCES,
   estimateTranslationTokens,
+  isTranslateFirstSource,
   isLimitFailure,
   questionTranslationSpend,
   sourceLanguage,
@@ -625,6 +631,10 @@ export function questionSourceOf(detected: QuestionLanguage, q?: string): Questi
   if (detected.confidence === "romanized_or_mixed") return q !== undefined && isClearlyEnglish(q) ? null : detected.confidence;
   if (detected.confidence === "ambiguous_arabic") return detected.confidence;
   if (detected.confidence === "confident" && (detected.lang === "ps" || detected.lang === "prs" || detected.lang === "ur")) return detected.lang;
+  // Translate-first: a question confidently in another launch language is a kind of its own; it is translated only where the
+  // route names a model for it, and searched directly (and reranked) otherwise.
+  const lang = detected.confidence === "confident" ? detected.lang : null;
+  if (lang !== null && (TRANSLATE_FIRST_SOURCES as readonly string[]).includes(lang)) return lang as QuestionSource;
   return null;
 }
 
@@ -823,7 +833,9 @@ export function createSearch(deps: SearchDeps): SearchService {
     const translating = source !== null && translateModel !== null && translator !== null;
     // The reranker is for a question in another language that needs no translated leg (whether or not the leg is configured):
     // its month's calls are counted now, beside the snapshot and the embedding, so that the count costs the search no time.
-    const mayRerank = reranker !== null && rerankQuota !== null && deps.embedder !== null && questionSourceOf(detected, q) === null && !isEnglishQuestion(detected, q, lang);
+    // A translate-first language is reranked like before when its translated leg is off, fails or is rejected (its route is then direct).
+    const kind = questionSourceOf(detected, q);
+    const mayRerank = reranker !== null && rerankQuota !== null && deps.embedder !== null && (kind === null || isTranslateFirstSource(kind)) && !isEnglishQuestion(detected, q, lang);
     if (mayRerank) rerankQuota.refresh();
 
     // ---- the request snapshot (read in parallel with the translation)

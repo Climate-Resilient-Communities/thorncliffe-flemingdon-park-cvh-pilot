@@ -10,16 +10,35 @@
 import { eld } from "eld/medium";
 import type { LangCode } from "@/contracts/lang";
 
-/** The questions that also search through English: Pashto, Dari, native-script Urdu, romanized or mixed, and ambiguous Arabic script. */
-export const QUESTION_SOURCES = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic"] as const;
+/**
+ * The launch languages (other than English) that are otherwise searched directly, by the multilingual embedding of the question
+ * as typed, and that may also be searched through English (translate-first): a kind of question each, translated only where
+ * `search_question_route` names a model for it (by default only those the 2026-10-07 measurement showed it helps).
+ */
+export const TRANSLATE_FIRST_SOURCES = ["tl", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"] as const;
+export type TranslateFirstSource = (typeof TRANSLATE_FIRST_SOURCES)[number];
+
+/**
+ * The questions that may also search through English: Pashto, Dari, native-script Urdu, romanized or mixed, ambiguous Arabic
+ * script, and (translate-first) a question confidently in one of the other launch languages.
+ */
+export const QUESTION_SOURCES = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic", ...TRANSLATE_FIRST_SOURCES] as const;
 export type QuestionSource = (typeof QUESTION_SOURCES)[number];
+
+/** Every translate-first language switched off: the route of a deployment that translates none of them. */
+export const TRANSLATE_FIRST_OFF: Readonly<Record<TranslateFirstSource, null>> = Object.fromEntries(TRANSLATE_FIRST_SOURCES.map((source) => [source, null])) as Record<TranslateFirstSource, null>;
+
+/** Whether a kind of question is a translate-first language (a language the direct route, and its reranker, serve when it is not translated). */
+export function isTranslateFirstSource(source: QuestionSource): source is TranslateFirstSource {
+  return (TRANSLATE_FIRST_SOURCES as readonly string[]).includes(source);
+}
 
 /** `search_question_route`: the model that translates each kind of question to English; null switches the leg off for it. */
 export type QuestionRoute = Readonly<Record<QuestionSource, string | null>>;
 
 /** The language a question of this kind is translated from, or null when the model has to tell (romanized, mixed, ambiguous). */
 export function sourceLanguage(source: QuestionSource): LangCode | null {
-  return source === "ps" || source === "prs" || source === "ur" ? source : null;
+  return source === "romanized_or_mixed" || source === "ambiguous_arabic" ? null : source;
 }
 
 /** The kind of usage a question's translation is counted under in spend_event. */

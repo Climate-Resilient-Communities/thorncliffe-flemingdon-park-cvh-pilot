@@ -646,6 +646,10 @@ describe("Cohere and the search settings (S03.02)", () => {
         ur: "north-small-translate-09-2026",
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
+        // Translate-first (2026-10-07 measurement): Tamil and Punjabi only.
+        ta: "command-a-translate-08-2025",
+        pa: "command-a-translate-08-2025",
+        tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
       },
       questionFallback: {
         ps: null,
@@ -653,6 +657,9 @@ describe("Cohere and the search settings (S03.02)", () => {
         ur: "command-a-translate-08-2025",
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
+        ta: "north-small-translate-09-2026",
+        pa: "north-small-translate-09-2026",
+        tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
       },
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
@@ -704,7 +711,16 @@ describe("Cohere and the search settings (S03.02)", () => {
 
   it("defaults the fallback per kind of question (owner decision 45): Dari and Urdu to Command A Translate, Pashto off, and the kinds routed to Command A have it only if their route changes", () => {
     const fallback = parseEnv(production).search.questionFallback;
-    expect(fallback).toEqual({ ps: null, prs: "command-a-translate-08-2025", ur: "command-a-translate-08-2025", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: "command-a-translate-08-2025" });
+    expect(fallback).toEqual({
+      ps: null,
+      prs: "command-a-translate-08-2025",
+      ur: "command-a-translate-08-2025",
+      romanized_or_mixed: "command-a-translate-08-2025",
+      ambiguous_arabic: "command-a-translate-08-2025",
+      ta: "north-small-translate-09-2026",
+      pa: "north-small-translate-09-2026",
+      tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
+    });
     // Never the routed model itself: where the route already is the fallback there is nothing to retry with (the translator skips it).
     for (const kind of ["romanized_or_mixed", "ambiguous_arabic"] as const) expect(DEFAULT_QUESTION_ROUTE[kind]).toBe(fallback[kind]);
     for (const kind of ["prs", "ur"] as const) expect(DEFAULT_QUESTION_ROUTE[kind]).not.toBe(fallback[kind]);
@@ -717,9 +733,12 @@ describe("Cohere and the search settings (S03.02)", () => {
       ur: null,
       romanized_or_mixed: "command-a-translate-08-2025",
       ambiguous_arabic: "command-a-translate-08-2025",
+      ta: "north-small-translate-09-2026",
+      pa: "north-small-translate-09-2026",
+      tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
     });
     expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "prs=command-r-translate-01-2027" }).search.questionFallback.prs).toBe("command-r-translate-01-2027");
-    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionFallback).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null });
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionFallback).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null, ta: null, pa: null, tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null });
     // The route is its own setting: changing one leaves the other alone.
     expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionRoute).toEqual(DEFAULT_QUESTION_ROUTE);
     expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionFallback).toEqual(DEFAULT_QUESTION_FALLBACK);
@@ -755,8 +774,14 @@ describe("Cohere and the search settings (S03.02)", () => {
       ur: "north-small-translate-09-2026",
       romanized_or_mixed: "command-a-translate-08-2025",
       ambiguous_arabic: null,
+      ta: "command-a-translate-08-2025",
+      pa: "command-a-translate-08-2025",
+      tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
     });
-    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionRoute).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null });
+    // A translate-first language is switched on or off like any kind.
+    const route = parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "tl=command-a-translate-08-2025,ta=off" }).search.questionRoute;
+    expect([route.tl, route.ta, route.pa]).toEqual(["command-a-translate-08-2025", null, "command-a-translate-08-2025"]);
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionRoute).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null, ta: null, pa: null, tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null });
   });
 
   it("routes native-script Urdu to the translated-question leg by default (owner decision 40), and lets config change or switch it off", () => {

@@ -34,7 +34,7 @@ import { recordOpsEvent } from "@/modules/ops";
 import { recordSearchNote } from "../../src/app/searchOps";
 import { translateQuotaWatch } from "../../src/app/translateQuota";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
-import { TranslateError, cohereTranslator, createQuestionTranslator, type CohereChatClient, type QuestionRoute, type Translator } from "@/modules/translation";
+import { TRANSLATE_FIRST_OFF, TranslateError, cohereTranslator, createQuestionTranslator, type CohereChatClient, type QuestionRoute, type Translator } from "@/modules/translation";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
 import { createDb, type Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
@@ -50,6 +50,7 @@ const ROUTE: QuestionRoute = {
   ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_OFF,
 };
 /** A Pashto question (Pashto letters): the embedding model makes nothing of it, its English translation finds the legal clinic. */
 const PASHTO = "زه وړیا حقوقي مشوره غواړم";
@@ -810,7 +811,7 @@ describe("search", () => {
           return { text: "I need a lawyer", inputTokens: 30, outputTokens: 6 };
         },
       };
-      const fallback: QuestionRoute = { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+      const fallback: QuestionRoute = { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF };
 
       it("writes the model that hit its limit and the model that rescued the question into ops_event.detail, through the app's own mapping, and bills only the one that answered", async () => {
         await publish();

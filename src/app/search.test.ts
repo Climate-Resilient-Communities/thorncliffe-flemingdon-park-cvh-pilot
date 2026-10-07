@@ -3,6 +3,7 @@
 // the database and Next are mocked; nothing here reaches a network.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SearchDeps } from "@/modules/directory";
+import { TRANSLATE_FIRST_OFF } from "@/modules/translation";
 import { DEFAULT_SEARCH_SETTINGS, type SearchSettings } from "@/platform/config/env";
 
 const NORTH = "north-small-translate-09-2026";
@@ -71,7 +72,7 @@ describe("search composition (S03.05)", () => {
   });
 
   it("gives the test-set engine no fallback at all, whatever the settings say, so a run measures the routed models and not whichever answered", async () => {
-    const { app, deps } = await load({ questionFallback: { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND } });
+    const { app, deps } = await load({ questionFallback: { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF } });
 
     app.searchTestSetEngine();
 
