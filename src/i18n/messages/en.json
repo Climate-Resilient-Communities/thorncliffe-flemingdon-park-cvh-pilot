@@ -6296,6 +6296,7 @@
     "onItsWay": "If this number can get texts, a message is on its way.",
     "expect": "Reply YES to that message within 48 hours to start getting alerts. Until you reply YES, you get no alerts by text.",
     "howChange": "To change your building, floor or language later, reply 1 or 2 to any text from the Hub.",
+    "smsTerms": "CVH text alerts from the Thorncliffe Park Community Hub. Message frequency varies. Msg & data rates may apply. Reply HELP for help or STOP to stop.",
     "startHelp": "No text within 5 minutes? Text START to {number}, then sign up again.",
     "startHelpNoNumber": "No text within 5 minutes? Text START to the number our texts come from, then sign up again.",
     "error": {
@@ -6314,7 +6315,7 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Reply YES to get CVH alerts. Reply STOP to stop.",
+    "confirmation": "CVH alerts from the Thorncliffe Park Community Hub: reply YES to confirm. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to stop.",
     "welcome": "You are signed up for CVH alerts. Hub staff check every message, so alerts may not be sent overnight. Reply 1 to change your building or floor, 2 to change your language, 3 to withdraw a check-in request, 0 to stop and delete your subscription. Reply STOP to stop.",
     "alreadySignedUp": "You are already signed up for CVH alerts.",
     "deletePrompt": "Reply 0 again within 10 minutes to delete your subscription. You will get no more texts.",

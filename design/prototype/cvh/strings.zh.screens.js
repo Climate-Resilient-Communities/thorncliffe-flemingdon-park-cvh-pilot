@@ -1417,7 +1417,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。"}});
+  m(t, {"smsTexts": {"confirmation": "Thorncliffe Park Community Hub 的 CVH 警报：回复 YES 确认。信息频率不定。可能产生短信和数据费用。回复 HELP 求助，回复 STOP 停止。"}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 1 更改楼宇或楼层，回复 2 更改语言，回复 3 撤回探望申请，回复 0 停止并删除订阅。回复 STOP 停止。", "alreadySignedUp": "您已订阅 CVH 警报。", "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。", "signupInfo": "如需通过短信接收 CVH 警报，请在此订阅：{link} 回复 STOP 停止。"}, "smsKeywords": {"yes": "是, 是的, 好"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1544,4 +1544,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["1","2","3","4","5","6","7","8","9","10","11","12"],"dayMonth":"{month}月{day}日","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH试点即将结束。如需继续接收提醒，请回复YES。如在{date}结束前未回复，您的号码将被删除。", "reconsentKept": "谢谢。您将继续收到CVH提醒。", "pilotEnded": "CVH试点已结束；您的号码未被保留。", "signupsPaused": "试点结束期间，CVH短信登记已暂停。"}, "signup": {"error": {"signups_paused": "试点结束期间，登记已暂停。"}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "来自 Thorncliffe Park Community Hub 的 CVH 短信警报。信息频率不定。可能产生短信和数据费用。回复 HELP 获取帮助，回复 STOP 停止。"}});
 })();

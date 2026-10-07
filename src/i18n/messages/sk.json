@@ -6296,6 +6296,7 @@
     "onItsWay": "Ak toto číslo môže prijímať SMS, správa je na ceste.",
     "expect": "Odpovedzte na túto správu YES do 48 hodín a začnete dostávať upozornenia. Kým neodpoviete YES, nedostanete cez SMS žiadne upozornenia.",
     "howChange": "Ak budete chcieť neskôr zmeniť budovu, poschodie alebo jazyk, odpovedzte 1 alebo 2 na ktorúkoľvek SMS od Hubu.",
+    "smsTerms": "Textové upozornenia CVH od Thorncliffe Park Community Hub. Počet správ sa mení. Môžu sa účtovať poplatky za správy a dáta. Odpovedzte HELP pre pomoc alebo STOP pre zrušenie.",
     "startHelp": "Neprišla SMS do 5 minút? Pošlite START na {number} a potom sa prihláste znova.",
     "startHelpNoNumber": "Neprišla SMS do 5 minút? Pošlite START na číslo, z ktorého chodia naše SMS, a potom sa prihláste znova.",
     "error": {
@@ -6314,7 +6315,7 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Odpovedzte YES a budete dostávať upozornenia CVH. Odpovedzte STOP a správy skončia.",
+    "confirmation": "Upozornenia CVH: potvrďte odpoveďou YES. Počet správ sa mení. Môžu sa účtovať poplatky za správy a dáta. HELP pomoc, STOP koniec.",
     "welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 1 na zmenu budovy alebo poschodia, 2 na zmenu jazyka, 3 na zrušenie žiadosti o kontrolu, 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.",
     "alreadySignedUp": "Na upozornenia CVH ste už prihlásení.",
     "deletePrompt": "Pošlite znova 0 do 10 minút a odber sa vymaže. Potom už nič nepríde.",

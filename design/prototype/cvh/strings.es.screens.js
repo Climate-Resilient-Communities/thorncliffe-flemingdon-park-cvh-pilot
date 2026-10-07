@@ -1417,7 +1417,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas."}});
+  m(t, {"smsTexts": {"confirmation": "Alertas CVH del Thorncliffe Park Community Hub: responde YES para confirmar. Frecuencia de mensajes variable. Pueden aplicarse tarifas de mensajes y datos. HELP: ayuda. STOP: parar."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "Ya está suscrito a las alertas del CVH. El personal del Hub revisa cada mensaje, así que es posible que las alertas no se envíen de noche. Responda 1 para cambiar su edificio o piso, 2 para cambiar su idioma, 3 para retirar su pedido de chequeo de bienestar y 0 para dejar de recibir mensajes y borrar su suscripción. Responda STOP para dejar de recibirlas.", "alreadySignedUp": "Ya está suscrito a las alertas del CVH.", "deletePrompt": "Envíe 0 otra vez en 10 minutos para borrarse. No recibirá más textos.", "signupInfo": "Para recibir alertas del CVH por mensaje de texto, suscríbase aquí: {link} Responda STOP para dejar de recibirlas."}, "smsKeywords": {"yes": "sí, si"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1544,4 +1544,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],"dayMonth":"{day} de {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "El proyecto piloto CVH termina. Responda YES para seguir recibiendo alertas. Si no responde hasta el final del {date}, borraremos sus datos.", "reconsentKept": "Gracias. Seguirá recibiendo las alertas de CVH.", "pilotEnded": "El proyecto piloto CVH terminó; no se guardó su número.", "signupsPaused": "Las inscripciones a CVH están en pausa mientras termina el piloto."}, "signup": {"error": {"signups_paused": "Las inscripciones están en pausa mientras termina el proyecto piloto."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "Alertas CVH por texto del Thorncliffe Park Community Hub. La frecuencia de los mensajes varía. Pueden aplicarse tarifas de mensajes y datos. Responde HELP para recibir ayuda o STOP para dejar de recibirlas."}});
 })();

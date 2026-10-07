@@ -2205,6 +2205,7 @@
     onItsWay: 'If this number can get texts, a message is on its way.',
     expect: 'Reply YES to that message within 48 hours to start getting alerts. Until you reply YES, you get no alerts by text.',
     howChange: 'To change your building, floor or language later, reply 1 or 2 to any text from the Hub.',
+    smsTerms: 'CVH text alerts from the Thorncliffe Park Community Hub. Message frequency varies. Msg & data rates may apply. Reply HELP for help or STOP to stop.',
     startHelp: 'No text within 5 minutes? Text START to {number}, then sign up again.',
     startHelpNoNumber: 'No text within 5 minutes? Text START to the number our texts come from, then sign up again.',
     error: {
@@ -2218,7 +2219,9 @@
       rate_limited: 'Too many sign-ups came from this connection. Try again in an hour.',
       signup_unavailable: 'Text sign-up is not available just now. Try again later.',
       network: 'We could not reach the CVH. Check your connection and try again.' } } });
-  m(en, { smsTexts: { confirmation: 'Reply YES to get CVH alerts. Reply STOP to stop.' } });
+  /* The confirmation and smsTerms carry what carriers' toll-free verification asks of an opt-in: the program, how often, that rates may
+     apply, and HELP and STOP (HELP is answered by Twilio's Advanced Opt-Out, AD-9). */
+  m(en, { smsTexts: { confirmation: 'CVH alerts from the Thorncliffe Park Community Hub: reply YES to confirm. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to stop.' } });
   /* S07.04: the welcome text after YES, the inbound router's replies and the words for yes. S07.05 put replies 1, 2 and 3 back into the
      welcome when it shipped the menus. The keywords residents text (YES, STOP) and "CVH" stay in English in every language. smsKeywords.yes
      lists, comma-separated, the words for yes a resident may reply with besides YES and Y (it is read, never sent). deletePrompt is a prompt:

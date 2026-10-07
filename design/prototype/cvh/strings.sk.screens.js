@@ -1417,7 +1417,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "Odpovedzte YES a budete dostávať upozornenia CVH. Odpovedzte STOP a správy skončia."}});
+  m(t, {"smsTexts": {"confirmation": "Upozornenia CVH: potvrďte odpoveďou YES. Počet správ sa mení. Môžu sa účtovať poplatky za správy a dáta. HELP pomoc, STOP koniec."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "Ste prihlásení na upozornenia CVH. Pracovníci Hubu kontrolujú každú správu, takže v noci sa upozornenia nemusia posielať. Odpovedzte 1 na zmenu budovy alebo poschodia, 2 na zmenu jazyka, 3 na zrušenie žiadosti o kontrolu, 0 na ukončenie a vymazanie odberu. Odpovedzte STOP a správy skončia.", "alreadySignedUp": "Na upozornenia CVH ste už prihlásení.", "deletePrompt": "Pošlite znova 0 do 10 minút a odber sa vymaže. Potom už nič nepríde.", "signupInfo": "Ak chcete upozornenia CVH v SMS, prihláste sa tu: {link} Odpovedzte STOP a správy skončia."}, "smsKeywords": {"yes": "áno, ano"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1544,4 +1544,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["januára","februára","marca","apríla","mája","júna","júla","augusta","septembra","októbra","novembra","decembra"],"dayMonth":"{day}. {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "Pilot CVH končí. Pre správy YES do {date}, inak číslo zmažeme.", "reconsentKept": "Ďakujeme. Upozornenia CVH budete dostávať aj naďalej.", "pilotEnded": "Pilot CVH sa skončil; vaše číslo sme neuchovali.", "signupsPaused": "Prihlasovanie na SMS CVH je do konca pilotu pozastavené."}, "signup": {"error": {"signups_paused": "Prihlasovanie je do konca pilotu pozastavené."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "Textové upozornenia CVH od Thorncliffe Park Community Hub. Počet správ sa mení. Môžu sa účtovať poplatky za správy a dáta. Odpovedzte HELP pre pomoc alebo STOP pre zrušenie."}});
 })();

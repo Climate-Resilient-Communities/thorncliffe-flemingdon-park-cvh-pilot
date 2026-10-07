@@ -1417,7 +1417,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "CVH எச்சரிக்கைகளைப் பெற YES என்று பதில் அனுப்புங்கள். நிறுத்த STOP என்று பதில் அனுப்புங்கள்."}});
+  m(t, {"smsTexts": {"confirmation": "CVH எச்சரிக்கைகள்: உறுதிசெய்ய YES அனுப்பவும். செய்திகள் எண்ணிக்கை மாறும். செய்தி, டேட்டா கட்டணம் வரலாம். உதவி: HELP, நிறுத்த: STOP."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "CVH எச்சரிக்கைகளுக்குப் பதிவு செய்துவிட்டீர்கள். ஹப் ஊழியர்கள் ஒவ்வொரு செய்தியையும் சரிபார்க்கிறார்கள், எனவே இரவில் எச்சரிக்கைகள் அனுப்பப்படாமல் போகலாம். கட்டடம் அல்லது தளத்தை மாற்ற 1, மொழியை மாற்ற 2, நலம் விசாரிப்புக் கோரிக்கையைத் திரும்பப் பெற 3, நிறுத்தி உங்கள் சந்தாவை நீக்க 0 என்று பதில் அனுப்புங்கள். நிறுத்த STOP என்று பதில் அனுப்புங்கள்.", "alreadySignedUp": "நீங்கள் ஏற்கெனவே CVH எச்சரிக்கைகளுக்குப் பதிவு செய்துள்ளீர்கள்.", "deletePrompt": "நீக்க 10 நிமிடத்தில் மீண்டும் 0 அனுப்புங்கள். பிறகு செய்தி வராது.", "signupInfo": "குறுஞ்செய்தியில் CVH எச்சரிக்கைகளைப் பெற இங்கே பதிவு செய்யுங்கள்: {link} நிறுத்த STOP என்று பதில் அனுப்புங்கள்."}, "smsKeywords": {"yes": "ஆம், ஆமாம்"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1544,4 +1544,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["ஜன.","பிப்.","மார்.","ஏப்.","மே","ஜூன்","ஜூலை","ஆக.","செப்.","அக்.","நவ.","டிச."],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH சோதனை முடிகிறது. தொடர {date}க்குள் YES; இல்லையேல் எண் நீக்கம்.", "reconsentKept": "நன்றி. CVH எச்சரிக்கைகள் தொடர்ந்து வரும்.", "pilotEnded": "CVH சோதனை முடிந்தது; உங்கள் எண் வைக்கப்படவில்லை.", "signupsPaused": "சோதனை முடியும்வரை CVH பதிவு நிறுத்தப்பட்டுள்ளது."}, "signup": {"error": {"signups_paused": "சோதனை முடியும்வரை பதிவு நிறுத்தப்பட்டுள்ளது."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "Thorncliffe Park Community Hub வழங்கும் CVH குறுஞ்செய்தி எச்சரிக்கைகள். செய்திகளின் எண்ணிக்கை மாறும். செய்தி, டேட்டா கட்டணம் வரலாம். உதவிக்கு HELP, நிறுத்த STOP என பதிலளிக்கவும்."}});
 })();

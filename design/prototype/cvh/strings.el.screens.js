@@ -1393,7 +1393,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "Απαντήστε YES για ειδοποιήσεις CVH. Απαντήστε STOP για διακοπή."}});
+  m(t, {"smsTexts": {"confirmation": "Ειδοποιήσεις CVH: απαντήστε YES για επιβεβαίωση. Η συχνότητα ποικίλλει. Πιθανές χρεώσεις SMS/δεδομένων. HELP βοήθεια, STOP διακοπή."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "Εγγραφήκατε στις ειδοποιήσεις CVH. Το προσωπικό του Hub ελέγχει κάθε μήνυμα, οπότε οι ειδοποιήσεις μπορεί να μη σταλούν τη νύχτα. Απαντήστε 1 για αλλαγή κτιρίου ή ορόφου, 2 για αλλαγή γλώσσας, 3 για ακύρωση του αιτήματος να δουν αν είστε καλά, 0 για διακοπή και διαγραφή της συνδρομής σας. Απαντήστε STOP για διακοπή.", "alreadySignedUp": "Είστε ήδη εγγεγραμμένοι στις ειδοποιήσεις CVH.", "deletePrompt": "Στείλτε ξανά 0 σε 10 λεπτά για διαγραφή. Δεν θα λάβετε άλλα μηνύματα.", "signupInfo": "Για ειδοποιήσεις CVH με μήνυμα, εγγραφείτε εδώ: {link} Απαντήστε STOP για διακοπή."}, "smsKeywords": {"yes": "ναι, nai"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1520,4 +1520,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["Ιαν","Φεβ","Μαρ","Απρ","Μαΐ","Ιουν","Ιουλ","Αυγ","Σεπ","Οκτ","Νοε","Δεκ"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "Λήξη πιλοτικού CVH. Στείλτε YES έως {date}, αλλιώς διαγραφή αριθμού.", "reconsentKept": "Ευχαριστούμε. Θα συνεχίσετε να λαμβάνετε ειδοποιήσεις CVH.", "pilotEnded": "Το πιλοτικό CVH έληξε· ο αριθμός σας δεν κρατήθηκε.", "signupsPaused": "Οι εγγραφές CVH έχουν ανασταλεί έως τη λήξη του πιλοτικού."}, "signup": {"error": {"signups_paused": "Οι εγγραφές έχουν ανασταλεί έως τη λήξη του πιλοτικού."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "Ειδοποιήσεις CVH με SMS από το Thorncliffe Park Community Hub. Η συχνότητα των μηνυμάτων ποικίλλει. Ενδέχεται να ισχύουν χρεώσεις μηνυμάτων και δεδομένων. Απαντήστε HELP για βοήθεια ή STOP για διακοπή."}});
 })();

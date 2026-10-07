@@ -305,12 +305,16 @@ describe("the web sign-up", () => {
 
 describe("the confirmation text", () => {
   it("is the catalog's text in every launch language, keeping YES, STOP and CVH in English, normalised and counted", () => {
-    expect(confirmationText("en")).toEqual({ body: "Reply YES to get CVH alerts. Reply STOP to stop.", segments: 1 });
+    expect(confirmationText("en")).toEqual({
+      body: "CVH alerts from the Thorncliffe Park Community Hub: reply YES to confirm. Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to stop.",
+      segments: 2,
+    });
     for (const lang of LAUNCH_CODES) {
       const { body, segments } = confirmationText(lang);
       expect(body, lang).toMatch(/YES/);
       expect(body, lang).toMatch(/STOP/);
       expect(body, lang).toMatch(/CVH/);
+      expect(body, lang).toMatch(/HELP/);
       expect(body.startsWith("[EN]"), lang).toBe(false);
       expect(segments, lang).toBeGreaterThanOrEqual(1);
       expect(segments, lang).toBeLessThanOrEqual(2);

@@ -551,6 +551,9 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
             <ResidentText as="p" className="choice-hint">
               {r05("whatYouGet")}
             </ResidentText>
+            <ResidentText as="p" className="choice-hint" testId="signup-sms-terms">
+              {t("smsTerms")}
+            </ResidentText>
           </Stack>
 
           <button type="submit" className="choice-btn choice-btn--primary tap signup-send" disabled={status === "sending"} data-testid="signup-send">
