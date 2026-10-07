@@ -148,8 +148,8 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        Urdu, owner decision 40),
  *                                                        command-a-translate-08-2025 for romanized_or_mixed and
  *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
- *                                                        Readiness) and for ta and pa (translate-first, 2026-10-07
- *                                                        measurement); off for the other translate-first languages (they
+ *                                                        Readiness) and for ta, pa, bn, el and zh (translate-first,
+ *                                                        2026-10-07 measurements); off for the other translate-first languages (they
  *                                                        are searched directly, with the reranker, as when a translation
  *                                                        fails). It applies only where COHERE_API_KEY is set
  * SEARCH_QUESTION_FALLBACK
@@ -163,10 +163,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        romanized_or_mixed and ambiguous_arabic (for the last two it only
  *                                                        applies if their route is changed: the routed model is that model),
  *                                                        off for ps (Command A Translate turned Pashto into Dari; S03.07 decides);
- *                                                        off for the translate-first languages (ta and pa included: North
+ *                                                        off for the translate-first languages (ta, pa, bn, el, zh included: North
  *                                                        Small Translate's month is alert translation's).
  * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS
- *                      server   optional                 a whole number (default 600): a translate-first question (ta, pa…) is
+ *                      server   optional                 a whole number (default 600): a translate-first question (ta, pa, bn, el, zh) is
  *                                                        translated only while its model's translate calls this calendar
  *                                                        month (America/Toronto, spend_event, every purpose, alert translation
  *                                                        included) are below it; past it the question takes the direct route
@@ -372,20 +372,21 @@ export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS
 /**
  * Translate-first (2026-10-07 measurement, data/search-test-set/reports/2026-10-07-interim-tuning.md, "Translate-first"): the
  * launch languages the multilingual embedding reads poorly enough that translating the question to English first wins clearly
- * (hit@3 up at least 10 points, no-match accuracy no worse): Tamil and Punjabi, with Command A Translate (the model the
- * measurement used) and no fallback model. The others are off (searched directly, with the reranker); a
- * kind can be switched on or off in SEARCH_QUESTION_ROUTE without a code change.
+ * (hit@3 up at least 10 points, no-match accuracy no worse): Tamil and Punjabi (section 10), and Bengali, Greek and Chinese
+ * (section 11, measured with the real model), with Command A Translate (the model the measurements used) and no fallback model.
+ * The others are off (searched directly, with the reranker; Gujarati gained nothing); a kind can be switched on or off in
+ * SEARCH_QUESTION_ROUTE without a code change.
  */
 const TRANSLATE_FIRST_ROUTE = {
   ta: "command-a-translate-08-2025",
   pa: "command-a-translate-08-2025",
+  bn: "command-a-translate-08-2025",
+  el: "command-a-translate-08-2025",
+  zh: "command-a-translate-08-2025",
   tl: null,
   gu: null,
-  el: null,
   sk: null,
-  bn: null,
   hi: null,
-  zh: null,
   es: null,
   fr: null,
 } as const;
