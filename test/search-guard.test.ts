@@ -48,10 +48,10 @@ const BAR = { version: 1, approvedBy: "Hub Director", approvedOn: "2026-10-20", 
 
 describe("the launch bar (the shape agreed with S03.08)", () => {
   it("is no bar yet while nobody has approved it or it holds no minimum, and a missing file is no bar either", () => {
-    expect(parseBar(JSON.stringify({ version: 1, approvedBy: null, approvedOn: null, minimums: null }))).toEqual({ set: false, reason: expect.stringContaining("not been approved") });
-    expect(parseBar(JSON.stringify({ ...BAR, approvedOn: null }))).toMatchObject({ set: false });
-    expect(parseBar(JSON.stringify({ version: 1, approvedBy: "Hub Director", approvedOn: "2026-10-20" }))).toEqual({ set: false, reason: "the launch bar holds no minimum yet" });
-    expect(parseBar(JSON.stringify({ ...BAR, minimums: { hitRate: {} } }))).toMatchObject({ set: false });
+    expect(parseBar(JSON.stringify({ version: 1, approvedBy: null, approvedOn: null, minimums: { hitRate: {}, noMatchAccuracy: 0, emergencyAccuracy: 0 } }))).toEqual({ set: false, reason: expect.stringContaining("not been approved") });
+    expect(() => parseBar(JSON.stringify({ ...BAR, approvedOn: null }))).toThrow(/both set or both null/); // half approved is a broken bar
+    expect(parseBar(JSON.stringify({ ...BAR, minimums: { hitRate: {}, noMatchAccuracy: 0, emergencyAccuracy: 0 } }))).toEqual({ set: false, reason: "the launch bar holds no minimum yet" });
+    expect(parseBar(readFileSync(path.join(__dirname, "..", "data", "search-test-set", "bar.json"), "utf8"))).toMatchObject({ set: false }); // as committed
     expect(readBar(tempDir())).toEqual({ set: false, reason: "there is no data/search-test-set/bar.json yet" });
   });
 
@@ -59,6 +59,10 @@ describe("the launch bar (the shape agreed with S03.08)", () => {
     expect(parseBar(JSON.stringify(BAR))).toEqual({ set: true, bar: { approvedBy: "Hub Director", approvedOn: "2026-10-20", hitRate: { en: 0.8, ur: 0.7 }, noMatchAccuracy: 0.9, emergencyAccuracy: 1 } });
     expect(() => parseBar(JSON.stringify({ ...BAR, minimums: { hitRate: { en: 80 } } }))).toThrow(/not a launch bar/);
     expect(() => parseBar(JSON.stringify({ ...BAR, version: 2 }))).toThrow(/not a launch bar/);
+    // S03.08's exact shape: every key present, no minimums object left out or null.
+    expect(() => parseBar(JSON.stringify({ version: 1, approvedBy: "Hub Director", approvedOn: "2026-10-20" }))).toThrow(/not a launch bar/);
+    expect(() => parseBar(JSON.stringify({ ...BAR, minimums: { hitRate: {} } }))).toThrow(/not a launch bar/);
+    expect(() => parseBar(JSON.stringify({ ...BAR, minimums: null }))).toThrow(/not a launch bar/);
   });
 
   it("takes the evaluation subset from subsets.json when S03.08 has committed it, otherwise from the questions' split, and refuses an id the questions do not hold", () => {
@@ -310,7 +314,7 @@ describe("the guard's command line", () => {
   });
 
   it("with an unapproved bar, passes the same way", async () => {
-    const run = await guard(["--yes"], { bar: { version: 1, approvedBy: null, approvedOn: null, minimums: null } });
+    const run = await guard(["--yes"], { bar: { version: 1, approvedBy: null, approvedOn: null, minimums: { hitRate: {}, noMatchAccuracy: 0, emergencyAccuracy: 0 } } });
     expect(run.code).toBe(0);
     expect(run.deps.makeEngine).not.toHaveBeenCalled();
   });

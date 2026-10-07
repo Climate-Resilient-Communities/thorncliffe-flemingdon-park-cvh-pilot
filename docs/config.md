@@ -593,6 +593,8 @@ production's real search use case (the current release, Cohere's `embed-v4.0`, t
 translated-question leg) and reports the hit rate per language, no-match and emergency accuracy, p50 and p95 per question, the
 vendor usage and a suggested no-match threshold; the suggestion sets nothing. It runs from `main` only, in the `production`
 environment, and the evaluation subset is refused (S03.08's).
+Importing the ambassadors' questions, the coverage check, the evaluation split (`subsets.json`), the launch bar (`bar.json`) and
+`readiness` are described in `data/search-test-set/README.md` (S03.08).
 
 Add to the GitHub `production` environment (repository settings > Environments > production), once:
 
