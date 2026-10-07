@@ -14,7 +14,8 @@
 //                                reads directory_release and spend_event and inserts spend_event. Not the superuser's URL.
 //   COHERE_API_KEY               Cohere's key; held only in production and in the workflow's production environment
 //   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY    the private bucket of the release files
-//   SEARCH_THRESHOLD, SEARCH_EMERGENCY_THRESHOLD, SEARCH_QUESTION_ROUTE, SEARCH_QUESTION_FALLBACK, SEARCH_FALLBACK_MIN_BUDGET_MS
+//   SEARCH_THRESHOLD, SEARCH_EMERGENCY_THRESHOLD, SEARCH_EMERGENCY_TOP_THRESHOLD, SEARCH_KEYWORD_WEIGHT, SEARCH_DIRECT_FLOOR,
+//   SEARCH_DIRECT_GAP, SEARCH_QUESTION_ROUTE, SEARCH_QUESTION_FALLBACK, SEARCH_FALLBACK_MIN_BUDGET_MS
 //                                optional: production's own values of these, resolved by the app's own parser (unset means the
 //                                default, as in production). The threshold the run measures is the release's own, recorded on it.
 //   SEARCH_TEST_MONTHLY_CALLS, SEARCH_TEST_RESERVE_CALLS
@@ -380,6 +381,10 @@ export async function runProduction(argv: string[], env: Variables, root: string
       question_fallback: { ...settings.settings.questionFallback },
       fallback_min_budget_ms: settings.settings.fallbackMinBudgetMs,
       emergency_threshold: settings.settings.emergencyThreshold,
+      emergency_top_threshold: settings.settings.emergencyTopThreshold,
+      keyword_weight: settings.settings.keywordWeight,
+      direct_floor: settings.settings.directFloor,
+      direct_gap: settings.settings.directGap,
     },
     max_calls: options.maxCalls,
     calls_made: budget.made,

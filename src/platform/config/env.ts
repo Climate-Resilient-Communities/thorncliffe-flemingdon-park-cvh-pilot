@@ -105,16 +105,31 @@ import { PRODUCTION_HOST } from "./hosts";
  * SEARCH_EMBED_MODEL   server   optional                 the embedding model a release's search data is made with and every
  *                                                        question is embedded with; default embed-v4.0 (AD-11; a config value
  *                                                        the test set can change)
- * SEARCH_THRESHOLD     server   optional                 the similarity (0 to 1) below which a question has no clear match,
- *                                                        recorded on each release. PROVISIONAL default 0.3: S03.07 chooses it
- *                                                        from the tuning subset; changing it means publishing a new release,
- *                                                        which copies the existing vectors
+ * SEARCH_THRESHOLD     server   optional                 the score (0 to 1) below which a question has no clear match on the
+ *                                                        ranking's hybrid route (English questions and those the translated
+ *                                                        leg answered; the score is the similarity plus the keyword boost),
+ *                                                        recorded on each release. PROVISIONAL default 0.27 (interim tuning,
+ *                                                        2026-10-07, on a mostly machine-drafted test set; S03.08 confirms
+ *                                                        it); changing it means publishing a new release, which copies the
+ *                                                        existing vectors
+ * SEARCH_KEYWORD_WEIGHT
+ *                      server   optional                 the most (0 to 1) the keyword match (BM25 over the providers'
+ *                                                        English text) adds to a similarity on the hybrid route; default
+ *                                                        0.15, 0 switches the boost off. Read at search time
+ * SEARCH_DIRECT_FLOOR, SEARCH_DIRECT_GAP
+ *                      server   optional                 the direct route (other languages, when no translated leg
+ *                                                        completed): results only when the best similarity is at least the
+ *                                                        floor (0 to 1, default 0.24), and none more than the gap (0 to 1,
+ *                                                        default 0.10) below it. Read at search time
  * SEARCH_EMERGENCY_THRESHOLD
  *                      server   optional                 the similarity (0 to 1) at which a provider of an emergency category
  *                                                        among the top 3 of either leg turns `emergency_first` on, even when
- *                                                        no result reaches SEARCH_THRESHOLD (owner decision 41: a fail-safe,
- *                                                        it never turns the flag off); default 0.25, and at most
- *                                                        SEARCH_THRESHOLD. Read at search time, not recorded on a release
+ *                                                        nothing is shown (owner decision 41: a fail-safe); default 0.25, and
+ *                                                        at most SEARCH_THRESHOLD. Read at search time, not recorded on a release
+ * SEARCH_EMERGENCY_TOP_THRESHOLD
+ *                      server   optional                 the similarity (0 to 1) at which a provider of an emergency category
+ *                                                        that is the best match of either leg turns `emergency_first` on;
+ *                                                        default 0.14 (interim tuning, 2026-10-07). Read at search time
  * SEARCH_EMERGENCY_CATEGORIES
  *                      server   optional                 comma-separated English names of the categories whose results put
  *                                                        the 911 block first, recorded on each release; default
@@ -269,6 +284,10 @@ const rawSchema = z.object({
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_THRESHOLD: optionalText,
+  SEARCH_EMERGENCY_TOP_THRESHOLD: optionalText,
+  SEARCH_KEYWORD_WEIGHT: optionalText,
+  SEARCH_DIRECT_FLOOR: optionalText,
+  SEARCH_DIRECT_GAP: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
   SEARCH_QUESTION_ROUTE: optionalText,
   SEARCH_QUESTION_FALLBACK: optionalText,
@@ -284,10 +303,17 @@ type Raw = z.infer<typeof rawSchema>;
 export interface SearchSettings {
   /** The Cohere embedding model id. */
   embedModel: string;
-  /** Similarity below which a question has no clear match (provisional until S03.07). */
+  /** Score below which a question has no clear match on the hybrid route (provisional: interim tuning, confirmed by S03.08). */
   threshold: number;
   /** Similarity at which an emergency provider among the top 3 of a leg sets `emergency_first` without a clear match (owner decision 41); at most `threshold`. */
   emergencyThreshold: number;
+  /** Similarity at which an emergency provider that is a leg's best match sets `emergency_first`. */
+  emergencyTopThreshold: number;
+  /** The most the keyword match adds to a similarity on the hybrid route. */
+  keywordWeight: number;
+  /** The direct route: the least best similarity for any result, and the furthest below it a result may be. */
+  directFloor: number;
+  directGap: number;
   /** English names of the categories that put the 911 block first. */
   emergencyCategories: string[];
   /** Embedding usage the calendar month may reach: calls and input tokens. */
@@ -338,8 +364,12 @@ const LEG_BUDGET_MS = 2200;
 
 export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   embedModel: "embed-v4.0",
-  threshold: 0.3,
+  threshold: 0.27,
   emergencyThreshold: 0.25,
+  emergencyTopThreshold: 0.14,
+  keywordWeight: 0.15,
+  directFloor: 0.24,
+  directGap: 0.1,
   emergencyCategories: ["Support & Emergency Services"],
   allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
   questionRoute: DEFAULT_QUESTION_ROUTE,
@@ -779,6 +809,18 @@ function parseTranslateMonthlyCalls(value: string | undefined, problems: string[
   return limits;
 }
 
+/** A search setting from 0 to 1 (the form of SEARCH_THRESHOLD), or its default when unset. */
+function unitNumber(name: string, raw: string | undefined, fallback: number, example: string, problems: string[]): number {
+  if (raw === undefined) return fallback;
+  const text = raw.trim();
+  const value = Number(text);
+  if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) {
+    problems.push(`${name}: must be a number from 0 to 1, such as ${example}`);
+    return fallback;
+  }
+  return value;
+}
+
 function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   const defaults = DEFAULT_SEARCH_SETTINGS;
   const embedModel = raw.SEARCH_EMBED_MODEL?.trim() ?? defaults.embedModel;
@@ -787,7 +829,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   if (raw.SEARCH_THRESHOLD !== undefined) {
     const text = raw.SEARCH_THRESHOLD.trim();
     const value = Number(text);
-    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.3");
+    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.27");
     else threshold = value;
   }
   let emergencyThreshold = defaults.emergencyThreshold;
@@ -798,6 +840,10 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     else emergencyThreshold = value;
   }
   if (emergencyThreshold > threshold) problems.push("SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD");
+  const emergencyTopThreshold = unitNumber("SEARCH_EMERGENCY_TOP_THRESHOLD", raw.SEARCH_EMERGENCY_TOP_THRESHOLD, defaults.emergencyTopThreshold, "0.14", problems);
+  const keywordWeight = unitNumber("SEARCH_KEYWORD_WEIGHT", raw.SEARCH_KEYWORD_WEIGHT, defaults.keywordWeight, "0.15", problems);
+  const directFloor = unitNumber("SEARCH_DIRECT_FLOOR", raw.SEARCH_DIRECT_FLOOR, defaults.directFloor, "0.24", problems);
+  const directGap = unitNumber("SEARCH_DIRECT_GAP", raw.SEARCH_DIRECT_GAP, defaults.directGap, "0.1", problems);
   let emergencyCategories = defaults.emergencyCategories;
   if (raw.SEARCH_EMERGENCY_CATEGORIES !== undefined) {
     const names = [...new Set(raw.SEARCH_EMERGENCY_CATEGORIES.split(",").map((name) => name.trim()).filter((name) => name !== ""))];
@@ -808,6 +854,10 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     embedModel,
     threshold,
     emergencyThreshold,
+    emergencyTopThreshold,
+    keywordWeight,
+    directFloor,
+    directGap,
     emergencyCategories,
     allowance: {
       callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),

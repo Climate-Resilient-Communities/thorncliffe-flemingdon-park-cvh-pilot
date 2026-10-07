@@ -150,7 +150,17 @@ describe("search-test-set workflow", () => {
   it("forwards production's own SEARCH_* values under their own names, and the app's parser takes them (blank is unset)", () => {
     const run = step(/Run the search test set/);
     const forwarded = Object.keys(run.env!).filter((name) => name.startsWith("SEARCH_") && !name.startsWith("SEARCH_TEST_"));
-    expect(forwarded.sort()).toEqual(["SEARCH_EMERGENCY_THRESHOLD", "SEARCH_FALLBACK_MIN_BUDGET_MS", "SEARCH_QUESTION_FALLBACK", "SEARCH_QUESTION_ROUTE", "SEARCH_THRESHOLD"]);
+    expect(forwarded.sort()).toEqual([
+      "SEARCH_DIRECT_FLOOR",
+      "SEARCH_DIRECT_GAP",
+      "SEARCH_EMERGENCY_THRESHOLD",
+      "SEARCH_EMERGENCY_TOP_THRESHOLD",
+      "SEARCH_FALLBACK_MIN_BUDGET_MS",
+      "SEARCH_KEYWORD_WEIGHT",
+      "SEARCH_QUESTION_FALLBACK",
+      "SEARCH_QUESTION_ROUTE",
+      "SEARCH_THRESHOLD",
+    ]);
     for (const name of forwarded) expect(run.env![name]).toBe(`\${{ vars.${name} }}`);
     expect(() => parseSearchEnv(Object.fromEntries(forwarded.map((name) => [name, ""])))).not.toThrow();
   });

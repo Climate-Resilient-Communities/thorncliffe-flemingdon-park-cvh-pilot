@@ -277,7 +277,7 @@ describe("search", () => {
       expect((await service(fakeQueryEmbedder().embedder).search({ q: "lawyer and doctor", lang: "en" })).status).toBe("no_clear_match");
     });
 
-    it("sets emergency_first when a result is in an emergency category recorded on the release", async () => {
+    it("sets emergency_first when the best match is in an emergency category recorded on the release (the interim tuning's rule; a result in it no longer sets it alone)", async () => {
       await publish();
 
       expect((await service(fakeQueryEmbedder().embedder).search({ q: "doctor", lang: "en" })).emergency_first).toBe(true);

@@ -62,6 +62,12 @@ function translateQuota() {
   return quotaWatch;
 }
 
+/** The ranking's settings that are read at search time (the threshold is the release's own). */
+function rankingSettings() {
+  const { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap } = getEnv().search;
+  return { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap };
+}
+
 /** The search use case. Without a Cohere key (every environment but production) every search answers `status: "unavailable"`. */
 export function searchService(): SearchService {
   if (service) return service;
@@ -74,7 +80,7 @@ export function searchService(): SearchService {
     fallbackMinBudgetMs: getEnv().search.fallbackMinBudgetMs,
     defer: deferAfterResponse,
     onSpendWritten: translateQuota(),
-    emergencyThreshold: getEnv().search.emergencyThreshold,
+    ...rankingSettings(),
     onFailure: (note) => recordSearchNote(getDb(), note),
   });
   return service;
@@ -94,7 +100,7 @@ export function searchTestSetEngine(options: { translatedLeg?: boolean } = {}): 
     embedder: questionEmbedder(),
     translator: options.translatedLeg === false ? null : questionTranslator(null),
     onSpendWritten: translateQuota(),
-    emergencyThreshold: getEnv().search.emergencyThreshold,
+    ...rankingSettings(),
     spendPurpose: "test_set",
     log: false,
   });
