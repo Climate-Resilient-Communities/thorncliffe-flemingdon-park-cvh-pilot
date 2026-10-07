@@ -27,6 +27,14 @@
 //                                pass the allowance less the live-search reserve, never makes more than --max-calls, reports the
 //                                hit rate per language, no-match and emergency accuracy, p50/p95, the vendor usage and a suggested
 //                                threshold (it sets nothing). The evaluation subset is refused.
+//   guard --yes | --plan-only [--checkpoint pr|pre_launch|week_4|manual] [--bar <bar.json>] [--max-calls <n>] [--summary-file <path>]
+//       [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+//                                S03.09: the evaluation subset through the same production search use case, against the Hub-approved
+//                                launch bar (data/search-test-set/bar.json, or --bar): exit 0 when every minimum is met or no bar is set
+//                                yet (nothing is called then), exit 1 naming each measure below its minimum and the drop, or when the
+//                                measurement is incomplete. The usage guard (usageGuard.ts) runs before the first call. At a manual
+//                                checkpoint (not `pr`) a measure below its minimum is also recorded as ops event `search.below_bar`.
+//                                Usage, rules and outputs: guard.ts.
 //   --compare <a> <b> [--fail-on-worse]
 //                                  per-language and per-language/form differences between two reports
 //                                  (paths, or file names in the reports folder); a language or subset
@@ -62,6 +70,7 @@ import {
 const USAGE = `usage: search-test-set validate [--require-checked]
        search-test-set run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off [--split tuning|evaluation|all --final] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
        search-test-set run --engine production --model <name> --translated-leg off|on|both --yes|--plan-only [--release <n>] [--max-calls <n>] [--scores] [--summary-file <path>] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+       search-test-set guard --yes|--plan-only [--checkpoint pr|pre_launch|week_4|manual] [--bar <bar.json>] [--max-calls <n>] [--summary-file <path>] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
        search-test-set --compare <report a> <report b> [--fail-on-worse]`;
 
 function option(argv: string[], name: string): string | undefined {
@@ -197,8 +206,13 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   if (argv[0] === "run" && option(argv, "--engine") === "production") {
     // The real search use case, built from the environment: loaded only when asked for (it pulls in the whole directory module).
     const { runProduction } = await import("./production");
-    const { makeProductionEngine, readCohereCallsThisMonth } = await import("./productionEngine");
-    return runProduction(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, monthCalls: readCohereCallsThisMonth, usage: USAGE });
+    const { makeProductionEngine, readCohereCallsThisMonth, readCohereUsageThisMonth } = await import("./productionEngine");
+    return runProduction(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, monthCalls: readCohereCallsThisMonth, monthUsage: readCohereUsageThisMonth, usage: USAGE });
+  }
+  if (argv[0] === "guard") {
+    const { runGuard } = await import("./guard");
+    const { makeProductionEngine, readCohereUsageThisMonth, recordBelowBar } = await import("./productionEngine");
+    return runGuard(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, monthUsage: readCohereUsageThisMonth, recordBelowBar, usage: USAGE });
   }
   if (argv[0] === "run") return run(argv, root);
   console.error(USAGE);

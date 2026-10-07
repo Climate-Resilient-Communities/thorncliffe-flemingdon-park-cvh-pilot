@@ -15,6 +15,7 @@ export const WEEKLY_SECTIONS = [
   "entry_timing",
   "slow_delivery",
   "access_request_overdue",
+  "search_below_bar",
 ] as const;
 export type WeeklySection = (typeof WEEKLY_SECTIONS)[number];
 

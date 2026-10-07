@@ -1,0 +1,290 @@
+name: Search guard
+
+# S03.09: the search test set guards every change that can change search, and the team's manual runs (the week before launch, week 4).
+#
+# On a pull request, "Search guard" decides in seconds, with git alone (scripts/ci/search-guard-scope.sh), whether the pull request
+# changes what search depends on (scripts/ci/search-guard-paths.txt: the catalogue, the embedding model, the threshold,
+# emergency_categories, search_question_route and its fallback, the search code) and whether the base branch has a Hub-approved launch
+# bar (data/search-test-set/bar.json, S03.08). A pull request that changes none of it passes at once; one that does, while there is no
+# bar yet, passes with a notice and nothing is called. Otherwise "Search guard: measure" asks the evaluation subset through the pull
+# request's own search use case (scripts/search-test-set guard) and fails if any language's hit rate, the no-match accuracy or the
+# emergency accuracy is below its minimum, naming the measure and the drop.
+#
+# Why not the pull request's preview deployment: previews hold no Cohere key (start-up refuses one outside production) and /api/search
+# answers 30 questions per 10 minutes, so a preview cannot answer the test set. The guard runs the same code the preview would, in the
+# runner, with the one Cohere key; previews keep their "preview" label and are not needed for it.
+#
+# Cohere is scarce (about 1,000 calls a month on the key that live search shares), so the measure job:
+#  - runs in the environment "search-guard", which holds the run's secrets and should have the owner as its required reviewer: the job
+#    then waits ("Review deployments") until the owner approves spending the calls on this pull request's code, typically after its
+#    last push. A newer push replaces a run still waiting;
+#  - passes the usage guard before its first call (the month's calls and tokens from spend_event, the live-search reserve), and stops
+#    at max calls;
+#  - never runs for a fork or for Dependabot, never without a bar, and never for a pull request that changes nothing search depends on.
+#
+# Run by hand from the Actions tab (main only, the production environment): the checkpoint run of the week before launch or of week 4.
+# It does the same measurement; a measure below its minimum is also recorded as ops_event search.below_bar for the weekly review (E09).
+# The report is uploaded as an artifact, and the job summary gives the two commands that commit it: nothing in CI writes to the
+# repository, because the jobs that hold secrets have only read access.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      checkpoint:
+        description: "Which run this is: the week before launch, week 4 of the pilot, or another time"
+        type: choice
+        required: true
+        default: pre_launch
+        options:
+          - pre_launch
+          - week_4
+          - manual
+      confirm:
+        description: "Start the run (calls Cohere). Left unticked it only prints the plan: the questions, the calls and the allowance"
+        type: boolean
+        required: false
+        default: false
+      max_calls:
+        description: "The most Cohere calls this run may make; empty is 500"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  scope:
+    name: Search guard
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      measure: ${{ steps.scope.outputs.measure }}
+    steps:
+      # Full history: the merge base of the pull request, and the base branch's bar.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Decide whether this pull request changes search
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: scripts/ci/search-guard-scope.sh "$BASE_SHA" "$HEAD_SHA"
+
+  measure:
+    name: "Search guard: measure"
+    needs: scope
+    # Only this repository's own pull requests: a fork's or Dependabot's code never gets the guard's secrets.
+    if: >-
+      needs.scope.outputs.measure == 'true'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    # The run step has its own limit below this one, so that the steps that keep the report still run.
+    timeout-minutes: 30
+    # Holds the secrets; give it the owner as required reviewer (repository settings > Environments > search-guard, docs/config.md).
+    environment: search-guard
+    concurrency:
+      group: search-guard-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      # Only whether each is set reaches this step, as true or false: the values never do.
+      - name: Check the search-guard environment has what the run needs
+        env:
+          HAVE_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL != '' }}
+          HAVE_COHERE_API_KEY: ${{ secrets.COHERE_API_KEY != '' }}
+          HAVE_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY != '' }}
+          HAVE_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
+        run: |
+          missing=0
+          check() {
+            local have=$1 kind=$2 name=$3
+            if [ "${!have}" != true ]; then
+              echo "::error title=Missing $kind $name::$name is not set in the search-guard environment (repository settings > Environments > search-guard). Add it, see docs/config.md."
+              missing=1
+            fi
+          }
+          check HAVE_DATABASE_URL secret SEARCH_TEST_DATABASE_URL
+          check HAVE_COHERE_API_KEY secret COHERE_API_KEY
+          check HAVE_SUPABASE_SECRET_KEY secret SUPABASE_SECRET_KEY
+          check HAVE_SUPABASE_URL variable NEXT_PUBLIC_SUPABASE_URL
+          exit $missing
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      # The base branch's bar: a pull request is not judged by a bar it changes itself.
+      - name: Take the base branch's launch bar
+        run: git show "$BASE_SHA:data/search-test-set/bar.json" > "$RUNNER_TEMP/bar.json"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      # No secret is in the environment while the dependencies install.
+      - run: npm ci
+      # The secrets are in this step's environment and no other step's. The SEARCH_* variables are production's own values, as in the
+      # "Search test set" workflow; unset, they are blank and mean the defaults (the pull request's own defaults, which is the point).
+      - name: Measure the evaluation subset against the launch bar
+        timeout-minutes: 25
+        env:
+          SEARCH_TEST_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SEARCH_THRESHOLD: ${{ vars.SEARCH_THRESHOLD }}
+          SEARCH_EMERGENCY_THRESHOLD: ${{ vars.SEARCH_EMERGENCY_THRESHOLD }}
+          SEARCH_QUESTION_ROUTE: ${{ vars.SEARCH_QUESTION_ROUTE }}
+          SEARCH_QUESTION_FALLBACK: ${{ vars.SEARCH_QUESTION_FALLBACK }}
+          SEARCH_FALLBACK_MIN_BUDGET_MS: ${{ vars.SEARCH_FALLBACK_MIN_BUDGET_MS }}
+          SEARCH_TEST_MONTHLY_CALLS: ${{ vars.SEARCH_TEST_MONTHLY_CALLS }}
+          SEARCH_TEST_RESERVE_CALLS: ${{ vars.SEARCH_TEST_RESERVE_CALLS }}
+          SEARCH_TEST_MONTHLY_TOKENS: ${{ vars.SEARCH_TEST_MONTHLY_TOKENS }}
+          SEARCH_TEST_PRICES: ${{ vars.SEARCH_TEST_PRICES }}
+        run: |
+          out="$RUNNER_TEMP/search-guard"
+          mkdir -p "$out/report"
+          npm run search-test-set -- guard --checkpoint pr --bar "$RUNNER_TEMP/bar.json" --yes --out-dir "$out/report" --summary-file "$out/summary.md"
+      # Question ids, provider ids, scores and counts, never a question's text.
+      - name: Upload the report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: search-guard-${{ github.run_id }}
+          path: ${{ runner.temp }}/search-guard/report
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Write the summary
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f "$RUNNER_TEMP/search-guard/summary.md" ]; then cat "$RUNNER_TEMP/search-guard/summary.md" >> "$GITHUB_STEP_SUMMARY"; fi
+
+  checkpoint:
+    name: Search test set checkpoint
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    # The production environment holds the secrets and accepts runs from main only.
+    environment: production
+    # Shared with the "Search test set" workflow: two runs on the key never overlap, and a queued run is never cancelled half way.
+    concurrency:
+      group: search-test-set
+      cancel-in-progress: false
+    # Inputs reach the shell only as environment variables, never interpolated into a script.
+    env:
+      CHECKPOINT: ${{ inputs.checkpoint }}
+      CONFIRM: ${{ inputs.confirm }}
+      MAX_CALLS: ${{ inputs.max_calls }}
+    steps:
+      - name: Check the inputs
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error title=Checkpoint not run::It runs from main only."
+            exit 1
+          fi
+          case "$CHECKPOINT" in pre_launch | week_4 | manual) ;; *) echo "::error title=Checkpoint not run::Unknown checkpoint."; exit 1 ;; esac
+          case "$CONFIRM" in true | false) ;; *) echo "::error title=Checkpoint not run::confirm must be true or false."; exit 1 ;; esac
+          if [ -n "$MAX_CALLS" ] && ! [[ "$MAX_CALLS" =~ ^[1-9][0-9]{0,5}$ ]]; then
+            echo "::error title=Checkpoint not run::max_calls must be a whole number of at least 1, or empty."
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check this commit is still the head of main
+        run: |
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::error title=Checkpoint not run::$GITHUB_SHA is no longer the head of main ($head); run the workflow again."
+            exit 1
+          fi
+      - name: Check the production environment has what the run needs
+        env:
+          HAVE_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL != '' }}
+          HAVE_COHERE_API_KEY: ${{ secrets.COHERE_API_KEY != '' }}
+          HAVE_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY != '' }}
+          HAVE_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
+        run: |
+          missing=0
+          check() {
+            local have=$1 kind=$2 name=$3
+            if [ "${!have}" != true ]; then
+              echo "::error title=Missing $kind $name::$name is not set in the production environment (repository settings > Environments > production). Add it, see docs/config.md."
+              missing=1
+            fi
+          }
+          check HAVE_DATABASE_URL secret SEARCH_TEST_DATABASE_URL
+          check HAVE_COHERE_API_KEY secret COHERE_API_KEY
+          check HAVE_SUPABASE_SECRET_KEY secret SUPABASE_SECRET_KEY
+          check HAVE_SUPABASE_URL variable NEXT_PUBLIC_SUPABASE_URL
+          exit $missing
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run the checkpoint
+        timeout-minutes: 25
+        env:
+          SEARCH_TEST_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SEARCH_THRESHOLD: ${{ vars.SEARCH_THRESHOLD }}
+          SEARCH_EMERGENCY_THRESHOLD: ${{ vars.SEARCH_EMERGENCY_THRESHOLD }}
+          SEARCH_QUESTION_ROUTE: ${{ vars.SEARCH_QUESTION_ROUTE }}
+          SEARCH_QUESTION_FALLBACK: ${{ vars.SEARCH_QUESTION_FALLBACK }}
+          SEARCH_FALLBACK_MIN_BUDGET_MS: ${{ vars.SEARCH_FALLBACK_MIN_BUDGET_MS }}
+          SEARCH_TEST_MONTHLY_CALLS: ${{ vars.SEARCH_TEST_MONTHLY_CALLS }}
+          SEARCH_TEST_RESERVE_CALLS: ${{ vars.SEARCH_TEST_RESERVE_CALLS }}
+          SEARCH_TEST_MONTHLY_TOKENS: ${{ vars.SEARCH_TEST_MONTHLY_TOKENS }}
+          SEARCH_TEST_PRICES: ${{ vars.SEARCH_TEST_PRICES }}
+        run: |
+          out="$RUNNER_TEMP/search-guard"
+          mkdir -p "$out/report"
+          args=(guard --checkpoint "$CHECKPOINT" --out-dir "$out/report" --summary-file "$out/summary.md")
+          if [ "$CONFIRM" = true ]; then args+=(--yes); else args+=(--plan-only); fi
+          if [ -n "$MAX_CALLS" ]; then args+=(--max-calls "$MAX_CALLS"); fi
+          npm run search-test-set -- "${args[@]}"
+      - name: Upload the report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: search-guard-${{ github.run_id }}
+          path: ${{ runner.temp }}/search-guard/report
+          if-no-files-found: ignore
+          retention-days: 90
+      # Aggregates only, and how to commit the report (nothing in CI writes to the repository).
+      - name: Write the summary
+        if: ${{ !cancelled() }}
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          {
+            if [ -f "$RUNNER_TEMP/search-guard/summary.md" ]; then
+              cat "$RUNNER_TEMP/search-guard/summary.md"
+            elif [ "$CONFIRM" != true ]; then
+              echo "Plan only: nothing was called. The plan is in the job log; run it again with confirm ticked to start."
+            fi
+            if compgen -G "$RUNNER_TEMP/search-guard/report/*.json" > /dev/null; then
+              echo
+              echo "To commit the report (S03.09), on an up-to-date main in a branch of your own:"
+              echo
+              echo '```'
+              echo "gh run download $RUN_ID -n search-guard-$RUN_ID -D data/search-test-set/reports"
+              echo "git add data/search-test-set/reports && git commit -m \"Search test set: $CHECKPOINT report\""
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

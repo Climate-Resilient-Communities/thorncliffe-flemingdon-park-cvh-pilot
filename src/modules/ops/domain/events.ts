@@ -44,6 +44,12 @@ export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
  */
 export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used", "translate_quota_near"] as const;
 
+/** The launch bar's measures (S03.08's `bar.json`): a language's hit rate, the no-match accuracy and the emergency accuracy (S03.09). */
+export const SEARCH_BAR_MEASURES = ["hit_rate", "no_match_accuracy", "emergency_accuracy"] as const;
+
+/** When the team ran the search test set by hand (S03.09): the week before launch, the middle of the pilot (week 4), or another time. */
+export const SEARCH_CHECKPOINTS = ["pre_launch", "week_4", "manual"] as const;
+
 /** A vendor model id (not personal data): the shape the config accepts for SEARCH_QUESTION_ROUTE and the fallback. */
 const modelId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
 
@@ -295,6 +301,23 @@ export const OPS_EVENT_KINDS = {
       model: modelId.optional(),
       /** What failed: a translation call's class (`translate_failed:quota`), a Postgres SQLSTATE or an error class name. Never a message. Absent for the fallback and the near-limit warning (nothing failed). */
       error: safeError.optional(),
+    }),
+  },
+  /**
+   * A manual run of the search test set (S03.09: the week before launch, week 4 of the pilot, or another time the team chose) measured the
+   * evaluation subset below a minimum of the Hub-approved launch bar (`data/search-test-set/bar.json`): one event per measure, for the weekly
+   * review (E09). Subject: the release it measured (`directory_release`, its number). Shares in thousandths; `observed_permille` is absent when the
+   * run could not measure it (no question of it was scored). Codes and counts only: never a question.
+   */
+  "search.below_bar": {
+    severity: "warning",
+    detail: z.strictObject({
+      measure: z.enum(SEARCH_BAR_MEASURES),
+      /** The language of a hit rate; absent for the no-match and emergency accuracy, which are measured over every language. */
+      lang: z.string().regex(/^[a-z]{2,3}$/).optional(),
+      observed_permille: z.number().int().min(0).max(1000).optional(),
+      minimum_permille: z.number().int().min(0).max(1000),
+      checkpoint: z.enum(SEARCH_CHECKPOINTS),
     }),
   },
 } as const;
