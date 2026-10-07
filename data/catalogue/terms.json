@@ -3,13 +3,13 @@
   "source": "S07.01, the acceptance criteria in docs/planning/pilot/epics.md, and the spine (AD-9, AD-12, AD-15, P9, N5).",
   "note": "English source of the terms and privacy page (/{lang}/terms). It is published only when src/modules/subscriptions/domain/terms.ts accepts it: a named owner, a last-updated date, an English review by that owner, a privacy contact, a consent version and a counsel review of exactly this English and version, or, for the pilot only, the owner's recorded waiver of it (counselWaiver, held to the same rules). Values starting with PLACEHOLDER are refused. Any change to the text, the contact or the version needs a new counsel review (python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer NAME --reviewed-on DATE) or a new decision by the owner (--waive-counsel --reviewer OWNER --reviewed-on DATE --reason TEXT). Translations: data/catalogue/translations/content/<lang>.json, keys terms.*."
  },
- "consentVersion": "2026-10-02.1",
+ "consentVersion": "2026-10-07.1",
  "owner": "Helena Yu, Sprout Climate Association",
- "lastUpdated": "2026-10-06",
+ "lastUpdated": "2026-10-07",
  "englishReview": {
   "reviewer": "Helena Yu, Sprout Climate Association",
-  "date": "2026-10-06",
-  "sourceHash": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269"
+  "date": "2026-10-07",
+  "sourceHash": "3aeb45db527dc227ef225598d6d7674ad333452674836d23104c9f9730b61233"
  },
  "counselReview": {
   "reviewer": "PLACEHOLDER: counsel to be named when the launch-readiness review is done",
@@ -43,7 +43,8 @@
     "Cohere translates alerts and helps match questions you type in search. It never gets your phone number. It may work outside Canada.",
     "Vercel runs the website. Its servers are in Montreal. If there is an outage, it may use servers in the United States.",
     "Supabase keeps the database that holds your number, language, neighbourhood and choices. The database is in Canada.",
-    "Twilio keeps a copy of each text, with your phone number. This includes your replies. The Hub deletes these copies from Twilio after the pilot ends."
+    "Twilio keeps a copy of each text, with your phone number. This includes your replies. The Hub deletes these copies from Twilio after the pilot ends.",
+    "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service."
    ]
   },
   {
@@ -76,7 +77,8 @@
    "heading": "About the messages",
    "lines": [
     "Hub staff check every alert before it is sent.",
-    "Because of this, a message may not be sent overnight."
+    "Because of this, a message may not be sent overnight.",
+    "How often we text depends on what happens in your building. Message and data rates may apply. Reply HELP for help."
    ]
   },
   {
@@ -90,12 +92,13 @@
  ],
  "counselWaiver": {
   "decidedBy": "Helena Yu, Sprout Climate Association",
-  "date": "2026-10-06",
-  "reason": "Pilot / proof of concept: the owner approved publishing without counsel review on 2026-10-06; counsel review is required before the MVP.",
-  "version": "2026-10-02.1",
-  "sourceHash": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269"
+  "date": "2026-10-07",
+  "reason": "Pilot / proof of concept: the owner approved publishing the 2026-10-07 wording (no-marketing-sharing and message-rate lines) without counsel review; counsel review is required before the MVP.",
+  "version": "2026-10-07.1",
+  "sourceHash": "3aeb45db527dc227ef225598d6d7674ad333452674836d23104c9f9730b61233"
  },
  "publishedVersions": {
-  "2026-10-02.1": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269"
+  "2026-10-02.1": "8bb61c0e25b1f7948e58df4227365f9f035822b0a23b2ecdcda93fad891e8269",
+  "2026-10-07.1": "3aeb45db527dc227ef225598d6d7674ad333452674836d23104c9f9730b61233"
  }
 }
