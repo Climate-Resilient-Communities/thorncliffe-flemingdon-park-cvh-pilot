@@ -73,7 +73,8 @@ export function maxSimilarity(o: SearchObservation): number {
 function replay(o: SearchObservation, threshold: number) {
   const legs = legsOf(o);
   const settings = settingsAt(o, threshold);
-  return { results: rankLegs(legs, o.route, o.boosts, settings), emergency: emergencyFirst(legs, o.emergencyProviders, settings) };
+  // A reranked answer (the direct route) does not depend on the threshold: it is the answer at every value.
+  return { results: o.reranked ?? rankLegs(legs, o.route, o.boosts, settings), emergency: emergencyFirst(legs, o.emergencyProviders, settings) };
 }
 
 const isHit = (results: readonly { provider_id: string }[], expected: readonly string[]) => results.some((r) => expected.includes(r.provider_id));
@@ -118,7 +119,7 @@ function hitSteps(o: SearchObservation, scores: readonly SearchHit[], expected: 
   const hit: boolean[] = [];
   let threshold = from;
   for (;;) {
-    const results = resultsOf(scores, o.route, settingsAt(o, threshold));
+    const results = o.reranked ?? resultsOf(scores, o.route, settingsAt(o, threshold));
     at.push(threshold);
     hit.push(isHit(results, expected));
     if (o.route !== "hybrid" || results.length === 0) break; // nothing qualifies (or nothing depends on it): no value above gives anything else

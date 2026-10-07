@@ -5,7 +5,7 @@
 // fixed word, so nothing a caller passes (a question, an id, an error message) can reach the header: anything else is dropped.
 
 /** The phases a request can report. Fixed: a name outside the list is dropped, never written. */
-export const TIMING_PHASES = ["boot", "limiter", "snapshot", "embed", "translate", "rank", "total"] as const;
+export const TIMING_PHASES = ["boot", "limiter", "snapshot", "embed", "translate", "rank", "rerank", "total"] as const;
 export type TimingPhase = (typeof TIMING_PHASES)[number];
 
 /** The flag a phase can carry: `cold`, the work came from storage (a cold instance), not from this instance's memory; `cache`, a cold instance got it from the shared data cache instead of storage. */

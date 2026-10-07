@@ -84,6 +84,47 @@ export function searchTextOf(provider: SnapshotProvider, categoryNames: readonly
   return lines.join("\n");
 }
 
+/** The part of a release's English listing that a provider's search text is made from (DirectoryListingV1, structurally). */
+export interface ListingForSearchText {
+  categories: readonly { id: string; sort_order: number; name: { body: string } }[];
+  providers: readonly {
+    id: string;
+    name: string;
+    category_ids: readonly string[];
+    subcategories: readonly { body: string }[];
+    services: { body: string };
+    emergency_role: { body: string } | null;
+  }[];
+}
+
+/**
+ * The search text of every provider of a release, made from its English listing by the rules of `searchTextOf` (the same name,
+ * categories in the release's order, subcategories, scrubbed services and emergency role): the text its vector was embedded from,
+ * which the reranker of the direct route reads (interim tuning of 2026-10-07, arm R2). By provider id.
+ */
+export function searchTextsOfListing(listing: ListingForSearchText): Map<string, string> {
+  const categories = new Map(listing.categories.map((c) => [c.id, c] as const));
+  const texts = new Map<string, string>();
+  for (const provider of listing.providers) {
+    const names = provider.category_ids
+      .map((id) => categories.get(id))
+      .filter((c): c is ListingForSearchText["categories"][number] => c !== undefined)
+      .sort((a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id))
+      .map((c) => c.name.body)
+      .filter(present);
+    const lines = [provider.name];
+    if (names.length > 0) lines.push(`Categories: ${names.join(", ")}`);
+    const subcategories = provider.subcategories.map((s) => s.body).filter(present);
+    if (subcategories.length > 0) lines.push(`Subcategories: ${subcategories.join(", ")}`);
+    const services = provider.services.body;
+    if (present(services) && scrubContactDetails(services) !== "") lines.push(`Services: ${scrubContactDetails(services)}`);
+    const role = provider.emergency_role?.body;
+    if (present(role) && scrubContactDetails(role) !== "") lines.push(`Emergency role: ${scrubContactDetails(role)}`);
+    texts.set(provider.id, lines.join("\n"));
+  }
+  return texts;
+}
+
 /** The search items of a snapshot, one per provider, in provider id order (the order of the vectors file). */
 export function searchItems(providers: readonly SnapshotProvider[], categories: readonly SnapshotCategory[], hash: Hasher): SearchItem[] {
   const order = new Map(categories.map((c) => [c.id, c] as const));

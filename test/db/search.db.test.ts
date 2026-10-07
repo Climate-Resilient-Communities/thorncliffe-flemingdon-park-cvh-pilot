@@ -19,6 +19,7 @@ import {
   cohereQueryEmbedder,
   createSearch,
   memoryDirectoryStorage,
+  type Reranker,
   publishDirectory,
   SearchFailure,
   type CohereEmbedClient,
@@ -127,10 +128,13 @@ describe("search", () => {
   const staffId = randomUUID();
   let auditBaseline = 0;
 
+  /** Every text the publish job embedded (the reranker must be handed the same texts). */
+  const embeddedTexts = new Set<string>();
   const docEmbedder = (model = MODEL): Embedder => ({
     model,
     config: { model, inputType: "search_document", embeddingType: "float", dims: null },
     async embedDocuments(texts) {
+      for (const text of texts) embeddedTexts.add(text);
       return { vectors: texts.map(vectorOfText), tokens: 10 };
     },
   });
@@ -1425,6 +1429,65 @@ describe("search", () => {
       expect(legReport(run, 0.3).counts).toMatchObject({ scored: 0, miss: 0, rate_limited: 1 });
       expect(await rows("spend_event")).toEqual([]);
       expect(await rows("search_log")).toEqual([]);
+    });
+  });
+
+  describe("the direct route's reranker (interim tuning arm R2)", () => {
+    const SPANISH = "necesito un abogado gratis";
+    /** A fake rerank-v3.5: the legal provider is relevant; it records what it was handed. */
+    const fakeReranker = () => {
+      const documents: string[][] = [];
+      const reranker: Reranker = {
+        model: "rerank-v3.5",
+        async rerank(input) {
+          documents.push([...input.documents]);
+          return { results: input.documents.map((text, index) => ({ index, relevance: /Categories: Legal/.test(text) ? 0.3 : 0.01 })) };
+        },
+      };
+      return { reranker, documents };
+    };
+    const reranking = (reranker: Reranker, monthly: number) =>
+      createSearch({ db: () => app, storage: () => storage, embedder: fakeQueryEmbedder().embedder, reranker, rerankMonthlyCalls: monthly });
+
+    it("reranks a Spanish question over the very texts the release's vectors were made from, and counts the call in spend_event as kind rerank", async () => {
+      embeddedTexts.clear();
+      await publish();
+      await sql`delete from spend_event`;
+      const rr = fakeReranker();
+
+      const body = await reranking(rr.reranker, 900).search({ q: SPANISH, lang: "es" });
+
+      expect(body).toMatchObject({ status: "ok", query_lang: "es", results: [{ provider_id: "M001" }] });
+      expect(rr.documents).toHaveLength(1);
+      expect(new Set(rr.documents[0])).toEqual(embeddedTexts);
+      const spent = (await rows("spend_event")).filter((r) => r.kind === "rerank");
+      expect(spent).toMatchObject([{ kind: "rerank", purpose: "search", model: "rerank-v3.5", release_v: 1, calls: 1, tokens: "0" }]);
+      // Nothing of the question is kept.
+      expect(JSON.stringify(await rows("spend_event"))).not.toContain("abogado");
+    });
+
+    it("stops calling the model at SEARCH_RERANK_MONTHLY_CALLS, counted from this month's rerank rows of the model, whoever made them", async () => {
+      await publish();
+      await sql`delete from spend_event`;
+      // This month: two calls (a test-set run's and a search's). Not counted: last month's, another model's, another kind's.
+      await sql`insert into spend_event (kind, purpose, model, calls, tokens) values
+        ('rerank', 'test_set', 'rerank-v3.5', 1, 0), ('rerank', 'search', 'rerank-v3.5', 1, 0),
+        ('rerank', 'search', 'rerank-v4.0', 5, 0), ('embed', 'search', 'rerank-v3.5', 5, 0)`;
+      await sql`insert into spend_event (kind, purpose, model, calls, tokens, at) values ('rerank', 'search', 'rerank-v3.5', 50, 0, now() - interval '40 days')`;
+
+      const rr = fakeReranker();
+      const search = reranking(rr.reranker, 3);
+      expect(await search.search({ q: SPANISH, lang: "es" })).toMatchObject({ results: [{ provider_id: "M001" }] });
+      // The third call of the month was this instance's own: the next search does not call, and is ranked by the floor and gap.
+      expect(await search.search({ q: SPANISH, lang: "es" })).toMatchObject({ status: "no_clear_match" });
+      expect(rr.documents).toHaveLength(1);
+
+      // Another instance counts the rows: three this month, the limit.
+      const other = fakeReranker();
+      await reranking(other.reranker, 3).search({ q: SPANISH, lang: "es" });
+      expect(other.documents).toHaveLength(0);
+      await reranking(other.reranker, 4).search({ q: SPANISH, lang: "es" });
+      expect(other.documents).toHaveLength(1);
     });
   });
 });

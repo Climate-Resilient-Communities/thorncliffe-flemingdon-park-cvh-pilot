@@ -2,7 +2,7 @@
 // ranking and its emergency flag) with vectors that were embedded before, so that a change to the ranking can be measured with no
 // vendor call at all. Run through scripts/search-test-set/replay-cached.mjs:
 //
-//   node scripts/search-test-set/replay-cached.mjs --cache <vector-cache.json> [--json <out.json>]
+//   node scripts/search-test-set/replay-cached.mjs --cache <vector-cache.json> [--rerank-cache <rerank-cache.json>] [--json <out.json>]
 //
 // The cache is a JSON file (never committed: it is about 7.6 MB) with
 //   providers:    { "<provider id>": [embedding of its search text, input_type search_document] }
@@ -10,6 +10,13 @@
 //   translations: { "<question text>": { english: "<its English translation>", vector: [embedding of the English] } }
 // as the offline experiment of 2026-10-07 wrote them (data/search-test-set/reports/2026-10-07-interim-tuning.md says how). The
 // translations stand in for the translated-question leg's model, so the numbers of questions that take that leg are an upper bound.
+//
+// With --rerank-cache the direct route's reranker runs too (SEARCH_RERANK and SEARCH_RERANK_MIN as production resolves them), its
+// answers looked up instead of asked: a JSON file (never committed) of
+//   { "<question text>": { candidates: [the 20 provider ids the experiment sent], scores: { "<provider id>": relevance } } }
+// as the experiment's `rerank-v3.5` calls answered them. The reranker is handed the providers' search texts by the use case; each
+// is mapped back to its provider, and a provider the experiment did not send (the use case chose other candidates) fails the run.
+// The monthly limit is not exercised (no calls are counted).
 //
 // What is real: the use case, the language detection and the routing to the translated leg (`questionSourceOf`), the ranking
 // (domain/searchRanking.ts) and the keyword match (domain/searchKeywords.ts), and the settings as production resolves them
@@ -24,7 +31,7 @@
 // or any result for a no_match question; share of all questions).
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { buildKeywordIndex, createSearch } from "@/modules/directory";
+import { buildKeywordIndex, createSearch, searchTextsOfListing, type Reranker } from "@/modules/directory";
 import type { SearchV1, TestQuestion } from "@/contracts/searchTestSet";
 import { QuestionTranslationError, type QuestionTranslator } from "@/modules/translation";
 import { EnvError, parseSearchEnv } from "@/platform/config/env";
@@ -42,7 +49,10 @@ interface CatalogueProvider {
   categories: string[];
   subcategories: string[];
   services: { en: string | null } | null;
+  emergencyRole?: { en: string | null } | null;
 }
+
+type RerankCache = Record<string, { candidates: string[]; scores: Record<string, number> }>;
 
 export interface Answered {
   question: TestQuestion;
@@ -120,7 +130,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   };
   const cacheFile = arg("--cache");
   if (!cacheFile) {
-    console.error("usage: replay-cached --cache <vector-cache.json> [--json <out.json>]");
+    console.error("usage: replay-cached --cache <vector-cache.json> [--rerank-cache <rerank-cache.json>] [--json <out.json>]");
     return 2;
   }
   let settings;
@@ -147,6 +157,19 @@ export async function main(argv: string[], env: Record<string, string | undefine
     return 1;
   }
   const emergencyNames = new Set(settings.emergencyCategories);
+  // The providers' search texts as the release's English listing rebuilds them (categories in the catalogue's order).
+  const categoryOrder = Object.keys((JSON.parse(providersJson) as { labels: { categories: Record<string, unknown> } }).labels.categories);
+  const searchTexts = searchTextsOfListing({
+    categories: categoryOrder.map((name, sortOrder) => ({ id: name, sort_order: sortOrder, name: { body: name } })),
+    providers: catalogue.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category_ids: p.categories,
+      subcategories: p.subcategories.map((body) => ({ body })),
+      services: { body: p.services?.en ?? "" },
+      emergency_role: p.emergencyRole?.en ? { body: p.emergencyRole.en } : null,
+    })),
+  });
   const data = {
     releaseV: 1,
     model: settings.embedModel,
@@ -157,7 +180,32 @@ export async function main(argv: string[], env: Record<string, string | undefine
     known: new Set(ids),
     emergency: new Set(catalogue.filter((p) => p.categories.some((c) => emergencyNames.has(c))).map((p) => p.id)),
     keywords: buildKeywordIndex(catalogue.map((p) => ({ id: p.id, text: [p.name, ...p.categories, ...p.subcategories, p.services?.en ?? ""].join(" ") }))),
+    searchTexts,
   };
+
+  const rerankFile = arg("--rerank-cache");
+  const rerankCache = rerankFile ? (JSON.parse(readFileSync(path.resolve(rerankFile), "utf8")) as RerankCache) : null;
+  const idOfText = new Map([...searchTexts].map(([id, text]) => [text, id] as const));
+  const rerankProblems: string[] = [];
+  let reranks = 0;
+  const reranker: Reranker | null =
+    rerankCache && settings.rerank
+      ? {
+          model: "cached-rerank",
+          async rerank({ query, documents }) {
+            const found = rerankCache[query];
+            if (!found) {
+              rerankProblems.push("a question is not in the rerank cache");
+              throw new Error("not in the rerank cache");
+            }
+            reranks += 1;
+            const ids = documents.map((text) => idOfText.get(text) ?? "?");
+            const sent = new Set(found.candidates);
+            if (ids.some((id) => !sent.has(id)) || ids.length !== found.candidates.length) rerankProblems.push("the use case chose other candidates than the experiment sent");
+            return { results: ids.map((id, index) => ({ index, relevance: found.scores[id] ?? 0 })) };
+          },
+        }
+      : null;
 
   const english = new Map(Object.values(cache.translations).map((t) => [t.english, t.vector] as const));
   const translator: QuestionTranslator = {
@@ -196,6 +244,10 @@ export async function main(argv: string[], env: Record<string, string | undefine
     keywordWeight: settings.keywordWeight,
     directFloor: settings.directFloor,
     directGap: settings.directGap,
+    reranker,
+    rerankMin: settings.rerankMin,
+    rerankMonthlyCalls: Number.MAX_SAFE_INTEGER,
+    rerankCalls: async () => 0,
     // No vendor, no deadline: a slow machine must not cut a leg.
     legTimeoutMs: 60_000,
     totalBudgetMs: 60_500,
@@ -209,13 +261,17 @@ export async function main(argv: string[], env: Record<string, string | undefine
       console.error(`${question.id}: the search failed`);
     }
   }
+  if (rerankProblems.length > 0) {
+    console.error(`rerank replay: ${[...new Set(rerankProblems)].join("; ")} (${rerankProblems.length} times)`);
+    return 1;
+  }
   if (missing.length > 0 || rows.length !== questions.length) {
     console.error(`${questions.length - rows.length} questions could not be replayed (${missing.length} texts missing from the cache)`);
     return 1;
   }
 
   console.log(
-    `settings: threshold ${settings.threshold}, keyword weight ${settings.keywordWeight}, direct floor ${settings.directFloor}, direct gap ${settings.directGap}, emergency top ${settings.emergencyTopThreshold}, emergency top-3 ${settings.emergencyThreshold}`,
+    `settings: threshold ${settings.threshold}, keyword weight ${settings.keywordWeight}, direct floor ${settings.directFloor}, direct gap ${settings.directGap}, emergency top ${settings.emergencyTopThreshold}, emergency top-3 ${settings.emergencyThreshold}, rerank ${reranker ? `on (min ${settings.rerankMin}; ${reranks} questions reranked from the cache)` : "off"}`,
   );
   const out = [HEADER, line("all", measureAnswers(rows))];
   for (const author of [...new Set(rows.map((r) => r.question.author))].sort()) {

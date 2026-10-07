@@ -25,6 +25,19 @@
 //    loaded), the top 5 at or above the release's threshold. Any other question takes the `direct` route: the top 5 when the
 //    best similarity reaches the direct floor, less those more than the direct gap below it. When the direct leg fails but
 //    the translated one completed, the results come from the translated leg alone.
+//  - The reranker of the direct route (arm R2 of the interim tuning; SEARCH_RERANK, on unless `off`, and only where a Cohere key
+//    is configured): a question in another language that needs no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…)
+//    whose direct leg completed has its 20 best providers by similarity reranked against their English search texts (the texts
+//    their vectors were made from, rebuilt from the release's English listing) with `rerank-v3.5`: the results are the top 5 with a
+//    relevance of at least SEARCH_RERANK_MIN (0.05), best relevance first, none when no provider reaches it. Each result's `score`
+//    stays its similarity (the relevance orders and filters only), so on this route the scores need not be in descending order.
+//    The call is made only when at least RERANK_MIN_BUDGET_MS (0.3 s) of the leg's 2.2 s is left, and is cut at 1.2 s or at the
+//    deadline, whichever comes first; it is made only while the month's rerank calls (spend_event kind `rerank`, counted beside the
+//    embedding, application/rerank.ts) are below SEARCH_RERANK_MONTHLY_CALLS (900), and not for 5 minutes after a 429. On any
+//    failure, timeout, limit or lack of time the question is ranked by the floor and gap as before, silently for the resident; a
+//    failed or timed-out call, and the monthly limit, are told to ops (`search.leg_failed`, `rerank_failed` / `rerank_quota`, with
+//    the model and a class, never the question). `emergency_first` is decided on the legs' similarities as before, never on the
+//    rerank, so a rerank cannot hide the 911 block.
 //  - `emergency_first` (owner decision 41, as changed by the interim tuning): set when the best match of either completed leg
 //    is an emergency-category provider at the emergency top threshold, or one is in the top 3 of either leg at the
 //    emergency-only threshold, even with no clear match (the results then stay empty). An emergency-category provider among
@@ -76,21 +89,28 @@ import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, type KeywordIndex } from "../domain/searchKeywords";
+import { monthlyModelCalls } from "@/modules/spend";
 import {
   DEFAULT_DIRECT_FLOOR,
   DEFAULT_DIRECT_GAP,
   DEFAULT_EMERGENCY_THRESHOLD,
   DEFAULT_EMERGENCY_TOP_THRESHOLD,
   DEFAULT_KEYWORD_WEIGHT,
+  DEFAULT_RERANK_MIN,
   cosine,
   emergencyFirst,
   rankLegs,
+  rerankCandidates,
+  rerankedResults,
+  type LegSimilarities,
   type RankingRoute,
   type RankingSettings,
+  type SearchHit,
 } from "../domain/searchRanking";
-import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
+import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, searchTextsOfListing, type ReleaseSearchRecord } from "../domain/searchData";
 import { VectorsBinaryError, decodeVectorsBinary } from "../domain/vectorsBinary";
-import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache } from "./ports";
+import { QueryEmbedError, RerankError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache, type Reranker } from "./ports";
+import { DEFAULT_RERANK_MONTHLY_CALLS, RERANK_MIN_BUDGET_MS, RERANK_SPEND_KIND, RERANK_TIMEOUT_MS, createRerankQuota, type RerankOutcome, type RerankQuota } from "./rerank";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
 export const SEARCH_SPEND_KIND = "embed";
@@ -164,8 +184,10 @@ export type SearchStageReason = "snapshot_failed" | "embed_failed" | "embed_inva
 /**
  * A vendor call of a leg failed while the search still answered (the other leg completed). `translate_quota`: the
  * translation model is past the vendor's limit; `translate_fallback_used`: the fallback model made the translation instead.
+ * `rerank_failed`: the direct route's rerank failed or timed out (the question was ranked by similarity instead); `rerank_quota`:
+ * the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS, or could not be counted.
  */
-export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used";
+export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used" | "rerank_failed" | "rerank_quota";
 
 /**
  * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
@@ -203,6 +225,10 @@ export interface SearchObservation {
   translatedLeg: TranslatedLeg;
   /** The similarity of every provider of the release in each leg that completed: the direct leg first, then the translated one. */
   legs: { leg: "direct" | "translated"; similarities: ReadonlyMap<string, number> }[];
+  /** What the direct route's reranker did. */
+  rerank: RerankOutcome;
+  /** The results the reranker made (`rerank` is `used`), which are the answer's; null otherwise (the answer is the legs' ranking). */
+  reranked: SearchHit[] | null;
 }
 
 /** One search_log row: counts and codes only. */
@@ -235,6 +261,8 @@ export interface SnapshotData {
   emergency: ReadonlySet<string>;
   /** The keyword index of the release's English listing; absent (a test's snapshot): no keyword boost. */
   keywords?: KeywordIndex;
+  /** Each provider's English search text (what its vector was made from), which the reranker reads; absent: no rerank. */
+  searchTexts?: ReadonlyMap<string, string>;
 }
 
 /** The request snapshot: the current release (null when there is none) and its search data (null when it has none, or no key is configured). */
@@ -282,6 +310,14 @@ export interface SearchDeps {
   directGap?: number;
   /** SEARCH_EMERGENCY_TOP_THRESHOLD: an emergency provider that is a leg's best match at this similarity sets `emergency_first`; default 0.14. */
   emergencyTopThreshold?: number;
+  /** The direct route's reranker (SEARCH_RERANK); absent or null: the direct route ranks by similarity alone (floor and gap). */
+  reranker?: Reranker | null;
+  /** SEARCH_RERANK_MIN: the least relevance of a reranked result; default 0.05. */
+  rerankMin?: number;
+  /** SEARCH_RERANK_MONTHLY_CALLS: the rerank calls a calendar month may use before the reranker is no longer called; default 900. */
+  rerankMonthlyCalls?: number;
+  /** Test seam: counts the month's rerank calls of a model (default: spend_event rows of kind `rerank`, every purpose). */
+  rerankCalls?: (model: string, now: Date) => Promise<number>;
   /** Test seams. */
   snapshotFailureTtlMs?: number;
   snapshotLoadTimeoutMs?: number;
@@ -548,6 +584,8 @@ async function loadReleaseData(storage: DirectoryStorage, release: CurrentReleas
     emergency,
     // The keyword half of the ranking reads the same English listing: indexed once per release, here.
     keywords: buildKeywordIndex(keywordDocumentsOf(listing)),
+    // So does the reranker: the providers' search texts, as the release's vectors were made from them.
+    searchTexts: searchTextsOfListing(listing),
   };
 }
 
@@ -640,6 +678,16 @@ export function createSearch(deps: SearchDeps): SearchService {
     },
     spend: (event) => recordSpendEvent(deps.db(), event),
   };
+  // The direct route's reranker and its monthly gate (one per service: an instance counts its own calls between two counts).
+  const reranker = deps.reranker ?? null;
+  const rerankMin = deps.rerankMin ?? DEFAULT_RERANK_MIN;
+  const rerankQuota: RerankQuota | null = reranker
+    ? createRerankQuota({
+        limit: deps.rerankMonthlyCalls ?? DEFAULT_RERANK_MONTHLY_CALLS,
+        clock,
+        count: (now) => (deps.rerankCalls ? deps.rerankCalls(reranker.model, now) : monthlyModelCalls(deps.db(), RERANK_SPEND_KIND, reranker.model, now)),
+      })
+    : null;
   // Releases whose data failed to load, until when: a bad release is not downloaded again on every search.
   const failedUntil = new Map<number, number>();
   // Vendor failures already told to ops (by reason and model), until when: the same failure of the same model is not reported
@@ -773,6 +821,10 @@ export function createSearch(deps: SearchDeps): SearchService {
     const source = translator ? questionSourceOf(detected, q) : null;
     const translateModel = source && translator ? translator.modelFor(source) : null;
     const translating = source !== null && translateModel !== null && translator !== null;
+    // The reranker is for a question in another language that needs no translated leg (whether or not the leg is configured):
+    // its month's calls are counted now, beside the snapshot and the embedding, so that the count costs the search no time.
+    const mayRerank = reranker !== null && rerankQuota !== null && deps.embedder !== null && questionSourceOf(detected, q) === null && !isEnglishQuestion(detected, q, lang);
+    if (mayRerank) rerankQuota.refresh();
 
     // ---- the request snapshot (read in parallel with the translation)
     const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean; detail: string | undefined } = { snapshot: null, failure: null, repeat: false, detail: undefined };
@@ -827,6 +879,64 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (!deps.onFailure) return;
       const at = { reason, releaseV, ms: elapsed(), answered: true as const, ...(model === undefined ? {} : { model }), ...(error === undefined ? {} : { error }) };
       track(() => deps.onFailure!(at));
+    };
+
+    /**
+     * The direct route's rerank (see the header): its results and what it did, or null results when the question is to be ranked
+     * by the floor and gap instead. Never throws. The call is counted in spend_event (kind `rerank`, one call) when the vendor
+     * answered or the call was cut at its deadline (it may have been billed), not when the vendor refused it.
+     */
+    const rerankDirect = async (legs: readonly LegSimilarities[], texts: ReadonlyMap<string, string>): Promise<{ outcome: RerankOutcome; results: SearchHit[] | null }> => {
+      const model = reranker!.model;
+      const quota = rerankQuota!;
+      if (deadline - clock() < RERANK_MIN_BUDGET_MS) return { outcome: "no_time", results: null };
+      const allowance = await quota.check(deadline - clock() - RERANK_MIN_BUDGET_MS);
+      if (allowance === "limited") return { outcome: "limited", results: null };
+      if (allowance !== "ok") {
+        reportVendorFailure("rerank_quota", model, allowance === "unknown" ? "count_failed" : undefined);
+        return { outcome: "quota", results: null };
+      }
+      const left = deadline - clock();
+      if (left < RERANK_MIN_BUDGET_MS) return { outcome: "no_time", results: null };
+      const candidates = rerankCandidates(legs);
+      const documents = candidates.map((hit) => texts.get(hit.provider_id));
+      if (candidates.length === 0 || documents.some((text) => text === undefined)) return { outcome: "failed", results: null };
+      const controller = new AbortController();
+      const callStarted = clock();
+      const count = () => {
+        quota.used();
+        const event: SpendEventInput = { kind: RERANK_SPEND_KIND, purpose: spendPurpose, model, releaseV, calls: 1, tokens: 0, ms: Math.round(clock() - callStarted) };
+        track(async () => {
+          await writer.spend(event);
+          deps.onSpendWritten?.(event);
+        });
+      };
+      const call = reranker!.rerank({ query: q, documents: documents as string[], signal: controller.signal });
+      call.catch(() => undefined);
+      const timedOut = () => {
+        count();
+        reportVendorFailure("rerank_failed", model, TIMED_OUT);
+        return { outcome: "timed_out" as const, results: null };
+      };
+      try {
+        const raced = await raceTimeout(call, Math.min(RERANK_TIMEOUT_MS, left), () => controller.abort());
+        // A call that rejects as it is aborted can settle the race before the timeout does: both are the timeout.
+        if (raced === "timeout") return timedOut();
+        count();
+        const relevance = new Map<string, number>();
+        for (const { index, relevance: r } of raced.results) {
+          const hit = candidates[index];
+          if (hit) relevance.set(hit.provider_id, r);
+        }
+        return { outcome: "used", results: rerankedResults(candidates, relevance, rerankMin) };
+      } catch (error) {
+        if (controller.signal.aborted) return timedOut();
+        if (error instanceof RerankError && error.vendor === "limited") quota.limited();
+        reportVendorFailure("rerank_failed", model, error instanceof RerankError ? (error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`) : classifyError(error));
+        return { outcome: "failed", results: null };
+      } finally {
+        timings?.record("rerank", clock() - callStarted);
+      }
     };
 
     // ---- the legs: each paid call's usage is recorded once, as the vendor reported it, or estimated when it was cancelled.
@@ -1049,19 +1159,23 @@ export function createSearch(deps: SearchDeps): SearchService {
     const keywordText = translatedEnglish !== null ? `${q} ${translatedEnglish}` : questionIsEnglish ? q : null;
     const route: RankingRoute = keywordText === null ? "direct" : "hybrid";
     const boosts = keywordText !== null && data.keywords ? keywordBoosts(data.keywords, keywordText, deps.keywordWeight ?? DEFAULT_KEYWORD_WEIGHT) : new Map<string, number>();
-    const results = rankLegs(completed, route, boosts, settings);
+    timings?.record("rank", clock() - rankStarted);
+    // The direct route of a question the reranker is for: its results, when it answered; the floor and gap otherwise.
+    const reranking = mayRerank && route === "direct" && direct.ok && data.searchTexts !== undefined ? await rerankDirect(completed, data.searchTexts) : null;
+    const rerank: RerankOutcome = reranking?.outcome ?? "not_needed";
+    const reranked = reranking?.results ?? null;
+    const results = reranked ?? rankLegs(completed, route, boosts, settings);
     const status = results.length === 0 ? "no_clear_match" : "ok";
     // `emergency_first` is decided on the legs, not on what is shown: an emergency provider that is a leg's best match at the
     // emergency top threshold, or in a leg's top 3 at the emergency-only threshold, sets it, even with no clear match.
     const emergency = emergencyFirst(completed, data.emergency, settings);
-    timings?.record("rank", clock() - rankStarted);
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
     if (deps.observe) {
       const legs: SearchObservation["legs"] = [];
       if (direct.ok) legs.push({ leg: "direct", similarities: direct.similarities });
       if (translated?.ok) legs.push({ leg: "translated", similarities: translated.similarities });
       try {
-        deps.observe({ releaseV: data.releaseV, ...settings, route, boosts, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs });
+        deps.observe({ releaseV: data.releaseV, ...settings, route, boosts, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs, rerank, reranked });
       } catch {
         // A measurement never changes an answer.
       }

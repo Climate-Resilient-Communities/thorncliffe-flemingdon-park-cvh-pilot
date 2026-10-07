@@ -170,6 +170,16 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        warning. When translate spend_event rows of a model with a limit
  *                                                        reach 80% of it, ops gets one `search.leg_failed` event
  *                                                        (`translate_quota_near`) per model per month per instance
+ * SEARCH_RERANK         server   optional                 `on` (default) or `off`: whether a question in another language that
+ *                                                        takes no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…)
+ *                                                        has its 20 best providers reranked with Cohere rerank-v3.5 (interim
+ *                                                        tuning, arm R2). It applies only where COHERE_API_KEY is set; on any
+ *                                                        failure the question is ranked by SEARCH_DIRECT_FLOOR and _GAP
+ * SEARCH_RERANK_MIN     server   optional                 the least rerank relevance (0 to 1, default 0.05) of a reranked result
+ * SEARCH_RERANK_MONTHLY_CALLS
+ *                      server   optional                 the rerank calls a calendar month (America/Toronto) may use, counted
+ *                                                        from spend_event (kind rerank); at it the reranker is no longer called
+ *                                                        that month. Default 900: Cohere allows about 1,000 a month per model
  * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
  *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
  *                                                        tokens the directory publish may use in a calendar month
@@ -293,6 +303,9 @@ const rawSchema = z.object({
   SEARCH_QUESTION_FALLBACK: optionalText,
   SEARCH_FALLBACK_MIN_BUDGET_MS: optionalText,
   SEARCH_TRANSLATE_MONTHLY_CALLS: optionalText,
+  SEARCH_RERANK: optionalText,
+  SEARCH_RERANK_MIN: optionalText,
+  SEARCH_RERANK_MONTHLY_CALLS: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
@@ -326,6 +339,12 @@ export interface SearchSettings {
   fallbackMinBudgetMs: number;
   /** The translation calls a model may use in a calendar month, where the vendor limits them (model id to limit); empty: no warning. */
   translateMonthlyCalls: Readonly<Record<string, number>>;
+  /** Whether the direct route reranks (where a Cohere key is configured). */
+  rerank: boolean;
+  /** The least rerank relevance of a reranked result. */
+  rerankMin: number;
+  /** The rerank calls a calendar month may use before the reranker is no longer called. */
+  rerankMonthlyCalls: number;
 }
 
 /** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
@@ -376,6 +395,9 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   questionFallback: DEFAULT_QUESTION_FALLBACK,
   fallbackMinBudgetMs: 800,
   translateMonthlyCalls: {},
+  rerank: true,
+  rerankMin: 0.05,
+  rerankMonthlyCalls: 900,
 };
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -809,6 +831,16 @@ function parseTranslateMonthlyCalls(value: string | undefined, problems: string[
   return limits;
 }
 
+/** SEARCH_RERANK: `on` or `off` (any case); unset is the default (on). */
+function parseRerankSwitch(value: string | undefined, problems: string[]): boolean {
+  if (value === undefined) return DEFAULT_SEARCH_SETTINGS.rerank;
+  const text = value.trim().toLowerCase();
+  if (text === "on") return true;
+  if (text === "off") return false;
+  problems.push("SEARCH_RERANK: must be `on` or `off`");
+  return DEFAULT_SEARCH_SETTINGS.rerank;
+}
+
 /** A search setting from 0 to 1 (the form of SEARCH_THRESHOLD), or its default when unset. */
 function unitNumber(name: string, raw: string | undefined, fallback: number, example: string, problems: string[]): number {
   if (raw === undefined) return fallback;
@@ -867,6 +899,9 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     questionFallback: parseQuestionKinds("SEARCH_QUESTION_FALLBACK", raw.SEARCH_QUESTION_FALLBACK, DEFAULT_QUESTION_FALLBACK, problems),
     fallbackMinBudgetMs: parseFallbackMinBudget(raw.SEARCH_FALLBACK_MIN_BUDGET_MS, problems),
     translateMonthlyCalls: parseTranslateMonthlyCalls(raw.SEARCH_TRANSLATE_MONTHLY_CALLS, problems),
+    rerank: parseRerankSwitch(raw.SEARCH_RERANK, problems),
+    rerankMin: unitNumber("SEARCH_RERANK_MIN", raw.SEARCH_RERANK_MIN, defaults.rerankMin, "0.05", problems),
+    rerankMonthlyCalls: positiveInteger("SEARCH_RERANK_MONTHLY_CALLS", raw.SEARCH_RERANK_MONTHLY_CALLS, defaults.rerankMonthlyCalls, problems),
   };
 }
 
