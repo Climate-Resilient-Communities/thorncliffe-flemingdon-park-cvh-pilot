@@ -7,7 +7,9 @@
 // What matches src/app/search.ts `searchService()`:
 //  - the use case (`createSearch`), the Cohere question embedder (`cohereQueryEmbedder`), the translated-question leg's translator
 //    (`createQuestionTranslator` over `cohereTranslator`) with the route (`SEARCH_QUESTION_ROUTE`) and the fallback
-//    (`SEARCH_QUESTION_FALLBACK`) as production resolves them, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`, the
+//    (`SEARCH_QUESTION_FALLBACK`) as production resolves them, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`,
+//    the ranking's search-time settings (`SEARCH_EMERGENCY_TOP_THRESHOLD`, `SEARCH_KEYWORD_WEIGHT`, `SEARCH_DIRECT_FLOOR`,
+//    `SEARCH_DIRECT_GAP`), the
 //    release's own threshold and emergency categories (they are in the release), the private bucket of the release files;
 //  - the spend of each call written by the use case, as purpose `test_set`, and no `search_log` row.
 // Nothing here ranks, embeds or translates: it only asks the use case and watches it. The use case's `observe` hands over the
@@ -81,6 +83,10 @@ export async function engineFrom(parts: EngineParts, options: { translatedLeg: b
     translator,
     fallbackMinBudgetMs: parts.settings.fallbackMinBudgetMs,
     emergencyThreshold: parts.settings.emergencyThreshold,
+    emergencyTopThreshold: parts.settings.emergencyTopThreshold,
+    keywordWeight: parts.settings.keywordWeight,
+    directFloor: parts.settings.directFloor,
+    directGap: parts.settings.directGap,
     spendPurpose: "test_set",
     log: false,
     defer: (work) => void pending.push(work),

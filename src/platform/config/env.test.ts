@@ -628,11 +628,16 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(() => parseEnv({ ...production, COHERE_API_KEY: KEY, NEXT_PUBLIC_ANYTHING: "something else" })).not.toThrow();
   });
 
-  it("has defaults: embed-v4.0, a provisional threshold, the emergency category and a monthly allowance", () => {
+  it("has defaults: embed-v4.0, a provisional threshold, the ranking's interim settings, the emergency category and a monthly allowance", () => {
+    // The threshold was 0.3 until the interim tuning of 2026-10-07 (data/search-test-set/reports/2026-10-07-interim-tuning.md).
     expect(parseEnv(local).search).toEqual({
       embedModel: "embed-v4.0",
-      threshold: 0.3,
+      threshold: 0.27,
       emergencyThreshold: 0.25,
+      emergencyTopThreshold: 0.14,
+      keywordWeight: 0.15,
+      directFloor: 0.24,
+      directGap: 0.1,
       emergencyCategories: ["Support & Emergency Services"],
       allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
       questionRoute: {
@@ -669,6 +674,10 @@ describe("Cohere and the search settings (S03.02)", () => {
       embedModel: "embed-multilingual-v3.0",
       threshold: 0.42,
       emergencyThreshold: 0.2,
+      emergencyTopThreshold: 0.14,
+      keywordWeight: 0.15,
+      directFloor: 0.24,
+      directGap: 0.1,
       emergencyCategories: ["Support & Emergency Services", "Crisis Lines"],
       allowance: { callsPerMonth: 40, tokensPerMonth: 100000 },
       questionRoute: DEFAULT_QUESTION_ROUTE,
@@ -741,8 +750,16 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "ur=off" }).search.questionRoute.ur).toBeNull();
   });
 
+  it("reads the ranking's search-time settings: keyword weight, direct floor and gap, emergency top threshold, each 0 to 1", () => {
+    expect(
+      parseEnv({ ...production, SEARCH_KEYWORD_WEIGHT: "0", SEARCH_DIRECT_FLOOR: " 0.3 ", SEARCH_DIRECT_GAP: "0.05", SEARCH_EMERGENCY_TOP_THRESHOLD: "0.2" }).search,
+    ).toMatchObject({ keywordWeight: 0, directFloor: 0.3, directGap: 0.05, emergencyTopThreshold: 0.2 });
+    // Blank is unset (a workflow's unset variable).
+    expect(parseEnv({ ...production, SEARCH_KEYWORD_WEIGHT: "", SEARCH_DIRECT_GAP: " " }).search).toMatchObject({ keywordWeight: 0.15, directGap: 0.1 });
+  });
+
   it("reads the emergency-only threshold (owner decision 41): 0 to 1, and no greater than SEARCH_THRESHOLD", () => {
-    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.3 " }).search.emergencyThreshold).toBe(0.3); // equal to the default threshold
+    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.27 " }).search.emergencyThreshold).toBe(0.27); // equal to the default threshold (0.27 since the interim tuning)
     expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: "0" }).search.emergencyThreshold).toBe(0);
     expect(parseEnv({ ...production, SEARCH_THRESHOLD: "0.5", SEARCH_EMERGENCY_THRESHOLD: "0.4" }).search.emergencyThreshold).toBe(0.4);
     // A lower SEARCH_THRESHOLD alone leaves the default 0.25 above it.
@@ -758,7 +775,11 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["SEARCH_EMERGENCY_THRESHOLD", "1.5", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_THRESHOLD", "low", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_THRESHOLD", "-0.1", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
-    ["SEARCH_EMERGENCY_THRESHOLD", "0.31", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "0.28", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
+    ["SEARCH_EMERGENCY_TOP_THRESHOLD", "1.5", /SEARCH_EMERGENCY_TOP_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_KEYWORD_WEIGHT", "-0.1", /SEARCH_KEYWORD_WEIGHT: must be a number from 0 to 1/],
+    ["SEARCH_DIRECT_FLOOR", "high", /SEARCH_DIRECT_FLOOR: must be a number from 0 to 1/],
+    ["SEARCH_DIRECT_GAP", "2", /SEARCH_DIRECT_GAP: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_CATEGORIES", " , ", /SEARCH_EMERGENCY_CATEGORIES: must list at least one category name/],
     ["EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", "0", /EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: must be a whole number of at least 1/],
     ["SEARCH_QUESTION_ROUTE", "xx=north-small-translate-09-2026", /SEARCH_QUESTION_ROUTE: must be `off`, or comma-separated kind=model pairs/],

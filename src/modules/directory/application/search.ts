@@ -18,11 +18,17 @@
 //    translation), `timed_out`, or `not_needed` (no leg was run, or the answer was the question itself, already English).
 //    A vendor call that failed while the other leg answered is still told to ops (`answered: true`), once a minute per reason
 //    and model.
-//  - Ranking (domain/searchRanking.ts) over the legs that completed: threshold first, then RRF (k = 60) when both did,
-//    top 5. When the direct leg fails but the translated one completed, the results come from the translated leg alone.
-//  - Emergency fail-safe (owner decision 41): `emergency_first` is also set when an emergency-category provider is in the
-//    top 3 of either completed leg at the emergency-only threshold, even with no clear match (the results then stay empty).
-//    It only ever turns the flag on.
+//  - Ranking (domain/searchRanking.ts, interim tuning of 2026-10-07) over the legs that completed, by a provider's best
+//    similarity over them. A question in English, or one whose translated leg completed, takes the `hybrid` route: the
+//    similarity plus a keyword boost (domain/searchKeywords.ts: BM25 of the question's words, and its English translation's,
+//    against each provider's English name, categories, subcategories and services, indexed when the release's data is
+//    loaded), the top 5 at or above the release's threshold. Any other question takes the `direct` route: the top 5 when the
+//    best similarity reaches the direct floor, less those more than the direct gap below it. When the direct leg fails but
+//    the translated one completed, the results come from the translated leg alone.
+//  - `emergency_first` (owner decision 41, as changed by the interim tuning): set when the best match of either completed leg
+//    is an emergency-category provider at the emergency top threshold, or one is in the top 3 of either leg at the
+//    emergency-only threshold, even with no clear match (the results then stay empty). An emergency-category provider among
+//    the results no longer sets it on its own (the category holds the shelters, which a question about food lists too).
 //  - Time: every leg is cancelled and ignored when still running 2.2 s after the request started (its result, should it
 //    arrive later, is never used), and the whole request
 //    answers within 2.5 s. "Started" is when the route took the request (it passes that time in), so reading the body and
@@ -69,7 +75,19 @@ import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeEr
 import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
-import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
+import { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, type KeywordIndex } from "../domain/searchKeywords";
+import {
+  DEFAULT_DIRECT_FLOOR,
+  DEFAULT_DIRECT_GAP,
+  DEFAULT_EMERGENCY_THRESHOLD,
+  DEFAULT_EMERGENCY_TOP_THRESHOLD,
+  DEFAULT_KEYWORD_WEIGHT,
+  cosine,
+  emergencyFirst,
+  rankLegs,
+  type RankingRoute,
+  type RankingSettings,
+} from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
 import { VectorsBinaryError, decodeVectorsBinary } from "../domain/vectorsBinary";
 import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache } from "./ports";
@@ -171,6 +189,14 @@ export interface SearchObservation {
   /** The release's threshold, and the emergency-only threshold as configured (the fail-safe applies it at most as high as the release's). */
   threshold: number;
   emergencyThreshold: number;
+  /** The direct route's floor and gap, and the emergency top threshold, as configured. */
+  directFloor: number;
+  directGap: number;
+  emergencyTopThreshold: number;
+  /** The route the question was ranked by. */
+  route: RankingRoute;
+  /** The keyword boost of each provider that matched a word (empty on the direct route): numbers only, never a word. */
+  boosts: ReadonlyMap<string, number>;
   /** The providers of an emergency category in this release. */
   emergencyProviders: ReadonlySet<string>;
   /** What the translated-question leg did. */
@@ -207,6 +233,8 @@ export interface SnapshotData {
   vectors: ArrayLike<number>[];
   known: ReadonlySet<string>;
   emergency: ReadonlySet<string>;
+  /** The keyword index of the release's English listing; absent (a test's snapshot): no keyword boost. */
+  keywords?: KeywordIndex;
 }
 
 /** The request snapshot: the current release (null when there is none) and its search data (null when it has none, or no key is configured). */
@@ -247,6 +275,13 @@ export interface SearchDeps {
    * release's own threshold.
    */
   emergencyThreshold?: number;
+  /** SEARCH_KEYWORD_WEIGHT: the most the keyword match adds to a similarity on the hybrid route; default 0.15. */
+  keywordWeight?: number;
+  /** SEARCH_DIRECT_FLOOR and SEARCH_DIRECT_GAP: the direct route's least best similarity and furthest gap below it; defaults 0.24 and 0.10. */
+  directFloor?: number;
+  directGap?: number;
+  /** SEARCH_EMERGENCY_TOP_THRESHOLD: an emergency provider that is a leg's best match at this similarity sets `emergency_first`; default 0.14. */
+  emergencyTopThreshold?: number;
   /** Test seams. */
   snapshotFailureTtlMs?: number;
   snapshotLoadTimeoutMs?: number;
@@ -511,6 +546,8 @@ async function loadReleaseData(storage: DirectoryStorage, release: CurrentReleas
     vectors: vectors.vectors,
     known: new Set(vectors.ids),
     emergency,
+    // The keyword half of the ranking reads the same English listing: indexed once per release, here.
+    keywords: buildKeywordIndex(keywordDocumentsOf(listing)),
   };
 }
 
@@ -560,6 +597,17 @@ export function questionSourceOf(detected: QuestionLanguage, q?: string): Questi
 export function questionLegSource(input: { q: string; lang: LangCode }): QuestionSource | null {
   const parsed = parseSearchRequest(input);
   return parsed.ok ? questionSourceOf(detect(parsed.value.q, parsed.value.lang), parsed.value.q) : null;
+}
+
+/**
+ * Whether a question is read as English for the ranking's hybrid route (its words are matched against the providers' English
+ * text): the detector is confident it is English; or it is Latin text the detector cannot place (`romanized_or_mixed`) asked
+ * on an English page, or one or two plainly English words ("lawyer", "rent") on any page.
+ */
+export function isEnglishQuestion(detected: QuestionLanguage, q: string, pageLang: LangCode): boolean {
+  if (detected.lang === "en") return true;
+  if (detected.lang !== null) return false;
+  return detected.confidence === "romanized_or_mixed" && (pageLang === "en" || isClearlyEnglish(q));
 }
 
 /** How a leg ended: its similarities, or why it has none. */
@@ -873,6 +921,9 @@ export function createSearch(deps: SearchDeps): SearchService {
     // What the translation told ops, with the model it concerned: `translate_quota` for a model past its limit, `translate_failed`
     // for any other vendor failure, `translate_fallback_used` when the fallback made the translation.
     const translateNotes: { reason: SearchLegFailureReason; model: string; error?: string }[] = [];
+    // The English translation, once the translated leg has it: only read for the keyword match when the leg completed. Held in
+    // this variable for the length of the request, like the question, and never written anywhere.
+    let english: string | null = null;
     const noteFailure = (error: unknown, model: string) => {
       translateNotes.push({ reason: error instanceof QuestionTranslationError && error.vendor === "quota" ? "translate_quota" : "translate_failed", model, error: classifyTranslation(error) });
     };
@@ -908,10 +959,10 @@ export function createSearch(deps: SearchDeps): SearchService {
             return new TranslateStageError(rejected ? "translate_rejected" : "translate_failed", classifyTranslation(error));
           };
 
-          let english: string;
+          let translation: string;
           let rescuedBy: string | null = null;
           try {
-            english = await translateWith(translateModel);
+            translation = await translateWith(translateModel);
           } catch (error) {
             if (leg.signal.aborted) throw new StageError("timed_out");
             const vendor = error instanceof QuestionTranslationError && error.code === "translate_failed" ? error.vendor : undefined;
@@ -923,7 +974,7 @@ export function createSearch(deps: SearchDeps): SearchService {
             // (what a rejection chain adds after that comes too late). The routed model needs someone's attention whatever the fallback does.
             if (vendor === "quota") noteFailure(error, translateModel);
             try {
-              english = await translateWith(fallback);
+              translation = await translateWith(fallback);
               rescuedBy = fallback;
             } catch (second) {
               // A transient limit is told only if the fallback failed too (when it answered, the rescue is all ops hears).
@@ -936,7 +987,8 @@ export function createSearch(deps: SearchDeps): SearchService {
           await snapshotKnown;
           const known = state.snapshot;
           if (!known?.data || !deps.embedder) throw new StageError("snapshot_failed");
-          const similarities = await embedAndCompare(leg, known.data, deps.embedder, english);
+          const similarities = await embedAndCompare(leg, known.data, deps.embedder, translation);
+          english = translation;
           // The fallback rescued the question only if the leg completed with its translation: not when the embedding failed or was cut at the deadline.
           if (rescuedBy !== null && !leg.signal.aborted) translateNotes.push({ reason: "translate_fallback_used", model: rescuedBy });
           return similarities;
@@ -981,14 +1033,27 @@ export function createSearch(deps: SearchDeps): SearchService {
     }
     for (const note of vendor) reportVendorFailure(note.reason, note.model, note.error);
 
-    // The ranking sequence over the legs that completed: threshold first, then RRF when there are two.
+    // The ranking over the legs that completed. With English text to match (the question in English, or the translated leg's
+    // English), the hybrid route: similarity plus keyword boost against the release's threshold. Otherwise the direct route.
     const rankStarted = clock();
-    const results = rankLegs(completed, data.threshold);
+    const settings: RankingSettings = {
+      threshold: data.threshold,
+      directFloor: deps.directFloor ?? DEFAULT_DIRECT_FLOOR,
+      directGap: deps.directGap ?? DEFAULT_DIRECT_GAP,
+      emergencyThreshold: deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD,
+      emergencyTopThreshold: deps.emergencyTopThreshold ?? DEFAULT_EMERGENCY_TOP_THRESHOLD,
+    };
+    const translatedEnglish = translated?.ok ? english : null;
+    // A translation that came back as the question itself says the question is English.
+    const questionIsEnglish = isEnglishQuestion(detected, q, lang) || (translated !== null && !translated.ok && translated.reason === "translate_identical");
+    const keywordText = translatedEnglish !== null ? `${q} ${translatedEnglish}` : questionIsEnglish ? q : null;
+    const route: RankingRoute = keywordText === null ? "direct" : "hybrid";
+    const boosts = keywordText !== null && data.keywords ? keywordBoosts(data.keywords, keywordText, deps.keywordWeight ?? DEFAULT_KEYWORD_WEIGHT) : new Map<string, number>();
+    const results = rankLegs(completed, route, boosts, settings);
     const status = results.length === 0 ? "no_clear_match" : "ok";
-    // The emergency fail-safe (owner decision 41) can only turn the flag on: an emergency provider among the top 3 of either
-    // leg at the emergency-only threshold sets it, even with no clear match (the results then stay empty).
-    const emergencyThreshold = Math.min(deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, data.threshold);
-    const emergency = emergencyFirst(results, data.emergency) || emergencyInTop(completed, data.emergency, emergencyThreshold);
+    // `emergency_first` is decided on the legs, not on what is shown: an emergency provider that is a leg's best match at the
+    // emergency top threshold, or in a leg's top 3 at the emergency-only threshold, sets it, even with no clear match.
+    const emergency = emergencyFirst(completed, data.emergency, settings);
     timings?.record("rank", clock() - rankStarted);
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
     if (deps.observe) {
@@ -996,7 +1061,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (direct.ok) legs.push({ leg: "direct", similarities: direct.similarities });
       if (translated?.ok) legs.push({ leg: "translated", similarities: translated.similarities });
       try {
-        deps.observe({ releaseV: data.releaseV, threshold: data.threshold, emergencyThreshold: deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs });
+        deps.observe({ releaseV: data.releaseV, ...settings, route, boosts, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs });
       } catch {
         // A measurement never changes an answer.
       }

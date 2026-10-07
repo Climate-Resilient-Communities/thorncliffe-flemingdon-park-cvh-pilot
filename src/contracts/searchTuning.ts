@@ -196,6 +196,11 @@ export const TuningReportSchema = z.strictObject({
     question_fallback: RouteSchema,
     fallback_min_budget_ms: z.number().int().min(0),
     emergency_threshold: z.number(),
+    /** The ranking's search-time settings (interim tuning, 2026-10-07); absent from reports made before it. */
+    emergency_top_threshold: z.number().optional(),
+    keyword_weight: z.number().optional(),
+    direct_floor: z.number().optional(),
+    direct_gap: z.number().optional(),
   }),
   max_calls: z.number().int().min(1),
   /** Vendor calls made, over all legs. */

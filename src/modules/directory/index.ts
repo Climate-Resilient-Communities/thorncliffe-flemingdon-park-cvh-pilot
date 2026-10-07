@@ -95,6 +95,7 @@ export {
   SearchFailure,
   createSearch,
   currentSearchFacts,
+  isEnglishQuestion,
   questionLegSource,
   type SearchDeps,
   type SearchFailureCode,
@@ -107,4 +108,22 @@ export {
 export { recordUsage, usageDay } from "./application/usageCount";
 export { QueryEmbedError, type QueryEmbedder, type ReleaseFileCache } from "./application/ports";
 export { cohereQueryEmbedder, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
-export { DEFAULT_EMERGENCY_THRESHOLD, MAX_RESULTS, RRF_K, cosine, emergencyFirst, emergencyInTop, rankLegs, type SearchHit } from "./domain/searchRanking";
+export {
+  DEFAULT_DIRECT_FLOOR,
+  DEFAULT_DIRECT_GAP,
+  DEFAULT_EMERGENCY_THRESHOLD,
+  DEFAULT_EMERGENCY_TOP_THRESHOLD,
+  DEFAULT_KEYWORD_WEIGHT,
+  MAX_RESULTS,
+  cosine,
+  emergencyFirst,
+  emergencyInTop,
+  emergencyOnTop,
+  rankLegs,
+  rankingScores,
+  resultsOf,
+  type RankingRoute,
+  type RankingSettings,
+  type SearchHit,
+} from "./domain/searchRanking";
+export { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, keywordTokens, type KeywordDocument, type KeywordIndex } from "./domain/searchKeywords";

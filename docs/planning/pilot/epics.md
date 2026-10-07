@@ -1596,9 +1596,9 @@ So that a question in any language finds an English-sourced listing.
 **When** results are returned
 **Then** `status` is `no_clear_match` and `results` is empty
 
-**Given** any result is an emergency result
+**Given** the best match of either completed leg is a provider in an emergency category with a similarity of at least `SEARCH_EMERGENCY_TOP_THRESHOLD` (default 0.14)
 **When** returned
-**Then** `emergency_first` is true
+**Then** `emergency_first` is true (interim tuning, 2026-10-07, see S03.07: this replaced "any result is an emergency result", which put the 911 block first for "where can I get food?" because the emergency category holds the shelters)
 
 **Given** a provider in an emergency category is among the top 3 (k = 3) of either completed leg, with a similarity of at least `SEARCH_EMERGENCY_THRESHOLD` (default 0.25, from 0 to 1, no greater than `SEARCH_THRESHOLD`; owner decision 41, 2026-10-03)
 **When** the server answers, including when the status is `no_clear_match`
@@ -1648,7 +1648,7 @@ So that I am not disadvantaged by the language or script I use.
 
 **Given** the translation and its embedding complete before 2.2 s from request start and `eld` confirms the translation is English
 **When** results are ranked
-**Then** the ranking sequence is applied to both legs (threshold first, then RRF over qualifying providers), and `search_log.translated_leg` is `used`
+**Then** the ranking sequence is applied to both legs (threshold first, then RRF over qualifying providers; since the interim tuning of 2026-10-07, see S03.07, each provider's best similarity over both legs plus the keyword boost), and `search_log.translated_leg` is `used`
 
 **Given** the translation fails, is not English, or the translated leg is still running at 2.2 s
 **When** the server answers
@@ -1751,6 +1751,8 @@ So that the choice is evidence, not guesswork, and can be repeated on the full t
 **Given** S03.08's evaluation run misses the launch bar
 **When** the team reviews it
 **Then** the comparison of the three candidates (`embed-multilingual-v3.0`, `embed-v4.0`, `embed-v5.0-fast`) from the MVP reference runs before launch, as contingent effort of about 3 h (2 h comparison, 1 h re-running the evaluation), recorded against this story's Actual
+
+**Notes — interim tuning (2026-10-07, product owner's approval).** Live search answered "where can I get food?", "food" and "I need food" with nothing (no similarity reached 0.30). An offline experiment (`data/search-test-set/reports/2026-10-07-interim-tuning.md`; cached `embed-v4.0` vectors, no change to production) compared five ways of ranking on the 171 test questions and 22 new English need-phrased ones (added to `questions.jsonl` as `claude-draft`, en-11 to en-32, tuning subset). The chosen setting, built in `searchRanking.ts`, `searchKeywords.ts` and `search.ts` (the spine's AD-11 "As built (interim search tuning)"): for English questions and those the translated leg answered, the similarity plus a keyword boost (BM25 over each provider's English name, categories, subcategories and services, weight `SEARCH_KEYWORD_WEIGHT` 0.15), top 5 at `SEARCH_THRESHOLD` 0.27 (was 0.30); for other languages with no translated leg, top 5 when the best similarity reaches `SEARCH_DIRECT_FLOOR` 0.24, less those more than `SEARCH_DIRECT_GAP` 0.10 below it; `emergency_first` when the best match of a leg is an emergency provider at `SEARCH_EMERGENCY_TOP_THRESHOLD` 0.14 (or in a leg's top 3 at 0.25, as before), no longer when an emergency-category result is merely shown. On all 193 questions, replayed through the real use case with the cached vectors: hit@3 48.3% → 70.9%, results shown 50.6% → 75.6%, no-match accuracy 85.7% → 81.0% (one more of 21 no-match questions answered), emergency flag 42.1% → 68.4%, emergency false alarms 1.1% (unchanged). **This is an interim tuning, not this story's measurement:** 161 of the 193 questions are machine drafts, none is an ambassador's, the parameters were chosen on the same questions they were scored on, and the translated leg used hand-written translations (an upper bound). S03.08's ambassador questions confirm or revise every value (on the tuning subset, then the evaluation run). The threshold reaches search only with the next published release (it is recorded on the release); the other values are read at search time.
 
 ### Story S03.08 — Ambassadors complete the test set and the Hub sets the launch bar
 

@@ -9,6 +9,7 @@
 ^src/modules/directory/application/search\.ts$
 ^src/modules/directory/application/releaseSearch\.ts$
 ^src/modules/directory/domain/searchRanking\.ts$
+^src/modules/directory/domain/searchKeywords\.ts$
 ^src/modules/directory/domain/searchData\.ts$
 ^src/modules/directory/domain/questionLanguage\.ts$
 ^src/modules/directory/adapters/cohereEmbedder\.ts$
@@ -18,6 +19,6 @@
 ^src/modules/translation/adapters/cohereTranslator\.ts$
 # How the app composes search.
 ^src/app/search\.ts$
-# The search settings' defaults and rules: the embedding model, the threshold, emergency_categories, search_question_route and its
-# fallback. Only a changed line that names one of them counts; the file holds every other setting too.
-^src/platform/config/env\.ts$ SEARCH_|DEFAULT_SEARCH|DEFAULT_QUESTION|[Qq]uestionRoute|[Qq]uestionFallback|[Ee]mbedModel|[Ee]mergencyCategor|[Ee]mergencyThreshold|threshold|parseSearch
+# The search settings' defaults and rules: the embedding model, the threshold, the ranking's keyword weight, direct floor and gap and
+# emergency thresholds, emergency_categories, search_question_route and its fallback. Only a changed line that names one of them counts; the file holds every other setting too.
+^src/platform/config/env\.ts$ SEARCH_|DEFAULT_SEARCH|DEFAULT_QUESTION|[Qq]uestionRoute|[Qq]uestionFallback|[Ee]mbedModel|[Ee]mergencyCategor|[Ee]mergencyThreshold|[Ee]mergencyTopThreshold|[Kk]eywordWeight|[Dd]irectFloor|[Dd]irectGap|threshold|parseSearch

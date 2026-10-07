@@ -3,22 +3,23 @@
 // which value the team could choose; it sets nothing (the threshold is recorded on a release when the directory is published,
 // SEARCH_THRESHOLD, and stays provisional until S03.08's evaluation run).
 //
-// The rule (the story's): the value that keeps every tuning no-match question below it while losing the fewest hits. A
-// question is below the threshold when no provider reaches it in any leg, which is when the use case answers `no_clear_match`
-// (a provider qualifies at or above the threshold). Every value strictly above the highest no-match similarity does that, so
-// the choice is among those. With one leg, raising the threshold only ever drops providers, so the lowest of them (just above
-// the highest no-match similarity, to four places) loses the fewest hits. With two legs it does not: a threshold above one
-// leg's similarity for a competing provider drops that provider from that leg only, which halves its fused score (reciprocal
-// rank fusion) and can let the expected provider back into the top five. So the values that matter are tried, each by the use
-// case's own ranking: the values at which some question's top five can change (just above the similarity of a provider in it, in
-// a leg, see `hitSteps`), from the lowest value that clears the no-match questions up. The best is the one that loses the fewest
-// hits, then keeps the most, then is the lowest.
+// The rule (the story's): the value that keeps every tuning no-match question below it while losing the fewest hits. Since the
+// interim tuning of 2026-10-07 the threshold applies to the ranking's hybrid route only (English questions and those the
+// translated leg answered), and to a provider's score there: its best similarity over the legs plus its keyword boost. A question
+// on the direct route (another language with no translated leg) is ranked by the direct floor and gap, which no threshold
+// changes, so it counts as it is at every value. A hybrid question is below the threshold when no provider's score reaches it,
+// which is when the use case answers `no_clear_match`. Every value strictly above the highest such no-match score does that, so
+// the choice is among those. A provider's score does not depend on the threshold and the results are the top five that reach it,
+// so raising it only ever drops providers from the bottom; the values that matter are still tried one by one (the values at
+// which some question's top five can change, just above the score of a provider in it, see `hitSteps`), each by the use case's
+// own ranking, from the lowest value that clears the no-match questions up. The best is the one that loses the fewest hits, then
+// keeps the most, then is the lowest.
 //
 // Nothing here ranks: what a threshold does to a question (its results, whether it is a hit, no-match or emergency) is asked
-// of the use case's own pure functions, `rankLegs`, `emergencyFirst` and `emergencyInTop`, applied to the similarities the use
-// case computed. And the same call at the release's own threshold is compared with what the use case answered, so a drift
-// between the two would show up as `replay_mismatches`.
-import { emergencyFirst, emergencyInTop, rankLegs, type SearchObservation } from "@/modules/directory";
+// of the use case's own pure functions, `rankingScores`, `resultsOf`, `rankLegs` and `emergencyFirst`, applied to the
+// similarities and keyword boosts the use case computed. And the same call at the release's own threshold is compared with what
+// the use case answered, so a drift between the two would show up as `replay_mismatches`.
+import { emergencyFirst, rankLegs, rankingScores, resultsOf, type RankingSettings, type SearchHit, type SearchObservation } from "@/modules/directory";
 import type { QuestionIntent, SearchV1 } from "@/contracts/searchTestSet";
 import type { ThresholdEffect, ThresholdSuggestion } from "@/contracts/searchTuning";
 
@@ -50,19 +51,29 @@ export function justAbove(score: number): number {
 
 const legsOf = (o: SearchObservation) => o.legs.map((l) => l.similarities);
 
-/** The highest similarity of any provider in any leg. */
+/** The observation's ranking settings, with `threshold` in place of the release's. */
+const settingsAt = (o: SearchObservation, threshold: number): RankingSettings => ({
+  threshold,
+  directFloor: o.directFloor,
+  directGap: o.directGap,
+  emergencyThreshold: o.emergencyThreshold,
+  emergencyTopThreshold: o.emergencyTopThreshold,
+});
+
+/** Every provider with the score the use case ranks it by (best similarity, plus the keyword boost on the hybrid route), best first. */
+const scoresOf = (o: SearchObservation) => rankingScores(legsOf(o), o.route, o.boosts);
+
+/** The highest score the threshold is compared with: the best provider's on the hybrid route; none on the direct route (-Infinity). */
 export function maxSimilarity(o: SearchObservation): number {
-  let max = -Infinity;
-  for (const leg of o.legs) for (const score of leg.similarities.values()) if (score > max) max = score;
-  return max;
+  if (o.route !== "hybrid") return -Infinity;
+  return scoresOf(o)[0]?.score ?? -Infinity;
 }
 
 /** What the use case would answer for the observation at `threshold`, by its own functions. */
 function replay(o: SearchObservation, threshold: number) {
   const legs = legsOf(o);
-  const results = rankLegs(legs, threshold);
-  const emergency = emergencyFirst(results, o.emergencyProviders) || emergencyInTop(legs, o.emergencyProviders, Math.min(o.emergencyThreshold, threshold));
-  return { results, emergency };
+  const settings = settingsAt(o, threshold);
+  return { results: rankLegs(legs, o.route, o.boosts, settings), emergency: emergencyFirst(legs, o.emergencyProviders, settings) };
 }
 
 const isHit = (results: readonly { provider_id: string }[], expected: readonly string[]) => results.some((r) => expected.includes(r.provider_id));
@@ -97,28 +108,21 @@ function effectAt(inputs: readonly ThresholdInput[], threshold: number, baseline
 
 /**
  * One question's hit as the threshold rises from `from`: the values (ascending, the first is `from`) from which the use case's
- * ranking can give another top five, and whether the question is a hit from each of them to the next. Raising the threshold
- * only takes a provider out of a leg, from the top of the sorted leg down, so a provider's rank in a leg never changes and a
- * provider's fused score only falls: the top five changes only when a provider that is in it loses a leg. So the next value
- * that can change it is the first four-place value above the lowest similarity, among the providers now in the top five, that
- * still qualifies. Each value is asked of the use case's own ranking (`rankLegs`).
+ * ranking can give another top five, and whether the question is a hit from each of them to the next. A provider's score does
+ * not depend on the threshold, so the top five changes only when a provider in it falls below: the next value that can change
+ * it is the first four-place value above the lowest score in it. Each value is asked of the use case's own ranking (`resultsOf`).
+ * On the direct route the threshold changes nothing: one step.
  */
-function hitSteps(legs: readonly ReadonlyMap<string, number>[], expected: readonly string[], from: number): { at: number[]; hit: boolean[] } {
+function hitSteps(o: SearchObservation, scores: readonly SearchHit[], expected: readonly string[], from: number): { at: number[]; hit: boolean[] } {
   const at: number[] = [];
   const hit: boolean[] = [];
   let threshold = from;
   for (;;) {
-    const results = rankLegs(legs, threshold);
+    const results = resultsOf(scores, o.route, settingsAt(o, threshold));
     at.push(threshold);
     hit.push(isHit(results, expected));
-    let next = Infinity;
-    for (const result of results) {
-      for (const leg of legs) {
-        const score = leg.get(result.provider_id);
-        if (score !== undefined && score >= threshold && score < next) next = score;
-      }
-    }
-    if (next === Infinity) break; // nothing qualifies: no value above gives anything else
+    if (o.route !== "hybrid" || results.length === 0) break; // nothing qualifies (or nothing depends on it): no value above gives anything else
+    const next = Math.min(...results.map((r) => r.score));
     threshold = justAbove(next);
     if (threshold > 1) break;
   }
@@ -134,9 +138,11 @@ function hitSteps(legs: readonly ReadonlyMap<string, number>[], expected: readon
 function bestThreshold(answerable: readonly ThresholdInput[], baseline: ReadonlySet<string>, from: number): number {
   const subjects = answerable.map((input) => ({
     lostIfMissed: baseline.has(input.id),
-    // Below `from` nothing qualifies at any value tried, so the legs are cut to what can: the same ranking, over far fewer providers.
+    // On the hybrid route nothing below `from` qualifies at any value tried, so the scores are cut to what can: the same
+    // ranking, over far fewer providers. The direct route needs them all (its floor and gap are measured from the best).
     ...hitSteps(
-      legsOf(input.observation!).map((leg) => new Map([...leg].filter(([, score]) => score >= from))),
+      input.observation!,
+      input.observation!.route === "hybrid" ? scoresOf(input.observation!).filter((hit) => hit.score >= from) : scoresOf(input.observation!),
       input.expected,
       from,
     ),
@@ -167,7 +173,7 @@ function bestThreshold(answerable: readonly ThresholdInput[], baseline: Readonly
 export function suggestThreshold(inputs: readonly ThresholdInput[], releaseThreshold: number): ThresholdSuggestion {
   const scored = inputs.filter((i) => i.observation !== null);
   const answerable = scored.filter((i) => i.intent !== "no_match" && !i.unanswerable);
-  const baseline = new Set(answerable.filter((i) => isHit(rankLegs(legsOf(i.observation!), -Infinity), i.expected)).map((i) => i.id));
+  const baseline = new Set(answerable.filter((i) => isHit(replay(i.observation!, -Infinity).results, i.expected)).map((i) => i.id));
   const atRelease = effectAt(inputs, releaseThreshold, baseline).effect;
 
   let mismatches = 0;
@@ -181,7 +187,9 @@ export function suggestThreshold(inputs: readonly ThresholdInput[], releaseThres
   const noMatch = inputs.filter((i) => i.intent === "no_match");
   const scoredNoMatch = noMatch.filter((i) => i.observation !== null);
   const lostLeg = scoredNoMatch.filter((i) => i.translatedLegLost === true);
-  const highest = scoredNoMatch.length === 0 ? null : Math.max(...scoredNoMatch.map((i) => maxSimilarity(i.observation!)));
+  // Only the no-match questions on the hybrid route are ranked against the threshold; the direct route's floor decides the others.
+  const thresholded = scoredNoMatch.filter((i) => i.observation!.route === "hybrid");
+  const highest = thresholded.length === 0 ? null : Math.max(...thresholded.map((i) => maxSimilarity(i.observation!)));
   const base = {
     no_match_questions: noMatch.length,
     highest_no_match: highest === null ? null : round6(highest),
@@ -208,7 +216,8 @@ export function suggestThreshold(inputs: readonly ThresholdInput[], releaseThres
     }
     return none(reasons.join("; "));
   }
-  const clearing = justAbove(highest as number);
+  if (highest === null) return none("no no-match question took the hybrid route, so the threshold does not apply to any of them (the direct route's floor decides)");
+  const clearing = justAbove(highest);
   if (clearing > 1) return none(`the highest no-match similarity is ${round6(highest as number)}: no threshold up to 1 is above it`);
 
   const threshold = bestThreshold(answerable, baseline, clearing);
