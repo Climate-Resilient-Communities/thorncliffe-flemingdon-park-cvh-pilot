@@ -62,6 +62,7 @@ The only alarm that still works when Vercel, Supabase or Twilio is down: the Hub
 | At least one number on the On-call numbers page (once texting is live, no alert but a drill can be approved without one) | | |
 | Drill roster set ([running a drill](run-a-drill.md)) | | |
 | Search launch readiness met (S03.08): `npm run search-test-set -- coverage --launch` and `npm run search-test-set -- readiness` both exit 0, i.e. the full test set has no coverage gap, the Hub has approved `data/search-test-set/bar.json`, and the latest evaluation report meets every minimum ([the search test set](../../data/search-test-set/README.md)). Each language whose first measurement is below what the Hub would accept is listed under this line with its action and owner | | Hub Director with the IT lead |
+| The search guard can measure (S03.09), set up once the Hub approves `bar.json`: in GitHub, **Settings → Environments → `search-guard`**, with the product owner as required reviewer (each measuring run waits for approval before it spends Cohere calls), deployment branches: all, the secrets `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (production's values) and the variable `NEXT_PUBLIC_SUPABASE_URL` | | Product owner with the IT lead |
 
 ## 6. Launch rehearsals ([rehearsal log](rehearsals.md))
 
