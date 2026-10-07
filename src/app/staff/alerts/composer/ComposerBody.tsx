@@ -1,4 +1,6 @@
 "use client";
+import { orderedByLanguage } from "@/ui/shell/language-order";
+
 
 import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
@@ -47,7 +49,7 @@ const fill = (template: string, values: Record<string, string | number>) => temp
 function LanguageList({ rows, progress, waiting, results }: { rows: LanguageRowView[]; progress: Readonly<Record<string, string>> | null; waiting: string; results: Record<string, string> }) {
   return (
     <Stack as="ul" gap="related">
-      {rows.map((row) => {
+      {orderedByLanguage(rows, (row) => row.lang).map((row) => {
         // While a submit runs, each language shows as it settles; otherwise what the server stores (or "translated when you submit").
         const settled = progress === null ? undefined : progress[row.lang];
         const label = progress === null ? row.stateLabel : settled ? (results[settled] ?? settled) : waiting;

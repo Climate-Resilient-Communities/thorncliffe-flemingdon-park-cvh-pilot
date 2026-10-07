@@ -216,7 +216,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                       </ul>
                     </div>
                   )}
-                  <div id="dir-filter-panel" hidden={!panelOpen} data-testid="filter-panel">
+                  <div id="dir-filter-panel" data-open={panelOpen} data-testid="filter-panel">
                     <Stack gap="stack">
                       <ResidentText as="p" className="dir-hint">
                         {t("R27.private")}

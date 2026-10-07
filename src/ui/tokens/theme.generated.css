@@ -9,6 +9,8 @@
   --text-*: initial;
   --color-*: initial;
 
+  /* app-breakpoint-resident-wide: resident desktop shell */
+  --breakpoint-resident-wide: 1000px;
   /* app-breakpoint-hub: variant hub:, the Hub shell only (viewport) */
   --breakpoint-hub: 700px;
   /* app-container-hub-two-column-min: variant @hub-two-column:, two-column Hub pages only (hub-page container) */

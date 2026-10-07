@@ -41,6 +41,11 @@
   --app-side-nav: 240px;
   --app-aside-staff: 380px;
   --app-aside-staff-compact: 300px;
+  --app-page-resident: 1120px;
+  --app-page-reading: 760px;
+  --app-side-directory: 260px;
+  --app-language-sheet: 640px;
+  --app-filter-viewport-offset: 220px;
   /* radius */
   --radius-none: 0;
   --radius-card: 16px;

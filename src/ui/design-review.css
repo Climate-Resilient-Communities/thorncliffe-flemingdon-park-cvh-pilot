@@ -1,11 +1,11 @@
 /* Approved resident direction, 2026-10-07. Logical start alignment preserves RTL.
-   Desktop dimensions remain explicit review values pending design-token consolidation. */
-.shell, .hub-shell { text-align: start; }
-.shell :is(p,button,summary), .hub-shell :is(h1,h2,h3,p,label,small,th,td,button) { text-align: start; }
+   Desktop dimensions are generated from the approved design tokens. */
+.shell { text-align: start; }
+.shell :is(p,button,summary) { text-align: start; }
 .shell { grid-template-rows: auto minmax(0, 1fr) auto auto; }
 .shell-header { padding-block: var(--gap-stack); }
 .shell-nav__item { align-items: flex-start; text-align: start; padding-inline: var(--gap-tight); }
-.shell .dir-btn, .shell .dir-call, .shell .shell-langbtn, .hub-button { border-radius: var(--gap-tight); }
+.shell .dir-btn, .shell .dir-call, .shell .shell-langbtn { border-radius: var(--gap-tight); }
 .shell .dir-option { border-radius: var(--gap-tight); border-color: transparent; background: transparent; }
 .shell .dir-option:hover { background: var(--surface-raised); }
 .shell .dir-card { border-radius: var(--gap-target); padding: var(--inset-card); }
@@ -13,7 +13,7 @@
 .shell .dir-card__link:hover { text-decoration: underline; }
 .shell .dir-facts, .shell .dir-card--page { max-inline-size: 70ch; }
 .shell .dir-card__confirmed { font-size: var(--type-caption-size); }
-.shell .dir-call, .hub-shell .hub-button { justify-content: flex-start; }
+.shell .dir-call { justify-content: flex-start; }
 
 /* Footer remains reachable without scrolling through the directory. */
 .shell-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap-target); position: relative; inline-size: 100%; padding-block: 0; padding-inline: var(--inset-card); border-block-start: 1px solid var(--border); background: var(--surface); }
@@ -32,38 +32,26 @@
 .shell .ask-input, .shell .ask-topic, .shell .home-card, .shell .home-place { border-radius: var(--gap-target); }
 .shell .ask-topic { justify-content: flex-start; text-align: start; }
 
-@media (min-width: 1000px) {
+@variant resident-wide {
   .shell { grid-template-rows: auto auto minmax(0, 1fr) auto; }
-  .shell-header { padding-inline: max(var(--inset-card), calc((100% - 1120px) / 2)); } /* spacing-exception: desktop gutter approved 2026-10-07; token consolidation pending. */
-  .shell-nav { grid-row: 2; display: flex; gap: var(--gap-stack); padding-inline: max(var(--inset-card), calc((100% - 1120px) / 2)); border-block-end: 1px solid var(--border); } /* spacing-exception: desktop gutter approved 2026-10-07; token consolidation pending. */
+  .shell-header { padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
+  .shell-nav { grid-row: 2; display: flex; gap: var(--gap-stack); padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); border-block-end: 1px solid var(--border); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
   .shell-nav__item { flex-direction: row; gap: var(--gap-target); padding-inline: var(--gap-stack); border-block-start: 0; border-block-end: 3px solid transparent; }
   .shell-nav__item[aria-current="page"] { border-block-end-color: currentColor; background: var(--surface); }
   .shell__main { grid-row: 3; }
   .shell-footer { grid-row: 4; }
-  .shell .layout-screen, .shell-footer { max-inline-size: 1120px; margin-inline: auto; }
+  .shell .layout-screen, .shell-footer { max-inline-size: var(--size-page-resident); margin-inline: auto; }
   .shell .layout-screen { padding-block: var(--inset-card); }
-  .shell [data-testid="search-page"] .layout-screen__body, .shell [data-testid="home"] .layout-screen__body { max-inline-size: 760px; }
+  .shell .layout-screen:not([data-testid="directory-page"]):not([data-testid="map-page"]) > .layout-screen__body { max-inline-size: var(--size-page-reading); }
   .shell .dir-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--inset-card); align-items: start; }
   .shell .dir-filters { max-inline-size: 70ch; }
   .shell .dir-card--card .dir-facts { font-size: var(--type-caption-size); }
-  .shell .shell-sheet { max-inline-size: 640px; margin-inline: auto; }
-  .dir-workspace { grid-template-columns: 260px minmax(0, 1fr); align-items: start; }
+  .shell .shell-sheet { max-inline-size: var(--size-language-sheet); margin-inline: auto; }
+  .dir-workspace { grid-template-columns: var(--size-side-directory) minmax(0, 1fr); align-items: start; }
   .dir-workspace > :first-child { position: sticky; inset-block-start: var(--gap-stack); }
   .dir-card--card { gap: var(--gap-label); }
 }
 
-/* Staff provider review: presentation only; server actions and permissions stay intact. */
-.provider-record { padding-block: var(--inset-card); border-block-end: 1px solid var(--border); text-align: start; }
-.provider-record:first-child { border-block-start: 1px solid var(--border); }
-.provider-record h2 { font-size: var(--type-body-size); }
-.provider-record strong { font-size: var(--type-caption-size); color: var(--text-muted); }
-.provider-record[data-published="true"] strong { color: var(--accent-text); }
-.provider-record__actions { display: flex; flex-wrap: wrap; align-items: end; gap: var(--inset-card); }
-.provider-record__actions > form { min-inline-size: 0; }
-.provider-record__actions .hub-input { inline-size: auto; max-inline-size: 100%; }
-/* Keep the live region in the accessibility tree before an action returns. */
-.provider-record [role="status"]:empty { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
-.hub-nav__item { border-radius: var(--gap-tight); }
 /* Topic browsing is a list of choices, not a wall of outlined buttons. */
 .shell .dir-btn { justify-content: flex-start; }
 .shell .ask-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -71,6 +59,21 @@
 .shell .ask-topic:hover { background: var(--surface); }
 .shell .ask-form > .dir-btn { align-self: flex-start; min-inline-size: 9rem; }
 :root[data-basic="true"] .shell .ask-topics { grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 1000px) {
-  .dir-workspace > :first-child { max-block-size: calc(100dvh - 220px); overflow-y: auto; }
+@variant resident-wide {
+  .dir-workspace > :first-child { max-block-size: calc(100dvh - var(--size-filter-viewport-offset)); overflow-y: auto; }
 }
+
+/* Consistent, start-aligned controls throughout resident workflows. Icon-only map controls retain their geometry. */
+.shell :is(.choice-btn,.alert-button,.share-btn,.map-btn,.map-segment__btn) { text-align: start; justify-content: flex-start; border-radius: var(--gap-tight); }
+.shell :is(.choice-option,.choice-input,.signup-input,.signup-errorbox,.checkin-card,.alert-card,.share-box,.map-frame) { border-radius: var(--gap-target); }
+.shell .map-segment__btn { padding-inline: var(--gap-stack); }
+@variant resident-wide { .shell .map-canvas { block-size: clamp(24rem, 55dvh, 40rem); } }
+
+.dir-filters [data-testid="filter-panel"][data-open="false"] { display: none; }
+
+/* The desktop sidebar stays open; the same controls collapse behind Filters on phones. */
+@variant resident-wide {
+  .dir-filters [data-testid="filter-panel"][data-open] { display: block; }
+  .dir-filters :is([data-testid="filters-toggle"], [data-testid="filters-apply"]) { display: none; }
+}
+.shell :is(.checkin-consent,.checkin-answer,.offline-notice,.not-911) { border-radius: var(--gap-target); }

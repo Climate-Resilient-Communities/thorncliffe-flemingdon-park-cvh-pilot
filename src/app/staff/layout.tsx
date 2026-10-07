@@ -15,7 +15,7 @@ import { hubShellUser, hubTabTitle } from "./hubShell";
 import { identity } from "./identity";
 import { messagingPause, pausedByName } from "./messagingPause";
 import { PauseBanner } from "./PauseBanner";
-import { loadPauseBanner, logPauseBannerFailure } from "./pauseBanner";
+import { loadPauseBanner, logPauseBannerFailure } from "./pauseBannerModel";
 import { currentStaffSession } from "./session";
 import { StaffShell } from "./StaffShell";
 

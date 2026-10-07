@@ -17,6 +17,11 @@ function declarations(file: string, only?: string) {
 
 // token-architecture.md sections 3.1, 3.2 and 3.4: semantic token, the primitive it resolves to, its value.
 const SEMANTIC_TOKENS: [string, string, string][] = [
+  ["--size-page-resident", "--app-page-resident", "1120px"],
+  ["--size-page-reading", "--app-page-reading", "760px"],
+  ["--size-side-directory", "--app-side-directory", "260px"],
+  ["--size-language-sheet", "--app-language-sheet", "640px"],
+  ["--size-filter-viewport-offset", "--app-filter-viewport-offset", "220px"],
   ["--gap-subline", "--app-space-1", "2px"],
   ["--gap-label", "--app-space-2", "4px"],
   ["--gap-tight", "--app-space-3", "6px"],

@@ -1,3 +1,4 @@
+import { orderedByLanguage } from "@/ui/shell/language-order";
 // The sending progress block (S06.09, O-06), drawn from its view model: the counts per language, the sentence about texts already handed to the provider
 // while texts are paused, the lists of the texts that did not arrive, and what the counts mean. It is drawn in the published confirmation and in the alert's
 // staff view. The only behaviour is the page reloading itself every 15 seconds while a text waits or is in flight, so the layout tests and the screenshots
@@ -49,7 +50,7 @@ export function SendingProgressBody({ view }: { view: SendingProgressView }) {
               </p>
             ) : null}
             <Stack as="ul" gap="related" testId="sending-languages">
-              {view.languages.map((row) => (
+              {orderedByLanguage(view.languages, (row) => row.lang).map((row) => (
                 <CountRow key={row.lang} row={row} />
               ))}
               {view.total ? <CountRow row={view.total} /> : null}

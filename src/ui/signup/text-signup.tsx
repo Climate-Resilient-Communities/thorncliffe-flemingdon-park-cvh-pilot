@@ -1,4 +1,6 @@
 "use client";
+import { orderedLanguages } from "../shell/language-order";
+
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -368,7 +370,7 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
               <ResidentText>{r05("language")}</ResidentText>
             </label>
             <select id="signup-lang" className="choice-input" value={draft.lang} onChange={(event) => update({ lang: event.target.value as LaunchCode })} data-testid="signup-lang">
-              {languages.map((l) => (
+              {orderedLanguages(languages).map((l) => (
                 <option key={l.code} value={l.code} lang={l.bcp47} dir={l.dir}>
                   {l.native}
                 </option>

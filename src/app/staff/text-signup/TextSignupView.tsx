@@ -1,3 +1,4 @@
+import { orderedLanguages } from "@/ui/shell/language-order";
 import type { ReactNode } from "react";
 import { FALLBACK_MARKER, ResidentText, Stack } from "@/ui";
 import { TEXT_SIGNUP_PAGE, signupText, type LanguageOption } from "./view";
@@ -51,7 +52,7 @@ export function TextSignupView({ model, form }: { model: TextSignupModel; form?:
           <h2>{signupText("languageHeading")}</h2>
           <p>{signupText("languageLead")}</p>
           <Stack gap="target" as="ul" testId="text-signup-languages">
-            {model.languages.map((option) => (
+            {orderedLanguages(model.languages).map((option) => (
               <li key={option.code}>
                 <a className="tap hub-link" href={option.href}>
                   <span>

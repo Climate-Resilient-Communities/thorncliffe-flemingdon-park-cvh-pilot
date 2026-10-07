@@ -27,7 +27,7 @@ Screen  (div, data-surface)
 | Prop | Type (allowed values only) | Default | Notes |
 | --- | --- | --- | --- |
 | `surface` | `'resident' \| 'staff'` | required | Picks the inset and width tokens. Ambassador screens use `'resident'` (they are phone screens in the prototype). |
-| `width` | `'default' \| 'review' \| 'published' \| 'log' \| 'update' \| 'resolve' \| 'partner'` | `'default'` | Staff only: the maximum inline size. Each named width only on the screens that already use it in the prototype: `'review'` O-02, O-03, O-04, O-05, O-07, O-13; `'published'` O-06; `'log'` O-11; `'update'` O-14, O-15; `'resolve'` O-16; `'partner'` partner-space screens (MVP). `'default'` everywhere else. Not accepted with `surface="resident"` (resident content is not capped). |
+| `width` | `'default' \| 'review' \| 'published' \| 'log' \| 'update' \| 'resolve' \| 'partner'` | `'default'` | Staff only: the maximum inline size. Each named width only on the screens that already use it in the prototype: `'review'` O-02, O-03, O-04, O-05, O-07, O-13; `'published'` O-06; `'log'` O-11; `'update'` O-14, O-15; `'resolve'` O-16; `'partner'` partner-space screens (MVP). `'default'` everywhere else. Not accepted with `surface="resident"` (resident caps are applied by the shared resident shell: 1120px overall and 760px for reading screens at its 1000px desktop breakpoint). |
 | `inset` | `'default' \| 'none'` | `'default'` | `'none'` removes the inline gutter and the section gap (the prototype's `.cvh-screen--flush`, used by the map). Block-end padding stays. |
 | `bleed` | `ReactNode` | none | Rendered before the body, full width. |
 | `actions` | `ReactNode` | none | Rendered after the body; sticky to the block end of the scroll container; full width. |

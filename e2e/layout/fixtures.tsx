@@ -27,7 +27,7 @@ import { ResendAllFormView, ResendOneFormView } from "@/app/staff/alerts/sending
 import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
 import { RosterFormsView } from "@/app/staff/drills/roster/RosterFormsView";
 import { RosterView } from "@/app/staff/drills/roster/RosterView";
-import type { PauseBannerView } from "@/app/staff/pauseBanner";
+import type { PauseBannerView } from "@/app/staff/pauseBannerModel";
 import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
 import { TextsView } from "@/app/staff/texts/TextsView";
 import type { PausedView } from "@/app/staff/texts/view";

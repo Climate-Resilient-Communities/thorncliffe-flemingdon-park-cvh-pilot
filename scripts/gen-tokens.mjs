@@ -34,6 +34,7 @@ const STAFF_SELECTOR = '[data-surface="staff"]';
 
 // Build-time tokens written as literals into Tailwind's @theme only (section 2.5).
 const BUILD_TIME = [
+  { group: "breakpoint", token: "app-breakpoint-resident-wide", theme: "--breakpoint-resident-wide", note: "resident desktop shell" },
   { group: "breakpoint", token: "app-breakpoint-hub", theme: "--breakpoint-hub", note: "variant hub:, the Hub shell only (viewport)" },
   {
     group: "container",
