@@ -105,6 +105,48 @@ Each run uses Cohere calls from a monthly allowance shared with live search: che
 
 The bar has one reader, `scripts/search-test-set/bar.ts`: `readBarFile(root)` and `meetsBar(report, file)` for launch readiness, and `readBar(root, file?)` / `checkBar(bar, subset)` for S03.09's guard, all through `BarSchema`. (The guard's workflow also peeks at the base branch's file in `scripts/ci/search-guard-scope.sh`, only to decide whether to measure at all.)
 
+## Questions from public datasets
+
+### Tagalog from Amazon MASSIVE (author `massive-tl`)
+
+`tl-12` to `tl-53` (42 questions, added 2026-10-07) are utterances of the `tl-PH` locale of **MASSIVE 1.1** by Amazon
+(FitzGerald et al., 2022, "MASSIVE: A 1M-Example Multilingual Natural Language Understanding Dataset with 51 Typologically-Diverse
+Languages"; <https://github.com/alexa/massive>, data from
+<https://amazon-massive-nlu-dataset.s3.amazonaws.com/amazon-massive-dataset-1.1.tar.gz>), licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the archive's `LICENSE`: "Attribution 4.0 International", copyright
+Amazon.com Inc. or its affiliates). Native speakers made MASSIVE by translating and localizing the English utterances of SLURP
+(also CC BY 4.0) for a voice assistant. So these are real Tagalog phrasings by native speakers, but they are not questions residents
+asked us. The product owner approved using them on 2026-10-07 because no one had time to fill in the ambassador sheet. Each question's
+text is exactly MASSIVE's `utt` (lowercase, no punctuation, as in the dataset). Only the selection and the labels are ours. The
+dataset itself is not committed.
+
+- **Selection.** Utterances a resident could type into this directory, chosen by MASSIVE's intent (`recommendation_locations`,
+  `recommendation_events`, `transport_query`, `general_quirky`, `qa_factoid`) and then read one by one. The topics: libraries,
+  directions to the police, parks and trails, swimming, a farmers' market, jobs, legal advice, health, volunteering, climate, free
+  local activities, parenting, saving on groceries, computer help, toddlers and a car accident (29 normal, 1 emergency). Twelve that
+  are clearly not in the directory are `no_match`: the nearest restaurant, gas station, bookstore, barber, zoo, cat groomer, theatre
+  and sports store, an old hotel in Manila, the weather, playing music, and setting an alarm. Nothing was taken that has a person's
+  name (no utterance whose annotation has a `person` slot), a phone number, an email address or a street address. Utterances that
+  start with an assistant's wake word ("olly", "alexa") were left out. So were shops that the East York Town Centre mall (M057) could
+  answer, such as a pharmacy, groceries or clothes, because their label would be ambiguous. MASSIVE has few utterances in scope for
+  this directory, so the set has 30 relevant questions rather than 40.
+- **Labels.** Claude (the coding assistant) assigned `intent` and `expected` from `data/catalogue/providers.json`, strictly: a generic
+  assistant request that the directory cannot answer is `no_match`. Nobody who reads Tagalog has checked the labels yet, so
+  `checked_by` is empty. The format has no field for a source, so the author handle `massive-tl` is the record: native-written text
+  with machine-assigned labels. These are not machine drafts (`claude-draft`), so they count for coverage and can be drawn into the
+  evaluation subset. The import put `tl-41`, `tl-47`, `tl-48` and `tl-52` there. Someone who reads Tagalog should check the labels,
+  starting with the evaluation questions.
+- **Import.** These were imported like any sheet: `npm run search-test-set -- import <sheet>.csv` (dry run first), with author
+  `massive-tl` and added date 2026-10-07. The committed rule assigned the subsets.
+- **MASSIVE ids** (`id` in `tl-PH.jsonl`): tl-12 12800, tl-13 11797, tl-14 11798, tl-15 6692, tl-16 12458, tl-17 12734, tl-18 14792,
+  tl-19 11720, tl-20 12113, tl-21 6449, tl-22 13160, tl-23 13825, tl-24 6697, tl-25 6643, tl-26 13467, tl-27 6402, tl-28 6600,
+  tl-29 6701, tl-30 13618, tl-31 12998, tl-32 11805, tl-33 13619, tl-34 11876, tl-35 6615, tl-36 6412, tl-37 6368, tl-38 13526,
+  tl-39 6296, tl-40 13892, tl-41 6444, tl-42 11675, tl-43 12409, tl-44 11946, tl-45 13323, tl-46 13630, tl-47 6446, tl-48 4523,
+  tl-49 4714, tl-50 941, tl-51 14199, tl-52 11954, tl-53 11830.
+
+Attribution: "Contains utterances from MASSIVE by Amazon (https://github.com/alexa/massive), licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/), selected and labelled for this test set; the utterances are unchanged."
+
 ## Replaying with cached vectors (no vendor call)
 
 `node scripts/search-test-set/replay-cached.mjs --cache <vector-cache.json>` asks every question of `questions.jsonl` through the
