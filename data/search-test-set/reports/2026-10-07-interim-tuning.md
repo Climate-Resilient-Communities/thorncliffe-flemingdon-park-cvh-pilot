@@ -568,3 +568,76 @@ monthly `spend_event` count and `translate_quota` events in the first month.
 **Cost.** One Command A Translate call per Bengali, Greek or Chinese search in its own script (as for Tamil and Punjabi), until the
 model's month reaches 600. **Interim**, as the rest: machine-drafted questions, ten per language; S03.08's ambassador questions
 confirm or revise the list.
+
+## 12. Tagalog with real native-speaker questions (Amazon MASSIVE), and the Tagalog route decision (2026-10-07)
+
+**Why.** Section 10 left Tagalog direct on one question: with one no-match question per language, the truck-rental question
+showing four providers once translated made no-match accuracy 100 → 0. That was too thin to decide on. With the product owner's
+approval, 42 Tagalog questions written by native speakers were added from Amazon's MASSIVE dataset (`tl-12` to `tl-53`, author
+`massive-tl`, CC BY 4.0; the README's "Questions from public datasets" says what was chosen, how it was labelled and the
+attribution). Tagalog now has 53 questions: 40 answerable (2 of them emergencies) and 13 no-match.
+
+**How (offline, no production change).** The same method as sections 10 and 11. The detector (`questionSourceOf(detect(q, page
+language))`) routes 57 texts to `tl`: all 53 Tagalog questions, the live "Saan ako makakakuha ng pagkain?", and three questions
+written in other languages (prs-11, el-03 and bn-05, all romanized). The 42 new questions were translated by Command A Translate
+(`command-a-translate-08-2025`) through production's question translator (`createQuestionTranslator` over `cohereTranslator`,
+`normaliseTranslation`, `checkTranslation`), with no fallback model, on the experiment key (key 1), at no more than 5 calls a
+minute. Every call answered and passed the checks. The 15 other texts reuse section 10's real Command A answers. The new questions
+and their English were embedded (`embed-v4.0`, `search_query`). Because the new questions take the direct route on main, each
+one's 20 candidates, exactly as the use case chose them, were sent once to `rerank-v3.5` (as #158 does) and cached. Every
+question was then replayed through the real `createSearch` in two arms:
+
+- (a) main after #160: `ta`, `pa`, `bn`, `el` and `zh` translate-first, Tagalog direct with the reranker.
+- (b) the same, plus `tl` translate-first.
+
+On the 193 earlier questions, arm (a) reproduces section 11's as-built hit@3 of 80.2.
+
+Vendor calls (key 1 only): 42 Command A Translate calls, all answered (no 429); 2 embedding calls (42 questions with 685 tokens,
+then 42 translations with 309 tokens); 42 `rerank-v3.5` calls. No North Small Translate call.
+
+| set | n (answerable / no-match / emergency) | arm | hit@3 | shown | no-match ok | emergency flag | false alarm | false-pos |
+|---|---|---|---|---|---|---|---|---|
+| tl, all | 53 (40 / 13 / 2) | (a) main | 32.5 | 35.0 | **100.0** | 0.0 | 2.0 | 1.9 |
+| tl, all | 53 (40 / 13 / 2) | (b) translate-first | **72.5** | 85.0 | 69.2 | 0.0 | 3.9 | 17.0 |
+| tl, tuning subset | 48 (38 / 10 / 1) | (a) main | 31.6 | 34.2 | **100.0** | 0.0 | 2.1 | 2.1 |
+| tl, tuning subset | 48 (38 / 10 / 1) | (b) translate-first | **73.7** | 86.8 | 70.0 | 0.0 | 4.3 | 16.7 |
+| tl, MASSIVE only | 42 (30 / 12 / 1) | (a) main | 20.0 | 23.3 | **100.0** | 0.0 | 2.4 | 2.4 |
+| tl, MASSIVE only | 42 (30 / 12 / 1) | (b) translate-first | **70.0** | 83.3 | 75.0 | 0.0 | 4.9 | 16.7 |
+| tl, earlier 11 (section 10) | 11 (10 / 1 / 1) | (a) main | 70.0 | 70.0 | 100.0 | 0.0 | 0.0 | 0.0 |
+| tl, earlier 11 (section 10) | 11 (10 / 1 / 1) | (b) translate-first | 80.0 | 90.0 | 0.0 | 0.0 | 0.0 | 18.2 |
+| other languages routed to tl (prs-11, el-03, bn-05) | 3 (3 / 0 / 0) | (a) main | 0.0 | 0.0 | — | — | 0.0 | 0.0 |
+| other languages routed to tl | 3 (3 / 0 / 0) | (b) translate-first | 100.0 | 100.0 | — | — | 33.3 | 0.0 |
+| all 235 | 235 (202 / 33 / 20) | (a) main | 71.3 | 74.3 | 87.9 | 70.0 | 1.4 | 3.4 |
+| all 235 | 235 (202 / 33 / 20) | (b) translate-first | 80.7 | 85.6 | 75.8 | 70.0 | 2.3 | 6.8 |
+
+**What changes.**
+
+- **Gains.** The real phrasings show that the direct route reads Tagalog poorly: arm (a) shows nothing for 26 of the 40 answerable
+  questions. Translation gains 17 hits, among them the library questions, directions to the police, parks and a walking trail,
+  swimming, the farmers' market, jobs, legal advice, health and climate. It loses one: tl-32, "free activities this weekend", gets
+  M081, M033 and M068 instead of a community centre.
+- **No-match losses.** It also shows something for 4 of the 13 no-match questions, where arm (a) showed nothing:
+  - tl-10: the truck rental from section 10.
+  - tl-43: "saan ang pinakamalapit na gasolinahan" ("where is the nearest gas station") gets the five fire stations, with the 911
+    block first.
+  - tl-47: a cat groomer (an evaluation question) gets M079 and M058.
+  - tl-49: "play my music" gets the Aga Khan Museum.
+- **Other languages.** The three questions from other languages that the detector reads as Tagalog all become hits, but prs-11
+  also turns the 911 block on.
+- **Emergencies.** Neither arm handles tl-41, "naaksidente ako sa sasakyan ngayon" ("I had a car accident today"): it gets no
+  result and no 911 block either way. This is a separate emergency gap, noted for S03.07.
+
+**Decision (the product owner's rule: hit@3 up by at least 10 points, no-match accuracy no worse): Tagalog stays direct.** Hit@3
+rises by 40 points (42 on the tuning subset alone), but no-match accuracy falls from 100 to 69.2 (70.0 on the tuning subset).
+Under the rule, the no-match drop decides it. No default changes. If the product owner weighs the 40-point gain above the no-match
+losses, switching Tagalog on takes one `SEARCH_QUESTION_ROUTE` entry (`tl=command-a-translate-08-2025`) and no code change. Most of
+the no-match losses are the hybrid route's threshold showing weak matches for translated questions, which S03.07's
+no-match threshold could address for every translate-first language at once.
+
+**Caveats.**
+
+- **Labels unchecked.** Claude assigned the MASSIVE labels, and nobody who reads Tagalog has checked them.
+- **Not resident questions.** The utterances are native-speaker localizations of voice-assistant requests, not questions residents
+  asked.
+- **Evaluation questions seen.** Four of the new questions went to the evaluation subset (tl-41, tl-47, tl-48, tl-52), and the
+  "tl, all" rows include them. The decision is the same on the tuning subset alone, which is what this section relies on.
