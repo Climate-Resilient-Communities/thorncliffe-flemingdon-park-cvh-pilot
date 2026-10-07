@@ -56,6 +56,9 @@ test.describe("the form", () => {
     await expect(page.getByTestId("signup-terms-link")).toHaveAttribute("href", "/en/terms");
     await expect(page.getByTestId("signup-terms-version")).toContainText(VERSION);
     await expect(page.getByTestId("signup-terms-draft")).toHaveCount(0);
+    // What carriers ask an opt-in to say: the program, how often, that rates may apply, and HELP and STOP.
+    const disclosure = page.getByTestId("signup-sms-terms");
+    for (const words of ["Thorncliffe Park Community Hub", "Message frequency varies", "Msg & data rates may apply", "HELP", "STOP"]) await expect(disclosure).toContainText(words);
     await expect(page.getByTestId("signup-terms-agree").locator("input")).not.toBeChecked();
     await expect(page.getByTestId("signup-age").locator("input")).not.toBeChecked();
   });

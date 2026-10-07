@@ -1393,7 +1393,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "CVH الرٹ حاصل کرنے کے لیے YES جواب دیں۔ روکنے کے لیے STOP جواب دیں۔"}});
+  m(t, {"smsTexts": {"confirmation": "CVH الرٹ: تصدیق کے لیے YES بھیجیں۔ پیغامات کی تعداد بدلتی رہتی ہے۔ میسج اور ڈیٹا چارجز لگ سکتے ہیں۔ مدد: HELP، روکیں: STOP۔"}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "آپ CVH الرٹ کے لیے سائن اپ ہو گئے ہیں۔ ہب کا عملہ ہر پیغام جانچتا ہے، اس لیے الرٹ رات کو شاید نہ بھیجے جائیں۔ عمارت یا منزل بدلنے کے لیے 1، زبان بدلنے کے لیے 2، خیریت معلوم کرنے کی درخواست واپس لینے کے لیے 3، اور روکنے اور اپنی رکنیت ختم کرنے کے لیے 0 جواب دیں۔ روکنے کے لیے STOP جواب دیں۔", "alreadySignedUp": "آپ پہلے ہی CVH الرٹ کے لیے سائن اپ ہیں۔", "deletePrompt": "رکنیت ختم کرنے کو 10 منٹ میں پھر 0 بھیجیں۔ پھر کوئی پیغام نہیں آئے گا۔", "signupInfo": "ٹیکسٹ پر CVH الرٹ حاصل کرنے کے لیے یہاں سائن اپ کریں: {link} روکنے کے لیے STOP جواب دیں۔"}, "smsKeywords": {"yes": "ہاں, جی, ہاں جی"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1520,4 +1520,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"],"dayMonth":"{day} {month}","digits":"0123456789"}, "smsTexts": {"reconsent": "CVH پائلٹ ختم۔ الرٹ کے لیے {date} تک YES بھیجیں ورنہ نمبر حذف ہوگا۔", "reconsentKept": "شکریہ۔ آپ کو CVH الرٹ ملتے رہیں گے۔", "pilotEnded": "CVH پائلٹ ختم ہو گیا ہے؛ آپ کا نمبر نہیں رکھا گیا۔", "signupsPaused": "پائلٹ کے اختتام تک CVH ٹیکسٹ سائن اپ بند ہیں۔"}, "signup": {"error": {"signups_paused": "پائلٹ کے اختتام تک سائن اپ بند ہیں۔"}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "Thorncliffe Park Community Hub کے CVH ٹیکسٹ الرٹ۔ پیغامات کی تعداد بدلتی رہتی ہے۔ میسج اور ڈیٹا چارجز لگ سکتے ہیں۔ مدد کے لیے HELP اور روکنے کے لیے STOP جواب دیں۔"}});
 })();
