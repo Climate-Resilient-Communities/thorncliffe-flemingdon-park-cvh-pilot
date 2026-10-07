@@ -1406,7 +1406,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."}});
+  m(t, {"smsTexts": {"confirmation": "Mga alerto ng CVH mula sa Thorncliffe Park Community Hub: sumagot ng YES para kumpirmahin. Nag-iiba ang dalas ng mensahe. Maaaring may singil sa mensahe at data. HELP para sa tulong, STOP para tumigil."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "Naka-sign up ka na sa CVH alert. Sinusuri ng staff ng Hub ang bawat mensahe, kaya maaaring hindi maipadala ang alert sa gabi. Sumagot ng 1 para palitan ang iyong gusali o palapag, 2 para palitan ang iyong wika, 3 para bawiin ang hiling na pangungumusta, 0 para itigil at burahin ang iyong subscription. Sumagot ng STOP para itigil.", "alreadySignedUp": "Naka-sign up ka na sa CVH alert.", "deletePrompt": "Sumagot ulit ng 0 sa loob ng 10 minuto para burahin ang subscription. Wala ka nang matatanggap na text.", "signupInfo": "Para makatanggap ng CVH alert sa text, mag-sign up dito: {link} Sumagot ng STOP para itigil."}, "smsKeywords": {"yes": "oo, opo, oho"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1533,4 +1533,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["Enero","Pebrero","Marso","Abril","Mayo","Hunyo","Hulyo","Agosto","Setyembre","Oktubre","Nobyembre","Disyembre"],"dayMonth":"{month} {day}","digits":"0123456789"}, "smsTexts": {"reconsent": "Matatapos na ang pilot ng CVH. I-reply ang YES para patuloy na makatanggap ng alerto. Kung walang sagot hanggang {date}, buburahin ang numero mo.", "reconsentKept": "Salamat. Patuloy kang makakatanggap ng mga alerto ng CVH.", "pilotEnded": "Tapos na ang pilot ng CVH; hindi itinago ang numero mo.", "signupsPaused": "Nakahinto ang pag-sign up sa text ng CVH habang nagtatapos ang pilot."}, "signup": {"error": {"signups_paused": "Nakahinto ang pag-sign up habang nagtatapos ang pilot."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "Mga text alert ng CVH mula sa Thorncliffe Park Community Hub. Nag-iiba ang dalas ng mensahe. Maaaring may singil sa mensahe at data. Sumagot ng HELP para sa tulong o STOP para tumigil."}});
 })();

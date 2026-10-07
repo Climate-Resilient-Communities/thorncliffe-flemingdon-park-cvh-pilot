@@ -6296,6 +6296,7 @@
     "onItsWay": "如果这个号码可以接收短信，一条短信正在发出。",
     "expect": "请在 48 小时内对这条短信回复 YES，即可开始接收警报。回复 YES 之前，您不会收到任何短信警报。",
     "howChange": "以后如要更改楼宇、楼层或语言，请对中心的任何一条短信回复 1 或 2。",
+    "smsTerms": "来自 Thorncliffe Park Community Hub 的 CVH 短信警报。信息频率不定。可能产生短信和数据费用。回复 HELP 获取帮助，回复 STOP 停止。",
     "startHelp": "5 分钟内没有收到短信？请发送 START 到 {number}，然后重新登记。",
     "startHelpNoNumber": "5 分钟内没有收到短信？请向我们发短信的号码发送 START，然后重新登记。",
     "error": {
@@ -6314,7 +6315,7 @@
     }
   },
   "smsTexts": {
-    "confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。",
+    "confirmation": "Thorncliffe Park Community Hub 的 CVH 警报：回复 YES 确认。信息频率不定。可能产生短信和数据费用。回复 HELP 求助，回复 STOP 停止。",
     "welcome": "您已订阅 CVH 警报。Hub 工作人员会审核每条消息，因此夜间可能不会发送警报。回复 1 更改楼宇或楼层，回复 2 更改语言，回复 3 撤回探望申请，回复 0 停止并删除订阅。回复 STOP 停止。",
     "alreadySignedUp": "您已订阅 CVH 警报。",
     "deletePrompt": "请在 10 分钟内再次回复 0 以删除订阅。之后您将不再收到短信。",

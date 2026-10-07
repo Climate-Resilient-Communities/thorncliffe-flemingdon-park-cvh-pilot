@@ -6296,6 +6296,7 @@
     "onItsWay": "Kung nakakatanggap ng text ang numerong ito, may mensaheng papunta na.",
     "expect": "Sumagot ng YES sa mensaheng iyon sa loob ng 48 oras para magsimulang makatanggap ng alerto. Hangga't hindi kayo sumasagot ng YES, wala kayong matatanggap na alerto sa text.",
     "howChange": "Para palitan ang inyong gusali, palapag o wika sa ibang pagkakataon, sumagot ng 1 o 2 sa anumang text mula sa Hub.",
+    "smsTerms": "Mga text alert ng CVH mula sa Thorncliffe Park Community Hub. Nag-iiba ang dalas ng mensahe. Maaaring may singil sa mensahe at data. Sumagot ng HELP para sa tulong o STOP para tumigil.",
     "startHelp": "Walang text sa loob ng 5 minuto? Mag-text ng START sa {number}, pagkatapos ay mag-sign up ulit.",
     "startHelpNoNumber": "Walang text sa loob ng 5 minuto? Mag-text ng START sa numerong pinanggagalingan ng aming mga text, pagkatapos ay mag-sign up ulit.",
     "error": {
@@ -6314,7 +6315,7 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil.",
+    "confirmation": "Mga alerto ng CVH mula sa Thorncliffe Park Community Hub: sumagot ng YES para kumpirmahin. Nag-iiba ang dalas ng mensahe. Maaaring may singil sa mensahe at data. HELP para sa tulong, STOP para tumigil.",
     "welcome": "Naka-sign up ka na sa CVH alert. Sinusuri ng staff ng Hub ang bawat mensahe, kaya maaaring hindi maipadala ang alert sa gabi. Sumagot ng 1 para palitan ang iyong gusali o palapag, 2 para palitan ang iyong wika, 3 para bawiin ang hiling na pangungumusta, 0 para itigil at burahin ang iyong subscription. Sumagot ng STOP para itigil.",
     "alreadySignedUp": "Naka-sign up ka na sa CVH alert.",
     "deletePrompt": "Sumagot ulit ng 0 sa loob ng 10 minuto para burahin ang subscription. Wala ka nang matatanggap na text.",

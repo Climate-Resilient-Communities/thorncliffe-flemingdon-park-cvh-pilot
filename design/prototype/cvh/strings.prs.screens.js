@@ -1406,7 +1406,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "برای گرفتن هشدارهای CVH، جواب YES بفرستید. برای قطع، STOP بفرستید."}});
+  m(t, {"smsTexts": {"confirmation": "هشدارهای CVH: برای تأیید YES بفرستید. تعداد پیام‌ها متغیر است. ممکن است هزینه پیام و دیتا اعمال شود. کمک: HELP، توقف: STOP."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای تغییر ساختمان یا طبقه 1، برای تغییر زبان 2، برای پس گرفتن درخواست احوال‌پرسی 3، و برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.", "alreadySignedUp": "شما قبلاً برای هشدارهای CVH ثبت نام کرده‌اید.", "deletePrompt": "برای حذف اشتراک، در 10 دقیقه باز 0 بفرستید. بعد از آن پیامی نمی‌گیرید.", "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید."}, "smsKeywords": {"yes": "بله, بلی, هان"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1533,4 +1533,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["جنوری","فبروری","مارچ","اپریل","می","جون","جولای","اگست","سپتمبر","اکتوبر","نومبر","دسمبر"],"dayMonth":"{month} {day}","digits":"۰۱۲۳۴۵۶۷۸۹"}, "smsTexts": {"reconsent": "پایان پیلوت CVH: برای هشدار تا {date} YES بفرستید، ورنه شماره حذف.", "reconsentKept": "تشکر. هشدارهای CVH را همچنان دریافت می‌کنید.", "pilotEnded": "پیلوت CVH پایان یافت؛ شماره شما نگه داشته نشد.", "signupsPaused": "ثبت‌نام پیامکی CVH تا پایان پیلوت متوقف است."}, "signup": {"error": {"signups_paused": "ثبت‌نام تا پایان پیلوت متوقف است."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "هشدارهای پیامکی CVH از Thorncliffe Park Community Hub. تعداد پیام‌ها متغیر است. ممکن است هزینه پیام و دیتا اعمال شود. برای کمک HELP و برای توقف STOP را بفرستید."}});
 })();

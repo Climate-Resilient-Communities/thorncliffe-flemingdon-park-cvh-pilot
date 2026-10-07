@@ -1406,7 +1406,7 @@
     }
    }
   });
-  m(t, {"smsTexts": {"confirmation": "د CVH د خبرتیاوو لپاره په YES ځواب ورکړئ. د بندولو لپاره په STOP ځواب ورکړئ."}});
+  m(t, {"smsTexts": {"confirmation": "د CVH خبرتیاوې: د تایید لپاره YES ولېږئ. د پیغامونو شمېر بدلېږي. د پیغام او ډېټا لګښت کېدای شي. مرسته: HELP، بندول: STOP."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
   m(t, {"smsTexts": {"welcome": "تاسو د CVH خبرتیاوو لپاره نوم لیکنه وکړه. د هب کارکوونکي هر پیغام ګوري، نو ښايي خبرتیاوې د شپې ونه لېږل شي. د ودانۍ یا پوړ بدلولو لپاره په 1، د ژبې بدلولو لپاره په 2، د احوال پوښتنې غوښتنې بېرته اخیستلو لپاره په 3، او د بندولو او خپل ګډون د ړنګولو لپاره په 0 ځواب ورکړئ. د بندولو لپاره په STOP ځواب ورکړئ.", "alreadySignedUp": "تاسو دمخه د CVH خبرتیاوو لپاره نوم لیکنه کړې ده.", "deletePrompt": "د ګډون د ړنګولو لپاره په 10 دقیقو کې بیا 0 ولېږئ. بیا پیغام نه درځي.", "signupInfo": "د پیغام له لارې د CVH خبرتیاوو لپاره دلته نوم لیکنه وکړئ: {link} د بندولو لپاره په STOP ځواب ورکړئ."}, "smsKeywords": {"yes": "هو, هوکې"}});
   /* S07.05: the numbered text menus and their replies (see the English file for what each is and the one-text rule; 0, 1, 8, 9, 10, 5
@@ -1533,4 +1533,6 @@
      from CLDR 47 so the frozen text is the same on every runtime. AI-generated (Claude), not yet checked by native readers: the texts and the
      date words are reviewed before launch (Launch Readiness). */
   m(t, {"smsDate": {"months":["جنوري","فبروري","مارچ","اپریل","مۍ","جون","جولای","اګست","سېپتمبر","اکتوبر","نومبر","دسمبر"],"dayMonth":"{month} {day}","digits":"۰۱۲۳۴۵۶۷۸۹"}, "smsTexts": {"reconsent": "CVH پیلوټ ختمېږي. خبرتیا ته تر {date} YES ولېږئ، کنه شمېره حذف.", "reconsentKept": "مننه. تاسو به د CVH خبرتیاوې ترلاسه کوئ.", "pilotEnded": "د CVH پیلوټ پای ته ورسېد؛ ستاسو شمېره نه ده ساتل شوې.", "signupsPaused": "د پیلوټ تر پایه د CVH ټکسټ نوم لیکنه بنده ده."}, "signup": {"error": {"signups_paused": "د پیلوټ تر پایه نوم لیکنه بنده ده."}}});
+  /* The opt-in disclosures carriers ask for (program, frequency, rates, HELP and STOP) under the sign-up form. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"smsTerms": "د Thorncliffe Park Community Hub د CVH متني خبرتیاوې. د پیغامونو شمېر بدلېږي. د پیغام او ډېټا لګښت کېدای شي. د مرستې لپاره HELP او د بندولو لپاره STOP ولېږئ."}});
 })();

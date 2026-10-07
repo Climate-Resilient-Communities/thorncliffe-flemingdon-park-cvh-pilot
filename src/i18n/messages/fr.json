@@ -6296,6 +6296,7 @@
     "onItsWay": "Si ce numéro peut recevoir des textos, un message est en route.",
     "expect": "Répondez YES à ce message dans les 48 heures pour commencer à recevoir les alertes. Tant que vous n'avez pas répondu YES, vous ne recevez aucune alerte par texto.",
     "howChange": "Pour changer plus tard d'immeuble, d'étage ou de langue, répondez 1 ou 2 à n'importe quel texto du Hub.",
+    "smsTerms": "Alertes CVH par texto du Thorncliffe Park Community Hub. La fréquence des messages varie. Des frais de messages et de données peuvent s'appliquer. Répondez HELP pour obtenir de l'aide ou STOP pour vous désabonner.",
     "startHelp": "Pas de texto après 5 minutes ? Envoyez START au {number}, puis inscrivez-vous de nouveau.",
     "startHelpNoNumber": "Pas de texto après 5 minutes ? Envoyez START au numéro d'où viennent nos textos, puis inscrivez-vous de nouveau.",
     "error": {
@@ -6314,7 +6315,7 @@
     }
   },
   "smsTexts": {
-    "confirmation": "Répondez YES pour recevoir les alertes du CVH. Répondez STOP pour arrêter.",
+    "confirmation": "Alertes CVH du Thorncliffe Park Community Hub : répondez YES pour confirmer. Fréquence variable. Des frais de messages et de données peuvent s'appliquer. HELP : aide. STOP pour vous désabonner.",
     "welcome": "Vous êtes inscrit aux alertes du CVH. Le personnel du Hub vérifie chaque message, donc les alertes peuvent ne pas être envoyées la nuit. Répondez 1 pour changer d'immeuble ou d'étage, 2 pour changer de langue, 3 pour retirer votre demande de prise de nouvelles, 0 pour arrêter et supprimer votre abonnement. Répondez STOP pour arrêter.",
     "alreadySignedUp": "Vous êtes déjà inscrit aux alertes du CVH.",
     "deletePrompt": "Répondez 0 à nouveau d'ici 10 minutes pour supprimer votre abonnement. Vous ne recevrez plus de messages.",
