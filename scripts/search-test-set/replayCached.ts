@@ -248,6 +248,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     rerankMin: settings.rerankMin,
     rerankMonthlyCalls: Number.MAX_SAFE_INTEGER,
     rerankCalls: async () => 0,
+    translateCalls: async () => 0,
     // No vendor, no deadline: a slow machine must not cut a leg.
     legTimeoutMs: 60_000,
     totalBudgetMs: 60_500,

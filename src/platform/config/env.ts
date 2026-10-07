@@ -141,23 +141,38 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        kind of question, as comma-separated `kind=model` pairs; a kind left
  *                                                        out keeps its default, `kind=off` switches the leg off for it, and
  *                                                        `off` alone switches it off for all. Kinds: ps, prs, ur,
- *                                                        romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults:
+ *                                                        romanized_or_mixed, ambiguous_arabic, and (translate-first) the
+ *                                                        other launch languages when the question is confidently in one:
+ *                                                        tl, gu, ta, el, sk, bn, hi, pa, zh, es, fr. PROVISIONAL defaults:
  *                                                        north-small-translate-09-2026 for ps, prs and ur (native-script
  *                                                        Urdu, owner decision 40),
  *                                                        command-a-translate-08-2025 for romanized_or_mixed and
  *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
- *                                                        Readiness). It applies only where COHERE_API_KEY is set
+ *                                                        Readiness) and for ta and pa (translate-first, 2026-10-07
+ *                                                        measurement); off for the other translate-first languages (they
+ *                                                        are searched directly, with the reranker, as when a translation
+ *                                                        fails). It applies only where COHERE_API_KEY is set
  * SEARCH_QUESTION_FALLBACK
  *                      server   optional                 the Cohere model the translated-question leg retries once with when
  *                                                        the routed model is past its limit (HTTP 429: quota or rate limit),
  *                                                        per kind of question, in the shape of SEARCH_QUESTION_ROUTE: comma-
  *                                                        separated `kind=model` pairs, a kind left out keeps its default,
- *                                                        `kind=off` means no retry for it, `off` alone for all. Kinds: ps, prs,
- *                                                        ur, romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults (owner
+ *                                                        `kind=off` means no retry for it, `off` alone for all. Kinds: as
+ *                                                        SEARCH_QUESTION_ROUTE. PROVISIONAL defaults (owner
  *                                                        decision 45): command-a-translate-08-2025 for prs, ur,
  *                                                        romanized_or_mixed and ambiguous_arabic (for the last two it only
  *                                                        applies if their route is changed: the routed model is that model),
- *                                                        off for ps (Command A Translate turned Pashto into Dari; S03.07 decides).
+ *                                                        off for ps (Command A Translate turned Pashto into Dari; S03.07 decides);
+ *                                                        off for the translate-first languages (ta and pa included: North
+ *                                                        Small Translate's month is alert translation's).
+ * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS
+ *                      server   optional                 a whole number (default 600): a translate-first question (ta, pa…) is
+ *                                                        translated only while its model's translate calls this calendar
+ *                                                        month (America/Toronto, spend_event, every purpose, alert translation
+ *                                                        included) are below it; past it the question takes the direct route
+ *                                                        with the reranker. Cohere allows ~1,000 a model a month on the key,
+ *                                                        so 600 leaves alert translation (S04.02: Command A Translate first
+ *                                                        for fr, es, zh, el, hi) a reserve of ~400
  *                                                        Never the routed model itself
  * SEARCH_FALLBACK_MIN_BUDGET_MS
  *                      server   optional                 the least time (0 to 2200 ms, default 800) that must be left of the
@@ -303,6 +318,7 @@ const rawSchema = z.object({
   SEARCH_QUESTION_FALLBACK: optionalText,
   SEARCH_FALLBACK_MIN_BUDGET_MS: optionalText,
   SEARCH_TRANSLATE_MONTHLY_CALLS: optionalText,
+  SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: optionalText,
   SEARCH_RERANK: optionalText,
   SEARCH_RERANK_MIN: optionalText,
   SEARCH_RERANK_MONTHLY_CALLS: optionalText,
@@ -339,6 +355,8 @@ export interface SearchSettings {
   fallbackMinBudgetMs: number;
   /** The translation calls a model may use in a calendar month, where the vendor limits them (model id to limit); empty: no warning. */
   translateMonthlyCalls: Readonly<Record<string, number>>;
+  /** The translate calls (every purpose) a model's calendar month may reach before translate-first questions are no longer translated. */
+  translateFirstMonthlyCalls: number;
   /** Whether the direct route reranks (where a Cohere key is configured). */
   rerank: boolean;
   /** The least rerank relevance of a reranked result. */
@@ -348,8 +366,44 @@ export interface SearchSettings {
 }
 
 /** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
-export const QUESTION_ROUTE_KINDS = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic"] as const;
+export const QUESTION_ROUTE_KINDS = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic", "tl", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"] as const;
 export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS)[number], string | null>>;
+
+/**
+ * Translate-first (2026-10-07 measurement, data/search-test-set/reports/2026-10-07-interim-tuning.md, "Translate-first"): the
+ * launch languages the multilingual embedding reads poorly enough that translating the question to English first wins clearly
+ * (hit@3 up at least 10 points, no-match accuracy no worse): Tamil and Punjabi, with Command A Translate (the model the
+ * measurement used) and no fallback model. The others are off (searched directly, with the reranker); a
+ * kind can be switched on or off in SEARCH_QUESTION_ROUTE without a code change.
+ */
+const TRANSLATE_FIRST_ROUTE = {
+  ta: "command-a-translate-08-2025",
+  pa: "command-a-translate-08-2025",
+  tl: null,
+  gu: null,
+  el: null,
+  sk: null,
+  bn: null,
+  hi: null,
+  zh: null,
+  es: null,
+  fr: null,
+} as const;
+// No fallback: North Small Translate's month on the production key is alert translation's (S04.02); a translate-first question
+// whose model fails or is past its limit takes today's route instead.
+const TRANSLATE_FIRST_FALLBACK = {
+  ta: null,
+  pa: null,
+  tl: null,
+  gu: null,
+  el: null,
+  sk: null,
+  bn: null,
+  hi: null,
+  zh: null,
+  es: null,
+  fr: null,
+} as const;
 
 /**
  * PROVISIONAL (the addendum's routing table): North Small Translate for Pashto, Dari and native-script Urdu (owner decision
@@ -361,6 +415,7 @@ export const DEFAULT_QUESTION_ROUTE: QuestionRouteSettings = {
   ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_ROUTE,
 };
 
 /**
@@ -376,6 +431,7 @@ export const DEFAULT_QUESTION_FALLBACK: QuestionRouteSettings = {
   ur: "command-a-translate-08-2025",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_FALLBACK,
 };
 
 /** The longest time the leg has (the E03 search time limit, DEFAULT_LEG_TIMEOUT_MS of the directory module): the most a minimum budget can be. */
@@ -395,6 +451,7 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   questionFallback: DEFAULT_QUESTION_FALLBACK,
   fallbackMinBudgetMs: 800,
   translateMonthlyCalls: {},
+  translateFirstMonthlyCalls: 600,
   rerank: true,
   rerankMin: 0.05,
   rerankMonthlyCalls: 900,
@@ -769,13 +826,13 @@ function positiveInteger(name: string, value: string | undefined, fallback: numb
 }
 
 const questionKindsProblem = (name: string) =>
-  `${name}: must be \`off\`, or comma-separated kind=model pairs (kinds ps, prs, ur, romanized_or_mixed, ambiguous_arabic; model a model id or off), each kind at most once`;
+  `${name}: must be \`off\`, or comma-separated kind=model pairs (kinds ${QUESTION_ROUTE_KINDS.join(", ")}; model a model id or off), each kind at most once`;
 
 /** A per-kind setting (the route and the fallback share the shape): `off` alone, or `kind=model|off` pairs over the defaults. */
 function parseQuestionKinds(name: string, value: string | undefined, defaults: QuestionRouteSettings, problems: string[]): QuestionRouteSettings {
   if (value === undefined) return defaults;
   const text = value.trim();
-  if (text === "off") return { ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null };
+  if (text === "off") return Object.fromEntries(QUESTION_ROUTE_KINDS.map((kind) => [kind, null])) as unknown as QuestionRouteSettings;
   const settings: Record<string, string | null> = { ...defaults };
   const seen = new Set<string>();
   for (const pair of text.split(",").map((p) => p.trim()).filter((p) => p !== "")) {
@@ -899,6 +956,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     questionFallback: parseQuestionKinds("SEARCH_QUESTION_FALLBACK", raw.SEARCH_QUESTION_FALLBACK, DEFAULT_QUESTION_FALLBACK, problems),
     fallbackMinBudgetMs: parseFallbackMinBudget(raw.SEARCH_FALLBACK_MIN_BUDGET_MS, problems),
     translateMonthlyCalls: parseTranslateMonthlyCalls(raw.SEARCH_TRANSLATE_MONTHLY_CALLS, problems),
+    translateFirstMonthlyCalls: positiveInteger("SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS", raw.SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS, defaults.translateFirstMonthlyCalls, problems),
     rerank: parseRerankSwitch(raw.SEARCH_RERANK, problems),
     rerankMin: unitNumber("SEARCH_RERANK_MIN", raw.SEARCH_RERANK_MIN, defaults.rerankMin, "0.05", problems),
     rerankMonthlyCalls: positiveInteger("SEARCH_RERANK_MONTHLY_CALLS", raw.SEARCH_RERANK_MONTHLY_CALLS, defaults.rerankMonthlyCalls, problems),

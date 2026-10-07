@@ -8,7 +8,10 @@
 //    never change), checked against the hash the release recorded.
 //  - The direct leg embeds the question as typed with the snapshot's model as a query (`input_type: search_query`).
 //  - The translated-question leg (S03.05): for Pashto, Dari, native-script Urdu, romanized or mixed (but not one or two plainly
-//    English words), and ambiguous Arabic-script questions, the `translation` module translates the question to English
+//    English words), and ambiguous Arabic-script questions, and (translate-first, 2026-10-07) a question confidently in another
+//    launch language whose kind `search_question_route` names a model for (by default Tamil and Punjabi: the embedding reads
+//    them poorly; with no fallback model, and only while the model's month of translate calls, every purpose, is below
+//    SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS, which leaves alert translation its reserve), the `translation` module translates the question to English
 //    with the model `search_question_route` names and checks that it is English; the translation is then embedded with the
 //    snapshot's model. The translation starts with the request, in parallel with the snapshot read and the direct leg (only
 //    its embedding waits for the snapshot). When the routed model is past a vendor limit (HTTP 429), the kind of question has a
@@ -26,7 +29,9 @@
 //    best similarity reaches the direct floor, less those more than the direct gap below it. When the direct leg fails but
 //    the translated one completed, the results come from the translated leg alone.
 //  - The reranker of the direct route (arm R2 of the interim tuning; SEARCH_RERANK, on unless `off`, and only where a Cohere key
-//    is configured): a question in another language that needs no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…)
+//    is configured): a question in another language that needs no translated leg (es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk…;
+//    a translate-first language whose leg is off, or failed, timed out or was rejected: the search then takes today's route; when
+//    its leg completed the question is on the hybrid route and is not reranked, the measurement showed no gain on top)
 //    whose direct leg completed has its 20 best providers by similarity reranked against their English search texts (the texts
 //    their vectors were made from, rebuilt from the release's English listing) with `rerank-v3.5`: the results are the top 5 with a
 //    relevance of at least SEARCH_RERANK_MIN (0.05), best relevance first, none when no provider reaches it. Each result's `score`
@@ -74,7 +79,10 @@ import type { SearchV1 } from "@/contracts/searchTestSet";
 import { recordSpendEvent, type SpendEventInput, type SpendPurpose } from "@/modules/spend";
 import {
   QuestionTranslationError,
+  TRANSLATE_FIRST_SOURCES,
+  TRANSLATE_SPEND_KIND,
   estimateTranslationTokens,
+  isTranslateFirstSource,
   isLimitFailure,
   questionTranslationSpend,
   sourceLanguage,
@@ -318,6 +326,14 @@ export interface SearchDeps {
   rerankMonthlyCalls?: number;
   /** Test seam: counts the month's rerank calls of a model (default: spend_event rows of kind `rerank`, every purpose). */
   rerankCalls?: (model: string, now: Date) => Promise<number>;
+  /**
+   * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: a translate-first question (ta, pa…) is translated only while its model's translate calls
+   * of the calendar month, every purpose (alert translation included), are below this; default 600. Past it the question takes
+   * today's route, so search cannot spend the reserve alert translation needs on the same key.
+   */
+  translateFirstMonthlyCalls?: number;
+  /** Test seam: counts the month's translate calls of a model (default: spend_event rows of kind `translate`, every purpose). */
+  translateCalls?: (model: string, now: Date) => Promise<number>;
   /** Test seams. */
   snapshotFailureTtlMs?: number;
   snapshotLoadTimeoutMs?: number;
@@ -619,12 +635,26 @@ function capped<T>(work: Promise<T>, ms: number): Promise<T> {
   return Promise.race([work, expired]).finally(() => clearTimeout(timer));
 }
 
+/**
+ * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS by default: Cohere allows a model about 1,000 calls a calendar month on a key, and alert
+ * translation (S04.02) uses Command A Translate on the same key; translate-first searches stop at 600 of the model's month, which
+ * leaves alerts a reserve of about 400 calls.
+ */
+export const DEFAULT_TRANSLATE_FIRST_MONTHLY_CALLS = 600;
+
+/** The longest a translate-first question waits for its model's month to be counted (only on a cold instance or every 30 s). */
+const TRANSLATE_GATE_WAIT_MS = 500;
+
 /** Which questions also search through English (the E03 definitions): Pashto, Dari, native-script Urdu, romanized or mixed (unless plainly English), ambiguous Arabic script. */
 export function questionSourceOf(detected: QuestionLanguage, q?: string): QuestionSource | null {
   // A short English word eld cannot tell from a Latin launch language ("lawyer", "rent") needs no translation to English.
   if (detected.confidence === "romanized_or_mixed") return q !== undefined && isClearlyEnglish(q) ? null : detected.confidence;
   if (detected.confidence === "ambiguous_arabic") return detected.confidence;
   if (detected.confidence === "confident" && (detected.lang === "ps" || detected.lang === "prs" || detected.lang === "ur")) return detected.lang;
+  // Translate-first: a question confidently in another launch language is a kind of its own; it is translated only where the
+  // route names a model for it, and searched directly (and reranked) otherwise.
+  const lang = detected.confidence === "confident" ? detected.lang : null;
+  if (lang !== null && (TRANSLATE_FIRST_SOURCES as readonly string[]).includes(lang)) return lang as QuestionSource;
   return null;
 }
 
@@ -688,6 +718,22 @@ export function createSearch(deps: SearchDeps): SearchService {
         count: (now) => (deps.rerankCalls ? deps.rerankCalls(reranker.model, now) : monthlyModelCalls(deps.db(), RERANK_SPEND_KIND, reranker.model, now)),
       })
     : null;
+  // The translate-first languages' monthly gate, one per model (the same counting as the reranker's: the month's rows, every
+  // purpose, plus this instance's own calls since the last count).
+  const translateFirstLimit = deps.translateFirstMonthlyCalls ?? DEFAULT_TRANSLATE_FIRST_MONTHLY_CALLS;
+  const translateGates = new Map<string, RerankQuota>();
+  const translateGate = (model: string): RerankQuota => {
+    let gate = translateGates.get(model);
+    if (!gate) {
+      gate = createRerankQuota({
+        limit: translateFirstLimit,
+        clock,
+        count: (now) => (deps.translateCalls ? deps.translateCalls(model, now) : monthlyModelCalls(deps.db(), TRANSLATE_SPEND_KIND, model, now)),
+      });
+      translateGates.set(model, gate);
+    }
+    return gate;
+  };
   // Releases whose data failed to load, until when: a bad release is not downloaded again on every search.
   const failedUntil = new Map<number, number>();
   // Vendor failures already told to ops (by reason and model), until when: the same failure of the same model is not reported
@@ -821,9 +867,14 @@ export function createSearch(deps: SearchDeps): SearchService {
     const source = translator ? questionSourceOf(detected, q) : null;
     const translateModel = source && translator ? translator.modelFor(source) : null;
     const translating = source !== null && translateModel !== null && translator !== null;
+    // A translate-first question is translated only within its model's monthly gate (counted beside the snapshot, costing no time).
+    const gated = translating && isTranslateFirstSource(source);
+    if (gated) translateGate(translateModel).refresh();
     // The reranker is for a question in another language that needs no translated leg (whether or not the leg is configured):
     // its month's calls are counted now, beside the snapshot and the embedding, so that the count costs the search no time.
-    const mayRerank = reranker !== null && rerankQuota !== null && deps.embedder !== null && questionSourceOf(detected, q) === null && !isEnglishQuestion(detected, q, lang);
+    // A translate-first language is reranked like before when its translated leg is off, fails or is rejected (its route is then direct).
+    const kind = questionSourceOf(detected, q);
+    const mayRerank = reranker !== null && rerankQuota !== null && deps.embedder !== null && (kind === null || isTranslateFirstSource(kind)) && !isEnglishQuestion(detected, q, lang);
     if (mayRerank) rerankQuota.refresh();
 
     // ---- the request snapshot (read in parallel with the translation)
@@ -1043,6 +1094,17 @@ export function createSearch(deps: SearchDeps): SearchService {
           checkTime(leg);
           /** One translation call with `model`: its usage is recorded as the vendor reported it (a call that failed at the vendor wrote none). */
           const translateWith = async (model: string): Promise<string> => {
+            if (gated) {
+              const gate = translateGate(model);
+              gate.refresh();
+              const allowance = await gate.check(Math.min(TRANSLATE_GATE_WAIT_MS, deadline - clock()));
+              if (allowance !== "ok") {
+                // The month's reserve for alert translation (or a count that could not be made): today's route, told to ops once a minute.
+                translateNotes.push({ reason: "translate_quota", model, error: allowance === "unknown" ? "count_failed" : "search_monthly_limit" });
+                throw new TranslateStageError("translate_failed", "search_monthly_limit");
+              }
+              gate.used();
+            }
             const call = leg.start("translate", model, q, systemPrompt(sourceLanguage(source), "en"));
             try {
               const translated = await translator.toEnglish({ text: q, source, signal: leg.signal, model });
@@ -1075,6 +1137,8 @@ export function createSearch(deps: SearchDeps): SearchService {
             translation = await translateWith(translateModel);
           } catch (error) {
             if (leg.signal.aborted) throw new StageError("timed_out");
+            // Past the translate-first gate: no call was made, and there is nothing to retry.
+            if (error instanceof TranslateStageError) throw error;
             const vendor = error instanceof QuestionTranslationError && error.code === "translate_failed" ? error.vendor : undefined;
             const fallback = vendor !== undefined && isLimitFailure(vendor) ? translator.fallbackFor(source, translateModel) : null;
             // Past its limit (or limited for a moment): one retry with the fallback model for this kind of question, with the same
@@ -1087,6 +1151,10 @@ export function createSearch(deps: SearchDeps): SearchService {
               translation = await translateWith(fallback);
               rescuedBy = fallback;
             } catch (second) {
+              if (second instanceof TranslateStageError) {
+                if (vendor !== "quota") noteFailure(error, translateModel);
+                throw second;
+              }
               // A transient limit is told only if the fallback failed too (when it answered, the rescue is all ops hears).
               if (vendor !== "quota") noteFailure(error, translateModel);
               if (leg.signal.aborted) throw new StageError("timed_out");

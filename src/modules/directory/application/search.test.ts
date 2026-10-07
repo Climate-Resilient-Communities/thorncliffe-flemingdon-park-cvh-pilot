@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
-import { QuestionTranslationError, TranslateError, createQuestionTranslator, type QuestionRoute, type QuestionTranslator, type TranslateErrorCode, type Translator } from "@/modules/translation";
+import { QuestionTranslationError, TRANSLATE_FIRST_OFF, TranslateError, createQuestionTranslator, type QuestionRoute, type QuestionTranslator, type TranslateErrorCode, type Translator } from "@/modules/translation";
 import type { SpendEventInput } from "@/modules/spend";
 import { detect } from "../domain/questionLanguage";
 import { buildKeywordIndex } from "../domain/searchKeywords";
@@ -40,6 +40,7 @@ const ROUTE: QuestionRoute = {
   ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
+  ...TRANSLATE_FIRST_OFF,
 };
 
 // Four providers, one per axis (the fifth axis is "nothing in particular"); P2 is an emergency provider.
@@ -226,7 +227,7 @@ describe("the translated-question leg", () => {
   }
 
   describe("which questions get it", () => {
-    it("is run for Pashto, Dari, native-script Urdu, romanized or mixed, and ambiguous Arabic script, and for no other question", () => {
+    it("is run for Pashto, Dari, native-script Urdu, romanized or mixed, and ambiguous Arabic script; another launch language is a translate-first kind of its own, and English none", () => {
       const of = (q: string, page: "en" | "ur" = "en") => questionSourceOf(detect(q, page), q);
       expect(of(PASHTO)).toBe("ps");
       expect(of("کلینیک صحی رایگان بدون کارت صحی کجا است؟")).toBe("prs");
@@ -236,10 +237,12 @@ describe("the translated-question leg", () => {
       expect(of("I need a lawyer")).toBeNull();
       expect(of(URDU)).toBe("ur"); // confident Urdu (owner decision 40)
       expect(of(URDU, "ur")).toBe("ur");
-      expect(of("Necesito un abogado")).toBeNull();
+      // Translate-first: translated only where the route names a model for the language (by default Tamil and Punjabi).
+      expect(of("Necesito un abogado")).toBe("es");
+      expect(of("எனக்கு உணவு எங்கே கிடைக்கும்?")).toBe("ta");
     });
 
-    it("matches the test set's native-script questions: every Pashto, Dari and Urdu one gets it, and none of the other scripts' (Latin-letter questions are the detector's, tuned in S03.07)", () => {
+    it("matches the test set's native-script questions: every Pashto, Dari and Urdu one gets it, and the other scripts' are their own translate-first kind (Latin-letter questions are the detector's, tuned in S03.07)", () => {
       const lines = readFileSync(path.join(process.cwd(), "data/search-test-set/questions.jsonl"), "utf8").split("\n").filter((l) => l.trim() !== "");
       const questions = lines.map((l) => JSON.parse(l) as { id: string; lang: string; q: string; form: string });
       const arabic = questions.filter((x) => x.form === "native" && ["ps", "prs", "ur"].includes(x.lang));
@@ -248,7 +251,7 @@ describe("the translated-question leg", () => {
       expect(otherScripts.length).toBeGreaterThan(0);
       // The page language is English: the leg depends on how the question is written, not the page.
       for (const x of arabic) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBe(x.lang);
-      for (const x of otherScripts) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBeNull();
+      for (const x of otherScripts) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBe(x.lang === "zh-Hant" ? "zh" : x.lang);
     });
 
     it("is not run, and is logged not_needed, for an English question", async () => {
@@ -786,7 +789,7 @@ describe("the translated-question leg", () => {
     const translateSpends = () => spends.filter((s) => s.kind === "translate");
     const reasons = (notes: SearchFailureNote[]) => notes.map((n) => n.reason);
     /** The same fallback model for every kind of question. */
-    const everyKind = (model: string): QuestionRoute => ({ ps: model, prs: model, ur: model, romanized_or_mixed: model, ambiguous_arabic: model });
+    const everyKind = (model: string): QuestionRoute => ({ ps: model, prs: model, ur: model, romanized_or_mixed: model, ambiguous_arabic: model, ...TRANSLATE_FIRST_OFF });
     const withFallback = (parts: Parameters<typeof service>[0], fallback: QuestionRoute | null = everyKind(COMMAND)) => service({ ...parts, fallback });
 
     it("retries once with the fallback when the routed model is past its quota, uses its translation, logs used, and bills only the call that answered", async () => {
@@ -1012,7 +1015,7 @@ describe("the translated-question leg", () => {
 
     describe("per kind of question (P2-3, owner decision 45)", () => {
       /** The defaults' shape: Dari and Urdu fall back to Command A, Pashto does not. */
-      const DEFAULTS: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+      const DEFAULTS: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF };
 
       it("retries a Dari question and an Urdu question with Command A when the routed model is past its quota", async () => {
         for (const [q, lang] of [

@@ -2,11 +2,11 @@
 // what the caller is told about a billed call. Nothing here reaches the network.
 import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
-import type { QuestionRoute } from "../domain/questionTranslation";
+import { TRANSLATE_FIRST_OFF, type QuestionRoute } from "../domain/questionTranslation";
 import { TranslateError, type Translator } from "./ports";
 import { QuestionTranslationError, createQuestionTranslator, questionTranslationSpend } from "./questionTranslator";
 
-const ROUTE: QuestionRoute = { ps: "north-small-translate-09-2026", prs: "north-small-translate-09-2026", ur: "north-small-translate-09-2026", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: null };
+const ROUTE: QuestionRoute = { ps: "north-small-translate-09-2026", prs: "north-small-translate-09-2026", ur: "north-small-translate-09-2026", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: null, ...TRANSLATE_FIRST_OFF };
 const MARKER = "zq7-marker-question";
 
 function fake(answer: string | Error, tokens: { inputTokens: number | null; outputTokens: number | null } = { inputTokens: 12, outputTokens: 5 }) {
@@ -100,7 +100,7 @@ describe("the fallback model", () => {
   const COMMAND = "command-a-translate-08-2025";
   const NORTH = "north-small-translate-09-2026";
   /** The shape of the defaults (owner decision 45): Dari and Urdu fall back to Command A, Pashto does not, and the kinds routed to Command A have it only to skip. */
-  const FALLBACK: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+  const FALLBACK: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF };
 
   it("offers the fallback the kind of question names, none when it is off for the kind, and none for the routed model itself", () => {
     const { translator } = fake("x");
