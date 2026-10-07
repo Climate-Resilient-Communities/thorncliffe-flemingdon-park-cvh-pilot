@@ -184,7 +184,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
         )}
 
         {listing && (
-          <>
+          <div className="dir-workspace">
             <Stack gap="related">
               <section className="dir-filters" aria-label={t("R27.title")} data-testid="filters">
                 <Stack gap="related">
@@ -336,7 +336,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                 </Stack>
               </section>
             )}
-          </>
+          </div>
         )}
       </Stack>
     </Screen>

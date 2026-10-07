@@ -1,3 +1,5 @@
+import { BasicSwitch } from "../basic";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { ResidentHeader, type ResidentHeaderProps } from "./resident-header";
 import { ResidentNav, type ResidentNavProps } from "./resident-nav";
@@ -20,6 +22,8 @@ export function ResidentShell({ header, nav, children }: ResidentShellProps) {
         {children}
       </main>
       <ResidentNav {...nav} />
+        <footer className="shell-footer"><Link href="/staff/sign-in">{header.current === "fr" ? "Connexion du personnel" : "Staff sign in"}</Link><details className="shell-tools"><summary className="tap" lang={header.current === "fr" ? "fr" : "en"}>{header.current === "fr" ? "Affichage" : "Display settings"}</summary><BasicSwitch labels={header.basic} /></details></footer>
+
     </div>
   );
 }

@@ -85,7 +85,7 @@ export function LanguageControl({ current, languages, labels }: LanguageControlP
               <ResidentText>{labels.note}</ResidentText>
             </p>
             <ul className="shell-sheet__list" role="list">
-              {languages.map((language) => (
+              {[...languages].sort((a, b) => (a.code === "en" ? -2 : a.code === "fr" ? -1 : 0) - (b.code === "en" ? -2 : b.code === "fr" ? -1 : 0)).map((language) => (
                 <li key={language.code}>
                   <a
                     className="shell-langopt tap"

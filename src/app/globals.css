@@ -11,3 +11,5 @@
 /* Unit tests describe classes rather than use them: their strings add no CSS (check:spacing skips them for that reason). */
 @source not "../**/*.test.*";
 @source not "../**/*.spec.*";
+
+@import "../ui/design-review.css";

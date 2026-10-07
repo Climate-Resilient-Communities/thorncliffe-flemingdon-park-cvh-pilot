@@ -49,7 +49,7 @@ export function LanguageStep({ lang, mode, languages }: LanguageStepProps) {
             <ResidentText>{t("title")}</ResidentText>
           </legend>
           <Stack gap="target" as="ul">
-            {languages.map((language) => (
+            {[...languages].sort((a, b) => (a.code === "en" ? -2 : a.code === "fr" ? -1 : 0) - (b.code === "en" ? -2 : b.code === "fr" ? -1 : 0)).map((language) => (
               <li key={language.code}>
                 <ChoiceOption
                   kind="radio"

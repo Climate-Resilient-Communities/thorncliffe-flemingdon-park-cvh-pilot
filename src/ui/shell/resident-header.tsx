@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BasicSwitch, type BasicSwitchProps } from "../basic";
+import { type BasicSwitchProps } from "../basic";
 import { Inline } from "../layout/inline";
 import { LanguageControl, type LanguageControlProps } from "./language-control";
 
@@ -17,7 +17,7 @@ const LOGO = { src: "/brand/hub-logo.png", width: 423, height: 136 } as const;
  * and the button swap ends in right-to-left because this is an Inline that justifies between, not because of a [dir]
  * rule. "My choices", the prototype's second tool beside the switch, is the link of R-03 for now (S02.03).
  */
-export function ResidentHeader({ logoAlt, basic, ...language }: ResidentHeaderProps) {
+export function ResidentHeader({ logoAlt, basic: _basic, ...language }: ResidentHeaderProps) {
   return (
     <header className="shell-header" data-testid="shell-header">
       <Inline gap="target" justify="between" wrap={false}>
@@ -33,9 +33,6 @@ export function ResidentHeader({ logoAlt, basic, ...language }: ResidentHeaderPr
         />
         <LanguageControl {...language} />
       </Inline>
-      <div className="shell-tools">
-        <BasicSwitch labels={basic} />
-      </div>
     </header>
   );
 }
