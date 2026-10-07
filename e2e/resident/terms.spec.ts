@@ -45,6 +45,8 @@ test("/en/terms states in plain words everything the terms must say, with versio
     "privacy contact",
     "Hub staff check every alert before it is sent.",
     "may not be sent overnight",
+    "we never share it or your agreement to get texts with anyone for marketing",
+    "Message and data rates may apply. Reply HELP for help.",
   ]) {
     expect(text.toLowerCase(), phrase).toContain(phrase.toLowerCase());
   }
@@ -52,8 +54,8 @@ test("/en/terms states in plain words everything the terms must say, with versio
   await expect(page.locator("main bdi[lang='en'], main h1[lang], main h2[lang], main p.terms-line[lang]")).toHaveCount(0);
   await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
 
-  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-02.1");
-  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-06");
+  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-07.1");
+  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-07");
   await expect(page.getByTestId("terms-owner")).toContainText("Helena Yu, Sprout Climate Association");
   await expect(page.getByTestId("terms-contact")).toContainText("helena.yu@sprout-climate.org");
   // No end-of-pilot purge has completed for this server: the page says nothing about deleted data (S09.08).

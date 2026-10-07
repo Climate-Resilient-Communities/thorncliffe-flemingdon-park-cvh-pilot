@@ -13,6 +13,7 @@ function service(change: Partial<TermsSource> = {}, reviewed = true, afterReview
     ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource),
     owner: "Ana Reyes",
     privacyContact: "privacy@example.org",
+    consentVersion: "2026-10-02.1",
     lastUpdated: "2026-10-02",
     counselWaiver: null,
     publishedVersions: null,
@@ -58,16 +59,16 @@ describe("the terms seam for the page and the web sign-up", () => {
   });
 
   it("publishes the committed terms: the owner reviewed the English and waived counsel's review for the pilot", () => {
-    expect(currentConsentVersion()).toBe("2026-10-02.1");
+    expect(currentConsentVersion()).toBe("2026-10-07.1");
     expect(currentPublishedTerms("en")).toMatchObject({
       status: "published",
-      consentVersion: "2026-10-02.1",
+      consentVersion: "2026-10-07.1",
       owner: "Helena Yu, Sprout Climate Association",
-      lastUpdated: "2026-10-06",
+      lastUpdated: "2026-10-07",
       privacyContact: "helena.yu@sprout-climate.org",
     });
     expect(termsPageView("en").status).toBe("published");
-    expect(bundledTermsInput().terms.counselWaiver).toMatchObject({ decidedBy: "Helena Yu, Sprout Climate Association", version: "2026-10-02.1" });
+    expect(bundledTermsInput().terms.counselWaiver).toMatchObject({ decidedBy: "Helena Yu, Sprout Climate Association", version: "2026-10-07.1" });
   });
 
   it("names no new version until counsel has reviewed it, so an earlier version stays the one in force", () => {

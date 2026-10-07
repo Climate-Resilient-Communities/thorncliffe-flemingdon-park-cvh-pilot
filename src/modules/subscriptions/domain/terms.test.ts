@@ -31,6 +31,7 @@ function approved(change: Partial<TermsSource> = {}): TermsSource {
     ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource),
     owner: "Ana Reyes",
     privacyContact: "privacy@example.org",
+    consentVersion: "2026-10-02.1",
     lastUpdated: "2026-10-02",
     counselWaiver: null,
     publishedVersions: null,
@@ -130,7 +131,7 @@ describe("publishing the terms", () => {
     expect(result.published).toBe(true);
     expect(result.owner).toBe("Helena Yu, Sprout Climate Association");
     expect(result.privacyContact).toBe("helena.yu@sprout-climate.org");
-    expect(formatTermsReport(result)[0]).toBe("Terms 2026-10-02.1 published");
+    expect(formatTermsReport(result)[0]).toBe("Terms 2026-10-07.1 published");
   });
 
   it("refuses a missing or placeholder owner, privacy contact and English review", () => {
