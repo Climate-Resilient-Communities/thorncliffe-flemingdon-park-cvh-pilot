@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { englishText } from "@/i18n/text";
 import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
@@ -133,7 +132,7 @@ export function ProviderList({ rows, today, labels }: { rows: ProviderRowData[];
     <Stack gap="section-hub">
       <Stack gap="related">
         <p>{englishText("staff.journey.publishReminder")}</p>
-        <Link className="hub-link tap" href="/staff/directory">{englishText("staff.journey.publishDirectory")}</Link>
+        <a className="hub-link tap" href="/staff/directory">{englishText("staff.journey.publishDirectory")}</a>
       </Stack>
     <Stack gap="section-hub" as="ul" testId="provider-list">
       {rows.map((row) => (

@@ -54,8 +54,8 @@ for (const [name, sample] of SAMPLES) {
           await page.setViewportSize({ width, height: 900 });
           await open(page, sample, lang);
           await expectNoHorizontalOverflow(page, hubPage(page));
-          // S09.05: its one link is the export's procedure (S09.03's link, opened in a new tab); nothing on it changes anything.
-          await expect(page.locator("main a[href]:not([data-testid=procedure-link]), main button, main input, main select, main textarea, main summary")).toHaveCount(0);
+          // The export help disclosure is read-only; no data-changing control belongs on this page.
+          await expect(page.locator("main a[href]:not([data-testid=procedure-link]), main button, main input, main select, main textarea")).toHaveCount(0);
           await expect(page.locator("main [data-testid=procedure-link]")).toHaveAttribute("data-procedure", "export-measures");
         }
       }
