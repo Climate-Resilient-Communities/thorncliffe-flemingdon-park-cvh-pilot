@@ -10,7 +10,7 @@ Questions residents might ask, each with the providers that answer it, used to m
 | `template.csv` | The sheet ambassadors fill in (open it in Excel or Google Sheets). |
 | `subsets.json` | Which questions are in the tuning subset and which in the evaluation subset, drawn by a committed seed. |
 | `bar.json` | The Hub-approved launch bar. Committed unapproved (`approvedBy` null, no minimums) until the Hub sets it. |
-| `reports/` | Reports of runs (`run`, S03.01 and S03.07). |
+| `reports/` | Reports of runs (`run`, S03.01 and S03.07), and the interim tuning of 2026-10-07 (`2026-10-07-interim-tuning.md`). |
 
 ## For ambassadors: filling in the template
 
@@ -104,3 +104,12 @@ Each run uses Cohere calls from a monthly allowance shared with live search: che
    and owner (for example more catalogue review, or a different question route).
 
 The bar has one reader, `scripts/search-test-set/bar.ts`: `readBarFile(root)` and `meetsBar(report, file)` for launch readiness, and `readBar(root, file?)` / `checkBar(bar, subset)` for S03.09's guard, all through `BarSchema`. (The guard's workflow also peeks at the base branch's file in `scripts/ci/search-guard-scope.sh`, only to decide whether to measure at all.)
+
+## Replaying with cached vectors (no vendor call)
+
+`node scripts/search-test-set/replay-cached.mjs --cache <vector-cache.json>` asks every question of `questions.jsonl` through the
+real search use case (language detection, the translated-leg routing, the ranking, the emergency flag, and the `SEARCH_*`
+settings of the environment) with vectors embedded earlier, and prints hit@3, results shown, no-match accuracy and emergency
+accuracy overall, by author and by language. It calls no model, so a ranking change can be measured for free; the cache (never
+committed) holds each provider's and each question's vector, and the English translations that stand in for the translated leg
+(an upper bound). `scripts/search-test-set/replayCached.ts` describes its shape; the interim tuning report used it.
