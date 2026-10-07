@@ -657,12 +657,13 @@ describe("Cohere and the search settings (S03.02)", () => {
         ur: "command-a-translate-08-2025",
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
-        ta: "north-small-translate-09-2026",
-        pa: "north-small-translate-09-2026",
+        ta: null,
+        pa: null,
         tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
       },
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
+      translateFirstMonthlyCalls: 600,
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
@@ -703,6 +704,7 @@ describe("Cohere and the search settings (S03.02)", () => {
       questionFallback: DEFAULT_QUESTION_FALLBACK,
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
+      translateFirstMonthlyCalls: 600,
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
@@ -717,8 +719,8 @@ describe("Cohere and the search settings (S03.02)", () => {
       ur: "command-a-translate-08-2025",
       romanized_or_mixed: "command-a-translate-08-2025",
       ambiguous_arabic: "command-a-translate-08-2025",
-      ta: "north-small-translate-09-2026",
-      pa: "north-small-translate-09-2026",
+      ta: null,
+      pa: null,
       tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
     });
     // Never the routed model itself: where the route already is the fallback there is nothing to retry with (the translator skips it).
@@ -733,8 +735,8 @@ describe("Cohere and the search settings (S03.02)", () => {
       ur: null,
       romanized_or_mixed: "command-a-translate-08-2025",
       ambiguous_arabic: "command-a-translate-08-2025",
-      ta: "north-small-translate-09-2026",
-      pa: "north-small-translate-09-2026",
+      ta: null,
+      pa: null,
       tl: null, gu: null, el: null, sk: null, bn: null, hi: null, zh: null, es: null, fr: null,
     });
     expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "prs=command-r-translate-01-2027" }).search.questionFallback.prs).toBe("command-r-translate-01-2027");
@@ -756,6 +758,18 @@ describe("Cohere and the search settings (S03.02)", () => {
     for (const bad of ["2201", "-1", "0.5", "1e3", "fast", "10000"]) {
       expect(problemsOf({ ...production, SEARCH_FALLBACK_MIN_BUDGET_MS: bad }).join("\n"), bad).toMatch(/SEARCH_FALLBACK_MIN_BUDGET_MS: must be a whole number of milliseconds from 0 to 2200/);
     }
+  });
+
+  it("reads SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: 600 by default (alert translation keeps ~400 of a model's ~1,000), a whole number of at least 1", () => {
+    expect(parseEnv(production).search.translateFirstMonthlyCalls).toBe(600);
+    expect(parseEnv({ ...production, SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: "250" }).search.translateFirstMonthlyCalls).toBe(250);
+    for (const bad of ["0", "-1", "lots", "1.5"]) expect(problemsOf({ ...production, SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: bad }).join("\n"), bad).toMatch(/SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS/);
+  });
+
+  it("gives Tamil and Punjabi no fallback model: North Small Translate's month is alert translation's", () => {
+    const { questionRoute, questionFallback } = parseEnv(production).search;
+    expect([questionRoute.ta, questionRoute.pa]).toEqual(["command-a-translate-08-2025", "command-a-translate-08-2025"]);
+    expect([questionFallback.ta, questionFallback.pa]).toEqual([null, null]);
   });
 
   it("reads SEARCH_TRANSLATE_MONTHLY_CALLS: no limit by default, and model=limit pairs", () => {

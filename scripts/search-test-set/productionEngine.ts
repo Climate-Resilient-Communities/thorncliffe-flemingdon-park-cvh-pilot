@@ -82,6 +82,7 @@ export async function engineFrom(parts: EngineParts, options: { translatedLeg: b
     embedder,
     translator,
     fallbackMinBudgetMs: parts.settings.fallbackMinBudgetMs,
+    translateFirstMonthlyCalls: parts.settings.translateFirstMonthlyCalls,
     emergencyThreshold: parts.settings.emergencyThreshold,
     emergencyTopThreshold: parts.settings.emergencyTopThreshold,
     keywordWeight: parts.settings.keywordWeight,

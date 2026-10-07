@@ -489,9 +489,18 @@ es and fr should stay direct: the embedding reads them well and translation cost
 
 **As built.** The translate-first languages are kinds of the translated-question leg (`QUESTION_SOURCES` / `SEARCH_QUESTION_ROUTE`:
 tl, gu, ta, el, sk, bn, hi, pa, zh, es, fr), translated only where the route names a model: by default `ta` and `pa` with Command A
-Translate, falling back to North Small Translate at a 429 (`SEARCH_QUESTION_FALLBACK`); the others are off. A failed, refused,
-rejected or timed-out translation leaves the question on the direct route with the reranker, as before; the translation is counted
-in `spend_event` (kind `translate`) like the other kinds' and in the S03.07 runner's call plan. **Interim**, as the rest: machine-drafted
-questions, ten per language. Cost: about 1 Command A Translate call per Tamil or Punjabi search, against the model's ~1,000 a month
-on the production key, shared with the romanized and ambiguous Arabic-script questions (`SEARCH_TRANSLATE_MONTHLY_CALLS` warns ops at
-80%).
+Translate and **no fallback model** (North Small Translate's month on the production key is alert translation's, S04.02); the others
+are off. A failed, refused (429), rejected or timed-out translation leaves the question on the direct route with the reranker, as
+before; the translation is counted in `spend_event` (kind `translate`) like the other kinds' and in the S03.07 runner's call plan.
+
+**Alert translation's reserve.** Command A Translate is also alert translation's model (S04.02's `translation_route`: first choice
+for fr, es, zh, el and hi, second for prs; about 5–6 calls per alert entry), and Cohere allows each model about 1,000 calls a month
+on a key. So translate-first questions have a gate of their own, `SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS` (default 600): a Tamil or
+Punjabi question is translated only while the model's translate calls this month, counted from `spend_event` for every purpose
+(alert translation, search, test-set runs), are below 600 (the reranker's counting: one count per 30 s per instance plus the
+instance's own calls; a count that fails means no call). Past it the question takes today's route and ops hears `translate_quota`
+(`search_monthly_limit`). That leaves alerts at least ~400 calls a month (some 70 alert entries), less what the romanized and
+ambiguous Arabic-script questions use: they were already on Command A Translate before this change and are not gated by it.
+
+**Cost.** One Command A Translate call per Tamil or Punjabi search, until the model's month reaches 600. **Interim**, as the rest:
+machine-drafted questions, ten per language.

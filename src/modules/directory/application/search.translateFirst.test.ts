@@ -55,7 +55,8 @@ const SNAPSHOT: SearchSnapshot = {
 
 /** The route as deployed by default for these kinds: Tamil and Punjabi on, the other translate-first languages off. */
 const ROUTE: QuestionRoute = { ps: NORTH, prs: NORTH, ur: NORTH, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF, ta: COMMAND, pa: COMMAND };
-const FALLBACK: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF, ta: NORTH, pa: NORTH };
+// No fallback for the translate-first languages: North Small Translate's month is alert translation's (S04.02).
+const FALLBACK: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF };
 
 function fakeEmbedder(): QueryEmbedder {
   return {
@@ -116,10 +117,13 @@ describe("translate-first languages", () => {
     spends = [];
     notes = [];
     seen = [];
+    translateCounts = [];
   });
   afterEach(() => vi.useRealTimers());
 
-  function service(parts: { translator: Translator; reranker?: Reranker | null; route?: QuestionRoute }) {
+  let translateCounts: string[];
+
+  function service(parts: { translator: Translator; reranker?: Reranker | null; route?: QuestionRoute; fallback?: QuestionRoute; monthly?: number; used?: number; countFails?: boolean }) {
     return createSearch({
       db: () => {
         throw new Error("no database in this test");
@@ -128,7 +132,13 @@ describe("translate-first languages", () => {
         throw new Error("no store in this test");
       },
       embedder: fakeEmbedder(),
-      translator: createQuestionTranslator({ translator: parts.translator, route: parts.route ?? ROUTE, fallback: FALLBACK }),
+      translator: createQuestionTranslator({ translator: parts.translator, route: parts.route ?? ROUTE, fallback: parts.fallback ?? FALLBACK }),
+      translateFirstMonthlyCalls: parts.monthly,
+      translateCalls: async (model) => {
+        translateCounts.push(model);
+        if (parts.countFails) throw new Error("the database is down");
+        return parts.used ?? 0;
+      },
       snapshot: async () => SNAPSHOT,
       reranker: parts.reranker ?? null,
       rerankCalls: async () => 0,
@@ -192,27 +202,50 @@ describe("translate-first languages", () => {
       expect(spends.filter((s) => s.kind === "translate")).toEqual([]);
     });
 
-    it("when the routed model and its fallback are both past the month's limit", async () => {
-      const words = fakeTranslator({ [COMMAND]: new TranslateError("quota"), [NORTH]: new TranslateError("quota") });
+    it("when the routed model is past its limit: no retry with another model (none is configured), the direct leg reranked", async () => {
+      const words = fakeTranslator({ [COMMAND]: new TranslateError("quota"), [NORTH]: FOOD });
       const rr = fakeReranker();
       const result = await ask(service({ translator: words.translator, reranker: rr.reranker }), TAMIL, "en");
 
-      expect(words.calls.map((c) => c.model)).toEqual([COMMAND, NORTH]);
+      expect(words.calls.map((c) => c.model)).toEqual([COMMAND]);
       expect(result.results.map((r) => r.provider_id)).toEqual(["P3"]);
       expect(rr.calls).toEqual([TAMIL]);
       expect(seen.at(-1)).toMatchObject({ route: "direct", translatedLeg: "failed", rerank: "used" });
       expect(notes).toContainEqual(expect.objectContaining({ reason: "translate_quota", model: COMMAND }));
     });
 
-    it("uses the fallback model's translation when only the routed model is past its limit", async () => {
-      const words = fakeTranslator({ [COMMAND]: new TranslateError("quota"), [NORTH]: FOOD });
+    it("when the model's month (every purpose, alert translation included) has reached SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: no call at all", async () => {
+      const words = fakeTranslator({ [COMMAND]: FOOD });
       const rr = fakeReranker();
-      const result = await ask(service({ translator: words.translator, reranker: rr.reranker }), TAMIL, "en");
+      const result = await ask(service({ translator: words.translator, reranker: rr.reranker, monthly: 600, used: 600 }), TAMIL, "en");
 
-      expect(result.results[0]).toMatchObject({ provider_id: "P3" });
-      expect(rr.calls).toHaveLength(0);
+      expect(words.calls).toHaveLength(0);
+      expect(translateCounts).toContain(COMMAND);
+      expect(result.results.map((r) => r.provider_id)).toEqual(["P3"]);
+      expect(rr.calls).toEqual([TAMIL]);
+      expect(seen.at(-1)).toMatchObject({ route: "direct", translatedLeg: "failed", rerank: "used" });
+      expect(notes).toContainEqual(expect.objectContaining({ reason: "translate_quota", model: COMMAND, error: "search_monthly_limit" }));
+      expect(spends.filter((s) => s.kind === "translate")).toEqual([]);
+    });
+
+    it("when the month cannot be counted: no call (the reserve is not risked)", async () => {
+      const words = fakeTranslator({ [COMMAND]: FOOD });
+      const result = await ask(service({ translator: words.translator, reranker: fakeReranker().reranker, countFails: true }), TAMIL, "en");
+
+      expect(words.calls).toHaveLength(0);
+      expect(result.results.map((r) => r.provider_id)).toEqual(["P3"]);
+      expect(notes).toContainEqual(expect.objectContaining({ reason: "translate_quota", model: COMMAND, error: "count_failed" }));
+    });
+
+    it("counts its own calls between two counts: the call that reaches the limit is the last", async () => {
+      const words = fakeTranslator({ [COMMAND]: FOOD });
+      const search = service({ translator: words.translator, reranker: fakeReranker().reranker, monthly: 600, used: 599 });
+      expect(seen.length).toBe(0);
+      await ask(search, TAMIL, "en");
       expect(seen.at(-1)).toMatchObject({ route: "hybrid", translatedLeg: "used" });
-      expect(notes).toContainEqual(expect.objectContaining({ reason: "translate_fallback_used", model: NORTH }));
+      await ask(search, TAMIL, "en");
+      expect(seen.at(-1)).toMatchObject({ route: "direct", translatedLeg: "failed", rerank: "used" });
+      expect(words.calls).toHaveLength(1);
     });
 
     it("when the answer is not English (rejected)", async () => {
