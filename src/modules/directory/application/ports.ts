@@ -190,3 +190,27 @@ export class QueryEmbedError extends Error {
     if (vendor !== undefined) this.vendor = vendor;
   }
 }
+
+/**
+ * The reranker of the direct route (interim tuning of 2026-10-07, arm R2): given a resident's question and some providers' search
+ * texts, how relevant each text is to it (0 to 1, the model's own scale), by the index of the text. Only the use case calls it,
+ * only for a question in another language that took no translated leg. Throws RerankError, never an error that holds the request:
+ * adapters wrap the vendor's failures and drop their bodies (AD-3).
+ */
+export interface Reranker {
+  /** The vendor's model id (counted in spend_event under it). */
+  readonly model: string;
+  rerank(input: { query: string; documents: readonly string[]; signal: AbortSignal }): Promise<{ results: { index: number; relevance: number }[] }>;
+}
+
+/** Why a rerank failed: a code, and for `rerank_failed` how the vendor's call failed (as QueryEmbedVendorFailure, from the status alone). */
+export class RerankError extends Error {
+  override name = "RerankError";
+  readonly code: "rerank_failed" | "aborted";
+  readonly vendor?: QueryEmbedVendorFailure;
+  constructor(code: "rerank_failed" | "aborted", vendor?: QueryEmbedVendorFailure) {
+    super(code === "aborted" ? "The rerank was cancelled" : "The rerank failed");
+    this.code = code;
+    if (vendor !== undefined) this.vendor = vendor;
+  }
+}

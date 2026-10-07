@@ -10,8 +10,11 @@
 //      - `direct`, for any other question (another language in its own script, or one whose translated leg did not complete):
 //        the score is the similarity; when the best one reaches the direct floor, the top 5 that are no more than the direct gap
 //        below it are the results, otherwise there are none (cross-lingual similarities run lower, and words cannot be matched);
+//      - the direct route reranked (arm R2, application/search.ts decides when): the 20 most similar providers, ordered by a
+//        reranker's relevance, the top 5 at or above SEARCH_RERANK_MIN (`rerankCandidates`, `rerankedResults`);
 //  (3) never more than 5, and nothing below the bar is added to fill the list.
-// The score a result carries is the score it was ranked by (similarity plus boost on the hybrid route), to six places.
+// The score a result carries is the score it was ranked by (similarity plus boost on the hybrid route), to six places; on the
+// reranked direct route it is the similarity, which is not what the results are ordered by there.
 export const MAX_RESULTS = 5;
 /** The emergency-only threshold of the top-3 fail-safe when none is configured (SEARCH_EMERGENCY_THRESHOLD, owner decision 41). */
 export const DEFAULT_EMERGENCY_THRESHOLD = 0.25;
@@ -144,4 +147,32 @@ export function emergencyFirst(
     emergencyOnTop(legs, emergencyProviders, settings.emergencyTopThreshold) ||
     emergencyInTop(legs, emergencyProviders, Math.min(settings.emergencyThreshold, settings.threshold))
   );
+}
+
+// ---------------------------------------------------------------- the reranked direct route (arm R2 of the interim tuning)
+/** How many of the direct leg's best providers the reranker is asked to order (the experiment's top 20). */
+export const RERANK_CANDIDATES = 20;
+/** SEARCH_RERANK_MIN: the least relevance (0 to 1, the reranker's own scale) a reranked provider needs to be a result. */
+export const DEFAULT_RERANK_MIN = 0.05;
+
+/** The providers the reranker is asked about: the best RERANK_CANDIDATES by similarity over the completed legs (ties by id), not rounded. */
+export function rerankCandidates(legs: readonly LegSimilarities[]): SearchHit[] {
+  return rankingScores(legs, "direct").slice(0, RERANK_CANDIDATES);
+}
+
+/**
+ * The results of the reranked direct route: the candidates whose relevance is at least `minRelevance`, best relevance first (ties
+ * by id), at most MAX_RESULTS; nothing below the bar is added to fill the list (none at all when no candidate reaches it). Each
+ * result keeps the `score` of the direct route, its similarity (to six places): the relevance only orders and filters, so a
+ * result's `score` means the same on every route, and may be lower than the next result's on this one.
+ */
+export function rerankedResults(candidates: readonly SearchHit[], relevance: ReadonlyMap<string, number>, minRelevance: number): SearchHit[] {
+  return candidates
+    .flatMap((hit) => {
+      const r = relevance.get(hit.provider_id);
+      return r !== undefined && r >= minRelevance ? [{ hit, r }] : [];
+    })
+    .sort((a, b) => b.r - a.r || a.hit.provider_id.localeCompare(b.hit.provider_id))
+    .slice(0, MAX_RESULTS)
+    .map(({ hit }) => ({ provider_id: hit.provider_id, score: rounded(hit.score) }));
 }

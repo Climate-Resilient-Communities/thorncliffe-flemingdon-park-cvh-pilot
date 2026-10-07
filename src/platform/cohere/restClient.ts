@@ -28,6 +28,15 @@ export interface CohereChatResponse {
   message?: { content?: { type: string; text?: string }[] };
   usage?: { billedUnits?: { inputTokens?: number; outputTokens?: number } };
 }
+export interface CohereRerankRequest {
+  model: string;
+  query: string;
+  documents: string[];
+}
+export interface CohereRerankResponse {
+  results: { index: number; relevanceScore: number }[];
+  meta?: { billedUnits?: { searchUnits?: number } };
+}
 export interface CohereCallOptions {
   abortSignal: AbortSignal;
   /** Accepted for the SDK's shape; this client never retries (the callers decide, and a retry would hide the time it takes). */
@@ -59,6 +68,7 @@ export interface CohereRestClient {
   v2: {
     embed(request: CohereEmbedRequest, options: CohereCallOptions): Promise<CohereEmbedResponse>;
     chat(request: CohereChatRequest, options: CohereCallOptions): Promise<CohereChatResponse>;
+    rerank(request: CohereRerankRequest, options: CohereCallOptions): Promise<CohereRerankResponse>;
   };
 }
 
@@ -147,6 +157,19 @@ export function createCohereRestClient(options: CohereRestClientOptions): Cohere
         return {
           message: { content: Array.isArray(message?.content) ? (message.content as { type: string; text?: string }[]) : undefined },
           usage: { billedUnits: billed(json.usage) },
+        };
+      },
+      async rerank(request, { abortSignal }) {
+        const json = await post("/v2/rerank", { model: request.model, query: request.query, documents: request.documents }, abortSignal);
+        const results = Array.isArray(json.results) ? json.results : [];
+        const units = record(record(json.meta)?.billed_units);
+        return {
+          results: results.flatMap((r) => {
+            const index = num(record(r)?.index);
+            const relevanceScore = num(record(r)?.relevance_score);
+            return index === undefined || relevanceScore === undefined ? [] : [{ index, relevanceScore }];
+          }),
+          meta: { billedUnits: { searchUnits: num(units?.search_units) } },
         };
       },
     },

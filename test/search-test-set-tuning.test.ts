@@ -62,7 +62,7 @@ function seen(
   const results = rankLegs(maps, route, boosts, settings);
   const emergency = emergencyFirst(maps, emergencyProviders, settings);
   const answer: SearchV1 = { v: 1, release_v: 7, query_lang: "en", status: results.length === 0 ? "no_clear_match" : "ok", emergency_first: emergency, results };
-  const observation: SearchObservation = { releaseV: 7, ...settings, route, boosts, emergencyProviders, translatedLeg: o.translated ? "used" : "not_needed", legs };
+  const observation: SearchObservation = { releaseV: 7, ...settings, route, boosts, emergencyProviders, translatedLeg: o.translated ? "used" : "not_needed", legs, rerank: "not_needed", reranked: null };
   return { answer, observation };
 }
 

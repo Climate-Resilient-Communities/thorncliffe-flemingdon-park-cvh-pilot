@@ -656,7 +656,19 @@ describe("Cohere and the search settings (S03.02)", () => {
       },
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
+      rerank: true,
+      rerankMin: 0.05,
+      rerankMonthlyCalls: 900,
     });
+  });
+
+  it("reads the direct route's reranker settings: SEARCH_RERANK on or off, SEARCH_RERANK_MIN from 0 to 1, SEARCH_RERANK_MONTHLY_CALLS a whole number", () => {
+    expect(parseEnv({ ...production, SEARCH_RERANK: " OFF ", SEARCH_RERANK_MIN: "0.08", SEARCH_RERANK_MONTHLY_CALLS: "500" }).search).toMatchObject({ rerank: false, rerankMin: 0.08, rerankMonthlyCalls: 500 });
+    expect(parseEnv({ ...production, SEARCH_RERANK: "on" }).search.rerank).toBe(true);
+    expect(() => parseEnv({ ...production, SEARCH_RERANK: "yes" })).toThrow(/SEARCH_RERANK: must be `on` or `off`/);
+    expect(() => parseEnv({ ...production, SEARCH_RERANK_MIN: "5" })).toThrow(/SEARCH_RERANK_MIN: must be a number from 0 to 1/);
+    expect(() => parseEnv({ ...production, SEARCH_RERANK_MONTHLY_CALLS: "0" })).toThrow(/SEARCH_RERANK_MONTHLY_CALLS: must be a whole number of at least 1/);
+    expect(parseSearchEnv({ SEARCH_RERANK: "off" }).rerank).toBe(false);
   });
 
   it("reads the model, threshold, emergency categories and allowance", () => {
@@ -684,6 +696,9 @@ describe("Cohere and the search settings (S03.02)", () => {
       questionFallback: DEFAULT_QUESTION_FALLBACK,
       fallbackMinBudgetMs: 800,
       translateMonthlyCalls: {},
+      rerank: true,
+      rerankMin: 0.05,
+      rerankMonthlyCalls: 900,
     });
   });
 

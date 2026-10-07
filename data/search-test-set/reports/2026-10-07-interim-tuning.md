@@ -349,3 +349,67 @@ How the build differs from the experiment's script, none of which moves a number
   experiment read the same fields from `data/catalogue/providers.json`.
 * A result's `score` is the score it was ranked by (similarity plus keyword boost on the hybrid route), to six places.
 * `SEARCH_THRESHOLD` is recorded on each release: production keeps 0.30 until the next release is published.
+
+## 9. Verification of R2 as built (2026-10-07): the reranker on the direct route
+
+The product owner approved R2 after R1b shipped: for a question in another language that takes no translated leg (the direct route:
+es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk… in their own script), Cohere `rerank-v3.5` orders the 20 best providers by similarity,
+reading the question and each provider's English search text (the text its vector was made from, rebuilt from the release's English
+listing; the experiment's arm C read the same texts, `docs.json`). The results are the top 5 with a relevance of at least
+`SEARCH_RERANK_MIN` (0.05), best relevance first, none when no provider reaches it. Each result's `score` stays its similarity. English
+questions and translated-leg questions are never reranked, and `emergency_first` is still decided on the legs' similarities, so a rerank
+cannot hide the 911 block. Built in `src/modules/directory/application/search.ts` (the step), `application/rerank.ts` (time and monthly
+budget), `domain/searchRanking.ts` (`rerankCandidates`, `rerankedResults`), `domain/searchData.ts` (`searchTextsOfListing`) and
+`adapters/cohereReranker.ts` (plain fetch, `src/platform/cohere/restClient.ts`); settings `SEARCH_RERANK` (on), `SEARCH_RERANK_MIN`
+(0.05), `SEARCH_RERANK_MONTHLY_CALLS` (900), docs/config.md.
+
+Budget and fallback: the call is made only when at least 0.3 s of the leg's 2.2 s is left after the embedding, and is cut at 1.2 s or at
+the 2.2 s deadline, whichever comes first (the experiment measured p50 0.16 s, p99 1.25 s), so the answer still beats the 2.5 s limit.
+Each call is a `spend_event` row (kind `rerank`, one call); the month's rows of the model (every purpose: the vendor's ~1,000 a month is
+the key's) are counted beside the embedding, at most every 30 s per instance, and the instance adds its own calls in between; at 900 the
+reranker is not called until the month ends. A 429 stops calls for 5 minutes. On a timeout, a vendor failure, a 429, the monthly limit or
+too little time, the question is ranked by the floor and gap (R1b), silently for the resident; ops gets `search.leg_failed` with reason
+`rerank_failed` (`timed_out`, `rerank_failed:limited`…) or `rerank_quota`, once a minute per reason and model, never the question.
+
+Replayed through the real use case with the experiment's cached vectors and its cached `rerank-v3.5` answers (`rerank_cache.json`, keyed
+by question; **no vendor call was made for this verification**):
+
+    node scripts/search-test-set/replay-cached.mjs --cache <vector-cache.json> --rerank-cache <rerank-cache.json>
+
+86 of the 193 questions took the direct route and were reranked; for every one of them the use case sent exactly the 20 providers the
+experiment sent and answered exactly arm C's results. All 193 questions:
+
+| | hit@3 | shown | no-match ok | emergency flag | emerg. false alarm | false-pos |
+|---|---|---|---|---|---|---|
+| R1b as built, replayed (section 8) | 70.9 | 75.6 | 81.0 | 68.4 | 1.1 | 5.2 |
+| R2 as the experiment computed it (section 3) | 75.0 | 79.7 | 81.0 | 68.4 | — | 4.7 |
+| **R2 as built, replayed** | **75.6** | **80.2** | **81.0** | **68.4** | **1.1** | **4.7** |
+
+Per language, hit@3 (no-match accuracy unchanged in every language):
+
+| lang | R1b as built | R2 experiment | **R2 as built** |
+|---|---|---|---|
+| en | 70.4 | 70 | 70.4 |
+| ta | 33.3 | 56 | **55.6** |
+| pa | 50.0 | 70 | **70.0** |
+| gu | 77.8 | 89 | **88.9** |
+| hi | 88.9 | 100 | **100.0** |
+| es | 63.6 | 73 | **72.7** |
+| fr | 62.5 | 75 | **75.0** |
+| tl | 70.0 | 70 | 70.0 |
+| sk | 66.7 | 67 | 66.7 |
+| el | 55.6 | 56 | 55.6 |
+| zh | 77.8 | 78 | 77.8 (shown 77.8 → 88.9) |
+| bn | 60.0 | 50 | 60.0 |
+| ur / ps / prs | 84.6 / 92.9 / 86.7 | 85 / 93 / 87 | unchanged (translated leg) |
+
+The one difference from the experiment's R2 column: three romanized questions asked on a Gujarati or Bengali page (gu-04, bn-03, bn-06:
+"free english class kothay") are confident English to the use case's detector, so they take the hybrid route and are not reranked;
+the experiment routed them by the test set's `lang` field. bn-03 is a hit on the hybrid route, hence bn 60.0 against 50 and 75.6
+overall against 75.0. False positives move from 5.2 to 4.7 overall (pa 27.3 → 18.2, fr and sk 10 → 0; zh and el 0 → 10, one question each).
+
+Cost: 86 of 193 test questions (45%) would make one rerank call; at 900 calls a month the reranker covers about 900 direct-route
+searches, after which those searches are ranked as in R1b until the month ends. **Interim**, as R1b: machine-drafted questions,
+parameters chosen on the questions they are scored on; S03.08's ambassador questions confirm or revise `SEARCH_RERANK_MIN`. The search
+test-set runner (S03.07 production runs, the S03.09 guard) does not rerank yet: its call plan and vendor meter count embedding and
+translation calls only, so its direct-route numbers are R1b's until it is wired with the rerank model's own allowance.

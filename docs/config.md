@@ -40,6 +40,9 @@ are in `src/platform/config/env.ts`.
 | `SEARCH_QUESTION_FALLBACK` | no | The Cohere model the translated-question leg retries with, once, when the routed model answers HTTP 429 (past the vendor's per-month request limit, or a transient rate limit), per kind of question, in the shape of `SEARCH_QUESTION_ROUTE`: `kind=model` pairs for `ps`, `prs`, `ur`, `romanized_or_mixed`, `ambiguous_arabic` (`kind=off` means no retry for that kind, `off` alone for all; a bad value fails start-up). Default (provisional, owner decision 45, 2026-10-03; the addendum's routing table lists Command A Translate as Dari's second choice): `command-a-translate-08-2025` for `prs` and for `ur` (the addendum says Command A Translate does not support writing Urdu, but a question is only read into English, and the owner tested that it does that: "کھانا کہاں ملے گا" gives "Where can I get food?"), and `off` for `ps` (Command A Translate returned Dari for Pashto: turn it on by config only if S03.07's test set shows it reads Pashto well). `romanized_or_mixed` and `ambiguous_arabic` default to `command-a-translate-08-2025` too, which is skipped while their routed model already is that model, so by default they do not retry; they would if `SEARCH_QUESTION_ROUTE` changed. A kind never retries with its routed model. See "When a translation model is past its limit" below | default |
 | `SEARCH_FALLBACK_MIN_BUDGET_MS` | no | The least time, in milliseconds (a whole number from 0 to 2200), that must remain of the leg's 2.2 s for the fallback to be tried: a call that cannot finish would only be billed. Default `800` (a translation takes about 0.5 s) | default |
 | `SEARCH_TRANSLATE_MONTHLY_CALLS` | no | `model=limit` pairs, for example `north-small-translate-09-2026=1000`: the translation calls the vendor allows that model in a calendar month, so that ops hears before the 429s begin. No default: unset means no warning. A bad value fails start-up. See "When a translation model is past its limit" below | not set |
+| `SEARCH_RERANK` | no | `on` or `off`: whether a question in another language that takes no translated leg (the direct route: es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk… in their own script) has its 20 best providers by similarity reranked with Cohere `rerank-v3.5` (interim tuning arm R2). Applies only where `COHERE_API_KEY` is set (production). Default `on`. On any failure the question is ranked by `SEARCH_DIRECT_FLOOR` and `SEARCH_DIRECT_GAP`. See "The direct route's reranker" below | default |
+| `SEARCH_RERANK_MIN` | no | the least rerank relevance (0 to 1, the model's own scale) a reranked provider needs to be a result. Default `0.05`. Read at search time | default |
+| `SEARCH_RERANK_MONTHLY_CALLS` | no | the rerank calls (a whole number of at least 1) a calendar month (America/Toronto) may use, counted from `spend_event` rows of kind `rerank` (every purpose); at it the reranker is not called again that month and direct-route questions are ranked by floor and gap. Default `900`: Cohere allows about 1,000 calls a month per model, paid keys too | default |
 
 | `MAP_TILE_URL` | no (the CARTO key in it is a public browser key, but it is not stored in the repository) | `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=…` (CARTO Positron, confirmed by IT); production and preview. The code's keyless default is a fallback whose legacy access ends 2026-11-30 | 2026-10-02 |
 | `MAP_TILE_SUBDOMAINS` | no | empty (the keyed URL has no `{s}`); the default `abcd` applies only to the keyless fallback | 2026-10-02 |
@@ -51,7 +54,7 @@ The `MAP_TILE_*` variables choose the resident map's tile provider (S02.07; the 
 Positron are in the spine's "Map Tile Provider (S02.07)" record). They are read when the map pages are built, so a change
 takes effect with the next deploy, and the same values may be set in Preview. A set value that is not valid fails the
 build, naming the variable (`src/platform/config/mapTiles.ts`). The two `EMBED_PUBLISH_ALLOWANCE_*` variables and the `SEARCH_*` variables take effect once S03.02
-(release search data) is deployed; `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS` and `SEARCH_TRANSLATE_MONTHLY_CALLS` once S03.05 is, and only where `COHERE_API_KEY` is set. Twilio and `COHERE_API_KEY` must not be set
+(release search data) is deployed; `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS` and `SEARCH_TRANSLATE_MONTHLY_CALLS` once S03.05 is, and `SEARCH_RERANK`, `SEARCH_RERANK_MIN` and `SEARCH_RERANK_MONTHLY_CALLS` once R2 is (defaults suffice), only where `COHERE_API_KEY` is set. Twilio and `COHERE_API_KEY` must not be set
 in Preview or Development: start-up fails there.
 
 **When a translation model is past its limit.** Cohere answers HTTP 429 ("You are past the per-month request limit for this
@@ -79,6 +82,23 @@ the count reaches 80% of the limit, one `ops_event` `search.leg_failed` with rea
 written (its `ms` is 0: no search is behind it): once per model per month per instance, so an instance that restarts may warn
 again. It is a warning only: nothing is refused at the limit, and a failed count changes nothing. The count is of calls as this
 app made them; the vendor's own count is the one that decides, so set the limit a little under it.
+
+## The direct route's reranker
+
+Since the interim tuning's R2 (2026-10-07, `data/search-test-set/reports/2026-10-07-interim-tuning.md` section 9), a question in
+another language that takes no translated leg is reranked: the use case sends the question and the English search texts of the 20
+providers most similar to it (the texts their vectors were made from) to `rerank-v3.5`, and shows the top 5 with a relevance of at least
+`SEARCH_RERANK_MIN`, best first, or none. A result's `score` stays its similarity. English and translated-leg questions are never
+reranked, and `emergency_first` is decided on the similarities as before, so the rerank cannot hide the 911 block.
+
+It runs inside the search's 2.2 s: only when at least 0.3 s is left after the embedding, and cut at 1.2 s or at the deadline. Each call
+is one `spend_event` row (kind `rerank`, `calls` 1, `tokens` 0: the vendor bills rerank per call). Each instance counts the model's rows of
+the month at most every 30 s, beside the embedding (no search waits for it), and adds its own calls in between; at
+`SEARCH_RERANK_MONTHLY_CALLS` it stops calling. After a 429 it does not call for 5 minutes. On a timeout, a failure, a 429, the limit
+or too little time, the resident gets the floor-and-gap ranking with no sign of it; ops gets `search.leg_failed` with reason
+`rerank_failed` (and `error` `timed_out`, `rerank_failed:limited`, …) or `rerank_quota` (`error` `count_failed` when the month could
+not be counted), once a minute per reason and model. The phase shows as `rerank` in the search's `Server-Timing`. `SEARCH_RERANK=off`
+switches it off at the next deployment. The search test-set runner does not rerank (its plan counts embedding and translation calls only).
 
 ## Messaging outbox (S06.01)
 

@@ -138,4 +138,26 @@ describe("search composition (S03.05)", () => {
 
     expect(mocks.inserted).toEqual([{ kind: "search.unavailable", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "rate_limit_failed", ms: 1003, error: "42501" } }]);
   });
+
+  it("gives the resident search the direct route's reranker (rerank-v3.5) with its relevance bar and monthly limit, and none when SEARCH_RERANK is off or there is no key", async () => {
+    const on = await load({ rerankMin: 0.07, rerankMonthlyCalls: 500 });
+    on.app.searchService();
+    expect(on.deps().reranker?.model).toBe("rerank-v3.5");
+    expect(on.deps().rerankMin).toBe(0.07);
+    expect(on.deps().rerankMonthlyCalls).toBe(500);
+
+    const off = await load({ rerank: false });
+    off.app.searchService();
+    expect(off.deps().reranker).toBeUndefined();
+
+    const noKey = await load({}, null);
+    noKey.app.searchService();
+    expect(noKey.deps().reranker).toBeUndefined();
+  });
+
+  it("does not rerank in the test-set engine", async () => {
+    const { app, deps } = await load();
+    app.searchTestSetEngine();
+    expect(deps().reranker).toBeUndefined();
+  });
 });

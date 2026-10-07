@@ -13,6 +13,9 @@
 ^src/modules/directory/domain/searchData\.ts$
 ^src/modules/directory/domain/questionLanguage\.ts$
 ^src/modules/directory/adapters/cohereEmbedder\.ts$
+# The direct route's reranker: its budget and its adapter.
+^src/modules/directory/application/rerank\.ts$
+^src/modules/directory/adapters/cohereReranker\.ts$
 # The translated-question leg: the route, the fallback, the English check and the prompt.
 ^src/modules/translation/application/questionTranslator\.ts$
 ^src/modules/translation/domain/questionTranslation\.ts$
@@ -20,5 +23,5 @@
 # How the app composes search.
 ^src/app/search\.ts$
 # The search settings' defaults and rules: the embedding model, the threshold, the ranking's keyword weight, direct floor and gap and
-# emergency thresholds, emergency_categories, search_question_route and its fallback. Only a changed line that names one of them counts; the file holds every other setting too.
-^src/platform/config/env\.ts$ SEARCH_|DEFAULT_SEARCH|DEFAULT_QUESTION|[Qq]uestionRoute|[Qq]uestionFallback|[Ee]mbedModel|[Ee]mergencyCategor|[Ee]mergencyThreshold|[Ee]mergencyTopThreshold|[Kk]eywordWeight|[Dd]irectFloor|[Dd]irectGap|threshold|parseSearch
+# emergency thresholds, emergency_categories, search_question_route and its fallback, the reranker's switch, bar and monthly limit. Only a changed line that names one of them counts; the file holds every other setting too.
+^src/platform/config/env\.ts$ SEARCH_|DEFAULT_SEARCH|DEFAULT_QUESTION|[Qq]uestionRoute|[Qq]uestionFallback|[Ee]mbedModel|[Ee]mergencyCategor|[Ee]mergencyThreshold|[Ee]mergencyTopThreshold|[Kk]eywordWeight|[Dd]irectFloor|[Dd]irectGap|[Rr]erank|threshold|parseSearch

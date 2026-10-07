@@ -6,12 +6,15 @@ import {
   DEFAULT_EMERGENCY_TOP_THRESHOLD,
   EMERGENCY_TOP_K,
   MAX_RESULTS,
+  RERANK_CANDIDATES,
   cosine,
   emergencyFirst,
   emergencyInTop,
   emergencyOnTop,
   rankLegs,
   rankingScores,
+  rerankCandidates,
+  rerankedResults,
   type RankingSettings,
 } from "./searchRanking";
 
@@ -184,5 +187,38 @@ describe("emergencyFirst", () => {
 
   it("uses the emergency-only threshold at most as high as the release's threshold", () => {
     expect(emergencyFirst([leg({ A: 0.4, B: 0.3, E: 0.22 })], emergency, { ...SETTINGS, threshold: 0.22 })).toBe(true);
+  });
+});
+
+describe("the reranked direct route (arm R2)", () => {
+  const legs = [new Map(Array.from({ length: 25 }, (_, i) => [`P${String(i).padStart(2, "0")}`, 0.3 - i / 100] as const))];
+
+  it("asks about the 20 best providers by similarity", () => {
+    const candidates = rerankCandidates(legs);
+    expect(candidates).toHaveLength(RERANK_CANDIDATES);
+    expect(candidates[0]!.provider_id).toBe("P00");
+    expect(candidates.at(-1)!.provider_id).toBe("P19");
+  });
+
+  it("keeps those at the relevance bar, best relevance first (ties by id), at most 5, each with its similarity as its score", () => {
+    const candidates = rerankCandidates(legs);
+    const relevance = new Map([
+      ["P05", 0.4],
+      ["P01", 0.2],
+      ["P02", 0.2],
+      ["P03", 0.05],
+      ["P04", 0.049],
+      ["P06", 0.1],
+      ["P07", 0.09],
+      ["P22", 0.9], // not a candidate
+    ]);
+    expect(rerankedResults(candidates, relevance, 0.05)).toEqual([
+      { provider_id: "P05", score: 0.25 },
+      { provider_id: "P01", score: 0.29 },
+      { provider_id: "P02", score: 0.28 },
+      { provider_id: "P06", score: 0.24 },
+      { provider_id: "P07", score: 0.23 },
+    ]);
+    expect(rerankedResults(candidates, new Map([["P00", 0.04]]), 0.05)).toEqual([]);
   });
 });

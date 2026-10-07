@@ -38,6 +38,17 @@ describe("createCohereRestClient", () => {
     expect(response).toEqual({ embeddings: { float: [[0.1, 0.2]] }, meta: { billedUnits: { inputTokens: 7, outputTokens: undefined } } });
   });
 
+  it("posts the rerank request to /v2/rerank and reads each result's index and relevance score", async () => {
+    const fake = fakeFetch(() => ok({ id: "x", results: [{ index: 1, relevance_score: 0.31 }, { index: 0, relevance_score: 0.02 }], meta: { billed_units: { search_units: 1 } } }));
+    const client = createCohereRestClient({ apiKey: "k", fetch: fake.fetch });
+
+    const response = await client.v2.rerank({ model: "rerank-v3.5", query: "q", documents: ["a", "b"] }, { abortSignal: signal(), maxRetries: 0 });
+
+    expect(fake.seen[0].url).toBe("https://api.cohere.com/v2/rerank");
+    expect(fake.seen[0].body).toEqual({ model: "rerank-v3.5", query: "q", documents: ["a", "b"] });
+    expect(response).toEqual({ results: [{ index: 1, relevanceScore: 0.31 }, { index: 0, relevanceScore: 0.02 }], meta: { billedUnits: { searchUnits: 1 } } });
+  });
+
   it("leaves output_dimension out when none is asked for", async () => {
     const fake = fakeFetch(() => ok({ embeddings: { float: [[1]] } }));
     await createCohereRestClient({ apiKey: "k", fetch: fake.fetch }).v2.embed({ model: "m", texts: ["a"], inputType: "search_document", embeddingTypes: ["float"] }, { abortSignal: signal() });
