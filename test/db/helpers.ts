@@ -88,3 +88,30 @@ export async function torontoDayFromToday(sql: postgres.Sql, days: number, margi
     await new Promise((resolve) => setTimeout(resolve, left + 500));
   }
 }
+
+/**
+ * Switches a pg_cron job off for a test file that runs its command by hand, and waits for a run already under way, so no test races the real job (it
+ * runs in the test server too). Returns what puts the job back as it was, for afterAll.
+ */
+export async function pauseCronJob(sql: postgres.Sql, jobname: string): Promise<() => Promise<void>> {
+  const [job] = await sql<{ jobid: string; active: boolean }[]>`select jobid, active from cron.job where jobname = ${jobname}`;
+  if (!job) return async () => {};
+  await sql`select cron.alter_job(job_id => ${job.jobid}::bigint, active => false)`;
+  for (let i = 0; i < 100; i += 1) {
+    const running = await sql`select 1 from cron.job_run_details where jobid = ${job.jobid}::bigint and status in ('starting', 'running') and start_time > now() - interval '5 minutes'`;
+    if (running.length === 0) break;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return async () => {
+    await sql`select cron.alter_job(job_id => ${job.jobid}::bigint, active => ${job.active})`;
+  };
+}
+
+/** Moves a delivery's creation back in time (its update guard, which keeps `created_at` as written, is off for the fixture only). */
+export function backdateDelivery(sql: postgres.Sql, id: string, ago: string) {
+  return sql.begin(async (tx) => {
+    await tx.unsafe("alter table delivery disable trigger delivery_guard");
+    await tx`update delivery set created_at = now() - ${ago}::interval where id = ${id}`;
+    await tx.unsafe("alter table delivery enable trigger delivery_guard");
+  });
+}

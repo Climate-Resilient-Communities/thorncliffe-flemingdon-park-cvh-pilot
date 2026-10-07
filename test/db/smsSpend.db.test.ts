@@ -35,12 +35,14 @@ import {
 } from "../../src/modules/spend";
 import { createDb, type Db } from "../../src/platform/db";
 import { BASE_URL, dispatcherWorld, sidOf, type Answerer, type DispatcherWorld } from "./dispatcherSupport";
-import { connect, serverUrl } from "./helpers";
+import { backdateDelivery, connect, pauseCronJob, serverUrl } from "./helpers";
 
 let owner: ReturnType<typeof connect>;
 let appSql: postgres.Sql;
 let app: Db;
 let world: DispatcherWorld;
+/** Puts the check-in purge job back as it was (it is off for this file, which runs its command by hand). */
+let restorePurgeJob: () => Promise<void> = async () => {};
 
 const TOKEN = "fake-auth-token-for-tests";
 /** The configured price per segment (cents CAD) and the exchange rate (CAD per USD) the tests run with. */
@@ -56,6 +58,7 @@ const spendSeams = { afterOutcome: hooks.afterOutcome, afterProviderId: hooks.af
 beforeAll(async () => {
   owner = connect(serverUrl());
   await migrate({ sql: owner, log: () => {} });
+  restorePurgeJob = await pauseCronJob(owner, "checkins-purge-stubs");
   const password = randomBytes(18).toString("hex");
   await owner.unsafe(`alter role cvh_app_login password '${password}'`);
   const url = new URL(serverUrl());
@@ -70,6 +73,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await restorePurgeJob();
   await world.reset();
   await clearSpend();
   await owner.unsafe("drop trigger if exists scratch_refuse_estimate on spend_event");
@@ -771,6 +775,25 @@ describe("a deleted resident's texts (AD-13, the review of S09.08)", () => {
     } finally {
       await owner.unsafe(`drop table if exists ${table}`);
     }
+  });
+});
+
+describe("an escalation text past the check-in stub cutoff (20261007050000_clear_escalation_texts.sql)", () => {
+  it("loses its building and floor to the purge job but keeps its provider id, so the month's reconciliation still retires its estimate", async () => {
+    const text = await sendOne(
+      { purpose: "escalation", created_by_module: "checkins", recipient_kind: "oncall", body: "CVH: Needs help: 10 Example Road, floor 7. Open: https://cvh.example/staff/rounds/escalation?id=1" },
+      accepted(sidOf(1)),
+    );
+    expect(await estimateOf(text)).toHaveLength(1);
+    await backdateDelivery(owner, text, "1 day");
+    const [job] = await owner`select command from cron.job where jobname = 'checkins-purge-stubs'`;
+
+    await owner.unsafe(job!.command as string);
+    expect(await world.rowOf(text)).toMatchObject({ body: "[deleted]", provider_message_id: sidOf(1), state: "submitted", segments: 1, cost_estimate_cents: 2 });
+
+    const result = await reconciler(fakeTwilio([message(sidOf(1))])).reconcile(OCT);
+    expect(result).toMatchObject({ status: "complete", messages: 1, imported: 1, retired: 1 });
+    expect(await retiredBy(text)).toBe(sidOf(1));
   });
 });
 

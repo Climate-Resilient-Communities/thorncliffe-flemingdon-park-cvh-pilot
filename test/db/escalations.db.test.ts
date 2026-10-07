@@ -13,10 +13,14 @@
 //    which a late mark escalates; a mark waiting behind a close becomes a late mark;
 //  - handling: an Admin's, once, audited without the note or the number; a kept row whose every escalation is handled becomes a stub;
 //  - the purge job: a kept row becomes a stub within 24 hours of the close, without being counted again, and is deleted 2 hours after that; rows a close
-//    of the previous release left live are tallied as of the close, and a row someone holds waits for the next run;
+//    of the previous release left live are tallied as of the close, and a row someone holds waits for the next run; an escalation text sent 23 hours 45
+//    minutes ago or more loses its body (building and floor) to '[deleted]' and keeps everything else, as the migration's backfill does, and only the
+//    table's owner may make that change;
 //  - who sees the resident's number (direct requests): an Admin at aal2 only, while the row names her and the escalation is not a late mark's; the page
 //    itself rendered through its guard as each role.
 import { randomBytes, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import postgres from "postgres";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -37,7 +41,7 @@ import { createOncallRoster, oncallNumberSource, onDutyStateOf } from "../../src
 import { roundTypes } from "../../src/modules/places";
 import { createDb, type Db } from "../../src/platform/db";
 import { deferred, dispatcherWorld, type DispatcherWorld } from "./dispatcherSupport";
-import { connect, serverUrl } from "./helpers";
+import { backdateDelivery, connect, ROOT, serverUrl } from "./helpers";
 
 /**
  * The staff surface's session lookup and the page's database, for an escalation's page called through its guard: the session is the one the test gives (the
@@ -673,6 +677,107 @@ describe("the purge job (E08 'Closed stub')", () => {
     // Closed 30 hours ago: its 24 hours have passed, so the number goes at once, though the Hub has not handled the escalation.
     expect(await rowOf(old.refs[0]!)).toMatchObject({ subscriber_id: null, method: null, outcome: "not_reached", closed: true });
     expect(await tallyOf(old.alertId)).toEqual({ requested: 1, not_reached: 1 });
+  });
+});
+
+describe("the purge job clears an escalation text's building and floor (20261007050000_clear_escalation_texts.sql)", () => {
+  /** A row of `delivery` without what clearing a body changes (the body and the update time). */
+  const withoutBody = (row: Record<string, unknown>) => Object.fromEntries(Object.entries(row).filter(([column]) => !["body", "updated_at"].includes(column)));
+  const purge = async () => {
+    const [job] = await owner`select command from cron.job where jobname = 'checkins-purge-stubs'`;
+    await owner.unsafe(job!.command as string);
+  };
+  /** One escalation text per new requester's needs help mark, to the on-duty Admin; its delivery id. */
+  async function escalationText(ambassador: Person): Promise<string> {
+    const { refs } = await round([await requester(F2)]);
+    await mark(ambassador, refs[0]!, "needs_help");
+    const [row] = await owner`select id from delivery where purpose = 'escalation' order by created_at desc, id desc limit 1`;
+    return row!.id as string;
+  }
+
+  it("clears, 23 hours 45 minutes after it was made, the body of an escalation text that was sent, keeping its provider id, segments, cost, state and times; leaves the rest; a second run changes nothing", async () => {
+    const [ambassador, admin] = [await person("ambassador"), await person("admin")];
+    await oncallEntry("On duty", { onDutyFor: admin.staffId });
+    const old = await escalationText(ambassador);
+    const recent = await escalationText(ambassador);
+    // The health job's on-call text (a condition and a count, never a resident) and an alert's text, both sent and old.
+    const [health] = await world.seedTransactional(1, { purpose: "oncall_alert", created_by_module: "ops", recipient_kind: "oncall", body: "CVH: texts with an unknown outcome: 3. Check the Hub." });
+    const alert = (await world.seedAlert({ types: ["heat"], scope: "buildings" })).ids[0]!;
+    await world.dispatcher().run();
+    // Made after the send: still queued, so never cleared, however old.
+    const waiting = await escalationText(ambassador);
+    await backdateDelivery(owner, old, "23 hours 46 minutes");
+    await backdateDelivery(owner, recent, "23 hours 40 minutes");
+    await backdateDelivery(owner, waiting, "2 days");
+    await backdateDelivery(owner, health!, "2 days");
+    await backdateDelivery(owner, alert, "2 days");
+    const ids = { old, recent, waiting, health: health!, alert };
+    const before = Object.fromEntries(await Promise.all(Object.entries(ids).map(async ([name, id]) => [name, await world.rowOf(id)])));
+    expect(before.old).toMatchObject({ state: "submitted", provider_message_id: expect.stringMatching(/^SM[0-9a-f]{32}$/), segments: 1, cost_estimate_cents: 2 });
+    expect(before.old!.body).toMatch(/^CVH: Needs help: 1 Escalation Street, floor 2\. Open: /);
+    expect(before.waiting).toMatchObject({ state: "queued" });
+
+    await purge();
+
+    const after = await world.rowOf(old);
+    expect(after.body).toBe("[deleted]");
+    // Nothing else of it changed: not the provider's id, the segments, the cost, the purpose, the recipient, the key, the state or the times.
+    expect(withoutBody(after)).toEqual(withoutBody(before.old!));
+    for (const name of ["recent", "waiting", "health", "alert"] as const) expect(await world.rowOf(ids[name]), name).toEqual(before[name]);
+    expect(JSON.stringify(await owner`select body from delivery where id = ${old}`)).not.toContain("Escalation Street");
+
+    // Idempotent: a second run changes no row, not even its update time.
+    const settled = await owner`select * from delivery order by id`;
+    await purge();
+    expect(await owner`select * from delivery order by id`).toEqual(settled);
+  });
+
+  it("clears the texts already past the cutoff when the migration applies (its backfill)", async () => {
+    const [ambassador, admin] = [await person("ambassador"), await person("admin")];
+    await oncallEntry("On duty", { onDutyFor: admin.staffId });
+    const [old, recent] = [await escalationText(ambassador), await escalationText(ambassador)];
+    await world.dispatcher().run();
+    await backdateDelivery(owner, old, "3 days");
+    const migration = readFileSync(path.join(ROOT, "db", "migrations", "20261007050000_clear_escalation_texts.sql"), "utf8");
+    const backfill = migration.slice(migration.indexOf("-- The escalation texts already past the cutoff"));
+    expect(backfill).toMatch(/^-- The escalation texts[\s\S]*update delivery[\s\S]*;\s*$/);
+
+    await owner.unsafe(backfill);
+
+    expect((await world.rowOf(old)).body).toBe("[deleted]");
+    expect((await world.rowOf(recent)).body).toMatch(/^CVH: Needs help: /);
+  });
+
+  it("lets an escalation text's body become the placeholder only once sent and 23 hours 45 minutes old, alone, once and for the table's owner; refuses any other body change", async () => {
+    const [ambassador, admin] = [await person("ambassador"), await person("admin")];
+    await oncallEntry("On duty", { onDutyFor: admin.staffId });
+    const [old, recent] = [await escalationText(ambassador), await escalationText(ambassador)];
+    const [health] = await world.seedTransactional(1, { purpose: "oncall_alert", created_by_module: "ops", recipient_kind: "oncall", body: "CVH: scheduled jobs failed in the last 10 minutes: 1. Check the Hub." });
+    await world.dispatcher().run();
+    const waiting = await escalationText(ambassador);
+    for (const id of [old, waiting, health!]) await backdateDelivery(owner, id, "1 day");
+    const clear = (id: string) => owner`update delivery set body = '[deleted]' where id = ${id}`;
+
+    // Not to any other words; not with anything else changed; not before the cutoff; not while it waits to be sent; never another purpose's text.
+    await expect(owner`update delivery set body = 'Needs help: elsewhere' where id = ${old}`).rejects.toThrow(/frozen at creation/);
+    await expect(owner`update delivery set body = '[deleted]', segments = 2 where id = ${old}`).rejects.toThrow(/clearing an escalation text changes nothing else/);
+    await expect(owner`update delivery set body = '[deleted]', provider_message_id = null where id = ${old}`).rejects.toThrow(/clearing an escalation text changes nothing else/);
+    await expect(clear(recent)).rejects.toThrow(/cleared only once sent and 23 hours 45 minutes old/);
+    await expect(clear(waiting)).rejects.toThrow(/cleared only once sent and 23 hours 45 minutes old/);
+    await expect(clear(health!)).rejects.toThrow(/frozen at creation/);
+    // Only the table's owner (the purge job): the app, even given the column, is refused.
+    await owner.unsafe("grant update (body) on table delivery to cvh_app");
+    try {
+      await expect(appSql`update delivery set body = '[deleted]' where id = ${old}`).rejects.toThrow(/only the check-in purge job clears an escalation text/);
+    } finally {
+      await owner.unsafe("revoke update (body) on table delivery from cvh_app");
+    }
+    expect((await world.rowOf(old)).body).toMatch(/^CVH: Needs help: /);
+
+    await clear(old);
+    expect((await world.rowOf(old)).body).toBe("[deleted]");
+    // Once: the placeholder never changes again.
+    await expect(owner`update delivery set body = 'Needs help: 1 Escalation Street' where id = ${old}`).rejects.toThrow(/frozen at creation/);
   });
 });
 
