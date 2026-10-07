@@ -1,5 +1,7 @@
 "use client";
 
+import { orderedLanguages } from "../shell/language-order";
+
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -49,7 +51,7 @@ export function LanguageStep({ lang, mode, languages }: LanguageStepProps) {
             <ResidentText>{t("title")}</ResidentText>
           </legend>
           <Stack gap="target" as="ul">
-            {[...languages].sort((a, b) => (a.code === "en" ? -2 : a.code === "fr" ? -1 : 0) - (b.code === "en" ? -2 : b.code === "fr" ? -1 : 0)).map((language) => (
+            {orderedLanguages(languages).map((language) => (
               <li key={language.code}>
                 <ChoiceOption
                   kind="radio"

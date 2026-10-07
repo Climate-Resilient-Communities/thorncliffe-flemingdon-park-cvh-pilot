@@ -5,7 +5,7 @@ import { LanguageControl, type LanguageControlProps } from "./language-control";
 
 export type ResidentHeaderProps = LanguageControlProps & {
   logoAlt: string;
-  /** The words of X-07, the basic-mode switch under the logo row. */
+  /** The words of X-07, rendered by ResidentShell in the display-settings footer. */
   basic: BasicSwitchProps["labels"];
 };
 
@@ -13,7 +13,7 @@ export type ResidentHeaderProps = LanguageControlProps & {
 const LOGO = { src: "/brand/hub-logo.png", width: 423, height: 136 } as const;
 
 /**
- * C_ResidentHeader: the Hub logo and the language button, and under them the basic-mode switch (X-07, S02.14). The logo
+ * C_ResidentHeader: the Hub logo and the language button. The basic-mode switch is in the shell footer. The logo
  * and the button swap ends in right-to-left because this is an Inline that justifies between, not because of a [dir]
  * rule. "My choices", the prototype's second tool beside the switch, is the link of R-03 for now (S02.03).
  */
