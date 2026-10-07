@@ -51,7 +51,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
   const dateHint = row.lastConfirmed === null ? labels.neverConfirmed : labels.dateHint;
 
   return (
-    <li data-testid={`provider-${row.id}`} data-published={row.published ? "true" : "false"} data-in-catalogue={row.inCatalogue ? "true" : "false"}>
+    <li className="provider-record" data-testid={`provider-${row.id}`} data-published={row.published ? "true" : "false"} data-in-catalogue={row.inCatalogue ? "true" : "false"}>
       <Stack gap="related">
         <Inline gap="related" justify="between" align="baseline">
           <h2>{row.name}</h2>
@@ -64,7 +64,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
             <p>{labels.removedNote}</p>
           </>
         ) : (
-          <Stack gap="stack">
+          <div className="provider-record__actions">
             <form action={confirm} onSubmit={() => setLast("confirm")}>
               <input type="hidden" name="providerId" value={row.id} />
               <Stack gap="label">
@@ -109,7 +109,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
                 ) : null}
               </Stack>
             </form>
-          </Stack>
+          </div>
         )}
         {/* The status region is always in the page (a live region must exist before its text does); a refusal is a separate alert. */}
         <p id={messageId} role="status" data-testid={`provider-${row.id}-message`}>
