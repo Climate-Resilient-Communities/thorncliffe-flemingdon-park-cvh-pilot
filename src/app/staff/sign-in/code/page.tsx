@@ -1,3 +1,4 @@
+import { StaffAuthBrand } from "../../StaffAuthBrand";
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { Screen, Stack } from "@/ui";
@@ -26,6 +27,7 @@ export default staffPage(
       <Screen surface="staff">
         <div className="hub-gate">
           <Stack gap="section-hub">
+            <StaffAuthBrand />
             <Stack gap="related">
               <h1>{englishText("staff.authenticator.code.title")}</h1>
               <p>{englishText("staff.authenticator.code.lead")}</p>

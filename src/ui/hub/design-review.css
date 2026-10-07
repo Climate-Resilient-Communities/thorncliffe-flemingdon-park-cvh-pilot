@@ -17,3 +17,20 @@
 /* Keep the live region in the accessibility tree before an action returns. */
 .provider-record [role="status"]:empty { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
 .hub-nav__item { border-radius: var(--gap-tight); }
+
+/* Staff entry: a readable form with adjacent onboarding, rather than a small card in an empty desktop. */
+.staff-signin { display: flex; flex-direction: column; gap: var(--gap-panel); inline-size: 100%; }
+.staff-auth-brand { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--gap-stack); }
+.staff-auth-brand__home { display: inline-flex; min-block-size: var(--tap-current); align-items: center; }
+.staff-auth-brand img { block-size: var(--size-topbar-hub-min); inline-size: auto; max-inline-size: 100%; object-fit: contain; }
+.staff-signin__columns { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--gap-panel); align-items: start; }
+.staff-signin__form { min-inline-size: 0; padding: var(--inset-card); background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--gap-target); }
+.staff-signin__help { min-inline-size: 0; padding-block: var(--inset-card); }
+.staff-signin__steps { display: flex; flex-direction: column; gap: var(--gap-stack); padding-inline-start: var(--gap-panel); list-style: decimal; }
+.staff-signin__recovery { border-block-start: 1px solid var(--border); padding-block-start: var(--gap-related); }
+.staff-signin__recovery summary { cursor: pointer; font-weight: 700; }
+.staff-signin__recovery summary:focus-visible, .staff-auth-brand a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@variant hub {
+  .staff-signin__columns { grid-template-columns: minmax(0,var(--size-aside-staff)) minmax(0,1fr); gap: var(--gap-columns-hub); }
+  .staff-signin__help { padding-inline-start: var(--inset-card); }
+}

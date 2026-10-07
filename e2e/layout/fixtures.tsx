@@ -1,3 +1,5 @@
+import { StaffSignInView } from "../../src/app/staff/sign-in/StaffSignInView";
+import { StaffAuthBrand } from "../../src/app/staff/StaffAuthBrand";
 // Fixture pages for the layout tests. They are bundled with esbuild and rendered to static HTML by
 // e2e/helpers/layout-fixture.ts (Playwright's own JSX transform is for component testing and does not
 // produce React elements). Inline styles here size the test frames only; src/ never uses them.
@@ -41,7 +43,6 @@ import type { CampaignPageText, CampaignScreen } from "@/app/staff/campaign/view
 import type { ComponentProps, ReactNode } from "react";
 import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
 import { SignOutButton } from "@/app/staff/SignOutButton";
-import { SignInForm } from "@/app/staff/sign-in/SignInForm";
 import { ChoosePasswordForm } from "@/app/staff/setup/password/ChoosePasswordForm";
 import { EnrolAuthenticator } from "@/app/staff/setup/authenticator/EnrolAuthenticator";
 import { AddPersonForm, type AddPersonLabels } from "@/app/staff/people/AddPersonForm";
@@ -1210,25 +1211,10 @@ export function DirectoryFixture({
  * screenshot that needs an answer replaces `fetch` in the page first (e2e/hub/staff-forms.spec.ts).
  */
 export function StaffGateFixture({ page }: { page: "sign-in" | "code" | "password" | "authenticator" }) {
+  if (page === "sign-in") return <StaffSignInView />;
   const signOut = <SignOutButton label={englishText("staff.signOut")} />;
   const unavailable = englishText("staff.authenticator.errors.unavailable");
   const body = {
-    "sign-in": (
-      <>
-        <Stack gap="related">
-          <h1>{englishText("staff.signIn.title")}</h1>
-          <p>{englishText("staff.signIn.lead")}</p>
-        </Stack>
-        <SignInForm
-          labels={{
-            username: englishText("staff.signIn.username"),
-            password: englishText("staff.signIn.password"),
-            submit: englishText("staff.signIn.submit"),
-            unavailable: englishText("staff.signIn.unavailable"),
-          }}
-        />
-      </>
-    ),
     code: (
       <>
         <Stack gap="related">
@@ -1286,7 +1272,10 @@ export function StaffGateFixture({ page }: { page: "sign-in" | "code" | "passwor
     <main>
       <Screen surface="staff">
         <div className="hub-gate">
-          <Stack gap="section-hub">{body}</Stack>
+          <Stack gap="section-hub">
+            <StaffAuthBrand />
+            {body}
+          </Stack>
         </div>
       </Screen>
     </main>
