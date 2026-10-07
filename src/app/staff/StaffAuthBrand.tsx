@@ -10,6 +10,7 @@ export function StaffAuthBrand() {
         <img src="/brand/hub-logo.png" alt="Thorncliffe Park Community Hub" width={423} height={136} />
       </Link>
       <Link className="hub-link tap" href="/en">{englishText("staff.signIn.residentLink")}</Link>
+      <Link className="hub-link tap" href="/en/terms">{englishText("staff.journey.privacy")}</Link>
     </div>
   );
 }

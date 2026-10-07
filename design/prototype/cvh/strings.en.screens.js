@@ -2850,4 +2850,14 @@
   ops: { oncall: { escalation: {
     needs_help: 'CVH: Needs help: {building}, floor {floor}. Open: {link}',
     not_reached: 'CVH: Not reached: {building}, floor {floor}. Open: {link}' } } } });
+m(en, { staff: { journey: {
+  privacy: 'Terms and privacy',
+  directoryLinks: 'Directory next steps',
+  providers: 'Manage providers',
+  residentDirectory: 'View the resident directory',
+  publishReminder: 'Provider changes reach residents after you publish a directory release.',
+  publishDirectory: 'Review and publish directory',
+  exportHelp: 'How to export these figures',
+  campaign: 'End of pilot'
+} } });
 })();

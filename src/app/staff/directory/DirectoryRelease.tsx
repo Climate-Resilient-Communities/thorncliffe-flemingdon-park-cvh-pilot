@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
 import { PublishDirectory, type PublishDirectoryLabels } from "./PublishDirectory";
 import { StaleList } from "./StaleList";
@@ -45,6 +47,12 @@ export function DirectoryRelease({ view }: { view: DirectoryReleaseView }) {
         ) : null}
       </Stack>
       <PublishDirectory labels={view.labels} />
+      <nav aria-label={englishText("staff.journey.directoryLinks")}>
+        <Stack gap="related">
+          <Link className="hub-link tap" href="/staff/providers">{englishText("staff.journey.providers")}</Link>
+          <Link className="hub-link tap" href="/en/directory">{englishText("staff.journey.residentDirectory")}</Link>
+        </Stack>
+      </nav>
     </>
   );
 }

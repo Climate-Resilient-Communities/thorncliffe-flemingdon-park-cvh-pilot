@@ -26,6 +26,9 @@ export function ResidentShell({ header, nav, children }: ResidentShellProps) {
         <Link href="/staff/sign-in" lang={header.current === "fr" ? "fr" : "en"}>
           {header.current === "fr" ? "Connexion du personnel" : "Staff sign in"}
         </Link>
+        <Link href={`/${header.current}/terms`} lang={header.current === "fr" ? "fr" : "en"}>
+          {header.current === "fr" ? "Conditions et confidentialité" : "Terms and privacy"}
+        </Link>
         <details className="shell-tools">
           <summary className="tap" lang={header.current === "fr" ? "fr" : "en"}>
             {header.current === "fr" ? "Affichage" : "Display settings"}

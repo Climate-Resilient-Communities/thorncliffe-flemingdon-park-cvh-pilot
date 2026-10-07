@@ -6211,6 +6211,16 @@
           "failed": "Nothing changed. Try again. If it fails again, tell IT."
         }
       }
+    },
+    "journey": {
+      "privacy": "Terms and privacy",
+      "directoryLinks": "Directory next steps",
+      "providers": "Manage providers",
+      "residentDirectory": "View the resident directory",
+      "publishReminder": "Provider changes reach residents after you publish a directory release.",
+      "publishDirectory": "Review and publish directory",
+      "exportHelp": "How to export these figures",
+      "campaign": "End of pilot"
     }
   },
   "building": {

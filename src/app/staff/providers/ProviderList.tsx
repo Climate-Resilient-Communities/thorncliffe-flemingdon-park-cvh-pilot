@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { englishText } from "@/i18n/text";
 import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import { confirmProviderAction, publishProviderAction, unpublishProviderAction } from "./actions";
@@ -128,10 +130,16 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
 /** The Admin's list of providers (S02.04). */
 export function ProviderList({ rows, today, labels }: { rows: ProviderRowData[]; today: string; labels: ProviderListLabels }) {
   return (
+    <Stack gap="section-hub">
+      <Stack gap="related">
+        <p>{englishText("staff.journey.publishReminder")}</p>
+        <Link className="hub-link tap" href="/staff/directory">{englishText("staff.journey.publishDirectory")}</Link>
+      </Stack>
     <Stack gap="section-hub" as="ul" testId="provider-list">
       {rows.map((row) => (
         <ProviderRow key={row.id} row={row} today={today} labels={labels} />
       ))}
+    </Stack>
     </Stack>
   );
 }

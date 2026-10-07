@@ -1,3 +1,4 @@
+import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
 import { ProcedureLink } from "../ProcedureLink";
 import type { CostView, MeasuresView as MeasuresViewModel, ReachEntryView, ReachView, SubscribersView } from "./view";
@@ -101,8 +102,13 @@ export function MeasuresView({ view }: { view: MeasuresViewModel }) {
         <h1>{view.title}</h1>
         <p>{view.lead}</p>
         <p data-testid="measures-privacy">{view.privacy}</p>
-        <p data-testid="measures-export">{view.exportNote}</p>
-        <ProcedureLink link={view.procedure} />
+        <details>
+          <summary className="tap">{englishText("staff.journey.exportHelp")}</summary>
+          <Stack gap="related">
+            <p data-testid="measures-export">{view.exportNote}</p>
+            <ProcedureLink link={view.procedure} />
+          </Stack>
+        </details>
       </Stack>
       <Subscribers view={view.subscribers} />
       <Reach view={view.reach} />
