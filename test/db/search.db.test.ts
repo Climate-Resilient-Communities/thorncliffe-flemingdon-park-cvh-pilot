@@ -2,12 +2,16 @@
 // SearchV1 answer, the request snapshot, the ranking sequence, the time limit, spend and search_log, the privacy of the
 // question, the per-client limit, and the route's answers. The embedding model is a fake: nothing here reaches Cohere.
 import { randomBytes, randomUUID } from "node:crypto";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { inspect } from "node:util";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { searchResponse, type SearchRouteDeps } from "../../src/app/api/search/handler";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { runQuestions } from "../../scripts/search-test-set/lib";
-import { cohereCallsThisMonth, engineFrom } from "../../scripts/search-test-set/productionEngine";
+import { belowBarEvents, cohereCallsThisMonth, cohereUsageThisMonth, engineFrom } from "../../scripts/search-test-set/productionEngine";
+import { runGuard } from "../../scripts/search-test-set/guard";
 import { CallBudget, legReport, runLeg } from "../../scripts/search-test-set/tuningRun";
 import { SearchErrorSchema } from "@/contracts/search";
 import { SearchV1Schema, TestQuestionSchema } from "@/contracts/searchTestSet";
@@ -1320,6 +1324,92 @@ describe("search", () => {
       expect(await cohereCallsThisMonth(app, new Date())).toBe(15);
       await sql.unsafe("delete from spend_event");
       expect(await cohereCallsThisMonth(app, new Date())).toBe(0);
+    });
+
+    it("counts the month's Cohere tokens with its calls for the usage guard (S03.09): embedding and translation, every purpose, this Toronto month only", async () => {
+      await sql.unsafe("delete from spend_event");
+      await sql.unsafe(`
+        insert into spend_event (at, kind, purpose, model, calls, tokens) values
+          (now(), 'embed', 'search', 'embed-v4.0', 3, 30),
+          (now(), 'translate', 'test_set', 'north-small-translate-09-2026', 2, 400),
+          (now() - interval '45 days', 'embed', 'test_set', 'embed-v4.0', 100, 9000)`);
+
+      expect(await cohereUsageThisMonth(app, new Date())).toEqual({ calls: 5, tokens: 430 });
+      await sql.unsafe("delete from spend_event");
+    });
+
+    describe("the guard (S03.09)", () => {
+      const BAR = { version: 1, approvedBy: "Hub Director", approvedOn: "2026-10-20", minimums: { hitRate: { en: 1 }, noMatchAccuracy: 1, emergencyAccuracy: 1 } };
+      const SECRETS = { SEARCH_TEST_DATABASE_URL: "postgres://u:p@db.example.com:5432/postgres", COHERE_API_KEY: "k", NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co", SUPABASE_SECRET_KEY: "s" };
+      const evaluation = (id: string, q: string, intent: "normal" | "emergency" | "no_match", expected: string[]) => ({ ...question(id, q, intent, expected), split: "evaluation" as const });
+      const QUESTIONS = [
+        evaluation("lawyer", "a lawyer", "normal", ["M001"]),
+        // Food finds the food bank, not the clinic it expects: a miss that takes English below its minimum.
+        evaluation("food", "food please", "normal", ["M002"]),
+        evaluation("doctor", "see a doctor", "emergency", ["M002"]),
+        evaluation("nothing", "xyzzy", "no_match", []),
+        { ...question("tune", "a lawyer", "normal", ["M001"]) },
+      ];
+
+      async function guardRun(checkpoint: string) {
+        const root = mkdtempSync(path.join(tmpdir(), "cvh-guard-db-"));
+        mkdirSync(path.join(root, "data", "search-test-set"), { recursive: true });
+        writeFileSync(path.join(root, "data", "search-test-set", "bar.json"), JSON.stringify(BAR));
+        const { clients, embedRequests } = vendors();
+        try {
+          const code = await runGuard(["guard", "--yes", "--checkpoint", checkpoint, "--out-dir", path.join(root, "out")], SECRETS, root, {
+            loadQuestions: () => ({ questions: QUESTIONS.map((x, i) => ({ ...x, line: i + 1 })), errors: [], sha256: "c".repeat(64) }),
+            makeEngine: (_env, options) => engineOf(clients, options.translatedLeg),
+            monthUsage: () => cohereUsageThisMonth(app),
+            recordBelowBar: (_env, release, at, shortfalls) => belowBarEvents(app, release, at, shortfalls),
+            usage: "USAGE",
+            sleep: noSleep,
+          });
+          return { code, embedRequests };
+        } finally {
+          rmSync(root, { recursive: true, force: true });
+        }
+      }
+      const belowBar = () => sql`select subject_type, subject_id, severity, detail from ops_event where kind = 'search.below_bar' order by id`.then((r) => r.map((row) => ({ ...row })));
+
+      beforeEach(async () => {
+        await publish();
+        await sql.unsafe("delete from spend_event; delete from search_log; delete from ops_event where kind = 'search.below_bar'");
+        // The run prints its plan and report; the assertions are on what it wrote.
+        vi.spyOn(console, "log").mockImplementation(() => undefined);
+        vi.spyOn(console, "error").mockImplementation(() => undefined);
+      });
+      afterEach(() => vi.restoreAllMocks());
+
+      it("at a manual checkpoint, asks only the evaluation subset through the real use case, records each call as test_set spend and each measure below the bar as an ops event, with the app's own login", async () => {
+        const { code, embedRequests } = await guardRun("week_4");
+
+        expect(code).toBe(1);
+        expect(embedRequests).toHaveLength(4);
+        const spend = await rows("spend_event");
+        expect(spend).toHaveLength(4);
+        expect(spend.every((row) => row.purpose === "test_set" && row.release_v === 1)).toBe(true);
+        expect(await rows("search_log")).toEqual([]);
+        expect(await belowBar()).toEqual([
+          { subject_type: "directory_release", subject_id: "1", severity: "warning", detail: { measure: "hit_rate", lang: "en", observed_permille: 667, minimum_permille: 1000, checkpoint: "week_4" } },
+        ]);
+      });
+
+      it("records no ops event for a pull request's run, which still fails below the bar", async () => {
+        expect((await guardRun("pr")).code).toBe(1);
+        expect(await belowBar()).toEqual([]);
+      });
+
+      it("refuses to start when this month's calls in spend_event leave too little, and calls nothing", async () => {
+        await sql.unsafe("insert into spend_event (at, kind, purpose, model, calls, tokens) values (now(), 'embed', 'search', 'embed-v4.0', 798, 10)");
+
+        const { code, embedRequests } = await guardRun("week_4");
+
+        expect(code).toBe(1);
+        expect(embedRequests).toEqual([]);
+        expect((await rows("spend_event")).filter((row) => row.purpose === "test_set")).toEqual([]);
+        expect(await belowBar()).toEqual([]);
+      });
     });
 
     it("tells a 429 from a miss: the question is rate_limited, left out of the rates, and nothing is billed for the refused call", async () => {

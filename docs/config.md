@@ -555,6 +555,7 @@ drill's, a closed thread's or one whose types are no longer round types), so ass
 |---|---|---|
 | `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
 | `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for open pull requests of this repository that carry the label `preview` |
+| `search-guard` | `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY`, `SUPABASE_SECRET_KEY` (the same values as `production`'s); variable `NEXT_PUBLIC_SUPABASE_URL`, and the optional `SEARCH_*` and `SEARCH_TEST_*` variables below. Not created yet: create it before the Hub approves the launch bar (S03.08) | required reviewer: the owner (each measurement of a pull request waits for approval: it spends Cohere calls and runs the branch's code with the key); deployment branches: all |
 
 `VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
 scoped to that team: `vercel promote` and `vercel rollback` look up the token's user and fail with
@@ -637,6 +638,58 @@ A run that ends badly (an error, or the step's 25-minute limit) leaves a progres
 with the same kind of content. From a shell, with the same values exported (the database as `SEARCH_TEST_DATABASE_URL`):
 `npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg both --yes`; `--plan-only` prints the plan
 and stops, and without either flag it prints the plan and exits 2.
+
+### The search guard (S03.09)
+
+"Search guard" (`.github/workflows/search-guard.yml`) runs on every pull request. Its first job, **Search guard**, takes seconds and
+needs no install and no secret: `scripts/ci/search-guard-scope.sh` lists the files the pull request changes and matches them against
+`scripts/ci/search-guard-paths.txt` (the catalogue's `providers.json`, the search use case, ranking, search data, the question's
+language, the embedder, the translated-question leg, `src/app/search.ts`, and, in `src/platform/config/env.ts`, only lines naming a
+search setting: the embedding model, the threshold, `emergency_categories`, `search_question_route` and its fallback). A pull request
+that changes none of them passes at once. One that does, while `main` has no Hub-approved launch bar (`data/search-test-set/bar.json`
+with `approvedBy`, `approvedOn` and at least one minimum, S03.08), passes with a notice and nothing is called.
+
+Once there is a bar, the second job, **Search guard: measure**, asks the evaluation subset (`data/search-test-set/subsets.json`'s
+`evaluation` ids, or the questions whose `split` is `evaluation`) through the pull request's own search use case, with the
+translated-question leg as production routes it, against production's current release, and fails if any language's hit rate (top 3),
+the no-match accuracy or the emergency accuracy is below its minimum in `main`'s bar, naming each measure and the drop ("hit rate (ur):
+62.5%, below the minimum 70.0% by 7.5 points"). A run that stops early or leaves a question without a usable answer fails too: it cannot
+show the bar is met. It never runs for a fork or for Dependabot. Previews are not used: a preview holds no Cohere key (start-up refuses
+one outside production) and `/api/search` answers 30 questions per 10 minutes, so the guard runs the same code in the runner; the
+`preview` label is not needed for it.
+
+The measure job waits in the `search-guard` environment for the owner's approval (Review deployments, on the pull request's checks):
+approve it once the pull request's search change is final, since each run spends about one call per question plus a translation per
+Pashto, Dari, Urdu, romanized or ambiguous question. A newer push replaces a run still waiting. Leaving it unapproved leaves the check
+pending (it is not part of "Checks", so it does not block a merge unless you make it required). What it measures: a change to the search
+code or to the route takes effect at once. A change to the catalogue, the embedding model, the threshold or `emergency_categories`
+reaches search only when a release is published from it (seed, then Publish): until then the guard measures the current release with the
+pull request's code, so run the checkpoint below after that publish.
+
+**Checkpoints (the week before launch, week 4).** Actions > Search guard > Run workflow, on `main`: `checkpoint` `pre_launch`, `week_4`
+or `manual`; `confirm` unticked prints the plan, ticked runs it (production environment, sharing the "Search test set" workflow's
+concurrency group). It measures the same way and, for each measure below its minimum, writes an `ops_event` `search.below_bar` (the
+measure, the language of a hit rate, the shares in thousandths, the checkpoint; the release as its subject), which the weekly review
+lists in the section `search_below_bar`. Nothing in CI writes to the repository: the report is the run's artifact, and the job summary
+prints the two commands that commit it (`gh run download <run id> -n search-guard-<run id> -D data/search-test-set/reports`, then
+`git add` and `git commit` in a branch).
+
+**The usage guard (every live run: the guard, the checkpoints and the "Search test set" tuning run).** Before its first call a run
+refuses to start unless every model it would use has a known per-unit price or the config holds a usage allowance in calls and tokens a
+month. It estimates its calls (the plan, every retry included, never more than `max_calls`) and its tokens (each question's text by the
+app's own estimators), reads this month's Cohere calls and tokens (every purpose, the calendar month in America/Toronto) from
+`spend_event`, and refuses when either would pass what is left: the calls allowance less the live-search reserve, or the tokens
+allowance. Units, not money, while Cohere's prices are unknown. Each call it makes is recorded in `spend_event` with the purpose
+`test_set`. Variables (GitHub, in `production` and `search-guard`; all optional):
+
+- `SEARCH_TEST_MONTHLY_CALLS` (default 1000) and `SEARCH_TEST_RESERVE_CALLS` (default 200), as above;
+- `SEARCH_TEST_MONTHLY_TOKENS`: the tokens a month the runs count against (default 1000000, the publish allowance's), or `none`
+  for no token allowance, in which case only a run whose every model is priced may start;
+- `SEARCH_TEST_PRICES`: `model=price` pairs, comma separated, in CAD per million tokens, for the models whose price is known (for
+  example `embed-v4.0=0.12`). A priced run still keeps to the calls allowance.
+
+From a shell, with the same values exported: `npm run search-test-set -- guard --checkpoint week_4 --yes` (`--plan-only` prints the
+plan; `--bar <file>` measures against another bar file).
 
 ### Rolling out a change to what the directory listing shows (for example the AD-11 pilot change, PR #60)
 

@@ -51,7 +51,8 @@ const DaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be a date as YYY
  * data/search-test-set/bar.json: the Hub-approved minimums, all measured on the evaluation subset. `hitRate` is the top-3 hit
  * rate per language (keyed by launch language code), `noMatchAccuracy` and `emergencyAccuracy` the overall shares. Until the
  * Hub approves it, `approvedBy` and `approvedOn` are null and the minimums are a placeholder that sets nothing: an unapproved
- * bar is never met. An approved bar names a minimum for every launch language.
+ * bar is never met. Launch readiness also needs a minimum for every launch language (checked by meetsBar, not here, so a bar
+ * that names fewer still guards the languages it names).
  */
 export const BarSchema = z
   .object({
@@ -76,13 +77,6 @@ export const BarSchema = z
         ctx.addIssue({ code: "custom", path: ["minimums", "hitRate", lang], message: `${lang} is not a launch language` });
       }
     }
-    if (bar.approvedBy !== null) {
-      for (const lang of LAUNCH_LANGS) {
-        if (bar.minimums.hitRate[lang] === undefined) {
-          ctx.addIssue({ code: "custom", path: ["minimums", "hitRate"], message: `an approved bar needs a hit-rate minimum for ${lang}` });
-        }
-      }
-    }
   });
 
-export type Bar = z.infer<typeof BarSchema>;
+export type BarFile = z.infer<typeof BarSchema>;

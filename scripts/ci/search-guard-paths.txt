@@ -1,0 +1,23 @@
+# What can change search (S03.09): a pull request that changes one of these is measured by the search guard
+# (.github/workflows/search-guard.yml) against the launch bar. One rule a line: a path pattern (extended regex, matched against
+# the whole path), then, optionally, a pattern the changed lines of that file must match (for a file that also holds other things).
+# Tests are not listed: a test cannot change what residents get.
+#
+# The catalogue: the search text of every provider (name, categories, subcategories, services, emergency role).
+^data/catalogue/providers\.json$
+# The search use case, its ranking, its search data and the question's language.
+^src/modules/directory/application/search\.ts$
+^src/modules/directory/application/releaseSearch\.ts$
+^src/modules/directory/domain/searchRanking\.ts$
+^src/modules/directory/domain/searchData\.ts$
+^src/modules/directory/domain/questionLanguage\.ts$
+^src/modules/directory/adapters/cohereEmbedder\.ts$
+# The translated-question leg: the route, the fallback, the English check and the prompt.
+^src/modules/translation/application/questionTranslator\.ts$
+^src/modules/translation/domain/questionTranslation\.ts$
+^src/modules/translation/adapters/cohereTranslator\.ts$
+# How the app composes search.
+^src/app/search\.ts$
+# The search settings' defaults and rules: the embedding model, the threshold, emergency_categories, search_question_route and its
+# fallback. Only a changed line that names one of them counts; the file holds every other setting too.
+^src/platform/config/env\.ts$ SEARCH_|DEFAULT_SEARCH|DEFAULT_QUESTION|[Qq]uestionRoute|[Qq]uestionFallback|[Ee]mbedModel|[Ee]mergencyCategor|[Ee]mergencyThreshold|threshold|parseSearch

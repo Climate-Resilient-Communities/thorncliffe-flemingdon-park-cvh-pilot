@@ -19,8 +19,10 @@
 // So the same set, the same seed and the same subsets.json give the same file, and new questions never move existing ones.
 // questions.jsonl repeats each question's subset in its `split` field, which must agree with subsets.json.
 import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import type { TestQuestion } from "@/contracts/searchTestSet";
-import { COVERAGE_MINIMUMS, EVALUATION_MINIMUMS, LAUNCH_LANGS, type SubsetsFile } from "@/contracts/searchTestSetLaunch";
+import { COVERAGE_MINIMUMS, EVALUATION_MINIMUMS, LAUNCH_LANGS, SubsetsFileSchema, type SubsetsFile } from "@/contracts/searchTestSetLaunch";
 
 export const SUBSETS_FILE = "data/search-test-set/subsets.json";
 /** The committed seed of the evaluation draw: chosen once (2026-10-06), never changed, so the draw can be repeated. */
@@ -130,6 +132,15 @@ export function checkSubsets(questions: readonly Pick<TestQuestion, "id" | "spli
   }
   for (const id of [...evaluation, ...tuning]) if (!ids.has(id)) problems.push(`${id} is in ${SUBSETS_FILE} but not in questions.jsonl`);
   return problems;
+}
+
+/** subsets.json, or null when there is none yet; throws when it does not fit its schema. */
+export function readSubsets(root: string): SubsetsFile | null {
+  const file = path.join(root, SUBSETS_FILE);
+  if (!existsSync(file)) return null;
+  const parsed = SubsetsFileSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+  if (!parsed.success) throw new Error(`${SUBSETS_FILE}: ${parsed.error.issues.map((i) => `${i.path.join(".") || "(file)"}: ${i.message}`).join("; ")}`);
+  return parsed.data;
 }
 
 export function subsetsJson(file: SubsetsFile): string {

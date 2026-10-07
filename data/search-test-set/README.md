@@ -103,4 +103,4 @@ Each run uses Cohere calls from a monthly allowance shared with live search: che
    A language whose first measurement is below what the Hub would accept goes on the launch-readiness checklist with its action
    and owner (for example more catalogue review, or a different question route).
 
-The bar is read by `scripts/search-test-set/bar.ts`: `readBar(root)` and `meetsBar(report, bar)`, which S03.09's guard also uses.
+The bar has one reader, `scripts/search-test-set/bar.ts`: `readBarFile(root)` and `meetsBar(report, file)` for launch readiness, and `readBar(root, file?)` / `checkBar(bar, subset)` for S03.09's guard, all through `BarSchema`. (The guard's workflow also peeks at the base branch's file in `scripts/ci/search-guard-scope.sh`, only to decide whether to measure at all.)

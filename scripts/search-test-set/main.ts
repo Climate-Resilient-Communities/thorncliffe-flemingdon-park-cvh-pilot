@@ -46,6 +46,14 @@
 //                                  (used once, when it was created); it refuses when subsets.json exists.
 //   readiness                      S03.08: whether the latest report that ran the evaluation subset meets every minimum of the
 //                                  approved launch bar (data/search-test-set/bar.json); exit 0 when met, 1 when not.
+//   guard --yes | --plan-only [--checkpoint pr|pre_launch|week_4|manual] [--bar <bar.json>] [--max-calls <n>] [--summary-file <path>]
+//       [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+//                                S03.09: the evaluation subset through the same production search use case, against the Hub-approved
+//                                launch bar (data/search-test-set/bar.json, or --bar): exit 0 when every minimum is met or no bar is set
+//                                yet (nothing is called then), exit 1 naming each measure below its minimum and the drop, or when the
+//                                measurement is incomplete. The usage guard (usageGuard.ts) runs before the first call. At a manual
+//                                checkpoint (not `pr`) a measure below its minimum is also recorded as ops event `search.below_bar`.
+//                                Usage, rules and outputs: guard.ts.
 //   --compare <a> <b> [--fail-on-worse]
 //                                  per-language and per-language/form differences between two reports
 //                                  (paths, or file names in the reports folder); a language or subset
@@ -62,7 +70,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { QuestionSplit, TestQuestion } from "@/contracts/searchTestSet";
-import { SubsetsFileSchema, type SubsetsFile } from "@/contracts/searchTestSetLaunch";
+import type { SubsetsFile } from "@/contracts/searchTestSetLaunch";
 import { launchReadiness } from "./bar";
 import { importRows, parseCsv, questionLine } from "./importSheet";
 import {
@@ -82,7 +90,7 @@ import {
   type LocatedQuestion,
   type SearchEngine,
 } from "./lib";
-import { assignSubsets, checkCoverage, checkSubsets, DEFAULT_SEED, formatCoverage, subsetsJson, SUBSETS_FILE } from "./subsets";
+import { assignSubsets, checkCoverage, checkSubsets, DEFAULT_SEED, formatCoverage, readSubsets, subsetsJson, SUBSETS_FILE } from "./subsets";
 
 const USAGE = `usage: search-test-set validate [--require-checked]
        search-test-set run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off [--split tuning|evaluation|all --final] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
@@ -91,6 +99,7 @@ const USAGE = `usage: search-test-set validate [--require-checked]
        search-test-set coverage [--launch]
        search-test-set assign [--adopt-splits]
        search-test-set readiness
+       search-test-set guard --yes|--plan-only [--checkpoint pr|pre_launch|week_4|manual] [--bar <bar.json>] [--max-calls <n>] [--summary-file <path>] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
        search-test-set --compare <report a> <report b> [--fail-on-worse]`;
 
 function option(argv: string[], name: string): string | undefined {
@@ -110,15 +119,6 @@ function warnUnchecked(unchecked: readonly { id: string }[], out: (line: string)
   if (unchecked.length > 0) {
     out(`WARNING: ${unchecked.length} question(s) not yet checked by a second team member: ${unchecked.map((q) => q.id).join(", ")}`);
   }
-}
-
-/** subsets.json, or null when there is none yet; throws when it does not fit its schema. */
-export function readSubsets(root: string): SubsetsFile | null {
-  const file = path.join(root, SUBSETS_FILE);
-  if (!existsSync(file)) return null;
-  const parsed = SubsetsFileSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
-  if (!parsed.success) throw new Error(`${SUBSETS_FILE}: ${parsed.error.issues.map((i) => `${i.path.join(".") || "(file)"}: ${i.message}`).join("; ")}`);
-  return parsed.data;
 }
 
 /** Writes subsets.json and the split of every question whose split it changes into questions.jsonl, leaving every other line as it is. */
@@ -348,8 +348,13 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   if (argv[0] === "run" && option(argv, "--engine") === "production") {
     // The real search use case, built from the environment: loaded only when asked for (it pulls in the whole directory module).
     const { runProduction } = await import("./production");
-    const { makeProductionEngine, readCohereCallsThisMonth } = await import("./productionEngine");
-    return runProduction(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, monthCalls: readCohereCallsThisMonth, usage: USAGE });
+    const { makeProductionEngine, readCohereCallsThisMonth, readCohereUsageThisMonth } = await import("./productionEngine");
+    return runProduction(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, monthCalls: readCohereCallsThisMonth, monthUsage: readCohereUsageThisMonth, usage: USAGE });
+  }
+  if (argv[0] === "guard") {
+    const { runGuard } = await import("./guard");
+    const { makeProductionEngine, readCohereUsageThisMonth, recordBelowBar } = await import("./productionEngine");
+    return runGuard(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, monthUsage: readCohereUsageThisMonth, recordBelowBar, usage: USAGE });
   }
   if (argv[0] === "run") return run(argv, root);
   console.error(USAGE);

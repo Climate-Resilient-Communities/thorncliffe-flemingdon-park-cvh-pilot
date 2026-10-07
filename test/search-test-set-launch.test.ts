@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Metrics, TestQuestion, TestSetReport } from "@/contracts/searchTestSet";
-import { BarSchema, LAUNCH_LANGS, SubsetsFileSchema, type Bar } from "@/contracts/searchTestSetLaunch";
-import { formatBarResult, latestEvaluationReport, launchReadiness, meetsBar, readBar } from "../scripts/search-test-set/bar";
+import { BarSchema, LAUNCH_LANGS, SubsetsFileSchema, type BarFile as Bar } from "@/contracts/searchTestSetLaunch";
+import { formatBarResult, latestEvaluationReport, launchReadiness, meetsBar, readBarFile } from "../scripts/search-test-set/bar";
 import { importRows, parseCsv, personalDataIn, questionLine, splitProviderIds, TEMPLATE_COLUMNS } from "../scripts/search-test-set/importSheet";
 import { parseQuestions, providerIdsOf } from "../scripts/search-test-set/lib";
 import { main } from "../scripts/search-test-set/main";
@@ -322,7 +322,7 @@ const approved = (hitRate: Record<string, number>, noMatch = 0.8, emergency = 0.
 
 describe("bar.json", () => {
   it("is committed unapproved, with no minimums set", () => {
-    const bar = readBar(ROOT);
+    const bar = readBarFile(ROOT);
     expect(bar).toEqual({ version: 1, approvedBy: null, approvedOn: null, minimums: { hitRate: {}, noMatchAccuracy: 0, emergencyAccuracy: 0 } });
   });
 
@@ -333,7 +333,9 @@ describe("bar.json", () => {
     expect(BarSchema.safeParse({ ...approved({}), approvedOn: null }).success).toBe(false);
     expect(BarSchema.safeParse({ ...approved({}), approvedOn: "2 Nov 2026" }).success).toBe(false);
     expect(BarSchema.safeParse({ ...approved({}), minimums: { ...approved({}).minimums, noMatchAccuracy: 1.2 } }).success).toBe(false);
-    expect(BarSchema.safeParse({ ...approved({}), minimums: { ...approved({}).minimums, hitRate: { en: 0.8 } } }).success).toBe(false); // approved: every language
+    expect(BarSchema.safeParse({ ...approved({}), minimums: { ...approved({}).minimums, hitRate: { en: 0.8 } } }).success).toBe(true); // readiness asks for every language
+    expect(BarSchema.safeParse({ ...approved({}), minimums: { hitRate: {} } }).success).toBe(false);
+    expect(BarSchema.safeParse({ ...approved({}), minimums: null }).success).toBe(false);
     expect(BarSchema.safeParse({ version: 1, approvedBy: null, approvedOn: null, minimums: { hitRate: { xx: 0.5 }, noMatchAccuracy: 0, emergencyAccuracy: 0 } }).success).toBe(false);
   });
 });
@@ -343,9 +345,9 @@ describe("meetsBar", () => {
     const result = meetsBar(report(true, Object.fromEntries(LAUNCH_LANGS.map((l) => [l, 0.8]))), approved({ en: 0.8 }));
     expect(result.met).toBe(true);
     expect(result.problems).toEqual([]);
-    expect(result.measures).toContainEqual({ measure: "hitRate", lang: "en", name: "hit rate (en)", minimum: 0.8, actual: 0.8, pass: true, drop: 0 });
-    expect(result.measures.at(-2)).toEqual({ measure: "noMatchAccuracy", lang: null, name: "no-match accuracy", minimum: 0.8, actual: 0.9, pass: true, drop: 0 });
-    expect(result.measures.at(-1)).toEqual({ measure: "emergencyAccuracy", lang: null, name: "emergency accuracy", minimum: 0.95, actual: 1, pass: true, drop: 0 });
+    expect(result.measures).toContainEqual({ measure: "hit_rate", lang: "en", name: "hit rate (en)", minimum: 0.8, actual: 0.8, pass: true, drop: 0 });
+    expect(result.measures.at(-2)).toEqual({ measure: "no_match_accuracy", lang: null, name: "no-match accuracy", minimum: 0.8, actual: 0.9, pass: true, drop: 0 });
+    expect(result.measures.at(-1)).toEqual({ measure: "emergency_accuracy", lang: null, name: "emergency accuracy", minimum: 0.95, actual: 1, pass: true, drop: 0 });
   });
 
   it("fails a measure below its minimum and gives the drop", () => {
@@ -353,8 +355,8 @@ describe("meetsBar", () => {
     const result = meetsBar(report(true, { ...all, ur: 0.65 }), approved({ ur: 0.8 }, 0.95));
     expect(result.met).toBe(false);
     expect(result.measures.filter((m) => !m.pass)).toEqual([
-      { measure: "hitRate", lang: "ur", name: "hit rate (ur)", minimum: 0.8, actual: 0.65, pass: false, drop: 0.15 },
-      { measure: "noMatchAccuracy", lang: null, name: "no-match accuracy", minimum: 0.95, actual: 0.9, pass: false, drop: 0.05 },
+      { measure: "hit_rate", lang: "ur", name: "hit rate (ur)", minimum: 0.8, actual: 0.65, pass: false, drop: 0.15 },
+      { measure: "no_match_accuracy", lang: null, name: "no-match accuracy", minimum: 0.95, actual: 0.9, pass: false, drop: 0.05 },
     ]);
     expect(formatBarResult(result)).toContain("  hit rate (ur): 65.0% against a minimum of 80.0%: FAIL (15.0 points below)");
   });
@@ -362,12 +364,20 @@ describe("meetsBar", () => {
   it("fails a language the evaluation subset did not measure", () => {
     const result = meetsBar(report(true, { en: 0.9 }), approved({}));
     expect(result.met).toBe(false);
-    expect(result.measures.find((m) => m.lang === "ps")).toEqual({ measure: "hitRate", lang: "ps", name: "hit rate (ps)", minimum: 0, actual: null, pass: false, drop: null });
+    expect(result.measures.find((m) => m.lang === "ps")).toEqual({ measure: "hit_rate", lang: "ps", name: "hit rate (ps)", minimum: 0, actual: null, pass: false, drop: null });
+  });
+
+  it("is not met by an approved bar that leaves a launch language without a minimum", () => {
+    const partial: Bar = { version: 1, approvedBy: "Hub Director", approvedOn: "2026-11-02", minimums: { hitRate: { en: 0.5 }, noMatchAccuracy: 0.5, emergencyAccuracy: 0.5 } };
+    const result = meetsBar(report(true, Object.fromEntries(LAUNCH_LANGS.map((l) => [l, 1]))), partial);
+    expect(result.met).toBe(false);
+    expect(result.measures.every((m) => m.pass)).toBe(true);
+    expect(result.problems).toEqual([expect.stringContaining("no hit-rate minimum for ur, ps")]);
   });
 
   it("is never met by an unapproved bar or a report without the evaluation subset", () => {
     const all = Object.fromEntries(LAUNCH_LANGS.map((l) => [l, 1]));
-    const unapproved = meetsBar(report(true, all), readBar(ROOT));
+    const unapproved = meetsBar(report(true, all), readBarFile(ROOT));
     expect(unapproved).toMatchObject({ met: false, approved: false });
     expect(unapproved.measures.every((m) => m.pass)).toBe(true);
     expect(unapproved.problems).toEqual([expect.stringContaining("not approved")]);
