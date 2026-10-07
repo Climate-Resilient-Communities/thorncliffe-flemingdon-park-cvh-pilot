@@ -9,8 +9,8 @@
 //  - The direct leg embeds the question as typed with the snapshot's model as a query (`input_type: search_query`).
 //  - The translated-question leg (S03.05): for Pashto, Dari, native-script Urdu, romanized or mixed (but not one or two plainly
 //    English words), and ambiguous Arabic-script questions, and (translate-first, 2026-10-07) a question confidently in another
-//    launch language whose kind `search_question_route` names a model for (by default Tamil and Punjabi: the embedding reads
-//    them poorly; with no fallback model, and only while the model's month of translate calls, every purpose, is below
+//    launch language whose kind `search_question_route` names a model for (by default Tamil, Punjabi, Bengali, Greek and Chinese: the
+//    embedding reads them poorly; with no fallback model, and only while the model's month of translate calls, every purpose, is below
 //    SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS, which leaves alert translation its reserve), the `translation` module translates the question to English
 //    with the model `search_question_route` names and checks that it is English; the translation is then embedded with the
 //    snapshot's model. The translation starts with the request, in parallel with the snapshot read and the direct leg (only
@@ -327,7 +327,7 @@ export interface SearchDeps {
   /** Test seam: counts the month's rerank calls of a model (default: spend_event rows of kind `rerank`, every purpose). */
   rerankCalls?: (model: string, now: Date) => Promise<number>;
   /**
-   * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: a translate-first question (ta, pa…) is translated only while its model's translate calls
+   * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: a translate-first question (ta, pa, bn, el, zh…) is translated only while its model's translate calls
    * of the calendar month, every purpose (alert translation included), are below this; default 600. Past it the question takes
    * today's route, so search cannot spend the reserve alert translation needs on the same key.
    */

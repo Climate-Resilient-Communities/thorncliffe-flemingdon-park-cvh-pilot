@@ -1,10 +1,11 @@
-// Translate-first (2026-10-07 measurement): a question confidently in a launch language the embedding reads poorly (by default
-// Tamil and Punjabi) is translated to English and searched on both legs, like a Pashto one; when its translation fails, is past
+// Translate-first (2026-10-07 measurements): a question confidently in a launch language the embedding reads poorly (by default
+// Tamil, Punjabi, Bengali, Greek and Chinese) is translated to English and searched on both legs, like a Pashto one; when its translation fails, is past
 // the month's limit or is rejected, it takes today's route: the direct leg, reranked. A language whose route is off (Tagalog by
 // default) is searched as before. Fakes for the snapshot, the embedding model, the translation model and the reranker; time is
 // vitest's fake clock.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SpendEventInput } from "@/modules/spend";
+import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE } from "@/platform/config/env";
 import { TRANSLATE_FIRST_OFF, TranslateError, createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
 import type { QueryEmbedder, Reranker } from "./ports";
 import { createSearch, type SearchFailureNote, type SearchObservation, type SearchSnapshot } from "./search";
@@ -16,6 +17,10 @@ const NORTH = "north-small-translate-09-2026";
 const TAMIL = "எனக்கு உணவு எங்கே கிடைக்கும்?";
 const TAGALOG = "Saan ako makakakuha ng pagkain?";
 const FOOD = "Where can I get food?";
+// The same question in the languages switched on by the second measurement (real Command A Translate translations, report section 11).
+const BENGALI = "আমি কোথায় খাবার পেতে পারি?";
+const GREEK = "Πού μπορώ να βρω φαγητό;";
+const CHINESE = "我在哪里可以找到食物？";
 
 /** A unit vector whose similarity with P1..P4 is the given number (the fifth axis is "nothing in particular"). */
 const unit = (s: [number, number, number, number]) => [...s, Math.sqrt(1 - s.reduce((sum, x) => sum + x * x, 0))];
@@ -24,6 +29,9 @@ const VECTORS: Record<string, number[]> = {
   // As in production: everything about 0.11, the daycare (P4) a hair ahead; nothing reaches the direct floor (0.24).
   [TAMIL]: unit([0.1, 0.05, 0.11, 0.12]),
   [TAGALOG]: unit([0.1, 0.05, 0.12, 0.11]),
+  [BENGALI]: unit([0.1, 0.05, 0.11, 0.12]),
+  [GREEK]: unit([0.1, 0.05, 0.11, 0.12]),
+  [CHINESE]: unit([0.1, 0.05, 0.11, 0.12]),
   // The English translation finds the food bank (P3) well over the threshold (0.27).
   [FOOD]: unit([0.05, 0.02, 0.36, 0.08]),
 };
@@ -53,7 +61,7 @@ const SNAPSHOT: SearchSnapshot = {
   },
 };
 
-/** The route as deployed by default for these kinds: Tamil and Punjabi on, the other translate-first languages off. */
+/** The route for these kinds, as deployed by default before the second measurement: Tamil and Punjabi on, the other translate-first languages off. */
 const ROUTE: QuestionRoute = { ps: NORTH, prs: NORTH, ur: NORTH, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF, ta: COMMAND, pa: COMMAND };
 // No fallback for the translate-first languages: North Small Translate's month is alert translation's (S04.02).
 const FALLBACK: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND, ...TRANSLATE_FIRST_OFF };
@@ -256,6 +264,48 @@ describe("translate-first languages", () => {
       expect(result.results.map((r) => r.provider_id)).toEqual(["P3"]);
       expect(rr.calls).toEqual([TAMIL]);
       expect(seen.at(-1)).toMatchObject({ route: "direct", translatedLeg: "failed", rerank: "used" });
+    });
+  });
+
+  describe("Bengali, Greek and Chinese are on by default (measured with the real model, report section 11)", () => {
+    for (const [name, q, kind] of [
+      ["Bengali", BENGALI, "bn"],
+      ["Greek", GREEK, "el"],
+      ["Chinese", CHINESE, "zh"],
+    ] as const) {
+      it(`translates a ${name} question with Command A Translate (the default route) and finds the food bank on the hybrid route`, async () => {
+        const words = fakeTranslator({ [COMMAND]: FOOD });
+        const rr = fakeReranker();
+        const result = await ask(service({ translator: words.translator, reranker: rr.reranker, route: DEFAULT_QUESTION_ROUTE, fallback: DEFAULT_QUESTION_FALLBACK }), q, "en");
+
+        expect(result).toMatchObject({ status: "ok", query_lang: kind });
+        expect(result.results[0]).toMatchObject({ provider_id: "P3" });
+        expect(words.calls).toEqual([{ text: q, from: kind, model: COMMAND }]);
+        expect(rr.calls).toHaveLength(0);
+        expect(seen.at(-1)).toMatchObject({ route: "hybrid", translatedLeg: "used", rerank: "not_needed" });
+      });
+
+      it(`takes today's route for a ${name} question whose translation is refused (429): no fallback model, the direct leg reranked`, async () => {
+        const words = fakeTranslator({ [COMMAND]: new TranslateError("quota"), [NORTH]: FOOD });
+        const rr = fakeReranker();
+        const result = await ask(service({ translator: words.translator, reranker: rr.reranker, route: DEFAULT_QUESTION_ROUTE, fallback: DEFAULT_QUESTION_FALLBACK }), q, "en");
+
+        expect(words.calls.map((c) => c.model)).toEqual([COMMAND]);
+        expect(result.results.map((r) => r.provider_id)).toEqual(["P3"]);
+        expect(rr.calls).toEqual([q]);
+        expect(seen.at(-1)).toMatchObject({ route: "direct", translatedLeg: "failed", rerank: "used" });
+      });
+    }
+
+    it("keeps Gujarati direct by default (it gained nothing with the real model)", async () => {
+      const GUJARATI = "મને ખોરાક ક્યાં મળી શકે?";
+      const words = fakeTranslator({ [COMMAND]: FOOD });
+      const rr = fakeReranker();
+      const result = await ask(service({ translator: words.translator, reranker: rr.reranker, route: DEFAULT_QUESTION_ROUTE, fallback: DEFAULT_QUESTION_FALLBACK }), GUJARATI, "en");
+      expect(result).toMatchObject({ query_lang: "gu" });
+      expect(words.calls).toHaveLength(0);
+      expect(rr.calls).toEqual([GUJARATI]);
+      expect(seen.at(-1)).toMatchObject({ route: "direct", translatedLeg: "not_needed", rerank: "used" });
     });
   });
 });
