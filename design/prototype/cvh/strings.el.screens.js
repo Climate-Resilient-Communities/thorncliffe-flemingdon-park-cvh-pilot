@@ -2,7 +2,7 @@
    screen ID. AI-generated (Claude), not yet checked by native readers. Staff screens stay in English. */
 (function () {
   var t = window.CVH_STRINGS.el;
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   m(t, {
   "terms": {
    "version": "Έκδοση",
