@@ -115,6 +115,9 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
   const checkinRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  // Each refusal moves the focus to the error box, once the render that shows the box is on the page: an update made after an await is
+  // rendered in a later task, so a requestAnimationFrame callback could run first and find no box to focus.
+  const [errorShown, setErrorShown] = useState(0);
   const { state, retry } = useBuildingList(phase.kind === "form");
   const list = state.status === "ready" ? state.list : null;
 
@@ -143,6 +146,10 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
       current = false;
     };
   }, [endpoints.view, token, tokenShaped, attempt]);
+
+  useEffect(() => {
+    if (errorShown > 0) errorRef.current?.focus();
+  }, [errorShown]);
 
   useEffect(() => {
     // Every new state of the page starts at its heading, wherever the form was scrolled to.
@@ -255,7 +262,7 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
     }
     const code = (body as { error?: { code?: unknown } } | null)?.error?.code;
     setProblem(isErrorCode(code) ? code : "edit_unavailable");
-    requestAnimationFrame(() => errorRef.current?.focus());
+    setErrorShown((count) => count + 1);
   };
 
   const save = async (event: FormEvent) => {
@@ -284,7 +291,7 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
       await answered(await post(endpoints.change, request), "changed");
     } catch {
       setProblem("network");
-      requestAnimationFrame(() => errorRef.current?.focus());
+      setErrorShown((count) => count + 1);
     }
     setBusy(null);
   };
@@ -296,7 +303,7 @@ export function SubscriptionEdit({ lang, languages, neighbourhoods, hub, endpoin
       await answered(await post(endpoints.delete, { v: SUBSCRIPTION_EDIT_CONTRACT_VERSION, token }), "deleted");
     } catch {
       setProblem("network");
-      requestAnimationFrame(() => errorRef.current?.focus());
+      setErrorShown((count) => count + 1);
     }
     setBusy(null);
   };
