@@ -1,7 +1,7 @@
-import { StaffAuthBrand } from "../../StaffAuthBrand";
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
-import { Screen, Stack } from "@/ui";
+import { Stack } from "@/ui";
+import { StaffAuthFrame } from "../../StaffAuthFrame";
 import { staffPage } from "../../guard";
 import { SignOutButton } from "../../SignOutButton";
 import { ChoosePasswordForm } from "./ChoosePasswordForm";
@@ -18,30 +18,27 @@ export default staffPage(
     action: "account.own_setup",
   },
   () => (
-    <main>
-      <Screen surface="staff">
-        <div className="hub-gate">
-          <Stack gap="section-hub">
-            <StaffAuthBrand />
-            <Stack gap="related">
-              <h1>{englishText("staff.setup.password.title")}</h1>
-              <p>{englishText("staff.setup.password.lead")}</p>
-            </Stack>
-            <ChoosePasswordForm
-              labels={{
-                password: englishText("staff.setup.password.password"),
-                passwordHint: englishText("staff.setup.password.passwordHint"),
-                confirm: englishText("staff.setup.password.confirm"),
-                submit: englishText("staff.setup.password.submit"),
-                unavailable: englishText(
-                  "staff.setup.password.errors.unavailable",
-                ),
-              }}
-            />
-            <SignOutButton label={englishText("staff.signOut")} />
+    <StaffAuthFrame>
+      <div className="hub-gate">
+        <Stack gap="section-hub">
+          <Stack gap="related">
+            <h1>{englishText("staff.setup.password.title")}</h1>
+            <p>{englishText("staff.setup.password.lead")}</p>
           </Stack>
-        </div>
-      </Screen>
-    </main>
+          <ChoosePasswordForm
+            labels={{
+              password: englishText("staff.setup.password.password"),
+              passwordHint: englishText("staff.setup.password.passwordHint"),
+              confirm: englishText("staff.setup.password.confirm"),
+              submit: englishText("staff.setup.password.submit"),
+              unavailable: englishText(
+                "staff.setup.password.errors.unavailable",
+              ),
+            }}
+          />
+          <SignOutButton label={englishText("staff.signOut")} />
+        </Stack>
+      </div>
+    </StaffAuthFrame>
   ),
 );

@@ -1,5 +1,5 @@
 import { StaffSignInView } from "../../src/app/staff/sign-in/StaffSignInView";
-import { StaffAuthBrand } from "../../src/app/staff/StaffAuthBrand";
+import { StaffAuthFrame } from "../../src/app/staff/StaffAuthFrame";
 // Fixture pages for the layout tests. They are bundled with esbuild and rendered to static HTML by
 // e2e/helpers/layout-fixture.ts (Playwright's own JSX transform is for component testing and does not
 // produce React elements). Inline styles here size the test frames only; src/ never uses them.
@@ -1269,16 +1269,11 @@ export function StaffGateFixture({ page, logoSrc }: { page: "sign-in" | "code" |
     ),
   }[page];
   return (
-    <main>
-      <Screen surface="staff">
-        <div className="hub-gate">
-          <Stack gap="section-hub">
-            <StaffAuthBrand logoSrc={logoSrc} />
-            {body}
-          </Stack>
-        </div>
-      </Screen>
-    </main>
+    <StaffAuthFrame logoSrc={logoSrc}>
+      <div className="hub-gate">
+        <Stack gap="section-hub">{body}</Stack>
+      </div>
+    </StaffAuthFrame>
   );
 }
 

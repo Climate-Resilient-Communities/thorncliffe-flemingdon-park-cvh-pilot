@@ -67,50 +67,44 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
             <p>{labels.removedNote}</p>
           </>
         ) : (
+          // One grid for both forms (each form is display: contents): the date field and Save date share a row and a height, the hint
+          // spans under them, and Publish or Unpublish lines up with that row from the Hub breakpoint or takes its own line below it.
           <div className="provider-record__actions">
-            <form action={confirm} onSubmit={() => setLast("confirm")}>
+            <form className="provider-record__form" action={confirm} onSubmit={() => setLast("confirm")}>
               <input type="hidden" name="providerId" value={row.id} />
-              <Stack gap="label">
-                <label htmlFor={`confirm-${row.id}`}>{labels.confirmDate}</label>
-                <Inline gap="target" align="end">
-                  <input
-                    className="hub-input"
-                    id={`confirm-${row.id}`}
-                    name="date"
-                    type="date"
-                    max={today}
-                    required
-                    defaultValue={row.lastConfirmed ?? undefined}
-                    aria-describedby={`confirm-${row.id}-hint`}
-                  />
-                  <button className="hub-button hub-button--secondary" type="submit" disabled={busy}>
-                    {labels.saveDate}
-                  </button>
-                </Inline>
-                <small id={`confirm-${row.id}-hint`} data-testid={`provider-${row.id}-date-hint`}>
-                  {dateHint}
-                </small>
-              </Stack>
+              <label htmlFor={`confirm-${row.id}`} className="provider-record__label">{labels.confirmDate}</label>
+              <input
+                className="hub-input provider-record__date"
+                id={`confirm-${row.id}`}
+                name="date"
+                type="date"
+                max={today}
+                required
+                defaultValue={row.lastConfirmed ?? undefined}
+                aria-describedby={`confirm-${row.id}-hint`}
+              />
+              <button className="hub-button hub-button--secondary provider-record__save" type="submit" disabled={busy}>
+                {labels.saveDate}
+              </button>
+              <small id={`confirm-${row.id}-hint`} className="provider-record__hint" data-testid={`provider-${row.id}-date-hint`}>
+                {dateHint}
+              </small>
             </form>
-            <form action={row.published ? unpublish : publish} onSubmit={() => setLast(row.published ? "unpublish" : "publish")}>
+            <form className="provider-record__form" action={row.published ? unpublish : publish} onSubmit={() => setLast(row.published ? "unpublish" : "publish")}>
               <input type="hidden" name="providerId" value={row.id} />
-              <Stack gap="label">
-                <div>
-                  <button
-                    className={`hub-button ${row.published ? "hub-button--secondary" : "hub-button--primary"}`}
-                    type="submit"
-                    disabled={busy || needsDate}
-                    aria-describedby={needsDate ? publishHintId : undefined}
-                  >
-                    {row.published ? labels.unpublish : labels.publish}
-                  </button>
-                </div>
-                {needsDate ? (
-                  <small id={publishHintId} data-testid={`provider-${row.id}-publish-hint`}>
-                    {labels.confirmFirst}
-                  </small>
-                ) : null}
-              </Stack>
+              <button
+                className={`hub-button ${row.published ? "hub-button--secondary" : "hub-button--primary"} provider-record__publish`}
+                type="submit"
+                disabled={busy || needsDate}
+                aria-describedby={needsDate ? publishHintId : undefined}
+              >
+                {row.published ? labels.unpublish : labels.publish}
+              </button>
+              {needsDate ? (
+                <small id={publishHintId} className="provider-record__publish-hint" data-testid={`provider-${row.id}-publish-hint`}>
+                  {labels.confirmFirst}
+                </small>
+              ) : null}
             </form>
           </div>
         )}
