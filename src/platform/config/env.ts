@@ -201,6 +201,13 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional                 the rerank calls a calendar month (America/Toronto) may use, counted
  *                                                        from spend_event (kind rerank); at it the reranker is no longer called
  *                                                        that month. Default 900: Cohere allows about 1,000 a month per model
+ * SEARCH_EMBED_MONTHLY_CALLS
+ *                      server   optional                 the embedding calls of the search model (SEARCH_EMBED_MODEL) a calendar
+ *                                                        month (America/Toronto) is budgeted, every purpose (searches, publishes,
+ *                                                        test-set runs), or `off`. Default 1000, the per-model monthly cap Cohere
+ *                                                        applies to other models on the key (not confirmed for embeddings). A
+ *                                                        warning only: at 80% of it ops gets one `search.leg_failed` event
+ *                                                        (`embed_quota_near`) per month per instance; nothing is refused
  * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
  *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
  *                                                        tokens the directory publish may use in a calendar month
@@ -329,6 +336,7 @@ const rawSchema = z.object({
   SEARCH_RERANK_MIN: optionalText,
   SEARCH_CRISIS_PHRASES: optionalText,
   SEARCH_RERANK_MONTHLY_CALLS: optionalText,
+  SEARCH_EMBED_MONTHLY_CALLS: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
@@ -370,6 +378,8 @@ export interface SearchSettings {
   rerankMin: number;
   /** The rerank calls a calendar month may use before the reranker is no longer called. */
   rerankMonthlyCalls: number;
+  /** The search embedding model's calls a calendar month is budgeted (every purpose): ops is warned at 80%; null: no warning. */
+  embedMonthlyCalls: number | null;
   /** Whether a question that describes an emergency in words turns `emergency_first` on (SEARCH_CRISIS_PHRASES). */
   crisisPhrases: boolean;
 }
@@ -467,6 +477,7 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   rerank: true,
   rerankMin: 0.05,
   rerankMonthlyCalls: 900,
+  embedMonthlyCalls: 1000,
   crisisPhrases: true,
 };
 
@@ -829,6 +840,16 @@ function parseTokenEstimate(value: string | undefined, problems: string[]): numb
 }
 
 /** A whole number of at least 1 from a variable, or the default; a bad value is a problem that names the variable, never the value. */
+/** `positiveInteger` for a setting that `off` also turns off (handled by the caller): the message names both. */
+function positiveIntegerOr(name: string, value: string | undefined, fallback: number | null, problems: string[]): number | null {
+  if (value === undefined) return fallback;
+  if (!/^[0-9]{1,12}$/.test(value.trim()) || Number(value) < 1) {
+    problems.push(`${name}: must be a whole number of at least 1, or \`off\``);
+    return fallback;
+  }
+  return Number(value);
+}
+
 function positiveInteger(name: string, value: string | undefined, fallback: number, problems: string[]): number {
   if (value === undefined) return fallback;
   if (!/^[0-9]{1,12}$/.test(value.trim()) || Number(value) < 1) {
@@ -973,6 +994,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     rerank: parseSwitch("SEARCH_RERANK", raw.SEARCH_RERANK, defaults.rerank, problems),
     rerankMin: unitNumber("SEARCH_RERANK_MIN", raw.SEARCH_RERANK_MIN, defaults.rerankMin, "0.05", problems),
     rerankMonthlyCalls: positiveInteger("SEARCH_RERANK_MONTHLY_CALLS", raw.SEARCH_RERANK_MONTHLY_CALLS, defaults.rerankMonthlyCalls, problems),
+    embedMonthlyCalls: raw.SEARCH_EMBED_MONTHLY_CALLS?.trim().toLowerCase() === "off" ? null : positiveIntegerOr("SEARCH_EMBED_MONTHLY_CALLS", raw.SEARCH_EMBED_MONTHLY_CALLS, defaults.embedMonthlyCalls, problems),
     crisisPhrases: parseSwitch("SEARCH_CRISIS_PHRASES", raw.SEARCH_CRISIS_PHRASES, defaults.crisisPhrases, problems),
   };
 }

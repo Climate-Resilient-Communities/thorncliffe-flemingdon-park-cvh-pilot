@@ -671,6 +671,7 @@ describe("Cohere and the search settings (S03.02)", () => {
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
+      embedMonthlyCalls: 1000,
       crisisPhrases: true,
     });
   });
@@ -682,6 +683,16 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(() => parseEnv({ ...production, SEARCH_RERANK_MIN: "5" })).toThrow(/SEARCH_RERANK_MIN: must be a number from 0 to 1/);
     expect(() => parseEnv({ ...production, SEARCH_RERANK_MONTHLY_CALLS: "0" })).toThrow(/SEARCH_RERANK_MONTHLY_CALLS: must be a whole number of at least 1/);
     expect(parseSearchEnv({ SEARCH_RERANK: "off" }).rerank).toBe(false);
+  });
+
+  it("reads SEARCH_EMBED_MONTHLY_CALLS: default 1000, a whole number of at least 1, or `off` for no warning", () => {
+    expect(parseEnv(production).search.embedMonthlyCalls).toBe(1000);
+    expect(parseEnv({ ...production, SEARCH_EMBED_MONTHLY_CALLS: " 5000 " }).search.embedMonthlyCalls).toBe(5000);
+    expect(parseEnv({ ...production, SEARCH_EMBED_MONTHLY_CALLS: " Off " }).search.embedMonthlyCalls).toBeNull();
+    for (const bad of ["0", "-1", "1.5", "lots"]) {
+      expect(() => parseEnv({ ...production, SEARCH_EMBED_MONTHLY_CALLS: bad })).toThrow(/SEARCH_EMBED_MONTHLY_CALLS: must be a whole number of at least 1, or `off`/);
+    }
+    expect(parseSearchEnv({ SEARCH_EMBED_MONTHLY_CALLS: "off" }).embedMonthlyCalls).toBeNull();
   });
 
   it("reads SEARCH_CRISIS_PHRASES: on unless `off`, anything else refused", () => {
@@ -721,6 +732,7 @@ describe("Cohere and the search settings (S03.02)", () => {
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
+      embedMonthlyCalls: 1000,
       crisisPhrases: true,
     });
   });

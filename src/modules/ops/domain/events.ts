@@ -43,9 +43,22 @@ export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
  * (`SEARCH_TRANSLATE_MONTHLY_CALLS`), a warning before the 429s begin (no search failed: `ms` is 0).
  * `rerank_failed`: the direct route's rerank failed or timed out (the question was ranked by similarity instead; `error` says how:
  * `timed_out`, `rerank_failed:limited`); `rerank_quota`: the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS (or could not
- * be counted: `error` is `count_failed`), so the reranker is not called until the month ends.
+ * be counted: `error` is `count_failed`), so the reranker is not called until the month ends; `rerank_skipped`: the rerank was not tried
+ * (`error` `no_time`: too little of the leg's time was left after the embedding; `limited`: backing off for 5 minutes after a 429), so the
+ * question was ranked by similarity. `embed_quota_near`: the month's embedding calls of the search model (every purpose) have reached 80%
+ * of SEARCH_EMBED_MONTHLY_CALLS, a warning before the vendor's 429s would make every search answer `search_unavailable` (`ms` is 0).
  */
-export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used", "translate_quota_near", "rerank_failed", "rerank_quota"] as const;
+export const SEARCH_LEG_FAILURE_REASONS = [
+  "embed_failed",
+  "translate_failed",
+  "translate_quota",
+  "translate_fallback_used",
+  "translate_quota_near",
+  "rerank_failed",
+  "rerank_quota",
+  "rerank_skipped",
+  "embed_quota_near",
+] as const;
 
 /** The launch bar's measures (S03.08's `bar.json`): a language's hit rate, the no-match accuracy and the emergency accuracy (S03.09). */
 export const SEARCH_BAR_MEASURES = ["hit_rate", "no_match_accuracy", "emergency_accuracy"] as const;

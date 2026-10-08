@@ -1,6 +1,6 @@
 // The direct route's reranker (interim tuning of 2026-10-07, arm R2) with fakes for the snapshot, the embedding model, the
 // reranker and the month's count: which questions are reranked, what the results are, the fallback to the floor and gap on a
-// timeout, a 429, the monthly limit or too little time, and the emergency flag, which the rerank never changes. Time is vitest's
+// timeout, a 429, the monthly limit or too little time (each told to ops), and the emergency flag, which the rerank never changes. Time is vitest's
 // fake clock. The count over spend_event is in test/db/search.db.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SpendEventInput } from "@/modules/spend";
@@ -214,6 +214,11 @@ describe("the direct route's reranker", () => {
       expect((await ask(search, TAGALOG, "tl")).results).toEqual([]);
       expect(rr.calls).toHaveLength(1);
       expect(seen.at(-1)!.rerank).toBe("limited");
+      // The search that skipped the call while backing off is told to ops as well (SIT F4), with no question in it.
+      expect(notes.slice(1)).toEqual([{ reason: "rerank_skipped", releaseV: 3, ms: expect.any(Number), answered: true, model: "rerank-v3.5", error: "limited" }]);
+      // Once a minute per reason and model: a second skip within the minute writes nothing more.
+      await ask(search, TAGALOG, "tl");
+      expect(notes).toHaveLength(2);
 
       await vi.advanceTimersByTimeAsync(RERANK_LIMITED_BACKOFF_MS);
       await ask(search, TAGALOG, "tl");
@@ -255,7 +260,20 @@ describe("the direct route's reranker", () => {
 
       expect(result.results.map((r) => r.provider_id)).toEqual(FALLBACK);
       expect(rr.calls).toHaveLength(0);
-      expect(notes).toEqual([]);
+      // Not called, so not counted (nothing reached the vendor), but told to ops (SIT F4): the fallback is no longer silent.
+      expect(spends.filter((s) => s.kind === "rerank")).toEqual([]);
+      expect(notes).toEqual([{ reason: "rerank_skipped", releaseV: 3, ms: expect.any(Number), answered: true, model: "rerank-v3.5", error: "no_time" }]);
+      expect(seen.at(-1)!.rerank).toBe("no_time");
+    });
+
+    it("when the embedding left too little time even before the month's count is checked (a slow embedding, as seen live)", async () => {
+      const rr = fakeReranker();
+      // The embedding alone takes 2.0 s of the leg's 2.2 s.
+      const result = await ask(service({ reranker: rr.reranker, embedMs: 2000 }), SPANISH, "es");
+
+      expect(result.results.map((r) => r.provider_id)).toEqual(FALLBACK);
+      expect(rr.calls).toHaveLength(0);
+      expect(notes).toEqual([expect.objectContaining({ reason: "rerank_skipped", error: "no_time", model: "rerank-v3.5" })]);
       expect(seen.at(-1)!.rerank).toBe("no_time");
     });
 

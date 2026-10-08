@@ -118,6 +118,17 @@ describe("ops events", () => {
       severity: "warning",
       detail: { reason: "translate_quota_near", ms: 0, model: "north-small-translate-09-2026" },
     });
+    // A rerank that was not tried (too little time, or backing off a 429), and the search embedding model near its monthly budget (no request: ms 0).
+    for (const error of ["no_time", "limited"]) {
+      expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason: "rerank_skipped", ms: 2000, model: "rerank-v3.5", error } })).toMatchObject({
+        severity: "warning",
+        detail: { reason: "rerank_skipped", ms: 2000, model: "rerank-v3.5", error },
+      });
+    }
+    expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason: "embed_quota_near", ms: 0, model: "embed-v4.0" } })).toMatchObject({
+      severity: "warning",
+      detail: { reason: "embed_quota_near", ms: 0, model: "embed-v4.0" },
+    });
     // The classification of the failed call is a code, like the one of a search that could not answer, and never a message.
     for (const [reason, error] of [["translate_quota", "translate_failed:quota"], ["translate_failed", "translate_failed:unavailable"], ["embed_failed", "42501"], ["embed_failed", "timed_out"]] as const) {
       expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300, model: "north-small-translate-09-2026", error } })).toMatchObject({ detail: { reason, ms: 300, model: "north-small-translate-09-2026", error } });
