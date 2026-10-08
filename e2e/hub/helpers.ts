@@ -18,5 +18,5 @@ export async function expectBaseline(page: Page, name: string, options: { fullPa
     });
     return;
   }
-  await expect.soft(page).toHaveScreenshot(name, options); // TEMPORARY: soft to collect every new baseline in one CI run
+  await expect(page).toHaveScreenshot(name, options);
 }
