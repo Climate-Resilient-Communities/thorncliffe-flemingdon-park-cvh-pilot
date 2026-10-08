@@ -38,8 +38,10 @@
 /* Account identity and sign-out share the bar at every width. */
 .hub-top { flex-wrap: nowrap; }
 .hub-top__who { flex-wrap: nowrap; justify-content: flex-end; }
-.hub-top__person { flex: 1 1 auto; }
-.hub-top__signout { flex: none; }
+.hub-top__person { flex: 1 1 auto; min-inline-size: 0; }
+/* On one line with the person, so both shrink and wrap: a long translated sign-out label never pushes the person out of the viewport. */
+.hub-top__signout { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 50%; }
+.hub-top__signout button { max-inline-size: 100%; overflow-wrap: anywhere; }
 .hub-top__context { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
 .hub-top__role { display: block; }
 .hub-top__app { display: none; }

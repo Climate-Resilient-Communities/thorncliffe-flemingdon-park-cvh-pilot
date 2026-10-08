@@ -2,8 +2,8 @@
 // threads, the person's own alerts, and the drills in their own labelled section. Pure: the layout tests and the screenshots render it on a view they built,
 // and the Hub home renders it on the person's own (IncidentsPanel.tsx).
 //
-// Below 800 px of content width it is one column, the main content first (what waits for the person, always above the links that start something, then the open threads, the person's alerts) and the aside (the drills)
-// after it, filling the width; from 800 px two columns with the page's approved gap. A Director gets the same screen with no link to anything that
+// Below 800 px of content width it is one column, the main content first (what waits for the person, always above the links that start something, then the open threads, the person's alerts) and the second
+// column (the routine tasks, then the drills) after it, filling the width; from 800 px two columns with the page's approved gap. A Director gets the same screen with no link to anything that
 // changes something.
 import { englishText } from "@/i18n/text";
 import { Grid, Stack } from "@/ui";
@@ -119,28 +119,38 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
       )}
     </Stack>
   );
+  // The second column: the routine tasks between disruptions in a section of their own, then the drills in their own labelled aside (a quiet home
+  // has no drills to list, so it shows the routine tasks only).
   const aside = (
-    <aside aria-labelledby={view.routine ? "routine-heading" : "incidents-drills-title"} data-testid="incidents-drills">
-      <Stack gap="related">
-        {view.routine && <section aria-labelledby="routine-heading">
+    <Stack gap="section-hub-main" testId="incidents-side">
+      {view.routine && (
+        <section aria-labelledby="routine-heading" data-testid="incidents-routine">
           <Stack gap="related">
-            <h2 id="routine-heading">{englishText("staff.homeTasks.routine")}</h2>
+            <h2 id="routine-heading" className="hub-wrap">{englishText("staff.homeTasks.routine")}</h2>
             <p>{englishText("staff.homeTasks.routineDetail")}</p>
             <Stack as="ul" gap="stack">
-              {view.routine.map(task => <li key={task.href}>
-                <a className="hub-link tap" href={task.href}>{task.label}</a>
-                <p>{task.detail}</p>
-              </li>)}
+              {view.routine.map((task) => (
+                <li key={task.href}>
+                  <a className="hub-link tap" href={task.href}>
+                    {task.label}
+                  </a>
+                  <p>{task.detail}</p>
+                </li>
+              ))}
             </Stack>
           </Stack>
-        </section>}
-        {!quiet && <>
-        <h2 id="incidents-drills-title" className="hub-wrap">{view.drills.title}</h2>
-        <p>{view.drills.items.length > 0 ? view.drills.lead : view.drills.none}</p>
-        {view.drills.items.length > 0 && <Items items={view.drills.items} id="drill" />}
-        </>}
-      </Stack>
-    </aside>
+        </section>
+      )}
+      {!quiet && (
+        <aside aria-labelledby="incidents-drills-title" data-testid="incidents-drills">
+          <Stack gap="related">
+            <h2 id="incidents-drills-title" className="hub-wrap">{view.drills.title}</h2>
+            <p>{view.drills.items.length > 0 ? view.drills.lead : view.drills.none}</p>
+            {view.drills.items.length > 0 && <Items items={view.drills.items} id="drill" />}
+          </Stack>
+        </aside>
+      )}
+    </Stack>
   );
   return (
     <Grid twoColumn="aside">

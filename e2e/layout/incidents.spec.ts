@@ -130,7 +130,11 @@ for (const home of HOMES) {
         await page.setViewportSize({ width: 390, height: 844 });
         await open(page, home, lang);
         await expect(grid(page).locator(":scope > *")).toHaveCount(2);
-        await expect(grid(page).locator(":scope > *").nth(1)).toHaveAttribute("data-testid", "incidents-drills");
+        // The second column holds the routine tasks and then the drills aside (a quiet home has no drills to list): the drills are never in the main column.
+        const second = grid(page).locator(":scope > *").nth(1);
+        await expect(second).toHaveAttribute("data-testid", "incidents-side");
+        await expect(grid(page).locator(":scope > *").nth(0).getByTestId("incidents-drills")).toHaveCount(0);
+        await expect(second.getByTestId("incidents-drills")).toHaveCount(await page.getByTestId("incidents-drills").count());
         await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
       }
     });

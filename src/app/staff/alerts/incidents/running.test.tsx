@@ -154,7 +154,9 @@ describe("the list of running alerts as it is drawn", () => {
     const out = html([thread({ isDrill: true })]);
     expect(out).toContain('data-two-column="aside"');
     expect(out.indexOf('data-testid="incidents-mine"')).toBeLessThan(out.indexOf('data-testid="incidents-drills"'));
-    expect(out).toMatch(/<aside aria-labelledby="routine-heading" data-testid="incidents-drills">.*<h2 id="incidents-drills-title" class="hub-wrap">Drills<\/h2>.*data-drill="true"/);
+    expect(out).toMatch(/<aside aria-labelledby="incidents-drills-title" data-testid="incidents-drills">.*<h2 id="incidents-drills-title" class="hub-wrap">Drills<\/h2>.*data-drill="true"/);
+    // The routine tasks are a section of their own beside it, not inside the Drills aside.
+    expect(out.indexOf('data-testid="incidents-routine"')).toBeLessThan(out.indexOf("<aside"));
     expect(html([])).not.toContain('id="incidents-drills-title"');
   });
 });
