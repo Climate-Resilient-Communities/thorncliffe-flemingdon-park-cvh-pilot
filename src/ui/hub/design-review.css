@@ -37,6 +37,8 @@
 
 /* Account identity and sign-out share the bar at every width. */
 .hub-top { flex-wrap: nowrap; }
+/* The menu button and the symbol keep their size; the person and sign-out take what is left and wrap (never under the menu button). */
+.hub-top__brand { flex: none; }
 .hub-top__who { flex-wrap: nowrap; justify-content: flex-end; }
 .hub-top__person { flex: 1 1 auto; min-inline-size: 0; }
 /* On one line with the person, so both shrink and wrap: a long translated sign-out label never pushes the person out of the viewport. */

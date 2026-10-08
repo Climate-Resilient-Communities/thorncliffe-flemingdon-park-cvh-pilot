@@ -112,6 +112,9 @@ test.describe("at 390 px", () => {
       await expectShellDoesNotOverflow(page);
       await expectInsideViewport(page, [menuButton(page), page.getByTestId("hub-person"), page.getByTestId("hub-sign-out").getByRole("button")]);
       expect(await smallTargets(page)).toEqual([]);
+      // The person and sign-out share the bar with the menu button and never cover it, however long the labels.
+      const [menu, person, signOut] = await Promise.all([box(menuButton(page)), box(page.getByTestId("hub-person")), box(page.getByTestId("hub-sign-out"))]);
+      for (const other of [person, signOut]) expect(other.right <= menu.left + 0.5 || other.left >= menu.right - 0.5, "beside the menu button").toBe(true);
 
       // The navigation is one tap away, in the drawer.
       await menuButton(page).click();
