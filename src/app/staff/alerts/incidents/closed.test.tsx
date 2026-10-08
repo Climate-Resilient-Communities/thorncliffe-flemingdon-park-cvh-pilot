@@ -73,7 +73,7 @@ describe("what closed lately, on the Hub home", () => {
     const view = incidentsView(none, "coordinator", undefined, [running()], undefined, [closed()]);
     expect(view.running?.items.map((item) => item.key)).toEqual([`running-${OTHER_ALERT}`]);
     const out = renderToStaticMarkup(<IncidentsList view={view} />);
-    const closedSection = out.slice(out.indexOf('data-testid="incidents-closed"'));
+    const closedSection = out.slice(out.indexOf('data-testid="incidents-closed"')).split("</section>")[0];
     expect(closedSection).not.toContain("/staff/alerts/update");
     expect(closedSection).not.toContain("/staff/alerts/resolve");
     expect(closedSection).not.toContain("hub-link");

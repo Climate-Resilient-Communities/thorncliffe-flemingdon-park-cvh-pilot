@@ -2860,4 +2860,12 @@ m(en, { staff: { journey: {
   exportHelp: 'How to export these figures',
   campaign: 'End of pilot'
 } } });
+m(en, { staff: { homeTasks: {
+quiet: 'No alerts are running, and there are no drafts or approvals waiting on this page.',
+start: 'Respond to a disruption', startDetail: 'Log a disruption to record what happened. Compose an alert when you have a message for residents; another staff member must approve it before it is sent.',
+routine: 'Between disruptions', routineDetail: 'Use quieter periods to check readiness and keep resident information current.',
+coverage: 'Check building coverage', coverageDetail: 'See which buildings and floors have ambassador coverage.',
+measures: 'Review pilot measures', measuresDetail: 'Review subscriber counts and how far alerts reached.',
+providers: 'Keep the directory current', providersDetail: 'Confirm provider details, then publish a directory release for residents.'
+} } });
 })();

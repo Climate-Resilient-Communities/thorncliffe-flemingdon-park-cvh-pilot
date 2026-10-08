@@ -188,7 +188,7 @@ test("the Hub home of a Director is read-only: the open threads and no link to a
   await fitToPage(page, 390);
   await expect(page.getByTestId("read-only")).toBeVisible();
   await expect(page.getByTestId("running-item")).toHaveCount(2);
-  await expect(page.locator(".layout-screen__body a[href]")).toHaveCount(0);
+  await expect(page.locator('.layout-screen__body a[href^="/staff/alerts/"]')).toHaveCount(0);
   await expectBaseline(page, "incidents-director-390.png");
 });
 
@@ -197,9 +197,9 @@ test("the Hub home with nothing open, at 390px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await mount(page, "IncidentsFixture", { texts: REAL_TEXTS, brand, view });
   await fitToPage(page, 390);
-  await expect(page.getByTestId("incidents-waiting")).toContainText("Nothing is waiting for your approval.");
-  await expect(page.getByTestId("incidents-running")).toContainText("No alert is running.");
-  await expect(page.getByTestId("incidents-drills")).toContainText("No drill is running.");
+  await expect(page.getByTestId("incidents-waiting")).toHaveCount(0);
+  await expect(page.getByTestId("incidents-running")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Between disruptions" })).toBeVisible();
   await expectBaseline(page, "incidents-empty-390.png");
 });
 

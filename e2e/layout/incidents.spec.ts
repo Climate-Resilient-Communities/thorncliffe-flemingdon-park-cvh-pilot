@@ -199,7 +199,8 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(page.getByTestId("running-item")).toHaveCount(2);
     await expect(page.getByTestId("incidents-waiting")).toHaveCount(0);
     await expect(page.getByTestId("incidents-start")).toHaveCount(0);
-    await expect(hubPage(page).locator("a[href]")).toHaveCount(0);
+    await expect(hubPage(page).locator('a[href^="/staff/alerts/"]')).toHaveCount(0);
+    await expect(hubPage(page).locator('a[href="/staff/coverage"]')).toHaveCount(1);
   });
 
   test("offers a Coordinator the two ways to start, and each open thread's one next step", async ({ page }) => {

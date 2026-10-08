@@ -6221,6 +6221,19 @@
       "publishDirectory": "[EN] Review and publish directory",
       "exportHelp": "[EN] How to export these figures",
       "campaign": "[EN] End of pilot"
+    },
+    "homeTasks": {
+      "quiet": "[EN] No alerts are running, and there are no drafts or approvals waiting on this page.",
+      "start": "[EN] Respond to a disruption",
+      "startDetail": "[EN] Log a disruption to record what happened. Compose an alert when you have a message for residents; another staff member must approve it before it is sent.",
+      "routine": "[EN] Between disruptions",
+      "routineDetail": "[EN] Use quieter periods to check readiness and keep resident information current.",
+      "coverage": "[EN] Check building coverage",
+      "coverageDetail": "[EN] See which buildings and floors have ambassador coverage.",
+      "measures": "[EN] Review pilot measures",
+      "measuresDetail": "[EN] Review subscriber counts and how far alerts reached.",
+      "providers": "[EN] Keep the directory current",
+      "providersDetail": "[EN] Confirm provider details, then publish a directory release for residents."
     }
   },
   "building": {

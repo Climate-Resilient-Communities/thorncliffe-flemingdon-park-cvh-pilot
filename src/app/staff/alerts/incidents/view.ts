@@ -51,6 +51,7 @@ interface Section {
 }
 
 export interface IncidentsView {
+  routine?: { label: string; href: string; detail: string }[];
   title: string;
   lead: string;
   /** "Read-only: ..." for a Director; null for the roles that act. */
@@ -161,6 +162,11 @@ export function incidentsView(
   const closedItems = author || director ? [...closed].sort((a, b) => b.closedAt.getTime() - a.closedAt.getTime()).map((thread) => closedOf(thread, t)) : [];
   const drills = [...waiting.filter((item) => item.drill), ...runningItems.filter((item) => item.drill), ...closedItems.filter((item) => item.drill), ...mine.filter((item) => item.drill)];
   return {
+    routine: [
+      { label: englishText("staff.homeTasks.coverage"), href: "/staff/coverage", detail: englishText("staff.homeTasks.coverageDetail") },
+      { label: englishText("staff.homeTasks.measures"), href: "/staff/measures", detail: englishText("staff.homeTasks.measuresDetail") },
+      ...(role === "admin" ? [{ label: englishText("staff.homeTasks.providers"), href: "/staff/providers", detail: englishText("staff.homeTasks.providersDetail") }] : []),
+    ],
     title: t("title"),
     lead: t("lead"),
     readOnly: director ? t("readOnly") : null,

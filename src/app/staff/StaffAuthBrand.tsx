@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- Staff navigation reloads session and safety banners; resident destinations cross root layouts. */
 import { englishText } from "@/i18n/text";
 
 /** A consistent identity and a way back to the public app throughout staff authentication. */
