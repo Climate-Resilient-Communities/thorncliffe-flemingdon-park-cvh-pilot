@@ -4,12 +4,9 @@
 // label rules, rename keeping the id, removal refused for a floor with assignments (a stub, until S01.14),
 // confirmation, one audit record per change, and the grants and RLS of the three tables.
 import { randomBytes, randomUUID } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { main as seedBuildings } from "../../scripts/seed/buildings-seed";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
 import {
   BuildingImportRefusedError,
