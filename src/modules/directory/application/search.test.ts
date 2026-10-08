@@ -237,7 +237,7 @@ describe("the translated-question leg", () => {
       expect(of("I need a lawyer")).toBeNull();
       expect(of(URDU)).toBe("ur"); // confident Urdu (owner decision 40)
       expect(of(URDU, "ur")).toBe("ur");
-      // Translate-first: translated only where the route names a model for the language (by default Tamil and Punjabi).
+      // Translate-first: translated only where the route names a model for the language (by default Tamil, Punjabi, Bengali, Greek and Chinese).
       expect(of("Necesito un abogado")).toBe("es");
       expect(of("எனக்கு உணவு எங்கே கிடைக்கும்?")).toBe("ta");
     });

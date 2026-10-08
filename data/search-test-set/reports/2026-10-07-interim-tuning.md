@@ -504,3 +504,140 @@ ambiguous Arabic-script questions use: they were already on Command A Translate 
 
 **Cost.** One Command A Translate call per Tamil or Punjabi search, until the model's month reaches 600. **Interim**, as the rest:
 machine-drafted questions, ten per language.
+
+## 11. Translate-first for Bengali, Greek and Chinese, measured with the real model (2026-10-07)
+
+**Why.** Section 10 found bn, gu, el and zh promising only on hand-written translations (an upper bound): the experiment key's
+translation month ran out before the real model could translate them. This run translates them with the model production would
+use and applies the same decision rule.
+
+**How (offline, no production change).** The 26 test questions the use case's detector routes to `bn`, `gu`, `el` or `zh`
+(`questionSourceOf(detect(q, page language))`) were translated by Command A Translate (`command-a-translate-08-2025`, the model
+`ta` and `pa` use) through production's question translator (`createQuestionTranslator` over `cohereTranslator`: the source
+language named in the system prompt, temperature 0, `normaliseTranslation`, then `checkTranslation`'s English and length
+checks), on the experiment key (key 1, never production's), paced at one call per 6.5 s. Every call answered and passed the
+checks. The new English texts were embedded (`embed-v4.0`, `search_query`, one batched call) and all 193 questions replayed
+through the real `createSearch` with the cached vectors and #158's cached rerank answers, as in section 10: arm (a) as on main
+(`ta` and `pa` translate-first, the reranker on the direct route), arm (b) with `bn`, `gu`, `el` and `zh` also translated. Arm (a)
+reproduces section 10's "as built" numbers exactly (all 193: hit@3 77.9, shown 82.0, no-match 81.0, emergency 73.7, false
+positives 4.7).
+
+The other questions written in these languages are not their own kind and are the same in both arms: romanized ones already take
+the leg as `romanized_or_mixed` (gu-06, gu-08, gu-10, el-05, el-10, bn-10, zh-08), some are read as another language (el-03 and
+bn-05 as Tagalog, bn-08 as French, bn-11 as Slovak) or as nothing confident (gu-04, el-08, bn-03, bn-06). No question written in
+another language is routed to `bn`, `gu`, `el` or `zh`, so switching them on changes nothing elsewhere.
+
+Vendor calls (key 1): 26 Command A Translate calls, all answered (no 429); 1 embedding call (18 texts, 206 tokens); no rerank
+call; no North Small Translate call.
+
+| lang | n | arm | hit@3 | shown | no-match ok | emergency | false-pos | qualifies |
+|---|---|---|---|---|---|---|---|---|
+| bn | 11 | (a) main | 60.0 | 60.0 | 100.0 | 100.0 | 0.0 | |
+| bn | 11 | **(b) translate-first** | **70.0** | 70.0 | 100.0 | 100.0 | 0.0 | **yes** (+10.0) |
+| gu | 10 | (a) main | 88.9 | 88.9 | 100.0 | 100.0 | 0.0 | |
+| gu | 10 | (b) translate-first | 88.9 | 100.0 | 100.0 | 100.0 | 10.0 | no (+0.0) |
+| el | 10 | (a) main | 55.6 | 66.7 | 100.0 | 0.0 | 10.0 | |
+| el | 10 | **(b) translate-first** | **66.7** | 66.7 | 100.0 | 0.0 | 0.0 | **yes** (+11.1) |
+| zh | 10 | (a) main | 77.8 | 88.9 | 100.0 | 100.0 | 10.0 | |
+| zh | 10 | **(b) translate-first** | **100.0** | 100.0 | 100.0 | 100.0 | 0.0 | **yes** (+22.2) |
+
+One question is 10 (bn, el, zh: 9 or 10 answerable) or 11.1 points of hit@3. bn gains bn-07 (a man threatening with a knife:
+the police, M001, now shown, where nothing was; the emergency flag was already on); el gains el-07 ("English courses for adults":
+M051 in the top 3, where (a) showed only unexpected providers); zh gains zh-06 (landlord eviction: legal aid, M022) and zh-07 (someone beating me downstairs: the police, M001,
+instead of the fire service, (a)'s false positive). Every other changed question keeps its hit, mostly with the expected
+providers higher. gu gains no hit: its one change is gu-07, "the landlord is evicting me", which the model turned into "What should
+I do if the landlord vacates the house?" and the hybrid route answered with two unrelated providers (shown up, a false positive);
+its no-match question (gu-09, a gold jewellery shop, translated as "the shop of Sonadagi Nani") shows nothing in both arms.
+The real translations land below section 10's hand-written upper bound (bn 100, el 77.8, zh 100) because only the questions the
+detector reads confidently as the language are translated.
+
+**Decision (the product owner's rule: hit@3 up by at least 10 points, no-match accuracy no worse):** Bengali, Greek and Chinese
+on, with Command A Translate and no fallback model, like Tamil and Punjabi; Gujarati stays direct.
+
+All 193 questions with bn, el and zh on (as built): hit@3 77.9 → 80.2, shown 82.0 → 83.1, no-match 81.0 (unchanged), emergency
+flag 73.7 (unchanged), false positives 4.7 → 3.6; every other language unchanged.
+
+**The monthly reserve.** `SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS` (600) counts every translate call of the model in the month,
+alert translation's included, and only stops search: so adding languages cannot take alert translation below its ~400 calls; in a
+busy month the translate-first questions only reach 600 sooner and are then searched directly (today's route). For a modest pilot
+(a few hundred searches a month, of which Bengali, Greek and Chinese questions in their own script are a small share, say 30 to
+100) the five translate-first languages together should stay well under 600 with alert translation's own use (5–6 calls an
+alert entry) on top, so 600 stays. What still is not gated: romanized and ambiguous Arabic-script questions. Watch the model's
+monthly `spend_event` count and `translate_quota` events in the first month.
+
+**Cost.** One Command A Translate call per Bengali, Greek or Chinese search in its own script (as for Tamil and Punjabi), until the
+model's month reaches 600. **Interim**, as the rest: machine-drafted questions, ten per language; S03.08's ambassador questions
+confirm or revise the list.
+
+## 12. Tagalog with real native-speaker questions (Amazon MASSIVE), and the Tagalog route decision (2026-10-07)
+
+**Why.** Section 10 left Tagalog direct on one question: with one no-match question per language, the truck-rental question
+showing four providers once translated made no-match accuracy 100 → 0. That was too thin to decide on. With the product owner's
+approval, 42 Tagalog questions written by native speakers were added from Amazon's MASSIVE dataset (`tl-12` to `tl-53`, author
+`massive-tl`, CC BY 4.0; the README's "Questions from public datasets" says what was chosen, how it was labelled and the
+attribution). Tagalog now has 53 questions: 40 answerable (2 of them emergencies) and 13 no-match.
+
+**How (offline, no production change).** The same method as sections 10 and 11. The detector (`questionSourceOf(detect(q, page
+language))`) routes 57 texts to `tl`: all 53 Tagalog questions, the live "Saan ako makakakuha ng pagkain?", and three questions
+written in other languages (prs-11, el-03 and bn-05, all romanized). The 42 new questions were translated by Command A Translate
+(`command-a-translate-08-2025`) through production's question translator (`createQuestionTranslator` over `cohereTranslator`,
+`normaliseTranslation`, `checkTranslation`), with no fallback model, on the experiment key (key 1), at no more than 5 calls a
+minute. Every call answered and passed the checks. The 15 other texts reuse section 10's real Command A answers. The new questions
+and their English were embedded (`embed-v4.0`, `search_query`). Because the new questions take the direct route on main, each
+one's 20 candidates, exactly as the use case chose them, were sent once to `rerank-v3.5` (as #158 does) and cached. Every
+question was then replayed through the real `createSearch` in two arms:
+
+- (a) main after #160: `ta`, `pa`, `bn`, `el` and `zh` translate-first, Tagalog direct with the reranker.
+- (b) the same, plus `tl` translate-first.
+
+On the 193 earlier questions, arm (a) reproduces section 11's as-built hit@3 of 80.2.
+
+Vendor calls (key 1 only): 42 Command A Translate calls, all answered (no 429); 2 embedding calls (42 questions with 685 tokens,
+then 42 translations with 309 tokens); 42 `rerank-v3.5` calls. No North Small Translate call.
+
+| set | n (answerable / no-match / emergency) | arm | hit@3 | shown | no-match ok | emergency flag | false alarm | false-pos |
+|---|---|---|---|---|---|---|---|---|
+| tl, all | 53 (40 / 13 / 2) | (a) main | 32.5 | 35.0 | **100.0** | 0.0 | 2.0 | 1.9 |
+| tl, all | 53 (40 / 13 / 2) | (b) translate-first | **72.5** | 85.0 | 69.2 | 0.0 | 3.9 | 17.0 |
+| tl, tuning subset | 48 (38 / 10 / 1) | (a) main | 31.6 | 34.2 | **100.0** | 0.0 | 2.1 | 2.1 |
+| tl, tuning subset | 48 (38 / 10 / 1) | (b) translate-first | **73.7** | 86.8 | 70.0 | 0.0 | 4.3 | 16.7 |
+| tl, MASSIVE only | 42 (30 / 12 / 1) | (a) main | 20.0 | 23.3 | **100.0** | 0.0 | 2.4 | 2.4 |
+| tl, MASSIVE only | 42 (30 / 12 / 1) | (b) translate-first | **70.0** | 83.3 | 75.0 | 0.0 | 4.9 | 16.7 |
+| tl, earlier 11 (section 10) | 11 (10 / 1 / 1) | (a) main | 70.0 | 70.0 | 100.0 | 0.0 | 0.0 | 0.0 |
+| tl, earlier 11 (section 10) | 11 (10 / 1 / 1) | (b) translate-first | 80.0 | 90.0 | 0.0 | 0.0 | 0.0 | 18.2 |
+| other languages routed to tl (prs-11, el-03, bn-05) | 3 (3 / 0 / 0) | (a) main | 0.0 | 0.0 | — | — | 0.0 | 0.0 |
+| other languages routed to tl | 3 (3 / 0 / 0) | (b) translate-first | 100.0 | 100.0 | — | — | 33.3 | 0.0 |
+| all 235 | 235 (202 / 33 / 20) | (a) main | 71.3 | 74.3 | 87.9 | 70.0 | 1.4 | 3.4 |
+| all 235 | 235 (202 / 33 / 20) | (b) translate-first | 80.7 | 85.6 | 75.8 | 70.0 | 2.3 | 6.8 |
+
+**What changes.**
+
+- **Gains.** The real phrasings show that the direct route reads Tagalog poorly: arm (a) shows nothing for 26 of the 40 answerable
+  questions. Translation gains 17 hits, among them the library questions, directions to the police, parks and a walking trail,
+  swimming, the farmers' market, jobs, legal advice, health and climate. It loses one: tl-32, "free activities this weekend", gets
+  M081, M033 and M068 instead of a community centre.
+- **No-match losses.** It also shows something for 4 of the 13 no-match questions, where arm (a) showed nothing:
+  - tl-10: the truck rental from section 10.
+  - tl-43: "saan ang pinakamalapit na gasolinahan" ("where is the nearest gas station") gets the five fire stations, with the 911
+    block first.
+  - tl-47: a cat groomer (an evaluation question) gets M079 and M058.
+  - tl-49: "play my music" gets the Aga Khan Museum.
+- **Other languages.** The three questions from other languages that the detector reads as Tagalog all become hits, but prs-11
+  also turns the 911 block on.
+- **Emergencies.** Neither arm handles tl-41, "naaksidente ako sa sasakyan ngayon" ("I had a car accident today"): it gets no
+  result and no 911 block either way. This is a separate emergency gap, noted for S03.07.
+
+**Decision (the product owner's rule: hit@3 up by at least 10 points, no-match accuracy no worse): Tagalog stays direct.** Hit@3
+rises by 40 points (42 on the tuning subset alone), but no-match accuracy falls from 100 to 69.2 (70.0 on the tuning subset).
+Under the rule, the no-match drop decides it. No default changes. If the product owner weighs the 40-point gain above the no-match
+losses, switching Tagalog on takes one `SEARCH_QUESTION_ROUTE` entry (`tl=command-a-translate-08-2025`) and no code change. Most of
+the no-match losses are the hybrid route's threshold showing weak matches for translated questions, which S03.07's
+no-match threshold could address for every translate-first language at once.
+
+**Caveats.**
+
+- **Labels unchecked.** Claude assigned the MASSIVE labels, and nobody who reads Tagalog has checked them.
+- **Not resident questions.** The utterances are native-speaker localizations of voice-assistant requests, not questions residents
+  asked.
+- **Evaluation questions seen.** Four of the new questions went to the evaluation subset (tl-41, tl-47, tl-48, tl-52), and the
+  "tl, all" rows include them. The decision is the same on the tuning subset alone, which is what this section relies on.
