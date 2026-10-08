@@ -13,7 +13,7 @@
 //                        removed or retyped as read from the database (removals.mjs);
 //                        used by the Checks job on its disposable database.
 
-import { appendFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import postgres from "postgres";
@@ -269,6 +269,8 @@ async function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   await main();
 }

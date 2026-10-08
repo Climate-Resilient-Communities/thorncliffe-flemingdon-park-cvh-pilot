@@ -13,7 +13,7 @@
 //   PRODUCTION_URL (or PRODUCTION_RELEASE) is read only when a contract note needs it.
 
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkDestructiveMigrations, lookUpProductionRelease } from "./contracts.mjs";
@@ -26,6 +26,14 @@ function git(args, cwd) {
 }
 
 /**
+ * `dir` relative to the top of the checkout, for git pathspecs. Both sides are real paths: git prints the top level
+ * with its symlinks resolved (macOS's /var is /private/var), and `dir` may have been given through one.
+ */
+function repoRelative(dir, cwd) {
+  return path.relative(realpathSync(git(["rev-parse", "--show-toplevel"], cwd)), realpathSync(dir)) || ".";
+}
+
+/**
  * Migration files added or modified since the merge base of `base` and HEAD
  * (working-tree changes included).
  *
@@ -33,7 +41,7 @@ function git(args, cwd) {
  */
 export function changedMigrations(base, dir, cwd) {
   const mergeBase = git(["merge-base", base, "HEAD"], cwd);
-  const relativeDir = path.relative(git(["rev-parse", "--show-toplevel"], cwd), dir) || ".";
+  const relativeDir = repoRelative(dir, cwd);
   const output = git(["diff", "--name-status", "--no-renames", mergeBase, "--", relativeDir], cwd);
   const added = [];
   const modified = [];
@@ -77,7 +85,7 @@ export function findMisorderedMigrations(added, baseFiles) {
 
 /** File names in the migrations directory on `base`. */
 export function migrationsOnBase(base, dir, cwd) {
-  const relativeDir = path.relative(git(["rev-parse", "--show-toplevel"], cwd), dir) || ".";
+  const relativeDir = repoRelative(dir, cwd);
   const output = git(["ls-tree", "--name-only", base, `${relativeDir}/`], cwd);
   return output.split("\n").filter(Boolean).map((f) => path.basename(f));
 }
@@ -124,6 +132,8 @@ async function main() {
   if (problems.length > 0) process.exitCode = 1;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   await main();
 }

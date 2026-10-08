@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -45,20 +45,26 @@ describe("the Hub's number (src/contracts/hubNumber.generated.ts)", () => {
       copyFileSync(path.join(ROOT, "scripts", "gen-hub-number.mjs"), path.join(dir, "scripts", "gen-hub-number.mjs"));
       copyFileSync(path.join(ROOT, SOURCE), path.join(dir, SOURCE));
       copyFileSync(path.join(ROOT, OUTPUT), path.join(dir, OUTPUT));
-      const run = () => spawnSync(process.execPath, [path.join(dir, "scripts", "gen-hub-number.mjs"), "--check"], { encoding: "utf8" });
+      const run = (root = dir) => spawnSync(process.execPath, [path.join(root, "scripts", "gen-hub-number.mjs"), "--check"], { encoding: "utf8" });
 
       expect(run().status).toBe(0);
+      // Run through a symlink too (a linked checkout; macOS's temporary folder is one): the script still runs, and still finds a stale file.
+      const link = `${dir}-link`;
+      symlinkSync(dir, link);
+      expect(run(link).stdout).toContain(`${OUTPUT} is up to date.`);
 
       writeFileSync(path.join(dir, SOURCE), JSON.stringify({ numbers: numbers.numbers.map((entry) => (entry.id === "hub" ? { ...entry, number: "(416) 555-0100" } : entry)) }));
       const stale = run();
       expect(stale.status).toBe(1);
       expect(stale.stderr).toContain(`${OUTPUT} is stale`);
+      expect(run(link).status).toBe(1);
 
       writeFileSync(path.join(dir, SOURCE), JSON.stringify({ numbers: numbers.numbers.filter((entry) => entry.id !== "hub") }));
       const missing = run();
       expect(missing.status).not.toBe(0);
       expect(missing.stderr).toContain('no number with id "hub"');
     } finally {
+      rmSync(`${dir}-link`, { force: true });
       rmSync(dir, { recursive: true, force: true });
     }
   });
