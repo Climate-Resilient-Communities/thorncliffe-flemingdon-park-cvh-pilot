@@ -4,6 +4,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Verified } from "./verified";
 
+/** The text of rendered markup: the runs between its tags, joined (read out, not sanitised). */
+const textOf = (html: string) => [...`>${html}<`.matchAll(/>([^<]*)</g)].map((match) => match[1]).join("");
+
 const CSS = readFileSync(path.join(__dirname, "verified.css"), "utf8");
 
 describe("the verified badge", () => {
@@ -36,7 +39,7 @@ describe("the verified badge", () => {
     expect(svg).toContain('focusable="false"');
     expect(svg).not.toMatch(/role=|aria-label|<title/);
     // Read out, the badge is its words and nothing else.
-    expect(html.replace(/<svg[\s\S]*<\/svg>/, "").replace(/<[^>]+>/g, "")).toBe("Checked by the Hub · October 2, 2026");
+    expect(textOf(html)).toBe("Checked by the Hub · October 2, 2026");
   });
 
   it("is drawn at 16 or 20 px, square, from a 24-unit box", () => {

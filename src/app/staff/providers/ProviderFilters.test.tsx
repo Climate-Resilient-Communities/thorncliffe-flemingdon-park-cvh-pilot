@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { ProviderFilters } from "./ProviderFilters";
 import { providerFiltersLabels } from "./labels";
 
+/** The text of rendered markup: the runs between its tags, joined (read out, not sanitised). */
+const textOf = (html: string) => [...`>${html}<`.matchAll(/>([^<]*)</g)].map((match) => match[1]).join("");
+
 const render = (filter: "all" | "confirm" | "hidden", q = "") =>
   renderToStaticMarkup(<ProviderFilters query={{ filter, q }} counts={{ all: 99, confirm: 0, hidden: 2 }} labels={providerFiltersLabels()} />);
 
@@ -11,7 +14,7 @@ describe("the Providers filter tabs", () => {
     const html = render("all");
 
     expect(html).toContain('<nav aria-label="Filter providers">');
-    const text = [...html.matchAll(/<a class="provider-tab tap"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => m[1].replace(/<[^>]+>/g, ""));
+    const text = [...html.matchAll(/<a class="provider-tab tap"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => textOf(m[1]));
     expect(text).toEqual(["All 99", "To confirm 0", "Hidden 2"]);
     expect(html).toContain('href="/staff/providers"');
     expect(html).toContain('href="/staff/providers?filter=confirm"');

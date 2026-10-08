@@ -21,6 +21,9 @@ const row = (change: Partial<ProviderRowData> = {}): ProviderRowData => ({
 
 const render = (rows: ProviderRowData[], empty?: string) => renderToStaticMarkup(<ProviderList rows={rows} today="2026-10-02" labels={labels} empty={empty} />);
 
+/** The text of rendered markup: the runs between its tags, joined (read out, not sanitised). */
+const textOf = (html: string) => [...`>${html}<`.matchAll(/>([^<]*)</g)].map((match) => match[1]).join("");
+
 /** The markup of one part of a row, by its data-testid, up to the end of its element (no nesting of the same tag inside). */
 const part = (html: string, testId: string, tag: string) => html.match(new RegExp(`<${tag}[^>]*data-testid="${testId}"[^>]*>[\\s\\S]*?</${tag}>`))?.[0] ?? "";
 
@@ -105,7 +108,7 @@ describe("the providers list: Change opens the date field (a <details>, so it wo
     expect(summary).toMatch(/^<summary class="provider-row__summary tap"/);
     // The rosette is decoration: its words are the name.
     expect(summary).toMatch(/<svg[^>]*aria-hidden="true"/);
-    expect(summary.replace(/<[^>]+>/g, "")).toBe("Confirmed Sep 30, 2026Change");
+    expect(textOf(summary)).toBe("Confirmed Sep 30, 2026Change");
   });
 });
 
