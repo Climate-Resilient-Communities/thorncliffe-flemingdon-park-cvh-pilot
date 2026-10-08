@@ -72,6 +72,58 @@ for (const language of LANGUAGES) {
   });
 }
 
+// A balanced bottom navigation: four items of one width, each one's icon centred in it (±1 px) above its centred label, every icon on one
+// line and every label below it, items at least the tap size (56 px in basic mode). In a left-to-right and a right-to-left language, with
+// standard text, large text (display settings) and basic mode (which brings large text with it).
+const DISPLAY_MODES = [
+  { name: "standard text", choices: {}, basic: false },
+  { name: "large text", choices: { textSize: "large" }, basic: false },
+  { name: "basic mode", choices: { basic: true }, basic: true },
+] as const;
+
+for (const code of ["en", "ur"] as const) {
+  for (const mode of DISPLAY_MODES) {
+    for (const width of WIDTHS) {
+      test(`${code}, ${mode.name}, ${width}px: the bottom navigation's items are equal and each icon and label is centred in its item`, async ({ page }) => {
+        await page.addInitScript(([key, value]) => localStorage.setItem(key, value), ["cvh.choices", JSON.stringify({ v: 1, welcomed: true, ...mode.choices })] as const);
+        await openResident(page, `/${code}`, width);
+        expect(await page.locator("html").getAttribute("data-basic")).toBe(mode.basic ? "true" : null);
+
+        const items = await page.evaluate(() =>
+          [...document.querySelectorAll('[data-testid="shell-nav"] a')].map((item) => {
+            const box = item.getBoundingClientRect();
+            const middle = box.left + box.width / 2;
+            const icon = item.querySelector(".shell-ico")!.getBoundingClientRect();
+            const range = document.createRange();
+            range.selectNodeContents(item.querySelector(".shell-nav__label")!);
+            const text = range.getBoundingClientRect();
+            return {
+              width: box.width,
+              height: box.height,
+              iconOffset: icon.left + icon.width / 2 - middle,
+              textOffset: text.left + text.width / 2 - middle,
+              iconTop: icon.top,
+              iconBottom: icon.bottom,
+              textTop: text.top,
+            };
+          }),
+        );
+
+        expect(items).toHaveLength(4);
+        const tap = mode.basic ? 56 : 44;
+        for (const [index, item] of items.entries()) {
+          expect(Math.abs(item.width - items[0].width), `item ${index}: width`).toBeLessThanOrEqual(1);
+          expect(Math.abs(item.iconOffset), `item ${index}: icon centred`).toBeLessThanOrEqual(1);
+          expect(Math.abs(item.textOffset), `item ${index}: label centred`).toBeLessThanOrEqual(1);
+          expect(Math.abs(item.iconTop - items[0].iconTop), `item ${index}: icons on one line`).toBeLessThanOrEqual(1);
+          expect(item.textTop, `item ${index}: label below its icon`).toBeGreaterThanOrEqual(item.iconBottom);
+          expect(Math.min(item.width, item.height), `item ${index}: tap size`).toBeGreaterThanOrEqual(tap);
+        }
+      });
+    }
+  }
+}
+
 test("every right-to-left page sets dir=rtl, and no other does", async ({ page }) => {
   const dirs: Record<string, string | null> = {};
   for (const { code } of LANGUAGES) {

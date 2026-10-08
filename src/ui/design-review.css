@@ -4,7 +4,6 @@
 .shell :is(p,button,summary) { text-align: start; }
 .shell { grid-template-rows: auto minmax(0, 1fr) auto auto; }
 .shell-header { padding-block: var(--gap-stack); }
-.shell-nav__item { align-items: flex-start; text-align: start; padding-inline: var(--gap-tight); }
 .shell .dir-btn, .shell .dir-call, .shell .shell-langbtn { border-radius: var(--gap-tight); }
 .shell .dir-option { border-radius: var(--gap-tight); border-color: transparent; background: transparent; }
 .shell .dir-option:hover { background: var(--surface-raised); }
@@ -15,8 +14,9 @@
 .shell .dir-card__confirmed { font-size: var(--type-caption-size); }
 .shell .dir-call { justify-content: flex-start; }
 
-/* Footer remains reachable without scrolling through the directory. */
-.shell-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap-target); position: relative; inline-size: 100%; padding-block: 0; padding-inline: var(--inset-card); border-block-start: 1px solid var(--border); background: var(--surface); }
+/* Footer remains reachable without scrolling through the directory. It is the last row on a phone, under the bottom navigation, so it keeps
+   clear of the home indicator (the safe-area inset is 0 unless the page is drawn edge to edge). */
+.shell-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap-target); position: relative; inline-size: 100%; padding-block: 0 env(safe-area-inset-bottom, 0); padding-inline: var(--inset-card); border-block-start: 1px solid var(--border); background: var(--surface); }
 .shell-footer a { display: inline-flex; align-items: center; min-block-size: var(--tap-current); color: var(--text-muted); }
 .shell-tools { color: var(--text-muted); }
 .shell-tools summary { cursor: pointer; display: flex; align-items: center; }
@@ -36,7 +36,8 @@
   .shell { grid-template-rows: auto auto minmax(0, 1fr) auto; }
   .shell-header { padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
   .shell-nav { grid-row: 2; display: flex; gap: var(--gap-stack); padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); border-block-end: 1px solid var(--border); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
-  .shell-nav__item { flex-direction: row; gap: var(--gap-target); padding-inline: var(--gap-stack); border-block-start: 0; border-block-end: 3px solid transparent; }
+  .shell-nav__item { display: flex; flex-direction: row; align-items: center; gap: var(--gap-target); padding-inline: var(--gap-stack); border-block-start: 0; border-block-end: 3px solid transparent; }
+  .shell-nav__item > * { align-self: center; }
   .shell-nav__item[aria-current="page"] { border-block-end-color: currentColor; background: var(--surface); }
   .shell__main { grid-row: 3; }
   .shell-footer { grid-row: 4; }

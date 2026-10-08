@@ -103,6 +103,53 @@ test.describe("at the Hub breakpoint, 699 and 700 px", () => {
   });
 });
 
+// The phone top bar: the menu button, the Hub symbol, the person (name and role) and sign-out each have their own space, none covering
+// another, with the real labels and the longest ones. A name or role too long for its space is cut with an ellipsis on screen; the
+// whole sentence ("Signed in as …, …") is still the person's text, so it is read aloud.
+test.describe("the top bar below the Hub breakpoint", () => {
+  const intersect = (a: { left: number; right: number; top: number; bottom: number }, b: typeof a) =>
+    a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
+  for (const width of [320, 390, HUB_BREAKPOINT - 1]) {
+    for (const [lang, name, texts] of [
+      ["en", "real labels", REAL_TEXTS],
+      ["en", "the longest labels", longestTexts("en")],
+      ["ur", "the longest labels", longestTexts("ur")],
+    ] as const) {
+      test(`${lang}, ${name}, ${width}px: the menu button, the symbol, the person and sign-out do not overlap`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 800 });
+        await open(page, { texts }, lang);
+
+        const parts = {
+          menu: await box(menuButton(page)),
+          symbol: await box(topBar(page).locator(".hub-symbol")),
+          person: await box(page.getByTestId("hub-person")),
+          signOut: await box(page.getByTestId("hub-sign-out").getByRole("button")),
+        };
+        const names = Object.keys(parts) as (keyof typeof parts)[];
+        for (const [index, a] of names.entries()) {
+          for (const b of names.slice(index + 1)) expect(intersect(parts[a], parts[b]), `${a} and ${b} overlap`).toBe(false);
+        }
+        // The text drawn inside the person's box stays inside it (cut with an ellipsis, never running under the symbol or sign-out).
+        const lines = await page.getByTestId("hub-person").evaluate((person) =>
+          [...person.querySelectorAll<HTMLElement>("bdi, .hub-top__role")].map((line) => {
+            const { left, right } = line.getBoundingClientRect();
+            return { left, right, ellipsis: getComputedStyle(line).textOverflow, clipped: line.scrollWidth > line.clientWidth };
+          }),
+        );
+        expect(lines).toHaveLength(2);
+        for (const line of lines) {
+          expect(line.left).toBeGreaterThanOrEqual(parts.person.left - 0.5);
+          expect(line.right).toBeLessThanOrEqual(parts.person.right + 0.5);
+          if (line.clipped) expect(line.ellipsis).toBe("ellipsis");
+        }
+        // Cut on screen, whole for a screen reader.
+        await expect(page.getByTestId("hub-person")).toHaveText(texts.signedInAs.replace("{name}", texts.personName).replace("{role}", texts.role));
+        await expectShellDoesNotOverflow(page);
+      });
+    }
+  }
+});
+
 test.describe("at 390 px", () => {
   for (const { lang } of LANGUAGES) {
     test(`${lang}: navigation, the person and role, and sign-out are reachable without scrolling sideways, with 44 px targets`, async ({ page }) => {

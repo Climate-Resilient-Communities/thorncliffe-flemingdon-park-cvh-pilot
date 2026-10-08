@@ -67,28 +67,35 @@
   }
 
   /*
-   * Navigation: four equal items (the prototype's .cvh-rnav: 18px bold, line height 1.15, 6px 2px padding). The
-   * active one is marked by a block-start border (every item has one). A label wraps between words; inside a word
-   * it breaks only at a hyphenation point (hyphens: auto follows the lang of the element, so the dictionary of the
-   * page's language, or English for a fallback string), and only if the word is wider than the item does
-   * overflow-wrap break it anywhere, so that nothing ever overflows sideways.
+   * Navigation: four equal columns (the prototype's .cvh-rnav: 18px bold, line height 1.15), with at least 8px between two labels. Each item is a centred
+   * column, its icon above its label, and the items share two rows through subgrid: every icon sits on one line and
+   * every label starts on the next, so a label that wraps to two or three lines (a long translation, larger text)
+   * makes all the items taller together and never moves one icon out of line with the others. The icon row and the
+   * label row share whatever height the item minimum adds, the icon at the end of its row and the label at the start
+   * of its own, so the icon and label stay together in the middle of the item. Only the label wraps: the columns stay
+   * equal. A label wraps between words; inside a word it breaks only at a hyphenation point (hyphens: auto follows
+   * the lang of the element), and only if the word is wider than the item does overflow-wrap break it anywhere, so
+   * nothing ever overflows sideways. The active item is marked by its colour and by its block-start border, as wide as
+   * its column (every item has one, transparent when not current).
    */
   .shell-nav {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    row-gap: var(--gap-label);
     background-color: var(--surface-raised);
     border-block-start: 1px solid var(--border);
   }
 
   .shell-nav__item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--gap-subline);
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    justify-items: center;
+    min-inline-size: 0;
     min-block-size: var(--size-nav-item-resident-min);
     padding-block: var(--gap-tight);
-    padding-inline: var(--gap-subline);
+    padding-inline: var(--gap-label);
     border-block-start: var(--offset-align-icon) solid transparent;
     color: var(--text-muted);
     font-size: var(--type-body-size);
@@ -100,10 +107,18 @@
     overflow-wrap: break-word;
   }
 
-  /* As wide as the item, so a long word breaks inside the item instead of widening the label past it. */
+  .shell-nav__item .shell-ico {
+    align-self: end;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+  }
+
+  /* As wide as the item, so a long word breaks inside the item instead of widening the label past it; a label of two lines or more has lines of even length. */
   .shell-nav__label {
-    align-self: stretch;
+    align-self: start;
+    justify-self: stretch;
     min-inline-size: 0;
+    text-wrap: balance;
   }
 
   .shell-nav__item[aria-current="page"] {
@@ -115,9 +130,9 @@
     min-block-size: var(--size-nav-item-resident-min-basic);
   }
 
-  .shell-nav__item .shell-ico {
-    inline-size: 26px;
-    block-size: 26px;
+  :root[data-basic="true"] .shell-nav__item .shell-ico {
+    inline-size: var(--size-icon-basic);
+    block-size: var(--size-icon-basic);
   }
 
   /* Language sheet (R-02): a modal dialog fixed to the block end of the viewport, the prototype's .cvh-sheet. */

@@ -40,7 +40,7 @@ describe("the providers list (screen)", () => {
 
     expect(html).toContain("Thorncliffe Neighbourhood Office");
     expect(html).toContain("Not published");
-    expect(html).toMatch(/<label for="confirm-M001">Date last confirmed<\/label>/);
+    expect(html).toMatch(/<label for="confirm-M001"[^>]*>Date last confirmed<\/label>/);
     const input = html.match(/<input[^>]*id="confirm-M001"[^>]*>/)?.[0] ?? "";
     for (const attribute of ['name="date"', 'type="date"', 'max="2026-10-02"', 'required=""']) expect(input, attribute).toContain(attribute);
     expect(html).toContain(">Save date</button>");
@@ -78,10 +78,10 @@ describe("the providers list (screen)", () => {
     const unpublished = render([row({ lastConfirmed: "2026-09-30" })]);
     const published = render([row({ published: true, lastConfirmed: "2026-09-30" })]);
 
-    expect(unpublished.match(/<button[^>]*>Save date<\/button>/)?.[0]).toContain('class="hub-button hub-button--secondary"');
-    expect(unpublished.match(/<button[^>]*>Publish<\/button>/)?.[0]).toContain('class="hub-button hub-button--primary"');
-    expect(published.match(/<button[^>]*>Unpublish<\/button>/)?.[0]).toContain('class="hub-button hub-button--secondary"');
-    expect(unpublished.match(/<input[^>]*id="confirm-M001"[^>]*>/)?.[0]).toContain('class="hub-input"');
+    expect(unpublished.match(/<button[^>]*>Save date<\/button>/)?.[0]).toMatch(/class="hub-button hub-button--secondary[ "]/);
+    expect(unpublished.match(/<button[^>]*>Publish<\/button>/)?.[0]).toMatch(/class="hub-button hub-button--primary[ "]/);
+    expect(published.match(/<button[^>]*>Unpublish<\/button>/)?.[0]).toMatch(/class="hub-button hub-button--secondary[ "]/);
+    expect(unpublished.match(/<input[^>]*id="confirm-M001"[^>]*>/)?.[0]).toMatch(/class="hub-input[ "]/);
   });
 
   it("keeps an empty status region in every row, and no alert until something is refused", () => {

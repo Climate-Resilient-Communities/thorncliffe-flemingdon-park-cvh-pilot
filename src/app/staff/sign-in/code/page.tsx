@@ -1,7 +1,7 @@
-import { StaffAuthBrand } from "../../StaffAuthBrand";
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
-import { Screen, Stack } from "@/ui";
+import { Stack } from "@/ui";
+import { StaffAuthFrame } from "../../StaffAuthFrame";
 import { AuthenticatorCodeForm } from "../../AuthenticatorCodeForm";
 import { staffPage } from "../../guard";
 import { SignOutButton } from "../../SignOutButton";
@@ -23,29 +23,26 @@ export default staffPage(
     action: "account.own_setup",
   },
   () => (
-    <main>
-      <Screen surface="staff">
-        <div className="hub-gate">
-          <Stack gap="section-hub">
-            <StaffAuthBrand />
-            <Stack gap="related">
-              <h1>{englishText("staff.authenticator.code.title")}</h1>
-              <p>{englishText("staff.authenticator.code.lead")}</p>
-            </Stack>
-            <AuthenticatorCodeForm
-              labels={{
-                code: englishText("staff.authenticator.code.code"),
-                submit: englishText("staff.authenticator.code.submit"),
-                unavailable: englishText(
-                  "staff.authenticator.errors.unavailable",
-                ),
-              }}
-            />
-            <p>{englishText("staff.authenticator.code.lost")}</p>
-            <SignOutButton label={englishText("staff.signOut")} />
+    <StaffAuthFrame>
+      <div className="hub-gate">
+        <Stack gap="section-hub">
+          <Stack gap="related">
+            <h1>{englishText("staff.authenticator.code.title")}</h1>
+            <p>{englishText("staff.authenticator.code.lead")}</p>
           </Stack>
-        </div>
-      </Screen>
-    </main>
+          <AuthenticatorCodeForm
+            labels={{
+              code: englishText("staff.authenticator.code.code"),
+              submit: englishText("staff.authenticator.code.submit"),
+              unavailable: englishText(
+                "staff.authenticator.errors.unavailable",
+              ),
+            }}
+          />
+          <p>{englishText("staff.authenticator.code.lost")}</p>
+          <SignOutButton label={englishText("staff.signOut")} />
+        </Stack>
+      </div>
+    </StaffAuthFrame>
   ),
 );
