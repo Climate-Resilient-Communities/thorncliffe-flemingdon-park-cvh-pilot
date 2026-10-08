@@ -373,7 +373,9 @@ export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS
  * Translate-first (2026-10-07 measurement, data/search-test-set/reports/2026-10-07-interim-tuning.md, "Translate-first"): the
  * launch languages the multilingual embedding reads poorly enough that translating the question to English first wins clearly
  * (hit@3 up at least 10 points, no-match accuracy no worse): Tamil and Punjabi (section 10), and Bengali, Greek and Chinese
- * (section 11, measured with the real model), with Command A Translate (the model the measurements used) and no fallback model.
+ * (section 11, measured with the real model), with Command A Translate (the model the measurements used) and no fallback model;
+ * and Tagalog by the product owner's decision (2026-10-07, section 12): hit@3 33 -> 73 on 53 real questions (42 native-written,
+ * MASSIVE tl-PH), accepting that no-match accuracy falls from 100 to 69 (some off-topic questions show providers).
  * The others are off (searched directly, with the reranker; Gujarati gained nothing); a kind can be switched on or off in
  * SEARCH_QUESTION_ROUTE without a code change.
  */
@@ -383,7 +385,7 @@ const TRANSLATE_FIRST_ROUTE = {
   bn: "command-a-translate-08-2025",
   el: "command-a-translate-08-2025",
   zh: "command-a-translate-08-2025",
-  tl: null,
+  tl: "command-a-translate-08-2025",
   gu: null,
   sk: null,
   hi: null,

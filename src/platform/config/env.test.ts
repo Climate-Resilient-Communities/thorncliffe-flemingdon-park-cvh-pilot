@@ -646,13 +646,14 @@ describe("Cohere and the search settings (S03.02)", () => {
         ur: "north-small-translate-09-2026",
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
-        // Translate-first (2026-10-07 measurements): Tamil, Punjabi, Bengali, Greek and Chinese.
+        // Translate-first (2026-10-07 measurements): Tamil, Punjabi, Bengali, Greek and Chinese; Tagalog by the owner's decision.
         ta: "command-a-translate-08-2025",
         pa: "command-a-translate-08-2025",
         bn: "command-a-translate-08-2025",
         el: "command-a-translate-08-2025",
         zh: "command-a-translate-08-2025",
-        tl: null, gu: null, sk: null, hi: null, es: null, fr: null,
+        tl: "command-a-translate-08-2025",
+        gu: null, sk: null, hi: null, es: null, fr: null,
       },
       questionFallback: {
         ps: null,
@@ -769,13 +770,14 @@ describe("Cohere and the search settings (S03.02)", () => {
     for (const bad of ["0", "-1", "lots", "1.5"]) expect(problemsOf({ ...production, SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: bad }).join("\n"), bad).toMatch(/SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS/);
   });
 
-  it("gives Tamil, Punjabi, Bengali, Greek and Chinese no fallback model: North Small Translate's month is alert translation's", () => {
+  it("gives Tamil, Punjabi, Bengali, Greek, Chinese and Tagalog no fallback model: North Small Translate's month is alert translation's", () => {
     const { questionRoute, questionFallback } = parseEnv(production).search;
-    const on = ["ta", "pa", "bn", "el", "zh"] as const;
+    const on = ["ta", "pa", "bn", "el", "zh", "tl"] as const;
     expect(on.map((kind) => questionRoute[kind])).toEqual(on.map(() => "command-a-translate-08-2025"));
     expect(on.map((kind) => questionFallback[kind])).toEqual(on.map(() => null));
     // Gujarati gained nothing when measured with the real model (report section 11): it stays direct, like the others.
-    expect([questionRoute.gu, questionRoute.tl, questionRoute.sk, questionRoute.hi, questionRoute.es, questionRoute.fr]).toEqual([null, null, null, null, null, null]);
+    // Tagalog is on by the owner's decision (report section 12), so only these stay direct.
+    expect([questionRoute.gu, questionRoute.sk, questionRoute.hi, questionRoute.es, questionRoute.fr]).toEqual([null, null, null, null, null]);
   });
 
   it("reads SEARCH_TRANSLATE_MONTHLY_CALLS: no limit by default, and model=limit pairs", () => {
@@ -799,7 +801,8 @@ describe("Cohere and the search settings (S03.02)", () => {
       bn: "command-a-translate-08-2025",
       el: "command-a-translate-08-2025",
       zh: "command-a-translate-08-2025",
-      tl: null, gu: null, sk: null, hi: null, es: null, fr: null,
+      tl: "command-a-translate-08-2025",
+      gu: null, sk: null, hi: null, es: null, fr: null,
     });
     // A translate-first language is switched on or off like any kind.
     const route = parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "tl=command-a-translate-08-2025,ta=off" }).search.questionRoute;
