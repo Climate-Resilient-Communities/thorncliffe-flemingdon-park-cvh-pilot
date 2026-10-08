@@ -14,7 +14,7 @@ describe("src/app/globals.css", () => {
     const css = await compileCss(path.join(__dirname, "globals.css"), { optimize: true });
 
     expect(PROBE_CLASSES.join(" ")).toContain("p-[13px]");
-    for (const name of PROBE_CLASSES) expect(css, name).not.toContain(name.replace(/[[\]]/g, "\\$&"));
+    for (const name of PROBE_CLASSES) expect(css, name).not.toContain(name.replace(/[[\]\\]/g, "\\$&"));
     expect(css).not.toMatch(/padding:\s*13px/);
   });
 
