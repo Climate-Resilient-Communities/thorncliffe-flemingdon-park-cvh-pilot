@@ -30,7 +30,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
       && contains(github.event.pull_request.labels.*.name, 'preview')
       && (github.event.action != 'labeled' || github.event.label.name == 'preview')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     # One preview run a pull request: a newer push or label replaces a run that is still waiting for the checks or building.
     # Set on the job, not the workflow, so a run skipped for another label never cancels a running preview.
     concurrency:

@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import type { Audience } from "@/contracts/audience";
 import type { BuildingList } from "@/contracts/buildingList";
 import en from "@/i18n/messages/en.json";
-import ur from "@/i18n/messages/ur.json";
 import { AlertCard } from "../alert/alert-card";
 import { alertView } from "../alert/alert-view";
 import { SERVER_NOW, thread, translatorFor } from "../alert/alert-test-helpers";

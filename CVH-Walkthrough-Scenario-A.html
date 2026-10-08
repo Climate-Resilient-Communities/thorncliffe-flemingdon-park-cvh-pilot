@@ -18303,7 +18303,7 @@ window.CVH_STRINGS.fr = {
 <script>/* English strings added with the Phase 2 screens, merged into the English table by screen ID. AI-generated. */
 (function () {
   var en = window.CVH_STRINGS.en;
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* A01_AmbHome.html */
   m(en, { A01: { role: 'Building ambassador', roundFloors: 'Your round: floors {a} to {b}.', offline: 'No signal. What you do is saved on your phone and sent when you have signal.',
   noRound: 'No check-in round right now. It starts when the Hub sends a heat or power alert for your building.', toDo: '{n} still to do', tellInPerson: '{n} households to tell in person',
@@ -19285,7 +19285,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Urdu: screen strings and content (Phase 5). AI-generated; to be checked by native readers before launch. */
 (function () {
   var S = window.CVH_STRINGS, T = S.ur = S.ur || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   // Isolate a left-to-right run that starts with digits (an address) inside a right-to-left sentence,
   // so "10 Gateway Boulevard" does not display as "Gateway Boulevard 10".
   function I(v) { return '⁨' + v + '⁩'; }
@@ -20099,7 +20099,7 @@ window.CVH_STRINGS.fr = {
    Organisation, building, street and place names stay in Latin script. Toronto and Canada use their usual Pashto spelling. */
 (function () {
   var S = window.CVH_STRINGS, T = S.ps = S.ps || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   // Isolate a left-to-right address that starts with a number, so it reads whole inside a right-to-left sentence.
   function G(s) { return '\u2068' + s + '\u2069'; }
 
@@ -20847,7 +20847,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Tagalog: screen strings and content (Phase 5). AI-generated; to be checked by native readers before launch. */
 (function () {
   var S = window.CVH_STRINGS, T = S.tl = S.tl || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
 
   /* ---- Shared sections: lib (times, dates, floors, ambassador post wording) ---- */
   m(T, {
@@ -21495,7 +21495,7 @@ window.CVH_STRINGS.fr = {
    Organisation, building, street and place names stay in Latin script. Toronto and Canada use their usual Dari spelling. */
 (function () {
   var S = window.CVH_STRINGS, T = S.prs = S.prs || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   // Isolate a left-to-right address that starts with a number, so it reads whole inside a right-to-left sentence.
   function G(s) { return '\u2068' + s + '\u2069'; }
 
@@ -22247,7 +22247,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Gujarati: screen strings and content (Phase 5). AI-generated; to be checked by native readers before launch. Shared sections, content and resident screens (built from p5tr/tr_gu.js). */
 (function () {
   var S = window.CVH_STRINGS, T = S.gu = S.gu || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* Shared sections: fills keys Phase 1 did not cover and corrects some Phase 1 wording. */
   m(T, {
  "lib": {
@@ -24295,7 +24295,7 @@ window.CVH_STRINGS.fr = {
    Generated by work_tazh/gen.py (part 1: shared sections and content). L12 is left untranslated on purpose. */
 (function () {
   var S = window.CVH_STRINGS, T = S.ta = S.ta || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* Shared sections: new keys and fixes over Phase 1 strings.ta.js */
   m(T, {
  "meta": {
@@ -26349,7 +26349,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Greek: screen strings and content (Phase 5). AI-generated; to be checked by native readers before launch. */
 (function () {
   var S = window.CVH_STRINGS, T = S.el = S.el || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
 
   /* ---- Shared sections (override and complete the Phase 1 table strings.el.js) ---- */
   m(T, {
@@ -27275,7 +27275,7 @@ window.CVH_STRINGS.fr = {
    ("Otvára sa: pondelok o 9.00") rather than "v {day}". */
 (function () {
   var S = window.CVH_STRINGS, T = S.sk = S.sk || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
 
   /* ---- Shared sections: fixes and additions to the Phase 1 table ---- */
   m(T, {
@@ -27922,7 +27922,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Bengali: screen strings and content (Phase 5). AI-generated; to be checked by native readers before launch. */
 (function () {
   var S = window.CVH_STRINGS, T = S.bn = S.bn || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
 
   /* ---- Shared sections: lib (times, dates, floors, ambassador post wording) ---- */
   m(T, {
@@ -28633,7 +28633,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Hindi: screen strings and content (Phase 5). AI-generated; to be checked by native readers before launch. Shared sections, content and resident screens (built from p5tr/tr_hi.js). */
 (function () {
   var S = window.CVH_STRINGS, T = S.hi = S.hi || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* Shared sections: fills keys Phase 1 did not cover and corrects some Phase 1 wording. */
   m(T, {
  "lib": {
@@ -30684,7 +30684,7 @@ window.CVH_STRINGS.fr = {
 <script>/* Punjabi (Gurmukhi): screen strings and content (Phase 5). Script choice open (brief O3). AI-generated; to be checked by native readers before launch. Shared sections, content and resident screens (built from p5tr/tr_pa.js). */
 (function () {
   var S = window.CVH_STRINGS, T = S.pa = S.pa || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* Shared sections: fills keys Phase 1 did not cover and corrects some Phase 1 wording. */
   m(T, {
  "lib": {
@@ -32729,7 +32729,7 @@ window.CVH_STRINGS.fr = {
    Written form (Simplified or Traditional) is an open question. Generated by work_tazh/gen.py (part 1: shared sections and content). L12 is left untranslated on purpose. */
 (function () {
   var S = window.CVH_STRINGS, T = S.zh = S.zh || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* Shared sections: new keys and fixes over Phase 1 strings.zh.js */
   m(T, {
  "meta": {
@@ -34800,7 +34800,7 @@ window.CVH_STRINGS.fr = {
    "a las {t}" (which would give "a las 1") and use "Abre: hoy, 9 a. m." instead. */
 (function () {
   var S = window.CVH_STRINGS, T = S.es = S.es || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
 
   /* ---- Shared sections: fixes and additions to the Phase 1 table ---- */
   m(T, {
@@ -35453,7 +35453,7 @@ window.CVH_STRINGS.fr = {
    Times: 24-hour Canadian French everywhere ("19 h 40", "21 h"), generated and written alike. */
 (function () {
   var S = window.CVH_STRINGS, T = S.fr = S.fr || {};
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === '__proto__' || k === 'constructor' || k === 'prototype') continue; if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k]) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
 
   /* ---- Shared sections: fixes and additions to the Phase 1 table ---- */
   m(T, {

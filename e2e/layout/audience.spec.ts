@@ -36,7 +36,7 @@ function plansFor(lang: string): BuildingFloorPlan[] {
 }
 
 /** The audience the pages show: some floors of two buildings, and two groups, so the aside has every line. */
-function audienceFor(plans: BuildingFloorPlan[]): Audience {
+function audience(): Audience {
   return {
     scope: "buildings",
     buildings: [
@@ -58,8 +58,8 @@ function longestText(lang: string): Text {
 const REF = { alertId: "01900000-0000-7000-8000-00000000a1e7", entryId: "01900000-0000-7000-8000-00000000e177" };
 
 const PAGES = [
-  { name: "O-03 the place", screen: (lang: string) => placeScreen(plansFor(lang), audienceFor(plansFor(lang)), REF, { text: longestText(lang), notice: longestText(lang)("saved.place") }) },
-  { name: "O-04 the groups", screen: (lang: string) => groupsScreen(plansFor(lang), audienceFor(plansFor(lang)), REF, { text: longestText(lang), notice: longestText(lang)("saved.groups") }) },
+  { name: "O-03 the place", screen: (lang: string) => placeScreen(plansFor(lang), audience(), REF, { text: longestText(lang), notice: longestText(lang)("saved.place") }) },
+  { name: "O-04 the groups", screen: (lang: string) => groupsScreen(plansFor(lang), audience(), REF, { text: longestText(lang), notice: longestText(lang)("saved.groups") }) },
 ] as const;
 
 type Props = Parameters<typeof mount<"AudienceFixture">>[2];

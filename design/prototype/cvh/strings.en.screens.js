@@ -1,7 +1,7 @@
 /* English strings added with the Phase 2 screens, merged into the English table by screen ID. AI-generated. */
 (function () {
   var en = window.CVH_STRINGS.en;
-  function m(t, s) { for (var k in s) { if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
   /* A01_AmbHome.html */
   m(en, { A01: { role: 'Building ambassador', roundFloors: 'Your round: floors {a} to {b}.', offline: 'No signal. What you do is saved on your phone and sent when you have signal.',
   noRound: 'No check-in round right now. It starts when the Hub sends a heat or power alert for your building.', toDo: '{n} still to do', tellInPerson: '{n} households to tell in person',

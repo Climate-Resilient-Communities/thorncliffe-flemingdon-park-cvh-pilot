@@ -62,7 +62,7 @@ jobs:
   run:
     name: Search test set
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     # The run step has its own limit below this one, so that a run that takes too long fails that step and the steps that keep
     # the reports still run: a job that hits its own limit is cancelled, and a cancelled job skips them.
     timeout-minutes: 35
