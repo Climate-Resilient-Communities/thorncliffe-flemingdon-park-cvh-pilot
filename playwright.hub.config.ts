@@ -23,6 +23,7 @@ export default defineConfig({
   },
   forbidOnly: !!process.env.CI,
   retries: 0, // TEMPORARY: one pass to collect new baselines
+  timeout: 120_000, // TEMPORARY: soft screenshot comparisons each wait for a stable image
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
     browserName: "chromium",

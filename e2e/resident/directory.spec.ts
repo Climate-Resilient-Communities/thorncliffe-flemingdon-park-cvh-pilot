@@ -25,8 +25,10 @@ async function waitForList(page: Page) {
   await waitForFonts(page);
 }
 
+/** On a phone the filters open from their toggle; from the desktop width they are a column that is always open, with no toggle. */
 async function openFilters(page: Page) {
-  if ((await page.getByTestId("filters-toggle").getAttribute("aria-expanded")) !== "true") await page.getByTestId("filters-toggle").click();
+  const toggle = page.getByTestId("filters-toggle");
+  if ((await toggle.isVisible()) && (await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
   await expect(page.getByTestId("filter-panel")).toBeVisible();
 }
 

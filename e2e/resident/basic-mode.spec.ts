@@ -22,6 +22,9 @@ async function phoneHolds(page: Page, choices: Record<string, unknown>) {
   await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [CHOICES, JSON.stringify({ v: 1, welcomed: true, ...choices })] as const);
 }
 
+/** The font size of the first paragraph of the main, read in one step (the home may redraw its paragraphs while the feed settles). */
+const mainTextSize = (page: Page) => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("main p")!).fontSize));
+
 async function toggleSimpler(page: Page) {
   await page.getByTestId("display-settings-button").click();
   await page.getByTestId("basic-switch").click();
@@ -32,15 +35,15 @@ test.describe("display settings (X-07)", () => {
   test("changes text size independently of simpler view", async ({ page }) => {
     await stubFeed(page, [feedOf(1)]);
     await openResident(page, "/en", 390);
-    const normalSize = await page.locator("main p").first().evaluate(p => parseFloat(getComputedStyle(p).fontSize));
+    const normalSize = await mainTextSize(page);
     await page.getByTestId("display-settings-button").click();
     await page.getByRole("radio", { name: "Large", exact: true }).check();
     expect(await htmlBasic(page)).toBeNull();
-    expect(await page.locator("main p").first().evaluate(p => parseFloat(getComputedStyle(p).fontSize))).toBeGreaterThan(normalSize);
+    expect(await mainTextSize(page)).toBeGreaterThan(normalSize);
     await page.getByTestId("basic-switch").check();
     await page.getByRole("radio", { name: "Standard", exact: true }).check();
     expect(await htmlBasic(page)).toBe("true");
-    expect(await page.locator("main p").first().evaluate(p => parseFloat(getComputedStyle(p).fontSize))).toBe(normalSize);
+    expect(await mainTextSize(page)).toBe(normalSize);
     await page.getByTestId("basic-switch").uncheck();
     expect(await savedBasic(page)).toBeUndefined();
   });

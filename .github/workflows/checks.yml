@@ -109,7 +109,7 @@ jobs:
   browser:
     name: Browser
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 50 # TEMPORARY: soft screenshot comparisons while collecting baselines
     # The staff suite signs in against a disposable database (scripts/staff-docker.sh migrates it and runs with the
     # container on the host's network), the same image as the Database job's and as gone when the job ends.
     services:
@@ -159,14 +159,14 @@ jobs:
       # host's (the same linux x64).
       - name: Test the resident surface in the production build
         continue-on-error: true # TEMPORARY: let the Hub screenshots run too while collecting baselines
-        run: npm run test:resident:docker
+        run: npm run test:resident:docker -- --output=test-results/resident # TEMPORARY: own folder, so the Hub run does not clear it
         env:
           CI: "true"
       # The Hub shell at 390, 699, 700 and 1280 px in en and ur (baseline screenshots), in the same pinned image
       # (scripts/hub-docker.sh). It renders the layout fixture with the app's compiled stylesheet, so it needs
       # no server; the shell's behaviour is asserted in `npm run test:layout` and `npm run test:staff`.
       - name: Test the Hub shell screenshots
-        run: npm run test:hub:docker
+        run: npm run test:hub:docker -- --output=test-results/hub # TEMPORARY: own folder
         env:
           CI: "true"
       # The diffs and actual screenshots of a failed comparison (the resident surface's and the Hub shell's).
