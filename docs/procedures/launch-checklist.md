@@ -1,7 +1,7 @@
 # Launch checklist
 
 **Owner:** IT lead (production settings and jobs) with the Hub Admin lead (rehearsals and sign-off)
-**Last reviewed:** 2026-10-06
+**Last reviewed:** 2026-10-08 (after the production SIT of that day: lines it confirmed are ticked "Claude (SIT)")
 
 Everything that must be true in production before residents rely on the CVH for alerts. Tick each line with the date and who did it. Secret values are never written here: only that they are set and where (`docs/config.md` holds the names and rules). Launch is the day `RESIDENT_ALERTS_ENABLED` is turned on and `cvh-dispatch` is scheduled; the items above that line can be done earlier.
 
@@ -10,9 +10,11 @@ Everything that must be true in production before residents rely on the CVH for 
 | Item | Done | By |
 | --- | --- | --- |
 | `JOB_SECRET` set (32+ random bytes, a Vercel Secret) | 2026-10-06 | Claude for the product owner |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID` set | | |
-| `SMS_MODE=live` | | |
-| `COHERE_API_KEY` is the launch key, with a spend limit set on the key in Cohere | | |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID` set | 2026-10-08 (set by 2026-10-06, Production only; untested until toll-free verification passes) | Claude (SIT) |
+| `SMS_MODE=live` (SIT 2026-10-08: the variable is set, Production only; its value was not read, so confirm it is `live` and tick) | | |
+| `COHERE_API_KEY` set (Production only; live searches answer) | 2026-10-08 (set by 2026-10-02) | Claude (SIT) |
+| `COHERE_API_KEY` is the launch key, with a spend limit set on the key in Cohere (not visible from the app: check in Cohere's dashboard) | | |
+| Cohere asked whether its ~1,000 calls a month per model also applies to `embed-v4.0` on the key, and the answer recorded here. The search embedding has **no app-side monthly stop**: `SEARCH_EMBED_MONTHLY_CALLS` (default 1000) only warns ops at 80% (`search.leg_failed` `embed_quota_near`), and past a vendor cap every search answers "unavailable" ([config](../config.md#the-search-embeddings-monthly-budget)). Until Cohere answers, check the dashboard's usage per model (`embed-v4.0`, `rerank-v3.5`, both translate models) **once a month**, and in the first week after launch | | Product owner |
 | `RESIDENT_ALERTS_ENABLED=true` (the launch switch, S04.08): last, on launch day | | |
 
 ## 2. Supabase scheduled jobs (SQL editor, as `postgres`; [config](../config.md))
@@ -23,6 +25,8 @@ Everything that must be true in production before residents rely on the CVH for 
 | `cvh-health` (every minute); the heartbeat answers 200 | 2026-10-06 | product owner |
 | `cvh-expire` (every minute) | 2026-10-06 | product owner |
 | `cvh-subscriber-measures` (05:05 UTC daily) | 2026-10-06 | product owner |
+| `cron.log_run` is on, checked as `postgres` (the app's login cannot read the `cron` schema): `show cron.log_run;` and `select count(*) from cron.job_run_details where start_time > now() - interval '1 hour';` returns more than 0. If it is off, `health_job_failures` sees only the HTTP jobs' failures, not a failed SQL-only job (the purges) (SIT 2026-10-08, O3: the run history looked empty) | | |
+| **The app's database password rotated before any phone number is stored** (SIT 2026-10-08, F1: it is short and guessable, and the pooler is public): as `postgres`, `alter role cvh_app_login password '…'` with 32 random bytes (`openssl rand -hex 32`); then `DATABASE_URL` in Vercel (Production **and** Preview), `SEARCH_TEST_DATABASE_URL` in GitHub `production`, a redeploy, the heartbeat answers 200, and a line in the [rotation record](rotate-secrets.md#rotation-record) | | IT lead |
 | `cvh-messaging-config` (daily; needs the Twilio settings above) | | |
 | `cvh-reconcile-spend` (daily; needs the Twilio settings above) | | |
 | `cvh-dispatch` (every minute): on launch day, after Twilio is set and tested | | |
@@ -38,6 +42,12 @@ Check with `select jobname, schedule, active from cron.job order by jobname;`.
 | Inbound webhook `PUBLIC_BASE_URL/api/twilio/inbound` (POST) | | |
 | **YES is not an opt-in (START) keyword**, tested on the verified number (a YES must reach the CVH and confirm a sign-up) | | |
 | Smart Encoding off | | |
+| Toll-free verification approved (until then every text fails with 30032) | | |
+| **No status callback URL** on the Messaging Service itself (the app sets the callback on each message) | | |
+| Geo permissions: **Canada only** | | |
+| SMS pumping protection **on** | | |
+| Sender pool: the verified toll-free number (`TWILIO_FROM_NUMBER`) only | | |
+| After the two lines above, `/api/jobs/messaging-config` run once (or `cvh-messaging-config` scheduled) and it reads both settings as set: the field names it reads are an unverified assumption ([config](../config.md)) | | |
 
 ## 4. The outside uptime monitor ([config: "The outside check"](../config.md))
 
@@ -56,8 +66,8 @@ The only alarm that still works when Vercel, Supabase or Twilio is down: the Hub
 
 | Item | Done | By |
 | --- | --- | --- |
-| Directory published (the current release on the Directory page) | 2026-10-04 (release 8) | product owner |
-| Terms published (until then production's sign-up page is a 404 and the endpoint answers 503) | | |
+| Directory published (the current release on the Directory page) | 2026-10-08 (release 9, published 2026-10-07, complete and current, 99 providers, files served) | Claude (SIT); published by the product owner |
+| Terms published (until then production's sign-up page is a 404 and the endpoint answers 503) | 2026-10-08 (`2026-10-07.1`; `/en/terms` and `/en/text-alerts` answer 200). Sign-up is therefore open: keep the page unadvertised until section 3 is done | Claude (SIT) |
 | Staff accounts made, Admins with an authenticator | | |
 | At least one number on the On-call numbers page (once texting is live, no alert but a drill can be approved without one) | | |
 | Drill roster set ([running a drill](run-a-drill.md)) | | |
@@ -71,6 +81,13 @@ The only alarm that still works when Vercel, Supabase or Twilio is down: the Hub
 | --- | --- | --- |
 | The four launch rehearsals each have a row marked "worked" in the rehearsal log | | |
 | The outside monitor's rehearsal (section 4) worked | | |
+
+## 7. GitHub repository
+
+| Item | Done | By |
+| --- | --- | --- |
+| `main` protected (a branch protection rule or a ruleset): the `Checks` status required, pull requests required, no force pushes or deletions (SIT 2026-10-08, F2; `Checks` is the one job to require, [config](../config.md#github-environments)) | | Product owner |
+| Secret scanning and push protection on (free for a public repository), and optionally Dependabot security updates | | Product owner |
 
 ## Sign-off
 
