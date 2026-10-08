@@ -22,43 +22,40 @@ async function phoneHolds(page: Page, choices: Record<string, unknown>) {
   await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [CHOICES, JSON.stringify({ v: 1, welcomed: true, ...choices })] as const);
 }
 
-test.describe("the switch (X-07)", () => {
-  test("is in the header on every page as a switch with a name and a state in words, and turns the mode on and off for the page at once", async ({ page }) => {
+async function toggleSimpler(page: Page) {
+  await page.getByTestId("display-settings-button").click();
+  await page.getByTestId("basic-switch").click();
+  await page.locator("dialog[open]").getByRole("button", { name: /Done/ }).click();
+}
+
+test.describe("display settings (X-07)", () => {
+  test("changes text size independently of simpler view", async ({ page }) => {
     await stubFeed(page, [feedOf(1)]);
     await openResident(page, "/en", 390);
-    const header = page.getByTestId("shell-header");
-    const toggle = header.getByRole("switch", { name: /Bigger text, fewer things/ });
-    await expect(toggle).toHaveAttribute("aria-checked", "false");
-    await expect(toggle).toContainText("Off");
-    // The state is the switch's own state, not part of its name, so a screen reader does not say it twice.
-    await expect(toggle).toHaveAccessibleName("Bigger text, fewer things");
+    const normalSize = await page.locator("main p").first().evaluate(p => parseFloat(getComputedStyle(p).fontSize));
+    await page.getByTestId("display-settings-button").click();
+    await page.getByRole("radio", { name: "Large", exact: true }).check();
     expect(await htmlBasic(page)).toBeNull();
-    const normalSize = await page.locator("main p").first().evaluate((p) => parseFloat(getComputedStyle(p).fontSize));
-
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-checked", "true");
-    await expect(toggle).toContainText("On");
+    expect(await page.locator("main p").first().evaluate(p => parseFloat(getComputedStyle(p).fontSize))).toBeGreaterThan(normalSize);
+    await page.getByTestId("basic-switch").check();
+    await page.getByRole("radio", { name: "Standard", exact: true }).check();
     expect(await htmlBasic(page)).toBe("true");
-    expect(await savedBasic(page)).toBe(true);
-    const basicSize = await page.locator("main p").first().evaluate((p) => parseFloat(getComputedStyle(p).fontSize));
-    expect(basicSize).toBeGreaterThan(normalSize);
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--tap-current").trim())).toBe("56px");
-
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(await htmlBasic(page)).toBeNull();
+    expect(await page.locator("main p").first().evaluate(p => parseFloat(getComputedStyle(p).fontSize))).toBe(normalSize);
+    await page.getByTestId("basic-switch").uncheck();
     expect(await savedBasic(page)).toBeUndefined();
   });
 
-  test("works from the keyboard: it is reached after the language button, and Space and Enter turn it", async ({ page }) => {
+  test("opens after the language button, supports Space, and returns focus with Escape", async ({ page }) => {
     await openResident(page, "/en/ready", 390);
     await page.getByTestId("shell-lang-button").focus();
     await page.keyboard.press("Tab");
-    await expect(page.getByTestId("basic-switch")).toBeFocused();
+    await expect(page.getByTestId("display-settings-button")).toBeFocused();
+    await page.keyboard.press("Enter");
+    await page.getByTestId("basic-switch").focus();
     await page.keyboard.press("Space");
     await expect(page.getByTestId("basic-switch")).toHaveAttribute("aria-checked", "true");
-    await page.keyboard.press("Enter");
-    await expect(page.getByTestId("basic-switch")).toHaveAttribute("aria-checked", "false");
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("display-settings-button")).toBeFocused();
   });
 
   test("saves the choice beside the other choices and sends nothing to the server", async ({ page }) => {
@@ -70,7 +67,7 @@ test.describe("the switch (X-07)", () => {
     const sent: Request[] = [];
     page.on("request", (request) => sent.push(request));
 
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(page.getByTestId("basic-switch")).toHaveAttribute("aria-checked", "true");
     await page.waitForTimeout(500);
 
@@ -114,7 +111,7 @@ test.describe("the switch (X-07)", () => {
     await openResident(page, "/en/terms", 390);
     const other = await page.context().newPage();
     await other.goto("/en/terms");
-    await other.getByTestId("basic-switch").click();
+    await toggleSimpler(other);
     await expect(page.locator("html")).toHaveAttribute("data-basic", "true");
     await expect(page.getByTestId("basic-switch")).toHaveAttribute("aria-checked", "true");
   });
@@ -125,7 +122,7 @@ test.describe("R-34 (my choices)", () => {
     await stubBuildingList(page);
     await openResident(page, "/en/choices", 390);
     const section = page.getByTestId("told-basic");
-    await expect(section).toContainText("Bigger text, fewer things");
+    await expect(section).toContainText("Simpler view");
     await expect(page.getByTestId("told-basic-value")).toHaveText("Off");
     await expect(page.getByTestId("change-basic")).toHaveText(catalogText("en", "x07.turnOn"));
 
@@ -145,7 +142,7 @@ test.describe("R-34 (my choices)", () => {
   test("the header switch and R-34 stay in step, in Urdu too", async ({ page }) => {
     await stubBuildingList(page);
     await openResident(page, "/ur/choices", 390);
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(page.getByTestId("change-basic")).toHaveText(catalogText("ur", "R34.turnOff"));
     await expect(page.getByTestId("told-basic-value")).toHaveText(catalogText("ur", "R34.on"));
   });
@@ -157,10 +154,10 @@ test.describe("what basic mode leaves out", () => {
     const lead = page.getByText(catalogText("en", "R24.lead"));
     await expect(lead).toBeVisible();
     await expect(page.locator(".ready-dest__line").first()).toBeVisible();
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(lead).toBeHidden();
     await expect(page.locator(".ready-dest__line").first()).toBeHidden();
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(lead).toBeVisible();
   });
 
@@ -171,7 +168,7 @@ test.describe("what basic mode leaves out", () => {
     const columns = () => page.locator(".ask-topics").evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
     expect(await columns()).toBeGreaterThan(1);
     const gap = await page.locator(".ask-topics").evaluate((el) => getComputedStyle(el).rowGap);
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     expect(await columns()).toBe(1);
     expect(await page.locator(".ask-topics").evaluate((el) => getComputedStyle(el).rowGap), "the gap is the same as in normal mode").toBe(gap);
   });
@@ -183,7 +180,7 @@ test.describe("what basic mode leaves out", () => {
     await expect(actions).toBeVisible();
     const read = () => actions.evaluate((el) => ({ columns: getComputedStyle(el).gridTemplateColumns.split(" ").length, gap: getComputedStyle(el).columnGap }));
     const normal = await read();
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     expect(await read()).toEqual({ columns: 1, gap: normal.gap });
   });
 });
@@ -216,7 +213,7 @@ test.describe("the thread of an alert (R-07)", () => {
     await expect(entries.filter({ visible: true })).toHaveCount(total);
     await expect(page.getByTestId("alert-earlier-more")).toBeHidden();
 
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(entries.filter({ visible: true })).toHaveCount(1);
     await expect(page.getByTestId("alert-earlier-more")).toBeVisible();
   });
@@ -227,7 +224,7 @@ test.describe("the thread of an alert (R-07)", () => {
     const total = await guides.count();
     expect(total).toBeGreaterThan(1);
     await expect(guides.filter({ visible: true })).toHaveCount(total);
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(guides.filter({ visible: true })).toHaveCount(1);
   });
 });
@@ -285,10 +282,10 @@ test.describe("the map (R-14)", () => {
     await stubMap(page);
     await openResident(page, "/en/map", 390);
     await expect(page.getByTestId("map-canvas")).toHaveAttribute("data-status", "ready");
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(page.getByTestId("map-list")).toBeVisible();
     await expect(page.getByTestId("map-frame")).toBeHidden();
-    await page.getByTestId("basic-switch").click();
+    await toggleSimpler(page);
     await expect(page.getByTestId("map-view-map")).toBeVisible();
     await page.getByTestId("map-view-map").click();
     await expect(page.getByTestId("map-canvas")).toHaveAttribute("data-status", "ready");

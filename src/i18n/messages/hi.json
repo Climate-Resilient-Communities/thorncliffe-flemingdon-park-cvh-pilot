@@ -6462,5 +6462,16 @@
     ],
     "dayMonth": "{day} {month}",
     "digits": "0123456789"
+  },
+  "display": {
+    "title": "[EN] Display settings",
+    "close": "[EN] Done",
+    "textSize": "[EN] Text size",
+    "standard": "[EN] Standard",
+    "large": "[EN] Large",
+    "simpler": "[EN] Simpler view",
+    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
+    "saved": "[EN] Saved on this device.",
+    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
   }
 }

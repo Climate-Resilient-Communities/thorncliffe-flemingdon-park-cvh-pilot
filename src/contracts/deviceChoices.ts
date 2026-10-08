@@ -23,6 +23,8 @@ export const DeviceChoicesSchema = z.looseObject({
   floors: z.array(FloorIdSchema).optional(),
   /** Basic mode (X-07, S02.14): bigger text, fewer things. Only an explicit `true` counts; turning it off removes the field. */
   basic: z.boolean().optional(),
+  /** Independent resident text size; absent preserves legacy basic-mode sizing. */
+  textSize: z.enum(["standard", "large"]).optional(),
   /** What the phone dropped because it is no longer in the building list, until the resident has read R-34's note. */
   removed: z.object({ buildings: z.number().int().min(0), floors: z.number().int().min(0) }).optional(),
   /** When (ms since 1970, the phone's clock) the choices were last written. A building list generated before it is never used to prune. */

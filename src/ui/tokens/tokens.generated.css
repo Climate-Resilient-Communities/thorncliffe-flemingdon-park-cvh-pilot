@@ -121,7 +121,7 @@
   --focus-ring: #fcb041;
 }
 
-[data-basic="true"] {
+:is([data-text-size="large"], [data-basic="true"]:not([data-text-size])) {
   /* type: Screens: basic mode (G7) */
   --app-fs-caption: 22px;
   --app-lh-caption: var(--lh-body);

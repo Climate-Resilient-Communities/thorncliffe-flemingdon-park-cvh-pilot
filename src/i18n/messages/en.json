@@ -169,13 +169,13 @@
     "recordDecision": "Record as a decision"
   },
   "x07": {
-    "label": "Bigger text, fewer things",
+    "label": "Simpler view",
     "on": "On",
     "off": "Off",
     "setByHelper": "Turned on by someone helping you",
     "remembered": "Remembered on this device",
-    "turnOn": "Turn on bigger text, fewer things",
-    "turnOff": "Turn off bigger text, fewer things"
+    "turnOn": "Turn on simpler view",
+    "turnOff": "Turn off simpler view"
   },
   "x08": {
     "idle": "Listen · {t}",
@@ -6462,5 +6462,16 @@
     ],
     "dayMonth": "{month} {day}",
     "digits": "0123456789"
+  },
+  "display": {
+    "title": "Display settings",
+    "close": "Done",
+    "textSize": "Text size",
+    "standard": "Standard",
+    "large": "Large",
+    "simpler": "Simpler view",
+    "help": "Show fewer details and use lists instead of the map. Text size stays the same.",
+    "saved": "Saved on this device.",
+    "sessionOnly": "Your browser cannot save this setting. It will last for this session only."
   }
 }

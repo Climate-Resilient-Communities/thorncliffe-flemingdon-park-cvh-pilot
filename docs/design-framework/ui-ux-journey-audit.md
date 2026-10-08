@@ -60,3 +60,11 @@ The current policy's “Who handles your information” section names Twilio, Co
 
 ## Validation for this follow-up
 Production build and type generation passed. 108 focused tests passed across staff navigation, provider management, directory release, measures and staff sign-in. ESLint: zero errors, nine existing warnings. Dependency and logical-CSS checks passed. Policy contents navigation moved keyboard focus to its target; revised resident directory was inspected at desktop width. Earlier full-suite baseline limitations remain in the approval record.
+
+## Display-settings follow-up
+
+The resident header now has a compact Aa button beside language. It opens a native modal with independent Standard/Large text size and Simpler view controls. Large text never turns on simpler view. Changing simpler view preserves the text size. Both preferences remain on the device; the boot script applies them before paint. Older basic-mode preferences retain their previous larger text until the resident changes it. The My choices control now says Simpler view and preserves text size too.
+
+Staff sign-in remains in the resident footer, per the user's latest instruction. The former footer display disclosure is removed.
+
+Validated: production build, 30 preference/token tests, dependency and CSS checks. Browser checks covered independent settings, reload persistence, a 320 px panel, Escape/focus return, and mobile/desktop screenshots. The resident browser tests were updated for the new settings entry point; CI and screenshot baselines still need their normal verification.

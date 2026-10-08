@@ -2868,4 +2868,6 @@ coverage: 'Check building coverage', coverageDetail: 'See which buildings and fl
 measures: 'Review pilot measures', measuresDetail: 'Review subscriber counts and how far alerts reached.',
 providers: 'Keep the directory current', providersDetail: 'Confirm provider details, then publish a directory release for residents.'
 } } });
+m(en, { display: { title: 'Display settings', close: 'Done', textSize: 'Text size', standard: 'Standard', large: 'Large', simpler: 'Simpler view', help: 'Show fewer details and use lists instead of the map. Text size stays the same.', saved: 'Saved on this device.', sessionOnly: 'Your browser cannot save this setting. It will last for this session only.' } });
+m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: 'Turn off simpler view' } });
 })();

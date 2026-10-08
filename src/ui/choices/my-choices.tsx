@@ -205,7 +205,7 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
         </Told>
 
         {/* X-07 (S02.14): always here, so the mode can be turned on from R-34 as well as from the header, and off again. */}
-        <Told id="told-basic" title={t("basic")}>
+        <Told id="told-basic" title={x07("label")}>
           <p className="choice-told__value" data-testid="told-basic-value">
             <ResidentText>{isBasic(saved) ? t("on") : x07("off")}</ResidentText>
           </p>
