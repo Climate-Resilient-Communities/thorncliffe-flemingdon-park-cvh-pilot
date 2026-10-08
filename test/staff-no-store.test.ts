@@ -15,12 +15,18 @@ import { GUIDE_ORDER } from "../src/modules/directory";
 const { pathToRegexp } = createRequire(import.meta.url)("next/dist/compiled/path-to-regexp") as { pathToRegexp: (source: string) => RegExp };
 const APP = path.join(__dirname, "..", "src", "app");
 const allRules = (await nextConfig.headers?.()) ?? [];
+/**
+ * SIT F3: the security headers of every response and the noindex of the staff surface and the API (src/platform/config/securityHeaders.ts,
+ * unit-tested there). None of them sets Cache-Control, checked below; the rules here are the others.
+ */
+const securityRules = allRules.filter((rule) => rule.headers.some((header) => ["Content-Security-Policy", "X-Robots-Tag"].includes(header.key)));
+const cacheRules = allRules.filter((rule) => !securityRules.includes(rule));
 /** The rules of the staff surface; the resident building page has its own (S02.08), checked below. */
-const rules = allRules.filter((rule) => /staff/.test(rule.source));
+const rules = cacheRules.filter((rule) => /staff/.test(rule.source));
 /** S07.06: the rules of the subscription edit page and its API (no-store and no referrer), checked on their own below. */
-const subscriptionRules = allRules.filter((rule) => /subscription/.test(rule.source));
+const subscriptionRules = cacheRules.filter((rule) => /subscription/.test(rule.source));
 /** The public resident pages that a shared cache may keep. */
-const publicRules = allRules.filter((rule) => !rules.includes(rule) && !subscriptionRules.includes(rule));
+const publicRules = cacheRules.filter((rule) => !rules.includes(rule) && !subscriptionRules.includes(rule));
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -49,6 +55,12 @@ const covered = (url: string) => rules.some((rule) => matcher(rule.source).test(
 const routeFiles = (dir: string) => walk(dir).filter((file) => /\/(?:page|route)\.tsx?$/.test(file));
 
 describe("next.config.ts headers", () => {
+  it("put the security headers first, on every path, and the noindex rules on the staff surface and the API, none of them setting Cache-Control", () => {
+    expect(securityRules.map((rule) => rule.source)).toEqual(["/:path*", "/staff/:path*", "/api/:path*"]);
+    expect(allRules[0]).toBe(securityRules[0]);
+    for (const rule of securityRules) expect(rule.headers.map((header) => header.key), rule.source).not.toContain("Cache-Control");
+  });
+
   it("are exactly the two rules for the staff surface, each setting Cache-Control: no-store and nothing else", () => {
     expect(rules.map((rule) => rule.source).sort()).toEqual(["/api/staff/:path*", "/staff/:path*"]);
     for (const rule of rules) expect(rule.headers, rule.source).toEqual([{ key: "Cache-Control", value: "no-store" }]);
