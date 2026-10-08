@@ -15,7 +15,7 @@ defaults:
 jobs:
   static:
     name: Static
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 15
     steps:
       # Full history, as the database job has: some tests read git.
@@ -44,7 +44,7 @@ jobs:
 
   database:
     name: Database
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 15
     # A disposable database built like Supabase's (pg_cron, pg_net, the anon and
     # authenticated roles), the image Supabase CLI 2.119.0 runs locally. It never
@@ -108,7 +108,7 @@ jobs:
 
   browser:
     name: Browser
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 25
     # The staff suite signs in against a disposable database (scripts/staff-docker.sh migrates it and runs with the
     # container on the host's network), the same image as the Database job's and as gone when the job ends.

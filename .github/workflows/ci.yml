@@ -27,7 +27,7 @@ jobs:
   tested-tree:
     name: Tested tree
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 5
     permissions:
       contents: read
@@ -64,7 +64,7 @@ jobs:
     needs: [tested-tree, suite]
     # not cancelled(): a run replaced by a newer push stays "cancelled" and is not reported as a failed Checks.
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 5
     env:
       SKIP: ${{ needs.tested-tree.outputs.skip }}
@@ -93,7 +93,7 @@ jobs:
     # `suite` job further up the chain (a tested tree), and production would be skipped while Checks passes.
     # needs.checks.result is success only when the suite succeeded or was skipped for an already tested tree.
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.checks.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 30
     # The production environment holds VERCEL_TOKEN and PRODUCTION_DATABASE_URL and
     # accepts deployments from main only (repository settings > Environments), so a

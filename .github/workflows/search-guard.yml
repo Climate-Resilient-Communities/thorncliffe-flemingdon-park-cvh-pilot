@@ -62,7 +62,7 @@ jobs:
   scope:
     name: Search guard
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 5
     outputs:
       measure: ${{ steps.scope.outputs.measure }}
@@ -88,7 +88,7 @@ jobs:
       needs.scope.outputs.measure == 'true'
       && github.event.pull_request.head.repo.full_name == github.repository
       && github.event.pull_request.user.login != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     # The run step has its own limit below this one, so that the steps that keep the report still run.
     timeout-minutes: 30
     # Holds the secrets; give it the owner as required reviewer (repository settings > Environments > search-guard, docs/config.md).
@@ -177,7 +177,7 @@ jobs:
   checkpoint:
     name: Search test set checkpoint
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
     timeout-minutes: 35
     # The production environment holds the secrets and accepts runs from main only.
     environment: production
