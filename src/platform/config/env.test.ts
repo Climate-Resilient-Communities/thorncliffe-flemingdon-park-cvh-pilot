@@ -671,6 +671,7 @@ describe("Cohere and the search settings (S03.02)", () => {
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
+      crisisPhrases: true,
     });
   });
 
@@ -681,6 +682,14 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(() => parseEnv({ ...production, SEARCH_RERANK_MIN: "5" })).toThrow(/SEARCH_RERANK_MIN: must be a number from 0 to 1/);
     expect(() => parseEnv({ ...production, SEARCH_RERANK_MONTHLY_CALLS: "0" })).toThrow(/SEARCH_RERANK_MONTHLY_CALLS: must be a whole number of at least 1/);
     expect(parseSearchEnv({ SEARCH_RERANK: "off" }).rerank).toBe(false);
+  });
+
+  it("reads SEARCH_CRISIS_PHRASES: on unless `off`, anything else refused", () => {
+    expect(parseEnv(production).search.crisisPhrases).toBe(true);
+    expect(parseEnv({ ...production, SEARCH_CRISIS_PHRASES: " Off " }).search.crisisPhrases).toBe(false);
+    expect(parseEnv({ ...production, SEARCH_CRISIS_PHRASES: "on" }).search.crisisPhrases).toBe(true);
+    expect(() => parseEnv({ ...production, SEARCH_CRISIS_PHRASES: "no" })).toThrow(/SEARCH_CRISIS_PHRASES: must be `on` or `off`/);
+    expect(parseSearchEnv({ SEARCH_CRISIS_PHRASES: "off" }).crisisPhrases).toBe(false);
   });
 
   it("reads the model, threshold, emergency categories and allowance", () => {
@@ -712,6 +721,7 @@ describe("Cohere and the search settings (S03.02)", () => {
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
+      crisisPhrases: true,
     });
   });
 

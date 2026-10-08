@@ -92,6 +92,8 @@ const VECTORS: Record<string, number[]> = {
   "em fourth": unit([0.28, 0.27, 0.28, 0.28]), // emergency 0.27, but fourth: three others are above it
   "em fourth and clear": unit([0.5, 0.35, 0.5, 0.5]), // emergency 0.35 qualifies as a result, though fourth in the leg
   "I need an ambulance": unit([0, 0.27, 0, 0]),
+  // The crisis-phrase check: an emergency described in words, its provider a lawyer's (no emergency provider near the top).
+  "someone stole my wallet, call the police": [1, 0, 0, 0, 0],
   // The ranking's routes: a food question that misses the threshold on its similarity alone, and Spanish ones (the direct route).
   "food bank near me": unit([0, 0, 0.25, 0.05]), // P3 0.25: below 0.3 alone, over it with the keyword boost
   "necesito un abogado gratis": unit([0.26, 0.2, 0.1, 0.18]), // P1 0.26 over the direct floor; P2 0.2 and P4 0.18 within 0.10; P3 not
@@ -180,6 +182,8 @@ describe("the translated-question leg", () => {
     snapshot?: () => Promise<SearchSnapshot>;
     emergencyThreshold?: number;
     emergencyTopThreshold?: number;
+    crisisPhrases?: boolean;
+    observe?: SearchDeps["observe"];
   }) {
     return createSearch({
       db: () => {
@@ -200,6 +204,8 @@ describe("the translated-question leg", () => {
         }),
       emergencyThreshold: parts.emergencyThreshold,
       emergencyTopThreshold: parts.emergencyTopThreshold,
+      crisisPhrases: parts.crisisPhrases,
+      observe: parts.observe,
       writer: {
         log: async (row) => void logs.push(row),
         spend: async (event) => void spends.push(event),
@@ -1252,7 +1258,8 @@ describe("the translated-question leg", () => {
     it("holds when the translated leg alone qualifies (the direct leg finds nothing)", async () => {
       const words = fakeTranslator({ answer: () => "I need an ambulance" });
 
-      const { result } = await run(PASHTO, { translator: words.translator });
+      // The crisis-phrase check would set it on the words alone: off here, so that the ranking's rule is what is tested.
+      const { result } = await run(PASHTO, { translator: words.translator, crisisPhrases: false });
 
       expect(result).toEqual({ v: 1, release_v: 3, query_lang: "ps", status: "no_clear_match", emergency_first: true, results: [] });
     });
@@ -1283,6 +1290,67 @@ describe("the translated-question leg", () => {
       expect((await run("em second", { emergencyThreshold: 0.28 })).result).toMatchObject({ emergency_first: false });
       // A misconfigured 0.9 is held to the release's 0.3: 0.27 stays below it.
       expect((await run("em second", { emergencyThreshold: 0.9 })).result).toMatchObject({ emergency_first: false });
+    });
+  });
+
+  describe("the crisis-phrase check (SEARCH_CRISIS_PHRASES)", () => {
+    const run = (q: string, parts: Partial<Parameters<typeof service>[0]> = {}, lang: "en" | "ur" | "ps" = "en") => ask(service({ embedder: fakeEmbedder().embedder, ...parts }), q, lang);
+
+    it("sets emergency_first for a question that describes an emergency the ranking finds no provider for, and the results stay empty", async () => {
+      const { result } = await run("my dad collapsed and is not breathing");
+
+      expect(result).toEqual({ v: 1, release_v: 3, query_lang: "en", status: "no_clear_match", emergency_first: true, results: [] });
+      expect(logs).toMatchObject([{ status: "no_clear_match", resultCount: 0 }]);
+    });
+
+    it("is switched off by crisisPhrases: false (the ranking's rules alone)", async () => {
+      expect((await run("my dad collapsed and is not breathing", { crisisPhrases: false })).result).toMatchObject({ emergency_first: false });
+    });
+
+    it("leaves the results as ranked: it only adds the flag", async () => {
+      const { result } = await run("someone stole my wallet, call the police");
+
+      expect(result).toMatchObject({ status: "ok", emergency_first: true, results: [{ provider_id: "P1", score: 1 }] });
+      expect((await run("someone stole my wallet, call the police", { crisisPhrases: false })).result).toMatchObject({ status: "ok", emergency_first: false });
+    });
+
+    it("leaves it off for an ordinary question with an emergency word in it", async () => {
+      expect((await run("where is the nearest gas station")).result).toMatchObject({ emergency_first: false });
+      expect((await run("fire station hours")).result).toMatchObject({ emergency_first: false });
+    });
+
+    it("reads the English translation: a Pashto question whose translation describes a gas leak", async () => {
+      const words = fakeTranslator({ answer: () => "There is a strong smell of gas in our house" });
+
+      expect((await run(PASHTO, { translator: words.translator }, "ps")).result).toMatchObject({ query_lang: "ps", status: "no_clear_match", emergency_first: true });
+      expect((await run(PASHTO, { translator: words.translator, crisisPhrases: false }, "ps")).result).toMatchObject({ emergency_first: false });
+    });
+
+    it("reads the translation even when its embedding then fails", async () => {
+      const words = fakeTranslator({ answer: () => "my father is unconscious" });
+      const model = fakeEmbedder({ fail: (text) => text === "my father is unconscious" });
+
+      const { result } = await ask(service({ embedder: model.embedder, translator: words.translator }), PASHTO, "ps");
+
+      expect(result).toMatchObject({ status: "no_clear_match", emergency_first: true });
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+    });
+
+    it("is the backstop when the translation fails: the question's own words in its own script", async () => {
+      const { result } = await run("ژر پولیس راوغواړئ", { translator: fakeTranslator({ fail: true }).translator }, "ps");
+
+      expect(result).toMatchObject({ status: "no_clear_match", emergency_first: true });
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+    });
+
+    it("tells the observer that it fired, and nothing of the words", async () => {
+      const seen: SearchObservation[] = [];
+
+      await run("my dad collapsed and is not breathing", { observe: (o) => void seen.push(o) });
+      await run("I need a lawyer", { observe: (o) => void seen.push(o) });
+
+      expect(seen.map((o) => o.crisisPhrase)).toEqual([true, false]);
+      expect(JSON.stringify(seen.map((o) => ({ ...o, legs: undefined, boosts: undefined, emergencyProviders: undefined })))).not.toMatch(/breath|dad/);
     });
   });
 });

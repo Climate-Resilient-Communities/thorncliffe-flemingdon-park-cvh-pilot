@@ -75,8 +75,8 @@ function directReranker() {
 
 /** The ranking's settings that are read at search time (the threshold is the release's own). */
 function rankingSettings() {
-  const { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap } = getEnv().search;
-  return { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap };
+  const { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap, crisisPhrases } = getEnv().search;
+  return { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap, crisisPhrases };
 }
 
 /** The search use case. Without a Cohere key (every environment but production) every search answers `status: "unavailable"`. */

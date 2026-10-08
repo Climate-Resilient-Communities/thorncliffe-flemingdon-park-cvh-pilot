@@ -244,6 +244,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     keywordWeight: settings.keywordWeight,
     directFloor: settings.directFloor,
     directGap: settings.directGap,
+    crisisPhrases: settings.crisisPhrases,
     reranker,
     rerankMin: settings.rerankMin,
     rerankMonthlyCalls: Number.MAX_SAFE_INTEGER,
@@ -272,7 +273,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   }
 
   console.log(
-    `settings: threshold ${settings.threshold}, keyword weight ${settings.keywordWeight}, direct floor ${settings.directFloor}, direct gap ${settings.directGap}, emergency top ${settings.emergencyTopThreshold}, emergency top-3 ${settings.emergencyThreshold}, rerank ${reranker ? `on (min ${settings.rerankMin}; ${reranks} questions reranked from the cache)` : "off"}`,
+    `settings: threshold ${settings.threshold}, keyword weight ${settings.keywordWeight}, direct floor ${settings.directFloor}, direct gap ${settings.directGap}, emergency top ${settings.emergencyTopThreshold}, emergency top-3 ${settings.emergencyThreshold}, crisis phrases ${settings.crisisPhrases ? "on" : "off"}, rerank ${reranker ? `on (min ${settings.rerankMin}; ${reranks} questions reranked from the cache)` : "off"}`,
   );
   const out = [HEADER, line("all", measureAnswers(rows))];
   for (const author of [...new Set(rows.map((r) => r.question.author))].sort()) {
