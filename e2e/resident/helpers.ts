@@ -150,5 +150,5 @@ export async function expectBaseline(page: Page, name: string) {
     });
     return;
   }
-  await expect(page).toHaveScreenshot(name);
+  await expect.soft(page).toHaveScreenshot(name); // TEMPORARY: soft to collect every new baseline in one CI run
 }
