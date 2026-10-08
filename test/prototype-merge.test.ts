@@ -33,10 +33,13 @@ function helpers(): Map<string, string[]> {
 
 // Loads one copy of the helper into a fresh context so a polluted Object.prototype stays there.
 function load(source: string) {
-  const context = vm.createContext({});
+  const context = vm.createContext({ target: "", input: "" });
   vm.runInContext(source, context);
-  const merge = (target: string, input: string) =>
-    vm.runInContext(`(function () { var t = ${target}; m(t, JSON.parse(${JSON.stringify(input)})); return JSON.stringify(t); })()`, context) as string;
+  // The JSON goes in as data and is parsed inside the context, so the objects are the context's own; the code run is fixed.
+  const merge = (target: string, input: string) => {
+    Object.assign(context, { target, input });
+    return vm.runInContext("(function () { var t = JSON.parse(target); m(t, JSON.parse(input)); return JSON.stringify(t); })()", context) as string;
+  };
   const polluted = () => vm.runInContext("({}).polluted", context) as unknown;
   return { merge, polluted };
 }
@@ -67,7 +70,7 @@ describe("the prototype's string merge helper", () => {
 
       it("still merges nested strings and replaces the rest", () => {
         const { merge } = load(source);
-        const target = "{ A01: { role: 'old', keep: 'k' }, list: ['x'] }";
+        const target = '{"A01": {"role": "old", "keep": "k"}, "list": ["x"]}';
         expect(merge(target, '{"A01": {"role": "new", "add": "a"}, "list": ["y", "z"]}')).toBe(
           '{"A01":{"role":"new","keep":"k","add":"a"},"list":["y","z"]}',
         );
