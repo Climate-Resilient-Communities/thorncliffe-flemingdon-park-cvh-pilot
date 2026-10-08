@@ -47,6 +47,12 @@
 //    is an emergency-category provider at the emergency top threshold, or one is in the top 3 of either leg at the
 //    emergency-only threshold, even with no clear match (the results then stay empty). An emergency-category provider among
 //    the results no longer sets it on its own (the category holds the shelters, which a question about food lists too).
+//  - The crisis-phrase check (domain/crisisPhrases.ts; SEARCH_CRISIS_PHRASES, on unless `off`; 2026-10-07, product owner's
+//    approval): a question that describes an emergency in words (someone not breathing, a fire, a gas leak, a flood, a car
+//    accident, a weapon, a missing child, "call the police"... in English and every launch language, and in the English the
+//    translated leg made of it, whether or not that leg's embedding completed) also sets `emergency_first`, whatever the ranking
+//    found: the catalogue has no ambulance, so the ranking alone cannot flag a medical emergency. It only ever turns the flag on;
+//    the results stay as ranked. The check is pure and local (no vendor call) and keeps nothing; the observation says only that it fired.
 //  - Time: every leg is cancelled and ignored when still running 2.2 s after the request started (its result, should it
 //    arrive later, is never used), and the whole request
 //    answers within 2.5 s. "Started" is when the route took the request (it passes that time in), so reading the body and
@@ -95,6 +101,7 @@ import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeError";
 import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
+import { describesEmergency } from "../domain/crisisPhrases";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, type KeywordIndex } from "../domain/searchKeywords";
 import { monthlyModelCalls } from "@/modules/spend";
@@ -237,6 +244,8 @@ export interface SearchObservation {
   rerank: RerankOutcome;
   /** The results the reranker made (`rerank` is `used`), which are the answer's; null otherwise (the answer is the legs' ranking). */
   reranked: SearchHit[] | null;
+  /** Whether the crisis-phrase check found an emergency described in the question or its English translation (never which words). */
+  crisisPhrase: boolean;
 }
 
 /** One search_log row: counts and codes only. */
@@ -318,6 +327,8 @@ export interface SearchDeps {
   directGap?: number;
   /** SEARCH_EMERGENCY_TOP_THRESHOLD: an emergency provider that is a leg's best match at this similarity sets `emergency_first`; default 0.14. */
   emergencyTopThreshold?: number;
+  /** SEARCH_CRISIS_PHRASES: whether a question that describes an emergency in words sets `emergency_first` (domain/crisisPhrases.ts); default true. */
+  crisisPhrases?: boolean;
   /** The direct route's reranker (SEARCH_RERANK); absent or null: the direct route ranks by similarity alone (floor and gap). */
   reranker?: Reranker | null;
   /** SEARCH_RERANK_MIN: the least relevance of a reranked result; default 0.05. */
@@ -1085,6 +1096,9 @@ export function createSearch(deps: SearchDeps): SearchService {
     // The English translation, once the translated leg has it: only read for the keyword match when the leg completed. Held in
     // this variable for the length of the request, like the question, and never written anywhere.
     let english: string | null = null;
+    // The English translation as soon as the translator gave it (the crisis-phrase check reads it even if its embedding then fails).
+    // Held and never written anywhere, like `english`.
+    let translatedText: string | null = null;
     const noteFailure = (error: unknown, model: string) => {
       translateNotes.push({ reason: error instanceof QuestionTranslationError && error.vendor === "quota" ? "translate_quota" : "translate_failed", model, error: classifyTranslation(error) });
     };
@@ -1161,6 +1175,7 @@ export function createSearch(deps: SearchDeps): SearchService {
               throw stageError(second, fallback);
             }
           }
+          translatedText = translation;
           // Only the embedding of the translation needs the snapshot.
           await snapshotKnown;
           const known = state.snapshot;
@@ -1236,14 +1251,16 @@ export function createSearch(deps: SearchDeps): SearchService {
     const status = results.length === 0 ? "no_clear_match" : "ok";
     // `emergency_first` is decided on the legs, not on what is shown: an emergency provider that is a leg's best match at the
     // emergency top threshold, or in a leg's top 3 at the emergency-only threshold, sets it, even with no clear match.
-    const emergency = emergencyFirst(completed, data.emergency, settings);
+    // The crisis-phrase check only ever adds the flag: a question that describes an emergency in words (or whose translation does).
+    const crisisPhrase = (deps.crisisPhrases ?? true) && describesEmergency([q, translatedText]);
+    const emergency = emergencyFirst(completed, data.emergency, settings) || crisisPhrase;
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
     if (deps.observe) {
       const legs: SearchObservation["legs"] = [];
       if (direct.ok) legs.push({ leg: "direct", similarities: direct.similarities });
       if (translated?.ok) legs.push({ leg: "translated", similarities: translated.similarities });
       try {
-        deps.observe({ releaseV: data.releaseV, ...settings, route, boosts, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs, rerank, reranked });
+        deps.observe({ releaseV: data.releaseV, ...settings, route, boosts, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs, rerank, reranked, crisisPhrase });
       } catch {
         // A measurement never changes an answer.
       }

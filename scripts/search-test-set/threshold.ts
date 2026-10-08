@@ -74,7 +74,8 @@ function replay(o: SearchObservation, threshold: number) {
   const legs = legsOf(o);
   const settings = settingsAt(o, threshold);
   // A reranked answer (the direct route) does not depend on the threshold: it is the answer at every value.
-  return { results: o.reranked ?? rankLegs(legs, o.route, o.boosts, settings), emergency: emergencyFirst(legs, o.emergencyProviders, settings) };
+  // The crisis-phrase check does not depend on the threshold either: it only ever adds the flag.
+  return { results: o.reranked ?? rankLegs(legs, o.route, o.boosts, settings), emergency: emergencyFirst(legs, o.emergencyProviders, settings) || o.crisisPhrase };
 }
 
 const isHit = (results: readonly { provider_id: string }[], expected: readonly string[]) => results.some((r) => expected.includes(r.provider_id));

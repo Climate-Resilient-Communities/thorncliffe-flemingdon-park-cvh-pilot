@@ -641,3 +641,67 @@ no-match threshold could address for every translate-first language at once.
   asked.
 - **Evaluation questions seen.** Four of the new questions went to the evaluation subset (tl-41, tl-47, tl-48, tl-52), and the
   "tl, all" rows include them. The decision is the same on the tuning subset alone, which is what this section relies on.
+
+## 13. Crisis phrases: the 911 block for any question that describes an emergency (2026-10-07)
+
+**Why.** `emergency_first` came only from the ranking: an emergency-category provider (police, the fire stations, crisis lines)
+as a leg's best match at 0.14, or in its top 3 at 0.25. The catalogue has no ambulance or paramedic provider, so a question about
+a medical emergency, a gas leak, a flood or a car accident had nothing to match: after section 12, with Tagalog translated first,
+6 of the 20 emergency questions got no 911 block (en-08 "my dad collapsed and is not breathing", es-07, fr-07, el-06, tl-07 and
+the Tagalog car accident tl-41). With every translation failing (a vendor outage, or a language past its month), 11 did.
+
+**What was built (product owner's approval).** A pure, deterministic crisis-phrase check, `src/modules/directory/domain/crisisPhrases.ts`:
+curated phrases for clear emergencies (someone not breathing, unconscious or collapsed; heart attack, stroke, choking, drowning,
+severe bleeding, a stabbing or shooting, overdose or poisoning; suicide or self-harm intent; fire or smoke in a home; gas leak,
+carbon monoxide; flood or water pouring in; car accident, hit by a car; assault, a weapon, a threat, a break-in; a missing child;
+"call an ambulance / the police / 911") in English and every launch language: es, fr and sk as typed; Hindi with romanized
+Hindi, Urdu, Punjabi and Gujarati; the native scripts of ur, prs, ps, bn, ta, pa, gu, el, zh and tl, the backstop for a failed
+translation. The English lists are also read in the English translation (taken as soon as the translator answers). Ordinary
+phrases are masked first ("gas station", "fire station", "police clearance / check / station / department", "first aid course",
+"CPR class", "flood insurance / warning", "smoke detector", "accident insurance", "flu shot", each language's fire-service words);
+"where is the hospital" alone is not an emergency (only a described emergency is). The check sets `emergency_first` and changes
+nothing else; it never turns the flag off. `SEARCH_CRISIS_PHRASES=off` switches it off. The non-English lists are
+**machine-assisted, to be checked by native readers** before launch (launch checklist, section 5).
+
+**How it was measured (no vendor call).** Every one of the 235 questions through the real `createSearch` with the cached vectors,
+section 10 to 12's real Command A Translate answers and #158's cached rerank answers, main's routes (ta, pa, bn, el, zh and tl
+translated first); arm "before" with `crisisPhrases: false`, arm "after" with the default; then both again with every translation
+failing. The "before" arm reproduces section 12's arm (b) exactly (hit@3 80.7, shown 85.6, no-match 75.8, emergency 70.0, false
+alarm 2.3, false-pos 6.8).
+
+| set | emergency questions with the 911 block, before → after | false alarms (other questions with it), before → after | the same with every translation failing: emergencies | false alarms |
+|---|---|---|---|---|
+| **all 235** | **14/20 → 20/20** (70.0% → 100%) | **5/215 → 5/215** (2.3%) | 9/20 → 20/20 | 2/215 → 2/215 |
+| en | 3/4 → 4/4 | 1/28 → 1/28 | 3/4 → 4/4 | 1/28 → 1/28 |
+| es | 1/2 → 2/2 | 0/10 → 0/10 | 1/2 → 2/2 | 0/10 |
+| fr | 0/1 → 1/1 | 0/9 → 0/9 | 0/1 → 1/1 | 0/9 |
+| el | 0/1 → 1/1 | 0/9 → 0/9 | 0/1 → 1/1 | 0/9 |
+| tl | 0/2 → 2/2 | 2/51 → 2/51 | 0/2 → 2/2 | 1/51 → 1/51 |
+| ur | 1/1 → 1/1 | 0/13 | 0/1 → 1/1 | 0/13 |
+| prs | 1/1 → 1/1 | 1/15 → 1/15 | 0/1 → 1/1 | 0/15 |
+| ps | 1/1 → 1/1 | 1/14 → 1/14 | 1/1 → 1/1 | 0/14 |
+| gu | 1/1 → 1/1 | 0/9 | 0/1 → 1/1 | 0/9 |
+| ta | 1/1 → 1/1 | 0/9 | 0/1 → 1/1 | 0/9 |
+| hi | 1/1 → 1/1 | 0/10 | 0/1 → 1/1 | 0/10 |
+| sk, bn, pa, zh | 1/1 → 1/1 each | 0 each | 1/1 → 1/1 each | 0 each |
+
+Hit@3, results shown, no-match accuracy and false positives are unchanged (the results are not touched).
+
+**False alarms.** The check adds none: no non-emergency question, nor its translation, matches a phrase. The five that remain are
+the ranking's, unchanged: en-17 (a teenager who "needs counselling": the crisis lines), ps-09 (an eviction), prs-11 (a romanized
+Dari question), tl-16 ("directions to the police department") and tl-43, MASSIVE's "nearest gas station", whose English
+translation makes the five fire stations the best match. A phrase cannot remove a flag the ranking set: the check only adds.
+
+**Proposal, not built (for the product owner).** Let a masked ordinary phrase turn the *ranking's* flag off when no crisis phrase is
+found: a question that says "gas station", "fire station", "police station / department" or "police check" and describes no
+emergency would not get the 911 block from a fire station or police provider at the top. Measured on the same replay: false
+alarms 5 → 3 of 215 (tl-16 and tl-43 lose the block), no emergency question loses it (all 20 are found by their phrases). It
+weakens a safety rule (owner decision 41's fail-safe) on the words of a mask list, so it is left for the product owner to decide.
+
+**Remaining misses.** None in the test set. **Caveats.** The phrases were written knowing these 20 emergency questions, so 20/20
+is an upper bound; `crisisPhrases.test.ts` holds about forty hand-written questions per major language group (emergencies, and
+ordinary questions close to an emergency word: gas station, fire station, police clearance, first aid course, smoke detector,
+flood insurance, "where is the hospital") and every phrase was also run over the catalogue's own texts in all languages to find
+words of one language that are ordinary in another (Slovak "ambulancia" is a clinic; "horí" is not "horizons"; the fire-service
+words of each language are masked). The non-English lists and examples are machine-assisted and wait for native readers.
+S03.08's ambassador questions are the real measure.

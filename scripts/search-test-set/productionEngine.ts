@@ -88,6 +88,7 @@ export async function engineFrom(parts: EngineParts, options: { translatedLeg: b
     keywordWeight: parts.settings.keywordWeight,
     directFloor: parts.settings.directFloor,
     directGap: parts.settings.directGap,
+    crisisPhrases: parts.settings.crisisPhrases,
     spendPurpose: "test_set",
     log: false,
     defer: (work) => void pending.push(work),
