@@ -4354,6 +4354,18 @@
     },
     "signIn": {
       "title": "[EN] Staff sign-in",
+      "audience": "[EN] For Hub staff and building ambassadors. Residents can use the app without signing in.",
+      "accountTitle": "[EN] Sign in to your account",
+      "residentLink": "[EN] Back to the resident app",
+      "forgot": "[EN] Forgot your password?",
+      "recovery": "[EN] Contact your Hub Admin to recover access. They will confirm who you are and arrange a password reset. This pilot does not send automatic password-reset emails.",
+      "recoveryPrivacy": "[EN] Never share your password or authenticator codes. If you have lost your authenticator, tell your Admin that you need help with it too.",
+      "newTitle": "[EN] New to the staff Hub?",
+      "newLead": "[EN] An Admin creates your account. There is no public staff registration.",
+      "stepAccount": "[EN] Get your username and starting password from your Admin in person.",
+      "stepPassword": "[EN] Sign in within 24 hours, then choose your own password. Your starting password works only once.",
+      "stepAuthenticator": "[EN] Admins and Coordinators will also be guided through setting up an authenticator app.",
+      "expiredHelp": "[EN] Starting password expired? Ask your Admin for a new one before trying again.",
       "lead": "[EN] Sign in with the username and password you were given.",
       "username": "[EN] Username",
       "password": "[EN] Password",
@@ -6199,6 +6211,29 @@
           "failed": "[EN] Nothing changed. Try again. If it fails again, tell IT."
         }
       }
+    },
+    "journey": {
+      "privacy": "[EN] Terms and privacy",
+      "directoryLinks": "[EN] Directory next steps",
+      "providers": "[EN] Manage providers",
+      "residentDirectory": "[EN] View the resident directory",
+      "publishReminder": "[EN] Provider changes reach residents after you publish a directory release.",
+      "publishDirectory": "[EN] Review and publish directory",
+      "exportHelp": "[EN] How to export these figures",
+      "campaign": "[EN] End of pilot"
+    },
+    "homeTasks": {
+      "quiet": "[EN] No alerts are running, and there are no drafts or approvals waiting on this page.",
+      "start": "[EN] Respond to a disruption",
+      "startDetail": "[EN] Log a disruption to record what happened. Compose an alert when you have a message for residents; another staff member must approve it before it is sent.",
+      "routine": "[EN] Between disruptions",
+      "routineDetail": "[EN] Use quieter periods to check readiness and keep resident information current.",
+      "coverage": "[EN] Check building coverage",
+      "coverageDetail": "[EN] See which buildings and floors have ambassador coverage.",
+      "measures": "[EN] Review pilot measures",
+      "measuresDetail": "[EN] Review subscriber counts and how far alerts reached.",
+      "providers": "[EN] Keep the directory current",
+      "providersDetail": "[EN] Confirm provider details, then publish a directory release for residents."
     }
   },
   "building": {
@@ -6427,5 +6462,16 @@
     ],
     "dayMonth": "{month} {day}",
     "digits": "0123456789"
+  },
+  "display": {
+    "title": "[EN] Display settings",
+    "close": "[EN] Done",
+    "textSize": "[EN] Text size",
+    "standard": "[EN] Standard",
+    "large": "[EN] Large",
+    "simpler": "[EN] Simpler view",
+    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
+    "saved": "[EN] Saved on this device.",
+    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
   }
 }

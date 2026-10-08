@@ -45,8 +45,8 @@ describe("the End of the pilot page", () => {
       deadline: "Deadline: Saturday, December 5, 2026, end of day in Toronto.",
       asked: "Subscribers who will be asked: 161",
       languages: [
-        { language: "Urdu", subscribers: 41 },
         { language: "English", subscribers: 120 },
+        { language: "Urdu", subscribers: 41 },
       ],
       noSubscribers: null,
       cost: "Estimated cost: $3.03 CAD for 161 texts.",

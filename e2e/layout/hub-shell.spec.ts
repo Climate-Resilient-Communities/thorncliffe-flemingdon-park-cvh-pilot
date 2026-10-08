@@ -112,13 +112,16 @@ test.describe("at 390 px", () => {
       await expectShellDoesNotOverflow(page);
       await expectInsideViewport(page, [menuButton(page), page.getByTestId("hub-person"), page.getByTestId("hub-sign-out").getByRole("button")]);
       expect(await smallTargets(page)).toEqual([]);
+      // The person and sign-out share the bar with the menu button and never cover it, however long the labels.
+      const [menu, person, signOut] = await Promise.all([box(menuButton(page)), box(page.getByTestId("hub-person")), box(page.getByTestId("hub-sign-out"))]);
+      for (const other of [person, signOut]) expect(other.right <= menu.left + 0.5 || other.left >= menu.right - 0.5, "beside the menu button").toBe(true);
 
       // The navigation is one tap away, in the drawer.
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: fifteen pages that exist (Incidents, Log a disruption, Compose an alert, Check-in rounds (S08.08), Coverage, Spend, Measures, Text sign-up, People, Providers, Directory, Buildings, Pause texts, On-call numbers, and Drills), none listed but not built yet.
-      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(15);
+      // The menu is the real one for an Admin: sixteen pages that exist (Incidents, Log a disruption, Compose an alert, Check-in rounds (S08.08), Coverage, Spend, Measures, Text sign-up, People, Providers, Directory, Buildings, Pause texts, On-call numbers, Drills, and End of pilot), none listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(16);
       await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(0);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
@@ -323,7 +326,7 @@ test.describe("what a screen reader reads", () => {
       await open(page, { texts: REAL_TEXTS, current: path });
 
       const links = page.getByTestId("hub-side").locator("a[href]");
-      await expect(links).toHaveCount(15);
+      await expect(links).toHaveCount(16);
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
       await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");

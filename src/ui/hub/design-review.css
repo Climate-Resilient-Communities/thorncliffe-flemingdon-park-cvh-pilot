@@ -1,0 +1,53 @@
+/* UI/UX alignment and control treatment shared by all staff screens, including sign-in/setup gates. */
+[data-surface="staff"] { text-align: start; }
+[data-surface="staff"] :is(h1,h2,h3,p,label,small,th,td,button,summary) { text-align: start; }
+.hub-button, .hub-top__signout button { text-align: start; border-radius: var(--gap-tight); }
+.hub-input, .hub-gate { border-radius: var(--gap-target); }
+.hub-gate { align-self: flex-start; }
+.hub-shell .hub-button { justify-content: flex-start; }
+/* Staff provider review: presentation only; server actions and permissions stay intact. */
+.provider-record { padding-block: var(--inset-card); border-block-end: 1px solid var(--border); text-align: start; }
+.provider-record:first-child { border-block-start: 1px solid var(--border); }
+.provider-record h2 { font-size: var(--type-body-size); }
+.provider-record strong { font-size: var(--type-caption-size); color: var(--text-muted); }
+.provider-record[data-published="true"] strong { color: var(--accent-text); }
+.provider-record__actions { display: flex; flex-wrap: wrap; align-items: end; gap: var(--inset-card); }
+.provider-record__actions > form { min-inline-size: 0; }
+.provider-record__actions .hub-input { inline-size: auto; max-inline-size: 100%; }
+/* Keep the live region in the accessibility tree before an action returns. */
+.provider-record [role="status"]:empty { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.hub-nav__item { border-radius: var(--gap-tight); }
+
+/* Staff entry: a readable form with adjacent onboarding, rather than a small card in an empty desktop. */
+.staff-signin { display: flex; flex-direction: column; gap: var(--gap-panel); inline-size: 100%; }
+.staff-auth-brand { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--gap-stack); }
+.staff-auth-brand__home { display: inline-flex; min-block-size: var(--tap-current); align-items: center; }
+.staff-auth-brand img { block-size: var(--size-topbar-hub-min); inline-size: auto; max-inline-size: 100%; object-fit: contain; }
+.staff-signin__columns { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--gap-panel); align-items: start; }
+.staff-signin__form { min-inline-size: 0; padding: var(--inset-card); background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--gap-target); }
+.staff-signin__help { min-inline-size: 0; padding-block: var(--inset-card); }
+.staff-signin__steps { display: flex; flex-direction: column; gap: var(--gap-stack); padding-inline-start: var(--gap-panel); list-style: decimal; }
+.staff-signin__recovery { border-block-start: 1px solid var(--border); padding-block-start: var(--gap-related); }
+.staff-signin__recovery summary { cursor: pointer; font-weight: 700; }
+.staff-signin__recovery summary:focus-visible, .staff-auth-brand a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@variant hub {
+  .staff-signin__columns { grid-template-columns: minmax(0,var(--size-aside-staff)) minmax(0,1fr); gap: var(--gap-columns-hub); }
+  .staff-signin__help { padding-inline-start: var(--inset-card); }
+}
+
+/* Account identity and sign-out share the bar at every width. */
+.hub-top { flex-wrap: nowrap; }
+/* The menu button and the symbol keep their size; the person and sign-out take what is left and wrap (never under the menu button). */
+.hub-top__brand { flex: none; }
+.hub-top__who { flex-wrap: nowrap; justify-content: flex-end; }
+.hub-top__person { flex: 1 1 auto; min-inline-size: 0; }
+/* On one line with the person, so both shrink and wrap: a long translated sign-out label never pushes the person out of the viewport. */
+.hub-top__signout { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 50%; }
+.hub-top__signout button { max-inline-size: 100%; overflow-wrap: anywhere; }
+.hub-top__context { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.hub-top__role { display: block; }
+.hub-top__app { display: none; }
+@variant hub {
+ .hub-top__context { position: static; inline-size: auto; block-size: auto; overflow: visible; clip-path: none; }
+ .hub-top__role { display: inline; }
+}

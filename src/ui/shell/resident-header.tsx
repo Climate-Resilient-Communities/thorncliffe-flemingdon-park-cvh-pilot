@@ -1,11 +1,13 @@
+import { DisplaySettings, type DisplaySettingsLabels } from "./display-settings";
 import Image from "next/image";
-import { BasicSwitch, type BasicSwitchProps } from "../basic";
+import { type BasicSwitchProps } from "../basic";
 import { Inline } from "../layout/inline";
 import { LanguageControl, type LanguageControlProps } from "./language-control";
 
 export type ResidentHeaderProps = LanguageControlProps & {
   logoAlt: string;
-  /** The words of X-07, the basic-mode switch under the logo row. */
+  display?: DisplaySettingsLabels;
+  /** The words of X-07, retained for compatibility with existing shell fixtures. */
   basic: BasicSwitchProps["labels"];
 };
 
@@ -13,11 +15,11 @@ export type ResidentHeaderProps = LanguageControlProps & {
 const LOGO = { src: "/brand/hub-logo.png", width: 423, height: 136 } as const;
 
 /**
- * C_ResidentHeader: the Hub logo and the language button, and under them the basic-mode switch (X-07, S02.14). The logo
+ * C_ResidentHeader: the Hub logo and the language button. Display settings open from the compact Aa button. The logo
  * and the button swap ends in right-to-left because this is an Inline that justifies between, not because of a [dir]
  * rule. "My choices", the prototype's second tool beside the switch, is the link of R-03 for now (S02.03).
  */
-export function ResidentHeader({ logoAlt, basic, ...language }: ResidentHeaderProps) {
+export function ResidentHeader({ logoAlt, display, basic: _basic, ...language }: ResidentHeaderProps) {
   return (
     <header className="shell-header" data-testid="shell-header">
       <Inline gap="target" justify="between" wrap={false}>
@@ -31,11 +33,11 @@ export function ResidentHeader({ logoAlt, basic, ...language }: ResidentHeaderPr
           unoptimized
           data-testid="shell-logo"
         />
-        <LanguageControl {...language} />
+        <div className="shell-header__tools">
+          <LanguageControl {...language} />
+          <DisplaySettings labels={display} />
+        </div>
       </Inline>
-      <div className="shell-tools">
-        <BasicSwitch labels={basic} />
-      </div>
     </header>
   );
 }

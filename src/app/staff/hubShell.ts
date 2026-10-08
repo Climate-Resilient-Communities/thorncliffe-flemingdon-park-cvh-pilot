@@ -73,6 +73,7 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   if (can(role, "oncall.manage")) admin.push({ id: "oncall", label: englishText("hub.nav.oncall"), href: "/staff/oncall", icon: "phone" });
   // The Drills page (S06.05, start a drill, the drill roster, what became of each drill's texts) is `drill.run`, Admin only.
   if (can(role, "drill.run")) admin.push({ id: "drills", label: englishText("hub.nav.drills"), href: "/staff/drills", icon: "phone" });
+  if (can(role, "campaign.run")) admin.push({ id: "campaign", label: englishText("staff.journey.campaign"), href: "/staff/campaign", icon: "phone" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }

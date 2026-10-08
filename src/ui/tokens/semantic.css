@@ -4,6 +4,11 @@
  * Spacing and sizes have one value in every theme, language and basic mode.
  */
 :root {
+  --size-page-resident: var(--app-page-resident);
+  --size-page-reading: var(--app-page-reading);
+  --size-side-directory: var(--app-side-directory);
+  --size-language-sheet: var(--app-language-sheet);
+  --size-filter-viewport-offset: var(--app-filter-viewport-offset);
   /* 3.1 Spacing */
   --gap-subline: var(--app-space-1);
   --gap-label: var(--app-space-2);

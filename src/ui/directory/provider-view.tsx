@@ -186,6 +186,15 @@ export function ProviderView({
         {machine && <MachineLabel english={english} onToggle={() => setEnglish((on) => !on)} describedBy={nameId} unreviewed={unreviewed} />}
       </header>
 
+      {variant === "card" && phoneEntries(provider.contact.phone).filter((entry) => entry.tel).slice(0, 1).map((entry) => (
+        // The card's first number as a call button up front (the full contacts are in the details below), drawn as Contacts draws a call.
+        <a key={entry.tel} href={`tel:${entry.tel}`} className="dir-call tap" {...(isEnglishFallback(t("R12.call")) ? { dir: "ltr", lang: "en" } : {})}>
+          <ResidentText>{t("R12.call")}</ResidentText>{" "}
+          <bdi dir="ltr" lang="en">{entry.text}</bdi>
+        </a>
+      ))}
+      <details className="dir-card__details" open={variant === "page"}>
+      <summary className="tap"><ResidentText>{t("R12.services")}</ResidentText></summary>
       <dl className="dir-facts">
         <div className="dir-fact">
           <ResidentText as="dt">{t("R12.services")}</ResidentText>
@@ -204,6 +213,7 @@ export function ProviderView({
           <dd data-testid="provider-emergency">{provider.emergency_role ? <HowTheyHelp role={provider.emergency_role} english={english} contentLang={contentLang} /> : <Unknown>{t("status.unknown")}</Unknown>}</dd>
         </div>
       </dl>
+      </details>
 
       <ResidentText as="p" className="dir-card__confirmed" testId="last-confirmed">
         {confirmed}

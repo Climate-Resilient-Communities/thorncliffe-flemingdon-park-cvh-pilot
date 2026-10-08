@@ -123,8 +123,8 @@ describe("the incidents list as it is drawn", () => {
 
   it("says nothing is waiting, and has no list of the person's own, when there is nothing at all", () => {
     const out = html(none);
-    expect(out).toContain("Nothing is waiting for your approval.");
-    expect(out).toContain("You have no alerts in progress.");
+    expect(out).toContain("No alerts are running");
+    expect(out).not.toContain('data-testid="incidents-mine"');
     expect(out).not.toContain('data-testid="waiting-item"');
   });
 
@@ -144,7 +144,7 @@ describe("the incidents list as it is drawn", () => {
   });
 
   it("is only the person's own alerts for an Ambassador, and a Director has nothing to approve", () => {
-    expect(html(none, "director")).not.toContain("approval");
+    expect(html(none, "director")).not.toContain('data-testid="incidents-waiting"');
     expect(html({ waiting: [], mine: [row({ status: "draft", submittedAt: null })] }, "ambassador")).toContain("Your alerts");
   });
 });

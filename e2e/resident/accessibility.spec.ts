@@ -238,7 +238,7 @@ test.describe("focus order", () => {
   for (const lang of ["en", "ur"] as const) {
     for (const basic of [false, true]) {
       for (const name of ["home", "directory", "my choices", "be ready", "choose groups"]) {
-        test(`${lang}, ${basic ? "basic" : "normal"} mode, ${name}: Tab visits the controls in the order of the page, header first and navigation last`, async ({ page }) => {
+        test(`${lang}, ${basic ? "basic" : "normal"} mode, ${name}: Tab visits the controls in the order of the page, header first, then the navigation and the footer last`, async ({ page }) => {
           const entry = PAGES.find((p) => p.name === name)!;
           await open(page, entry, lang, basic, 390);
           const order = await page.evaluate(() => {
@@ -262,9 +262,18 @@ test.describe("focus order", () => {
 
           const first = await page.evaluate(() => document.querySelector<HTMLElement>('[data-tab-index="0"]')?.getAttribute("data-testid"));
           const second = await page.evaluate(() => document.querySelector<HTMLElement>('[data-tab-index="1"]')?.getAttribute("data-testid"));
-          const lastInNav = await page.evaluate((last) => !!document.querySelector(`[data-tab-index="${last}"]`)?.closest("nav"), order.count - 1);
-          expect([first, second]).toEqual(["shell-lang-button", "basic-switch"]);
-          expect(lastInNav, "the last control is in the bottom navigation").toBe(true);
+          // The page ends with the bottom navigation and then the footer (staff sign-in, terms and privacy), in that order on screen and for Tab.
+          const tail = await page.evaluate((count) => {
+            const at = (index: number) => document.querySelector(`[data-tab-index="${index}"]`);
+            const footer = [...Array(count).keys()].filter((index) => at(index)?.closest(".shell-footer"));
+            const lastBeforeFooter = footer.length > 0 ? Math.min(...footer) - 1 : count - 1;
+            return { footer, footerIsLast: footer.every((index, i) => index === count - footer.length + i), lastBeforeFooterInNav: !!at(lastBeforeFooter)?.closest("[data-testid=shell-nav]") };
+          }, order.count);
+          // The header's language button and then its display settings (Aa) button come first.
+          expect([first, second]).toEqual(["shell-lang-button", "display-settings-button"]);
+          expect(tail.footer.length, "the footer's two links").toBe(2);
+          expect(tail.footerIsLast, "the footer's links are the last controls").toBe(true);
+          expect(tail.lastBeforeFooterInNav, "the bottom navigation comes right before the footer").toBe(true);
         });
       }
     }

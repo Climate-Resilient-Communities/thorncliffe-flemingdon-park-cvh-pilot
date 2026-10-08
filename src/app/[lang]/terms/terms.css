@@ -8,6 +8,15 @@
     outline-offset: 2px;
   }
 
+  /* The contents list: each section link is a whole tap target (a plain <a> is inline, so the tap utility's minimum would not apply). */
+  .terms-contents a {
+    display: inline-flex;
+    align-items: center;
+    overflow-wrap: anywhere;
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+
   .terms-facts {
     display: flex;
     flex-direction: column;

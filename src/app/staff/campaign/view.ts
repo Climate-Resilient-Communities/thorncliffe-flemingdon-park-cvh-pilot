@@ -1,3 +1,4 @@
+import { orderedByLanguage } from "@/ui/shell/language-order";
 // What the End of the pilot page says (S09.07), built from what subscriptions and messaging read: before the start, the rehearsal and the confirmation (the deadline,
 // the subscribers who will be asked per language, the estimated cost and the cap); while it runs, who started it and how far it has got; after the deadline, who
 // stayed; and sign-ups (paused, or reopened). Every sentence is resolved from the catalog here; the page's components only draw it.
@@ -103,7 +104,7 @@ export function campaignScreen({ overview, names, rehearsalTexts, campaignTexts,
           deadline: t("start.deadline", { date: deadlineForStaff(overview.deadlineDate) }),
           deadlineHint: t("start.deadlineHint"),
           asked: t("start.asked", { n: estimate.subscribers }),
-          languages: estimate.byLanguage.map((row) => ({ language: languageName(row.lang), subscribers: row.subscribers })),
+          languages: orderedByLanguage(estimate.byLanguage, (row) => row.lang).map((row) => ({ language: languageName(row.lang), subscribers: row.subscribers })),
           noSubscribers: estimate.subscribers === 0 ? t("start.noSubscribers") : null,
           cost: t("start.cost", { cost: `${formatCents(estimate.costCents)} CAD`, n: estimate.subscribers }),
           capNotice,

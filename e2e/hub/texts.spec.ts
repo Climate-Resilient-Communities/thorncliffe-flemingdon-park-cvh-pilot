@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadPauseBanner } from "../../src/app/staff/pauseBanner";
+import { loadPauseBanner } from "../../src/app/staff/pauseBannerModel";
 import type { PauseTextsLabels } from "../../src/app/staff/texts/PauseTextsFormView";
 import type { TextsState } from "../../src/app/staff/texts/control";
 import { pausedView } from "../../src/app/staff/texts/view";

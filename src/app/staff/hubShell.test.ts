@@ -40,7 +40,7 @@ describe("hubNavigation", () => {
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend", "Measures"]);
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "End of pilot"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -109,6 +109,7 @@ describe("hubNavigation", () => {
       { id: "texts", label: "Pause texts", href: "/staff/texts", icon: "pause" },
       { id: "oncall", label: "On-call numbers", href: "/staff/oncall", icon: "phone" },
       { id: "drills", label: "Drills", href: "/staff/drills", icon: "phone" },
+      { id: "campaign", label: "End of pilot", href: "/staff/campaign", icon: "phone" },
     ]);
   });
 

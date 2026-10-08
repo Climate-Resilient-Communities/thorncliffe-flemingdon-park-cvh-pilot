@@ -59,11 +59,11 @@ describe("saving the choice", () => {
     const store = createChoicesStore(() => storage, undefined, () => 5);
 
     expect(saveBasicChoice(true, store)).toBe(true);
-    expect(JSON.parse(storage.items.get(DEVICE_CHOICES_KEY)!)).toEqual({ v: 1, lang: "ta", buildings: ["100"], basic: true, savedAt: 5 });
+    expect(JSON.parse(storage.items.get(DEVICE_CHOICES_KEY)!)).toEqual({ v: 1, lang: "ta", buildings: ["100"], textSize: "standard", basic: true, savedAt: 5 });
     expect(isBasic(store.getSnapshot())).toBe(true);
 
     expect(saveBasicChoice(false, store)).toBe(true);
-    expect(JSON.parse(storage.items.get(DEVICE_CHOICES_KEY)!)).toEqual({ v: 1, lang: "ta", buildings: ["100"], savedAt: 5 });
+    expect(JSON.parse(storage.items.get(DEVICE_CHOICES_KEY)!)).toEqual({ v: 1, lang: "ta", buildings: ["100"], textSize: "standard", savedAt: 5 });
     expect(isBasic(store.getSnapshot())).toBe(false);
   });
 
@@ -74,7 +74,7 @@ describe("saving the choice", () => {
     expect(saveBasicChoice(false, store)).toBe(true);
     expect(storage.items.size).toBe(0);
     expect(saveBasicChoice(true, store)).toBe(true);
-    expect(JSON.parse(storage.items.get(DEVICE_CHOICES_KEY)!)).toEqual({ v: 1, basic: true, savedAt: 1 });
+    expect(JSON.parse(storage.items.get(DEVICE_CHOICES_KEY)!)).toEqual({ v: 1, textSize: "standard", basic: true, savedAt: 1 });
   });
 
   it("says so when the phone refuses to keep it, and the mode then lasts for this session", () => {

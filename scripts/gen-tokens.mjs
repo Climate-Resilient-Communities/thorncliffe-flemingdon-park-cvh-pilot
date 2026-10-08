@@ -29,11 +29,12 @@ const TYPE_GROUPS = [
 // Basic mode is data-basic="true" on <html> (token-architecture.md section 8). The staff type set
 // applies on the staff surface: the element carrying data-surface="staff", which is Screen's staff
 // root and, from S01.09, the Hub shell's root.
-const BASIC_SELECTOR = '[data-basic="true"]';
+const BASIC_SELECTOR = ':is([data-text-size="large"], [data-basic="true"]:not([data-text-size]))';
 const STAFF_SELECTOR = '[data-surface="staff"]';
 
 // Build-time tokens written as literals into Tailwind's @theme only (section 2.5).
 const BUILD_TIME = [
+  { group: "breakpoint", token: "app-breakpoint-resident-wide", theme: "--breakpoint-resident-wide", note: "resident desktop shell" },
   { group: "breakpoint", token: "app-breakpoint-hub", theme: "--breakpoint-hub", note: "variant hub:, the Hub shell only (viewport)" },
   {
     group: "container",

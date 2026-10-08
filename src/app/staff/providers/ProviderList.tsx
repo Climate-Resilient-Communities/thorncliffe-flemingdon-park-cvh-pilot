@@ -1,5 +1,8 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages -- Staff navigation reloads session and safety banners; resident destinations cross root layouts. */
 
+
+import { englishText } from "@/i18n/text";
 import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import { confirmProviderAction, publishProviderAction, unpublishProviderAction } from "./actions";
@@ -51,7 +54,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
   const dateHint = row.lastConfirmed === null ? labels.neverConfirmed : labels.dateHint;
 
   return (
-    <li data-testid={`provider-${row.id}`} data-published={row.published ? "true" : "false"} data-in-catalogue={row.inCatalogue ? "true" : "false"}>
+    <li className="provider-record" data-testid={`provider-${row.id}`} data-published={row.published ? "true" : "false"} data-in-catalogue={row.inCatalogue ? "true" : "false"}>
       <Stack gap="related">
         <Inline gap="related" justify="between" align="baseline">
           <h2>{row.name}</h2>
@@ -64,7 +67,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
             <p>{labels.removedNote}</p>
           </>
         ) : (
-          <Stack gap="stack">
+          <div className="provider-record__actions">
             <form action={confirm} onSubmit={() => setLast("confirm")}>
               <input type="hidden" name="providerId" value={row.id} />
               <Stack gap="label">
@@ -109,7 +112,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
                 ) : null}
               </Stack>
             </form>
-          </Stack>
+          </div>
         )}
         {/* The status region is always in the page (a live region must exist before its text does); a refusal is a separate alert. */}
         <p id={messageId} role="status" data-testid={`provider-${row.id}-message`}>
@@ -128,10 +131,16 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
 /** The Admin's list of providers (S02.04). */
 export function ProviderList({ rows, today, labels }: { rows: ProviderRowData[]; today: string; labels: ProviderListLabels }) {
   return (
+    <Stack gap="section-hub">
+      <Stack gap="related">
+        <p>{englishText("staff.journey.publishReminder")}</p>
+        <a className="hub-link tap" href="/staff/directory">{englishText("staff.journey.publishDirectory")}</a>
+      </Stack>
     <Stack gap="section-hub" as="ul" testId="provider-list">
       {rows.map((row) => (
         <ProviderRow key={row.id} row={row} today={today} labels={labels} />
       ))}
+    </Stack>
     </Stack>
   );
 }

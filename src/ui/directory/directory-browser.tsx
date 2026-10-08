@@ -184,7 +184,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
         )}
 
         {listing && (
-          <>
+          <div className="dir-workspace">
             <Stack gap="related">
               <section className="dir-filters" aria-label={t("R27.title")} data-testid="filters">
                 <Stack gap="related">
@@ -216,7 +216,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                       </ul>
                     </div>
                   )}
-                  <div id="dir-filter-panel" hidden={!panelOpen} data-testid="filter-panel">
+                  <div id="dir-filter-panel" data-open={panelOpen} data-testid="filter-panel">
                     <Stack gap="stack">
                       <ResidentText as="p" className="dir-hint">
                         {t("R27.private")}
@@ -336,7 +336,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                 </Stack>
               </section>
             )}
-          </>
+          </div>
         )}
       </Stack>
     </Screen>

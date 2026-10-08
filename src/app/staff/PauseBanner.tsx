@@ -1,5 +1,5 @@
 import { Screen, Stack } from "@/ui";
-import type { PauseBannerView } from "./pauseBanner";
+import type { PauseBannerView } from "./pauseBannerModel";
 
 /**
  * "Texts are paused" (S06.06): shown to everyone at the Hub, above each Hub screen, from the moment an Admin pauses until texts are resumed:

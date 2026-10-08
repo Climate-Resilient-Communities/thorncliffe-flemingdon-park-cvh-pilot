@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { MessagingControlMissing, type PauseStatus } from "@/modules/messaging";
 import { PauseBanner } from "./PauseBanner";
-import { loadPauseBanner, missingBanner, type PauseBannerDeps } from "./pauseBanner";
+import { loadPauseBanner, missingBanner, type PauseBannerDeps } from "./pauseBannerModel";
 
 const PAUSER = "01900000-0000-7000-8000-0000000000a1";
 const PAUSED: PauseStatus = { paused: true, pausedBy: PAUSER, pausedAt: new Date("2026-10-05T18:15:00Z"), reason: "Wrong alert sent to Thorncliffe Park", handedOffAtPause: 4 };

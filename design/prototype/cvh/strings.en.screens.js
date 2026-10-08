@@ -1126,7 +1126,18 @@
       providerRejected: "Supabase rejected the starting password; check the project's password policy.",
       passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so no account can be created. Nothing was saved. Ask IT to set it.' } } } });
   /* Staff sign-in and the setup sequence's first gate (S01.07). Not a prototype screen. */
-  m(en, { staff: { signIn: { title: 'Staff sign-in', lead: 'Sign in with the username and password you were given.', username: 'Username', password: 'Password', submit: 'Sign in',
+  m(en, { staff: { signIn: { title: 'Staff sign-in',
+    audience: 'For Hub staff and building ambassadors. Residents can use the app without signing in.',
+    accountTitle: 'Sign in to your account', residentLink: 'Back to the resident app',
+    forgot: 'Forgot your password?',
+    recovery: 'Contact your Hub Admin to recover access. They will confirm who you are and arrange a password reset. This pilot does not send automatic password-reset emails.',
+    recoveryPrivacy: 'Never share your password or authenticator codes. If you have lost your authenticator, tell your Admin that you need help with it too.',
+    newTitle: 'New to the staff Hub?', newLead: 'An Admin creates your account. There is no public staff registration.',
+    stepAccount: 'Get your username and starting password from your Admin in person.',
+    stepPassword: 'Sign in within 24 hours, then choose your own password. Your starting password works only once.',
+    stepAuthenticator: 'Admins and Coordinators will also be guided through setting up an authenticator app.',
+    expiredHelp: 'Starting password expired? Ask your Admin for a new one before trying again.',
+    lead: 'Sign in with the username and password you were given.', username: 'Username', password: 'Password', submit: 'Sign in',
     failed: 'Username or password is incorrect', expired: 'Your starting password has expired or was already used. Ask an Admin for a new starting password.',
     unavailable: 'Sign-in is not working right now. Try again in a few minutes.' },
   signOut: 'Sign out', signedInAs: 'Signed in as {name}, {role}',
@@ -2839,4 +2850,24 @@
   ops: { oncall: { escalation: {
     needs_help: 'CVH: Needs help: {building}, floor {floor}. Open: {link}',
     not_reached: 'CVH: Not reached: {building}, floor {floor}. Open: {link}' } } } });
+m(en, { staff: { journey: {
+  privacy: 'Terms and privacy',
+  directoryLinks: 'Directory next steps',
+  providers: 'Manage providers',
+  residentDirectory: 'View the resident directory',
+  publishReminder: 'Provider changes reach residents after you publish a directory release.',
+  publishDirectory: 'Review and publish directory',
+  exportHelp: 'How to export these figures',
+  campaign: 'End of pilot'
+} } });
+m(en, { staff: { homeTasks: {
+quiet: 'No alerts are running, and there are no drafts or approvals waiting on this page.',
+start: 'Respond to a disruption', startDetail: 'Log a disruption to record what happened. Compose an alert when you have a message for residents; another staff member must approve it before it is sent.',
+routine: 'Between disruptions', routineDetail: 'Use quieter periods to check readiness and keep resident information current.',
+coverage: 'Check building coverage', coverageDetail: 'See which buildings and floors have ambassador coverage.',
+measures: 'Review pilot measures', measuresDetail: 'Review subscriber counts and how far alerts reached.',
+providers: 'Keep the directory current', providersDetail: 'Confirm provider details, then publish a directory release for residents.'
+} } });
+m(en, { display: { title: 'Display settings', close: 'Done', textSize: 'Text size', standard: 'Standard', large: 'Large', simpler: 'Simpler view', help: 'Show fewer details and use lists instead of the map. Text size stays the same.', saved: 'Saved on this device.', sessionOnly: 'Your browser cannot save this setting. It will last for this session only.' } });
+m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: 'Turn off simpler view' } });
 })();

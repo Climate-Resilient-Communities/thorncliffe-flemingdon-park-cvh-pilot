@@ -1,0 +1,89 @@
+/* Approved resident direction, 2026-10-07. Logical start alignment preserves RTL.
+   Desktop dimensions are generated from the approved design tokens. */
+.shell { text-align: start; }
+.shell :is(p,button,summary) { text-align: start; }
+.shell { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.shell-header { padding-block: var(--gap-stack); }
+.shell-nav__item { align-items: flex-start; text-align: start; padding-inline: var(--gap-tight); }
+.shell .dir-btn, .shell .dir-call, .shell .shell-langbtn { border-radius: var(--gap-tight); }
+.shell .dir-option { border-radius: var(--gap-tight); border-color: transparent; background: transparent; }
+.shell .dir-option:hover { background: var(--surface-raised); }
+.shell .dir-card { border-radius: var(--gap-target); padding: var(--inset-card); }
+.shell .dir-card__link { text-decoration: none; }
+.shell .dir-card__link:hover { text-decoration: underline; }
+.shell .dir-facts, .shell .dir-card--page { max-inline-size: 70ch; }
+.shell .dir-card__confirmed { font-size: var(--type-caption-size); }
+.shell .dir-call { justify-content: flex-start; }
+
+/* Footer remains reachable without scrolling through the directory. */
+.shell-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap-target); position: relative; inline-size: 100%; padding-block: 0; padding-inline: var(--inset-card); border-block-start: 1px solid var(--border); background: var(--surface); }
+.shell-footer a { display: inline-flex; align-items: center; min-block-size: var(--tap-current); color: var(--text-muted); }
+.shell-tools { color: var(--text-muted); }
+.shell-tools summary { cursor: pointer; display: flex; align-items: center; }
+.shell-tools summary::before { content: '+'; margin-inline-end: var(--gap-target); }
+.shell-tools[open] summary::before { content: '−'; }
+.shell-tools[open] { position: absolute; inset-block-end: 0; inset-inline-end: 0; max-inline-size: 100%; max-block-size: 70dvh; overflow-y: auto; padding: var(--inset-card); background: var(--surface); border: 1px solid var(--border); z-index: 10; }
+
+.dir-workspace { display: grid; gap: var(--inset-card); }
+.dir-card__details summary { display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--accent-text); }
+.dir-card__details summary::after { content: '+'; margin-inline-start: var(--gap-target); }
+.dir-card__details[open] summary::after { content: '−'; }
+.dir-card--page > .dir-card__details > summary { display: none; }
+.shell .ask-input, .shell .ask-topic, .shell .home-card, .shell .home-place { border-radius: var(--gap-target); }
+.shell .ask-topic { justify-content: flex-start; text-align: start; }
+
+@variant resident-wide {
+  .shell { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  .shell-header { padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
+  .shell-nav { grid-row: 2; display: flex; gap: var(--gap-stack); padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); border-block-end: 1px solid var(--border); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
+  .shell-nav__item { flex-direction: row; gap: var(--gap-target); padding-inline: var(--gap-stack); border-block-start: 0; border-block-end: 3px solid transparent; }
+  .shell-nav__item[aria-current="page"] { border-block-end-color: currentColor; background: var(--surface); }
+  .shell__main { grid-row: 3; }
+  .shell-footer { grid-row: 4; }
+  .shell .layout-screen, .shell-footer { max-inline-size: var(--size-page-resident); margin-inline: auto; }
+  .shell .layout-screen { padding-block: var(--inset-card); }
+  .shell .layout-screen:not([data-testid="directory-page"]):not([data-testid="map-page"]) > .layout-screen__body { max-inline-size: var(--size-page-reading); }
+  .shell .dir-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--inset-card); align-items: start; }
+  .shell .dir-filters { max-inline-size: 70ch; }
+  .shell .dir-card--card .dir-facts { font-size: var(--type-caption-size); }
+  .shell .shell-sheet { max-inline-size: var(--size-language-sheet); margin-inline: auto; }
+  .dir-workspace { grid-template-columns: var(--size-side-directory) minmax(0, 1fr); align-items: start; }
+  .dir-workspace > :first-child { position: sticky; inset-block-start: var(--gap-stack); }
+  .dir-card--card { gap: var(--gap-label); }
+}
+
+/* Topic browsing is a list of choices, not a wall of outlined buttons. */
+.shell .dir-btn { justify-content: flex-start; }
+.shell .ask-topics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.shell .ask-topic { inline-size: 100%; block-size: 100%; align-items: flex-start; padding: var(--gap-stack); border: 0; border-block-end: 1px solid var(--border); border-radius: 0; background: var(--surface-raised); }
+.shell .ask-topic:hover { background: var(--surface); }
+.shell .ask-form > .dir-btn { align-self: flex-start; min-inline-size: 9rem; }
+:root[data-basic="true"] .shell .ask-topics { grid-template-columns: minmax(0, 1fr); }
+@variant resident-wide {
+  .dir-workspace > :first-child { max-block-size: calc(100dvh - var(--size-filter-viewport-offset)); overflow-y: auto; }
+}
+
+/* Consistent, start-aligned controls throughout resident workflows. Icon-only map controls retain their geometry. */
+.shell :is(.choice-btn,.alert-button,.share-btn,.map-btn,.map-segment__btn) { text-align: start; justify-content: flex-start; border-radius: var(--gap-tight); }
+.shell :is(.choice-option,.choice-input,.signup-input,.signup-errorbox,.checkin-card,.alert-card,.share-box,.map-frame) { border-radius: var(--gap-target); }
+.shell .map-segment__btn { padding-inline: var(--gap-stack); }
+@variant resident-wide { .shell .map-canvas { block-size: clamp(24rem, 55dvh, 40rem); } }
+
+.dir-filters [data-testid="filter-panel"][data-open="false"] { display: none; }
+
+/* The desktop sidebar stays open; the same controls collapse behind Filters on phones. */
+@variant resident-wide {
+  .dir-filters [data-testid="filter-panel"][data-open] { display: block; }
+  .dir-filters :is([data-testid="filters-toggle"], [data-testid="filters-apply"]) { display: none; }
+}
+.shell :is(.checkin-consent,.checkin-answer,.offline-notice,.not-911) { border-radius: var(--gap-target); }
+
+.shell-header__tools { display: flex; align-items: center; gap: var(--gap-target); min-inline-size: 0; }
+.shell-header__tools .shell-langbtn { min-inline-size: 0; max-inline-size: 100%; }
+/* The rule above lets the language button shrink; the Aa button keeps the full tap size (56 px in basic mode). */
+.shell-header__tools .shell-display-button { flex: none; min-inline-size: var(--tap-current); justify-content: center; }
+.display-size { border: 0; padding: 0; margin: 0; }
+.display-size legend { font-weight: 700; }
+.display-size__choices { display: flex; flex-wrap: wrap; gap: var(--gap-stack); }
+.display-size__choices label, .display-simpler { display: flex; align-items: center; gap: var(--gap-target); cursor: pointer; }
+.shell-header .shell-logo { min-inline-size: 0; flex-shrink: 1; object-fit: contain; }

@@ -1,3 +1,4 @@
+import { orderedByLanguage } from "@/ui/shell/language-order";
 // The main column of the published confirmation (O-06, S04.10): what an approved entry did and where it went. Pure; ApprovalBody draws it for an entry that is
 // approved, beside the aside that holds every language's web text and text message.
 import { Stack } from "@/ui";
@@ -8,7 +9,7 @@ import type { ApprovalScreen, PublishedLanguageView, PublishedRowView } from "./
 function Languages({ label, items, id }: { label: string; items: PublishedLanguageView[]; id: string }) {
   return (
     <p className="hub-wrap" aria-label={label} data-testid={id}>
-      {items.map((language, index) => (
+      {orderedByLanguage(items, (language) => language.lang).map((language, index) => (
         <span key={language.lang}>
           {index > 0 && " · "}
           <span lang={language.bcp47} dir={language.dir} data-testid={`${id}-${language.lang}`}>

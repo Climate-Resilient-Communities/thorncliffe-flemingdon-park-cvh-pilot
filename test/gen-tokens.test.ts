@@ -75,11 +75,11 @@ describe("gen:tokens output", () => {
     }
   });
 
-  it("writes the resident type set on :root, basic mode under [data-basic=\"true\"] and staff on the staff surface", () => {
+  it("writes resident, independent large-text with legacy basic fallback, and staff type sets", () => {
     const groups = Object.fromEntries(tokens.type.groups.map((group: { name: string }) => [group.name, group]));
     const sets = [
       [":root", groups["Screens: resident"], "screen-"],
-      ['[data-basic="true"]', groups["Screens: basic mode"], "screen-basic-"],
+      [':is([data-text-size="large"], [data-basic="true"]:not([data-text-size]))', groups["Screens: basic mode"], "screen-basic-"],
       ['[data-surface="staff"]', groups["Screens: staff"], "screen-staff-"],
     ] as const;
 

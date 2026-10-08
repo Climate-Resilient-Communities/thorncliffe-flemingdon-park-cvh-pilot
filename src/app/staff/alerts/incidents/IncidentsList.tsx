@@ -2,9 +2,10 @@
 // threads, the person's own alerts, and the drills in their own labelled section. Pure: the layout tests and the screenshots render it on a view they built,
 // and the Hub home renders it on the person's own (IncidentsPanel.tsx).
 //
-// Below 800 px of content width it is one column, the main content first (what waits for the person, always above the links that start something, then the open threads, the person's alerts) and the aside (the drills)
-// after it, filling the width; from 800 px two columns with the page's approved gap. A Director gets the same screen with no link to anything that
+// Below 800 px of content width it is one column, the main content first (what waits for the person, always above the links that start something, then the open threads, the person's alerts) and the second
+// column (the routine tasks, then the drills) after it, filling the width; from 800 px two columns with the page's approved gap. A Director gets the same screen with no link to anything that
 // changes something.
+import { englishText } from "@/i18n/text";
 import { Grid, Stack } from "@/ui";
 import type { IncidentItemView, IncidentsView } from "./view";
 
@@ -52,18 +53,19 @@ function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
 
 /** The screen for a view that was already loaded (the tests and the page both render this). */
 export function IncidentsList({ view }: { view: IncidentsView }) {
+  const quiet = !view.waiting?.items.length && !view.running?.items.length && !view.mine.items.length && !view.drills.items.length;
   const main = (
     <Stack gap="section-hub-main">
       <Stack gap="related">
         <h1 className="hub-wrap">{view.title}</h1>
-        <p>{view.lead}</p>
+        <p>{quiet ? englishText("staff.homeTasks.quiet") : view.lead}</p>
         {view.readOnly && (
           <p role="note" className="hub-flag hub-wrap" data-testid="read-only">
             {view.readOnly}
           </p>
         )}
       </Stack>
-      {view.waiting && (
+      {view.waiting && !quiet && (
         <section aria-labelledby="incidents-waiting-title" data-testid="incidents-waiting">
           <Stack gap="related">
             <h2 id="incidents-waiting-title" className="hub-wrap">{view.waiting.title}</h2>
@@ -74,6 +76,9 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
       )}
       {view.start && (
         <nav aria-label={view.start.title} data-testid="incidents-start">
+          <Stack gap="related">
+            <h2>{englishText("staff.homeTasks.start")}</h2>
+            <p>{englishText("staff.homeTasks.startDetail")}</p>
           <Stack as="ul" gap="subline">
             {view.start.links.map((link) => (
               <li key={link.id}>
@@ -83,9 +88,10 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
               </li>
             ))}
           </Stack>
+          </Stack>
         </nav>
       )}
-      {view.running && (
+      {view.running && !quiet && (
         <section aria-labelledby="incidents-running-title" data-testid="incidents-running">
           <Stack gap="related">
             <h2 id="incidents-running-title" className="hub-wrap">{view.running.title}</h2>
@@ -103,7 +109,7 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
           </Stack>
         </section>
       )}
-      {(view.mine.items.length > 0 || view.waiting) && (
+      {!quiet && (view.mine.items.length > 0 || view.waiting) && (
         <section aria-labelledby="incidents-mine-title" data-testid="incidents-mine">
           <Stack gap="related">
             <h2 id="incidents-mine-title" className="hub-wrap">{view.mine.title}</h2>
@@ -113,14 +119,38 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
       )}
     </Stack>
   );
+  // The second column: the routine tasks between disruptions in a section of their own, then the drills in their own labelled aside (a quiet home
+  // has no drills to list, so it shows the routine tasks only).
   const aside = (
-    <aside aria-labelledby="incidents-drills-title" data-testid="incidents-drills">
-      <Stack gap="related">
-        <h2 id="incidents-drills-title" className="hub-wrap">{view.drills.title}</h2>
-        <p>{view.drills.items.length > 0 ? view.drills.lead : view.drills.none}</p>
-        {view.drills.items.length > 0 && <Items items={view.drills.items} id="drill" />}
-      </Stack>
-    </aside>
+    <Stack gap="section-hub-main" testId="incidents-side">
+      {view.routine && (
+        <section aria-labelledby="routine-heading" data-testid="incidents-routine">
+          <Stack gap="related">
+            <h2 id="routine-heading" className="hub-wrap">{englishText("staff.homeTasks.routine")}</h2>
+            <p>{englishText("staff.homeTasks.routineDetail")}</p>
+            <Stack as="ul" gap="stack">
+              {view.routine.map((task) => (
+                <li key={task.href}>
+                  <a className="hub-link tap" href={task.href}>
+                    {task.label}
+                  </a>
+                  <p>{task.detail}</p>
+                </li>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
+      {!quiet && (
+        <aside aria-labelledby="incidents-drills-title" data-testid="incidents-drills">
+          <Stack gap="related">
+            <h2 id="incidents-drills-title" className="hub-wrap">{view.drills.title}</h2>
+            <p>{view.drills.items.length > 0 ? view.drills.lead : view.drills.none}</p>
+            {view.drills.items.length > 0 && <Items items={view.drills.items} id="drill" />}
+          </Stack>
+        </aside>
+      )}
+    </Stack>
   );
   return (
     <Grid twoColumn="aside">

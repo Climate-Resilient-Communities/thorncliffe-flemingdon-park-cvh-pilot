@@ -131,7 +131,7 @@ describe("the list of running alerts as it is drawn", () => {
   });
 
   it("says nothing is running when nothing is, and draws no list at all for a role that does not write alerts", () => {
-    expect(html([])).toContain("No alert is running.");
+    expect(html([])).toContain("No alerts are running");
     expect(renderToStaticMarkup(<IncidentsList view={incidentsView(none, "ambassador", undefined, [thread()])} />)).not.toContain('data-testid="incidents-running"');
   });
 
@@ -139,7 +139,7 @@ describe("the list of running alerts as it is drawn", () => {
     const out = html([thread(), thread({ alertId: OTHER_ALERT, isDrill: true, ackOnly: true })], "director");
     expect(out).toContain('data-testid="running-item"');
     expect(out).toContain('data-testid="read-only"');
-    expect(out).not.toMatch(/<a /);
+    expect([...out.matchAll(/href="([^"]+)"/g)].map(match => match[1])).toEqual(["/staff/coverage", "/staff/measures"]);
     expect(out).not.toContain("Add an update");
     expect(out).not.toContain("Promote");
   });
@@ -155,6 +155,8 @@ describe("the list of running alerts as it is drawn", () => {
     expect(out).toContain('data-two-column="aside"');
     expect(out.indexOf('data-testid="incidents-mine"')).toBeLessThan(out.indexOf('data-testid="incidents-drills"'));
     expect(out).toMatch(/<aside aria-labelledby="incidents-drills-title" data-testid="incidents-drills">.*<h2 id="incidents-drills-title" class="hub-wrap">Drills<\/h2>.*data-drill="true"/);
-    expect(html([])).toContain("No drill is running.");
+    // The routine tasks are a section of their own beside it, not inside the Drills aside.
+    expect(out.indexOf('data-testid="incidents-routine"')).toBeLessThan(out.indexOf("<aside"));
+    expect(html([])).not.toContain('id="incidents-drills-title"');
   });
 });

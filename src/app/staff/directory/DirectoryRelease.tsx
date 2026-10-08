@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- Staff navigation reloads session and safety banners; resident destinations cross root layouts. */
+import { englishText } from "@/i18n/text";
 import { Stack } from "@/ui";
 import { PublishDirectory, type PublishDirectoryLabels } from "./PublishDirectory";
 import { StaleList } from "./StaleList";
@@ -45,6 +47,12 @@ export function DirectoryRelease({ view }: { view: DirectoryReleaseView }) {
         ) : null}
       </Stack>
       <PublishDirectory labels={view.labels} />
+      <nav aria-label={englishText("staff.journey.directoryLinks")}>
+        <Stack gap="related">
+          <a className="hub-link tap" href="/staff/providers">{englishText("staff.journey.providers")}</a>
+          <a className="hub-link tap" href="/en/directory">{englishText("staff.journey.residentDirectory")}</a>
+        </Stack>
+      </nav>
     </>
   );
 }

@@ -38,8 +38,9 @@ export type HubShellProps = {
 function SignedInAs({ template, user, roles }: { template: string; user: HubShellUser; roles: HubShellLabels["roles"] }) {
   return template.split(/(\{name\}|\{role\})/).map((part, index) => {
     if (part === "{name}") return <bdi key={index}>{user.displayName}</bdi>;
-    if (part === "{role}") return <span key={index}>{roles[user.role]}</span>;
-    return part;
+    if (part === "{role}") return <span className="hub-top__role" key={index}>{roles[user.role]}</span>;
+    // The words around the name and role are hidden visually on a phone (the bar shows the name and role only) and stay read aloud.
+    return part ? <span className="hub-top__context" key={index}>{part}</span> : null;
   });
 }
 

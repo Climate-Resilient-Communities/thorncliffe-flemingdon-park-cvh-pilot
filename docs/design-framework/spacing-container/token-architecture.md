@@ -265,7 +265,7 @@ In Tailwind v4, `px-*` and `mx-*` compile to `padding-inline` and `margin-inline
 
 | Surface | Layout switch | Test widths |
 | --- | --- | --- |
-| Resident | None. Resident screens are fluid (`ResidentApp_320` and `ResidentApp_768` render the same layout at a different width). | 320, 390, 768 px (UX-DR3, S02.02) |
+| Resident | `app-breakpoint-resident-wide` 1000px moves navigation above content and gives directory filters a side column. Shell maximum 1120px; reading content maximum 760px. | 320, 390, 768, 999, 1000, 1440 px |
 | Hub shell | One viewport breakpoint, `app-breakpoint-hub` 700px: below it the side navigation is hidden and the narrow inset applies; at or above it the side navigation is shown. | 390, 699, 700, 1280 px (S01.09) |
 | Two-column Hub pages | One container query, `app-container-hub-two-column-min` 800px of available content width, measured inside the page padding (the staff `Screen` content box is the query container). | Content width 799 and 800 px (S01.16 fixture; viewport 1087 and 1088 px with the side navigation) |
 | Ambassador | None (A-xx run in the phone layout). | 390 px |
@@ -279,7 +279,7 @@ Two-column Hub pages (O-01, O-02, O-03, O-04, O-05, O-06, O-07, O-12, O-13, O-14
 
 Boundary checks: viewport 699 and 700 px for the shell; content width 799 and 800 px for two-column pages; each in `en` and `ur`, including the longest translated labels; neither layout may overflow horizontally (`scrollWidth` is not greater than `clientWidth` on the document or the page container).
 
-Tailwind's default breakpoints are removed so nobody uses `md:` or `lg:` by habit. The only responsive variants are `hub:` (shell) and `@hub-two-column:` (page columns).
+Tailwind's default breakpoints are removed so nobody uses `md:` or `lg:` by habit. The responsive variants are `resident-wide:` (resident desktop), `hub:` (staff shell) and `@hub-two-column:` (staff page columns).
 
 ## 8. Basic mode
 
@@ -421,3 +421,17 @@ Decided by the design owner on 2026-10-02; recorded in `tokens.json` version 3. 
 - `--gap-subline` (2px), `--gap-tight` (6px) and `--gap-related` (8px) name the 2, 6 and 8px steps; the home-tile grid gap is 10px; the slide-only decorations (`--rule-length`, `--rule-thickness`, `--bar-thickness`) are not generated for the app; check-in mark buttons are 8px apart.
 - The prototype is preserved for the remaining differences: list-row metadata keeps a 4px row gap and the disruption type grid a 14px row gap (`--gap-meta-block`, `--gap-type-grid-block`; their items are text, not targets, so the 8px target spacing does not apply); the equal-column blocks inside O-06 and O-12 keep 10px; each Hub screen with its own maximum keeps it as a named variant (O-06 960px, O-11 920px, O-14 and O-15 980px, O-16 900px), and 1040px is the default only where no screen-specific maximum exists. O-18 stays out of the pilot.
 - Staff screens: Arabic-script text uses body 1.9 and tight 1.6 like resident screens; Indic and Chinese text keep the staff body 1.45 (2026-10-02).
+
+## October 7 UI/UX refinement
+
+Approved in the UI/UX review. These resident dimensions are generated from the single token source:
+
+| Semantic token | Primitive | Value |
+| --- | --- | --- |
+| `--size-page-resident` | `--app-page-resident` | 1120px |
+| `--size-page-reading` | `--app-page-reading` | 760px |
+| `--size-side-directory` | `--app-side-directory` | 260px |
+| `--size-language-sheet` | `--app-language-sheet` | 640px |
+| `--size-filter-viewport-offset` | `--app-filter-viewport-offset` | 220px |
+
+`app-breakpoint-resident-wide` is 1000px. Mobile remains the default. Basic mode retains its larger targets. Text aligns to logical start, preserving RTL. Staff styling remains in the staff CSS bundle.

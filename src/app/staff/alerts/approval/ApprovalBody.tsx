@@ -1,4 +1,6 @@
 "use client";
+import { orderedByLanguage } from "@/ui/shell/language-order";
+
 
 import { useActionState, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
@@ -438,7 +440,7 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
         <h2 id="languages-title">{screen.languages.title}</h2>
         <p>{screen.languages.lead}</p>
         <Stack as="ul" gap="related">
-          {screen.languages.rows.map((row) => (
+          {orderedByLanguage(screen.languages.rows, (row) => row.lang).map((row) => (
             <LanguageItem key={row.lang} row={row} webLabel={screen.languages.webLabel} />
           ))}
         </Stack>

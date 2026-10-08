@@ -136,9 +136,23 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
           )}
         </Stack>
 
+        <nav aria-label={document.title.text} className="terms-contents">
+          <ul>
+            {document.sections.map((section) => (
+              <li key={section.id}>
+                <a className="tap" href={`#terms-${section.id}`} lang={section.heading.unavailable ? "en" : lang}>
+                  {section.heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         {document.sections.map((section) => (
           <Stack key={section.id} as="section" gap="related" testId={`terms-section-${section.id}`}>
-            <TermsBlock as="h2" text={section.heading} marked />
+            <div id={`terms-${section.id}`} tabIndex={-1}>
+              <TermsBlock as="h2" text={section.heading} marked />
+            </div>
             <Stack gap="paragraph">
               {section.lines.map((line, index) => (
                 <TermsBlock key={index} as="p" className="terms-line" text={line} marked={!showNote} />

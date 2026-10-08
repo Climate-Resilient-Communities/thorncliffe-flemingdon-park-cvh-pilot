@@ -13,7 +13,11 @@ test.describe("language control", () => {
     const sheet = page.getByTestId("shell-lang-sheet");
     await expect(sheet).toBeVisible();
     const names = await sheet.locator("a[data-lang]").allTextContents();
-    expect(names).toEqual(LANGUAGES.map(({ native }) => native));
+    // English and French first (the approved redesign), then the other thirteen in the launch order.
+    const leading = ["en", "fr"].map((code) => LANGUAGES.find((language) => language.code === code)!);
+    expect(names).toEqual([...leading, ...LANGUAGES.filter(({ code }) => code !== "en" && code !== "fr")].map(({ native }) => native));
+    expect(names.slice(0, 2)).toEqual(["English", "Français"]);
+    expect(names).toHaveLength(15);
     await expect(sheet.locator('a[aria-current="true"]')).toHaveText("English");
   });
 

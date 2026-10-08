@@ -1,5 +1,7 @@
 "use client";
 
+import { orderedLanguages } from "./language-order";
+
 import { usePathname } from "next/navigation";
 import { useId, useRef, type MouseEvent } from "react";
 import { pathInLanguage } from "@/i18n/paths";
@@ -85,7 +87,7 @@ export function LanguageControl({ current, languages, labels }: LanguageControlP
               <ResidentText>{labels.note}</ResidentText>
             </p>
             <ul className="shell-sheet__list" role="list">
-              {languages.map((language) => (
+              {orderedLanguages(languages).map((language) => (
                 <li key={language.code}>
                   <a
                     className="shell-langopt tap"

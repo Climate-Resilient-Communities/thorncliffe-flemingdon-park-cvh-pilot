@@ -11,8 +11,12 @@ import { applyBasic, isBasic } from "./basic-mode";
  */
 export function BasicSync() {
   useEffect(() => {
-    const sync = () =>
-      applyBasic(document.documentElement, isBasic(choicesStore.getSnapshot()));
+    const sync = () => {
+      const choices = choicesStore.getSnapshot();
+      applyBasic(document.documentElement, isBasic(choices));
+      if (choices?.textSize) document.documentElement.setAttribute("data-text-size", choices.textSize);
+      else document.documentElement.removeAttribute("data-text-size");
+    };
     sync();
     return choicesStore.subscribe(sync);
   }, []);

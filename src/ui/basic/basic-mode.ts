@@ -19,7 +19,7 @@ export const isBasic = (choices: ChoicesSnapshot | undefined): boolean =>
  * JSON, an object, version 1, with `basic` exactly true; anything else (no storage, a throwing storage, bad JSON) leaves
  * the page in normal mode. It is a string because it runs before React; basic-mode.test.ts runs it against parseDeviceChoices.
  */
-export const BASIC_BOOT_SCRIPT = `try{var c=JSON.parse(localStorage.getItem(${JSON.stringify(DEVICE_CHOICES_KEY)})||"null");if(c&&typeof c==="object"&&c.v===1&&c.basic===true)document.documentElement.setAttribute(${JSON.stringify(BASIC_ATTRIBUTE)},"true")}catch(e){}`;
+export const BASIC_BOOT_SCRIPT = `try{var c=JSON.parse(localStorage.getItem(${JSON.stringify(DEVICE_CHOICES_KEY)})||"null");if(c&&typeof c==="object"&&c.v===1&&c.basic===true)document.documentElement.setAttribute(${JSON.stringify(BASIC_ATTRIBUTE)},"true");if(c&&c.v===1&&(c.textSize==="standard"||c.textSize==="large"))document.documentElement.setAttribute("data-text-size",c.textSize)}catch(e){}`;
 
 /** Sets or removes the attribute on an element (the document's root). */
 export function applyBasic(
@@ -41,9 +41,20 @@ export function saveBasicChoice(
 ): boolean {
   return store.update((current) => {
     if (isBasic(current) === on) return current;
-    const next = baseChoices(current);
+    const next = { ...baseChoices(current), textSize: isLargeText(current) ? "large" as const : "standard" as const };
     if (on) return { ...next, basic: true };
     const { basic: _basic, ...rest } = next;
     return rest;
+  });
+}
+
+export const isLargeText = (choices: ChoicesSnapshot | undefined): boolean =>
+  choices?.textSize === "large" || (choices?.textSize === undefined && isBasic(choices));
+
+export function saveDisplayChoice(change: { textSize?: "standard" | "large"; basic?: boolean }, store: Pick<ChoicesStore, "update" | "getSnapshot"> = choicesStore): boolean {
+  return store.update(current => {
+    const next = { ...baseChoices(current), textSize: isLargeText(current) ? "large" as const : "standard" as const, ...change };
+    if (next.basic === false) delete next.basic;
+    return next;
   });
 }

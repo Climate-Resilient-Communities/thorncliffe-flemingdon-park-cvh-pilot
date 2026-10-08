@@ -55,7 +55,10 @@ describe("HubShell", () => {
   });
 
   it("shows the person and role in one sentence with the name isolated, and the app's sign-out control", () => {
-    expect(html).toContain('<p class="hub-top__person" data-testid="hub-person">Signed in as <bdi>Priya Sharma</bdi>, <span>Coordinator</span></p>');
+    // The words around the name and role are their own spans (hidden visually below the Hub breakpoint, still read), so the sentence is whole for a screen reader.
+    expect(html).toContain(
+      '<p class="hub-top__person" data-testid="hub-person"><span class="hub-top__context">Signed in as </span><bdi>Priya Sharma</bdi><span class="hub-top__context">, </span><span class="hub-top__role">Coordinator</span></p>',
+    );
     expect(html).toContain('<div class="hub-top__signout" data-testid="hub-sign-out"><button type="submit">Sign out</button></div>');
   });
 
