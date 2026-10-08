@@ -71,15 +71,21 @@ describe("self-hosted fonts of the staff screens (S01.09)", () => {
         mkdirSync(path.dirname(path.join(dir, output)), { recursive: true });
         copyFileSync(path.join(ROOT, output), path.join(dir, output));
       }
-      const run = () => spawnSync(process.execPath, [path.join(dir, "scripts", "gen-fonts.mjs"), "--check"], { encoding: "utf8" });
+      const run = (root = dir) => spawnSync(process.execPath, [path.join(root, "scripts", "gen-fonts.mjs"), "--check"], { encoding: "utf8" });
 
       expect(run().status).toBe(0);
+      // Run through a symlink too (a linked checkout; macOS's temporary folder is one): the script still runs, and still finds a stale file.
+      const link = `${dir}-link`;
+      symlinkSync(dir, link);
+      expect(run(link).stdout).toContain(`${STAFF_OUTPUT} is up to date.`);
       writeFileSync(path.join(dir, STAFF_OUTPUT), `${staffCss}/* stale */\n`);
       const stale = run();
       expect(stale.status).toBe(1);
       expect(stale.stderr).toContain(STAFF_OUTPUT);
       expect(stale.stderr).not.toContain(OUTPUT);
+      expect(run(link).status).toBe(1);
     } finally {
+      rmSync(`${dir}-link`, { force: true });
       rmSync(dir, { recursive: true, force: true });
     }
   });

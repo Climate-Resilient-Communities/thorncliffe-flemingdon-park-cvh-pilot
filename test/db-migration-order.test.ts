@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -28,12 +28,15 @@ describe("migration order check", () => {
     const repo = mkdtempSync(path.join(tmpdir(), "order-"));
     const identity = ["-c", "user.email=a@b.c", "-c", "user.name=t"];
     const git = (...args: string[]) => spawnSync("git", [...identity, ...args], { cwd: repo, encoding: "utf8" });
-    const dir = path.join(repo, "db", "migrations");
-    const check = () =>
-      spawnSync("node", [path.resolve("scripts/db/check-destructive.mjs"), "--base", "main", "--dir", dir], {
-        cwd: repo,
+    // The checkout seen through a symlink as well (a linked checkout; macOS's temporary folder is one): git prints
+    // its top level with links resolved, and the check must still find the migrations folder inside it.
+    const link = `${repo}-link`;
+    const check = (root = repo) =>
+      spawnSync("node", [path.resolve("scripts/db/check-destructive.mjs"), "--base", "main", "--dir", path.join(root, "db", "migrations")], {
+        cwd: root,
         encoding: "utf8",
       });
+    const dir = path.join(repo, "db", "migrations");
     try {
       mkdirSync(dir, { recursive: true });
       writeFileSync(path.join(dir, "20261002100000_b.sql"), "select 1;\n");
@@ -45,14 +48,19 @@ describe("migration order check", () => {
       git("add", "-A");
       git("commit", "-qm", "old");
 
-      const failing = check();
-      expect(failing.status).toBe(1);
-      expect(failing.stderr).toContain("rename it with a later timestamp than 20261002100000");
+      symlinkSync(repo, link);
+      for (const root of [repo, link]) {
+        const failing = check(root);
+        expect(failing.status, root).toBe(1);
+        expect(failing.stderr, root).toContain("rename it with a later timestamp than 20261002100000");
+      }
 
       git("mv", "db/migrations/20261002020000_old.sql", "db/migrations/20261002110000_old.sql");
       git("commit", "-qam", "rename");
       expect(check().status).toBe(0);
+      expect(check(link).status).toBe(0);
     } finally {
+      rmSync(link, { force: true });
       rmSync(repo, { recursive: true, force: true });
     }
   });

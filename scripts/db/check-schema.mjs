@@ -27,6 +27,7 @@
 //
 // Usage: MIGRATE_DATABASE_URL=postgres://... node scripts/db/check-schema.mjs
 
+import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import postgres from "postgres";
@@ -350,6 +351,8 @@ async function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   await main();
 }

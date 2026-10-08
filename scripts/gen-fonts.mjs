@@ -9,7 +9,7 @@
 // Each rule keeps the package's unicode-range slice, so a page downloads only the slices its text needs; the
 // family is renamed from "Noto Sans Tamil Variable" to "Noto Sans Tamil" (the name the stack and the tests use).
 // Only the slices a launch language needs are kept: Latin text is Public Sans's, so a Noto face has its own script.
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -85,4 +85,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exitCode = main(process.argv.slice(2));
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) process.exitCode = main(process.argv.slice(2));

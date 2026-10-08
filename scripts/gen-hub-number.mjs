@@ -7,7 +7,7 @@
 //
 // numbers.json writes the number as the Hub reads it, "(416) 421-8997"; the generated file stores it as E.164
 // ("+14164218997", what tel: links take) and the app formats it for reading with displayPhone (src/contracts/phone.ts).
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -49,4 +49,6 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exitCode = main(process.argv.slice(2));
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) process.exitCode = main(process.argv.slice(2));

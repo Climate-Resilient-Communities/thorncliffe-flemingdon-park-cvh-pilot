@@ -9,7 +9,7 @@
 //                                        no undeclared custom property
 //
 // Each check prints its findings as file:line and exits non-zero when there are any.
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import postcss from "postcss";
@@ -564,7 +564,9 @@ export function runCheck(name, root) {
   return { code: problems.length > 0 ? 1 : 0, output: lines.join("\n") };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [name, root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..")] = process.argv.slice(2);
   const { code, output } = runCheck(name, path.resolve(root));
   (code === 0 ? console.log : console.error)(output);

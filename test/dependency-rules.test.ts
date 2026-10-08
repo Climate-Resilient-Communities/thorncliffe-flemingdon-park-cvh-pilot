@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { cruise, type ICruiseResult } from "dependency-cruiser";
@@ -276,7 +276,9 @@ describe("dependency rules", () => {
       from === APP_NODE ? `src/app/${to}.ts` : `src/modules/${from}/application/${to}.ts`;
 
     // One file per ordered pair, each importing the target module's index.ts.
-    const dir = mkdtempSync(join(tmpdir(), "deps-all-pairs-"));
+    // By its real path: dependency-cruiser resolves each import to a real path (macOS's /var is /private/var), so under
+    // a baseDir that is not one every import lands outside it, no rule matches, and every edge would pass.
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), "deps-all-pairs-")));
     const write = (file: string, text: string) => {
       mkdirSync(dirname(join(dir, file)), { recursive: true });
       writeFileSync(join(dir, file), text);

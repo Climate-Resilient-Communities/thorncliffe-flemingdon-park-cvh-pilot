@@ -5,7 +5,7 @@
 //   node scripts/gen-tokens.mjs --check   fails if a generated file differs from what tokens.json gives
 //
 // It never writes a default: a token that tokens.json lacks fails the run and is named.
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import postcss from "postcss";
@@ -394,7 +394,9 @@ export function main(argv, root = path.join(path.dirname(fileURLToPath(import.me
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Run directly, not imported. Node runs the entry point by its real path (import.meta.url), while argv[1] keeps any
+// symlink in the path it was given (macOS's /var is /private/var), so the two are compared as real paths.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const rootFlag = process.argv.indexOf("--root");
   process.exitCode = main(process.argv.slice(2), rootFlag > 0 ? path.resolve(process.argv[rootFlag + 1]) : undefined);
 }
