@@ -191,6 +191,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        tuning, arm R2). It applies only where COHERE_API_KEY is set; on any
  *                                                        failure the question is ranked by SEARCH_DIRECT_FLOOR and _GAP
  * SEARCH_RERANK_MIN     server   optional                 the least rerank relevance (0 to 1, default 0.05) of a reranked result
+ * SEARCH_CRISIS_PHRASES
+ *                      server   optional                 `on` (default) or `off`: whether a question that describes an emergency
+ *                                                        in words (domain/crisisPhrases.ts: someone not breathing, a fire, a gas
+ *                                                        leak, a car accident... in every launch language, and in the question's
+ *                                                        English translation) turns `emergency_first` on whatever the ranking
+ *                                                        found. It only ever turns the flag on. Read at search time
  * SEARCH_RERANK_MONTHLY_CALLS
  *                      server   optional                 the rerank calls a calendar month (America/Toronto) may use, counted
  *                                                        from spend_event (kind rerank); at it the reranker is no longer called
@@ -321,6 +327,7 @@ const rawSchema = z.object({
   SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: optionalText,
   SEARCH_RERANK: optionalText,
   SEARCH_RERANK_MIN: optionalText,
+  SEARCH_CRISIS_PHRASES: optionalText,
   SEARCH_RERANK_MONTHLY_CALLS: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
@@ -363,6 +370,8 @@ export interface SearchSettings {
   rerankMin: number;
   /** The rerank calls a calendar month may use before the reranker is no longer called. */
   rerankMonthlyCalls: number;
+  /** Whether a question that describes an emergency in words turns `emergency_first` on (SEARCH_CRISIS_PHRASES). */
+  crisisPhrases: boolean;
 }
 
 /** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
@@ -458,6 +467,7 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   rerank: true,
   rerankMin: 0.05,
   rerankMonthlyCalls: 900,
+  crisisPhrases: true,
 };
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -891,14 +901,14 @@ function parseTranslateMonthlyCalls(value: string | undefined, problems: string[
   return limits;
 }
 
-/** SEARCH_RERANK: `on` or `off` (any case); unset is the default (on). */
-function parseRerankSwitch(value: string | undefined, problems: string[]): boolean {
-  if (value === undefined) return DEFAULT_SEARCH_SETTINGS.rerank;
+/** An `on`/`off` search switch (any case), such as SEARCH_RERANK; unset is its default. */
+function parseSwitch(name: string, value: string | undefined, fallback: boolean, problems: string[]): boolean {
+  if (value === undefined) return fallback;
   const text = value.trim().toLowerCase();
   if (text === "on") return true;
   if (text === "off") return false;
-  problems.push("SEARCH_RERANK: must be `on` or `off`");
-  return DEFAULT_SEARCH_SETTINGS.rerank;
+  problems.push(`${name}: must be \`on\` or \`off\``);
+  return fallback;
 }
 
 /** A search setting from 0 to 1 (the form of SEARCH_THRESHOLD), or its default when unset. */
@@ -960,9 +970,10 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     fallbackMinBudgetMs: parseFallbackMinBudget(raw.SEARCH_FALLBACK_MIN_BUDGET_MS, problems),
     translateMonthlyCalls: parseTranslateMonthlyCalls(raw.SEARCH_TRANSLATE_MONTHLY_CALLS, problems),
     translateFirstMonthlyCalls: positiveInteger("SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS", raw.SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS, defaults.translateFirstMonthlyCalls, problems),
-    rerank: parseRerankSwitch(raw.SEARCH_RERANK, problems),
+    rerank: parseSwitch("SEARCH_RERANK", raw.SEARCH_RERANK, defaults.rerank, problems),
     rerankMin: unitNumber("SEARCH_RERANK_MIN", raw.SEARCH_RERANK_MIN, defaults.rerankMin, "0.05", problems),
     rerankMonthlyCalls: positiveInteger("SEARCH_RERANK_MONTHLY_CALLS", raw.SEARCH_RERANK_MONTHLY_CALLS, defaults.rerankMonthlyCalls, problems),
+    crisisPhrases: parseSwitch("SEARCH_CRISIS_PHRASES", raw.SEARCH_CRISIS_PHRASES, defaults.crisisPhrases, problems),
   };
 }
 

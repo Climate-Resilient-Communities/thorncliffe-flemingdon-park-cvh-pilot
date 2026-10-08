@@ -1604,6 +1604,10 @@ So that a question in any language finds an English-sourced listing.
 **When** the server answers, including when the status is `no_clear_match`
 **Then** `emergency_first` is true; in the `no_clear_match` case `results` stays empty (the list is not padded, only the flag is set), and the rule only ever turns `emergency_first` on, never off (unit tests: an emergency provider at 0.27 with a threshold of 0.3 gives `no_clear_match` with `emergency_first: true`; a non-emergency provider at 0.27 gives `false`; an emergency provider fourth in its leg gives `false`; the translated leg alone qualifies; the direct leg alone qualifies)
 
+**Given** the question, or the English translation the translated leg made of it, describes an emergency in words (someone not breathing or unconscious, a heart attack, a fire, a gas leak, a flood, a car accident, a weapon, a missing child, "call an ambulance"…, in any launch language; `domain/crisisPhrases.ts`), and `SEARCH_CRISIS_PHRASES` is not `off`
+**When** the server answers, whatever the ranking found (including `no_clear_match`, and when the translation failed: the native-script lists are the backstop)
+**Then** `emergency_first` is true and the results are as ranked; an ordinary question ("nearest gas station", "fire station hours", "police clearance", "first aid course", "flood insurance", "smoke detector", "where is the hospital") does not set it (crisis phrases, 2026-10-07, product owner's approval; unit tests with about forty questions per language group)
+
 **Given** the direct leg fails or is still running at 2.2 s and no translated leg completed
 **When** the server answers
 **Then** it returns `{error:{code: "search_unavailable"}}` within 2.5 s of request start, the leg's call is cancelled, and the failure is counted in `ops_event` without the question
@@ -1627,6 +1631,8 @@ So that a question in any language finds an English-sourced listing.
 **Given** `/api/search`
 **When** the no-cookie test and the contract test run
 **Then** no cookie is set and every response matches `SearchV1` or the error schema
+
+**Notes — crisis phrases (2026-10-07, product owner's approval).** The ranking can only put the 911 block first for an emergency the catalogue has a provider for (police, fire stations, crisis lines); there is no ambulance provider, so six medical, gas, flood and accident emergencies of the test set got no 911 block, among them the Tagalog car accident `tl-41`. A crisis-phrase check now sets `emergency_first` when the question or its English translation describes an emergency in words (`src/modules/directory/domain/crisisPhrases.ts`; the spine's AD-11 "As built (crisis phrases)"; `SEARCH_CRISIS_PHRASES`, default on). It only adds the flag. Replayed through the real use case with the cached vectors and translations (all 235 questions, no vendor call): emergency flag 14 → 20 of 20 (70% → 100%), and 9 → 20 of 20 with every translation failing; false alarms unchanged at 5 of 215 (2.3%). The phrases were written knowing the test set's 20 emergencies, so 20 of 20 is an upper bound: the hand-written unit tests (emergencies and near-miss ordinary questions per language group) are the check on new wording, and S03.08's ambassador questions the real one. **Safety review:** every list but English is machine-assisted and is checked by native readers before launch (launch checklist, section 5). The remaining false alarms come from the ranking, which a phrase cannot turn off; the interim tuning report's section 13 proposes, without building it, letting an ordinary phrase such as "gas station" turn the ranking's flag off.
 
 ### Story S03.05 — Questions in Pashto, Dari, Urdu and romanized text also search through English
 
