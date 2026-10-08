@@ -1210,8 +1210,8 @@ export function DirectoryFixture({
  * and lead, and its real form, as the page markup has them. Words are the catalog's. The form posts with fetch, so a
  * screenshot that needs an answer replaces `fetch` in the page first (e2e/hub/staff-forms.spec.ts).
  */
-export function StaffGateFixture({ page }: { page: "sign-in" | "code" | "password" | "authenticator" }) {
-  if (page === "sign-in") return <StaffSignInView />;
+export function StaffGateFixture({ page, logoSrc }: { page: "sign-in" | "code" | "password" | "authenticator"; logoSrc?: string }) {
+  if (page === "sign-in") return <StaffSignInView logoSrc={logoSrc} />;
   const signOut = <SignOutButton label={englishText("staff.signOut")} />;
   const unavailable = englishText("staff.authenticator.errors.unavailable");
   const body = {
@@ -1273,7 +1273,7 @@ export function StaffGateFixture({ page }: { page: "sign-in" | "code" | "passwor
       <Screen surface="staff">
         <div className="hub-gate">
           <Stack gap="section-hub">
-            <StaffAuthBrand />
+            <StaffAuthBrand logoSrc={logoSrc} />
             {body}
           </Stack>
         </div>

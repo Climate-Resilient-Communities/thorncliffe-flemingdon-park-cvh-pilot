@@ -4,12 +4,12 @@ import { StaffAuthBrand } from "../StaffAuthBrand";
 import { SignInForm } from "./SignInForm";
 
 /** Shared by the public route and visual fixtures; recovery follows the Admin-managed pilot process. */
-export function StaffSignInView() {
+export function StaffSignInView({ logoSrc }: { logoSrc?: string } = {}) {
   return (
     <main>
       <Screen surface="staff">
         <div className="staff-signin">
-          <StaffAuthBrand />
+          <StaffAuthBrand logoSrc={logoSrc} />
           <header>
             <Stack gap="related">
               <h1>{englishText("staff.signIn.title")}</h1>

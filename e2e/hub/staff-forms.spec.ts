@@ -52,7 +52,7 @@ async function answerFetch(page: Page, status: number, body: unknown) {
 for (const width of [1280, 390]) {
   test(`sign-in at ${width}px`, async ({ page }) => {
     await size(page, width);
-    await mountHydrated(page, "StaffGateFixture", { page: "sign-in" });
+    await mountHydrated(page, "StaffGateFixture", { page: "sign-in", logoSrc: brand.logoSrc });
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(englishText("staff.signIn.title"));
     await expectControlsLookLikeControls(page);
     await expectBaseline(page, `staff-sign-in-${width}.png`, { fullPage: true });
@@ -60,7 +60,7 @@ for (const width of [1280, 390]) {
 
   test(`sign-in refused at ${width}px`, async ({ page }) => {
     await size(page, width);
-    await mountHydrated(page, "StaffGateFixture", { page: "sign-in" });
+    await mountHydrated(page, "StaffGateFixture", { page: "sign-in", logoSrc: brand.logoSrc });
     await answerFetch(page, 401, { error: "invalid_credentials", message: "That username or password is not right." });
     await page.getByLabel("Username").fill("amira");
     await page.getByLabel("Password", { exact: true }).fill("wrong");
@@ -73,21 +73,21 @@ for (const width of [1280, 390]) {
 
   test(`authenticator code at ${width}px`, async ({ page }) => {
     await size(page, width);
-    await mountHydrated(page, "StaffGateFixture", { page: "code" });
+    await mountHydrated(page, "StaffGateFixture", { page: "code", logoSrc: brand.logoSrc });
     await expectControlsLookLikeControls(page);
     await expectBaseline(page, `staff-sign-in-code-${width}.png`, { fullPage: true });
   });
 
   test(`choose a password at ${width}px`, async ({ page }) => {
     await size(page, width);
-    await mountHydrated(page, "StaffGateFixture", { page: "password" });
+    await mountHydrated(page, "StaffGateFixture", { page: "password", logoSrc: brand.logoSrc });
     await expectControlsLookLikeControls(page);
     await expectBaseline(page, `staff-setup-password-${width}.png`, { fullPage: true });
   });
 
   test(`set up an authenticator at ${width}px`, async ({ page }) => {
     await size(page, width);
-    await mountHydrated(page, "StaffGateFixture", { page: "authenticator" });
+    await mountHydrated(page, "StaffGateFixture", { page: "authenticator", logoSrc: brand.logoSrc });
     await expectControlsLookLikeControls(page);
     await expectBaseline(page, `staff-setup-authenticator-start-${width}.png`, { fullPage: true });
 
