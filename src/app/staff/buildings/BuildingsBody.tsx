@@ -1,4 +1,4 @@
-import { Stack } from "@/ui";
+import { Stack, Verified } from "@/ui";
 import type { EditState } from "./editFloors";
 import { AddFloorForm, ConfirmForm, ContactForm, FloorRow, type FloorAction } from "./FloorForms";
 import type { BuildingView, BuildingsScreen, ListView, MissingView } from "./view";
@@ -49,8 +49,11 @@ function List({ view }: { view: ListView }) {
                       {item.address}
                     </a>
                     <p>
-                      {item.storeys}. {item.floors}. {item.status.text}.
+                      {item.storeys}. {item.floors}.
                     </p>
+                    <Verified as="p" confirmed={item.status.confirmed} testId={`building-${item.rsn}-confirmed`}>
+                      {item.status.text}
+                    </Verified>
                     {item.notInRegister && (
                       <p role="note" className="hub-flag">
                         <span className="hub-flag__label">{item.notInRegister.label}</span> {item.notInRegister.status}
@@ -75,9 +78,10 @@ function Building({ view, actions, initial }: { view: BuildingView; actions: Bui
           {view.back.label}
         </a>
         <h1>{view.address}</h1>
-        <p>
-          {view.neighbourhood}. {view.status.text}.
-        </p>
+        <p>{view.neighbourhood}</p>
+        <Verified as="p" confirmed={view.status.confirmed} testId="building-confirmed">
+          {view.status.text}
+        </Verified>
         <Notice text={view.notice} />
         {view.notInRegister && (
           <div role="note">

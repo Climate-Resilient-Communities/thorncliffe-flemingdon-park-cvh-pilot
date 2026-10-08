@@ -1455,7 +1455,8 @@
     "topic": "বিষয়",
     "emergency": "জরুরি অবস্থায় সাহায্য করে",
     "emergencyRole": "জরুরি অবস্থায় ভূমিকা",
-    "lastConfirmed": "হাব সর্বশেষ নিশ্চিত করেছে {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "হাব যাচাই করেছে · {date}",
     "lastUpdated": "সর্বশেষ হালনাগাদ {time}",
     "loading": "ডিরেক্টরি লোড হচ্ছে",
     "couldNotLoad": "ডিরেক্টরি লোড হয়নি",

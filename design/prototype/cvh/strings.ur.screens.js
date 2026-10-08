@@ -1442,7 +1442,8 @@
     "topic": "موضوع",
     "emergency": "ہنگامی حالت میں مدد کرتی ہے",
     "emergencyRole": "ہنگامی حالت میں کردار",
-    "lastConfirmed": "ہب کی آخری تصدیق {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "ہب نے جانچا · {date}",
     "lastUpdated": "آخری اپ ڈیٹ {time}",
     "loading": "ڈائریکٹری لوڈ ہو رہی ہے",
     "couldNotLoad": "ڈائریکٹری لوڈ نہیں ہو سکی",

@@ -93,7 +93,8 @@ test("an Admin edits a building's floors and confirms it, and every change is au
   await expect(page.getByRole("heading", { level: 1, name: "Buildings and floors" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: /^Thorncliffe Park \(\d+\)$/ })).toBeVisible();
   const item = page.getByTestId(`building-${RSN}`);
-  await expect(item).toContainText("14 storeys in the register. 14 floors. Floors not confirmed yet.");
+  await expect(item).toContainText("14 storeys in the register. 14 floors.");
+  await expect(page.getByTestId(`building-${RSN}-confirmed`)).toHaveText("Floors not confirmed");
   await item.getByRole("link", { name: `Edit floors of ${ADDRESS}` }).click();
   await expect(page).toHaveURL(new RegExp(`/staff/buildings\\?building=${RSN}$`));
   await expect(page.getByRole("heading", { level: 1, name: ADDRESS })).toBeVisible();
@@ -159,7 +160,8 @@ test("an Admin edits a building's floors and confirms it, and every change is au
   await page.getByRole("button", { name: "Mark building confirmed" }).click();
   await expect(page.getByRole("status")).toHaveText("Building confirmed with 15 floors.");
   await expect(page.getByRole("button", { name: "Mark building confirmed" })).toHaveCount(0);
-  await expect(page.getByText(/^Thorncliffe Park\. Floors confirmed on /)).toBeVisible();
+  await expect(page.getByTestId("building-confirmed")).toHaveText(/^Floors confirmed [A-Z][a-z]{2} \d{1,2}, \d{4}$/);
+  await expect(page.getByTestId("building-confirmed")).toHaveAttribute("data-confirmed", "true");
   const [confirmed] = await sql`select floors_confirmed_by, (select count(*)::int from building_floor where rsn = ${RSN} and confirmed) as confirmed_floors from building where rsn = ${RSN}`;
   expect(confirmed).toEqual({ floors_confirmed_by: admin.id, confirmed_floors: 15 });
 

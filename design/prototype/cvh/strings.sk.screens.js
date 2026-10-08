@@ -1466,7 +1466,8 @@
     "topic": "Téma",
     "emergency": "Pomáha v tiesňovej situácii",
     "emergencyRole": "Úloha v tiesňovej situácii",
-    "lastConfirmed": "Naposledy overil Hub {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "Overené Hubom · {date}",
     "lastUpdated": "Naposledy aktualizované {time}",
     "loading": "Adresár sa načítava",
     "couldNotLoad": "Adresár sa nepodarilo načítať",

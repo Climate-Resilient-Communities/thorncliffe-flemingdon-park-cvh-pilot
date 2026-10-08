@@ -13,7 +13,7 @@ import { addressLines, postalText, ProviderView, type CategoryNames } from "./pr
 const NBSP = "\u00a0";
 // Urdu with the Hub's confirmation line as an English fallback, as a catalog that has not translated it holds it: the fallback tests
 // below stay true whatever has been translated since.
-const urFallback = { ...ur, directory: { ...ur.directory, lastConfirmed: "[EN] Last confirmed by the Hub {date}" } };
+const urFallback = { ...ur, directory: { ...ur.directory, checkedByHub: "[EN] Checked by the Hub · {date}" } };
 const wrap = (lang: "en" | "ur", node: ReactNode, messages: unknown = lang === "ur" ? ur : en) =>
   renderToStaticMarkup(
     <NextIntlClientProvider locale={lang} messages={messages as AbstractIntlMessages}>
@@ -29,30 +29,44 @@ const render = (lang: "en" | "ur", id: string, variant: "card" | "page" = "card"
 };
 
 describe("ProviderView", () => {
-  it("shows a provider's categories, contacts, services, emergency role and the day the Hub last confirmed it", () => {
+  it("shows a provider's categories, contacts, services, emergency role and the day the Hub last checked it", () => {
     const html = render("en", "P101");
 
     expect(html).toContain("Thorncliffe Park Food Bank");
     expect(html).toContain("Food");
     expect(html).toContain("Free groceries every Tuesday and Friday");
     expect(html).toContain("Hands out ready-to-eat food and water during a long power cut.");
-    expect(html).toContain("Last confirmed by the Hub September 30, 2026");
+    expect(html).toContain("Checked by the Hub · September 30, 2026");
     expect(html).toContain('href="tel:+14165550101"');
     expect(html).toContain('href="mailto:food@example.org"');
   });
 
-  it("writes the day the Hub last confirmed a provider into its line in every language, the English way when the line fell back to English", () => {
-    // The catalog line is "Last confirmed by the Hub {date}": its date must always be filled, never probed for with no values
+  it("writes the day the Hub last checked a provider into its line in every language, the English way when the line fell back to English", () => {
+    // The catalog line is "Checked by the Hub · {date}": its date must always be filled, never probed for with no values
     // (next-intl reports a FORMATTING_ERROR and gives back the key, so the line read as translated and its date as Urdu).
-    expect(urFallback.directory.lastConfirmed).toBe("[EN] Last confirmed by the Hub {date}");
-    expect(render("en", "P101")).toContain('data-testid="last-confirmed">Last confirmed by the Hub September 30, 2026<');
-    expect(render("ur", "P101", "card", {}, urFallback)).toContain("[EN] Last confirmed by the Hub September 30, 2026<");
-    for (const variant of ["card", "page"] as const) expect(render("ur", "P101", variant, {}, urFallback)).not.toContain("directory.lastConfirmed");
+    expect(urFallback.directory.checkedByHub).toBe("[EN] Checked by the Hub · {date}");
+    expect(render("en", "P101")).toContain('<span class="verified__text">Checked by the Hub · September 30, 2026</span>');
+    // A fallback line is English as a whole, left to right, badge and all.
+    const fallback = render("ur", "P101", "card", {}, urFallback);
+    expect(fallback).toMatch(/<p class="verified verified--yes dir-card__confirmed" data-testid="last-confirmed" data-confirmed="true" lang="en" dir="ltr">/);
+    expect(fallback).toContain(">[EN] Checked by the Hub · September 30, 2026<");
+    for (const variant of ["card", "page"] as const) expect(render("ur", "P101", variant, {}, urFallback)).not.toContain("directory.checkedByHub");
     // Translated, the line is Urdu and its date is written in Urdu.
     const translated = render("ur", "P101");
     expect(translated).not.toContain("[EN]");
-    expect(translated).not.toContain("directory.lastConfirmed");
+    expect(translated).not.toContain("directory.checkedByHub");
     expect(translated).not.toContain("September 30, 2026");
+    expect(translated).toContain("ہب نے جانچا · ");
+    expect(translated).not.toMatch(/data-testid="last-confirmed"[^>]*lang="en"/);
+  });
+
+  it("puts the confirmed verified badge, 20 px and hidden from assistive technology, at the start of the line, on the card and the page", () => {
+    for (const variant of ["card", "page"] as const) {
+      const line = render("en", "P101", variant).match(/<p class="verified[^"]*"[^>]*data-testid="last-confirmed"[\s\S]*?<\/p>/)?.[0] ?? "";
+      expect(line).toMatch(/^<p class="verified verified--yes dir-card__confirmed"/);
+      expect(line).toMatch(/<svg class="verified__icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">/);
+      expect(line.indexOf("<svg")).toBeLessThan(line.indexOf("Checked by the Hub"));
+    }
   });
 
   it("writes a phone number with displayPhone, as an isolated left-to-right run, in a right-to-left page too", () => {

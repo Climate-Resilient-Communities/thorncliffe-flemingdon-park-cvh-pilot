@@ -5,6 +5,7 @@
 @import "../ui/shell/shell.css";
 @import "../ui/basic/basic.css";
 @import "../ui/offline/offline.css";
+@import "../ui/verified/verified.css";
 
 /* Tailwind generates utilities only for classes used in src/. */
 @source "../";

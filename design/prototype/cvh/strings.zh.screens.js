@@ -1466,7 +1466,8 @@
     "topic": "主题",
     "emergency": "在紧急情况下提供帮助",
     "emergencyRole": "紧急情况中的作用",
-    "lastConfirmed": "中心最后确认于{date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "中心已核实 · {date}",
     "lastUpdated": "最后更新于{time}",
     "loading": "正在加载目录",
     "couldNotLoad": "目录无法加载",

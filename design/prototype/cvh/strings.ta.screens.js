@@ -1466,7 +1466,8 @@
     "topic": "தலைப்பு",
     "emergency": "அவசரநிலையில் உதவுகிறது",
     "emergencyRole": "அவசரநிலையில் பங்கு",
-    "lastConfirmed": "மையம் கடைசியாக உறுதிசெய்தது {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "மையம் சரிபார்த்தது · {date}",
     "lastUpdated": "கடைசியாகப் புதுப்பித்தது {time}",
     "loading": "அடைவு ஏற்றப்படுகிறது",
     "couldNotLoad": "அடைவு ஏறவில்லை",

@@ -2,12 +2,10 @@
 // every text already resolved from the English catalog, so the components that draw them know none of it.
 import { englishText } from "@/i18n/text";
 import { CONTACT_ROLES, CONTACT_ROLE_LABEL_KEYS, displayPhone, type BuildingDetail, type BuildingSummary } from "@/modules/places";
+import { formatDay } from "../day";
 import { BUILDINGS_PAGE } from "./editFloors";
 
 const t = (key: string, values?: Record<string, string | number>) => englishText(`staff.buildings.${key}`, values);
-
-/** A date as the Hub's staff read it: the day in Toronto. */
-export const formatDay = (date: Date): string => new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeZone: "America/Toronto" }).format(date);
 
 export interface ListItemView {
   rsn: string;
@@ -18,6 +16,7 @@ export interface ListItemView {
   edit: string;
   storeys: string;
   floors: string;
+  /** The verified badge's line: "Floors confirmed Oct 2, 2026" or "Floors not confirmed". */
   status: { confirmed: boolean; text: string };
   /** "Register" and "Not in latest register": a labelled line of its own. */
   notInRegister?: { label: string; status: string };
@@ -137,8 +136,9 @@ export function savedNotice(query: SavedQuery): string | undefined {
 const yesNo = (value: boolean | null) => (value === null ? t("unknown") : value ? t("yes") : t("no"));
 const orUnknown = (value: string | number | null) => (value === null ? t("unknown") : String(value));
 
-const statusOf = (building: BuildingSummary) =>
-  building.confirmedAt ? { confirmed: true, text: t("confirmed") } : { confirmed: false, text: t("unconfirmed") };
+/** The verified badge's line of a building: "Floors confirmed Oct 2, 2026" or "Floors not confirmed". */
+const statusOf = (building: Pick<BuildingSummary, "confirmedAt">) =>
+  building.confirmedAt ? { confirmed: true, text: t("confirmedBadge", { date: formatDay(building.confirmedAt) }) } : { confirmed: false, text: t("unconfirmedBadge") };
 
 export function listView(buildings: readonly BuildingSummary[], notice?: string): ListView {
   const groups = new Map<string, ListView["groups"][number]>();
@@ -176,7 +176,7 @@ export function buildingView(building: BuildingDetail, notice?: string): Buildin
     neighbourhood: building.neighbourhoodName,
     ...(notice ? { notice } : {}),
     back: { href: BUILDINGS_PAGE, label: t("back") },
-    status: building.confirmedAt ? { confirmed: true, text: t("confirmedOn", { date: formatDay(building.confirmedAt) }) } : { confirmed: false, text: t("unconfirmed") },
+    status: statusOf(building),
     ...(building.notInRegisterSince ? { notInRegister: { title: t("notInRegister"), line: t("notInRegisterLine") } } : {}),
     facts: {
       title: t("factsTitle"),

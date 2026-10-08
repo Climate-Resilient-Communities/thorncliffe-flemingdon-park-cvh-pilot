@@ -1,0 +1,75 @@
+/*
+ * The verified badge (src/ui/verified/verified.tsx; docs/design-framework/verified-badge.md): the rosette at the start of the first line
+ * of its words. Confirmed is the brand blue with a tick in the light text colour; not confirmed is an outline in the muted text colour.
+ * The words carry the meaning; the colours only add to them. In forced colours the rosette takes the system's text colours.
+ */
+@layer components {
+  .verified {
+    --verified-fill: var(--tpch-blue);
+    --verified-tick: var(--on-deep);
+    --verified-outline: var(--text-muted);
+
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-tight);
+  }
+
+  span.verified {
+    display: inline-flex;
+  }
+
+  /* As tall as one line of the words, so the rosette is centred on the first line however many lines they wrap to. */
+  .verified__mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    block-size: 1lh;
+  }
+
+  .verified__icon {
+    display: block;
+    overflow: visible;
+  }
+
+  .verified__text {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Not confirmed reads quieter than confirmed, in words as well: "Not confirmed". */
+  .verified--no .verified__text {
+    color: var(--text-muted);
+  }
+
+  .verified--yes .verified__shape {
+    fill: var(--verified-fill);
+  }
+
+  .verified--no .verified__shape {
+    fill: none;
+    stroke: var(--verified-outline);
+    stroke-width: 1.5;
+  }
+
+  .verified__tick {
+    fill: none;
+    stroke: var(--verified-tick);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (forced-colors: active) {
+    .verified--yes .verified__shape {
+      fill: CanvasText;
+    }
+
+    .verified--no .verified__shape {
+      stroke: CanvasText;
+    }
+
+    .verified__tick {
+      stroke: Canvas;
+    }
+  }
+}

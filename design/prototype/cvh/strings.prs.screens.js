@@ -1455,7 +1455,8 @@
     "topic": "موضوع",
     "emergency": "در حالت اضطراری کمک می‌کند",
     "emergencyRole": "نقش در حالت اضطراری",
-    "lastConfirmed": "آخرین تأیید مرکز {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "بررسی‌شده توسط مرکز · {date}",
     "lastUpdated": "آخرین تغییر {time}",
     "loading": "رهنما بارگذاری می‌شود",
     "couldNotLoad": "رهنما بارگذاری نشد",

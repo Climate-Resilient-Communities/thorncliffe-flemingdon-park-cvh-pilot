@@ -1466,7 +1466,8 @@
     "topic": "ਵਿਸ਼ਾ",
     "emergency": "ਐਮਰਜੈਂਸੀ ਵਿੱਚ ਮਦਦ ਕਰਦੀ ਹੈ",
     "emergencyRole": "ਐਮਰਜੈਂਸੀ ਵਿੱਚ ਭੂਮਿਕਾ",
-    "lastConfirmed": "ਹੱਬ ਨੇ ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਪੁਸ਼ਟੀ ਕੀਤੀ",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "ਹੱਬ ਨੇ ਜਾਂਚਿਆ · {date}",
     "lastUpdated": "ਆਖ਼ਰੀ ਵਾਰ {time} ਅੱਪਡੇਟ ਕੀਤਾ",
     "loading": "ਡਾਇਰੈਕਟਰੀ ਲੋਡ ਹੋ ਰਹੀ ਹੈ",
     "couldNotLoad": "ਡਾਇਰੈਕਟਰੀ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀ",
