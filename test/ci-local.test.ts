@@ -55,7 +55,7 @@ function workflowEntries(text: string): Entry[] {
 function scriptEntries(text: string): Entry[] {
   const entries: Entry[] = [];
   for (const line of text.split("\n")) {
-    const match = /^((?:[A-Z_]+=(?:"[^"]*"|\S*) )*)(step|always_step|replaced_step) (.+)$/.exec(line);
+    const match = /^((?:[A-Z_]+=(?:"[^"]*"|[^\s"]*) )*)(step|always_step|replaced_step) (.+)$/.exec(line);
     if (!match) continue;
     const env = [...match[1].matchAll(/([A-Z_]+)=/g)].map((m) => m[1]).sort();
     const [, , kind, rest] = match;

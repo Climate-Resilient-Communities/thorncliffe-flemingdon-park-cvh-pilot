@@ -1605,7 +1605,7 @@ describe("the request's deadline over the snapshot read and the writes", () => {
       const result = await told(files, recorded);
 
       expect(result.notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error }]);
-      expect(result.lines).toEqual([expect.stringMatching(new RegExp(`^search\\.failed reason=snapshot_failed code=${error.replace(/[.]/g, "\\.")} ms=\\d+$`))]);
+      expect(result.lines).toEqual([expect.stringMatching(new RegExp(`^search\\.failed reason=snapshot_failed code=${error.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} ms=\\d+$`))]);
     });
 
     it("tells a file that is not valid JSON as the class of the error, never its text", async () => {
