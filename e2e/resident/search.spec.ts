@@ -130,7 +130,7 @@ test("results are the listings of the answer's release in the returned order, in
   expect(await listed(page)).toEqual(["P104", "P101"]);
   await expect(page.getByTestId("ask-status")).toHaveAttribute("role", "status");
   await expect(page.getByTestId("ask-status")).toContainText('2 results for "I need food"');
-  await expect(page.getByTestId("provider-P101").getByTestId("last-confirmed")).toHaveText("Last confirmed by the Hub September 30, 2026");
+  await expect(page.getByTestId("provider-P101").getByTestId("last-confirmed")).toHaveText("Checked by the Hub · September 30, 2026");
   await expect(page.getByTestId("provider-P101").locator("h2")).toHaveText("Thorncliffe Park Food Bank");
   await expect(page.getByTestId("ask-emergency-first")).toHaveCount(0);
   await expect(page.getByTestId("ask-shown-in")).toHaveCount(0);

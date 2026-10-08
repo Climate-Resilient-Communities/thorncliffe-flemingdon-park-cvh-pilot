@@ -4,8 +4,12 @@ import { listProviders, torontoDate } from "@/modules/directory";
 import { Screen, Stack } from "@/ui";
 import { directoryDb } from "../directory";
 import { staffPage } from "../guard";
+import { filterProviders, providerCounts, readProviderQuery } from "./filters";
+import { ProviderFilters } from "./ProviderFilters";
 import { ProviderList, type ProviderRowData } from "./ProviderList";
-import { providerListLabels } from "./labels";
+import { providerFiltersLabels, providerListLabels } from "./labels";
+
+type Props = { searchParams?: Promise<{ filter?: string | string[]; q?: string | string[] }> };
 
 export const metadata: Metadata = { title: englishText("staff.providers.title") };
 
@@ -20,14 +24,16 @@ function ProvidersHeading() {
 }
 
 /**
- * "Providers" (S02.04): the loaded catalogue, with each provider's state, its last-confirmed date
- * and the buttons to set that date and to publish or unpublish. The policy action `provider.manage`,
+ * "Providers" (S02.04): the loaded catalogue, with each provider's state, its last-confirmed date beside
+ * the verified badge, the date field to set it and the actions menu to publish or unpublish. The filter
+ * tabs (All, To confirm, Hidden) and the search by name or code are the page's query (?filter=&q=), so
+ * they work without scripts. The policy action `provider.manage`,
  * Admins only (S01.12), and its actions run at aal2 (S01.10); another role sees "Only an Admin can
  * change providers." and no list, and each action of the page refuses it on its own. Listing text is
  * shown nowhere on this page and edited nowhere: it changes only through the catalogue scripts (AD-11).
  * Responses are no-store. The shell (layout.tsx) owns the <main>.
  */
-export default staffPage(
+export default staffPage<Props>(
   {
     route: "/staff/providers",
     access: "hub",
@@ -41,7 +47,8 @@ export default staffPage(
       </Screen>
     ),
   },
-  async () => {
+  async (_session, { searchParams }) => {
+    const query = readProviderQuery((await searchParams) ?? {});
     const providers = await listProviders(directoryDb());
     const rows: ProviderRowData[] = providers.map((p) => ({
       id: p.id,
@@ -51,12 +58,7 @@ export default staffPage(
       inCatalogue: p.inCatalogue,
       lastConfirmed: p.lastConfirmed,
     }));
-    const inCatalogue = providers.filter((p) => p.inCatalogue);
-    const summary = englishText("staff.providers.summary", {
-      published: inCatalogue.filter((p) => p.published).length,
-      total: inCatalogue.length,
-      unconfirmed: inCatalogue.filter((p) => p.lastConfirmed === null).length,
-    });
+    const shown = filterProviders(rows, query);
     return (
       <Screen surface="staff">
         <Stack gap="section-hub">
@@ -65,8 +67,13 @@ export default staffPage(
             <p>{englishText("staff.providers.empty")}</p>
           ) : (
             <>
-              <p data-testid="provider-summary">{summary}</p>
-              <ProviderList rows={rows} today={torontoDate(new Date())} labels={providerListLabels()} />
+              <ProviderFilters query={query} counts={providerCounts(rows, query.q)} labels={providerFiltersLabels()} />
+              <ProviderList
+                rows={shown}
+                today={torontoDate(new Date())}
+                labels={providerListLabels()}
+                empty={query.q === "" ? englishText("staff.providers.noneHere") : englishText("staff.providers.noMatch", { q: query.q })}
+              />
             </>
           )}
         </Stack>

@@ -94,9 +94,11 @@ describe("Buildings and floors: the list", () => {
     expect(out).toContain("Flemingdon Park (1)");
     expect(out).toContain('href="/staff/buildings?building=4154146"');
     expect(out).toContain('aria-label="Edit floors of 4 Milepost Pl"');
-    expect(out).toContain("6 storeys in the register. 6 floors. Floors not confirmed yet.");
-    expect(out).toContain("Storeys not known. 0 floors.");
-    expect(out).toMatch(/Floors confirmed\./);
+    expect(out).toContain("<p>6 storeys in the register. 6 floors.</p>");
+    expect(out).toContain("<p>Storeys not known. 0 floors.</p>");
+    // Each building's floors, confirmed or not, as the verified badge beside its words.
+    expect(out).toMatch(/<p class="verified verified--no" data-testid="building-4154146-confirmed"[^>]*>[\s\S]*?<span class="verified__text">Floors not confirmed<\/span><\/p>/);
+    expect(out).toMatch(/<p class="verified verified--yes" data-testid="building-4154147-confirmed"[^>]*>[\s\S]*?<span class="verified__text">Floors confirmed Oct 6, 2026<\/span><\/p>/);
   });
 
   it("flags a building that is not in the latest register", () => {
@@ -146,11 +148,11 @@ describe("Buildings and floors: one building", () => {
     expect(open).toContain('<option value="top" selected="">Above the top floor</option>');
     expect(open).toContain('<option value="bottom">Below the lowest floor</option>');
     expect(open).toContain(">Mark building confirmed</button>");
-    expect(open).toContain("Floors not confirmed yet.");
+    expect(open).toMatch(/<p class="verified verified--no" data-testid="building-confirmed"[^>]*>[\s\S]*?Floors not confirmed<\/span>/);
 
     const done = html(buildingView(detail({ confirmedAt: new Date("2026-10-06T15:00:00Z") })));
     expect(done).not.toContain("Mark building confirmed");
-    expect(done).toContain("Floors confirmed on Oct 6, 2026.");
+    expect(done).toMatch(/<p class="verified verified--yes" data-testid="building-confirmed"[^>]*>[\s\S]*?Floors confirmed Oct 6, 2026<\/span>/);
     expect(done).toContain("Add a floor");
   });
 

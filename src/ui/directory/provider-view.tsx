@@ -8,6 +8,7 @@ import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { isEnglishFallback, isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { Isolated } from "../text/isolated";
+import { Verified } from "../verified/verified";
 import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
 import { HowTheyHelp, ListingBlock, MachineLabel, isMachineText, isUnreviewedMachineText } from "./listing-text";
@@ -104,7 +105,7 @@ function Contacts({ provider }: { provider: ListingProvider }) {
 /**
  * One provider, as the list shows it (`variant="card"`) and as its own page shows it (`variant="page"`, R-12 and R-13: the
  * pilot's providers are the organisations, so a listing and its organisation are one page). The facts are the same: topics,
- * contacts, day-to-day services, emergency role ("How they can help") and the day the Hub last confirmed them. A detail the
+ * contacts, day-to-day services, emergency role ("How they can help") and, beside the verified badge, the day the Hub last checked them. A detail the
  * file does not give reads "Not known". The machine-translation label and "Read it in English" sit on the card once, and
  * switch every machine-translated text of the card between the page language and its English original; the label says
  * "not reviewed by a person" when one of them (a description, AD-11 pilot change) has had no person's review.
@@ -133,7 +134,9 @@ export function ProviderView({
   const machineList = machineTexts(provider, categories);
   const machine = machineList.length > 0;
   const unreviewed = machineList.some(isUnreviewedMachineText);
-  const confirmed = t("directory.lastConfirmed", { date: formatDayText(provider.last_confirmed, isEnglishFallbackMessage(t, "directory.lastConfirmed") ? "en-CA" : locale) });
+  // An English fallback writes its date in English too, so the line is one language.
+  const checkedIsEnglish = isEnglishFallbackMessage(t, "directory.checkedByHub");
+  const checked = t("directory.checkedByHub", { date: formatDayText(provider.last_confirmed, checkedIsEnglish ? "en-CA" : locale) });
   const Heading = variant === "page" ? "h1" : "h2";
 
   return (
@@ -215,9 +218,10 @@ export function ProviderView({
       </dl>
       </details>
 
-      <ResidentText as="p" className="dir-card__confirmed" testId="last-confirmed">
-        {confirmed}
-      </ResidentText>
+      {/* Every listing a resident sees was confirmed by the Hub (unconfirmed providers are never published), so the badge is always the confirmed one. */}
+      <Verified as="p" confirmed size={20} className="dir-card__confirmed" testId="last-confirmed" {...(checkedIsEnglish ? { lang: "en", dir: "ltr" as const } : {})}>
+        {checked}
+      </Verified>
     </article>
   );
 }

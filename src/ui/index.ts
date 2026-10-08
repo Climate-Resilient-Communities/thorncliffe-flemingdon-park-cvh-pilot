@@ -5,3 +5,4 @@ export { Screen, SCREEN_WIDTHS, type ScreenProps, type ScreenWidth } from "./lay
 export { Stack, STACK_GAPS, type StackGap, type StackProps } from "./layout/stack";
 export { FALLBACK_MARKER, ResidentText, isEnglishFallback } from "./text/resident-text";
 export { ContentText } from "./text/content-text";
+export { Verified, VERIFIED_SIZES, type VerifiedProps, type VerifiedSize } from "./verified/verified";

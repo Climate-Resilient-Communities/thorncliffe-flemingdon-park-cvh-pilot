@@ -62,7 +62,10 @@ test("lists every published provider once, each with its categories, contacts, s
   await expect(food.getByTestId("provider-contact").getByTestId("provider-call")).toHaveAttribute("href", "tel:+14165550101");
   await expect(food.getByTestId("provider-contact").getByTestId("provider-call")).toContainText("(416) 555-0101");
   await expect(food.getByTestId("emergency-role")).toHaveText("Hands out ready-to-eat food and water during a long power cut.");
-  await expect(food.getByTestId("last-confirmed")).toHaveText("Last confirmed by the Hub September 30, 2026");
+  await expect(food.getByTestId("last-confirmed")).toHaveText("Checked by the Hub · September 30, 2026");
+  // The verified badge beside it: confirmed, decoration only (the words carry the meaning).
+  await expect(food.getByTestId("last-confirmed")).toHaveAttribute("data-confirmed", "true");
+  await expect(food.getByTestId("last-confirmed").locator("svg")).toHaveAttribute("aria-hidden", "true");
   // The English page has nothing in a language it was not translated into.
   await expect(page.getByTestId("directory-unavailable-note")).toHaveCount(0);
   await expect(page.getByTestId("machine-label")).toHaveCount(0);
@@ -217,7 +220,7 @@ test("How they can help shows the emergency role and names 911, on the list and 
   await expect(page.getByTestId("how-they-help")).toContainText("How they can help");
   await expect(page.getByTestId("emergency-role")).toHaveText("Open as a cooling room during heat warnings. Not a medical service.");
   await expect(page.getByTestId("help-911")).toHaveText("If someone is in danger, call 911.");
-  await expect(page.getByTestId("last-confirmed")).toHaveText("Last confirmed by the Hub September 28, 2026");
+  await expect(page.getByTestId("last-confirmed")).toHaveText("Checked by the Hub · September 28, 2026");
   // The provider page ends with the inline 911 note, after the provider.
   await expect(page.getByTestId("inline-911")).toHaveText("Not an emergency service. In danger? Call 911.");
   await expect(page.getByTestId("inline-911")).toHaveAttribute("role", "note");
@@ -537,9 +540,9 @@ test.describe("in Urdu", () => {
       await expect(run, text).toHaveAttribute("dir", "ltr");
       await expect(run, text).toHaveAttribute("lang", "en");
     }
-    // The confirmed line is the catalog's Urdu wording with its date in Urdu's way of writing dates, in the page's
+    // The checked line (beside the verified badge) is the catalog's Urdu wording with its date in Urdu's way of writing dates, in the page's
     // direction. (English behind [EN] with an English date, in an English block, is measured in fallback.spec.ts.)
-    const confirmedTemplate = catalogText("ur", "directory.lastConfirmed");
+    const confirmedTemplate = catalogText("ur", "directory.checkedByHub");
     const confirmed = card.getByTestId("last-confirmed");
     if (isFallback(confirmedTemplate)) {
       await expect(confirmed).toHaveText(confirmedTemplate.replace("{date}", "September 30, 2026"));

@@ -1455,7 +1455,8 @@
     "topic": "Paksa",
     "emergency": "Tumutulong sa emerhensiya",
     "emergencyRole": "Tungkulin sa emerhensiya",
-    "lastConfirmed": "Huling kinumpirma ng Hub {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "Sinuri ng Hub · {date}",
     "lastUpdated": "Huling na-update {time}",
     "loading": "Nilo-load ang direktoryo",
     "couldNotLoad": "Hindi na-load ang direktoryo",

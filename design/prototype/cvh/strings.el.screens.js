@@ -1442,7 +1442,8 @@
     "topic": "Θέμα",
     "emergency": "Βοηθά σε έκτακτη ανάγκη",
     "emergencyRole": "Ρόλος σε έκτακτη ανάγκη",
-    "lastConfirmed": "Τελευταία επιβεβαίωση από το Hub {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "Ελέγχθηκε από το Hub · {date}",
     "lastUpdated": "Τελευταία ενημέρωση {time}",
     "loading": "Φόρτωση του καταλόγου",
     "couldNotLoad": "Ο κατάλογος δεν φόρτωσε",

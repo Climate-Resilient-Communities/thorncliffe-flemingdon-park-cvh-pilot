@@ -1466,7 +1466,8 @@
     "topic": "विषय",
     "emergency": "आपातकाल में मदद करती है",
     "emergencyRole": "आपातकाल में भूमिका",
-    "lastConfirmed": "हब ने आखिरी बार {date} को पुष्टि की",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "हब ने जाँचा · {date}",
     "lastUpdated": "आखिरी बार {time} अपडेट किया गया",
     "loading": "डायरेक्टरी लोड हो रही है",
     "couldNotLoad": "डायरेक्टरी लोड नहीं हो सकी",

@@ -994,6 +994,8 @@ So that residents only see listings the Hub has checked.
 **And** publishing a provider with no last-confirmed date is refused with "Confirm this provider first"
 **And** there is no way on any screen to edit listing text (text changes go through the catalogue scripts)
 
+> **UI change (product owner, 2026-10-08):** the providers screen lists compact rows: the name with a status pill (Published, Hidden, Not in catalogue) and a "⋯" actions menu holding Publish or Unpublish; the verified badge with "Confirmed {date}" or "Not confirmed", whose Change (or Confirm) opens the date field and Save date; filter tabs All, To confirm and Hidden with counts, and a search by name or code (both a query of the page). The rules above are unchanged. See `docs/design-framework/verified-badge.md`.
+
 **Given** a Coordinator, Director or Ambassador
 **When** they call any provider-changing endpoint directly
 **Then** it returns 403 and the endpoints are added to the S01.12 permission test list
@@ -1075,7 +1077,7 @@ So that I can find help near me in my language.
 
 **Given** the current release in the page language
 **When** the resident opens the directory
-**Then** only published providers are listed, each once, with categories, contacts, day-to-day services, emergency role and "Last confirmed by the Hub {date}"; missing details show "Not known"
+**Then** only published providers are listed, each once, with categories, contacts, day-to-day services, emergency role and "Checked by the Hub · {date}" (beside the verified badge; the wording was "Last confirmed by the Hub {date}" until 2026-10-08); missing details show "Not known"
 
 **Given** filters R-27 (category, neighbourhood, "Helps in an emergency")
 **When** the resident applies one or more
@@ -1704,7 +1706,7 @@ So that I find help without knowing the provider's name.
 
 **Given** results R-10
 **When** the server returns `status: ok`
-**Then** the 1 to 5 qualifying listings are shown exactly as published in `query_lang`, in the returned order, with "Last confirmed by the Hub {date}", the machine-translation label where it applies, and a note "Shown in {language}" when `query_lang` differs from the page language
+**Then** the 1 to 5 qualifying listings are shown exactly as published in `query_lang`, in the returned order, with "Checked by the Hub · {date}" beside the verified badge, the machine-translation label where it applies, and a note "Shown in {language}" when `query_lang` differs from the page language
 **And** if the `query_lang` listing file is not on the phone, it is downloaded first; if that fails, the results are shown in the page language with that note
 
 **Given** the response's `release_v`

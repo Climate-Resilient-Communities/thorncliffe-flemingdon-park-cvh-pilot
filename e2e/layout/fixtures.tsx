@@ -82,6 +82,8 @@ import type { LogScreen } from "@/app/staff/alerts/log/view";
 import { CoverageBody, type CoverageActions, type CoverageInitial } from "@/app/staff/coverage/CoverageBody";
 import type { CoverageScreen } from "@/app/staff/coverage/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
+import { ProviderFilters, type ProviderFiltersLabels } from "@/app/staff/providers/ProviderFilters";
+import { filterProviders, providerCounts, type ProviderQuery } from "@/app/staff/providers/filters";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
 
@@ -761,23 +763,28 @@ export function AmbassadorResolveFixture({ texts, brand, screen, followInitial }
 }
 
 /**
- * The Hub shell around the Providers screen (S02.04), as an Admin sees it: the real ProviderList with the rows and
- * words the page gives it. Its actions are the harness's stand-ins (e2e/helpers/provider-actions-stub.ts).
+ * The Hub shell around the Providers screen (S02.04), as an Admin sees it: the real filter tabs and search, and the real
+ * ProviderList with the rows the page's query leaves, as the page builds them. Its actions are the harness's stand-ins
+ * (e2e/helpers/provider-actions-stub.ts).
  */
 export function ProvidersFixture({
   texts,
   brand,
   rows,
   labels,
+  filterLabels,
   today,
-  summary,
+  query = { filter: "all", q: "" },
+  empty = "",
 }: {
   texts: HubShellTexts;
   brand: { logoSrc: string; symbolSrc: string };
   rows: ProviderRowData[];
   labels: ProviderListLabels;
+  filterLabels: ProviderFiltersLabels;
   today: string;
-  summary: string;
+  query?: ProviderQuery;
+  empty?: string;
 }) {
   return (
     <HubShell
@@ -809,8 +816,8 @@ export function ProvidersFixture({
               <p key={text}>{text}</p>
             ))}
           </Stack>
-          <p>{summary}</p>
-          <ProviderList rows={rows} today={today} labels={labels} />
+          <ProviderFilters query={query} counts={providerCounts(rows, query.q)} labels={filterLabels} />
+          <ProviderList rows={filterProviders(rows, query)} today={today} labels={labels} empty={empty} />
         </Stack>
       </Screen>
     </HubShell>

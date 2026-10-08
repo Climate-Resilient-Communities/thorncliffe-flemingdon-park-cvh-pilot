@@ -44,3 +44,10 @@ Checked at 1440, 390 and 320px, with the recovery disclosure open and closed. Ad
 - Staff sign-in, authenticator code and both setup gates share one frame: the Hub logo alone in the header (it is the link back to the resident app), the title and form below it, and a quiet footer with "Terms and privacy" and "Back to the resident app" at the bottom of the viewport.
 - Providers: the date field and Save date are one group of equal height with the hint below; Publish/Unpublish has its own line on a phone and joins the date's line from the Hub breakpoint.
 - Hub top bar on a phone: the name and role are cut with an ellipsis when too long (the full sentence is still read aloud), sign-out keeps its one-line label, and the symbol has a fixed size, so nothing in the bar overlaps.
+
+## Verified badge and compact Providers — October 8
+
+- A shared verified badge (`Verified`, `src/ui/verified`): a scalloped rosette, brand blue with a white tick when confirmed and a grey outline when not, always beside its words, never icon only ([verified-badge.md](verified-badge.md)).
+- Hub Providers: compact two-line rows (name with a Published / Hidden pill and a "⋯" actions menu; badge with "Confirmed Oct 2, 2026" or "Not confirmed" and Change / Confirm opening the date field), filter tabs with counts, and a search by name or code. Server actions and their validation are unchanged.
+- Hub Buildings: the badge with "Floors confirmed Oct 2, 2026" or "Floors not confirmed", in the list and on a building's page.
+- Resident directory card and provider page: the badge with "Checked by the Hub · {date}" (`directory.checkedByHub`, machine-translated into the 14 other languages; it replaces `directory.lastConfirmed`).

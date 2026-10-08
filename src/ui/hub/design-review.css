@@ -5,29 +5,59 @@
 .hub-input, .hub-gate { border-radius: var(--gap-target); }
 .hub-gate { align-self: flex-start; }
 .hub-shell .hub-button { justify-content: flex-start; }
-/* Staff provider review: presentation only; server actions and permissions stay intact. */
-.provider-record { padding-block: var(--inset-card); border-block-end: 1px solid var(--border); text-align: start; }
-.provider-record:first-child { border-block-start: 1px solid var(--border); }
-.provider-record h2 { font-size: var(--type-body-size); }
-.provider-record strong { font-size: var(--type-caption-size); color: var(--text-muted); }
-.provider-record[data-published="true"] strong { color: var(--accent-text); }
-/* A provider's actions (ProviderList): one grid for its two forms, which are display: contents. The date field and Save date share a row
-   and its height, the hint spans under them; Publish or Unpublish has its own line on a phone and joins the row from the Hub breakpoint. */
-.provider-record__actions { display: grid; grid-template-columns: minmax(0, max-content) max-content minmax(0, 1fr); grid-template-areas: "label label label" "date save ." "hint hint hint" "publish publish publish" "phint phint phint"; column-gap: var(--gap-target); row-gap: var(--gap-label); align-items: stretch; justify-items: start; }
-.provider-record__form { display: contents; }
-.provider-record__label { grid-area: label; }
-.provider-record__date { grid-area: date; inline-size: 100%; }
-.provider-record__save { grid-area: save; }
-.provider-record__hint { grid-area: hint; }
-.provider-record__publish { grid-area: publish; margin-block-start: var(--gap-related); }
-.provider-record__publish-hint { grid-area: phint; }
-@variant hub {
-  .provider-record__actions { grid-template-columns: minmax(0, max-content) max-content max-content minmax(0, 1fr); grid-template-areas: "label label label ." "date save publish ." "hint hint phint ."; }
-  .provider-record__publish { margin-block-start: 0; }
-  .provider-record__publish, .provider-record__publish-hint { margin-inline-start: var(--gap-stack); }
-}
+/*
+ * Staff Providers (ProviderFilters, ProviderList): presentation only; server actions and permissions stay intact.
+ * The top: filter tabs (links; the current one filled, and aria-current) and the search by name or code.
+ */
+.provider-filters { display: flex; flex-direction: column; gap: var(--gap-stack); }
+.provider-tabs { display: flex; flex-wrap: wrap; gap: var(--gap-related); }
+.provider-tab { display: inline-flex; align-items: center; gap: var(--gap-label); padding-inline: var(--gap-related); border: var(--offset-align-hairline) solid var(--control-border); border-radius: var(--radius-card); background-color: var(--surface-raised); color: var(--ink); font-weight: 700; text-decoration: none; }
+.provider-tab:hover { border-color: var(--ink); }
+.provider-tab[aria-current="page"] { border-color: var(--ink); background-color: var(--ink); color: var(--on-deep); }
+.provider-tab__count { font-weight: 400; font-variant-numeric: tabular-nums; }
+.provider-search { display: flex; flex-direction: column; align-items: flex-start; gap: var(--gap-label); inline-size: 100%; max-inline-size: var(--size-aside-staff); }
+.provider-search__row { display: flex; align-items: stretch; gap: var(--gap-target); inline-size: 100%; }
+.provider-search__input { flex: 1 1 auto; min-inline-size: 0; }
+:is(.provider-tab, .row-actions__button, .provider-row__summary):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/*
+ * A provider row, compact: line 1 the name, its status pill and the actions menu (⋯) at the end; the code, categories and street small
+ * and muted; line 2 the verified badge, its words and "Change" (or "Confirm"), which opens the date field and Save date under it.
+ */
+.provider-rows { display: flex; flex-direction: column; border-block-start: var(--offset-align-hairline) solid var(--border); }
+.provider-row { display: flex; flex-direction: column; gap: var(--gap-subline); padding-block: var(--gap-related); border-block-end: var(--offset-align-hairline) solid var(--border); }
+.provider-row__head { display: flex; align-items: center; gap: var(--gap-related); }
+.provider-row__name { min-inline-size: 0; font-size: var(--type-body-size); overflow-wrap: anywhere; }
+.provider-row__detail { font-size: var(--type-caption-size); color: var(--text-muted); overflow-wrap: anywhere; }
+.provider-pill { flex: none; padding-inline: var(--gap-tight); border: var(--offset-align-hairline) solid var(--control-border); border-radius: var(--radius-card); font-size: var(--type-caption-size); font-weight: 700; line-height: var(--type-tight-line-height); white-space: nowrap; }
+.provider-pill--published { border-color: var(--sprout-green); background-color: var(--surface-raised); color: var(--ink); }
+.provider-pill--hidden { border-style: dashed; background-color: var(--surface); color: var(--text-muted); }
+.provider-pill--removed { border-color: var(--accent-bar); background-color: var(--surface-warm); color: var(--text-on-warm); }
+.provider-row .verified { font-size: var(--type-caption-size); }
+.provider-row .verified--yes .verified__text { color: var(--ink); }
+/* The badge's line is the date field's disclosure: as wide as its words and "Change", at least a touch target tall. */
+.provider-row__summary { display: inline-flex; flex-wrap: wrap; align-items: center; column-gap: var(--gap-related); max-inline-size: 100%; cursor: pointer; list-style: none; }
+.provider-row__summary::-webkit-details-marker { display: none; }
+.provider-row__change { color: var(--accent-text); font-size: var(--type-caption-size); text-decoration: underline; text-underline-offset: 0.2em; }
+.provider-row__summary:hover .provider-row__change { text-decoration-thickness: 2px; }
+.provider-row__edit[open] > .provider-row__summary .provider-row__change { font-weight: 700; }
+.provider-row__form { display: flex; flex-direction: column; align-items: flex-start; gap: var(--gap-label); padding-block: var(--gap-label); }
+.provider-row__fields { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--gap-target); }
+.provider-row__date { min-inline-size: 0; }
+.provider-row__hint { font-size: var(--type-caption-size); color: var(--text-muted); }
+
+/* The actions menu: a <details> whose ⋯ summary is the button; its panel opens under it, at the end of the row. */
+.row-actions { position: relative; flex: none; margin-inline-start: auto; }
+.row-actions__button { display: inline-flex; align-items: center; justify-content: center; border: var(--offset-align-hairline) solid transparent; border-radius: var(--gap-tight); color: var(--ink); font-size: var(--type-h3-size); font-weight: 700; line-height: 1; cursor: pointer; list-style: none; }
+.row-actions__button::-webkit-details-marker { display: none; }
+.row-actions__button:hover, .row-actions[open] > .row-actions__button { border-color: var(--control-border); background-color: var(--surface); }
+.row-actions__panel { position: absolute; inset-block-start: 100%; inset-inline-end: 0; z-index: 10; display: flex; flex-direction: column; gap: var(--gap-label); inline-size: max-content; max-inline-size: var(--size-aside-staff-compact); padding: var(--gap-label); border: var(--offset-align-hairline) solid var(--control-border); border-radius: var(--gap-target); background-color: var(--surface-raised); }
+.row-actions__form { display: flex; flex-direction: column; gap: var(--gap-label); }
+/* Its items are the Hub's secondary buttons, as wide as the panel. */
+.row-actions__item { inline-size: 100%; }
+.row-actions__hint { font-size: var(--type-caption-size); color: var(--text-muted); }
 /* Keep the live region in the accessibility tree before an action returns. */
-.provider-record [role="status"]:empty { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.provider-row [role="status"]:empty { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
 .hub-nav__item { border-radius: var(--gap-tight); }
 
 /*

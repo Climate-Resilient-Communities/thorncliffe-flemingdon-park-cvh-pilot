@@ -1191,7 +1191,8 @@
     empty: 'No buildings have been imported yet. Ask IT to run the buildings seed.',
     listTitle: 'All buildings',
     storeysRegister: '{n} storeys in the register', storeysUnknown: 'Storeys not known', floorsCount: '{n} floors',
-    confirmed: 'Floors confirmed', confirmedOn: 'Floors confirmed on {date}', unconfirmed: 'Floors not confirmed yet',
+    /* The verified badge's line of a building, in the list and on its page. */
+    confirmedBadge: 'Floors confirmed {date}', unconfirmedBadge: 'Floors not confirmed',
     notInRegister: 'Not in latest register', registerLabel: 'Register status:',
     notInRegisterLine: 'The latest import did not find this building in the City register. It is kept as it is. Check whether it still belongs in the pilot.',
     edit: 'Edit floors', editOf: 'Edit floors of {address}', back: 'All buildings',
@@ -1551,12 +1552,18 @@
   m(en, { hub: { nav: { providers: 'Providers' } }, staff: { providers: {
     title: 'Providers',
     lead: 'The reviewed catalogue is loaded by the catalogue script. Here you confirm each provider and choose which ones residents see. Listing text is not edited here: it changes in the catalogue files.',
-    summary: '{published} of {total} providers published. {unconfirmed} not confirmed yet.',
     empty: 'No providers are loaded yet. Run the catalogue script (npm run seed:providers).',
-    statusPublished: 'Published', statusUnpublished: 'Not published', statusRemoved: 'Not in catalogue',
+    /* The filter tabs over the list, each with its count, and the search by name or code (a query of the page, so it works without scripts). */
+    filters: 'Filter providers', filterAll: 'All', filterToConfirm: 'To confirm', filterHidden: 'Hidden',
+    search: 'Search by name or code', searchSubmit: 'Search', clearSearch: 'Clear search',
+    noMatch: 'No providers match \u201c{q}\u201d.', noneHere: 'No providers here.',
+    statusPublished: 'Published', statusUnpublished: 'Hidden', statusRemoved: 'Not in catalogue',
     removedNote: 'No longer in the catalogue. It is unpublished and kept with its last-confirmed date, and cannot be published or confirmed.',
-    neverConfirmed: 'Not confirmed yet', confirmedOn: 'Last confirmed {date}',
+    /* The verified badge's line of a row: the date in words, or "Not confirmed"; "Change" or "Confirm" opens the date field. */
+    confirmedOn: 'Confirmed {date}', notConfirmed: 'Not confirmed', change: 'Change', confirm: 'Confirm',
     confirmDate: 'Date last confirmed', dateHint: 'Today or earlier.', saveDate: 'Save date',
+    /* The row's actions menu (\u22ef): its button's name, then Publish or Unpublish inside it. */
+    actionsOf: 'Actions for {name}',
     publish: 'Publish', unpublish: 'Unpublish',
     done: { published: '{name} is published.', unpublished: '{name} is no longer published.', confirmed: '{name} was confirmed on {date}.' },
     errors: { confirmFirst: 'Confirm this provider first', dateInvalid: 'Choose a date.', dateInFuture: 'The date cannot be later than today.',
@@ -1612,7 +1619,8 @@
     lead: 'What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.',
     count: '{n} services', countOne: '1 service',
     topic: 'Topic', emergency: 'Helps in an emergency', emergencyRole: 'Emergency role',
-    lastConfirmed: 'Last confirmed by the Hub {date}',
+    /* Beside the verified badge on a provider: who checked the listing and when. */
+    checkedByHub: 'Checked by the Hub · {date}',
     lastUpdated: 'Last updated {time}',
     loading: 'Loading the directory',
     couldNotLoad: 'The directory could not load',

@@ -1466,7 +1466,8 @@
     "topic": "વિષય",
     "emergency": "કટોકટીમાં મદદ કરે છે",
     "emergencyRole": "કટોકટીમાં ભૂમિકા",
-    "lastConfirmed": "હબે છેલ્લે {date} ના રોજ ખાતરી કરી",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "હબે તપાસ્યું · {date}",
     "lastUpdated": "છેલ્લું અપડેટ {time}",
     "loading": "ડિરેક્ટરી લોડ થાય છે",
     "couldNotLoad": "ડિરેક્ટરી લોડ ન થઈ",

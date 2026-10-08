@@ -1455,7 +1455,8 @@
     "topic": "موضوع",
     "emergency": "په بیړني حالت کې مرسته کوي",
     "emergencyRole": "په بیړني حالت کې رول",
-    "lastConfirmed": "د مرکز وروستی تایید {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "د مرکز لخوا کتل شوی · {date}",
     "lastUpdated": "وروستی بدلون {time}",
     "loading": "لارښود پورته کېږي",
     "couldNotLoad": "لارښود پورته نه شو",

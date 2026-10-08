@@ -1466,7 +1466,8 @@
     "topic": "Tema",
     "emergency": "Ayuda en una emergencia",
     "emergencyRole": "Función en una emergencia",
-    "lastConfirmed": "Confirmado por el Hub por última vez el {date}",
+    /* The verified badge's line on a provider (it replaces the earlier last-confirmed line). AI-generated (Claude), not yet checked by native readers. */
+    "checkedByHub": "Verificado por el Hub · {date}",
     "lastUpdated": "Última actualización: {time}",
     "loading": "Cargando el directorio",
     "couldNotLoad": "No se pudo cargar el directorio",
