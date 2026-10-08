@@ -56,7 +56,6 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
   const r02 = await getTranslations({ locale: lang, namespace: "R02" });
   const display = await getTranslations({ locale: lang, namespace: "display" });
-  const x07 = await getTranslations({ locale: lang, namespace: "x07" });
   // The parts of the catalog the layout's client components read: the 911 block of error.tsx, which must be able to draw
   // itself in the page's language when a render fails, and the offline note below. Nothing else is sent to the browser.
   const { x01, shell: shellMessages, time } = (await getMessages({ locale: lang })) as {
@@ -95,7 +94,6 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
           header={{
             logoAlt: shell("hubLogoAlt"),
             display: { title: display("title"), close: display("close"), textSize: display("textSize"), standard: display("standard"), large: display("large"), simpler: display("simpler"), help: display("help"), saved: display("saved"), sessionOnly: display("sessionOnly") },
-            basic: { label: x07("label"), on: x07("on"), off: x07("off") },
             current: lang,
             languages: LAUNCH_LANGUAGES,
             labels: {

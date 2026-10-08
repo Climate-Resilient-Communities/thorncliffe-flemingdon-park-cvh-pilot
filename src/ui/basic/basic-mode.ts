@@ -43,8 +43,8 @@ export function saveBasicChoice(
     if (isBasic(current) === on) return current;
     const next = { ...baseChoices(current), textSize: isLargeText(current) ? "large" as const : "standard" as const };
     if (on) return { ...next, basic: true };
-    const { basic: _basic, ...rest } = next;
-    return rest;
+    delete next.basic;
+    return next;
   });
 }
 
