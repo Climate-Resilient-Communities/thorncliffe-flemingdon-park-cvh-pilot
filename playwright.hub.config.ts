@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: 0, // TEMPORARY: one pass to collect new baselines
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
     browserName: "chromium",
