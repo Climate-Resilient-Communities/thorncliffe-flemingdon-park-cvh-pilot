@@ -71,8 +71,9 @@
 .hub-top__brand { flex: none; }
 .hub-top__who { flex-wrap: nowrap; justify-content: flex-end; }
 .hub-top__person { flex: 1 1 auto; min-inline-size: 0; }
-/* On one line with the person. The person gives way first (its name and role are cut with an ellipsis), so a short sign-out label stays on one
-   line; a long translated one wraps inside at most half the bar and never pushes the person out of the viewport. */
+/* On one line with the person. On a phone the person gives way first (its name and role are cut with an ellipsis), so a short sign-out label
+   stays on one line; a long translated one wraps inside at most half the bar and never pushes the person out of the viewport. From the Hub
+   breakpoint, where the person is a sentence that wraps, both shrink. */
 .hub-top__signout { flex: 0 0 auto; min-inline-size: 0; max-inline-size: 50%; }
 .hub-top__signout button { max-inline-size: 100%; overflow-wrap: anywhere; }
 .hub-top__context { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
@@ -85,4 +86,5 @@
 @variant hub {
  .hub-top__context { position: static; inline-size: auto; block-size: auto; overflow: visible; clip-path: none; }
  .hub-top__person > bdi, .hub-top__role { display: inline; overflow: visible; white-space: normal; }
+ .hub-top__signout { flex-shrink: 1; }
 }
