@@ -13,6 +13,8 @@
     display: inline-flex;
     align-items: center;
     overflow-wrap: anywhere;
+    color: var(--accent-text);
+    text-decoration: underline;
   }
 
   .terms-facts {
