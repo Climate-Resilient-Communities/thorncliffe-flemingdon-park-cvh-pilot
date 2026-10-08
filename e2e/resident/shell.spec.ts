@@ -94,6 +94,12 @@ for (const rtl of ["ur", "ps", "prs"]) {
 
       expect(Object.keys(mirrored)).toEqual(Object.keys(english));
       for (const part of Object.keys(english)) {
+        // The logo is anchored at the inline start and shrinks (object-fit: contain) to leave the language and Aa buttons their room
+        // at narrow widths, so its width follows the length of the language button's label: its start edge is the one that mirrors.
+        if (part === "shell-logo") {
+          expect(Math.abs(mirrored[part].right - (width - english[part].left)), `${part}: start edge`).toBeLessThanOrEqual(1);
+          continue;
+        }
         expect(Math.abs(mirrored[part].left - (width - english[part].right)), `${part}: left edge`).toBeLessThanOrEqual(1);
         // Only the language button is as wide as its text, which differs by language.
         if (part !== "shell-lang-button") {

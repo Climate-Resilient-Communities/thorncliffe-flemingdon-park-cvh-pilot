@@ -187,7 +187,11 @@ export function ProviderView({
       </header>
 
       {variant === "card" && phoneEntries(provider.contact.phone).filter((entry) => entry.tel).slice(0, 1).map((entry) => (
-        <a key={entry.tel} href={`tel:${entry.tel}`} className="dir-call tap"><ResidentText>{t("R12.call")}</ResidentText>{" "}<bdi dir="ltr">{entry.text}</bdi></a>
+        // The card's first number as a call button up front (the full contacts are in the details below), drawn as Contacts draws a call.
+        <a key={entry.tel} href={`tel:${entry.tel}`} className="dir-call tap" {...(isEnglishFallback(t("R12.call")) ? { dir: "ltr", lang: "en" } : {})}>
+          <ResidentText>{t("R12.call")}</ResidentText>{" "}
+          <bdi dir="ltr" lang="en">{entry.text}</bdi>
+        </a>
       ))}
       <details className="dir-card__details" open={variant === "page"}>
       <summary className="tap"><ResidentText>{t("R12.services")}</ResidentText></summary>

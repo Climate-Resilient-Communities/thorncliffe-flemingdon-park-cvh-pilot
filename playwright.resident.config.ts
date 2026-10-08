@@ -46,6 +46,7 @@ export default defineConfig({
   // (accessibility.spec.ts, parallel by test) now spreads over all of them. The three servers are read-only for every test, so any worker may share them.
   workers: 4,
   retries: 0, // TEMPORARY: one pass to collect new baselines
+  timeout: 120_000, // TEMPORARY: soft screenshot comparisons each wait for a stable image
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
     baseURL: localUrl,

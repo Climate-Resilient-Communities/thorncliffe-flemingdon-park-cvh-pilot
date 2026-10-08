@@ -136,7 +136,7 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
           )}
         </Stack>
 
-        <nav aria-label={document.title.text}>
+        <nav aria-label={document.title.text} className="terms-contents">
           <ul>
             {document.sections.map((section) => (
               <li key={section.id}>

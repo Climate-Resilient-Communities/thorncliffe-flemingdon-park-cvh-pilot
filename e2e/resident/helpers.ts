@@ -105,6 +105,7 @@ export const SHELL_PARTS = [
   "shell-header",
   "shell-logo",
   "shell-lang-button",
+  "display-settings-button",
   "shell-main",
   "shell-nav",
   "shell-nav-now",

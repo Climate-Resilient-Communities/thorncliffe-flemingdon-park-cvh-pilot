@@ -21,15 +21,15 @@ export function ResidentShell({ header, nav, children }: ResidentShellProps) {
         {children}
       </main>
       <ResidentNav {...nav} />
-      <footer className="shell-footer">
-        <Link href="/staff/sign-in" lang={header.current === "fr" ? "fr" : "en"}>
+      {/* The footer's words are English or French (fr) until they are translated, so they carry their language and direction.
+          prefetch off, as the shell's other links: Next would otherwise fetch both pages as soon as the footer is on screen. */}
+      <footer className="shell-footer" data-testid="shell-footer">
+        <Link href="/staff/sign-in" prefetch={false} lang={header.current === "fr" ? "fr" : "en"} dir="ltr">
           {header.current === "fr" ? "Connexion du personnel" : "Staff sign in"}
         </Link>
-
-        <Link href={`/${header.current}/terms`} lang={header.current === "fr" ? "fr" : "en"}>
+        <Link href={`/${header.current}/terms`} prefetch={false} lang={header.current === "fr" ? "fr" : "en"} dir="ltr">
           {header.current === "fr" ? "Conditions et confidentialité" : "Terms and privacy"}
         </Link>
-
       </footer>
 
     </div>

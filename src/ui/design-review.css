@@ -80,7 +80,8 @@
 
 .shell-header__tools { display: flex; align-items: center; gap: var(--gap-target); min-inline-size: 0; }
 .shell-header__tools .shell-langbtn { min-inline-size: 0; max-inline-size: 100%; }
-.shell-display-button { flex: none; }
+/* The rule above lets the language button shrink; the Aa button keeps the full tap size (56 px in basic mode). */
+.shell-header__tools .shell-display-button { flex: none; min-inline-size: var(--tap-current); justify-content: center; }
 .display-size { border: 0; padding: 0; margin: 0; }
 .display-size legend { font-weight: 700; }
 .display-size__choices { display: flex; flex-wrap: wrap; gap: var(--gap-stack); }
