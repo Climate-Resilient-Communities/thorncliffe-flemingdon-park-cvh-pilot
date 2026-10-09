@@ -15,6 +15,7 @@ function setup(over: Partial<InstallDeps> = {}) {
       sent.push(event);
       return true;
     },
+    leaving: async () => false,
     ...over,
   };
   return { all, data, sent };
@@ -101,6 +102,34 @@ describe("reportInstall", () => {
 
     expect(await reportInstall("en", all)).toBe("failed");
     expect(data.has(INSTALL_FLAG_KEY)).toBe(false);
+  });
+
+  it("keeps the flag when the send failed because the page was going away: the request goes on to the server without it", async () => {
+    let leaving = false;
+    const { all, data, sent } = setup({
+      send: async (event) => {
+        sent.push(event);
+        // The page is reloaded while the event is on its way; the browser then tells the page the request failed.
+        leaving = true;
+        return false;
+      },
+      leaving: async () => leaving,
+    });
+
+    expect(await reportInstall("en", all)).toBe("left");
+    expect(data.get(INSTALL_FLAG_KEY)).toBe("1");
+    // The reloaded page sends nothing more.
+    expect(await reportInstall("en", all)).toBe("already");
+    expect(sent).toHaveLength(1);
+  });
+
+  it("leaves the flag set when the page is gone before it can be told whether it was leaving", async () => {
+    const { all, data } = setup({ send: async () => false, leaving: () => new Promise<boolean>(() => {}) });
+
+    void reportInstall("en", all);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(data.get(INSTALL_FLAG_KEY)).toBe("1");
   });
 });
 

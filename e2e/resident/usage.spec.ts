@@ -224,6 +224,32 @@ test.describe("the install event", () => {
     expect(await flag(page)).toBe("1");
   });
 
+  test("is not sent again when the app is reloaded while the install event is still on its way", async ({ page }) => {
+    await page.addInitScript(() => {
+      const real = window.matchMedia.bind(window);
+      window.matchMedia = (query: string) => (query === "(display-mode: standalone)" ? ({ ...real("all"), matches: true, media: query } as MediaQueryList) : real(query));
+    });
+    // The first event is answered only after the reload has begun, so the reload always lands while it is on its way; the browser then tells the
+    // page the request failed, though the request goes on to the server without it. The flag must stay, or the reloaded page sends a second one.
+    let answer = () => {};
+    const held = new Promise<void>((resolve) => (answer = resolve));
+    const seen = { events: [] as unknown[] };
+    await page.context().route("**/api/metrics", async (route) => {
+      seen.events.push(expectUsageRequest(await seenRequest(route.request())));
+      await held;
+      await route.fulfill({ status: 204, headers: { "Cache-Control": "no-store" } }).catch(() => {});
+    });
+
+    await openResident(page, "/en", 390);
+    await events(seen, 1);
+    await page.reload();
+    answer();
+    await page.waitForLoadState("networkidle");
+
+    expect(seen.events).toEqual([{ evt: "install", lang: "en" }]);
+    expect(await flag(page)).toBe("1");
+  });
+
   test("is not queued without signal: nothing is sent, the flag is not set, and no earlier event comes when the signal is back", async ({ page, context }) => {
     const seen = await stubMetrics(page);
     await openResident(page, "/en", 390);

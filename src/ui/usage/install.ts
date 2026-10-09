@@ -21,6 +21,8 @@ export type InstallOutcome =
   | "offline"
   /** The phone cannot keep the flag, so a second event could not be stopped: nothing is sent. */
   | "no-flag"
+  /** The page went away while the event was on its way: the request outlives the page (keepalive), so it is not taken as lost and the flag stays. */
+  | "left"
   /** The server did not count it; the flag is taken back so the next open tries again. */
   | "failed";
 
@@ -30,6 +32,14 @@ export interface InstallDeps {
   /** The one neighbourhood the chosen buildings are all in, if there is one. Called only once an event is going to be sent. */
   neighbourhood: () => Promise<NeighbourhoodId | undefined>;
   send: (event: UsageEvent) => Promise<boolean>;
+  /**
+   * Whether the page is going away (`pagehide`: a reload, a full navigation, the app closed), asked only after a failed send. The browser
+   * tells a page that is going away that its request failed, but a keepalive request goes on to the server without the page and is counted
+   * there, so that failure is no sign the event was lost: taking the flag back would let the next open send a second one. The browser
+   * reports the failure in the same task in which it fires `pagehide`, possibly before the page's own listener has run, so the answer comes
+   * only once that task is over; for a page that is gone it never comes, and the flag stays.
+   */
+  leaving: () => Promise<boolean>;
 }
 
 /** Sends the install event unless this phone has sent it. The flag is set before anything is awaited, so two signals at once send one event. */
@@ -50,6 +60,7 @@ export async function reportInstall(lang: LangCode, deps: InstallDeps): Promise<
   const nbhd = await deps.neighbourhood().catch(() => undefined);
   const counted = await deps.send(nbhd === undefined ? { evt: "install", lang } : { evt: "install", lang, nbhd });
   if (counted) return "sent";
+  if (await deps.leaving()) return "left";
   try {
     storage.removeItem(INSTALL_FLAG_KEY);
   } catch {
