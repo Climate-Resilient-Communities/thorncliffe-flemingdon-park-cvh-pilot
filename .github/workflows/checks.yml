@@ -157,7 +157,9 @@ jobs:
       # in the pinned Playwright image (scripts/resident-docker.sh), the one environment the baselines are made
       # and compared in; the runner's own Ubuntu rasterises text differently. node_modules and .next are the
       # host's (the same linux x64).
+      # It and the Hub step run even after an earlier step failed, so one run collects the screenshot differences of both suites.
       - name: Test the resident surface in the production build
+        if: ${{ !cancelled() }}
         run: npm run test:resident:docker
         env:
           CI: "true"
@@ -165,12 +167,15 @@ jobs:
       # (scripts/hub-docker.sh). It renders the layout fixture with the app's compiled stylesheet, so it needs
       # no server; the shell's behaviour is asserted in `npm run test:layout` and `npm run test:staff`.
       - name: Test the Hub shell screenshots
+        if: ${{ !cancelled() }}
         run: npm run test:hub:docker
         env:
           CI: "true"
-      # The diffs and actual screenshots of a failed comparison (the resident surface's and the Hub shell's).
+      # The diffs and actual screenshots of a failed comparison (the resident surface's in test-results/resident, the Hub
+      # shell's in test-results/hub), every comparison of every attempt: docs/config.md, "Screenshot baselines". Also when the
+      # job is cancelled, as at its time limit (many failing tests, each tried three times), so what was collected is kept.
       - name: Upload the browser test results
-        if: failure()
+        if: ${{ failure() || cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: browser-test-results

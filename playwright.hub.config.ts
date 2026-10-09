@@ -10,6 +10,8 @@ export default defineConfig({
   testDir: "./e2e/hub",
   // One baseline per language, width and state, stored beside the spec and committed.
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",
+  // A folder of its own, beside the resident suite's (test-results/resident): each run empties its outputDir first.
+  outputDir: "test-results/hub",
   expect: {
     toHaveScreenshot: {
       animations: "disabled",
