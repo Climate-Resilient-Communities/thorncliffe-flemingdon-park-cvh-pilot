@@ -3,11 +3,12 @@
   "source": "design/prototype/cvh/data.js (numbers) and design/prototype/cvh/strings.en.js (R31, for the labels and the 911 text)",
   "note": "English source of the essential numbers page. The list needs a named owner, a last-updated date and an English review by that owner; every number needs the date it was last checked as correct (lastChecked). Phone numbers are never translated. Values starting with PLACEHOLDER are refused by the seed."
  },
- "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+ "owner": "Luis Ticas",
  "lastUpdated": "2026-10-02",
  "englishReview": {
-  "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-  "date": null
+  "reviewer": "Luis Ticas",
+  "date": "2026-10-08",
+  "sourceHash": "34638113149cb7cd9104b2a81cb89efad189a7ff19628b2e67a1505fb9e773f9"
  },
  "numbers": [
   {
@@ -15,7 +16,7 @@
    "number": "911",
    "emergency": true,
    "label": "Emergency",
-   "lastChecked": null,
+   "lastChecked": "2026-10-08",
    "when": "Call 911 if someone's life or safety is in danger right now: fire, a medical emergency, or a crime happening now."
   },
   {
@@ -23,28 +24,28 @@
    "number": "211",
    "emergency": false,
    "label": "Help finding community, social and government services",
-   "lastChecked": null
+   "lastChecked": "2026-10-08"
   },
   {
    "id": "311",
    "number": "311",
    "emergency": false,
    "label": "City of Toronto services and non-emergency problems",
-   "lastChecked": null
+   "lastChecked": "2026-10-08"
   },
   {
    "id": "hydro",
    "number": "416-542-8000",
    "emergency": false,
    "label": "Report a power outage to Toronto Hydro",
-   "lastChecked": null
+   "lastChecked": "2026-10-08"
   },
   {
    "id": "hub",
    "number": "(416) 421-8997",
    "emergency": false,
    "label": "Talk to someone at the Hub",
-   "lastChecked": null
+   "lastChecked": "2026-10-08"
   }
  ]
 }

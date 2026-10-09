@@ -382,19 +382,18 @@ describe("guide and essential_number seed", () => {
     ]);
   });
 
-  it("loads nothing from the committed catalogue until the owner fills the placeholders", async () => {
+  it("loads every guide and the numbers from the committed catalogue, now that the owner signed them off (2026-10-08)", async () => {
     const before = await auditEvents();
 
     const result = await seedGuidesAndNumbers(db, readContentCatalogue(path.join(ROOT, "data", "catalogue")));
 
-    expect(result.partial).toBe(true);
-    expect(result.report.guides.every((g) => !g.loaded && g.reasons.includes("the owner is still a placeholder"))).toBe(true);
-    expect(result.report.numbers.loaded).toBe(false);
-    expect(result.report.translations.loaded).toBe(0);
-    expect(await rows()).toEqual({ guides: [], numbers: [] });
-    // nothing was loaded and the run failed: audited as refused, not as an ok seed
-    expect((await auditEvents()).slice(before.length)).toEqual([
-      { action: "seed.run", outcome: "refused", meta: { seed: "guides_and_numbers", failures: result.report.guides.length + 1 } },
-    ]);
+    expect(result.report.guides.map((g) => [g.id, g.loaded, g.reasons])).toEqual(result.report.guides.map((g) => [g.id, true, []]));
+    expect(result.report.guides).toHaveLength(6);
+    expect(result.report.numbers.loaded).toBe(true);
+    const loaded = await rows();
+    expect(loaded.guides).toHaveLength(6);
+    expect(loaded.numbers).toHaveLength(5);
+    // a complete run is audited as ok, never as refused
+    expect((await auditEvents()).slice(before.length)).toMatchObject([{ action: "seed.run", outcome: "ok" }]);
   });
 });

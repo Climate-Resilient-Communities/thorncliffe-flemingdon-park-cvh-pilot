@@ -6,11 +6,12 @@
  "guides": [
   {
    "id": "power",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08",
+    "sourceHash": "698bd014b7e6d7c7f0c466637909cd24bdc35ce1fdc856cf7306b2ee6945429e"
    },
    "readMins": 3,
    "title": "Power outage",
@@ -35,11 +36,12 @@
   },
   {
    "id": "flood",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08",
+    "sourceHash": "e2f3c057a9296062efdefd80421d38109c2d9e878bd3ee7ea535ced38652ee26"
    },
    "readMins": 3,
    "title": "Flood or plumbing failure",
@@ -63,11 +65,12 @@
   },
   {
    "id": "elevator",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08",
+    "sourceHash": "87de941929422e3d0aab640798b0db2025266591ac2de33db7aad03819027875"
    },
    "readMins": 2,
    "title": "Elevator failure",
@@ -89,11 +92,12 @@
   },
   {
    "id": "heat",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08",
+    "sourceHash": "bb464c4485b48de9951adbe9f751040a3802c059a656d1e3e6b293cb8c14aed1"
    },
    "readMins": 3,
    "title": "Extreme heat",
@@ -117,11 +121,12 @@
   },
   {
    "id": "smoke",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08",
+    "sourceHash": "13462d6ac8a11778fcd7b11e7bcdce85830f1740c3f00b13ec7f27e7dc2158ee"
    },
    "readMins": 3,
    "title": "Wildfire smoke",
@@ -145,11 +150,12 @@
   },
   {
    "id": "fire",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08",
+    "sourceHash": "992a6177934af76894afbaecc80fcee6719bab186a06e08afef6ec689bbe3025"
    },
    "readMins": 2,
    "title": "Fire and evacuation",

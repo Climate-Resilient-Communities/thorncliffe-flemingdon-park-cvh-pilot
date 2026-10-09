@@ -1,18 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { startingPasswordStanding } from "./startingPasswordWindow";
+import { STARTING_PASSWORD_VALID_MS, startingPasswordStanding } from "./startingPasswordWindow";
 
 const issued = new Date("2026-10-01T12:00:00Z");
 const account = { status: "active" as const, mustChangePassword: true, startingPasswordIssuedAt: issued, startingPasswordUsedAt: null };
 const at = (iso: string) => new Date(iso);
 
 describe("starting password standing", () => {
-  it("is valid for 24 hours from issue", () => {
+  it("is valid for 72 hours from issue", () => {
+    expect(STARTING_PASSWORD_VALID_MS).toBe(72 * 60 * 60_000);
     expect(startingPasswordStanding(account, at("2026-10-01T12:00:00Z"))).toBe("valid");
-    expect(startingPasswordStanding(account, at("2026-10-02T11:59:59.999Z"))).toBe("valid");
+    expect(startingPasswordStanding(account, at("2026-10-02T12:00:00Z"))).toBe("valid");
+    expect(startingPasswordStanding(account, at("2026-10-04T11:59:00Z"))).toBe("valid");
+    expect(startingPasswordStanding(account, at("2026-10-04T11:59:59.999Z"))).toBe("valid");
   });
 
-  it("expires 24 hours after issue", () => {
-    expect(startingPasswordStanding(account, at("2026-10-02T12:00:00Z"))).toBe("expired");
+  it("expires 72 hours after issue", () => {
+    expect(startingPasswordStanding(account, at("2026-10-04T12:00:00Z"))).toBe("expired");
+    expect(startingPasswordStanding(account, at("2026-10-05T12:00:00Z"))).toBe("expired");
   });
 
   it("is used after its one successful sign-in", () => {

@@ -27,7 +27,7 @@ export const reissueUsername = (form: FormData) => {
 };
 
 /**
- * "Re-issue a starting password" (S01.07): an Admin restarts the 24-hour window of a starting
+ * "Re-issue a starting password" (S01.07): an Admin restarts the 72-hour window of a starting
  * password that expired or was used without being replaced. The identity module decides and
  * audits; the new starting password is shown once, to hand over in person.
  */

@@ -148,7 +148,7 @@ export const AUDIT_META = {
   "account.role_changed": meta({ from: role.optional(), to: role.optional() }),
   "bootstrap.completed": meta({}),
 
-  // Passwords (S01.07, S01.08). `reissued` restarts an expired starting password's 24 hours.
+  // Passwords (S01.07, S01.08). `reissued` restarts an expired starting password's 72 hours.
   "password.changed": meta({}),
   "password.reset": meta({ admin_shortfall: adminShortfall.optional() }),
   "password.reissued": meta({ admin_shortfall: adminShortfall.optional() }),

@@ -1,4 +1,4 @@
-// Staff sign-in against a real database (S01.07): the starting password's one use and 24-hour
+// Staff sign-in against a real database (S01.07): the starting password's one use and 72-hour
 // window, the password change, re-issue, the failed-sign-in throttle (with concurrent failures),
 // the session lookup and its binding to sessions the app opened, the password pepper, the timing
 // of refusals, the purge job and the tables' lockdown. The app writes with its own credentials
@@ -204,9 +204,9 @@ describe("signing in with a starting password", () => {
     expect((await auditsOf("auth.failed")).at(-1)).toMatchObject({ actor_staff_id: id, outcome: "refused", meta: { reason: "expired_starting_password" } });
   });
 
-  it("expires 24 hours after issue: the account becomes locked_pending_reissue and auth.locked is audited, once", async () => {
+  it("expires 72 hours after issue: the account becomes locked_pending_reissue and auth.locked is audited, once", async () => {
     const id = await account(ann);
-    advance(minutes(24 * 60));
+    advance(minutes(72 * 60));
     const phone = browser();
 
     expect(await signIn(phone, "aokafor", ANN_START)).toEqual({ ok: false, error: "starting_password_expired" });
@@ -222,16 +222,16 @@ describe("signing in with a starting password", () => {
     expect((await auditsOf("auth.failed")).at(-1)).toMatchObject({ meta: { reason: "expired_starting_password" } });
   });
 
-  it("is still valid a moment before 24 hours", async () => {
+  it("is still valid a moment before 72 hours", async () => {
     await account(ann);
-    advance(minutes(24 * 60) - 1);
+    advance(minutes(72 * 60) - 1);
 
     expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
   });
 
   it("answers a wrong password with the generic failure, never the expired message, even after expiry", async () => {
     await account(ann);
-    advance(minutes(25 * 60));
+    advance(minutes(73 * 60));
 
     expect(await signIn(browser(), "aokafor", "rvh-ann-okafo")).toEqual({ ok: false, error: "sign_in_failed" });
   });
@@ -312,10 +312,10 @@ describe("re-issuing a starting password", () => {
     return admin;
   }
 
-  it("unlocks an expired account and starts a new 24-hour window, audited as password.reissued", async () => {
+  it("unlocks an expired account and starts a new 72-hour window, audited as password.reissued", async () => {
     const admin = await hubAdmin();
     const id = await account(ann);
-    advance(minutes(30 * 60));
+    advance(minutes(78 * 60));
     await signIn(browser(), "aokafor", ANN_START);
     expect((await row(id)).status).toBe("locked_pending_reissue");
 
@@ -323,7 +323,7 @@ describe("re-issuing a starting password", () => {
 
     expect(await row(id)).toMatchObject({ status: "active", must_change_password: true, starting_password_issued_at: clock, starting_password_used_at: null });
     expect((await auditsOf("password.reissued")).at(-1)).toEqual({ actor_staff_id: admin, action: "password.reissued", subject_id: id, outcome: "ok", meta: {} });
-    advance(minutes(23 * 60));
+    advance(minutes(71 * 60));
     expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
   });
 
@@ -722,9 +722,9 @@ describe("sessions the app did not open", () => {
     await signIn(phone, "aokafor", ANN_START);
     expect(await auth.currentSession(phone.sessions())).toMatchObject({ gate: "choose_password" });
 
-    // Its one use not recorded (as for a session opened outside this rule), 24 hours after issue.
+    // Its one use not recorded (as for a session opened outside this rule), 72 hours after issue.
     await owner`update staff_account set starting_password_used_at = null where id = ${id}`;
-    advance(minutes(24 * 60));
+    advance(minutes(72 * 60));
     expect(await auth.currentSession(phone.sessions())).toBeNull();
     expect(phone.cookies.size).toBe(0);
   });
@@ -804,7 +804,7 @@ describe("ending sessions on password changes", () => {
   it("a re-issue whose provider call fails changes nothing and is logged", async () => {
     const admin = await hubAdmin();
     const id = await account(ann);
-    advance(minutes(25 * 60));
+    advance(minutes(73 * 60));
     await signIn(browser(), "aokafor", ANN_START);
     idp.failNextPassword("unavailable");
 
@@ -993,7 +993,7 @@ describe("IT's re-issue of the first Admin's starting password (scripts/create-f
     const first = await bootstrapWith(jane);
     const old = browser();
     await signIn(old, "jdoe", "rvh-jane-doe");
-    advance(minutes(25 * 60));
+    advance(minutes(73 * 60));
     expect(await signIn(browser(), "jdoe", "rvh-jane-doe")).toEqual({ ok: false, error: "starting_password_expired" });
 
     expect(await auth.reissueFirstAdminStartingPassword("JDoe")).toEqual({ ok: true, value: { username: "jdoe", startingPassword: "rvh-jane-doe" } });
@@ -1002,7 +1002,7 @@ describe("IT's re-issue of the first Admin's starting password (scripts/create-f
     expect((await auditsOf("password.reissued")).at(-1)).toEqual({ actor_staff_id: null, action: "password.reissued", subject_id: first, outcome: "ok", meta: {} });
     expect(await auth.currentSession(old.sessions())).toBeNull();
     expect((await sessionRows(first)).every((session) => session.revoked_at !== null)).toBe(true);
-    advance(minutes(23 * 60));
+    advance(minutes(71 * 60));
     expect(await signIn(browser(), "jdoe", "rvh-jane-doe")).toMatchObject({ ok: true, gate: "choose_password" });
   });
 
@@ -1025,7 +1025,7 @@ describe("IT's re-issue of the first Admin's starting password (scripts/create-f
 
   it("runs from the script, which prints the starting password once", async () => {
     await bootstrapWith(jane);
-    advance(minutes(25 * 60));
+    advance(minutes(73 * 60));
     const out: string[] = [];
     const error: string[] = [];
     const env = {
@@ -1357,7 +1357,7 @@ describe("expired or used starting-password sign-ins are throttled (P3-3)", () =
     const admin = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", enrolled: true });
     const other = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
     await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${admin}, ${other}, now())`;
-    advance(minutes(25 * 60));
+    advance(minutes(73 * 60));
 
     const outcomes = [];
     for (let i = 0; i < 7; i++) outcomes.push(await signIn(browser(), "admin1", "rvh-ada-admin"));

@@ -1,14 +1,17 @@
 import type { StaffAccount } from "./staffAccount";
 
-/** A starting password is valid for 24 hours from issue (epic E01 definitions). */
-export const STARTING_PASSWORD_VALID_MS = 24 * 60 * 60_000;
+/**
+ * A starting password is valid for 72 hours from issue (epic E01 definitions; 24 hours until the
+ * product owner changed it on 2026-10-08).
+ */
+export const STARTING_PASSWORD_VALID_MS = 72 * 60 * 60_000;
 
 /**
  * Where an account's starting password stands at `now`:
  *  - `none`: the person has chosen their own password;
- *  - `valid`: issued less than 24 hours ago and not yet used to sign in;
+ *  - `valid`: issued less than 72 hours ago and not yet used to sign in;
  *  - `used`: already used for its one successful sign-in (valid once, AD-4);
- *  - `expired`: unused 24 hours after issue, or the account is already `locked_pending_reissue`.
+ *  - `expired`: unused 72 hours after issue, or the account is already `locked_pending_reissue`.
  */
 export type StartingPasswordStanding = "none" | "valid" | "used" | "expired";
 

@@ -5,7 +5,7 @@ import { createHmac } from "node:crypto";
  * typed: it stores `hex(HMAC-SHA-256(STAFF_PASSWORD_PEPPER, password))`. Usernames and starting
  * passwords (`rvh-first-last`) can be guessed, and the provider accepts a password grant from
  * anyone holding the public key; without the server-only pepper that grant cannot be made with
- * the human password, so the only way to a session is the app's own sign-in (valid once, 24 hours,
+ * the human password, so the only way to a session is the app's own sign-in (valid once, 72 hours,
  * throttled, audited). The app also binds every session it opens (staff_session).
  *
  * The peppered form is 64 hex characters, under bcrypt's 72-byte limit; the 72-byte rule still

@@ -192,7 +192,7 @@ export interface StaffStore {
    * `issuedAt` (a re-issue or reset since then changes it). True when it changed.
    */
   completePasswordChange(tx: DbTransaction, id: string, issuedAt: Date | null): Promise<boolean>;
-  /** An Admin re-issued the starting password: active again, a new 24-hour window, unused. */
+  /** An Admin re-issued the starting password: active again, a new 72-hour window, unused. */
   reissueStartingPassword(tx: DbTransaction, id: string, issuedAt: Date): Promise<boolean>;
   usernameTaken(db: DbExecutor, username: string): Promise<boolean>;
   /** True when a staff_account is linked to this auth user. */
