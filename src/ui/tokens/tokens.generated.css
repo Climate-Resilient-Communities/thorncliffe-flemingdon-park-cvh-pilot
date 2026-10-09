@@ -100,6 +100,8 @@
   --app-lh-h2: var(--lh-tight);
   --app-fs-h1: 27px;
   --app-lh-h1: var(--lh-tight);
+  --app-fs-nav: 14px;
+  --app-lh-nav: var(--lh-tight);
   /* type.lineHeights (G10) */
   --lh-body: 1.5;
   --lh-tight: 1.25;
@@ -139,6 +141,8 @@
   --app-lh-h2: var(--lh-tight);
   --app-fs-h1: 30px;
   --app-lh-h1: var(--lh-tight);
+  --app-fs-nav: 16px;
+  --app-lh-nav: var(--lh-tight);
 }
 
 [data-surface="staff"] {
@@ -157,6 +161,8 @@
   --app-lh-h2: var(--lh-tight);
   --app-fs-h1: 27px;
   --app-lh-h1: var(--lh-tight);
+  --app-fs-nav: 14px;
+  --app-lh-nav: var(--lh-tight);
 }
 
 :lang(ur), :lang(ps), :lang(prs), :lang(fa) {
@@ -171,6 +177,7 @@
   --app-lh-h3: var(--lh-tight);
   --app-lh-h2: var(--lh-tight);
   --app-lh-h1: var(--lh-tight);
+  --app-lh-nav: var(--lh-tight);
 }
 
 [data-surface="staff"]:lang(ur), [data-surface="staff"] :lang(ur), [data-surface="staff"]:lang(ps), [data-surface="staff"] :lang(ps), [data-surface="staff"]:lang(prs), [data-surface="staff"] :lang(prs), [data-surface="staff"]:lang(fa), [data-surface="staff"] :lang(fa) {
@@ -182,6 +189,7 @@
   --app-lh-h3: var(--lh-tight);
   --app-lh-h2: var(--lh-tight);
   --app-lh-h1: var(--lh-tight);
+  --app-lh-nav: var(--lh-tight);
 }
 
 :lang(hi), :lang(pa), :lang(gu), :lang(bn), :lang(ta) {
@@ -195,6 +203,7 @@
   --app-lh-h3: var(--lh-tight);
   --app-lh-h2: var(--lh-tight);
   --app-lh-h1: var(--lh-tight);
+  --app-lh-nav: var(--lh-tight);
 }
 
 [data-surface="staff"]:lang(hi), [data-surface="staff"] :lang(hi), [data-surface="staff"]:lang(pa), [data-surface="staff"] :lang(pa), [data-surface="staff"]:lang(gu), [data-surface="staff"] :lang(gu), [data-surface="staff"]:lang(bn), [data-surface="staff"] :lang(bn), [data-surface="staff"]:lang(ta), [data-surface="staff"] :lang(ta) {
@@ -206,6 +215,7 @@
   --app-lh-h3: var(--lh-tight);
   --app-lh-h2: var(--lh-tight);
   --app-lh-h1: var(--lh-tight);
+  --app-lh-nav: var(--lh-tight);
 }
 
 :lang(zh) {
@@ -218,6 +228,7 @@
   --app-lh-h3: var(--lh-tight);
   --app-lh-h2: var(--lh-tight);
   --app-lh-h1: var(--lh-tight);
+  --app-lh-nav: var(--lh-tight);
 }
 
 [data-surface="staff"]:lang(zh), [data-surface="staff"] :lang(zh) {
@@ -229,4 +240,5 @@
   --app-lh-h3: var(--lh-tight);
   --app-lh-h2: var(--lh-tight);
   --app-lh-h1: var(--lh-tight);
+  --app-lh-nav: var(--lh-tight);
 }

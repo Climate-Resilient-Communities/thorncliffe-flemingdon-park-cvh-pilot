@@ -172,7 +172,7 @@ describe("gen:tokens output", () => {
     expect(theme.indexOf("--color-*: initial;")).toBeGreaterThan(-1);
     expect(theme.indexOf("--color-*: initial;")).toBeLessThan(theme.indexOf("--color-surface:"));
     expect(text.map(([name]) => name)).toEqual(
-      ["caption", "body", "alert", "lead", "h3", "h2", "h1"].flatMap((role) => [role, `${role}--line-height`]),
+      ["caption", "body", "alert", "lead", "h3", "h2", "h1", "nav"].flatMap((role) => [role, `${role}--line-height`]),
     );
     for (const [name, value] of text) {
       expect(value).toMatch(name.endsWith("--line-height") ? /^var\(--type-(body|tight)-line-height\)$/ : /^var\(--type-[\w-]+-size\)$/);

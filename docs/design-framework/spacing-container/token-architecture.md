@@ -196,9 +196,10 @@ Components reach the generated type primitives (`--app-fs-*`, `--app-lh-*`) only
 | `--type-h3-size` | `var(--app-fs-h3)` | Font size of third-level headings (`text-h3`) |
 | `--type-h2-size` | `var(--app-fs-h2)` | Font size of second-level headings (`text-h2`) |
 | `--type-h1-size` | `var(--app-fs-h1)` | Font size of page titles (`text-h1`) |
+| `--type-nav-size` | `var(--app-fs-nav)` | Font size of the phone's bottom navigation labels (`text-nav`): 14px, 16px with large text or in basic mode, smaller than body so that a long word fits a quarter of a 320px screen (design owner, 2026-10-09). Only the bottom bar uses it |
 | `--type-family-sans` | `var(--app-font-sans)` | Font family of all text (`tokens.json` → `type.families.sans`); applied by the base layer below |
 | `--type-body-line-height` | `var(--app-lh-body)` | Line height of caption, body, alert and lead text; follows the surface and the script (section 6) |
-| `--type-tight-line-height` | `var(--app-lh-h2)` | Line height of H3, H2 and H1; follows the script. The generator fails if the three roles ever take different line-height tokens |
+| `--type-tight-line-height` | `var(--app-lh-h2)` | Line height of H3, H2, H1 and the navigation label role; follows the script. The generator fails if the three roles ever take different line-height tokens |
 
 A custom property that is a `var()` is substituted where it is declared and inherited as that value, so these tokens are declared for every element (`:where(*)` in `semantic.css`) and read the primitives that element inherits. The generator also repeats the `--app-lh-*` mappings inside the `:lang()` blocks, so a `lang` subtree inside a page gets its script's line height.
 

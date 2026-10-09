@@ -67,14 +67,15 @@
   }
 
   /*
-   * Navigation: four equal columns (the prototype's .cvh-rnav: 18px bold, line height 1.15), with at least 8px between two labels. Each item is a centred
+   * Navigation: four equal columns (the prototype's .cvh-rnav: bold, line height 1.15), with at least 8px between two labels. Each item is a centred
    * column, its icon above its label, and the items share two rows through subgrid: every icon sits on one line and
    * every label starts on the next, so a label that wraps to two or three lines (a long translation, larger text)
    * makes all the items taller together and never moves one icon out of line with the others. The icon row and the
    * label row share whatever height the item minimum adds, the icon at the end of its row and the label at the start
    * of its own, so the icon and label stay together in the middle of the item. Only the label wraps: the columns stay
-   * equal. A label wraps between words; inside a word it breaks only at a hyphenation point (hyphens: auto follows
-   * the lang of the element), and only if the word is wider than the item does overflow-wrap break it anywhere, so
+   * equal. The label is the nav's own type size (--type-nav-size: 14px, 16px with large text or in basic mode), smaller
+   * than body so that a long word fits its quarter of the screen. A label wraps between words, every line centred; a word
+   * breaks inside only when it alone is wider than the item (overflow-wrap: break-word, never a hyphenation point), so
    * nothing ever overflows sideways. The active item is marked by its colour and by its block-start border, as wide as
    * its column (every item has one, transparent when not current).
    */
@@ -98,12 +99,13 @@
     padding-inline: var(--gap-label);
     border-block-start: var(--offset-align-icon) solid transparent;
     color: var(--text-muted);
-    font-size: var(--type-body-size);
+    font-size: var(--type-nav-size);
     font-weight: 700;
     line-height: 1.15;
     text-align: center;
     text-decoration: none;
-    hyphens: auto;
+    hyphens: manual;
+    word-break: normal;
     overflow-wrap: break-word;
   }
 
@@ -113,7 +115,7 @@
     block-size: var(--size-icon);
   }
 
-  /* As wide as the item, so a long word breaks inside the item instead of widening the label past it; a label of two lines or more has lines of even length. */
+  /* As wide as the item, so a word wider than the item breaks inside it instead of widening the label past it; a label of two lines or more has lines of even length. */
   .shell-nav__label {
     align-self: start;
     justify-self: stretch;

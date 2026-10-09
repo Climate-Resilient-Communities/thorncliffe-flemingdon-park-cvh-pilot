@@ -52,6 +52,7 @@ describe("Tailwind 4.3.3 with the CVH theme", () => {
     ["text-h3", "var(--type-h3-size)", "var(--type-tight-line-height)"],
     ["text-h2", "var(--type-h2-size)", "var(--type-tight-line-height)"],
     ["text-h1", "var(--type-h1-size)", "var(--type-tight-line-height)"],
+    ["text-nav", "var(--type-nav-size)", "var(--type-tight-line-height)"],
   ])("compiles %s to the semantic type tokens", (utility, size, lineHeight) => {
     const declarations = rules.get(utility)?.declarations ?? "";
 
