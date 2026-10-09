@@ -169,13 +169,13 @@
     "recordDecision": "Registrar como decisión"
   },
   "x07": {
-    "label": "Letra más grande, menos cosas",
+    "label": "Vista más sencilla",
     "on": "Sí",
     "off": "No",
     "setByHelper": "Lo activó alguien que le ayuda",
     "remembered": "Se recuerda en este dispositivo",
-    "turnOn": "Activar",
-    "turnOff": "Desactivar"
+    "turnOn": "Activar la vista más sencilla",
+    "turnOff": "Desactivar la vista más sencilla"
   },
   "x08": {
     "idle": "Escuchar · {t}",
@@ -248,97 +248,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "Si usa un aparato médico que necesita electricidad, vaya ahora a un lugar donde pueda cargarlo.",
+        "Use las escaleras solo si se siente capaz. El embajador de su piso puede llevarle cosas."
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "Los espacios para cargar dispositivos no piden identificación ni estatus migratorio.",
+        "Toronto Hydro y la Ciudad nunca le pedirán dinero ni papeles por teléfono durante un corte de luz."
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "Si el refrigerador se ha calentado, guarde la fórmula para bebés y la leche en una hielera con hielo.",
+        "Cerca de los niños, use linternas, no velas."
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "Ponga ahora sus medicamentos y papeles en un estante alto.",
+        "Si tiene que salir, pida ayuda a un vecino o al embajador de su piso."
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "Puede avisar de una fuga al dueño de su casa sin que eso afecte su estatus migratorio.",
+        "La ayuda legal gratuita puede explicarle, en su idioma, las reparaciones y el alquiler después de una inundación."
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "Mantenga a los niños lejos de las zonas mojadas y de los enchufes.",
+        "Tire los juguetes y la comida que tocaron el agua de la inundación."
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "El embajador de su piso puede organizar que le suban comestibles o medicamentos.",
+        "Mientras el ascensor no funcione, se puede organizar transporte a sus citas médicas."
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "La ayuda con comestibles y transporte no pide identificación ni estatus migratorio.",
+        "Tiene derecho a preguntar al dueño de su casa cuándo van a arreglar el ascensor."
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "Los vecinos pueden ayudar a subir por las escaleras los cochecitos y los comestibles.",
+        "Si un niño tiene una cita médica, pregunte por la ayuda con el transporte."
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "Algunos medicamentos hacen que el calor afecte más al cuerpo. Consulte a su farmacéutico.",
+        "Vaya a un espacio para refrescarse a primera hora de la tarde, antes de la parte más calurosa del día."
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "Los espacios para refrescarse son gratis y no piden identificación ni estatus migratorio.",
+        "La ayuda con las facturas de electricidad es gratis. Pregunte en el Hub."
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "Los bebés y los niños pequeños se calientan más rápido que los adultos. Deles agua a menudo.",
+        "Nunca deje a un niño en un auto estacionado, ni siquiera por un minuto."
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "Si tiene asma o un problema del corazón, tenga sus medicamentos cerca.",
+        "Hay espacios con aire filtrado abiertos. Pida a un vecino que vaya con usted."
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "Los espacios con aire filtrado son gratis y no piden identificación ni estatus migratorio.",
+        "Hay mascarillas gratis en el Hub hasta que se acaben."
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "Mantenga a los niños dentro de casa y limite que corran y jueguen.",
+        "Un ventilador de caja con filtro en el cuarto de los niños les ayuda a dormir."
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "Si no puede usar las escaleras, quédese en su apartamento con la puerta cerrada y llame al 911.",
+        "El embajador de su piso sabe qué residentes pueden necesitar ayuda para salir."
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "Los puntos de recepción y el apoyo después de un incendio no piden estatus migratorio.",
+        "Los trabajadores de asentamiento pueden ayudarle a reemplazar documentos perdidos."
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "Practique con sus hijos cómo llegar a la escalera y dónde reunirse afuera.",
+        "Tenga junto a la puerta una bolsa con los medicamentos y los papeles de los niños."
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "Cargue su teléfono y tenga mantas cerca por si se va la luz."
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "Los espacios para calentarse son gratis y no piden identificación ni estatus migratorio."
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "Si se apaga la calefacción, vista a los niños con varias capas de ropa dentro de casa."
       ]
     }
   },

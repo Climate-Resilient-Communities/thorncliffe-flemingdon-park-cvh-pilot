@@ -169,13 +169,13 @@
     "recordDecision": "Itala bilang desisyon"
   },
   "x07": {
-    "label": "Mas malaking teksto, mas kaunting bagay",
+    "label": "Mas simpleng view",
     "on": "Bukas",
     "off": "Sarado",
     "setByHelper": "Binuksan ng taong tumutulong sa iyo",
     "remembered": "Naaalala sa device na ito",
-    "turnOn": "Buksan",
-    "turnOff": "Isara"
+    "turnOn": "Buksan ang mas simpleng view",
+    "turnOff": "Isara ang mas simpleng view"
   },
   "x08": {
     "idle": "Makinig · {t}",
@@ -248,97 +248,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "Kung gumagamit ka ng medical device na kailangan ng kuryente, pumunta ka na ngayon sa lugar na may pag-charge.",
+        "Gumamit lang ng hagdan kung kaya mo. Puwedeng magdala ng mga bagay sa iyo ang ambassador ng palapag mo."
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "Hindi humihingi ng ID o immigration status ang mga lugar para mag-charge.",
+        "Hindi kailanman hihingi sa iyo ng pera o papeles sa telepono ang Toronto Hydro at ang Lungsod ng Toronto habang walang kuryente."
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "Kung mainit na ang ref, ilagay ang formula ng sanggol at ang gatas sa cooler na may yelo.",
+        "Gumamit ng flashlight, hindi kandila, kapag may mga bata."
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "Ilipat na ngayon ang mga gamot at papeles sa mataas na istante.",
+        "Humingi ng tulong sa isang kapitbahay o sa ambassador ng palapag mo kung kailangan mong umalis."
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "Puwede mong iulat sa landlord mo ang tagas nang hindi naaapektuhan ang immigration status mo.",
+        "Ang libreng tulong legal ay makapagpapaliwanag sa iyong wika tungkol sa pagkukumpuni at upa pagkatapos ng baha."
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "Ilayo ang mga bata sa mga basang lugar at sa mga saksakan ng kuryente.",
+        "Itapon ang mga laruan at pagkaing nadikit sa tubig-baha."
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "Maaaring isaayos ng ambassador ng palapag mo na maiakyat sa iyo ang grocery o mga gamot.",
+        "Puwedeng isaayos ang sasakyan papunta sa mga medical appointment habang sira ang elevator."
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "Hindi humihingi ng ID o status ang tulong sa grocery at transportasyon.",
+        "May karapatan kang itanong sa landlord mo kung kailan maaayos ang elevator."
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "Puwedeng tumulong ang mga kapitbahay sa pagbubuhat ng stroller at grocery paakyat sa hagdan.",
+        "Kung may medical appointment ang isang bata, magtanong tungkol sa tulong sa transportasyon."
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "May mga gamot na nagpapahirap sa katawan kapag mainit. Magtanong sa iyong pharmacist.",
+        "Pumunta sa lugar na pampalamig sa unang bahagi ng hapon, bago ang pinakamainit na oras ng araw."
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "Libre ang mga lugar na pampalamig at hindi humihingi ng ID o immigration status.",
+        "Libre ang tulong sa bayarin sa kuryente. Magtanong sa Hub."
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "Mas mabilis mainitan ang mga sanggol at maliliit na bata kaysa sa mga nasa hustong gulang. Painumin sila ng tubig nang madalas.",
+        "Huwag kailanman iwan ang bata sa nakaparadang sasakyan, kahit isang minuto lang."
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "Kung may hika ka o sakit sa puso, panatilihing malapit sa iyo ang mga gamot mo.",
+        "Bukas ang mga lugar na may na-filter na hangin. Magpasama sa isang kapitbahay."
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "Libre ang mga lugar na may na-filter na hangin at hindi humihingi ng ID o immigration status.",
+        "Libre ang mga mask sa Hub habang may supply pa."
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "Panatilihin ang mga bata sa loob ng bahay at limitahan ang pagtakbo at paglalaro.",
+        "Nakakatulong sa pagtulog ng mga bata ang filter na nakakabit sa box fan sa kanilang kuwarto."
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "Kung hindi mo kayang gumamit ng hagdan, manatili sa iyong unit nang nakasara ang pinto at tumawag sa 911.",
+        "Alam ng ambassador ng palapag mo kung aling mga residente ang maaaring mangailangan ng tulong sa paglabas."
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "Hindi nagtatanong ng immigration status ang mga reception point at ang suporta pagkatapos ng sunog.",
+        "Matutulungan ka ng mga settlement worker na palitan ang mga nawalang dokumento."
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "Magsanay kasama ang mga anak mo: paano pumunta sa hagdanan, at saan magkikita sa labas.",
+        "Maglagay ng bag na may mga gamot at papeles ng mga bata malapit sa pinto."
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "I-charge ang telepono mo at ilapit sa iyo ang mga kumot sakaling mawalan ng kuryente."
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "Libre ang mga lugar na pampainit at hindi humihingi ng ID o status."
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "Kung mamatay ang heating, bihisan ang mga bata ng patong-patong na damit kahit nasa loob ng bahay."
       ]
     }
   },

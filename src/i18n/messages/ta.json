@@ -169,13 +169,13 @@
     "recordDecision": "முடிவாகப் பதிவு செய்"
   },
   "x07": {
-    "label": "பெரிய எழுத்து, குறைவான பொருட்கள்",
+    "label": "எளிய தோற்றம்",
     "on": "இயக்கத்தில்",
     "off": "நிறுத்தத்தில்",
     "setByHelper": "உங்களுக்கு உதவுபவர் இயக்கினார்",
     "remembered": "இந்தச் சாதனத்தில் நினைவில் வைக்கப்பட்டது",
-    "turnOn": "இயக்கு",
-    "turnOff": "நிறுத்து"
+    "turnOn": "எளிய தோற்றத்தை இயக்கு",
+    "turnOff": "எளிய தோற்றத்தை நிறுத்து"
   },
   "x08": {
     "idle": "கேளுங்கள் · {t}",
@@ -248,97 +248,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "மின்சாரம் தேவைப்படும் மருத்துவக் கருவியை நீங்கள் பயன்படுத்தினால், சார்ஜ் செய்யும் வசதி உள்ள இடத்துக்கு இப்போதே செல்லுங்கள்.",
+        "உங்களால் முடியும் என்று தோன்றினால் மட்டும் படிக்கட்டுகளைப் பயன்படுத்துங்கள். உங்கள் தளத் தூதர் பொருட்களை உங்களிடம் கொண்டுவந்து தர முடியும்."
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "சார்ஜ் செய்யும் இடங்களில் அடையாள அட்டை அல்லது குடிவரவு நிலையைக் கேட்க மாட்டார்கள்.",
+        "மின்தடையின்போது Toronto Hydro-வும் டொராண்டோ நகர நிர்வாகமும் தொலைபேசியில் உங்களிடம் பணமோ ஆவணங்களோ ஒருபோதும் கேட்க மாட்டார்கள்."
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "குளிர்சாதனப் பெட்டி சூடாகிவிட்டால், குழந்தைக்கான ஃபார்முலா பாலையும் பாலையும் ஐஸ் வைத்த கூலர் பெட்டியில் வையுங்கள்.",
+        "குழந்தைகள் அருகில் மெழுகுவர்த்தி வேண்டாம், டார்ச் விளக்கைப் பயன்படுத்துங்கள்."
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "மருந்துகளையும் ஆவணங்களையும் இப்போதே உயரமான அலமாரித் தட்டுக்கு மாற்றுங்கள்.",
+        "நீங்கள் வெளியேற வேண்டியிருந்தால், அண்டை வீட்டாரிடமோ உங்கள் தளத் தூதரிடமோ உதவி கேளுங்கள்."
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "கசிவு பற்றி உங்கள் வீட்டு உரிமையாளரிடம் தெரிவிக்கலாம். அது உங்கள் குடிவரவு நிலையைப் பாதிக்காது.",
+        "வெள்ளத்துக்குப் பிறகு பழுதுபார்ப்பு மற்றும் வாடகை பற்றி இலவச சட்ட உதவி உங்கள் மொழியிலேயே விளக்க முடியும்."
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "குழந்தைகளை ஈரமான இடங்களிலிருந்தும் மின் சாக்கெட்டுகளிலிருந்தும் விலக்கி வையுங்கள்.",
+        "வெள்ள நீர் பட்ட பொம்மைகளையும் உணவையும் தூக்கி எறியுங்கள்."
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "மளிகைப் பொருட்களையோ மருந்துகளையோ மேலே கொண்டுவந்து தர உங்கள் தளத் தூதர் ஏற்பாடு செய்ய முடியும்.",
+        "மின்தூக்கி வேலை செய்யாத நேரத்தில், மருத்துவச் சந்திப்புகளுக்குச் செல்ல வாகன வசதி ஏற்பாடு செய்யலாம்."
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "மளிகை மற்றும் போக்குவரத்து உதவிக்கு அடையாள அட்டையோ குடிவரவு நிலையோ கேட்க மாட்டார்கள்.",
+        "மின்தூக்கி எப்போது சரிசெய்யப்படும் என்று உங்கள் வீட்டு உரிமையாளரிடம் கேட்க உங்களுக்கு உரிமை உண்டு."
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "தள்ளுவண்டிகளையும் மளிகைப் பொருட்களையும் படிக்கட்டுகளில் மேலே தூக்கிச் செல்ல அண்டை வீட்டார் உதவலாம்.",
+        "குழந்தைக்கு மருத்துவச் சந்திப்பு இருந்தால், போக்குவரத்து உதவி பற்றிக் கேளுங்கள்."
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "சில மருந்துகள் வெப்பத்தை உடலுக்கு மேலும் கடினமாக்கும். உங்கள் மருந்தாளரிடம் கேட்டுத் தெரிந்துகொள்ளுங்கள்.",
+        "நாளின் மிக வெப்பமான நேரத்துக்கு முன்பே, மதியத் தொடக்கத்தில் குளிர்ச்சியான இடத்துக்குச் செல்லுங்கள்."
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "குளிர்ச்சியான இடங்கள் இலவசம். அங்கு அடையாள அட்டை அல்லது குடிவரவு நிலையைக் கேட்க மாட்டார்கள்.",
+        "மின் கட்டணத்துக்கான உதவி இலவசம். மையத்தில் கேளுங்கள்."
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "கைக்குழந்தைகளும் சிறு குழந்தைகளும் பெரியவர்களைவிட வேகமாகச் சூடாகிவிடுவார்கள். அவர்களுக்கு அடிக்கடி தண்ணீர் கொடுங்கள்.",
+        "நிறுத்தி வைத்த காரில் குழந்தையை ஒருபோதும் விட்டுச் செல்லாதீர்கள், ஒரு நிமிடம்கூட."
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "உங்களுக்கு ஆஸ்துமா அல்லது இதய நோய் இருந்தால், உங்கள் மருந்துகளை அருகிலேயே வைத்திருங்கள்.",
+        "வடிகட்டிய காற்று உள்ள இடங்கள் திறந்துள்ளன. அண்டை வீட்டார் ஒருவரை உங்களுடன் வரச் சொல்லுங்கள்."
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "வடிகட்டிய காற்று உள்ள இடங்கள் இலவசம். அங்கு அடையாள அட்டை அல்லது குடிவரவு நிலையைக் கேட்க மாட்டார்கள்.",
+        "இருப்பு உள்ளவரை மையத்தில் முகக்கவசங்கள் இலவசமாகக் கிடைக்கும்."
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "குழந்தைகளை வீட்டுக்குள்ளேயே வைத்திருங்கள், ஓடுவதையும் விளையாடுவதையும் குறைத்துக்கொள்ளச் செய்யுங்கள்.",
+        "குழந்தைகளின் அறையில் பாக்ஸ் ஃபேனுடன் பொருத்திய வடிகட்டி அவர்கள் தூங்க உதவும்."
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "உங்களால் படிக்கட்டுகளைப் பயன்படுத்த முடியாவிட்டால், கதவை மூடிக்கொண்டு உங்கள் வீட்டுக்குள்ளேயே இருங்கள், 911-ஐ அழையுங்கள்.",
+        "எந்தக் குடியிருப்பாளர்களுக்கு வெளியேற உதவி தேவைப்படலாம் என்று உங்கள் தளத் தூதருக்குத் தெரியும்."
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "தீ விபத்துக்குப் பிறகான வரவேற்பு மையங்களிலும் உதவிகளிலும் குடிவரவு நிலையைக் கேட்க மாட்டார்கள்.",
+        "குடியமர்வுப் பணியாளர்கள் தொலைந்த ஆவணங்களை மீண்டும் பெற உதவ முடியும்."
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "உங்கள் குழந்தைகளுடன் பயிற்சி செய்யுங்கள்: படிக்கட்டுப் பகுதிக்கு எப்படிச் செல்வது, வெளியே எங்கே சந்திப்பது.",
+        "குழந்தைகளின் மருந்துகளும் ஆவணங்களும் உள்ள ஒரு பையைக் கதவருகே வையுங்கள்."
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "மின்சாரம் போகக்கூடும் என்பதால், உங்கள் தொலைபேசியை சார்ஜ் செய்து வையுங்கள், போர்வைகளை அருகில் வைத்திருங்கள்."
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "குளிரில் கதகதப்பு தரும் இடங்கள் இலவசம். அங்கு அடையாள அட்டை அல்லது குடிவரவு நிலையைக் கேட்க மாட்டார்கள்."
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "வீட்டு வெப்பமூட்டல் நின்றுவிட்டால், வீட்டுக்குள்ளேயும் குழந்தைகளுக்குப் பல அடுக்கு உடைகளை அணிவியுங்கள்."
       ]
     }
   },

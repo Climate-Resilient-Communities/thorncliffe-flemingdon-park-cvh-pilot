@@ -169,13 +169,13 @@
     "recordDecision": "فیصلے کے طور پر درج کریں"
   },
   "x07": {
-    "label": "بڑا متن، کم چیزیں",
+    "label": "آسان منظر",
     "on": "آن",
     "off": "آف",
     "setByHelper": "آپ کی مدد کرنے والے نے آن کیا",
     "remembered": "اس ڈیوائس پر یاد رکھا گیا",
-    "turnOn": "بڑا متن، کم چیزیں آن کریں",
-    "turnOff": "بڑا متن، کم چیزیں آف کریں"
+    "turnOn": "آسان منظر آن کریں",
+    "turnOff": "آسان منظر آف کریں"
   },
   "x08": {
     "idle": "سنیں · {t}",
@@ -248,97 +248,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "اگر آپ کوئی ایسا طبی آلہ استعمال کرتے ہیں جسے بجلی کی ضرورت ہو، تو ابھی کسی ایسی جگہ جائیں جہاں چارجنگ کی سہولت ہو۔",
+        "سیڑھیاں صرف اسی صورت میں استعمال کریں جب آپ خود کو اس قابل محسوس کریں۔ آپ کا فلور ایمبیسڈر چیزیں آپ تک پہنچا سکتا ہے۔"
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "چارجنگ کی جگہوں پر شناخت یا امیگریشن حیثیت نہیں پوچھی جاتی۔",
+        "بجلی بند ہونے کے دوران Toronto Hydro اور سٹی آف ٹورنٹو آپ سے فون پر کبھی پیسے یا کاغذات نہیں مانگیں گے۔"
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "اگر فریج گرم ہو تو بچوں کا فارمولا دودھ اور دودھ برف والے کولر میں رکھیں۔",
+        "بچوں کے آس پاس موم بتیاں نہیں، ٹارچ استعمال کریں۔"
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "دوائیں اور کاغذات ابھی کسی اونچی شیلف پر رکھ دیں۔",
+        "اگر آپ کو گھر چھوڑ کر جانا پڑے تو کسی پڑوسی یا اپنے فلور ایمبیسڈر سے مدد مانگیں۔"
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "آپ اپنے مالک مکان کو رساؤ کی اطلاع دے سکتے ہیں، اس سے آپ کی امیگریشن حیثیت پر کوئی اثر نہیں پڑے گا۔",
+        "مفت قانونی مدد آپ کی زبان میں سمجھا سکتی ہے کہ سیلاب کے بعد مرمت اور کرائے کا کیا ہوگا۔"
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "بچوں کو گیلی جگہوں سے اور بجلی کے ساکٹ سے دور رکھیں۔",
+        "جو کھلونے اور کھانا سیلاب کے پانی سے لگ گئے ہوں، انہیں پھینک دیں۔"
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "آپ کا فلور ایمبیسڈر سودا سلف یا دوائیں اوپر پہنچانے کا انتظام کر سکتا ہے۔",
+        "جب تک لفٹ بند ہے، ڈاکٹر کی اپائنٹمنٹ پر آنے جانے کے لیے سواری کا انتظام کیا جا سکتا ہے۔"
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "سودا سلف اور آنے جانے میں مدد کے لیے شناخت یا امیگریشن حیثیت نہیں پوچھی جاتی۔",
+        "آپ کو حق ہے کہ اپنے مالک مکان سے پوچھیں کہ لفٹ کب ٹھیک ہوگی۔"
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "پڑوسی بچوں کی گاڑی (اسٹرولر) اور سودا سلف سیڑھیوں سے اوپر لے جانے میں مدد کر سکتے ہیں۔",
+        "اگر کسی بچے کی ڈاکٹر کی اپائنٹمنٹ ہو تو آنے جانے میں مدد کے بارے میں پوچھیں۔"
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "کچھ دوائیں جسم کے لیے گرمی برداشت کرنا زیادہ مشکل بنا دیتی ہیں۔ اپنے فارماسسٹ سے پوچھ لیں۔",
+        "دوپہر کے شروع میں، دن کے سب سے گرم وقت سے پہلے، کسی ٹھنڈی جگہ پر چلے جائیں۔"
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "ٹھنڈی جگہیں مفت ہیں اور وہاں شناخت یا امیگریشن حیثیت نہیں پوچھی جاتی۔",
+        "بجلی کے بل میں مدد مفت ہے۔ ہب میں پوچھیں۔"
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "شیر خوار اور چھوٹے بچے بڑوں کی نسبت جلدی گرم ہو جاتے ہیں۔ انہیں بار بار پانی دیں۔",
+        "کسی بچے کو کھڑی گاڑی میں کبھی نہ چھوڑیں، ایک منٹ کے لیے بھی نہیں۔"
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "اگر آپ کو دمہ یا دل کی بیماری ہے تو اپنی دوائیں اپنے پاس رکھیں۔",
+        "فلٹر شدہ ہوا والی جگہیں کھلی ہیں۔ کسی پڑوسی سے کہیں کہ آپ کے ساتھ چلے۔"
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "فلٹر شدہ ہوا والی جگہیں مفت ہیں اور وہاں شناخت یا امیگریشن حیثیت نہیں پوچھی جاتی۔",
+        "جب تک سامان موجود ہے، ہب میں ماسک مفت ملتے ہیں۔"
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "بچوں کو گھر کے اندر رکھیں اور ان کا دوڑنا اور کھیلنا کم کریں۔",
+        "بچوں کے کمرے میں باکس فین پر لگا فلٹر انہیں سونے میں مدد دیتا ہے۔"
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "اگر آپ سیڑھیاں استعمال نہیں کر سکتے تو دروازہ بند کر کے اپنے اپارٹمنٹ میں رہیں اور 911 پر کال کریں۔",
+        "آپ کے فلور ایمبیسڈر کو معلوم ہے کہ کن رہائشیوں کو باہر نکلنے میں مدد کی ضرورت ہو سکتی ہے۔"
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "آگ کے بعد استقبال کی جگہوں اور مدد کے لیے امیگریشن حیثیت نہیں پوچھی جاتی۔",
+        "سیٹلمنٹ ورکرز گم شدہ دستاویزات دوبارہ بنوانے میں مدد کر سکتے ہیں۔"
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "اپنے بچوں کے ساتھ مشق کریں: سیڑھیوں تک کیسے پہنچنا ہے، اور باہر کہاں ملنا ہے۔",
+        "بچوں کی دواؤں اور کاغذات والا ایک بیگ دروازے کے پاس رکھیں۔"
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "اگر بجلی چلی جائے تو اس کے لیے اپنا فون چارج رکھیں اور کمبل پاس رکھیں۔"
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "گرمائش کی جگہیں مفت ہیں اور وہاں شناخت یا امیگریشن حیثیت نہیں پوچھی جاتی۔"
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "اگر ہیٹنگ بند ہو جائے تو گھر کے اندر بچوں کو کپڑوں کی کئی تہیں پہنائیں۔"
       ]
     }
   },

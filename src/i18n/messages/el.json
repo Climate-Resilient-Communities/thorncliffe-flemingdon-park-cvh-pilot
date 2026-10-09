@@ -169,13 +169,13 @@
     "recordDecision": "Καταγραφή ως απόφαση"
   },
   "x07": {
-    "label": "Μεγαλύτερα γράμματα, λιγότερα πράγματα",
+    "label": "Απλούστερη προβολή",
     "on": "Ναι",
     "off": "Όχι",
     "setByHelper": "Το ενεργοποίησε κάποιος που σας βοηθά",
     "remembered": "Αποθηκεύτηκε σε αυτή τη συσκευή",
-    "turnOn": "Ενεργοποίηση",
-    "turnOff": "Απενεργοποίηση"
+    "turnOn": "Ενεργοποιήστε την απλούστερη προβολή",
+    "turnOff": "Απενεργοποιήστε την απλούστερη προβολή"
   },
   "x08": {
     "idle": "Ακούστε · {t}",
@@ -248,97 +248,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "Αν χρησιμοποιείτε ιατρική συσκευή που χρειάζεται ρεύμα, πηγαίνετε τώρα σε ένα μέρος όπου μπορείτε να τη φορτίσετε.",
+        "Χρησιμοποιήστε τις σκάλες μόνο αν νιώθετε ότι μπορείτε. Ο πρεσβευτής του ορόφου σας μπορεί να σας φέρει πράγματα."
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "Οι χώροι φόρτισης δεν ζητούν ταυτότητα ούτε μεταναστευτικό καθεστώς.",
+        "Η Toronto Hydro και ο Δήμος δεν θα σας ζητήσουν ποτέ χρήματα ή χαρτιά από το τηλέφωνο κατά τη διάρκεια διακοπής ρεύματος."
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "Αν το ψυγείο έχει ζεσταθεί, κρατήστε το βρεφικό γάλα και το γάλα σε φορητό ψυγείο με πάγο.",
+        "Κοντά σε παιδιά, χρησιμοποιείτε φακούς, όχι κεριά."
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "Βάλτε τώρα τα φάρμακα και τα χαρτιά σας σε ψηλό ράφι.",
+        "Αν χρειαστεί να φύγετε, ζητήστε βοήθεια από έναν γείτονα ή από τον πρεσβευτή του ορόφου σας."
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "Μπορείτε να αναφέρετε μια διαρροή στον σπιτονοικοκύρη σας χωρίς να επηρεαστεί το μεταναστευτικό σας καθεστώς.",
+        "Δωρεάν νομική βοήθεια μπορεί να σας εξηγήσει, στη γλώσσα σας, τι ισχύει για τις επισκευές και το ενοίκιο μετά από πλημμύρα."
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "Κρατήστε τα παιδιά μακριά από βρεγμένα σημεία και από πρίζες.",
+        "Πετάξτε τα παιχνίδια και τα τρόφιμα που ήρθαν σε επαφή με νερό της πλημμύρας."
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "Ο πρεσβευτής του ορόφου σας μπορεί να κανονίσει να σας ανεβάσουν τρόφιμα ή φάρμακα.",
+        "Όσο ο ανελκυστήρας δεν λειτουργεί, μπορεί να κανονιστεί η μεταφορά σας σε ιατρικά ραντεβού."
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "Η βοήθεια με τρόφιμα και μεταφορά δεν ζητά ταυτότητα ούτε καθεστώς παραμονής.",
+        "Έχετε δικαίωμα να ρωτήσετε τον σπιτονοικοκύρη σας πότε θα επισκευαστεί ο ανελκυστήρας."
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "Οι γείτονες μπορούν να βοηθήσουν να ανέβουν από τις σκάλες τα καρότσια και τα τρόφιμα.",
+        "Αν ένα παιδί έχει ιατρικό ραντεβού, ρωτήστε για βοήθεια με τη μεταφορά."
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "Ορισμένα φάρμακα κάνουν τη ζέστη πιο δύσκολη για τον οργανισμό. Ρωτήστε τον φαρμακοποιό σας.",
+        "Πηγαίνετε σε έναν χώρο δροσισμού νωρίς το απόγευμα, πριν από την πιο ζεστή ώρα της ημέρας."
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "Οι χώροι δροσισμού είναι δωρεάν και δεν ζητούν ταυτότητα ούτε μεταναστευτικό καθεστώς.",
+        "Η βοήθεια για τους λογαριασμούς ρεύματος είναι δωρεάν. Ρωτήστε στο Hub."
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "Τα μωρά και τα μικρά παιδιά ζεσταίνονται πιο γρήγορα από τους ενήλικες. Δίνετέ τους συχνά νερό.",
+        "Μην αφήνετε ποτέ ένα παιδί σε σταθμευμένο αυτοκίνητο, ούτε για ένα λεπτό."
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "Αν έχετε άσθμα ή πρόβλημα με την καρδιά, κρατήστε τα φάρμακά σας κοντά σας.",
+        "Χώροι με φιλτραρισμένο αέρα είναι ανοιχτοί. Ζητήστε από έναν γείτονα να έρθει μαζί σας."
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "Οι χώροι με φιλτραρισμένο αέρα είναι δωρεάν και δεν ζητούν ταυτότητα ούτε μεταναστευτικό καθεστώς.",
+        "Στο Hub υπάρχουν δωρεάν μάσκες, όσο διαρκούν τα αποθέματα."
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "Κρατήστε τα παιδιά μέσα στο σπίτι και περιορίστε το τρέξιμο και το παιχνίδι.",
+        "Ένας ανεμιστήρας κουτί με φίλτρο στο δωμάτιο των παιδιών τα βοηθά να κοιμηθούν."
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "Αν δεν μπορείτε να χρησιμοποιήσετε τις σκάλες, μείνετε στο διαμέρισμά σας με την πόρτα κλειστή και καλέστε το 911.",
+        "Ο πρεσβευτής του ορόφου σας ξέρει ποιοι κάτοικοι μπορεί να χρειαστούν βοήθεια για να βγουν."
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "Τα σημεία υποδοχής και η υποστήριξη μετά από φωτιά δεν ζητούν μεταναστευτικό καθεστώς.",
+        "Οι εργαζόμενοι στις υπηρεσίες εγκατάστασης μπορούν να σας βοηθήσουν να αντικαταστήσετε χαμένα έγγραφα."
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "Κάντε εξάσκηση με τα παιδιά σας: πώς να φτάσετε στο κλιμακοστάσιο και πού να συναντηθείτε έξω.",
+        "Κρατήστε δίπλα στην πόρτα μια τσάντα με τα φάρμακα και τα χαρτιά των παιδιών."
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "Φορτίστε το τηλέφωνό σας και κρατήστε κουβέρτες κοντά σας, σε περίπτωση που κοπεί το ρεύμα."
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "Οι θερμαινόμενοι χώροι είναι δωρεάν και δεν ζητούν ταυτότητα ούτε καθεστώς παραμονής."
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "Αν σταματήσει η θέρμανση, ντύστε τα παιδιά με πολλά στρώματα ρούχων μέσα στο σπίτι."
       ]
     }
   },
