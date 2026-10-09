@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { catalogText, expectBaseline, filledPattern, isFallback, openResident } from "./helpers";
+import { catalogText, expectBaseline, filledPattern, isFallback, openResident, wholePageHeight } from "./helpers";
 
 // S02.08: the building page (/{lang}/buildings/{rsn}) in the resident shell. The server runs with
 // CVH_FAKE_BUILDINGS_FILE (playwright.resident.config.ts), so these three sample buildings stand in for the database:
@@ -15,11 +15,7 @@ const CHECKING = "/en/buildings/4154169";
 
 /** Grows the viewport to the whole page, so the baseline shows every fact and the contact, not the first screen. */
 async function showWholePage(page: Page, width: number) {
-  const needed = await page.evaluate(() => {
-    const main = document.querySelector("main")!;
-    const around = document.documentElement.clientHeight - main.clientHeight;
-    return Math.ceil(main.scrollHeight + around);
-  });
+  const needed = await wholePageHeight(page, width);
   await page.setViewportSize({ width, height: needed });
 }
 

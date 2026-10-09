@@ -3,9 +3,9 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { FALLBACK_MARKER } from "@/ui";
-import { MapScreen, type MapTiles } from "@/ui/map";
+import { MapScreen } from "@/ui/map";
 import { isLaunchCode } from "@/i18n/languages";
-import { readMapTileConfig } from "@/platform/config/mapTiles";
+import { pageMapTiles } from "./tiles";
 
 // The map (S02.07, R-14 with R-15 and R-16) is the same for every visitor and reads nothing on the server: the page is a
 // shell, prerendered for each launch language, with the tile provider's settings (MAP_TILE_*, read at build). The phone
@@ -25,17 +25,7 @@ export default async function MapPage({ params }: PageProps<"/[lang]/map">) {
   const { lang } = await params;
   if (!isLaunchCode(lang)) notFound();
   setRequestLocale(lang);
-  const config = readMapTileConfig();
-  const tiles: MapTiles = {
-    urlTemplate: config.urlTemplate,
-    subdomains: config.subdomains,
-    maxZoom: config.maxZoom,
-    cacheable: config.cacheable,
-    cacheLimit: config.cacheLimit,
-    cacheDays: config.cacheDays,
-    attribution: config.attribution,
-    attributionUrl: config.attributionUrl,
-  };
+  const tiles = pageMapTiles();
   const all = (await getMessages({ locale: lang })) as Record<string, unknown>;
   const messages = Object.fromEntries(MAP_NAMESPACES.map((namespace) => [namespace, all[namespace]]));
   return (

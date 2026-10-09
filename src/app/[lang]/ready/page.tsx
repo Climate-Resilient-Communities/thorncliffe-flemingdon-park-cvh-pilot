@@ -51,7 +51,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
           {showUnavailableNote && <UnavailableNote t={t} native={languageOf(lang).native} testId="ready-unavailable" />}
         </Stack>
 
-        <section data-testid="ready-guides">
+        <section data-layout="grid" data-testid="ready-guides">
           <Stack gap="related">
             <ResidentText as="h2">{t("R24.guides")}</ResidentText>
             {guides.length > 0 ? (
@@ -82,7 +82,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
           </Stack>
         </section>
 
-        <section data-testid="ready-more">
+        <section data-layout="grid" data-testid="ready-more">
           <Stack gap="related">
             <ResidentText as="h2">{t("R24.more")}</ResidentText>
             <Link href={`/${lang}/ready/numbers`} prefetch={false} className="ready-dest tap" data-testid="ready-numbers">

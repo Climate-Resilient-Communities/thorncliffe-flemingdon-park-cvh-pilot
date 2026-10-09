@@ -27,10 +27,13 @@ import "./home.css";
 
 // The Every day destinations of the prototype's R-03, in its order: find help (the directory, R-09), the map (R-14) and
 // be ready (R-24). Each one's words are the catalog's R03 key of the same name and `${key}Line`.
+// `wide` marks the one destination drawn only from the desktop breakpoint: on a desktop the side column has room for the way to
+// text alerts (R-05, the words of R03.getTextAlerts); on a phone it stays in "What I have told the CVH", as approved, so the phone is unchanged.
 const DESTINATIONS = [
-  { key: "findHelp", icon: "search", path: "/directory" },
-  { key: "map", icon: "map", path: "/map" },
-  { key: "beReady", icon: "ready", path: "/ready" },
+  { key: "findHelp", icon: "search", path: "/directory", wide: false },
+  { key: "map", icon: "map", path: "/map", wide: false },
+  { key: "beReady", icon: "ready", path: "/ready", wide: false },
+  { key: "getTextAlerts", icon: "text", path: "/text-alerts", wide: true },
 ] as const;
 
 type Translator = ReturnType<typeof useTranslations>;
@@ -176,7 +179,7 @@ function EveryDay({ lang }: { lang: LaunchCode }) {
         </ResidentText>
         <ul className="home-list home-list--dest">
           {DESTINATIONS.map((d) => (
-            <li key={d.key}>
+            <li key={d.key} className={d.wide ? "home-dest--wide" : undefined}>
               {/* prefetch off, as the shell's navigation links to the same pages: Next would otherwise fetch each page as soon as its link is on screen. */}
               <Link className="home-dest tap" href={`/${lang}${d.path}`} prefetch={false} data-testid={`home-dest-${d.key}`}>
                 <span className={`home-ico home-ico--${d.icon}`} aria-hidden="true" />
@@ -193,6 +196,20 @@ function EveryDay({ lang }: { lang: LaunchCode }) {
         </ul>
       </Stack>
     </section>
+  );
+}
+
+/**
+ * The end of home: "Every day", the short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline) directly under
+ * it, then `children` (the link to "What I have told the CVH"). From the desktop breakpoint it is the side column.
+ */
+function HomeSide({ lang, x01, children }: { lang: LaunchCode; x01: Parameters<typeof Not911>[0]["t"]; children?: ReactNode }) {
+  return (
+    <div className="home-side" data-testid="home-side">
+      <EveryDay lang={lang} />
+      <Not911 variant="inline" t={x01} />
+      {children}
+    </div>
   );
 }
 
@@ -227,9 +244,11 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
       <Screen surface="resident" testId="home">
         <Stack gap="section-resident">
           {heading}
-          <EveryDay lang={lang} />
-          <Not911 variant="inline" t={x01} />
-          {children}
+          <div className="home-cols" data-layout="columns" data-testid="home-columns">
+            <HomeSide lang={lang} x01={x01}>
+              {children}
+            </HomeSide>
+          </div>
         </Stack>
       </Screen>
     );
@@ -265,6 +284,10 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             </div>
           )}
 
+          {/* Two columns from the desktop breakpoint (desktop.css): the places and the alerts, then the side column. On a phone the
+              wrappers are stacks with the screen's own gap, so the screen is drawn as before; the order is the same everywhere. */}
+          <div className="home-cols" data-layout="columns" data-testid="home-columns">
+          <div className="home-main" data-testid="home-main">
           {rows.buildings.length > 0 ? (
             <section data-testid="home-buildings">
               <Stack gap="related">
@@ -316,14 +339,12 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             <span className="alert-ico alert-ico--clock alert-ico--sm" aria-hidden="true" />
             <ResidentText>{t("archive")}</ResidentText>
           </Link>
+          </div>
 
-          <EveryDay lang={lang} />
-
-          {/* The short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline), the shared component:
-              directly under "Every day", above `children` (the link to "What I have told the CVH"). */}
-          <Not911 variant="inline" t={x01} />
-
-          {children}
+          <HomeSide lang={lang} x01={x01}>
+            {children}
+          </HomeSide>
+          </div>
         </Stack>
       </div>
     </Screen>

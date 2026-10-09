@@ -289,6 +289,19 @@
   }
 
   /* The list. */
+  /* A provider's page from the desktop breakpoint (desktop.css): the details and a side panel. On a phone the wrappers are stacks with
+     the screen's section gap and the panel is not displayed, so the page is one column. */
+  .provider-cols,
+  .provider-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section-resident);
+  }
+
+  .provider-side {
+    display: none;
+  }
+
   .dir-list {
     display: flex;
     flex-direction: column;

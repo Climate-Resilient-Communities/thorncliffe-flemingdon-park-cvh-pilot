@@ -12,11 +12,13 @@ export type ResidentShellProps = {
 /**
  * The frame around every resident screen (component-boundaries.md section 3.1): header, the one scrolling main,
  * bottom navigation. A screen puts a Screen surface="resident" inside the main; the shell adds no inset.
+ * From the desktop breakpoint (resident-wide) the navigation is the header's row instead of the bottom bar, the page
+ * scrolls as a whole and the footer follows the page (shell.css).
  */
 export function ResidentShell({ header, nav, children }: ResidentShellProps) {
   return (
     <div className="shell" data-testid="shell">
-      <ResidentHeader {...header} />
+      <ResidentHeader {...header} nav={nav} />
       <main className="shell__main" data-testid="shell-main">
         {children}
       </main>

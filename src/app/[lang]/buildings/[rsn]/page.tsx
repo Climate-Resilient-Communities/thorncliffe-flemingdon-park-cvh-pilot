@@ -108,6 +108,9 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
           <BuildingStatus lang={lang} rsn={building.rsn} neighbourhoodId={building.neighbourhoodId ?? null} />
         </NextIntlClientProvider>
 
+        {/* From the desktop breakpoint (desktop.css): the register's facts, and the contact as a side column. On a phone, a stack with the
+            screen's section gap, so the page is drawn as before. */}
+        <div className="building-cols" data-layout="columns" data-testid="building-columns">
         <section data-testid="building-register">
           <Stack gap="related">
             <ResidentText as="h2">{view.registerTitle}</ResidentText>
@@ -162,6 +165,7 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
             )}
           </Stack>
         </section>
+        </div>
       </Stack>
     </Screen>
   );

@@ -9,6 +9,9 @@ import { expectUsageRequest, isUsageRequest, seenRequest } from "./usage-fixture
 
 const CREDIT = "© OpenStreetMap contributors © CARTO";
 
+// The pins on the map are Leaflet's marker icons (.leaflet-marker-icon): the list of places beside or behind the map draws the same
+// marks (map-pin--inline), so a pin is looked for among the markers.
+
 async function openMap(page: Page, lang = "en", width = 390): Promise<void> {
   await openResident(page, `/${lang}/map`, width);
   await expect(page.getByTestId("map-canvas")).toHaveAttribute("data-status", "ready");
@@ -45,10 +48,10 @@ test.describe("the map (R-14)", () => {
 
   test("published providers and the buildings appear as clustered pins; cooling spaces, water fountains and washrooms have their own marker and words", async ({ page }) => {
     await openMap(page);
-    await expect(page.locator(".map-pin--cooling .map-pin__word")).toHaveText("Cooling Spaces");
-    await expect(page.locator(".map-pin--water .map-pin__word")).toHaveText("Water Fountains");
-    await expect(page.locator(".map-pin--washroom .map-pin__word")).toHaveText("Public Washrooms");
-    await expect(page.locator(".map-pin--building")).toHaveCount(MAP_BUILDINGS.length);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling .map-pin__word")).toHaveText("Cooling Spaces");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--water .map-pin__word")).toHaveText("Water Fountains");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--washroom .map-pin__word")).toHaveText("Public Washrooms");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--building")).toHaveCount(MAP_BUILDINGS.length);
     // Two providers at one spot are one cluster, which says how many places are there.
     const cluster = page.locator(".map-cluster");
     await expect(cluster).toHaveCount(1);
@@ -74,13 +77,13 @@ test.describe("the map (R-14)", () => {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByTestId("map-credit")).toHaveText(CREDIT);
     await expect(page.getByTestId("map-credit")).toHaveAttribute("lang", "en");
-    await expect(page.locator(".map-pin--cooling .map-pin__word")).toHaveText("ٹھنڈک کی جگہیں");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling .map-pin__word")).toHaveText("ٹھنڈک کی جگہیں");
     await expectBaseline(page, "map-ur-390.png");
   });
 
   test("a pin opens the preview card (R-16), which leads to the same listing as the directory", async ({ page }) => {
     await openMap(page);
-    await page.locator(".map-pin--cooling").click();
+    await page.locator(".leaflet-marker-icon.map-pin--cooling").click();
     const card = page.getByTestId("map-preview");
     await expect(card).toBeVisible();
     await expect(card.getByRole("heading", { name: "Overlea Cooling Centre" })).toBeVisible();
@@ -94,11 +97,11 @@ test.describe("the map (R-14)", () => {
 
   test("a building pin leads to the building page; the card closes", async ({ page }) => {
     await openMap(page);
-    await page.locator(".map-pin--building").first().click();
+    await page.locator(".leaflet-marker-icon.map-pin--building").first().click();
     await expect(page.getByTestId("map-preview-kind")).toHaveText("Apartment building");
     await page.getByTestId("map-preview-close").click();
     await expect(page.getByTestId("map-preview")).toHaveCount(0);
-    await page.locator(".map-pin--building").first().click();
+    await page.locator(".leaflet-marker-icon.map-pin--building").first().click();
     const href = await page.getByTestId("map-preview-open").getAttribute("href");
     expect(MAP_BUILDINGS.map((b) => `/en/buildings/${b.rsn}`)).toContain(href);
     await page.getByTestId("map-preview-open").click();
@@ -189,7 +192,7 @@ test.describe("the map (R-14)", () => {
     server.listingDown = true;
     await openMap(page);
     await expect(page.getByTestId("map-last-updated")).toBeVisible();
-    await expect(page.locator(".map-pin--cooling")).toBeVisible();
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling")).toBeVisible();
     await page.getByTestId("map-view-list").click();
     expect((await listed(page)).providers).toEqual(IN_HOME_VIEW);
   });
@@ -203,7 +206,7 @@ test("map tiles are the only cross-origin request, and they carry nothing about 
   const seen: Request[] = [];
   page.context().on("request", (request) => seen.push(request));
   await openMap(page);
-  await page.locator(".map-pin--cooling").click();
+  await page.locator(".leaflet-marker-icon.map-pin--cooling").click();
   await zoom(page, "in");
   await page.getByTestId("map-view-list").click();
   await page.waitForLoadState("networkidle");

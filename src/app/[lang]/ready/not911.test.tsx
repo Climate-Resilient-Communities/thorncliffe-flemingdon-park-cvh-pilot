@@ -101,9 +101,12 @@ describe("the 911 block", () => {
       expect(link, `${lang}: the link`).toBeGreaterThan(marker);
 
       // Every day is in the server render too, with its three destinations in the prototype's order: nothing about them depends on the phone.
+      // The fourth, the way to text alerts, is marked to be drawn only from the desktop breakpoint (src/ui/desktop.css).
       const section = html.slice(everyDay, html.indexOf("</section>", everyDay));
       const hrefs = [...section.matchAll(/href="([^"]+)"/g)].map((match) => match[1]);
-      expect(hrefs, lang).toEqual([`/${lang}/directory`, `/${lang}/map`, `/${lang}/ready`]);
+      expect(hrefs, lang).toEqual([`/${lang}/directory`, `/${lang}/map`, `/${lang}/ready`, `/${lang}/text-alerts`]);
+      expect(section.match(/<li class="home-dest--wide">/g), lang).toHaveLength(1);
+      expect(section.indexOf('<li class="home-dest--wide">'), lang).toBeGreaterThan(section.indexOf(`href="/${lang}/ready"`));
 
       // Nothing sits between the end of Every day and the notice, nor between the notice and the link.
       const sectionEnd = html.indexOf("</section>", everyDay) + "</section>".length;

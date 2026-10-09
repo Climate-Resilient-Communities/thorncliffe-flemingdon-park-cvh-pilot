@@ -6,6 +6,16 @@
  * --status-*), each 6.5:1 or better on white; they are used for status and nothing else.
  */
 @layer components {
+  /* The columns of home from the desktop breakpoint (desktop.css). On a phone each is a stack with the screen's section gap, so the
+     screen is drawn exactly as one stack. */
+  .home-cols,
+  .home-main,
+  .home-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section-resident);
+  }
+
   .home-list {
     display: flex;
     flex-direction: column;
@@ -302,5 +312,15 @@
   .home-ico--ready {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='4.5' y='3.5' width='15' height='18' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 3.5h6v3H9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m8.5 12.5 2 2 4-4'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8.5 17.5h7'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='4.5' y='3.5' width='15' height='18' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 3.5h6v3H9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m8.5 12.5 2 2 4-4'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8.5 17.5h7'/%3E%3C/svg%3E");
+  }
+
+  /* Text alerts (R-05): a speech bubble. Its destination is drawn only from the desktop breakpoint (desktop.css). */
+  .home-ico--text {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6.5 3.5h11a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4h.5A2.5 2.5 0 0 1 4 14V6a2.5 2.5 0 0 1 2.5-2.5z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 8.5h8M8 12h5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6.5 3.5h11a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4h.5A2.5 2.5 0 0 1 4 14V6a2.5 2.5 0 0 1 2.5-2.5z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 8.5h8M8 12h5'/%3E%3C/svg%3E");
+  }
+
+  .home-list--dest > li.home-dest--wide {
+    display: none;
   }
 }

@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import type { Page, Route } from "@playwright/test";
-import { buildManifest, CATALOGUE_HASH, listingUrl } from "./directory-fixture";
+import { buildManifest, CATALOGUE_HASH, GREY_TILE, listingUrl, TILE_URL } from "./directory-fixture";
+
+export { TILE_URL };
 
 // The map's sample data (S02.07): a directory release whose providers are spread over Thorncliffe Park and Flemingdon
 // Park, with a cooling space, a water fountain and a public washroom, two providers at one spot (they always cluster)
@@ -61,11 +63,6 @@ export function mapListing(lang: Lang) {
   };
 }
 
-/** The tile provider's tile URLs (the default MAP_TILE_URL). */
-export const TILE_URL = /^https:\/\/[a-d]\.basemaps\.cartocdn\.com\/light_all\/\d+\/\d+\/\d+\.png$/;
-
-// A 1 by 1 grey PNG: Leaflet draws each tile 256 pixels square.
-const GREY_TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGN4AQAA6gDp3uJOLwAAAABJRU5ErkJggg==", "base64");
 
 export type MapServer = { manifestDown: boolean; listingDown: boolean; tilesDown: boolean; tileRequests: string[] };
 

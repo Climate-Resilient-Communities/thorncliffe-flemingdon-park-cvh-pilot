@@ -37,6 +37,7 @@
   --spacing-meta-block: var(--gap-meta-block);
   --spacing-type-grid-block: var(--gap-type-grid-block);
   --spacing-columns-inner: var(--gap-columns-inner);
+  --spacing-columns-resident: var(--gap-columns-resident);
   --spacing-gutter: var(--gutter-resident);
   --spacing-screen-end: var(--inset-screen-end);
   --spacing-page-staff: var(--inset-page-staff);

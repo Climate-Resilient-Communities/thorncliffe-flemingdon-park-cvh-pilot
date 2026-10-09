@@ -1,5 +1,5 @@
 import type { Coords, DivIcon, Leaflet, LeafletMap, Marker, TileEvent } from "leaflet";
-import type { Bounds, MapPin } from "./places";
+import type { Bounds, MapPin, MarkerKind } from "./places";
 import { NEIGHBOURHOODS_VIEW } from "./places";
 import { cacheStorageStore, clearKeptTiles, createTileLoader, pruneStore, TileIndex, type IndexStorage } from "./tile-cache";
 
@@ -107,15 +107,15 @@ async function loadLeaflet(): Promise<Leaflet> {
   return L;
 }
 
-export async function createMap(element: HTMLElement, tiles: TileSettings, words: PinWords, callbacks: MapCallbacks): Promise<MapHandle> {
-  const L = await loadLeaflet();
-  const map = L.map(element, { zoomControl: false, attributionControl: false, minZoom: MIN_ZOOM, maxZoom: tiles.maxZoom, maxBounds: MAX_BOUNDS, maxBoundsViscosity: 0.8 });
-  L.control.zoom({ position: "topright", zoomInTitle: words.zoomIn, zoomOutTitle: words.zoomOut }).addTo(map);
-
+/**
+ * The base map's tiles, through the phone's tile cache when the provider allows it (see the top of this file). `onMissing` is
+ * told how many tiles on screen could not be drawn.
+ */
+function addTiles(L: Leaflet, map: LeafletMap, tiles: TileSettings, onMissing: (count: number) => void): void {
   // Which tiles on screen could not be drawn, by their place in the grid.
   const missing = new Set<string>();
   const keyOf = (c: Coords) => `${c.z}/${c.x}/${c.y}`;
-  const report = () => callbacks.onMissingTiles(missing.size);
+  const report = () => onMissing(missing.size);
   const objectUrls = new WeakMap<HTMLImageElement, string>();
 
   const tileOptions = { maxZoom: tiles.maxZoom, subdomains: tiles.subdomains || "abc", keepBuffer: 0, updateWhenIdle: true, className: "map-tiles" };
@@ -171,6 +171,13 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
       if (missing.delete(keyOf(event.coords))) report();
     });
   }
+}
+
+export async function createMap(element: HTMLElement, tiles: TileSettings, words: PinWords, callbacks: MapCallbacks): Promise<MapHandle> {
+  const L = await loadLeaflet();
+  const map = L.map(element, { zoomControl: false, attributionControl: false, minZoom: MIN_ZOOM, maxZoom: tiles.maxZoom, maxBounds: MAX_BOUNDS, maxBoundsViscosity: 0.8 });
+  L.control.zoom({ position: "topright", zoomInTitle: words.zoomIn, zoomOutTitle: words.zoomOut }).addTo(map);
+  addTiles(L, map, tiles, callbacks.onMissingTiles);
 
   const clusters = L.markerClusterGroup!({
     showCoverageOnHover: false,
@@ -217,3 +224,33 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
   };
 }
 
+/**
+ * The small map of a provider's page on a desktop: the whole area, the same view the map opens on (NEIGHBOURHOODS_VIEW), with
+ * the one place marked. It is a picture: it does not move, zoom or take focus. Because it always shows the whole area, the
+ * tiles it asks for are the same whichever provider is open, so the tile provider learns nothing about who looks at what (AD-3).
+ */
+export async function createMiniMap(element: HTMLElement, tiles: TileSettings, place: { lat: number; lng: number; marker: MarkerKind }): Promise<{ destroy(): void }> {
+  const L = await loadLeaflet();
+  const map = L.map(element, {
+    zoomControl: false,
+    attributionControl: false,
+    keyboard: false,
+    dragging: false,
+    touchZoom: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    zoomSnap: 0.25,
+    maxZoom: tiles.maxZoom,
+  });
+  addTiles(L, map, tiles, () => undefined);
+  const icon = L.divIcon({
+    className: `map-pin map-pin--${place.marker}`,
+    html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${place.marker}"></span></span></span>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+  });
+  L.marker([place.lat, place.lng], { icon, keyboard: false, interactive: false }).addTo(map);
+  map.fitBounds(HOME, { animate: false });
+  return { destroy: () => void map.remove() };
+}

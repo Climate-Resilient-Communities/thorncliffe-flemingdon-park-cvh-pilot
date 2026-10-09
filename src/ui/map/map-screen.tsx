@@ -261,6 +261,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         )}
       </Stack>
 
+      {/* The map and its list. On a phone one of them is on screen at a time (the Map / List switch); from the desktop breakpoint they are
+          side by side, the list following the part of the map on screen (desktop.css). The list is always rendered, and on a phone in the
+          map view it is not displayed, so it is out of the accessibility tree there as before. Simpler view is the list alone everywhere. */}
+      <div className="map-work" data-view={view} data-layout="columns" data-testid="map-work">
       <section className="map-frame" hidden={view !== "map"} aria-label={plain(t("R14.mapLabel"))} data-testid="map-frame">
         {/* The map is a picture: Leaflet lays it out left to right in every language; the words on it carry their own direction. */}
         <div ref={element} className="map-canvas" dir="ltr" data-testid="map-canvas" data-status={mapStatus} />
@@ -335,8 +339,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         )}
       </section>
 
-      {view === "list" && (
-        <section className="map-list" aria-label={plain(t("map.listTitle"))} data-testid="map-list">
+      <section className="map-list" aria-label={plain(t("map.listTitle"))} data-testid="map-list">
           <Stack gap="section-resident">
             <Stack gap="related">
               <ResidentText as="h2" testId="map-list-title">
@@ -355,6 +358,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                   type="button"
                   className="map-btn map-btn--secondary tap hide-basic"
                   onClick={() => {
+                    // Beside the map (a desktop) the map is already on screen: show the whole area now.
+                    if (view === "map") return handle.current?.showWholeArea();
                     setView("map");
                     wholeArea.current = true;
                   }}
@@ -424,7 +429,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             )}
           </Stack>
         </section>
-      )}
+      </div>
     </Screen>
   );
 }
