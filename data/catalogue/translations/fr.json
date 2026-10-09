@@ -2,7 +2,7 @@
  "failed": {},
  "language": "fr",
  "models": {
-  "command-a-translate-08-2025": 101,
+  "command-a-translate-08-2025": 93,
   "north-small-translate-09-2026": 1
  },
  "texts": {
@@ -76,10 +76,10 @@
     "model": "command-a-translate-08-2025",
     "text": "Fournisseur de soins de santé à domicile et en milieu communautaire offrant des services à domicile et en clinique : soins infirmiers (infirmière autorisée/infirmière auxiliaire), soutien personnel, soutien à domicile (préparation des repas, entretien ménager, compagnie, rappels de prise de médicaments), physiothérapie, ergothérapie, orthophonie, travail social et diététique. Des infirmières sont disponibles 24 heures sur 24 pour répondre aux besoins de soins à court ou à long terme; exploite également des cliniques d'infirmières et de physiothérapie."
    },
-   "model": "claude-correction",
-   "note": "24/7 rendered fully (7 days a week was missing).",
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was written '24 heures sur 24, 7 jours sur 7'",
    "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
-   "text": "Fournisseur de soins de santé à domicile et en milieu communautaire offrant des services à domicile et en clinique : soins infirmiers (infirmière autorisée/infirmière auxiliaire), soutien personnel, soutien à domicile (préparation des repas, entretien ménager, compagnie, rappels de prise de médicaments), physiothérapie, ergothérapie, orthophonie, travail social et diététique. Des infirmières sont disponibles 24 heures sur 24, 7 jours sur 7, pour répondre aux besoins de soins à court ou à long terme; exploite également des cliniques d'infirmières et de physiothérapie."
+   "text": "Fournisseur de soins de santé à domicile et dans la communauté, avec des services à domicile et en clinique : soins infirmiers (inf. aut./IAA), soutien personnel, aide à domicile (préparation des repas, entretien ménager, compagnie, rappels de médicaments), physiothérapie, ergothérapie, orthophonie, travail social et diététique. Des infirmières sont disponibles 24/7 pour les besoins de soins à court ou à long terme; exploite aussi des cliniques de soins infirmiers et de physiothérapie."
   },
   "1330dcebcb5e": {
    "model": "command-a-translate-08-2025",
@@ -109,10 +109,10 @@
     "model": "command-a-translate-08-2025",
     "text": "Ferme communautaire située dans Flemingdon Park qui cultive des aliments sains pour les résidents. Offre des activités communautaires de culture de produits alimentaires, un marché fermier hebdomadaire en été au 150, Grenoble Drive (jeudis de 15 h à 18 h, de fin juin à début octobre) et un programme communautaire de fermiers qui donne aux résidents des occasions entrepreneuriales de gérer des microentreprises agricoles."
    },
-   "model": "claude-correction",
-   "note": "Program name Community Farmer kept in English with gloss.",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'Thursdays 3-6pm' became '15 h à 18 h' (3 lost, a time added); kept '3 à 6 p.m.'",
    "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
-   "text": "Ferme communautaire située dans Flemingdon Park qui cultive des aliments sains pour les résidents. Offre des activités communautaires de culture de produits alimentaires, un marché fermier hebdomadaire en été au 150, Grenoble Drive (jeudis de 15 h à 18 h, de fin juin à début octobre) et le programme Community Farmer (fermiers communautaires), qui donne aux résidents des occasions entrepreneuriales de gérer des microentreprises agricoles."
+   "text": "Ferme communautaire de Flemingdon Park, créée par la communauté, qui cultive des aliments sains pour les résidents. Offre des activités de jardinage communautaire, un marché fermier chaque semaine l'été au 150 Grenoble Drive (le jeudi de 3 à 6 p.m., de la fin juin au début octobre), et le programme Community Farmer, qui donne aux résidents la chance de lancer et gérer une petite entreprise de micro-ferme."
   },
   "16b01b9ea5a7": {
    "model": "command-a-translate-08-2025",
@@ -124,20 +124,20 @@
     "model": "command-a-translate-08-2025",
     "text": "Clinique de sages-femmes (East York/Don Mills) offrant des soins gratuits financés par le ministère de la Santé pendant la grossesse, l’accouchement et la naissance, ainsi que pour les parents et les bébés pendant les six semaines suivant l’accouchement. Les accouchements ont lieu à domicile, au Toronto Birth Centre ou à l’hôpital Michael Garron; les sages-femmes sont disponibles 24 heures sur 24 pour les urgences, et les complications sont référées à des obstétriciens, des pédiatres et des consultantes en lactation. Personnel multilingue (anglais, arabe, français, espagnol, farsi, dari et autres) et cours prénataux, y compris Newborn 101."
    },
-   "model": "claude-correction",
-   "note": "24/7 rendered fully (7 days a week was missing).",
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was written '24 heures sur 24, 7 jours sur 7' and '6 weeks' as 'six'",
    "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
-   "text": "Clinique de sages-femmes (East York/Don Mills) offrant des soins gratuits financés par le ministère de la Santé pendant la grossesse, l’accouchement et la naissance, ainsi que pour les parents et les bébés pendant les six semaines suivant l’accouchement. Les accouchements ont lieu à domicile, au Toronto Birth Centre ou à l’hôpital Michael Garron; les sages-femmes sont disponibles 24 heures sur 24, 7 jours sur 7, pour les urgences, et les complications sont référées à des obstétriciens, des pédiatres et des consultantes en lactation. Personnel multilingue (anglais, arabe, français, espagnol, farsi, dari et autres) et cours prénataux, y compris Newborn 101."
+   "text": "Clinique de sages-femmes (East York/Don Mills) qui offre des soins gratuits, financés par le ministère de la Santé, pendant la grossesse, le travail et l'accouchement, ainsi qu'au parent et au bébé jusqu'à 6 semaines après la naissance. Les accouchements ont lieu à domicile, au Toronto Birth Centre ou au Michael Garron Hospital; les sages-femmes sont de garde 24/7 pour les problèmes urgents, et les complications sont dirigées vers des obstétriciens, des pédiatres et des consultantes en lactation. Personnel multilingue (anglais, arabe, français, espagnol, farsi, dari et autres) et cours prénataux, dont Newborn 101."
   },
   "1a3c95cbc0e2": {
    "correctedFrom": {
     "model": "command-a-translate-08-2025",
     "text": "Conseils juridiques et représentation gratuits pour les personnes à faible revenu dans la zone de desserte (du lac Ontario à York Mills/401, de Yonge/Don River à Victoria Park Ave), dans quatre domaines : le droit du logement (prévention des expulsions, verrouillages illégaux, droits des locataires), le droit du travail (normes d'emploi, congédiement abusif, indemnités de départ, AE), le droit de l'immigration (demandes de résidence permanente, permis de travail, citoyenneté) et les soutiens au revenu (PDOS, AO, RPC, SV, SVG, Allocation canadienne pour personnes en situation de handicap) ; également éducation juridique publique et services de documentation limités (déclarations sous serment, copies conformes notariées). Ligne d’accueil : 416-441-1764 poste 1, du lundi au jeudi de 9 h à 12 h 30 (messagerie vocale avec rappel dans un délai de 1 à 3 jours ouvrables ; pas de visites sans rendez-vous ; accueil en personne sur rendez-vous les lundi et mercredi de 13 h 30 à 16 h 30)."
    },
-   "model": "claude-correction",
-   "note": "Fixed wrong benefit acronyms (POSPH, Ontario au travail, SRG) and official name of Canada Disability Benefit; replaced calque \"verrouillages illégaux\".",
+   "model": "claude-opus-5.5",
+   "note": "facts check: '1:30' (no a.m./p.m.) was turned into 13 h 30; kept as written",
    "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
-   "text": "Conseils juridiques et représentation gratuits pour les personnes à faible revenu dans la zone de desserte (du lac Ontario à York Mills/401, de Yonge/Don River à Victoria Park Ave), dans quatre domaines : le droit du logement (prévention des expulsions, changements de serrures illégaux par le propriétaire, droits des locataires), le droit du travail (normes d'emploi, congédiement abusif, indemnités de départ, AE), le droit de l'immigration (demandes de résidence permanente, permis de travail, citoyenneté) et les soutiens au revenu (POSPH, Ontario au travail, RPC, SV, SRG, Prestation canadienne pour les personnes handicapées) ; également éducation juridique publique et services de documentation limités (déclarations sous serment, copies conformes notariées). Ligne d’accueil : 416-441-1764 poste 1, du lundi au jeudi de 9 h à 12 h 30 (messagerie vocale avec rappel dans un délai de 1 à 3 jours ouvrables ; pas de visites sans rendez-vous ; accueil en personne sur rendez-vous les lundi et mercredi de 13 h 30 à 16 h 30)."
+   "text": "Conseils juridiques et représentation gratuits pour les personnes à faible revenu du secteur desservi (du lac Ontario à York Mills/401, de Yonge/Don River à Victoria Park Ave), dans quatre domaines : droit du logement (prévention des expulsions, changements de serrure illégaux, droits des locataires), droit du travail (normes d'emploi, congédiement injustifié, indemnité de départ, AE), droit de l'immigration (demandes de résidence permanente, permis de travail, citoyenneté) et soutien du revenu (POSPH, Ontario au travail, RPC, SV, SRG, Prestation canadienne pour les personnes handicapées); aussi de l'information juridique pour le public et quelques services de documents (déclarations sous serment, copies certifiées conformes). Ligne d'accueil : 416-441-1764 poste 1, du lundi au jeudi de 9 h à 12 h 30 (boîte vocale avec rappel en 1 à 3 jours ouvrables; pas de visites sans rendez-vous; accueil en personne sur rendez-vous le lundi et le mercredi de 1:30 à 4:30 p.m.)."
   },
   "1ae4b85c3a4e": {
    "correctedFrom": {
@@ -150,12 +150,14 @@
    "text": "Programme TNO (financé par IRCC) qui aide les nouveaux arrivants de 18 ans et plus à poursuivre une carrière dans les métiers spécialisés et les domaines techniques. Offre des parcours de formation et d’emploi en construction, en chauffage, ventilation et climatisation (CVC/HVAC, certificat G2/G3), en TI, y compris en science des données et en IA, en conduite de camion (permis DZ), en conduite de chariot élévateur et en contrôle de la circulation sur les chantiers de construction. Ouvert aux résidents permanents, aux réfugiés au sens de la Convention et aux citoyens canadiens ayant un niveau d’anglais NCLC/CLB 5-6+."
   },
   "1be560c4691c": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Les casernes des services d’incendie de Toronto qui offrent une protection contre les incendies et des services de sauvetage d’urgence 24 heures sur 24 dans la région sont les suivantes : Caserne 321 (231 McRae Dr), Caserne 235 (200 Bermondsey Rd), Caserne 322 (256 Cosburn Ave), Caserne 224 (1313 Woodbine Ave). Ligne non urgente : 416-338-9050."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was written '24 heures sur 24' (extra 24, lost 7)",
    "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
-   "text": "Les casernes des services d’incendie de Toronto qui offrent une protection contre les incendies et des services de sauvetage d’urgence 24 heures sur 24 dans la région sont les suivantes : Caserne 321 (231 McRae Dr), Caserne 235 (200 Bermondsey Rd), Caserne 322 (256 Cosburn Ave), Caserne 224 (1313 Woodbine Ave). Ligne non urgente : 416-338-9050.",
-   "warnings": [
-    "numbers missing from translation: 7"
-   ]
+   "text": "Casernes des Toronto Fire Services qui offrent, 24/7, la protection contre les incendies et le sauvetage d'urgence dans le secteur : Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Ligne non urgente : 416-338-9050."
   },
   "235e1072c4f3": {
    "model": "command-a-translate-08-2025",
@@ -263,12 +265,14 @@
    "text": "Cliniques de santé"
   },
   "411f70e150dd": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Paroisse orthodoxe grecque située au 30 Thorncliffe Park Drive (capacité de plus de 600 fidèles assis, stationnement abondant), dirigée par le prêtre de la paroisse, le père Apostolos Gkolias (apostolosgkolias@yahoo.com; téléphone de l'église : +1 (416) 425-2485, info@togreekcom.org). Services du dimanche et des jours de fête : Orthros-Matines de 8 h 30 à 10 h 00 et Divine Liturgie de 10 h 00 à midi; organise l'inscription à l'école du dimanche et d'autres programmes paroissiaux."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '8:30' and '12:00' (no a.m./p.m.) must stay as written; noon kept",
    "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
-   "text": "Paroisse orthodoxe grecque située au 30 Thorncliffe Park Drive (capacité de plus de 600 fidèles assis, stationnement abondant), dirigée par le prêtre de la paroisse, le père Apostolos Gkolias (apostolosgkolias@yahoo.com; téléphone de l'église : +1 (416) 425-2485, info@togreekcom.org). Services du dimanche et des jours de fête : Orthros-Matines de 8 h 30 à 10 h 00 et Divine Liturgie de 10 h 00 à midi; organise l'inscription à l'école du dimanche et d'autres programmes paroissiaux.",
-   "warnings": [
-    "numbers missing from translation: 12"
-   ]
+   "text": "Paroisse orthodoxe grecque au 30 Thorncliffe Park Drive (plus de 600 places assises, grand stationnement), dirigée par le prêtre de la paroisse, le père Apostolos Gkolias (apostolosgkolias@yahoo.com; téléphone de l'église : +1 (416) 425-2485, info@togreekcom.org). Offices du dimanche et des jours de fête : Orthros-Matines de 8:30 à 10 h et Divine Liturgie de 10 h à 12:00 (midi); gère l'inscription à l'école du dimanche et d'autres programmes de l'église."
   },
   "4341d8807857": {
    "correctedFrom": {
@@ -346,9 +350,14 @@
    "text": "Le Pride In Heritage Children’s Centre est un centre de garde d’enfants multiculturel communautaire sans but lucratif situé à l’intérieur de Gateway Public School, au 55 Gateway Blvd, à Toronto (416-467-5981). Il offre des services de garde inclusifs et exempts de préjugés dans un environnement sécuritaire et enrichissant, géré par un conseil d’administration bénévole; il traite tous les individus avec dignité, peu importe leur origine."
   },
   "6112e2d3ed72": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Offre une assistance gratuite et confidentielle, disponible 24 heures sur 24, assurée par des médecins (416-429-4991). Indique explicitement qu'il ne s'agit pas d'un service d'urgence ou sans rendez-vous — composez le 911 en cas d'urgence."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24-hour' was written '24 heures sur 24' (extra 24)",
    "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
-   "text": "Offre une assistance gratuite et confidentielle, disponible 24 heures sur 24, assurée par des médecins (416-429-4991). Indique explicitement qu'il ne s'agit pas d'un service d'urgence ou sans rendez-vous — composez le 911 en cas d'urgence."
+   "text": "Offre une aide gratuite et confidentielle, de garde 24 heures, par des médecins de l'équipe (416-429-4991). Indique clairement ne pas offrir de services d'urgence ni de services sans rendez-vous : appelez le 911 en cas d'urgence."
   },
   "6166d8860ebc": {
    "correctedFrom": {
@@ -370,15 +379,20 @@
     "model": "command-a-translate-08-2025",
     "text": "Des infirmières sont disponibles 24 heures sur 24 pour répondre aux besoins de soins à domicile; aucun service d'urgence dédié n'est indiqué (ce n'est pas un fournisseur de services d'urgence 911 ou de soins urgents)."
    },
-   "model": "claude-correction",
-   "note": "24/7 rendered fully (7 days a week was missing).",
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was written '24 heures sur 24, 7 jours sur 7'",
    "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
-   "text": "Des infirmières sont disponibles 24 heures sur 24, 7 jours sur 7, pour répondre aux besoins de soins à domicile; aucun service d'urgence dédié n'est indiqué (ce n'est pas un fournisseur de services d'urgence 911 ou de soins urgents)."
+   "text": "Infirmières disponibles 24/7 pour les besoins de soins à domicile; aucun service d'urgence particulier n'est indiqué (ce n'est pas un service 911 ni de soins urgents)."
   },
   "67d4ed5dfe5d": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "La mosquée Masjid Darus Salaam, située au 20 Overlea Blvd, sert la communauté musulmane de Thorncliffe Park, de Flemingdon Park et des environs depuis 1995. Elle offre cinq prières quotidiennes et la prière du vendredi, des programmes à temps plein de Hifz et d'Alim/Alima, des cours du soir sur le Coran (Madrasah), une école du dimanche, des études sur le Tafseer et les principes de base de l'Islam, des programmes pour les jeunes, des services de Nikah et des événements communautaires."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'Jummah' was rendered 'prière du vendredi', adding a weekday the English does not name; kept 'Jummah'",
    "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
-   "text": "La mosquée Masjid Darus Salaam, située au 20 Overlea Blvd, sert la communauté musulmane de Thorncliffe Park, de Flemingdon Park et des environs depuis 1995. Elle offre cinq prières quotidiennes et la prière du vendredi, des programmes à temps plein de Hifz et d'Alim/Alima, des cours du soir sur le Coran (Madrasah), une école du dimanche, des études sur le Tafseer et les principes de base de l'Islam, des programmes pour les jeunes, des services de Nikah et des événements communautaires."
+   "text": "La mosquée Masjid Darus Salaam, au 20 Overlea Blvd, sert la communauté musulmane de Thorncliffe Park, de Flemingdon Park et des environs depuis 1995. Elle offre les cinq prières quotidiennes et la prière de Jummah, des programmes à temps plein de Hifz et d'Alim/Alima, des cours du soir sur le Coran (Madrasah), une école du dimanche, des études de Tafseer et des bases de l'islam, des programmes pour les jeunes, des services de Nikah et des événements communautaires."
   },
   "68c635426ffe": {
    "model": "command-a-translate-08-2025",
@@ -603,10 +617,10 @@
     "model": "command-a-translate-08-2025",
     "text": "Bibliothèque publique de Toronto, succursale située au 29 St. Dennis Drive : emprunt de livres, ordinateurs publics, programmes pour enfants, programme d’alphabétisation Leading to Reading pour les enfants et le service gratuit d’autonomisation financière (déclaration de revenus, demandes de prestations, aide budgétaire — également offert à la succursale de Thorncliffe). Heures d’ouverture indiquées : du lundi au vendredi de 9 h à 20 h 30, le samedi de 9 h à 17 h et le dimanche de 12 h à 17 h. Remarque : la succursale a fermé le 1er décembre 2025 pour un projet de rénovation et sa réouverture est prévue au début du troisième trimestre de 2026; les heures d’ouverture actuelles indiquent qu’elle a rouvert, mais vérifiez avant de vous y rendre."
    },
-   "model": "claude-correction",
-   "note": "Program name Financial Empowerment Service kept in English with gloss.",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'Sun 12-5pm' gained a time, 'Dec 1' lost 12 for the month order and 'Q3' its 3; numbers kept as in the English",
    "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
-   "text": "Bibliothèque publique de Toronto, succursale située au 29 St. Dennis Drive : emprunt de livres, ordinateurs publics, programmes pour enfants, programme d’alphabétisation Leading to Reading pour les enfants et le Financial Empowerment Service gratuit (aide pour vos finances) (déclaration de revenus, demandes de prestations, aide budgétaire — également offert à la succursale de Thorncliffe). Heures d’ouverture indiquées : du lundi au vendredi de 9 h à 20 h 30, le samedi de 9 h à 17 h et le dimanche de 12 h à 17 h. Remarque : la succursale a fermé le 1er décembre 2025 pour un projet de rénovation et sa réouverture est prévue au début du troisième trimestre de 2026; les heures d’ouverture actuelles indiquent qu’elle a rouvert, mais vérifiez avant de vous y rendre."
+   "text": "Succursale de la Toronto Public Library au 29 St. Dennis Drive : prêt de livres, ordinateurs publics, programmes pour enfants, programme d'alphabétisation Leading to Reading pour les enfants, et le Financial Empowerment Service gratuit (déclaration de revenus, demandes de prestations, aide au budget — aussi offert à la succursale de Thorncliffe). Heures indiquées : du lundi au vendredi de 9 h à 20 h 30, le samedi de 9 h à 17 h, le dimanche de 12 à 17 h. Remarque : la succursale a fermé le 1er décembre 2025 pour des rénovations, avec une réouverture prévue au début du 3e trimestre de 2026; les heures affichées laissent croire qu'elle a rouvert, mais vérifiez avant de vous déplacer."
   },
   "a5c931e58836": {
    "model": "command-a-translate-08-2025",
@@ -704,18 +718,20 @@
     "model": "command-a-translate-08-2025",
     "text": "Le Leaside Park (près de la route Millwood et du boulevard Overlea) fournit de l’eau potable au public grâce à une fontaine à boire et à deux stations de remplissage de bouteilles. Le parc de 3,4 hectares comprend également un terrain de balle éclairé, six courts de tennis éclairés, un terrain de sport polyvalent, un terrain de jeu pour enfants, un jardin communautaire, des toilettes et la piscine extérieure de Leaside."
    },
-   "model": "claude-correction",
-   "note": "Street and pool names kept in English so they can be found (\"route\" suggested a highway).",
+   "model": "claude-opus-5.5",
+   "note": "facts check: '1 drinking fountain and 2 bottle filling stations' were written in words; digits kept",
    "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
-   "text": "Le Leaside Park (près de Millwood Road et d’Overlea Boulevard) fournit de l’eau potable au public grâce à une fontaine à boire et à deux stations de remplissage de bouteilles. Le parc de 3,4 hectares comprend également un terrain de balle éclairé, six courts de tennis éclairés, un terrain de sport polyvalent, un terrain de jeu pour enfants, un jardin communautaire, des toilettes et la Leaside Outdoor Pool (piscine extérieure)."
+   "text": "Le Leaside Park (près de Millwood Road et d'Overlea Boulevard) offre de l'eau potable au public avec 1 fontaine à boire et 2 stations de remplissage de bouteilles. Ce parc de 3,4 hectares a aussi un terrain de balle éclairé, six courts de tennis éclairés, un terrain de sport polyvalent, une aire de jeux pour enfants, un jardin communautaire, des toilettes et la piscine extérieure Leaside Outdoor Pool."
   },
   "c0b5b18276a1": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Banque alimentaire communautaire située au 10 Gateway Blvd (sous-sol), North York, qui offre de la nourriture et des ressources gratuites aux familles dans le besoin; elle est maintenant un organisme de bienfaisance enregistré. Le site indique des heures d'ouverture incohérentes (lundi et mercredi de 11 h à 15 h 30 à un endroit, lundi au jeudi de 13 h 30 à 15 h 30 à un autre endroit) - appelez le 416-422-4322 pour confirmer avant de vous rendre sur place."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '1:30' (no a.m./p.m.) was turned into 13 h 30; kept as written",
    "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
-   "text": "Banque alimentaire communautaire située au 10 Gateway Blvd (sous-sol), North York, qui offre de la nourriture et des ressources gratuites aux familles dans le besoin; elle est maintenant un organisme de bienfaisance enregistré. Le site indique des heures d'ouverture incohérentes (lundi et mercredi de 11 h à 15 h 30 à un endroit, lundi au jeudi de 13 h 30 à 15 h 30 à un autre endroit) - appelez le 416-422-4322 pour confirmer avant de vous rendre sur place.",
-   "warnings": [
-    "numbers missing from translation: 00, 1, 3"
-   ]
+   "text": "Banque alimentaire communautaire au 10 Gateway Blvd (sous-sol), North York, qui offre de la nourriture et des ressources gratuites aux familles dans le besoin; c'est maintenant un organisme de bienfaisance enregistré. Le site indique des heures qui ne concordent pas (lundis et mercredis de 11 h à 15 h 30 à un endroit, du lundi au jeudi de 1:30 à 3:30 p.m. à un autre) : appelez le 416-422-4322 pour confirmer avant de vous déplacer."
   },
   "c6efc2c01c02": {
    "model": "command-a-translate-08-2025",
@@ -888,9 +904,14 @@
    "text": "Le parc Leonard Linton, situé au 135 Vanderhoof Ave, est doté d’une station de remplissage de bouteilles d’eau, selon la liste des installations de la ville. Il n’a pas été possible d’obtenir la liste complète des commodités."
   },
   "f2e70e53d615": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Offre des services d'hébergement d'urgence, y compris un centre de répit ouvert 24 heures sur 24 (351 Lake Shore Blvd East), ainsi que des services de réduction des méfaits pour les personnes dans les refuges et les programmes de logement."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24-hour' was written '24 heures sur 24' (extra 24)",
    "source": "Provides emergency shelter services, including a 24-hour respite centre (351 Lake Shore Blvd East), plus harm reduction supports for people in shelters and housing programs.",
-   "text": "Offre des services d'hébergement d'urgence, y compris un centre de répit ouvert 24 heures sur 24 (351 Lake Shore Blvd East), ainsi que des services de réduction des méfaits pour les personnes dans les refuges et les programmes de logement."
+   "text": "Offre des services d'hébergement d'urgence, dont un centre de répit ouvert 24 heures (351 Lake Shore Blvd East), ainsi que des services de réduction des méfaits pour les personnes dans les refuges et les programmes de logement."
   },
   "f53b3121ceff": {
    "model": "command-a-translate-08-2025",
@@ -898,9 +919,14 @@
    "text": "Composez le 911 en cas d’urgence. Vous pouvez joindre la division 55 au 416-808-5500."
   },
   "f630f0f0b145": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Les sages-femmes sont disponibles 24 heures sur 24 et 7 jours sur 7 pour répondre aux préoccupations urgentes liées à la grossesse et à l'accouchement; aucun programme d'urgence distinct n'est indiqué."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was written '24 heures sur 24 et 7 jours sur 7'",
    "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
-   "text": "Les sages-femmes sont disponibles 24 heures sur 24 et 7 jours sur 7 pour répondre aux préoccupations urgentes liées à la grossesse et à l'accouchement; aucun programme d'urgence distinct n'est indiqué."
+   "text": "Les sages-femmes sont de garde 24/7 pour les problèmes urgents liés à la grossesse et à l'accouchement; aucun programme d'urgence distinct n'est indiqué."
   },
   "fa4e99c2c2ea": {
    "model": "command-a-translate-08-2025",
@@ -923,5 +949,5 @@
    "text": "Garde d’enfants et EarlyON"
   }
  },
- "updated": "2026-10-01T04:36:51+00:00"
+ "updated": "2026-10-09T03:59:35+00:00"
 }

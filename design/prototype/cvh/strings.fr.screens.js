@@ -319,7 +319,7 @@
    "protoTag": "Prototype",
    "howStop": "Pour arrêter tous les messages du Hub, répondez STOP à n'importe quel texto.",
    "howChange": "Pour changer vos groupes, répondez GROUPS.",
-   "toHome": "Aller à Maintenant",
+   "toHome": "Aller aux Alertes",
    "sample": "Immeuble d'exemple",
    "moreBuildings": "{n} de plus. Tapez une partie de l'adresse."
   },
@@ -414,7 +414,7 @@
    "emptyBody": "Quand une alerte se termine, elle vient ici et reste lisible.",
    "lead": "Chaque alerte reste lisible ici une fois terminée.",
    "endedOn": "Publié {posted}",
-   "backHome": "Retour à Maintenant"
+   "backHome": "Retour aux Alertes"
   },
   "R09": {
    "title": "Trouver de l'aide",
@@ -979,10 +979,10 @@
     "winter": "Avant les tempêtes d'hiver"
    },
    "readGuide": "Lire le guide « {hazard} »",
-   "turnedOn": "Avertissements de saison activés. Vous les verrez dans Maintenant, dans le CVH seulement.",
+   "turnedOn": "Avertissements de saison activés. Vous les verrez dans Alertes, dans le CVH seulement.",
    "turnedOff": "Avertissements de saison désactivés. Rien d'autre n'a changé.",
    "offLine": "Les avertissements de saison sont désactivés jusqu'à ce que vous les activiez.",
-   "whereLine": "Ils s'affichent sur l'écran Maintenant, quelques semaines avant chaque saison."
+   "whereLine": "Ils s'affichent sur l'écran Alertes, quelques semaines avant chaque saison."
   },
   "R33": {
    "title": "Demander qu'on prenne de vos nouvelles",
@@ -1116,7 +1116,7 @@
    "floorOf": "{building}, étage {floor}",
    "checkinBy": "Prises de nouvelles par {method}",
    "changeAll": "Changer vos choix",
-   "toHome": "Aller à Maintenant",
+   "toHome": "Aller aux Alertes",
    "manyLine": "Choisissez votre immeuble ou celui d'un proche. Vous pouvez en choisir autant que vous voulez.",
    "chosenNone": "Aucun immeuble choisi pour l'instant",
    "chosenOne": "1 immeuble choisi",

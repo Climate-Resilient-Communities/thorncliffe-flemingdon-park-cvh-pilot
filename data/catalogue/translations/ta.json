@@ -2,7 +2,7 @@
  "failed": {},
  "language": "ta",
  "models": {
-  "north-small-translate-09-2026": 98,
+  "north-small-translate-09-2026": 83,
   "tiny-aya-fire": 1
  },
  "texts": {
@@ -57,17 +57,24 @@
    "text": "தேவையுள்ள குடும்பங்களுக்கான அவசர உணவு உதவி (மாதம் இருமுறை இலவச உணவு விநியோகம்). Food Collaborative அமைப்பின் சார்பாக தங்குமிடம், குளிர்சாதன வசதி கொண்ட பாதுகாப்பு மையங்கள் அல்லது அவசர உதவி தொலைபேசி சேவைகள் எதுவும் இருப்பதாக உறுதிப்படுத்தப்படவில்லை."
   },
   "0f7fe1d38b46": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "வீட்டிலும் சமூகத்திலும் சுகாதார சேவைகளை வழங்கும் நிறுவனம்; இது வீட்டிற்கு வந்து வழங்கும் சேவைகளையும் கிளினிக் சேவைகளையும் வழங்குகிறது: செவிலியர் சேவை (RN/RPN), தனிநபர் உதவி, வீட்டு உதவி (உணவு தயாரிப்பு, வீட்டுப் பராமரிப்பு, துணையாக இருத்தல், மருந்து உட்கொள்ளும் நேர நினைவூட்டல்), இயன்முறை சிகிச்சை (Physiotherapy), தொழில்சார் சிகிச்சை (Occupational Therapy), பேச்சு மற்றும் மொழி சிகிச்சை, சமூக சேவை மற்றும் ஊட்டச்சத்து ஆலோசனை. குறுகிய கால அல்லது நீண்ட கால பராமரிப்பு தேவைகளுக்காக செவிலியர்கள் 24 மணிநேரமும் கிடைப்பார்கள்; மேலும் செவிலியர் மற்றும் இயன்முறை சிகிச்சை கிளினிக்குகளையும் இந்த நிறுவனம் நடத்துகிறது."
+   },
+   "model": "claude-opus-5.5",
+   "note": "24/7 kept.",
    "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
-   "text": "வீட்டிலும் சமூகத்திலும் சுகாதார சேவைகளை வழங்கும் நிறுவனம்; இது வீட்டிற்கு வந்து வழங்கும் சேவைகளையும் கிளினிக் சேவைகளையும் வழங்குகிறது: செவிலியர் சேவை (RN/RPN), தனிநபர் உதவி, வீட்டு உதவி (உணவு தயாரிப்பு, வீட்டுப் பராமரிப்பு, துணையாக இருத்தல், மருந்து உட்கொள்ளும் நேர நினைவூட்டல்), இயன்முறை சிகிச்சை (Physiotherapy), தொழில்சார் சிகிச்சை (Occupational Therapy), பேச்சு மற்றும் மொழி சிகிச்சை, சமூக சேவை மற்றும் ஊட்டச்சத்து ஆலோசனை. குறுகிய கால அல்லது நீண்ட கால பராமரிப்பு தேவைகளுக்காக செவிலியர்கள் 24 மணிநேரமும் கிடைப்பார்கள்; மேலும் செவிலியர் மற்றும் இயன்முறை சிகிச்சை கிளினிக்குகளையும் இந்த நிறுவனம் நடத்துகிறது.",
-   "warnings": [
-    "numbers missing from translation: 7"
-   ]
+   "text": "வீட்டிலும் சமூகத்திலும் சுகாதாரப் பராமரிப்பு வழங்கும் நிறுவனம்; வீட்டிலும் கிளினிக்கிலும் சேவைகள்: செவிலியர் சேவை (RN/RPN), தனிநபர் உதவி, வீட்டு உதவி (உணவு தயாரித்தல், வீட்டு வேலை, துணையாக இருத்தல், மருந்து நினைவூட்டல்கள்), இயன்முறை மருத்துவம் (physiotherapy), தொழில்வழிச் சிகிச்சை (occupational therapy), பேச்சு-மொழிச் சிகிச்சை, சமூகப் பணி, உணவுமுறை ஆலோசனை. குறுகிய கால அல்லது நீண்ட காலப் பராமரிப்புத் தேவைகளுக்குச் செவிலியர்கள் 24/7 கிடைப்பார்கள்; செவிலியர் மற்றும் இயன்முறை மருத்துவக் கிளினிக்குகளையும் நடத்துகிறது."
   },
   "1330dcebcb5e": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "தோர்ன்கிளிஃப் மற்றும் ஃபிளெமிங்டன் பார்க்ஸ் பகுதிகளில் உள்ள 75 குடும்பங்களைச் சேர்ந்த சுமார் 80 உறுப்பினர்களைக் கொண்ட ஒரு அடிமட்ட மக்கள் குழு; பல்வேறு கலாச்சாரங்கள் மற்றும் மதங்களைச் சேர்ந்தவர்கள் இதில் உள்ளனர். வலுவான அக்கம்பக்கத்தை உருவாக்குவதற்காக, சமூக அமைப்புகளையும் குடியிருப்பாளர்களையும் ஒன்றிணைப்பதில் முன்னின்று வழிநடத்துவதை இந்தக் குழு நோக்கமாகக் கொண்டுள்ளது."
+   },
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (80, 75).",
    "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
-   "text": "தோர்ன்கிளிஃப் மற்றும் ஃபிளெமிங்டன் பார்க்ஸ் பகுதிகளில் உள்ள 75 குடும்பங்களைச் சேர்ந்த சுமார் 80 உறுப்பினர்களைக் கொண்ட ஒரு அடிமட்ட மக்கள் குழு; பல்வேறு கலாச்சாரங்கள் மற்றும் மதங்களைச் சேர்ந்தவர்கள் இதில் உள்ளனர். வலுவான அக்கம்பக்கத்தை உருவாக்குவதற்காக, சமூக அமைப்புகளையும் குடியிருப்பாளர்களையும் ஒன்றிணைப்பதில் முன்னின்று வழிநடத்துவதை இந்தக் குழு நோக்கமாகக் கொண்டுள்ளது."
+   "text": "சுமார் 80 உறுப்பினர்களைக் கொண்ட ஓர் அடித்தள மக்கள் குழு; இவர்கள் Thorncliffe, Flemingdon Parks பகுதிகளைச் சேர்ந்த 75 குடும்பங்களைச் சேர்ந்தவர்கள், பல கலாச்சாரங்களையும் மதங்களையும் சார்ந்தவர்கள். அக்கம்பக்கத்தை வலுப்படுத்த, சமூக அமைப்புகளையும் குடியிருப்பாளர்களையும் இணைப்பதில் தலைமைப் பங்கு வகிப்பதே இதன் நோக்கம்."
   },
   "145d746d96ec": {
    "correctedFrom": {
@@ -84,10 +91,10 @@
     "model": "tiny-aya-fire",
     "text": "45 ஓவர்லியா புல்வார்ட், 2-வது மாடி (ஈஸ்ட் யோர்க் டவுன் சென்டர் உள்ளே), திங்கள் முதல் ஞாயிறு காலை 8:00 மணி முதல் மாலை 8:00 மணி வரை. குடிமக்கள் சுகாதாரம் மற்றும் சமூக சேவைகள், நிகழ்ச்சிகள் மற்றும் பங்குதாரர் அமைப்புகளின் சமூக இடங்களை அணுகும் ஒரே இடமாக உள்ளது."
    },
-   "model": "claude-correction",
-   "note": "Added the missing 'multi-service community hub' and 'open'; address back in English; 'citizens' corrected to 'residents'.",
+   "model": "claude-opus-5.5",
+   "note": "AM/PM kept; no extra 2.",
    "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
-   "text": "பல சேவைகளை ஒரே இடத்தில் வழங்கும் சமூக மையம் (community hub), 45 Overlea Blvd, 2nd Floor (2-வது மாடி, East York Town Centre உள்ளே); திங்கள் முதல் ஞாயிறு வரை காலை 8:00 மணி முதல் மாலை 8:00 மணி வரை திறந்திருக்கும். பங்குதாரர் அமைப்புகளின் சுகாதாரம் மற்றும் சமூக சேவைகள், நிகழ்ச்சிகள் மற்றும் சமூக இடங்களைக் குடியிருப்பாளர்கள் ஒரே இடத்தில் அணுகலாம்."
+   "text": "45 Overlea Blvd, 2nd Floor (East York Town Centre-க்குள்) உள்ள பல சேவைகள் கொண்ட சமூக மையம் (community hub); திங்கள் முதல் ஞாயிறு வரை 8:00 AM முதல் 8:00 PM வரை திறந்திருக்கும். பங்காளர் அமைப்புகளின் சுகாதார, சமூகச் சேவைகள், நிகழ்ச்சிகள், சமூக இடங்கள் ஆகியவற்றைக் குடியிருப்பாளர்கள் ஒரே இடத்தில் பெறலாம்."
   },
   "1538ea5a988e": {
    "correctedFrom": {
@@ -100,9 +107,14 @@
    "text": "St. Michael's Hospital-இல் அவசர சிகிச்சைப் பிரிவு செயல்படுகிறது (30 Bond St.); Unity Health-இன் MyChart மற்றும் மருத்துவமனை தொலைபேசி எண்கள் கொடுக்கப்பட்டுள்ளன. சிறுநீரக சிகிச்சை மையத்திற்கென பிரத்யேக அவசர சிகிச்சை சேவைகள் எதுவும் கண்டறியப்படவில்லை — மருத்துவ அவசரநிலை ஏற்பட்டால் 911-க்கு அழையுங்கள்."
   },
   "1621e2da2a65": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "ஃபிளெமிங்டன் பார்க்கில் (Flemingdon Park) பொதுமக்களால் உருவாக்கப்பட்ட ஒரு பண்ணை, அங்குள்ள குடியிருப்பாளர்களுக்காக ஆரோக்கியமான உணவுகளை விளைவிக்கிறது. இங்கு பொதுமக்கள் இணைந்து உணவு பயிரிடும் வசதி, 150 கிரெனோபிள் டிரைவ் (150 Grenoble Drive) பகுதியில் வாராந்திர கோடைக்கால விவசாயிகள் சந்தை (ஜூன் இறுதி முதல் அக்டோபர் தொடக்கம் வரை, வியாழக்கிழமைகளில் மதிய 3 முதல் மாலை 6 மணி வரை) மற்றும் குடியிருப்பாளர்கள் சிறு பண்ணை வணிகங்களை நடத்துவதற்கான தொழில்முனைவோர் வாய்ப்புகளை வழங்கும் 'கம்யூனிட்டி ஃபார்மர்' (Community Farmer) திட்டம் ஆகியவை உள்ளன."
+   },
+   "model": "claude-opus-5.5",
+   "note": "3-6pm kept as written; address once, in English.",
    "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
-   "text": "ஃபிளெமிங்டன் பார்க்கில் (Flemingdon Park) பொதுமக்களால் உருவாக்கப்பட்ட ஒரு பண்ணை, அங்குள்ள குடியிருப்பாளர்களுக்காக ஆரோக்கியமான உணவுகளை விளைவிக்கிறது. இங்கு பொதுமக்கள் இணைந்து உணவு பயிரிடும் வசதி, 150 கிரெனோபிள் டிரைவ் (150 Grenoble Drive) பகுதியில் வாராந்திர கோடைக்கால விவசாயிகள் சந்தை (ஜூன் இறுதி முதல் அக்டோபர் தொடக்கம் வரை, வியாழக்கிழமைகளில் மதிய 3 முதல் மாலை 6 மணி வரை) மற்றும் குடியிருப்பாளர்கள் சிறு பண்ணை வணிகங்களை நடத்துவதற்கான தொழில்முனைவோர் வாய்ப்புகளை வழங்கும் 'கம்யூனிட்டி ஃபார்மர்' (Community Farmer) திட்டம் ஆகியவை உள்ளன."
+   "text": "Flemingdon Park-இல் சமூகத்தால் உருவாக்கப்பட்ட பண்ணை; குடியிருப்பாளர்களுக்காக ஆரோக்கியமான உணவை விளைவிக்கிறது. சமூகமாக இணைந்து உணவு பயிரிடுதல், 150 Grenoble Drive-இல் வாராந்திரக் கோடைக்கால விவசாயிகள் சந்தை (வியாழக்கிழமைகளில் 3-6pm, ஜூன் இறுதி முதல் அக்டோபர் தொடக்கம் வரை), சிறு பண்ணை வணிகங்களை நடத்தக் குடியிருப்பாளர்களுக்குத் தொழில்முனைவு வாய்ப்புகளை வழங்கும் Community Farmer திட்டம் ஆகியவை உள்ளன."
   },
   "16b01b9ea5a7": {
    "model": "north-small-translate-09-2026",
@@ -114,20 +126,20 @@
     "model": "north-small-translate-09-2026",
     "text": "மகப்பேறு பராமரிப்பு மையம் (கிழக்கு யார்க்/டான் மில்ஸ்). கர்ப்ப காலம், பிரசவ காலம் மற்றும் குழந்தை பிறப்பு வரையிலான சேவைகளையும், பிரசவத்திற்குப் பிந்தைய 6 வாரங்கள் வரை தாய்க்கும் குழந்தைக்கும் தேவையான சேவைகளையும் இலவசமாக வழங்குகிறது; இவை சுகாதார அமைச்சகத்தின் நிதியுதவியுடன் அளிக்கப்படுகின்றன. பிரசவங்கள் வீட்டிலோ, டொரண்டோ பிரசவ மையத்திலோ அல்லது மைக்கேல் கார்ரான் மருத்துவமனையிலோ மேற்கொள்ளப்படுகின்றன; அவசரத் தேவைகளுக்கு மகப்பேறு செவிலியர்கள் (midwives) 24 மணிநேரமும் தொடர்பில் இருப்பார்கள்; சிக்கல்கள் ஏற்பட்டால் மகப்பேறு மருத்துவர்கள், குழந்தை நல மருத்துவர்கள் மற்றும் தாய்ப்பால் ஆலோசகர்களிடம் பரிந்துரைக்கப்படுவார்கள். ஆங்கிலம், அரபு, பிரஞ்சு, ஸ்பானிஷ், பார்சி, டாரி மற்றும் பிற மொழிகளைப் பேசும் பணியாளர்கள் உள்ளனர்; மேலும் 'நியூபோர்ன் 101' உள்ளிட்ட பிரசவத்திற்கு முந்தைய வகுப்புகளும் வழங்கப்படுகின்றன."
    },
-   "model": "claude-correction",
-   "note": "Hospital, birth centre, class and area names in English.",
+   "model": "claude-opus-5.5",
+   "note": "24/7 kept; midwives no longer called nurses.",
    "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
-   "text": "மகப்பேறு பராமரிப்பு மையம் (East York/Don Mills). கர்ப்ப காலம், பிரசவ காலம் மற்றும் குழந்தை பிறப்பு வரையிலான சேவைகளையும், பிரசவத்திற்குப் பிந்தைய 6 வாரங்கள் வரை தாய்க்கும் குழந்தைக்கும் தேவையான சேவைகளையும் இலவசமாக வழங்குகிறது; இவை சுகாதார அமைச்சகத்தின் நிதியுதவியுடன் அளிக்கப்படுகின்றன. பிரசவங்கள் வீட்டிலோ, Toronto Birth Centre-இலோ அல்லது Michael Garron Hospital-இலோ மேற்கொள்ளப்படுகின்றன; அவசரத் தேவைகளுக்கு மகப்பேறு செவிலியர்கள் (midwives) 24 மணிநேரமும் தொடர்பில் இருப்பார்கள்; சிக்கல்கள் ஏற்பட்டால் மகப்பேறு மருத்துவர்கள், குழந்தை நல மருத்துவர்கள் மற்றும் தாய்ப்பால் ஆலோசகர்களிடம் பரிந்துரைக்கப்படுவார்கள். ஆங்கிலம், அரபு, பிரஞ்சு, ஸ்பானிஷ், பார்சி, டாரி மற்றும் பிற மொழிகளைப் பேசும் பணியாளர்கள் உள்ளனர்; மேலும் 'Newborn 101' உள்ளிட்ட பிரசவத்திற்கு முந்தைய வகுப்புகளும் வழங்கப்படுகின்றன."
+   "text": "மகப்பேறு உதவியாளர் (midwifery) மருத்துவமனை (East York/Don Mills): கர்ப்பகாலம், பிரசவம், குழந்தைப் பிறப்பு முழுவதும், பிரசவத்துக்குப் பிறகு 6 வாரங்கள் வரை பெற்றோருக்கும் குழந்தைக்கும், சுகாதார அமைச்சகத்தின் நிதியுதவியுடன் இலவசப் பராமரிப்பு வழங்குகிறது. பிரசவங்கள் வீட்டிலோ, Toronto Birth Centre-இலோ, Michael Garron Hospital-இலோ நடைபெறும்; அவசரக் கவலைகளுக்கு மகப்பேறு உதவியாளர்கள் (midwives) 24/7 அழைப்பில் இருப்பார்கள்; சிக்கல்கள் இருந்தால் மகப்பேறு மருத்துவர்கள், குழந்தை மருத்துவர்கள், தாய்ப்பால் ஆலோசகர்களிடம் அனுப்பப்படும். பல மொழி பேசும் பணியாளர்கள் (ஆங்கிலம், அரபு, பிரெஞ்சு, ஸ்பானிஷ், பார்சி, தாரி மற்றும் பிற) உள்ளனர்; Newborn 101 உட்பட பிரசவத்துக்கு முந்தைய வகுப்புகளும் உள்ளன."
   },
   "1a3c95cbc0e2": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "குறிப்பிட்ட பகுதியில் (லேக் ஒண்டாரியோ முதல் யார்க் மில்ஸ்/401 வரை, யோங்/டான் நதி முதல் விக்டோரியா பார்க் அவென்யூ வரை) குறைந்த வருமானம் கொண்டவர்களுக்கு நான்கு துறைகளில் இலவச சட்ட ஆலோசனையும் பிரதிநிதித்துவமும் வழங்கப்படுகின்றன: வீட்டுவசதி சட்டம் (வீட்டிலிருந்து வெளியேற்றப்படுவதைத் தடுத்தல், சட்டவிரோதமாக கதவுகளை பூட்டி வெளியேற்றுதல், வாடகைதாரர்களின் உரிமைகள்), வேலைவாய்ப்பு சட்டம் (வேலைவாய்ப்பு தரநிலைகள், நியாயமற்ற பணிநீக்கம், இழப்பீடு, EI), குடிவரவு சட்டம் (நிரந்தர குடியிருப்பு விண்ணப்பங்கள், வேலை அனுமதிச் சீட்டுகள், குடியுரிமை) மற்றும் வருமான உதவிகள் (ODSP, OW, CPP, OAS, GIS, கனடா மாற்றுத்திறனாளி நலத்தொகை); மேலும் பொதுமக்களுக்கான சட்ட விழிப்புணர்வு மற்றும் வரையறுக்கப்பட்ட ஆவண சேவைகளும் (உறுதிமொழி ஆவணங்கள், நோட்டரி சான்றளிக்கப்பட்ட நகல்கள்) வழங்கப்படுகின்றன. தொடர்பு எண்: 416-441-1764 எக்ஸ்டென்ஷன் 1, திங்கள்–வியாழன் காலை 9:00 மணி முதல் மதியம் 12:30 மணி வரை (தொடர்பு கொண்டால் 1–3 வேலை நாட்களுக்குள் பதில் அளிக்கப்படும்; நேரடியாக வந்து சந்திக்க முடியாது; முன்கூட்டியே நேரம் ஒதுக்கி திங்கள்/புதன் மதியம் 1:30–4:30 மணி வரை நேரில் சந்திக்கலாம்)."
    },
-   "model": "claude-correction",
-   "note": "Catchment street names, benefit and line names in English; restored the missing voicemail/callback detail.",
+   "model": "claude-opus-5.5",
+   "note": "AM/PM kept on the times.",
    "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
-   "text": "குறிப்பிட்ட பகுதியில் (Lake Ontario முதல் York Mills/401 வரை, Yonge/Don River முதல் Victoria Park Ave வரை) குறைந்த வருமானம் கொண்டவர்களுக்கு நான்கு துறைகளில் இலவச சட்ட ஆலோசனையும் பிரதிநிதித்துவமும் வழங்கப்படுகின்றன: வீட்டுவசதி சட்டம் (வீட்டிலிருந்து வெளியேற்றப்படுவதைத் தடுத்தல், சட்டவிரோதமாக கதவுகளை பூட்டி வெளியேற்றுதல், வாடகைதாரர்களின் உரிமைகள்), வேலைவாய்ப்பு சட்டம் (வேலைவாய்ப்பு தரநிலைகள், நியாயமற்ற பணிநீக்கம், இழப்பீடு, EI), குடிவரவு சட்டம் (நிரந்தர குடியிருப்பு விண்ணப்பங்கள், வேலை அனுமதிச் சீட்டுகள், குடியுரிமை) மற்றும் வருமான உதவிகள் (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); மேலும் பொதுமக்களுக்கான சட்ட விழிப்புணர்வு மற்றும் வரையறுக்கப்பட்ட ஆவண சேவைகளும் (உறுதிமொழி ஆவணங்கள், நோட்டரி சான்றளிக்கப்பட்ட நகல்கள்) வழங்கப்படுகின்றன. Intake Line (பதிவுக்கான தொலைபேசி): 416-441-1764 எக்ஸ்டென்ஷன் 1, திங்கள்–வியாழன் காலை 9:00 மணி முதல் மதியம் 12:30 மணி வரை (குரல் அஞ்சலில் (voicemail) செய்தி விட்டால் 1–3 வேலை நாட்களுக்குள் திரும்ப அழைப்பார்கள்; நேரடியாக வந்து சந்திக்க முடியாது; முன்கூட்டியே நேரம் ஒதுக்கி திங்கள்/புதன் மதியம் 1:30–4:30 மணி வரை நேரில் சந்திக்கலாம்)."
+   "text": "வருமானம் குறைந்தவர்களுக்கு இலவச சட்ட ஆலோசனையும் பிரதிநிதித்துவமும்; சேவைப் பகுதி: Lake Ontario முதல் York Mills/401 வரை, Yonge/Don River முதல் Victoria Park Ave வரை. நான்கு துறைகள்: வீட்டுவசதிச் சட்டம் (வெளியேற்றத்தைத் தடுத்தல், சட்டவிரோதமாகப் பூட்டி வெளியேற்றுதல், வாடகைதாரர் உரிமைகள்), வேலைவாய்ப்புச் சட்டம் (வேலைவாய்ப்புத் தரநிலைகள், நியாயமற்ற பணிநீக்கம், பணிநீக்க இழப்பீடு, EI), குடிவரவுச் சட்டம் (PR விண்ணப்பங்கள், பணி அனுமதிகள், குடியுரிமை), வருமான உதவிகள் (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); மேலும் பொதுமக்களுக்கான சட்டக் கல்வியும், வரையறுக்கப்பட்ட ஆவணச் சேவைகளும் (பிரமாணப் பத்திரங்கள் / affidavits, நோட்டரி சான்றளித்த உண்மை நகல்கள்). Intake Line: 416-441-1764 ext. 1, திங்கள்–வியாழன் 9:00 AM–12:30 PM (குரல் அஞ்சலில் செய்தி விட்டால் 1–3 வேலை நாட்களுக்குள் திரும்ப அழைப்பார்கள்; முன்பதிவின்றி நேரில் வர முடியாது; நேரில் பதிவு, முன்பதிவு செய்த சந்திப்பு மூலம் மட்டும்: திங்கள்/புதன் 1:30–4:30 PM)."
   },
   "1ae4b85c3a4e": {
    "model": "north-small-translate-09-2026",
@@ -139,10 +151,10 @@
     "model": "north-small-translate-09-2026",
     "text": "இந்தப் பகுதிக்கு 24 மணிநேர தீயணைப்பு மற்றும் அவசர கால மீட்புப் பணிகளை வழங்கும் டொராண்டோ தீயணைப்பு சேவை நிலையங்கள்: நிலையம் 321 (231 McRae Dr), நிலையம் 235 (200 Bermondsey Rd), நிலையம் 322 (256 Cosburn Ave), நிலையம் 224 (1313 Woodbine Ave). அவசரமில்லாத அழைப்புகளுக்கான தொலைபேசி எண்: 416-338-9050."
    },
-   "model": "claude-correction",
-   "note": "Organisation name in English.",
+   "model": "claude-opus-5.5",
+   "note": "24/7 kept (was '24 hours', lost the 7).",
    "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
-   "text": "இந்தப் பகுதிக்கு 24 மணிநேர தீயணைப்பு மற்றும் அவசர கால மீட்புப் பணிகளை வழங்கும் Toronto Fire Services (டொராண்டோ தீயணைப்பு சேவை) நிலையங்கள்: நிலையம் 321 (231 McRae Dr), நிலையம் 235 (200 Bermondsey Rd), நிலையம் 322 (256 Cosburn Ave), நிலையம் 224 (1313 Woodbine Ave). அவசரமில்லாத அழைப்புகளுக்கான தொலைபேசி எண்: 416-338-9050."
+   "text": "இந்தப் பகுதிக்கு 24/7 தீ பாதுகாப்பும் அவசர மீட்பும் வழங்கும் Toronto Fire Services நிலையங்கள்: நிலையம் 321 (231 McRae Dr), நிலையம் 235 (200 Bermondsey Rd), நிலையம் 322 (256 Cosburn Ave), நிலையம் 224 (1313 Woodbine Ave). அவசரமில்லாத அழைப்புகளுக்கான எண்: 416-338-9050."
   },
   "235e1072c4f3": {
    "correctedFrom": {
@@ -260,9 +272,14 @@
    "text": "சுகாதார மையங்கள்"
   },
   "411f70e150dd": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "30 Thorncliffe Park Drive-இல் அமைந்துள்ள கிரேக்க ஆர்த்தடாக்ஸ் திருச்சபை (600-க்கும் மேற்பட்டோர் அமர்ந்து வழிபடும் வசதி, போதுமான வாகன நிறுத்துமிடம்); இதன் தலைவராக பங்குத் தந்தை Fr. Apostolos Gkolias உள்ளார் (apostolosgkolias@yahoo.com; திருச்சபை தொலைபேசி +1 (416) 425-2485, info@togreekcom.org). ஞாயிற்றுக்கிழமை மற்றும் பண்டிகை நாட்களின் வழிபாடுகள்: ஆர்த்ரோஸ்-மாத்தின்ஸ் காலை 8:30–10:00 மணி வரை மற்றும் தெய்வீக லிதர்ஜி காலை 10:00 மணி முதல் மதியம் 12:00 மணி வரை; ஞாயிற்றுக்கிழமை பள்ளி (Sunday School) பதிவு மற்றும் பிற திருச்சபை திட்டங்களையும் இது நடத்துகிறது."
+   },
+   "model": "claude-opus-5.5",
+   "note": "AM kept on the times; both Sunday mentions kept.",
    "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
-   "text": "30 Thorncliffe Park Drive-இல் அமைந்துள்ள கிரேக்க ஆர்த்தடாக்ஸ் திருச்சபை (600-க்கும் மேற்பட்டோர் அமர்ந்து வழிபடும் வசதி, போதுமான வாகன நிறுத்துமிடம்); இதன் தலைவராக பங்குத் தந்தை Fr. Apostolos Gkolias உள்ளார் (apostolosgkolias@yahoo.com; திருச்சபை தொலைபேசி +1 (416) 425-2485, info@togreekcom.org). ஞாயிற்றுக்கிழமை மற்றும் பண்டிகை நாட்களின் வழிபாடுகள்: ஆர்த்ரோஸ்-மாத்தின்ஸ் காலை 8:30–10:00 மணி வரை மற்றும் தெய்வீக லிதர்ஜி காலை 10:00 மணி முதல் மதியம் 12:00 மணி வரை; ஞாயிற்றுக்கிழமை பள்ளி (Sunday School) பதிவு மற்றும் பிற திருச்சபை திட்டங்களையும் இது நடத்துகிறது."
+   "text": "30 Thorncliffe Park Drive-இல் உள்ள கிரேக்க ஆர்த்தடாக்ஸ் பங்கு ஆலயம் (600+ பேர் அமர்ந்து வழிபடலாம், போதுமான வாகன நிறுத்துமிடம்); பங்குக் குரு Fr. Apostolos Gkolias தலைமை தாங்குகிறார் (apostolosgkolias@yahoo.com; ஆலயத் தொலைபேசி +1 (416) 425-2485, info@togreekcom.org). ஞாயிறு மற்றும் திருநாள் வழிபாடுகள்: Orthros-Matins 8:30–10:00 AM, Divine Liturgy 10:00 AM–12:00 மதியம்; ஞாயிறு பள்ளிக்கான பதிவையும் பிற ஆலய நிகழ்ச்சிகளையும் நடத்துகிறது."
   },
   "4341d8807857": {
    "correctedFrom": {
@@ -319,10 +336,10 @@
     "model": "north-small-translate-09-2026",
     "text": "பனிக்கட்டி ஸ்கேட்டிங் மற்றும் ஹாக்கி பயிற்சிகளுக்காக 165 கிரெனோபிள் டிரைவில் (கனடிய ஹாக்கி நட்சத்திரமான ஏஞ்சலா ஜேம்ஸின் நினைவாக 2009-இல் மறுபெயரிடப்பட்டது) அமைந்துள்ள சிட்டி அரீனா மற்றும் அதன் அருகில் பொதுப் டென்னிஸ் மைதானங்கள் உள்ளன. குறிப்பு: 165 கிரெனோபிள் டிரைவில் புதிய ஃபிளெமிங்டன் தீயணைப்பு நிலையத்தை அமைக்க (2026-இல்) நகர நிர்வாகம் திட்டமிட்டுள்ளதாக அறிவித்துள்ளது; இதனால் நான்கு டென்னிஸ் மைதானங்களில் இரண்டு நீக்கப்படும் — இதன் தற்போதைய நிலை உறுதியாகத் தெரியவில்லை."
    },
-   "model": "claude-correction",
-   "note": "'in memory of' (implies she died) changed to 'in honour of'; 'City arena' no longer reads as a proper name; address in English; 'would remove' kept conditional.",
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (165, 2009, 2026, 165).",
    "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
-   "text": "பனிக்கட்டி ஸ்கேட்டிங் மற்றும் ஹாக்கி நிகழ்ச்சிகளுக்கான நகர அரீனா (ice arena), 165 Grenoble Dr முகவரியில் உள்ளது (கனடிய ஹாக்கி நட்சத்திரமான Angela James-ஐ கௌரவிக்கும் வகையில் 2009-இல் அவர் பெயர் சூட்டப்பட்டது); அதன் அருகில் பொது டென்னிஸ் மைதானங்களும் உள்ளன. குறிப்பு: 165 Grenoble Dr-இல் புதிய Flemingdon தீயணைப்பு நிலையத்தை அமைக்கும் திட்டத்தை நகர நிர்வாகம் (2026-இல்) அறிவித்துள்ளது; இதனால் நான்கு டென்னிஸ் மைதானங்களில் இரண்டு நீக்கப்படக்கூடும் — இதன் தற்போதைய நிலை உறுதியாகத் தெரியவில்லை."
+   "text": "165 Grenoble Dr-இல் உள்ள நகர அரீனா (கனடிய ஹாக்கி நட்சத்திரம் Angela James-இன் பெயர் 2009-இல் சூட்டப்பட்டது): பனிச்சறுக்கு (ice skating), ஹாக்கி நிகழ்ச்சிகள், அருகிலேயே பொது டென்னிஸ் மைதானங்கள். குறிப்பு: நகர நிர்வாகம் (2026) 165 Grenoble Dr-இல் புதிய Flemingdon தீயணைப்பு நிலையம் கட்டும் திட்டத்தை அறிவித்தது; இதனால் நான்கு டென்னிஸ் மைதானங்களில் இரண்டு அகற்றப்படும் — நிலை உறுதியாகத் தெரியவில்லை."
   },
   "5b54b1c20dbc": {
    "model": "north-small-translate-09-2026",
@@ -354,23 +371,30 @@
     "model": "north-small-translate-09-2026",
     "text": "Valley Park Middle School என்பது கிழக்கு யார்க்கில் உள்ள 130 Overlea Blvd-ல் அமைந்துள்ள TDSB-யின் ஒரு இடைநிலைப் பள்ளியாகும். இது Thorncliffe Park மற்றும் Flemingdon Park பகுதிகளைச் சேர்ந்த சுமார் 1,100 மாணவர்களுடன் 6 முதல் 8 ஆம் வகுப்பு வரையிலான கல்வியை வழங்குகிறது. மரியாதை, பொறுப்பு மற்றும் பாதுகாப்பின் அடிப்படையில் உருவாக்கப்பட்ட பாதுகாப்பான மற்றும் ஆதரவான கற்றல் சூழலையே இந்தப் பள்ளி நோக்கமாகக் கொண்டுள்ளது; எடுக்கப்பட்ட முகப்புப் பக்கத் தகவலில் பிரெஞ்சு மொழிப் பயிற்சி (French immersion), ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை."
    },
-   "model": "claude-correction",
-   "note": "Address (East York) in English as in source.",
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (6, 8, 1,100, 130).",
    "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
-   "text": "Valley Park Middle School என்பது 130 Overlea Blvd, East York-ல் அமைந்துள்ள TDSB-யின் ஒரு இடைநிலைப் பள்ளியாகும். இது Thorncliffe Park மற்றும் Flemingdon Park பகுதிகளைச் சேர்ந்த சுமார் 1,100 மாணவர்களுடன் 6 முதல் 8 ஆம் வகுப்பு வரையிலான கல்வியை வழங்குகிறது. மரியாதை, பொறுப்பு மற்றும் பாதுகாப்பின் அடிப்படையில் உருவாக்கப்பட்ட பாதுகாப்பான மற்றும் ஆதரவான கற்றல் சூழலையே இந்தப் பள்ளி நோக்கமாகக் கொண்டுள்ளது; எடுக்கப்பட்ட முகப்புப் பக்கத் தகவலில் பிரெஞ்சு மொழிப் பயிற்சி (French immersion), ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை."
+   "text": "Valley Park Middle School என்பது TDSB இடைநிலைப் பள்ளி; 6–8 வகுப்புகளுக்கு, Thorncliffe Park, Flemingdon Park சமூகங்களைச் சேர்ந்த சுமார் 1,100 மாணவர்களுக்குக் கல்வி வழங்குகிறது; முகவரி: 130 Overlea Blvd, East York. மரியாதை, பொறுப்பு, பாதுகாப்பு ஆகியவற்றின் அடிப்படையிலான பாதுகாப்பான, ஆதரவான கற்றல் சூழலே இதன் நோக்கம்; பெறப்பட்ட முகப்புப் பக்க உரையில் French immersion, ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் எதுவும் குறிப்பிடப்படவில்லை."
   },
   "62d55110cf7b": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "TCDSB-ஆல் நடத்தப்படும் இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம், 175 Grenoble Dr முகவரியில் அமைந்துள்ளது. இங்கு 0-6 வயது குழந்தைகளுக்காக அவர்களின் பெற்றோர் அல்லது பராமரிப்பாளர்களுடன் இணைந்து, எப்போது வேண்டுமானாலும் வந்து விளையாடவும் கற்றுக்கொள்ளவும் கூடிய நிகழ்ச்சிகள் வழங்கப்படுகின்றன (பெற்றோரின் பங்கேற்பு அவசியம், முன்பதிவு தேவையில்லை). TCDSB அட்டவணையின்படி, St. John XXIII மையம் திங்கள் முதல் வியாழன் வரை காலை 8:45 முதல் மதியம் 12:45 வரையிலும், வெள்ளிக்கிழமை காலை 8:45 முதல் மதியம் 12:45 வரையிலும் இயங்கும்."
+   },
+   "model": "claude-opus-5.5",
+   "note": "am/pm kept on the times.",
    "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
-   "text": "TCDSB-ஆல் நடத்தப்படும் இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம், 175 Grenoble Dr முகவரியில் அமைந்துள்ளது. இங்கு 0-6 வயது குழந்தைகளுக்காக அவர்களின் பெற்றோர் அல்லது பராமரிப்பாளர்களுடன் இணைந்து, எப்போது வேண்டுமானாலும் வந்து விளையாடவும் கற்றுக்கொள்ளவும் கூடிய நிகழ்ச்சிகள் வழங்கப்படுகின்றன (பெற்றோரின் பங்கேற்பு அவசியம், முன்பதிவு தேவையில்லை). TCDSB அட்டவணையின்படி, St. John XXIII மையம் திங்கள் முதல் வியாழன் வரை காலை 8:45 முதல் மதியம் 12:45 வரையிலும், வெள்ளிக்கிழமை காலை 8:45 முதல் மதியம் 12:45 வரையிலும் இயங்கும்."
+   "text": "TCDSB நடத்தும் இலவச EarlyON Child and Family Centre, 175 Grenoble Dr; 0-6 வயதுக் குழந்தைகள் தங்கள் பெற்றோர்/பராமரிப்பாளர்களுடன் வந்து விளையாடவும் கற்கவும் முன்பதிவின்றி வரக்கூடிய (drop-in) நிகழ்ச்சிகள் (பெற்றோர் பங்கேற்பது அவசியம், பதிவு தேவையில்லை). TCDSB அட்டவணைப்படி, St. John XXIII மையம் திங்கள்–வியாழன் 8:45am-12:45pm, வெள்ளி 8:45am-12:45pm இயங்குகிறது."
   },
   "63c710ddedbb": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "வீட்டுப் பராமரிப்பு தேவைகளுக்காக 24 மணிநேரமும் செவிலியர்கள் கிடைப்பார்கள்; பிரத்யேக அவசர சிகிச்சை சேவை எதுவும் குறிப்பிடப்படவில்லை (இது 911 அல்லது அவசர சிகிச்சை மையம் அல்ல)."
+   },
+   "model": "claude-opus-5.5",
+   "note": "24/7 kept.",
    "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
-   "text": "வீட்டுப் பராமரிப்பு தேவைகளுக்காக 24 மணிநேரமும் செவிலியர்கள் கிடைப்பார்கள்; பிரத்யேக அவசர சிகிச்சை சேவை எதுவும் குறிப்பிடப்படவில்லை (இது 911 அல்லது அவசர சிகிச்சை மையம் அல்ல).",
-   "warnings": [
-    "numbers missing from translation: 7"
-   ]
+   "text": "வீட்டுப் பராமரிப்புத் தேவைகளுக்குச் செவிலியர்கள் 24/7 கிடைப்பார்கள்; தனியான அவசரச் சேவை எதுவும் குறிப்பிடப்படவில்லை (இது 911 அல்லது அவசர சிகிச்சை வழங்கும் சேவை அல்ல)."
   },
   "67d4ed5dfe5d": {
    "correctedFrom": {
@@ -438,9 +462,14 @@
    "text": "பொது இடங்கள்"
   },
   "79db95729d8c": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "9 Grenoble Drive-இல் அமைந்துள்ள TDSB ஆரம்பப் பள்ளியில், மழலையர் வகுப்பு முதல் 6-ஆம் வகுப்பு வரை 960-க்கும் மேற்பட்ட மாணவர்கள் பயில்கின்றனர் (சுமார் 93% குடும்பங்கள் கனடாவிற்கு குடிபெயர்ந்தவர்கள்; 73-க்கும் மேற்பட்ட மொழிகள் பேசப்படுகின்றன). பள்ளியின் இணையதளத்தில் பிரெஞ்சு இம்மர்ஷன் (French Immersion) போன்ற சிறப்புத் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை."
+   },
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (9, 960, 6, 93, 73).",
    "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
-   "text": "9 Grenoble Drive-இல் அமைந்துள்ள TDSB ஆரம்பப் பள்ளியில், மழலையர் வகுப்பு முதல் 6-ஆம் வகுப்பு வரை 960-க்கும் மேற்பட்ட மாணவர்கள் பயில்கின்றனர் (சுமார் 93% குடும்பங்கள் கனடாவிற்கு குடிபெயர்ந்தவர்கள்; 73-க்கும் மேற்பட்ட மொழிகள் பேசப்படுகின்றன). பள்ளியின் இணையதளத்தில் பிரெஞ்சு இம்மர்ஷன் (French Immersion) போன்ற சிறப்புத் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை."
+   "text": "9 Grenoble Drive-இல் உள்ள TDSB தொடக்கப் பள்ளி; 960-க்கும் மேற்பட்ட மாணவர்களுக்கு Kindergarten முதல் 6-ஆம் வகுப்பு வரை கல்வி வழங்குகிறது (சுமார் 93% குடும்பங்கள் கனடாவுக்குக் குடிபெயர்ந்து வந்தவை; 73-க்கும் மேற்பட்ட மொழிகள் பேசப்படுகின்றன). பள்ளியின் முகப்புப் பக்கத்தில் French Immersion போன்ற சிறப்புத் திட்டங்கள் எதுவும் குறிப்பிடப்படவில்லை."
   },
   "7bd551d09cd0": {
    "model": "north-small-translate-09-2026",
@@ -452,20 +481,20 @@
     "model": "north-small-translate-09-2026",
     "text": "டொரண்டோ நகரில் வசிக்கும் 0-6 வயதுக்குட்பட்ட குழந்தைகள் மற்றும் அவர்களின் பெற்றோர்/பராமரிப்பாளர்களுக்கான இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம்: குழந்தைகளின் வளர்ச்சிக்கான ஆதரவு திட்டங்கள், பெற்றோருக்கான ஆதரவு சேவைகள், பள்ளிக்குத் தயாராகும் திட்டங்கள், பேச்சுத் தாமதத்திற்கான ஆதரவு மற்றும் தனிப்பட்ட வழிகாட்டுதலுடன் கூடிய சிறப்புத் தேவை சேவைகள். முதன்மை மையம்: TNO-தோர்ன்கிளிஃப் பார்க் சமூக மையம் (Community Hub), 45 Overlea Blvd Unit 200 (திங்கள்-வெள்ளி காலை 9 மணி முதல் மாலை 5 மணி வரை); வெள்ளிக்கிழமை உடற்பயிற்சி மற்றும் விளையாட்டு நேரம்: ஜென்னர் ஜீன் மேரி சமூக மையம் (Jenner Jean Marie Community Centre), 48 Thorncliffe Park Dr."
    },
-   "model": "claude-correction",
-   "note": "Hub and centre names in English.",
+   "model": "claude-opus-5.5",
+   "note": "Times 9am-5pm kept as written (were spelled out without am/pm).",
    "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
-   "text": "டொரண்டோ நகரில் வசிக்கும் 0-6 வயதுக்குட்பட்ட குழந்தைகள் மற்றும் அவர்களின் பெற்றோர்/பராமரிப்பாளர்களுக்கான இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம்: குழந்தைகளின் வளர்ச்சிக்கான ஆதரவு திட்டங்கள், பெற்றோருக்கான ஆதரவு சேவைகள், பள்ளிக்குத் தயாராகும் திட்டங்கள், பேச்சுத் தாமதத்திற்கான ஆதரவு மற்றும் தனிப்பட்ட வழிகாட்டுதலுடன் கூடிய சிறப்புத் தேவை சேவைகள். முதன்மை மையம்: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (திங்கள்-வெள்ளி காலை 9 மணி முதல் மாலை 5 மணி வரை); வெள்ளிக்கிழமை உடற்பயிற்சி மற்றும் விளையாட்டு நேரம்: Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+   "text": "City of Toronto-வில் வசிக்கும், 0-6 வயதுக் குழந்தைகளுக்கும் அவர்களின் பெற்றோர்/பராமரிப்பாளர்களுக்குமான இலவச EarlyON Child and Family Centre: குழந்தை வளர்ச்சி உதவித் திட்டங்கள், பெற்றோர் உதவிச் சேவைகள், பள்ளிக்குத் தயார்படுத்தும் திட்டங்கள், பேச்சுத் தாமதத்துக்கான உதவி, தனிப்பட்ட வழக்கு மேலாண்மையுடன் கூடிய சிறப்புத் தேவைச் சேவைகள். முதன்மை இடம்: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (திங்கள்–வெள்ளி 9am-5pm); வெள்ளிக்கிழமை உடற்பயிற்சிக் கூட விளையாட்டு நேரம்: Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
   },
   "7d47cf9e0e64": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "ஃபிளெமிங்டன் பார்க்கில் உள்ள 175 கிரெனோபிள் டிரைவ் முகவரியில் அமைந்துள்ள டொராண்டோ கத்தோலிக்க மாவட்ட பள்ளி வாரியத்தின் ஆரம்பப் பள்ளி (முன் வகுப்பு முதல் 8-ஆம் வகுப்பு வரை), இங்கு ESL, சிறப்புக் கல்வி மற்றும் 'எம்பவர் ரீடிங்' (Empower Reading) உதவிகள் மற்றும் விளையாட்டு அணிகள் வழங்கப்படுகின்றன. இந்தக் கட்டிடத்தில் ரெட் ஆப்பிள் டேகேர் (பள்ளிக்கு முன்னும் பின்னும் குழந்தைகளுக்கான பராமரிப்பு மையம்), இலவச எர்லியான் (EarlyON) குழந்தைகள் மற்றும் குடும்ப மையம் (பிறந்த குழந்தைகள் முதல் 6 வயது வரையிலான குழந்தைகள் மற்றும் பெற்றோருக்கான திட்டங்கள்), மற்றும் புதிதாக குடிபெயர்ந்தவர்களுக்கு உதவி வழங்கும் குடியேற்ற உதவியாளர் அலுவலகமும் உள்ளன."
    },
-   "model": "claude-correction",
-   "note": "Address, school board and daycare names in English.",
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (8, 175, 6).",
    "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
-   "text": "ஃபிளெமிங்டன் பார்க்கில் உள்ள 175 Grenoble Drive முகவரியில் அமைந்துள்ள Toronto Catholic District School Board-இன் (டொராண்டோ கத்தோலிக்க மாவட்ட பள்ளி வாரியம்) ஆரம்பப் பள்ளி (முன் வகுப்பு முதல் 8-ஆம் வகுப்பு வரை), இங்கு ESL, சிறப்புக் கல்வி மற்றும் 'எம்பவர் ரீடிங்' (Empower Reading) உதவிகள் மற்றும் விளையாட்டு அணிகள் வழங்கப்படுகின்றன. இந்தக் கட்டிடத்தில் Red Apple Daycare (பள்ளிக்கு முன்னும் பின்னும் குழந்தைகளுக்கான பராமரிப்பு மையம்), இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம் (பிறந்த குழந்தைகள் முதல் 6 வயது வரையிலான குழந்தைகள் மற்றும் பெற்றோருக்கான திட்டங்கள்), மற்றும் புதிதாக குடிபெயர்ந்தவர்களுக்கு உதவி வழங்கும் குடியேற்ற உதவியாளர் அலுவலகமும் உள்ளன."
+   "text": "Toronto Catholic District School Board-இன் தொடக்கப் பள்ளி (JK முதல் 8-ஆம் வகுப்பு வரை), Flemingdon Park-இல் 175 Grenoble Drive-இல் உள்ளது; ESL, சிறப்புக் கல்வி, Empower Reading உதவிகள், விளையாட்டு அணிகள் ஆகியவற்றை வழங்குகிறது. இதே கட்டடத்தில் Red Apple Daycare (பள்ளி நேரத்துக்கு முன்னும் பின்னும் குழந்தைப் பராமரிப்பு), இலவச EarlyON Child and Family Centre (பிறப்பு முதல் 6 வயது வரையிலான குழந்தைகளுக்கும் பெற்றோருக்குமான நிகழ்ச்சிகள்), புதிதாகக் குடியேறியவர்களுக்கு உதவும் குடியமர்வுப் பணியாளர் (settlement worker) அலுவலகம் ஆகியவையும் உள்ளன."
   },
   "7d8fe058aabe": {
    "model": "north-small-translate-09-2026",
@@ -513,9 +542,14 @@
    "text": "பல் மருத்துவமனைகள்"
   },
   "8f3b8610ff41": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "மாகாண அரசு சேவை மையம், 945 Eglinton Avenue East (Staples கடையின் உள்ளே) அமைந்துள்ளது. இங்கு ஓட்டுநர் உரிமம், வாகனப் பதிவு மற்றும் பதிவு எண் பலகைகள், ஒன்டாரியோ சுகாதார அட்டைகள் மற்றும் பிறப்புச் சான்றிதழ்கள் வழங்கப்படுகின்றன. திங்கள் முதல் வெள்ளி வரை காலை 9:00 மணி முதல் இரவு 9:00 மணி வரையிலும், சனிக்கிழமை காலை 9:00 மணி முதல் மாலை 5:00 மணி வரையிலும் இயங்கும்."
+   },
+   "model": "claude-opus-5.5",
+   "note": "AM/PM kept on the times.",
    "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
-   "text": "மாகாண அரசு சேவை மையம், 945 Eglinton Avenue East (Staples கடையின் உள்ளே) அமைந்துள்ளது. இங்கு ஓட்டுநர் உரிமம், வாகனப் பதிவு மற்றும் பதிவு எண் பலகைகள், ஒன்டாரியோ சுகாதார அட்டைகள் மற்றும் பிறப்புச் சான்றிதழ்கள் வழங்கப்படுகின்றன. திங்கள் முதல் வெள்ளி வரை காலை 9:00 மணி முதல் இரவு 9:00 மணி வரையிலும், சனிக்கிழமை காலை 9:00 மணி முதல் மாலை 5:00 மணி வரையிலும் இயங்கும்."
+   "text": "945 Eglinton Avenue East-இல் (Staples கடைக்குள்) உள்ள மாகாண அரசுச் சேவை அலுவலகம். ஓட்டுநர் உரிமங்கள், வாகனப் பதிவு மற்றும் நம்பர் பிளேட்டுகள், Ontario சுகாதார அட்டைகள் (health cards), பிறப்புச் சான்றிதழ்கள் ஆகியவற்றை வழங்குகிறது. திறந்திருக்கும் நேரம்: திங்கள் முதல் வெள்ளி வரை 9:00 AM முதல் 9:00 PM வரை, சனிக்கிழமை 9:00 AM முதல் 5:00 PM வரை."
   },
   "912f65f2191e": {
    "model": "north-small-translate-09-2026",
@@ -538,9 +572,14 @@
    "text": "சுற்றுப்புறம் மற்றும் தனிநபர் வலுவூட்டல்"
   },
   "941791890d5c": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Gateway Public School என்பது North York-ல் உள்ள Flemingdon Park-ல், 55 Gateway Blvd என்ற முகவரியில் அமைந்துள்ள TDSB-யின் ஒரு தொடக்கப் பள்ளியாகும். இது ஜூனியர் கிண்டர்கார்டன் முதல் 6-ஆம் வகுப்பு வரையிலான மாணவர்களுக்கு (சுமார் 950 மாணவர்கள்) கல்வி வழங்குகிறது. இந்தப் பள்ளி, கல்வி மற்றும் ஒழுக்கத்தில் உயர் எதிர்பார்ப்புகளைக் கொண்ட, அனைவரையும் உள்ளடக்கிய மற்றும் பன்முக கலாச்சார கற்றல் சூழலுக்கு முக்கியத்துவம் அளிக்கிறது; எடுக்கப்பட்ட முகப்புப் பக்கத் தகவலில் பிரெஞ்சு மொழி பயிற்சி (French immersion), ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை."
+   },
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (6, 950, 55).",
    "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
-   "text": "Gateway Public School என்பது North York-ல் உள்ள Flemingdon Park-ல், 55 Gateway Blvd என்ற முகவரியில் அமைந்துள்ள TDSB-யின் ஒரு தொடக்கப் பள்ளியாகும். இது ஜூனியர் கிண்டர்கார்டன் முதல் 6-ஆம் வகுப்பு வரையிலான மாணவர்களுக்கு (சுமார் 950 மாணவர்கள்) கல்வி வழங்குகிறது. இந்தப் பள்ளி, கல்வி மற்றும் ஒழுக்கத்தில் உயர் எதிர்பார்ப்புகளைக் கொண்ட, அனைவரையும் உள்ளடக்கிய மற்றும் பன்முக கலாச்சார கற்றல் சூழலுக்கு முக்கியத்துவம் அளிக்கிறது; எடுக்கப்பட்ட முகப்புப் பக்கத் தகவலில் பிரெஞ்சு மொழி பயிற்சி (French immersion), ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை."
+   "text": "Gateway Public School என்பது Flemingdon Park-இல் உள்ள TDSB தொடக்கப் பள்ளி; Junior Kindergarten முதல் 6-ஆம் வகுப்பு வரை (சுமார் 950 மாணவர்கள்) கல்வி வழங்குகிறது; முகவரி: 55 Gateway Blvd, North York. அனைவரையும் உள்ளடக்கிய, பல்கலாச்சாரக் கற்றல் சூழலுக்கும், கல்வியிலும் நடத்தையிலும் உயர்ந்த எதிர்பார்ப்புகளுக்கும் பள்ளி முக்கியத்துவம் தருகிறது; பெறப்பட்ட முகப்புப் பக்க உரையில் French immersion, ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் எதுவும் குறிப்பிடப்படவில்லை."
   },
   "95c8c42be839": {
    "correctedFrom": {
@@ -583,19 +622,24 @@
    "text": "தோர்ன்கிளிஃப் பார்க்கில் உள்ள ஒரு சமூக நகர்ப்புற விவசாயக் குழு, இரண்டு பொதுவான காய்கறித் தோட்டங்களையும் 20-க்கும் மேற்பட்ட பழ மரங்களையும் பராமரிக்கிறது; இங்கு விளையும் அனைத்துப் பயிர்களும் குடியிருப்பாளர்களுக்கும் தன்னார்வலர்களுக்கும் இலவசமாகப் பகிர்ந்தளிக்கப்படுகின்றன. இக்குழு சுற்றுச்சூழல் கல்வி, குழந்தைகளுக்கான இயற்கை நிகழ்ச்சிகள், இளைஞர்களுக்கான தலைமைத்துவப் பயிற்சி மற்றும் தன்னார்வப் பணிகள், குடியிருப்பாளர்களால் நடத்தப்படும் உரம் தயாரிக்கும் திட்டம், மகரந்தச் சேர்க்கை உயிரினங்களுக்கான வாழ்விடங்கள், மரவேலை மற்றும் கலை பயிற்சி வகுப்புகளை நடத்துகிறது."
   },
   "a44c76defc5c": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "தோர்ன்கிளிஃப் பார்க் டே கேர் சென்டர் (Thorncliffe Park Day Care Centre), 'How Does Learning Happen' வழிகாட்டுதலின்படி, பள்ளி செல்லும் வயதுக் குழந்தைகள் உட்பட பிறந்த குழந்தைகள் முதல் 12 வயது வரையிலான சிறுவர்களுக்கான விளையாட்டு அடிப்படையிலான கல்வித் திட்டங்களை வழங்கி, 1969 முதல் குடும்பங்களுக்கு சேவை செய்து வருகிறது. இங்குள்ள பணியாளர்கள் 11 மொழிகளில் (உருது, பாரசீகம், பஞ்சாபி, பெங்காலி, அம்ஹாரிக், டாகாலோக், துருக்கிய மொழிகள் உட்பட) பேசுவார்கள்; உணவுகள் 'ரியல் ஃபுட் ஃபார் ரியல் கிட்ஸ்' (Real Food For Real Kids) உணவு வழங்கல் சேவை மூலம் வழங்கப்படுகின்றன; மேலும் இந்த மையம் CWELCC திட்டத்தில் பங்கேற்கிறது, அதன் கட்டண மானிய விவரங்கள் கிடைக்கின்றன."
+   },
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (1969, 12, 11); name kept in English.",
    "source": "Thorncliffe Park Day Care Centre has served families since 1969 with play-based educational programs for children from infancy through 12 years old, including school-age programs, following the 'How Does Learning Happen' framework. Staff speak 11 languages (including Urdu, Farsi, Punjabi, Bengali, Amharic, Tagalog, Turkish), meals are provided through the Real Food For Real Kids catering, and the centre participates in CWELCC with fee subsidy information available.",
-   "text": "தோர்ன்கிளிஃப் பார்க் டே கேர் சென்டர் (Thorncliffe Park Day Care Centre), 'How Does Learning Happen' வழிகாட்டுதலின்படி, பள்ளி செல்லும் வயதுக் குழந்தைகள் உட்பட பிறந்த குழந்தைகள் முதல் 12 வயது வரையிலான சிறுவர்களுக்கான விளையாட்டு அடிப்படையிலான கல்வித் திட்டங்களை வழங்கி, 1969 முதல் குடும்பங்களுக்கு சேவை செய்து வருகிறது. இங்குள்ள பணியாளர்கள் 11 மொழிகளில் (உருது, பாரசீகம், பஞ்சாபி, பெங்காலி, அம்ஹாரிக், டாகாலோக், துருக்கிய மொழிகள் உட்பட) பேசுவார்கள்; உணவுகள் 'ரியல் ஃபுட் ஃபார் ரியல் கிட்ஸ்' (Real Food For Real Kids) உணவு வழங்கல் சேவை மூலம் வழங்கப்படுகின்றன; மேலும் இந்த மையம் CWELCC திட்டத்தில் பங்கேற்கிறது, அதன் கட்டண மானிய விவரங்கள் கிடைக்கின்றன."
+   "text": "Thorncliffe Park Day Care Centre 1969 முதல் குடும்பங்களுக்குச் சேவை செய்து வருகிறது; 'How Does Learning Happen' வழிகாட்டுதலின்படி, கைக்குழந்தைகள் முதல் 12 வயது வரையிலான குழந்தைகளுக்கு, பள்ளி வயதுக் குழந்தைகளுக்கான திட்டங்கள் உட்பட, விளையாட்டு அடிப்படையிலான கல்வித் திட்டங்களை வழங்குகிறது. பணியாளர்கள் 11 மொழிகள் பேசுகிறார்கள் (உருது, பார்சி, பஞ்சாபி, வங்காளம், அம்ஹாரிக், தகலாக், துருக்கியம் உட்பட); Real Food For Real Kids உணவு வழங்கல் சேவை மூலம் உணவு வழங்கப்படுகிறது; மையம் CWELCC திட்டத்தில் பங்கேற்கிறது, கட்டண மானியம் பற்றிய தகவலும் கிடைக்கும்."
   },
   "a583aca46f5e": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "29 St. Dennis Drive-ல் உள்ள டொராண்டோ பொது நூலகக் கிளை: புத்தகங்கள் இரவல் பெறுதல், பொதுக் கணினிகள், குழந்தைகளுக்கான நிகழ்ச்சிகள், குழந்தைகளுக்கான 'Leading to Reading' கல்வியறிவுத் திட்டம் மற்றும் இலவச நிதி மேம்பாட்டு சேவை (வரி தாக்கல் செய்தல், உதவித்தொகை விண்ணப்பங்கள், பட்ஜெட் திட்டமிடல் உதவி — இவை Thorncliffe கிளையிலும் கிடைக்கின்றன). வேலை நேரம்: திங்கள் முதல் வெள்ளி வரை காலை 9 மணி முதல் இரவு 8:30 மணி வரை, சனிக்கிழமை காலை 9 மணி முதல் மாலை 5 மணி வரை, ஞாயிற்றுக்கிழமை மதியம் 12 மணி முதல் மாலை 5 மணி வரை. குறிப்பு: புதுப்பிப்பு பணிகளுக்காக இந்தக் கிளை டிசம்பர் 1, 2025 அன்று மூடப்படும்; 2026-ஆம் ஆண்டின் மூன்றாம் காலாண்டின் தொடக்கத்தில் மீண்டும் திறக்கப்படும் என எதிர்பார்க்கப்படுகிறது. தற்போதைய தகவல்களில் அது மீண்டும் திறக்கப்பட்டதாகக் குறிப்பிடப்பட்டுள்ளது, இருப்பினும் அங்கு செல்வதற்கு முன் உறுதிப்படுத்திக் கொள்ளுங்கள்."
    },
-   "model": "claude-correction",
-   "note": "Closure was in future tense ('will close'); now past. Library and service names in English.",
+   "model": "claude-opus-5.5",
+   "note": "Times kept with am/pm; Sunday hours kept; Q3 kept.",
    "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
-   "text": "29 St. Dennis Drive-ல் உள்ள Toronto Public Library கிளை: புத்தகங்கள் இரவல் பெறுதல், பொதுக் கணினிகள், குழந்தைகளுக்கான நிகழ்ச்சிகள், குழந்தைகளுக்கான 'Leading to Reading' கல்வியறிவுத் திட்டம் மற்றும் இலவச Financial Empowerment Service எனும் நிதி மேம்பாட்டு சேவை (வரி தாக்கல் செய்தல், உதவித்தொகை விண்ணப்பங்கள், பட்ஜெட் திட்டமிடல் உதவி — இவை Thorncliffe கிளையிலும் கிடைக்கின்றன). வேலை நேரம்: திங்கள் முதல் வெள்ளி வரை காலை 9 மணி முதல் இரவு 8:30 மணி வரை, சனிக்கிழமை காலை 9 மணி முதல் மாலை 5 மணி வரை, ஞாயிற்றுக்கிழமை மதியம் 12 மணி முதல் மாலை 5 மணி வரை. குறிப்பு: புதுப்பிப்பு பணிகளுக்காக இந்தக் கிளை டிசம்பர் 1, 2025 அன்று மூடப்பட்டது; 2026-ஆம் ஆண்டின் மூன்றாம் காலாண்டின் தொடக்கத்தில் மீண்டும் திறக்கப்படும் என எதிர்பார்க்கப்படுகிறது. தற்போதைய தகவல்களில் அது மீண்டும் திறக்கப்பட்டதாகக் குறிப்பிடப்பட்டுள்ளது, இருப்பினும் அங்கு செல்வதற்கு முன் உறுதிப்படுத்திக் கொள்ளுங்கள்."
+   "text": "29 St. Dennis Drive-இல் உள்ள Toronto Public Library கிளை: புத்தகங்கள் இரவல், பொதுக் கணினிகள், குழந்தைகளுக்கான நிகழ்ச்சிகள், குழந்தைகளுக்கான Leading to Reading எழுத்தறிவுத் திட்டம், இலவச Financial Empowerment Service (வரி தாக்கல், உதவித்தொகை விண்ணப்பங்கள், வரவுசெலவுத் திட்டமிடல் உதவி — Thorncliffe கிளையிலும் கிடைக்கும்). குறிப்பிடப்பட்ட நேரங்கள்: திங்கள்–வெள்ளி 9am-8:30pm, சனி 9am-5pm, ஞாயிறு 12-5pm. குறிப்பு: புதுப்பிப்புப் பணிக்காக இந்தக் கிளை டிசம்பர் 1, 2025 அன்று மூடப்பட்டது; Q3 2026-இன் (ஜூலை–செப்டம்பர் காலாண்டு) தொடக்கத்தில் மீண்டும் திறக்கும் என எதிர்பார்க்கப்பட்டது; தற்போதைய நேரப் பட்டியல் அது மீண்டும் திறந்துவிட்டதைக் காட்டுகிறது, ஆனால் செல்வதற்கு முன் உறுதிப்படுத்திக்கொள்ளுங்கள்."
   },
   "a5c931e58836": {
    "model": "north-small-translate-09-2026",
@@ -618,9 +662,14 @@
    "text": "தங்குமிடம்"
   },
   "aa052d1c9356": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "135 Overlea Blvd-இல் அமைந்துள்ள TDSB பொதுப் பள்ளி (9-12 ஆம் வகுப்புகள்), Flemingdon Park மற்றும் Thorncliffe Park பகுதிகளைச் சேர்ந்த சுமார் 1800 மாணவர்களுக்குச் சேவை செய்கிறது. இது TOPS (Talented Offerings for Programs in the Sciences) திட்டத்திற்கான முதன்மைப் பள்ளியாகும்; இது AP நிலை பாடங்களைக் கொண்ட நான்கு ஆண்டு கால சிறப்பு கணிதம், அறிவியல் மற்றும் ஆங்கிலப் பாடத் திட்டமாகும். மேலும், இங்கு SHSM, தோட்டக்கலை, நிதிப் பத்திரங்கள் தொடர்பான திட்டங்கள், ESL ஆதரவுகள், 90-க்கும் மேற்பட்ட மாணவர் தலைமையிலான சங்கங்கள் மற்றும் போட்டிப் விளையாட்டு அணிகளும் உள்ளன."
+   },
+   "model": "claude-opus-5.5",
+   "note": "Numbers in English order (9, 12, 135, 1800, 90).",
    "source": "TDSB public high school (grades 9-12) at 135 Overlea Blvd serving Flemingdon Park and Thorncliffe Park (~1800 students). Host school of the TOPS program (Talented Offerings for Programs in the Sciences), a four-year enriched math/science/English program with AP-level courses; also offers SHSM, horticulture, financial securities programs, ESL supports, 90+ student-led clubs and competitive team sports.",
-   "text": "135 Overlea Blvd-இல் அமைந்துள்ள TDSB பொதுப் பள்ளி (9-12 ஆம் வகுப்புகள்), Flemingdon Park மற்றும் Thorncliffe Park பகுதிகளைச் சேர்ந்த சுமார் 1800 மாணவர்களுக்குச் சேவை செய்கிறது. இது TOPS (Talented Offerings for Programs in the Sciences) திட்டத்திற்கான முதன்மைப் பள்ளியாகும்; இது AP நிலை பாடங்களைக் கொண்ட நான்கு ஆண்டு கால சிறப்பு கணிதம், அறிவியல் மற்றும் ஆங்கிலப் பாடத் திட்டமாகும். மேலும், இங்கு SHSM, தோட்டக்கலை, நிதிப் பத்திரங்கள் தொடர்பான திட்டங்கள், ESL ஆதரவுகள், 90-க்கும் மேற்பட்ட மாணவர் தலைமையிலான சங்கங்கள் மற்றும் போட்டிப் விளையாட்டு அணிகளும் உள்ளன."
+   "text": "TDSB பொது உயர்நிலைப் பள்ளி (9-12 வகுப்புகள்), 135 Overlea Blvd; Flemingdon Park, Thorncliffe Park பகுதிகளுக்குச் சேவை செய்கிறது (~1800 மாணவர்கள்). TOPS திட்டத்தை (Talented Offerings for Programs in the Sciences) நடத்தும் பள்ளி: AP நிலைப் பாடங்களுடன் கூடிய, நான்கு ஆண்டு மேம்படுத்தப்பட்ட கணிதம்/அறிவியல்/ஆங்கிலத் திட்டம்; மேலும் SHSM, தோட்டக்கலை, நிதிப் பத்திரங்கள் (financial securities) திட்டங்கள், ESL உதவிகள், மாணவர்கள் நடத்தும் 90+ மன்றங்கள், போட்டி அணி விளையாட்டுகள் ஆகியவையும் உள்ளன."
   },
   "ac4875864ec7": {
    "model": "north-small-translate-09-2026",
@@ -628,9 +677,14 @@
    "text": "காவல் நிலையம்"
   },
   "ae69792878f8": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Chapel in the Park United Church என்பது டொரண்டோவில் உள்ள 16 Thorncliffe Park Drive-ல் அமைந்துள்ள ஒரு சிறிய பன்முக கலாச்சார திருச்சபை (416-421-0792) ஆகும்; இது Thorncliffe Park மற்றும் Don Mills பகுதிகளுக்கு சேவை செய்கிறது. இங்கு ஞாயிற்றுக்கிழமை காலை 10:00 மணிக்கு நேரடியாகவும், Zoom வழியாகவும் மற்றும் நேரடி ஒளிபரப்பு மூலமாகவும் வழிபாடுகள் நடைபெறுகின்றன; புதியவர்கள் ஒரு 'நம்பிக்கை குடும்பத்தில்' இணையுமாறு இத்திருச்சபை அழைக்கிறது."
+   },
+   "model": "claude-opus-5.5",
+   "note": "10:00 a.m. kept; Sunday written so the check reads it.",
    "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
-   "text": "Chapel in the Park United Church என்பது டொரண்டோவில் உள்ள 16 Thorncliffe Park Drive-ல் அமைந்துள்ள ஒரு சிறிய பன்முக கலாச்சார திருச்சபை (416-421-0792) ஆகும்; இது Thorncliffe Park மற்றும் Don Mills பகுதிகளுக்கு சேவை செய்கிறது. இங்கு ஞாயிற்றுக்கிழமை காலை 10:00 மணிக்கு நேரடியாகவும், Zoom வழியாகவும் மற்றும் நேரடி ஒளிபரப்பு மூலமாகவும் வழிபாடுகள் நடைபெறுகின்றன; புதியவர்கள் ஒரு 'நம்பிக்கை குடும்பத்தில்' இணையுமாறு இத்திருச்சபை அழைக்கிறது."
+   "text": "Chapel in the Park United Church என்பது 16 Thorncliffe Park Drive, Toronto-வில் (416-421-0792) உள்ள ஒரு சிறிய பல்கலாச்சாரச் சபை; Thorncliffe Park, Don Mills பகுதிகளுக்குச் சேவை செய்கிறது. ஞாயிறு வழிபாடுகள் 10:00 a.m. மணிக்கு நேரிலும், Zoom வழியாகவும், நேரலையிலும் நடைபெறுகின்றன; புதியவர்களை ஒரு 'நம்பிக்கைக் குடும்பமாக' இணைய அழைக்கிறது."
   },
   "b0e486b1a83e": {
    "model": "north-small-translate-09-2026",
@@ -668,29 +722,34 @@
    "text": "தீயணைப்பு நிலையம்"
   },
   "bc208860cefc": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Toronto Hifz Academy, 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) என்பது முழுநேர மற்றும் பகுதிநேர ஹிஃப்ஸ் (குர்ஆன் மனப்பாடம்), ப்ரீ-ஹிஃப்ஸ், ஹாஃபிஸ் மறுஆய்வு, செவ்வியல் அரபு மொழி மற்றும் சகோதரிகளுக்கான குர்ஆன் வகுப்புகளை வழங்கும் ஒரு குர்ஆன் பள்ளியாகும். வகுப்புகள் திங்கள் முதல் வியாழன் வரை காலை 9 மணி முதல் மதியம் 1 மணி வரையிலும், மாலை 4 மணி முதல் இரவு 7 மணி வரையிலும், வெள்ளிக்கிழமை காலை 9 மணி முதல் மதியம் 2 மணி வரையிலும் மற்றும் மாலை 4 மணி முதல் இரவு 7 மணி வரையிலும் நடைபெறுகின்றன."
+   },
+   "model": "claude-opus-5.5",
+   "note": "Times kept with am/pm as in English.",
    "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
-   "text": "Toronto Hifz Academy, 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) என்பது முழுநேர மற்றும் பகுதிநேர ஹிஃப்ஸ் (குர்ஆன் மனப்பாடம்), ப்ரீ-ஹிஃப்ஸ், ஹாஃபிஸ் மறுஆய்வு, செவ்வியல் அரபு மொழி மற்றும் சகோதரிகளுக்கான குர்ஆன் வகுப்புகளை வழங்கும் ஒரு குர்ஆன் பள்ளியாகும். வகுப்புகள் திங்கள் முதல் வியாழன் வரை காலை 9 மணி முதல் மதியம் 1 மணி வரையிலும், மாலை 4 மணி முதல் இரவு 7 மணி வரையிலும், வெள்ளிக்கிழமை காலை 9 மணி முதல் மதியம் 2 மணி வரையிலும் மற்றும் மாலை 4 மணி முதல் இரவு 7 மணி வரையிலும் நடைபெறுகின்றன."
+   "text": "Toronto Hifz Academy (45 Overlea Blvd, Unit 201, Toronto, M4H 1C3; 647-505-8622) ஒரு குர்ஆன் பள்ளி; முழுநேர, பகுதிநேர Hifz (குர்ஆன் மனனம்), Pre-Hifz, Hafiz மீள்பார்வை, பாரம்பரிய அரபு (Classical Arabic), சகோதரிகளுக்கான குர்ஆன் வகுப்புகள் ஆகியவற்றை வழங்குகிறது. வகுப்புகள்: திங்கள்–வியாழன் 9am–1pm மற்றும் 4pm–7pm, வெள்ளி 9am–2pm மற்றும் 4pm–7pm."
   },
   "c04bdbce2472": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "லீசைட் பூங்கா (மில் வுட் சாலை மற்றும் ஓவர்லியா பவுல்வர்டு அருகில்) ஒரு குடிநீர் ஊற்று மற்றும் 2 பாட்டில் நிரப்பும் நிலையங்கள் மூலம் பொதுமக்களுக்கான குடிநீரை வழங்குகிறது. 3.4 ஹெக்டேர் பரப்பளவு கொண்ட இந்தப் பூங்காவில் மின்விளக்கு வசதி கொண்ட ஒரு கிரிக்கெட் மைதானம், ஆறு மின்விளக்கு வசதி கொண்ட டென்னிஸ் மைதானங்கள், பல்நோக்கு விளையாட்டு மைதானம், குழந்தைகளுக்கான விளையாட்டு பூங்கா, சமூகத் தோட்டம், கழிப்பறைகள் மற்றும் லீசைட் வெளிப்புற நீச்சல் குளம் ஆகியவை உள்ளன."
    },
-   "model": "claude-correction",
-   "note": "'lit ball diamond' had been translated as a cricket ground; now baseball. Park, street and pool names in English.",
+   "model": "claude-opus-5.5",
+   "note": "1 fountain kept as a digit.",
    "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
-   "text": "Leaside Park (Millwood Road மற்றும் Overlea Boulevard அருகில்) ஒரு குடிநீர் ஊற்று மற்றும் 2 பாட்டில் நிரப்பும் நிலையங்கள் மூலம் பொதுமக்களுக்கான குடிநீரை வழங்குகிறது. 3.4 ஹெக்டேர் பரப்பளவு கொண்ட இந்தப் பூங்காவில் மின்விளக்கு வசதி கொண்ட ஒரு பேஸ்பால் மைதானம், ஆறு மின்விளக்கு வசதி கொண்ட டென்னிஸ் மைதானங்கள், பல்நோக்கு விளையாட்டு மைதானம், குழந்தைகளுக்கான விளையாட்டு பூங்கா, சமூகத் தோட்டம், கழிப்பறைகள் மற்றும் Leaside Outdoor Pool (வெளிப்புற நீச்சல் குளம்) ஆகியவை உள்ளன."
+   "text": "Leaside Park (Millwood Road, Overlea Boulevard அருகில்) 1 குடிநீர் ஊற்றும் 2 பாட்டில் நிரப்பும் நிலையங்களும் மூலம் பொதுமக்களுக்குக் குடிநீர் வழங்குகிறது. 3.4 ஹெக்டேர் பரப்புள்ள இந்தப் பூங்காவில் விளக்கு வசதியுள்ள பேஸ்பால் மைதானம், விளக்கு வசதியுள்ள ஆறு டென்னிஸ் மைதானங்கள், பல்நோக்கு விளையாட்டுத் திடல், குழந்தைகள் விளையாட்டிடம், சமூகத் தோட்டம், கழிப்பறைகள், Leaside Outdoor Pool ஆகியவையும் உள்ளன."
   },
   "c0b5b18276a1": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "நார்த் யார்க்கில் உள்ள 10 Gateway Blvd (தரைத்தளம்) முகவரியில் இயங்கும் சமூக உணவு வங்கி, தேவையுள்ள குடும்பங்களுக்கு இலவச உணவு மற்றும் உதவிகளைக் வழங்குகிறது; இது தற்போது ஒரு பதிவு செய்யப்பட்ட தொண்டு நிறுவனமாகும். இந்த இடத்திற்கான வேலை நேரங்கள் முரணாகக் குறிப்பிடப்பட்டுள்ளன (ஒரு இடத்தில் திங்கள் மற்றும் புதன்கிழமைகளில் காலை 11:00 முதல் மாலை 3:30 வரை என்றும், மற்றொரு இடத்தில் திங்கள் முதல் வியாழன் வரை மதியம் 1:30 முதல் மாலை 3:30 வரை என்றும் குறிப்பிடப்பட்டுள்ளது) - அங்கு செல்வதற்கு முன் உறுதிப்படுத்திக்கொள்ள 416-422-4322 என்ற எண்ணிற்கு அழைக்கவும்."
    },
-   "model": "claude-correction",
-   "note": "'basement' had been translated as 'ground floor'; also North York in English.",
+   "model": "claude-opus-5.5",
+   "note": "Times kept with am/pm as in English; weekdays Mon, Wed, Mon, Thu in order.",
    "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
-   "text": "North York-இல் உள்ள 10 Gateway Blvd (அடித்தளம் / basement) முகவரியில் இயங்கும் சமூக உணவு வங்கி, தேவையுள்ள குடும்பங்களுக்கு இலவச உணவு மற்றும் உதவிகளைக் வழங்குகிறது; இது தற்போது ஒரு பதிவு செய்யப்பட்ட தொண்டு நிறுவனமாகும். இந்த இடத்திற்கான வேலை நேரங்கள் முரணாகக் குறிப்பிடப்பட்டுள்ளன (ஒரு இடத்தில் திங்கள் மற்றும் புதன்கிழமைகளில் காலை 11:00 முதல் மாலை 3:30 வரை என்றும், மற்றொரு இடத்தில் திங்கள் முதல் வியாழன் வரை மதியம் 1:30 முதல் மாலை 3:30 வரை என்றும் குறிப்பிடப்பட்டுள்ளது) - அங்கு செல்வதற்கு முன் உறுதிப்படுத்திக்கொள்ள 416-422-4322 என்ற எண்ணிற்கு அழைக்கவும்."
+   "text": "10 Gateway Blvd (அடித்தளம் / basement), North York-இல் உள்ள சமூக உணவு வங்கி; தேவையுள்ள குடும்பங்களுக்கு இலவச உணவும் உதவிப் பொருட்களும் வழங்குகிறது; இப்போது பதிவுசெய்யப்பட்ட தொண்டு நிறுவனம். இணையதளத்தில் நேரங்கள் முரண்பாடாக உள்ளன (ஓர் இடத்தில் திங்கள்கிழமைகளிலும் புதன்கிழமைகளிலும் 11:00am-3:30pm, மற்றோர் இடத்தில் திங்கள்–வியாழன் 1:30-3:30pm) - செல்வதற்கு முன் 416-422-4322 என்ற எண்ணை அழைத்து உறுதிப்படுத்திக்கொள்ளுங்கள்."
   },
   "c6efc2c01c02": {
    "correctedFrom": {
@@ -768,9 +827,14 @@
    "text": "தோர்ன்கிளிஃப் பார்க்கில் உள்ள 80 Overlea Boulevard-இல் அமைந்துள்ள இஸ்மாயிலி சமூக மையம் மற்றும் தொழுகை மண்டபம் (ஜமாத்கானா). இஸ்மாயிலி முஸ்லிம்களுக்கான தினசரி கூட்டுத் தொழுகைகள் மற்றும் சமூகக் கூட்டங்களை இங்கு நடத்துகிறார்கள்; இந்தக் கட்டிடத்தில் உடற்பயிற்சி கூடம், நூலகம், வகுப்பறைகள், அலுவலகங்கள் மற்றும் உணவுப் பொருட்களைக் கொண்டுவந்து ஒப்படைக்கும் (drop-off) பகுதி உள்ளன."
   },
   "de5580650854": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Fraser Mustard EarlyON குழந்தைகள் மற்றும் குடும்ப மையம் (Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) என்பது கைக்குழந்தைகள் முதல் 6 வயது வரையிலான குழந்தைகளைக் கொண்ட பெற்றோர்கள் மற்றும் பராமரிப்பாளர்களுக்கான இலவச சேவை மையமாகும்; இது திங்கள் முதல் வியாழன் வரை காலை 8:45 முதல் மதியம் 1:45 மணி வரை இயங்குகிறது. குழந்தைகள் விளையாடவும், புதிய விஷயங்களை ஆராயவும், கற்றுக்கொள்ளவும் மற்றும் ஆரோக்கியமான சிற்றுண்டியை உண்ணவும் முடியும்; அதே நேரத்தில் பெற்றோர்கள் மற்ற குடும்பங்களுடன் தொடர்பு கொண்டு, தகுதிவாய்ந்த ஆரம்பக்காலக் கல்வி நிபுணரின் உதவியுடன் சமூகத் திட்டங்கள் மற்றும் சேவைகள் பற்றிய தகவல்களைப் பெறலாம்; இதற்கு முன்கூட்டிய பதிவு தேவையில்லை."
+   },
+   "model": "claude-opus-5.5",
+   "note": "am/pm kept on the times.",
    "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
-   "text": "Fraser Mustard EarlyON குழந்தைகள் மற்றும் குடும்ப மையம் (Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) என்பது கைக்குழந்தைகள் முதல் 6 வயது வரையிலான குழந்தைகளைக் கொண்ட பெற்றோர்கள் மற்றும் பராமரிப்பாளர்களுக்கான இலவச சேவை மையமாகும்; இது திங்கள் முதல் வியாழன் வரை காலை 8:45 முதல் மதியம் 1:45 மணி வரை இயங்குகிறது. குழந்தைகள் விளையாடவும், புதிய விஷயங்களை ஆராயவும், கற்றுக்கொள்ளவும் மற்றும் ஆரோக்கியமான சிற்றுண்டியை உண்ணவும் முடியும்; அதே நேரத்தில் பெற்றோர்கள் மற்ற குடும்பங்களுடன் தொடர்பு கொண்டு, தகுதிவாய்ந்த ஆரம்பக்காலக் கல்வி நிபுணரின் உதவியுடன் சமூகத் திட்டங்கள் மற்றும் சேவைகள் பற்றிய தகவல்களைப் பெறலாம்; இதற்கு முன்கூட்டிய பதிவு தேவையில்லை."
+   "text": "Fraser Mustard EarlyON Child and Family Centre (Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) என்பது கைக்குழந்தைகள் முதல் 6 வயது வரையிலான குழந்தைகளுடன் வரும் பெற்றோருக்கும் பராமரிப்பாளர்களுக்குமான இலவச, முன்பதிவின்றி வரக்கூடிய (drop-in) நிகழ்ச்சி; திங்கள்–வியாழன் 8:45am–1:45pm நடைபெறுகிறது. குழந்தைகள் விளையாடலாம், ஆராயலாம், கற்கலாம், சத்தான சிற்றுண்டி சாப்பிடலாம்; அதே நேரத்தில் பெற்றோர் மற்ற குடும்பங்களுடன் பழகி, சமூக நிகழ்ச்சிகள், சேவைகள் பற்றிய தகவல்களைப் பெறலாம்; தகுதிபெற்ற ஆரம்பக் குழந்தைப் பருவ நிபுணர் உதவுவார்; முன்பதிவு தேவையில்லை."
   },
   "e04d44a05f5d": {
    "model": "north-small-translate-09-2026",
@@ -852,10 +916,10 @@
     "model": "north-small-translate-09-2026",
     "text": "நார்த் யார்க்கில் உள்ள 24 Ferrand Drive-இல் அமைந்துள்ள 'தி சர்ச் ஆஃப் ஜீசஸ் கிறைஸ்ட் ஆஃப் லேட்டர்-டே செயிண்ட்ஸ்' (The Church of Jesus Christ of Latter-day Saints) உள்ளூர் சபை. ஞாயிற்றுக்கிழமை வழிபாட்டில் புனித அப்பத்து மற்றும் திராட்சை ரச வழிபாட்டுக் கூட்டம் மற்றும் 18 மாதங்கள் முதல் அனைத்து வயதினருக்கும் ஏற்ற வயதுக்குரிய வகுப்புகள் இடம்பெறுகின்றன; அனைவரும் இதில் கலந்துகொள்ள வரவேற்கப்படுகிறார்கள்."
    },
-   "model": "claude-correction",
-   "note": "Removed the invented bread-and-wine detail; church name and North York in English.",
+   "model": "claude-opus-5.5",
+   "note": "Sunday written so the check reads it (ஞாயிறு).",
    "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
-   "text": "North York-இல் உள்ள 24 Ferrand Drive-இல் அமைந்துள்ள The Church of Jesus Christ of Latter-day Saints உள்ளூர் சபை. ஞாயிற்றுக்கிழமை வழிபாட்டில் திருவிருந்துக் கூட்டம் (sacrament meeting) மற்றும் 18 மாதங்கள் முதல் அனைத்து வயதினருக்கும் ஏற்ற வயதுக்குரிய வகுப்புகள் இடம்பெறுகின்றன; அனைவரும் இதில் கலந்துகொள்ள வரவேற்கப்படுகிறார்கள்."
+   "text": "North York, 24 Ferrand Drive-இல் உள்ள The Church of Jesus Christ of Latter-day Saints-இன் உள்ளூர் சபை. ஞாயிறு வழிபாட்டில் திருவிருந்துக் கூட்டமும் (sacrament meeting), 18 மாதக் குழந்தைகள் முதல் அனைவருக்கும் வயதுப் பிரிவுக்கேற்ற வகுப்புகளும் உள்ளன; அனைவரும் கலந்துகொள்ள வரவேற்கப்படுகிறார்கள்."
   },
   "f0173151ade9": {
    "model": "north-small-translate-09-2026",
@@ -888,12 +952,14 @@
    "text": "அவசர காலங்களுக்கு 911-க்கு அழையுங்கள். 55 Division-ஐ 416-808-5500 என்ற எண்ணில் தொடர்பு கொள்ளலாம்."
   },
   "f630f0f0b145": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "கர்ப்ப கால அவசரப் பிரச்சனைகள் மற்றும் பிரசவ கால சிக்கல்களுக்காக மகப்பேறு செவிலியர்கள் 24 மணிநேரமும் தொடர்பு கொள்ளக் கூடிய நிலையில் இருப்பார்கள்; தனியாக அவசர சிகிச்சை திட்டம் எதுவும் குறிப்பிடப்படவில்லை."
+   },
+   "model": "claude-opus-5.5",
+   "note": "24/7 kept; midwives no longer called nurses.",
    "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
-   "text": "கர்ப்ப கால அவசரப் பிரச்சனைகள் மற்றும் பிரசவ கால சிக்கல்களுக்காக மகப்பேறு செவிலியர்கள் 24 மணிநேரமும் தொடர்பு கொள்ளக் கூடிய நிலையில் இருப்பார்கள்; தனியாக அவசர சிகிச்சை திட்டம் எதுவும் குறிப்பிடப்படவில்லை.",
-   "warnings": [
-    "numbers missing from translation: 7"
-   ]
+   "text": "அவசரமான கர்ப்பகால மற்றும் பிரசவக் கவலைகளுக்கு மகப்பேறு உதவியாளர்கள் (midwives) 24/7 அழைப்பில் இருப்பார்கள்; தனியான அவசரத் திட்டம் எதுவும் குறிப்பிடப்படவில்லை."
   },
   "fa4e99c2c2ea": {
    "model": "north-small-translate-09-2026",
@@ -921,5 +987,5 @@
    "text": "குழந்தை பராமரிப்பு மற்றும் EarlyON"
   }
  },
- "updated": "2026-10-01T04:36:24+00:00"
+ "updated": "2026-10-09T04:07:12+00:00"
 }

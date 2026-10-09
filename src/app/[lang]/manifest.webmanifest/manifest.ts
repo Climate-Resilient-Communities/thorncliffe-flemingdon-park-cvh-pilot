@@ -21,7 +21,7 @@ export const ICONS = [
 
 /**
  * The manifest of one language. One app whatever the language (`id` and `scope` are the whole site), so changing language
- * in the installed app stays in it; it opens on that language's home (the "Now" screen), in the language's direction.
+ * in the installed app stays in it; it opens on that language's home (the "Alerts" screen), in the language's direction.
  * The background is the page colour (`surface`) and the theme the header's (`surface-raised`).
  */
 export function webAppManifest(language: Pick<LaunchLanguage, "code" | "bcp47" | "dir">, name: string) {

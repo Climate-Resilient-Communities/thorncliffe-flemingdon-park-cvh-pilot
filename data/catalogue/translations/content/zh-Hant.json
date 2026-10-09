@@ -1,117 +1,1786 @@
 {
  "failed": {},
  "language": "zh-Hant",
- "models": {},
- "texts": {
-  "guide.elevator.after.0": null,
-  "guide.elevator.after.1": null,
-  "guide.elevator.before.0": null,
-  "guide.elevator.before.1": null,
-  "guide.elevator.before.2": null,
-  "guide.elevator.during.0": null,
-  "guide.elevator.during.1": null,
-  "guide.elevator.during.2": null,
-  "guide.elevator.title": null,
-  "guide.elevator.when911": null,
-  "guide.fire.after.0": null,
-  "guide.fire.after.1": null,
-  "guide.fire.after.2": null,
-  "guide.fire.before.0": null,
-  "guide.fire.before.1": null,
-  "guide.fire.before.2": null,
-  "guide.fire.during.0": null,
-  "guide.fire.during.1": null,
-  "guide.fire.during.2": null,
-  "guide.fire.title": null,
-  "guide.fire.when911": null,
-  "guide.flood.after.0": null,
-  "guide.flood.after.1": null,
-  "guide.flood.after.2": null,
-  "guide.flood.before.0": null,
-  "guide.flood.before.1": null,
-  "guide.flood.before.2": null,
-  "guide.flood.during.0": null,
-  "guide.flood.during.1": null,
-  "guide.flood.during.2": null,
-  "guide.flood.during.3": null,
-  "guide.flood.title": null,
-  "guide.flood.when911": null,
-  "guide.heat.after.0": null,
-  "guide.heat.after.1": null,
-  "guide.heat.before.0": null,
-  "guide.heat.before.1": null,
-  "guide.heat.before.2": null,
-  "guide.heat.during.0": null,
-  "guide.heat.during.1": null,
-  "guide.heat.during.2": null,
-  "guide.heat.during.3": null,
-  "guide.heat.during.4": null,
-  "guide.heat.title": null,
-  "guide.heat.when911": null,
-  "guide.power.after.0": null,
-  "guide.power.after.1": null,
-  "guide.power.after.2": null,
-  "guide.power.before.0": null,
-  "guide.power.before.1": null,
-  "guide.power.before.2": null,
-  "guide.power.before.3": null,
-  "guide.power.during.0": null,
-  "guide.power.during.1": null,
-  "guide.power.during.2": null,
-  "guide.power.during.3": null,
-  "guide.power.title": null,
-  "guide.power.when911": null,
-  "guide.smoke.after.0": null,
-  "guide.smoke.after.1": null,
-  "guide.smoke.after.2": null,
-  "guide.smoke.before.0": null,
-  "guide.smoke.before.1": null,
-  "guide.smoke.before.2": null,
-  "guide.smoke.during.0": null,
-  "guide.smoke.during.1": null,
-  "guide.smoke.during.2": null,
-  "guide.smoke.during.3": null,
-  "guide.smoke.title": null,
-  "guide.smoke.when911": null,
-  "number.211.label": null,
-  "number.311.label": null,
-  "number.911.label": null,
-  "number.911.when": null,
-  "number.hub.label": null,
-  "number.hydro.label": null,
-  "terms.age.0": null,
-  "terms.age.1": null,
-  "terms.age.heading": null,
-  "terms.contact.0": null,
-  "terms.contact.1": null,
-  "terms.contact.heading": null,
-  "terms.keep.0": null,
-  "terms.keep.1": null,
-  "terms.keep.2": null,
-  "terms.keep.3": null,
-  "terms.keep.4": null,
-  "terms.keep.5": null,
-  "terms.keep.6": null,
-  "terms.keep.7": null,
-  "terms.keep.heading": null,
-  "terms.messages.0": null,
-  "terms.messages.1": null,
-  "terms.messages.heading": null,
-  "terms.owns.0": null,
-  "terms.owns.heading": null,
-  "terms.stop.0": null,
-  "terms.stop.1": null,
-  "terms.stop.2": null,
-  "terms.stop.3": null,
-  "terms.stop.heading": null,
-  "terms.title": null,
-  "terms.who.0": null,
-  "terms.who.1": null,
-  "terms.who.2": null,
-  "terms.who.3": null,
-  "terms.who.4": null,
-  "terms.who.5": null,
-  "terms.who.heading": null
+ "models": {
+  "opencc": 111
  },
- "updated": "2026-10-02T05:23:42+00:00"
+ "texts": {
+  "guide.elevator.after.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "adf3ea41af37de97e71bbed2316bb9ba3941d285d5714ab1f8a698020cc0ab80",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Report any problems with the elevator to building management.",
+   "sourceHash": "b2b90b4c6e9d1ca83aea0b36732ea4ae304b50be414a7af7b89841da556cbcbc",
+   "status": "machine",
+   "text": "把電梯的任何問題報告給物業管理處。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.after.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d966ff8a7f7b97c2017f2e0cf5ef7d32dca0d62e906a70c88dd8bc9a77d59635",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If repairs take a long time, you have the right to ask your landlord about it. Free legal help can explain your rights.",
+   "sourceHash": "df3f1c3188a5beca211390c21549bd7014429a4ff37be4f3419eccd02d27eaa7",
+   "status": "machine",
+   "text": "如果維修需要很長時間，您有權向房東詢問。免費法律援助可以向您解釋您的權利。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.before.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b4ca79650ea4ced7fd6903b88d1ecb43e8f52d362ff9e05103d4db9c7db40fe5",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep a week of medicines and some food at home.",
+   "sourceHash": "842eb48fb81d54bf0a6d925bb76f987518ac4cf97343f0b0a21d7292b5594ee6",
+   "status": "machine",
+   "text": "在家裡備好一週的藥和一些食物。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.before.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b18d505b4abe5478a910f4e4f1c0922d234ef91bc5830f3eb93b4902288d4d73",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Tell your floor ambassador if you cannot use the stairs.",
+   "sourceHash": "70ebaf5c38a94b1eeb5f2fb1b7df8e6ca37a1f1ea8dc01ea28538453aa6beeb0",
+   "status": "machine",
+   "text": "如果您不能走樓梯，請告訴您的樓層聯絡員。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.before.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d871349a4909ab6c7e6cd1e432dfe7c0bc0cbfbe6372892920f082ee9e25602d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep the number for the building office or superintendent on paper.",
+   "sourceHash": "47e04b4bdf34c55fdd41b5cecd918b306d2dc700f56392dcfd5fdc7d2d4fdf99",
+   "status": "machine",
+   "text": "把大樓辦公室或大樓管理員的電話號碼寫在紙上。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "4a80852c7574025cb64653236525f610a1ff82a4aa2a8fed0bc026a380909cca",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Use the stairs slowly and hold the handrail. Rest on the landings.",
+   "sourceHash": "70fa97227b8cfe6a9154e2fbce3f754ab803fcd08372619449df1337d9661883",
+   "status": "machine",
+   "text": "慢慢走樓梯，扶好扶手。可以在樓梯平臺上休息。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "7f3794ff79e47dfabf73947c80d6596c525470354c5d282bf847c2d92602886a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Ask a neighbour or your floor ambassador to help carry groceries.",
+   "sourceHash": "1b891e43e3fcd564530a6a4fafb03d2b8ea81035335134c75dab9f319c026b98",
+   "status": "machine",
+   "text": "請鄰居或您的樓層聯絡員幫忙搬運買來的東西。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "25c24721bebf286516e3ac39ae2bf1c252b4d05177d0b51215d9ed12d9cd2961",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you need to get to an appointment, ask for help with transport.",
+   "sourceHash": "25c8f7790d9d16b90bf2a21d194ab44e2e8623fcf6b964bfc3f2026094adb242",
+   "status": "machine",
+   "text": "如果您有預約需要前往，請尋求交通方面的幫助。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "31ff2c512af390cb799e7014d36f982651edeb7d40b5156b8291069b8e53b4c3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Elevator failure",
+   "sourceHash": "f17991aa66feb689e82aaa1f5a0f368ca9cdfebc798b45be6361fea84f804ccc",
+   "status": "machine",
+   "text": "電梯故障",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.when911": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "fb255f5eed1fba460571b1d6e1c50c1f4c020de7b06d2443eea2862e4fbc8019",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 if someone is trapped in an elevator and unwell, or if someone cannot get out of the building in an emergency.",
+   "sourceHash": "26754815a5054a7530d9a5e4fbebf53a94b3afd1cb62674826870510fa501c17",
+   "status": "machine",
+   "text": "如果有人被困在電梯裡並且身體不適，或在緊急情況下有人無法離開大樓，請撥打 911。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.after.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "cf67675b36b086669162562c30db96c15f69a05334c8ebb56e1357eacad7a6e6",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Do not go back in until the fire service says it is safe.",
+   "sourceHash": "234328bc70edc68944c923d4788338cd2eebc3c103162b2fc7bd9105756102e8",
+   "status": "machine",
+   "text": "在消防部門說安全之前，不要回到樓裡。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.after.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "9405045ff3609853909c7bff044d809df00fb5a6029b4e6c2aa3afaf36265034",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you cannot go home, ask where the reception point is.",
+   "sourceHash": "236cdb99c58b608009f76290890e238cd608d11160b84bf38ca9fa2e7833e7af",
+   "status": "machine",
+   "text": "如果您不能回家，請詢問接待點在哪裡。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.after.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2bedf5fa9dfafd065d9aa5eabab84110e2190e5d1593a41982c6bc539b6236f8",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Free help can replace household basics and explain your rights as a tenant.",
+   "sourceHash": "3f5d23588550bde193fe58112863f9ea5068c4cc63dcd384b453da6c54a380b9",
+   "status": "machine",
+   "text": "免費幫助可以為您補充基本生活用品，並向您解釋您作為租客的權利。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.before.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "091fdc18e31be289b293655bea71180676a636fe7e9b783f3333a94ea0848d19",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Know where the two nearest stairwells are on your floor.",
+   "sourceHash": "add1fafe236647747626158a55e629760fd168f2d60a0e1d2229a656f9846b6e",
+   "status": "machine",
+   "text": "瞭解您所在樓層最近的兩個樓梯間在哪裡。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.before.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "7f1fa16fbc2d08b44ec26fe922d0a339d210de52398d3e58d5c76af5441dc409",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep your keys, phone and medicines in one place by the door.",
+   "sourceHash": "5ae07b1a314acf938b6cf86d651c7a190accceece315391b6ddc157283775c88",
+   "status": "machine",
+   "text": "把鑰匙、手機和藥放在門邊的同一個地方。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.before.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "3a9e84ba176400b3815f6d28b07bbd9f4243a5b931f6f7cefe64f3343b895dff",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Tell your floor ambassador if you will need help to leave the building.",
+   "sourceHash": "c034026b7c1d9aab5df73a4c787d8c639a46e27a285a5b43f9b7d748a8735cab",
+   "status": "machine",
+   "text": "如果您需要別人幫助才能離開大樓，請告訴您的樓層聯絡員。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "4fe6f60ac3c6981ac5a4a5815c461d2781a54593ba1084cca8fefb3818c82d71",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
+   "sourceHash": "9bd859c0a5595ad279b11d44f8747fe22337628a09ddf6e0a0848a49ce9f80ce",
+   "status": "machine",
+   "text": "如果警報響了，先摸一下您的門。如果門是熱的，請留在屋裡，並在門下塞上溼毛巾。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "95258bba74417e0ac1ea69daadc28969728b0d32c0e94452f0de92874a2585de",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
+   "sourceHash": "12f485bdf8ddc59c3100e23fa83af46b90fa3a26b66dfb87f0fc77161d7ed151",
+   "status": "machine",
+   "text": "如果可以安全離開，請走樓梯，不要坐電梯，並隨手關門。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "5c45690f3d815cd30ae0ae89fcdcc09ac6dc8e8c9471504bfca649cfbd04eae8",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Once you are out, stay out until the fire service says it is safe.",
+   "sourceHash": "81dab47ca3d05ecc8d7385f24e7fd10e73082e2bf4c7359d7aab592a184bd25e",
+   "status": "machine",
+   "text": "出來以後，在消防部門說安全之前，不要再回去。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b3df38b4ab73d56be6ff16dfddb5206b2bc2a77f386fc1947fc147a93345f21b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fire and evacuation",
+   "sourceHash": "d3dd68730891f19490323e330869f09068bc9fe5202b91b3fa441d3e75b83cf2",
+   "status": "machine",
+   "text": "火災和疏散",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.fire.when911": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "dbb5246e8e45ab98bbf3449a058472c2a4c7ff695411309099fcbadb50fe0585",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 as soon as you see fire or smoke, or hear a fire alarm with signs of fire. Do not wait for anyone else to call.",
+   "sourceHash": "38894afe43d6906225811abb5ee2e6f31645f4d73f363f0d4066a1e42868d486",
+   "status": "machine",
+   "text": "一看到火或煙，或聽到火警警報並發現有著火跡象，請馬上撥打 911。不要等別人打電話。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.after.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "f2edea8419e71eacd73dd83b28155eadc2dfee6b1624719891626b7bf2c42232",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Take photos of any damage for your landlord and insurance.",
+   "sourceHash": "cf3f4d768b92b8b1b1add71e4789d0e98ff1cd01d030f1d5f6a9bdff95d9c149",
+   "status": "machine",
+   "text": "把所有損壞的地方拍照，給房東和保險公司看。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.after.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d3de280bf55bbe2283f86fd2b4ff0555f23fe36104775f78a1f0fdaac19af699",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Throw away food that touched flood water.",
+   "sourceHash": "987cfc48a15136f9dcea91b9bf7f187d92ddd605cf11bea11ecdd72c2ff62ac9",
+   "status": "machine",
+   "text": "碰過洪水的食物要扔掉。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.after.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "28a6d29af492d557b2677429fea8a8c7db0fa6bfc7961303d94584010fa4a02d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Open windows to dry things out. Ask for help if you see mould.",
+   "sourceHash": "ac3552b9d7421bbb34754d7cd068974be79e0649070f13d8f2bd081384b49c58",
+   "status": "machine",
+   "text": "開啟窗戶讓東西變幹。如果看到黴菌，請尋求幫助。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.before.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8796013e17c58077001146487ddddf60779981036977d5391a36c353ef9a5904",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep valuables and papers off the floor, in a plastic bag or box.",
+   "sourceHash": "ccd3d5b0cdd9418f96cf413525382c1c9faeed51bfa484af4d37e5a517f59827",
+   "status": "machine",
+   "text": "把貴重物品和檔案放在塑膠袋或盒子裡，不要放在地上。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.before.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8e8418ab7ca470467264100d0d21b8d746f183f5b708fcf9a97f4a3209e27014",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Know where the water shut-off valve is in your unit, if there is one.",
+   "sourceHash": "95fedd7c75da4fe12de127af68eea4f576a9e978d1eb14c8e48dbab17edfbb3e",
+   "status": "machine",
+   "text": "如果您的單元有總水閥，請了解它在哪裡。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.before.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "be183770cf4f9b1ebce44c75ec2e5c8e72abb37b995c8da4c6894de763efdc06",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep a few large bottles of drinking water.",
+   "sourceHash": "8de33d935c51623c67924fa0fe4b1d0a2d492171ee857c3d25e583fce2e2845a",
+   "status": "machine",
+   "text": "在家裡存幾大瓶飲用水。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "e78b45fc71c2e845532387ebc25ac5a871fd76e50c53f613fcb63d4550fc9525",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Stay out of flooded parking levels, stairwells and basements.",
+   "sourceHash": "56cf966b83fe3dfad23137caa278e71a263a14e5bbda48e2cbd02d533a3847a3",
+   "status": "machine",
+   "text": "不要進入被水淹的停車層、樓梯間和地下室。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8ff8334adac96911d438f5c1d13ecd3b8e5aaffa1e634e4a8fd0dc08c3adf8c2",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Do not touch electrical outlets or equipment if you are standing in water.",
+   "sourceHash": "a58aa5816971c99d45803cf29e826b34077a088c0fc327e9a2407107253c2e36",
+   "status": "machine",
+   "text": "如果您站在水裡，不要碰電源插座或電器。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "0c40a6dfa91c2a998f9c658a8d478c069b4a81570691ccb0864e29ee3cfc44a5",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Tell your superintendent or building management about leaks straight away.",
+   "sourceHash": "05892c9e4cbebdb0ed7a8282866ec599fa645d7ea229fe210e7549a173504ce6",
+   "status": "machine",
+   "text": "發現漏水，請馬上告訴大樓管理員或物業管理處。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.during.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6ebe69ac8b2325996547cb62dd3cd3c6c93a4114f947bbf6740a21125d42a698",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If the water in your building is turned off, use bottled water for drinking and cooking.",
+   "sourceHash": "3f980f03d0f83f3f5ffb4d54bea66d85533d7163c23c4848da1efaa1ae651452",
+   "status": "machine",
+   "text": "如果大樓停水，請用瓶裝水喝水和做飯。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "c83e4f5b2f9958065ffdec8ac9072d3570d4c3af15fc0458842b3cdce8cf084e",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Flood or plumbing failure",
+   "sourceHash": "4f3ac5d0c14854736076f364762d4e34c426c5fff101a0ec900e22531799b16e",
+   "status": "machine",
+   "text": "水災或水管故障",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.flood.when911": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "a15a9a33fb0b282505d867fdb3e55e9dc9035d834a5e3d4b1f9af411f4de3051",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 if water is near electrical outlets or panels, if someone is trapped, or if water is rising fast.",
+   "sourceHash": "607d16f77e8a7f3eea63ba19312aeb958211aaeb89f30c77279cf0ed487a93d0",
+   "status": "machine",
+   "text": "如果水靠近電源插座或配電箱、有人被困，或水位上漲很快，請撥打 911。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.after.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "887e75f26a610fa43b22dd111330be42c5600b075e0516388574b469dfd500a8",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep drinking water; your body needs time to recover.",
+   "sourceHash": "fee0bffa7df668bf0f40075adce0f292f90dce71bcc95015266d612018292224",
+   "status": "machine",
+   "text": "繼續多喝水；您的身體需要時間恢復。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.after.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "83f3316ef89d586e03ec304335856568f030b5732308d6e80e7f01511cd82e7d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Tell a doctor or nurse if you still feel dizzy or unwell.",
+   "sourceHash": "894b047bda2033bd84c0eecebbc75ad6bdb0339e51b86ee5684e18c39d3e8696",
+   "status": "machine",
+   "text": "如果您仍然感到頭暈或不舒服，請告訴醫生或護士。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.before.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "818a92de5555bd101b4bb30f7d10ad902b865b627691c49302351562292338e3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Find out which cool places are near you and when they are open.",
+   "sourceHash": "5a2ae0e7c88cc33c05d503123f7328c7d1c7eeacd9d1d59a5baf5e80e59d3152",
+   "status": "machine",
+   "text": "瞭解您附近有哪些涼爽的地方，以及它們什麼時候開放。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.before.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b37364b124af83059f305deabb908e33be101869e3b27c6cd6dd3573d14a6256",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Get a fan, and curtains or blinds to block the sun.",
+   "sourceHash": "0d9ee7206f1741fe7bbaafbf83b63342ed18375c92e5e0885d930e2fa8c8b34a",
+   "status": "machine",
+   "text": "準備一臺風扇，以及能擋住陽光的窗簾或百葉窗。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.before.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "ce2b6e2c16c00dac2fd4444291cf7656f5097a50d8d87ae086ba63ebb6423c7f",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Ask your pharmacist if any of your medicines make heat harder on your body.",
+   "sourceHash": "cb2548ed8719df28dbf5a6625d921d1a354aeafe0920eedd163ce19d9b017c5d",
+   "status": "machine",
+   "text": "問問您的藥劑師，您吃的藥裡有沒有會讓身體更難承受高溫的。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "49e2e5d8178683d059b89277ed16c59ec0b9c7bd942a2448a95f7cf50beb0a5c",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Drink water often, even if you are not thirsty.",
+   "sourceHash": "357bf8ee69fc7506f1807bb7e0a7829ba1f7a2cdfa466897af14f8268508d579",
+   "status": "machine",
+   "text": "經常喝水，即使不覺得口渴也要喝。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8743457fbe708a59e24fe3fee888519b8af2ed69c11c77eaee4b993a8ed235a3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Spend a few hours in a cool place each day.",
+   "sourceHash": "7bb20c6c06e51feae18e77626aad35989d9bae46c2559dbb31124b012ecfd0e8",
+   "status": "machine",
+   "text": "每天在涼爽的地方待幾個小時。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "358cf21a3768e3540a69da9a658927b6ca1068a149fdf8b86ff7c207ed29a957",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep blinds closed during the day and open windows at night if it is cooler outside.",
+   "sourceHash": "f38aa936465fab1692405354e08bf112108d461d62e212d75ebb20fe5513b5f7",
+   "status": "machine",
+   "text": "白天拉上百葉窗；如果晚上外面比較涼快，就開啟窗戶。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.during.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "0796d5d4a8140d32b79ece2a28b9512fb240ed33a7ab7526428eff1154149dc0",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Take a cool shower or bath, or put your feet in cool water.",
+   "sourceHash": "143beab695e363f0a7c5f3c93919163147d7b749f359f34c9ec8062e6cae1d91",
+   "status": "machine",
+   "text": "洗個涼水澡，或把腳泡在涼水裡。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.during.4": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "0c521322e0e9ee3348336b070f9bdd713ab660a2f81a92690b6515ab53de3a98",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Check on neighbours who live alone.",
+   "sourceHash": "4e3eb50b6a72c1f24cc7a44846d353892af8686b239bf82cb0401acd7eeebe91",
+   "status": "machine",
+   "text": "去看看獨自居住的鄰居。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "1383fb0dabd78159ca0c1e4511f13138f3397f7bda15182065f690092af24b73",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat",
+   "sourceHash": "a730a46438245507944c3d50b751851ae50b6b1c04d40e55745fc5218680267e",
+   "status": "machine",
+   "text": "極端高溫",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.heat.when911": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "0c8843311c0a1d28c892c1581ea5577fbd944b4544cbba1833be4c2d922ef616",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
+   "sourceHash": "9891a4f88f7951d4f346a5cd66cdbca5f1927fcf87776961116f89142840dcff",
+   "status": "machine",
+   "text": "如果有人神志不清、不再出汗、體溫很高或暈倒，請撥打 911。這些是中暑的徵兆。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.after.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d882d05656c7efdf91ed6f20c0f50a1189a707f99e658cf67908ec5ae2247b64",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Throw away food that has been above 4 degrees for more than 2 hours.",
+   "sourceHash": "99ee98a28ec7f0cb4506c2f667b365e0343eb8048b06f581f87da57731eab312",
+   "status": "machine",
+   "text": "在 4 攝氏度以上放置超過 2 小時的食物，請扔掉。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.after.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "044194ac45e7b59d0161b7b719893362a13d12e6a289a3911689ddf462de3167",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Plug your electronics back in one at a time.",
+   "sourceHash": "ef132a8a7b1a31079b75409d46981ff71d2231a91dc7f36cb8cc98506999d06d",
+   "status": "machine",
+   "text": "把電器一件一件地重新插上電源。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.after.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "9c593f17611107f627f6f73523f232cc49d7d27981e5221fa6eca98201c29091",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If your power is still out when your neighbours' is back, call Toronto Hydro.",
+   "sourceHash": "6e8f4933604149a645cb4b7ae4f83eddfc64ca42b1829d5bd4262367247a0ead",
+   "status": "machine",
+   "text": "如果鄰居家已經來電，而您家還沒有電，請聯絡 Toronto Hydro。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.before.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "7b54ceec2d071ecd890c7b4e648dd7dc272b982cfd23698ff75d6e29e67d2f21",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep a flashlight and spare batteries where you can find them in the dark.",
+   "sourceHash": "d8b45c639274eecdd399e6b395ed5be040470678cb0639619fcdbe8f27c08b02",
+   "status": "machine",
+   "text": "把手電筒和備用電池放在黑暗中也能找到的地方。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.before.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "ccc1ec3f013e2e77e07257c6ebb7aca6c71c789416b78ce3c1e1f075fe105fc3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Charge a battery pack for your phone and keep it charged.",
+   "sourceHash": "dc1fce25005579cc2c4c60298d5530f60b4433bcd02acc38aa0638fb4bbd4be9",
+   "status": "machine",
+   "text": "給手機充電寶充好電，並讓它一直保持有電。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.before.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "ab2383efdb6f12bb619bc7caac10c97b453df03490da46f8b8d37480a7874976",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Write down important phone numbers on paper.",
+   "sourceHash": "26f3400ff8bf53a648820d7f9245bb7bc621bea554230b5cc0654680ba22db5d",
+   "status": "machine",
+   "text": "把重要的電話號碼寫在紙上。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.before.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "569bb337fd8d76ab843ae47ef25a8e4c2e6081f92afa35e995cef3ee0ff596c0",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you use medical equipment that needs power, ask your doctor or pharmacist about a backup plan.",
+   "sourceHash": "2833199725a52c803906619e69f90a279f8a1030c780f47772fc98665f535d12",
+   "status": "machine",
+   "text": "如果您使用需要用電的醫療裝置，請向您的醫生或藥劑師詢問備用方案。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d2d306f36c577144282076c72e1cad411023debc268de41d5c0372b8b1cab439",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Use a flashlight, not candles.",
+   "sourceHash": "640c7d234976fd4a596859de56bfced4b9783f905753a5ec99ff5c29d27b5cc1",
+   "status": "machine",
+   "text": "請用手電筒，不要用蠟燭。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "799757f93ccdde3b423e29231430164f8176098c296e605f6380c6b0582c8bec",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep your fridge and freezer closed. Food stays cold for about 4 hours in the fridge and 24 hours in a full freezer.",
+   "sourceHash": "0fac403d8499f2709190e6bb81431d69a758192c4fca2723058e2143e639ac93",
+   "status": "machine",
+   "text": "請關好冰箱和冷凍櫃的門。食物在冰箱裡大約能保持冰冷 4 小時，在裝滿的冷凍櫃裡大約能保持 24 小時。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b1dcb3af2698433017c5dffc480e60cc07c25ab7ff4374fe982d363b84858c19",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Unplug electronics so they are not damaged when the power comes back.",
+   "sourceHash": "7b7365f7d3b7afe7a1ae458f7b5194e42b32a0d6f1e45367e862894192402f06",
+   "status": "machine",
+   "text": "拔掉電器的插頭，以免來電時損壞。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.during.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "a457c7bb85d0dfca05e4793705430ac3dc3d47f6112f145bdcf97c0ec8e669fb",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Check on neighbours who live alone, if it is safe to do so.",
+   "sourceHash": "c30f68fc8a43db597c34e8a57d93a61590490d88750a8d2522f0973b21bf733c",
+   "status": "machine",
+   "text": "在安全的情況下，去看看獨自居住的鄰居。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "de315176eb445f9978f6c68d5ae3bef058a23c8405017b9067cc76df62a4e376",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Power outage",
+   "sourceHash": "fe236fdaa58da311940b886915cf57c5c674bf82a7de9ea01b9cb5cb624f3a1b",
+   "status": "machine",
+   "text": "停電",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.power.when911": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8016b83d6ed6aa01e2c435c19cb43e37d329937adbf97f199d6696100079f0db",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 if someone is in danger, there is a fire, or a person who uses powered medical equipment cannot breathe or is unwell.",
+   "sourceHash": "8f1b4fba1e939b53f16674abb0d91ec9744217500ef5145b75073a4ac0bd3e29",
+   "status": "machine",
+   "text": "如果有人身處危險、發生火災，或使用電動醫療裝置的人無法呼吸或身體不適，請撥打 911。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.after.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2551de2b28688bed87606cc437e19ba1b1eccf466accfcb5ca4ec7af72ca62a9",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Air out your home when the air outside is clean again.",
+   "sourceHash": "42867db9a0c626d7aaa82ad96383afd6549604eb3fa51f3fa11dd6b210519e45",
+   "status": "machine",
+   "text": "等外面的空氣重新變乾淨後，再給家裡通風。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.after.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "913afc03859dda5e119d281682f947a8790b27c688fedc75d7dca26ccf92f2eb",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Change or clean your fan filter.",
+   "sourceHash": "065eb93eaadec2883f5a4d80938982674919910f3337b6dcf2e851a18bf59074",
+   "status": "machine",
+   "text": "更換或清洗風扇上的過濾器。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.after.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "7b7706b27ae1bfaf822183bb67f90fa6090b1a31ab4f95d142256d05264d15fa",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "See a doctor if you still cough or feel short of breath.",
+   "sourceHash": "165bd06ad3cabbb0d184d5dbb83389cd89b834a1b5fab50d367983530a3ea09d",
+   "status": "machine",
+   "text": "如果您仍然咳嗽或感到呼吸困難，請去看醫生。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.before.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "f1060c1e5a73731a6d7ee13a5b84ac74a5e2c7c7b62c6360b262adc66ff14d6b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Make a box-fan air filter, or find out where to get one.",
+   "sourceHash": "df71c2fe6b60533a22ac5bdbf3005c128f48602e3a8db9a039427d044dbc5658",
+   "status": "machine",
+   "text": "自己做一個箱式風扇空氣過濾器，或瞭解在哪裡可以買到。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.before.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "769d907119c52a2c33d74cdc0460bf8876b6432b0c4547aa5bc3ad8ca0d6f1cb",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Keep a few well-fitting masks at home.",
+   "sourceHash": "edff265fc96f7b117f80e84752c2ed0db9bafeb6fdc49114c8d36864b9891969",
+   "status": "machine",
+   "text": "在家裡備幾個合適貼臉的口罩。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.before.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "eaa6ae5c0108745ee5fb3cf3bbe6608a33be7c0ed99f130a2e9eb0dba6a6565a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you have asthma or a heart condition, make sure your medicines are not expired.",
+   "sourceHash": "cbb2116b5bb02973ab00bb4c7abf937be1a81ce045742c293814fe8ea91f9083",
+   "status": "machine",
+   "text": "如果您有哮喘或心臟病，請確認您的藥沒有過期。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "03e51bb8a6532cba075b9cb4767e30f2a8bb59edef577b973701052a2196114d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Stay indoors with windows and doors closed.",
+   "sourceHash": "1973883398047afc19a7f8d3eedbaf04a3d641c3288e5ff3c8a04d98533c3319",
+   "status": "machine",
+   "text": "待在室內，關好門窗。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2f8bba7645fe027efef2cdad21c1cb47412bfdf565bb220b839820aceec60589",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Run a box-fan filter or an air purifier in one room and stay in that room.",
+   "sourceHash": "2207e492cdc9686c053719000f0c9359e92ab9f3b8bf74d1488f9522117d1d6b",
+   "status": "machine",
+   "text": "在一個房間裡開著箱式風扇過濾器或空氣清淨機，並待在那個房間裡。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "75e3f07ec1ba5644dd2f6860fad6f3ce47e3d898d425dcbbc95290bda3b308ac",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Wear a well-fitting mask if you have to go outside.",
+   "sourceHash": "c5e9631c4fa4c54102308d3859f7715d681e2f2f7d4025979e39d2b0a8383e09",
+   "status": "machine",
+   "text": "如果必須外出，請戴上合適貼臉的口罩。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.during.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "3e0d385065340393562ff1f2d8c042cb67a1b73f47253be7dc4111c76319ee57",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Go to a space with filtered air if your home gets smoky.",
+   "sourceHash": "61da5b4e37a129157145b2b3b76ecc1519eb848a5363d490dff86d668b786f57",
+   "status": "machine",
+   "text": "如果家裡煙霧變多，請去有過濾空氣的地方。",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "5701aaf0d576f2a653f6fd4ae1a5a13120f0ccb094de75965545f263e664e58f",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Wildfire smoke",
+   "sourceHash": "52239aad33d8b59be3989dd38bbf9edfdf227c0f8c4d78b2f9702b06da1f81b1",
+   "status": "machine",
+   "text": "山火煙霧",
+   "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.when911": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "64d9637e715b05347735a3da7b1422314e870de78a928c5812d49e56d5fd1fb7",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 if someone has chest pain, cannot breathe, or is very confused.",
+   "sourceHash": "3230eb987395aadba117ed89904a5797aba95389dc90a393fb9eaf8d6434c4f0",
+   "status": "machine",
+   "text": "如果有人胸痛、無法呼吸或非常神志不清，請撥打 911。",
+   "translatedOn": "2026-10-09"
+  },
+  "number.211.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "c3b5bfde4666d19ec79163d9b7f8d0b10c55bd8eff4e4b9b17141d6798788620",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Help finding community, social and government services",
+   "sourceHash": "3e548ece7b1f0c7a6105da23f1c07143ae85ad646d6c989e7606701734dd80c3",
+   "status": "machine",
+   "text": "幫您尋找社群、社會和政府服務",
+   "translatedOn": "2026-10-09"
+  },
+  "number.311.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "737d0d29f1618dacaf5df1074adde04a3730b50fa3070144c5bece6d52c104d9",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "City of Toronto services and non-emergency problems",
+   "sourceHash": "44c503dcf683c062dc69bfced5ded7c135b69944ba50c558ed53f319c2c93d12",
+   "status": "machine",
+   "text": "多倫多市政服務和非緊急問題",
+   "translatedOn": "2026-10-09"
+  },
+  "number.911.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6cb91f126a4660a9d790250cd92022281930bc30a13c768aa437c036ef5dc081",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Emergency",
+   "sourceHash": "4538f2dc67b55939f9ad7692868aa5a00c48a6fc9a682212d3052dd4ab65d935",
+   "status": "machine",
+   "text": "緊急情況",
+   "translatedOn": "2026-10-09"
+  },
+  "number.911.when": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "76817be7d807e5b51d87043a0eb049b4a380bfaa5599c2ee18040a0a0ce00033",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Call 911 if someone's life or safety is in danger right now: fire, a medical emergency, or a crime happening now.",
+   "sourceHash": "ee07201672f9ce1927e626e6e4ac7993c9001b9f4b7709095de06e94b0278fbd",
+   "status": "machine",
+   "text": "如果有人的生命或安全正處於危險之中，請撥打 911：火災、醫療緊急情況，或正在發生的犯罪。",
+   "translatedOn": "2026-10-09"
+  },
+  "number.hub.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "5168aa99d754b8eeb6604fcb41ba76813dd5904aaa28cf30d20422abdf9f1a2e",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Talk to someone at the Hub",
+   "sourceHash": "893e7dbc102f162bab15ad770e73fc83475f4815d3a130cf20c742cdaa2f30ac",
+   "status": "machine",
+   "text": "與中心的工作人員通話",
+   "translatedOn": "2026-10-09"
+  },
+  "number.hydro.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "94ec61ab41613ed64dca540d81ec3051462e0cbd37ed779a47627c93e9630672",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Report a power outage to Toronto Hydro",
+   "sourceHash": "225c2003c027501ee73c480ff5cebe69892bb919e13b50a832fbabbac93d1ae0",
+   "status": "machine",
+   "text": "向 Toronto Hydro 報告停電",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.age.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d9a5fa6c82c505e69bcb25fec84b5edf23cc2578fa4517056e51e13f06d6407b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "You must be 16 or older to sign up.",
+   "sourceHash": "60b675422bd94b377685ba30eed89f903ec830b46dd02ee2621c11d645074c1c",
+   "status": "machine",
+   "text": "您必須年滿 16 歲才能登記。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.age.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "edf30ed2840265b3a21b48d07ffdaeebe61b4ea6c60dc4726d08d7f75e0f186b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you are younger than 16, a parent or guardian must help you sign up.",
+   "sourceHash": "1178b2a295bab605c24df68f10684563ba620b9f9df142353d17d15effb28253",
+   "status": "machine",
+   "text": "如果您未滿 16 歲，必須由父母或監護人幫您登記。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.age.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "1281517b0ce3f7a98a1f94c2e2655cf2087378c021d476b40798ceda755b8585",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Who can sign up",
+   "sourceHash": "ebba26b4ed01edd0e53c65819e6511ca18510c29f10d198e9de50b68632b098c",
+   "status": "machine",
+   "text": "誰可以登記",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.contact.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6d0a8da14d9e6035432da0c30d926a52f173da13e6618832b41a1979e720e523",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "To see what we hold about you, or to fix it, contact our privacy contact.",
+   "sourceHash": "7eb740bc3e59b4e53d61791781c35fcbff231c1b3f5b6859f997621756af2392",
+   "status": "machine",
+   "text": "如果您想檢視我們儲存了您的哪些資訊，或想更正資訊，請聯絡我們的隱私聯絡人。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.contact.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "a25adde49c09c3e605761dd4ace45b7cd72b245ab2cb63152a903e2a98aadbb3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Hub staff will call your number back to check that it is yours. Then they will tell you what we hold. If something is wrong, they will fix it.",
+   "sourceHash": "d259fcb6a992b05bfd1c507e5a9fbd2287fa80bb5e7569cfa1e3f19b06b6bdbb",
+   "status": "machine",
+   "text": "中心工作人員會回撥您的電話號碼，確認這個號碼是您的。然後他們會告訴您我們儲存了哪些資訊。如果有錯誤，他們會改正。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.contact.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "fb0d6c1789d6ca548019e7901793395e7529362e3eabf76d64586119498cd063",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Questions and your information",
+   "sourceHash": "53c73029a9c7204d8b90f882fe778c5f3c89b805bf7e0da743829d3828d79f0c",
+   "status": "machine",
+   "text": "疑問和您的資訊",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d125b77cc50665e9ba1f69b92b38e68a9f16a24954454e0be1b1d335fdd7e35d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you sign up for text alerts, we keep four things.",
+   "sourceHash": "94241a282ec2c59ce705dfa6abd4b924d5cb7d31fc9ea410592fcc92d5e5b956",
+   "status": "machine",
+   "text": "如果您登記接收簡訊警報，我們會儲存四項資訊。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "65acdaf0783ed70ec02f4fff4da1faa82e697cb2971d4169c6b3267426b503c1",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Your phone number.",
+   "sourceHash": "4922f28265c48c76703d0615bad5c0cfbe160cb8506b1c5979244ec81ea23e4e",
+   "status": "machine",
+   "text": "您的電話號碼。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6dd51c66d2389d1e8e66234ad8127234ef5d6aeaa076e3b49ad94cd970da7c2d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Your language.",
+   "sourceHash": "0d095111ae740686edb40db1b8f6dcd6cdaa5425fb0be789da25cb41ce9369b5",
+   "status": "machine",
+   "text": "您的語言。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "51917c45106c3b30ea2c3a1e2f79816e2d4b490030a10318ff8073d81a6b8d4b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Your neighbourhood: Thorncliffe Park or Flemingdon Park.",
+   "sourceHash": "3beabcb7c85a05b88e0bffe8ecacb5ac0d25c8d347849440e6b27cc50f9a3865",
+   "status": "machine",
+   "text": "您所在的社群是 Thorncliffe Park 或 Flemingdon Park。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.4": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "646eeb9f94599e67a60db8c497c9cd592c758d3a69a8f468d0bb81ee0082716d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Choices you make if you want to, such as your building, your floor and the groups you belong to.",
+   "sourceHash": "c341411571f925b34c9a8a22e73b48dd54759c5c00935807ef04f25a69cacacd",
+   "status": "machine",
+   "text": "您自願做出的選擇，例如您的樓宇、樓層和您所屬的群體。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.5": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "917677db91daa3fb5664db2611c05abe3f5462b9515838d951c02f862ad1eaa1",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If an ambassador could not reach you or found you needed help, the Hub keeps your number and floor to follow up. It keeps them for up to 24 hours after the alert ends.",
+   "sourceHash": "13bb3f3ce1932d87112dcc7fd7cdfea591632653829b45b3d54554a6cbb87df0",
+   "status": "machine",
+   "text": "如果聯絡員聯絡不上您，或發現您需要幫助，中心會儲存您的電話號碼和樓層，以便跟進。這些資訊最多儲存到警報結束後 24 小時。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.6": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "420c9733577992382bed1842ecbc89c7200d16cfafde8315cb17b20210210b78",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "We do not ask for your name. We do not ask for your unit number, your email or a password. We do not keep them.",
+   "sourceHash": "c65bf434ddb2bb18487c84e0c3462654f2127c4ba6a1ae6246fb5763c91b5b7f",
+   "status": "machine",
+   "text": "我們不會詢問您的姓名。我們不會詢問您的單元號、電子郵箱或密碼。我們也不會儲存這些資訊。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.7": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "5462ff4e5ff67ab82b5e06966d67745df82fcc6006f3a51a354315c76837a8a8",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you do not sign up, we keep nothing about you. This app sets no cookies. It does not keep the questions you type.",
+   "sourceHash": "4475cf24422fd14c9789eeab77b64ef0e352370ec3e9964bca74db78d5bb0900",
+   "status": "machine",
+   "text": "如果您不登記，我們不會儲存任何關於您的資訊。本應用不使用 cookie，也不會儲存您輸入的問題。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.keep.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6ad624ab80d77ad3301916a14d45c71ccd52fbc1d6729ad47ef0b5891f66dd6e",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "What we keep",
+   "sourceHash": "e12796a571a160e9b4bb7e42c6dbf601485b1ec32986540be96e7d2b22c2be33",
+   "status": "machine",
+   "text": "我們儲存哪些資訊",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.messages.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "338055d7a127c6f9ae0a3b568e9ea0ea44e90a9c438047fb4aa34776930faed5",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Hub staff check every alert before it is sent.",
+   "sourceHash": "407d701059169073824df4e50c786a4ea6418c7d8c87f6c3ad30e5c8553bc15f",
+   "status": "machine",
+   "text": "每條警報傳送之前，中心工作人員都會先檢查。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.messages.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "4f9410b66c70c57ff6dfc6dfe7502318bc8605c98aaed79e8daa51d26ff7524f",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Because of this, a message may not be sent overnight.",
+   "sourceHash": "bb3b8df6c7780f4beb0a8d5003bf9a14d06a2a08df08a62ad595ee2b1b89c44c",
+   "status": "machine",
+   "text": "因此，夜間可能不會發送簡訊。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.messages.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "bd3f6c634107833cb5a4dcb51549cf21b6050b73c79f5c35e91d85693e734b26",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "How often we text depends on what happens in your building. Message and data rates may apply. Reply HELP for help.",
+   "sourceHash": "35b5030af09181e7bf57490321e959305ffcc4b1514433a4531d47332250769d",
+   "status": "machine",
+   "text": "我們發簡訊的頻率取決於您樓裡發生的情況。可能會產生簡訊和資料費用。回覆 HELP 獲取幫助。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.messages.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "5d9056de81b369af1783146c638efe6be3efa39dced5695ef3ae9f4cd63aa9f0",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "About the messages",
+   "sourceHash": "b397b764d76536a191223cb39eb052cdd3e7d2f0a3e74572bea43eebc6f164b2",
+   "status": "machine",
+   "text": "關於簡訊",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.owns.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "ee3c392e92dfd8f3d9192f5d5762be4539f3933bf7c17aa945d0e791db6ccd14",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The community owns the data. The Hub looks after it for you and your neighbours.",
+   "sourceHash": "67d60a66b469c405b6ff041a165690155fb7c34876088a321cada83692dbe177",
+   "status": "machine",
+   "text": "資料歸社群所有。中心為您和您的鄰居保管這些資料。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.owns.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "487716040cc398fcda63e9dbbf3bcd7e4ee6ffb2433ee8fef6c00f17b638fc87",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Who owns the data",
+   "sourceHash": "2ca0166b19a1cc60e23c4ed997769c1eaaddbbe2fed28eacfbc9fb2c7c6f47b8",
+   "status": "machine",
+   "text": "資料歸誰所有",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.stop.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "eec65e34ab085b79877baec27d21a48c06a6c8b4fcaee19690db7d0165bb195f",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Reply STOP to any text from the Hub. Or reply 0, then reply 0 again to confirm.",
+   "sourceHash": "0dcb1f79e54d3598b288a9b85d9bb994e80e7b9e8a87e38dda2cab2ea2e19762",
+   "status": "machine",
+   "text": "請對中心的任何一條簡訊回覆 STOP。或者回復 0，然後再回復一次 0 進行確認。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.stop.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "78b51f5dde6bd9a1247d937caa83f33da8870f4d897d2ced6a07776102076ff3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When you stop, we delete your subscription. That means we delete your phone number and your choices. We cannot get them back.",
+   "sourceHash": "997d8e7d2a93a82ca0715b051ac63afec2eba8568bd98ad030bdd856212703fa",
+   "status": "machine",
+   "text": "當您停止時，我們會刪除您的訂閱。也就是說，我們會刪除您的電話號碼和您的選擇，並且無法恢復。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.stop.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "f8a7c2c37b646f9b97f55bdc3b23b5fd23fff9a368d220b1bc4acb05253c4f07",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After that, we send you nothing.",
+   "sourceHash": "09e5966501ec155182d117b6622dfcf5ffa24c1837813c7a6e423eef77446a2a",
+   "status": "machine",
+   "text": "之後，我們不會再給您傳送任何資訊。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.stop.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "0d4417a7de042844ee7a00896459b34d6b62c3f1a2ad271965a5f10635f20e76",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Twilio's copies of the texts we sent you and of your replies stay until the Hub deletes them from Twilio after the pilot ends.",
+   "sourceHash": "3ae28aa6038e7e4b5cb85ce157af794288f77b14d612f17ca5965d8d1ea05aae",
+   "status": "machine",
+   "text": "我們發給您的簡訊和您的回覆，在 Twilio 那裡的副本會一直保留，直到試點結束後中心從 Twilio 刪除它們。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.stop.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "152684b3ca1004cbe835aef5ad38de1d7b2ff2ea9f712fdd785d0226d766e50e",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "How to stop",
+   "sourceHash": "3a6600b248f1198306464b28eb086caf3cd2b78c2c45279a610b10f946efb84b",
+   "status": "machine",
+   "text": "如何停止",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.title": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "1991a23b5001d4f76677259d266b60e993f732eab811d4ca604ba97b6c8264b0",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Terms and privacy",
+   "sourceHash": "8d60f3a91d3e885449c9bcbf7abe51ad84f58837c80b0bd0d13f73ae8d1d960f",
+   "status": "machine",
+   "text": "條款和隱私",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "32e4daafd68ed251ec3dfef20b704db79483cee696a5d35af16e2bb5e7e0a7a0",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Four companies help us run the service. They handle information for us.",
+   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "status": "machine",
+   "text": "有四家公司幫助我們運營這項服務。它們代我們處理資訊。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "1a4c2d314553ca80f440f54bdd50db09e02c086a3c0ec789c72edd0d4926cf0c",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Twilio sends the text messages. It handles your phone number and our messages to you. It may do this outside Canada.",
+   "sourceHash": "d7b2dcfb04c77d108acaf0fa821907ea0f10290fbbbc5614300b6a5932b9c4e3",
+   "status": "machine",
+   "text": "Twilio 負責傳送簡訊。它會處理您的電話號碼和我們發給您的簡訊，可能在加拿大境外處理。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "c250ece059856fa5aa9b68b27ebd81f02ea4222808fd5e8bb1db1aa21f670977",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cohere translates alerts and helps match questions you type in search. It never gets your phone number. It may work outside Canada.",
+   "sourceHash": "1f0ded43cee891dcd478975b4dc83eb1bf29f29a6597856da0bab84dbe30c405",
+   "status": "machine",
+   "text": "Cohere 負責翻譯警報，並幫助匹配您在搜尋中輸入的問題。它永遠不會得到您的電話號碼。它可能在加拿大境外運作。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "0a6d1f0afe6c0f3a19c8deaaeaf1fdea63e9fd19f796b9cc8f8e417934650748",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Vercel runs the website. Its servers are in Montreal. If there is an outage, it may use servers in the United States.",
+   "sourceHash": "f12915fd1063f8d8655e8825358f1f48d62ee1973ff15f4dc3c5808b5427ae18",
+   "status": "machine",
+   "text": "Vercel 負責執行網站。它的伺服器在蒙特利爾。如果出現故障，它可能會使用美國的伺服器。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.4": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "eef99b6dde97fe9a6599b897346ccbd18832d973680271446a44c3aa19bd3573",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Supabase keeps the database that holds your number, language, neighbourhood and choices. The database is in Canada.",
+   "sourceHash": "75c8b9276dc9b5b7107501347a5a13d3260298658c3a52d73432c5db0213868a",
+   "status": "machine",
+   "text": "Supabase 負責保管資料庫，裡面存有您的電話號碼、語言、社群和選擇。資料庫在加拿大。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.5": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "c8696026b5ba1ca7d79cd98a7e92b924ac6ecbfd72658fe8799f51f20327034b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Twilio keeps a copy of each text, with your phone number. This includes your replies. The Hub deletes these copies from Twilio after the pilot ends.",
+   "sourceHash": "4cc2079189e30e7b289f95f3718c3fadaf9f10c129aec4ff4e3603ea1ce79f82",
+   "status": "machine",
+   "text": "Twilio 會儲存每條簡訊的副本，以及您的電話號碼，其中也包括您的回覆。試點結束後，中心會從 Twilio 刪除這些副本。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.6": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "641a7e4ab0f79e2a0b4a84f1c80adeb30c148b4932e2a0e079fa269008a87f70",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
+   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "status": "machine",
+   "text": "我們絕不會出售您的電話號碼，也絕不會為了營銷把您的電話號碼或您同意接收簡訊的記錄分享給任何人。上面這四家公司只會用它來運營這項服務。",
+   "translatedOn": "2026-10-09"
+  },
+  "terms.who.heading": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6b1c6c3358f983b742cbd03531183b8600ca1dd3dfb995ba5a70b4aa4044e35a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Who handles your information",
+   "sourceHash": "a1100ee5fa0f7a202676804a47e4ea926688eebe85868e46f322f647e6e90973",
+   "status": "machine",
+   "text": "誰會處理您的資訊",
+   "translatedOn": "2026-10-09"
+  }
+ },
+ "updated": "2026-10-09T04:00:28+00:00"
 }

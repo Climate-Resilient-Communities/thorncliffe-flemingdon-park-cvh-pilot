@@ -29,7 +29,7 @@ window.CVH_STRINGS.en = {
   language: 'Language', changeLanguage: 'Change language', languageTitle: 'Choose your language', languageCurrent: 'Now showing',
   languageReturn: 'The screen stays where you were.',
   choices: 'What I have told the CVH', choicesShort: 'My choices',
-  nav: { now: 'Now', help: 'Find help', map: 'Map', ready: 'Be ready' },
+  nav: { now: 'Alerts', help: 'Find help', map: 'Map', ready: 'Be ready' },
   navLabel: 'Main', close: 'Close', back: 'Back', next: 'Continue', skip: 'Skip', done: 'Done', cancel: 'Cancel', more: 'More',
   notInPrototype: 'Not in this prototype', notInPrototypeBody: 'This part is not built in the prototype. Nothing has changed.',
   pageNotFound: 'This page could not be found.', pageNotFoundBody: 'The link may be old or mistyped. Use the menu below to go on.',

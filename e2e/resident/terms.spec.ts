@@ -1,6 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ALERTS_URL, RESIDENT_DATA_DELETED_ON } from "./alerts-server";
 import { HEIGHTS, LANGUAGES, WIDTHS, expectBaseline, openResident } from "./helpers";
+import terms from "../../data/catalogue/terms.json";
+import urduContent from "../../data/catalogue/translations/content/ur.json";
+
+const termsTitle = "terms.title";
+const urduTexts = urduContent.texts as Record<string, { text: string | null } | undefined>;
+/** The committed Urdu translation of a terms text (data/catalogue/translations/content/ur.json). */
+function urdu(key: string): string {
+  const text = urduTexts[key]?.text;
+  if (!text) throw new Error(`No Urdu translation of ${key}`);
+  return text;
+}
 
 // S07.01: /{lang}/terms inside the resident shell. The committed terms are published: the owner reviewed the English and,
 // for the pilot, waived counsel's review (data/catalogue/terms.json counselWaiver). The draft banner and the 404 of unpublished
@@ -102,25 +113,29 @@ for (const language of LANGUAGES) {
   }
 }
 
-test("a translation that is not available shows in English, silently, in a left-to-right English block, inside a right-to-left page", async ({ page }) => {
+test("/ur/terms is in Urdu, right to left: every text is its translation, with no English standing in and no note", async ({ page }) => {
   await openResident(page, "/ur/terms", 390);
 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  // Nothing is translated or reviewed yet, so every text of the terms is English standing in. Each is a block with
-  // lang="en" dir="ltr" on the heading or paragraph itself, not an inline run inside a right-to-left block.
-  const headings = page.locator("main h1[lang=en][dir=ltr], main h2[lang=en][dir=ltr]");
-  const lines = page.locator("main p.terms-line[lang=en][dir=ltr]");
-  expect(await headings.count()).toBe(8);
-  expect(await lines.count()).toBeGreaterThan(20);
-  await expect(page.locator("main p.terms-line:not([lang=en])")).toHaveCount(0);
-  await expect(page.locator("main h1:not([lang=en]), main h2:not([lang=en])")).toHaveCount(0);
+  // Under the pilot setting (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, on) every current Urdu text whose facts match the English
+  // is shown: each heading and paragraph is the committed translation, in order, inheriting the page's lang and dir.
+  await expect(page.locator("main h1")).toHaveText(urdu(termsTitle));
+  for (const section of terms.sections) {
+    const block = page.getByTestId(`terms-section-${section.id}`);
+    await expect(block.locator("h2")).toHaveText(urdu(`terms.${section.id}.heading`));
+    await expect(block.locator("p.terms-line")).toHaveText(section.lines.map((_, index) => urdu(`terms.${section.id}.${index}`)));
+  }
+  await expect(page.locator("main h1, main h2")).toHaveCount(1 + terms.sections.length);
+  await expect(page.locator("main :is(h1, h2, p.terms-line)[lang], main :is(h1, h2, p.terms-line)[dir]")).toHaveCount(0);
   await expect(page.locator("main :is(h1, h2, p.terms-line) bdi")).toHaveCount(0);
-  // Shown silently (product-owner decision 2026-10-09): no visible "[EN]" on any heading or paragraph, and no note.
-  for (let index = 0; index < (await headings.count()); index += 1) expect(await headings.nth(index).innerText()).not.toMatch(/^\[EN\]/);
-  for (let index = 0; index < (await lines.count()); index += 1) expect(await lines.nth(index).innerText()).not.toMatch(/^\[EN\]/);
-  await expect(page.locator("main h1[lang=en]")).toHaveText("Terms and privacy");
   await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
-  // The facts that are not words (version, date, contact) are left-to-right runs.
+  // The rules the people reading it follow stay in Latin script, as in the English.
+  const text = await page.getByTestId("terms").innerText();
+  for (const word of ["STOP", "Twilio", "Cohere", "Vercel", "Supabase", "16"]) expect(text, word).toContain(word);
+  // The version, the date and the contact are shown and are left-to-right runs inside the right-to-left page.
+  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-07.1");
+  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-07");
+  await expect(page.getByTestId("terms-contact")).toContainText("helena.yu@sprout-climate.org");
   for (const id of ["terms-version", "terms-updated", "terms-contact"]) await expect(page.getByTestId(id)).toHaveAttribute("dir", "ltr");
 });
 
@@ -136,42 +151,42 @@ test("text starts at the edge its own direction says: English blocks at the left
       return { fromLeft: text.left - main.left, fromRight: main.right - text.right };
     }, selector);
   };
-  // No text of the Urdu page's main is translated yet, so make one the way the page would render it: a paragraph of the
-  // page's own, with Urdu text and no lang or dir of its own (a translated block inherits both from the page).
-  const translatedLine = async () => {
+  // Every text of the Urdu page is translated, so make an English stand-in the way the page renders one (src/ui/text,
+  // ResidentText with fallback): a paragraph of the page's own, with English text and lang="en" dir="ltr" on the element itself.
+  const englishStandIn = async () => {
     await openResident(page, "/ur/terms", 390);
     // Only once the page is hydrated: a node added before that is dropped when React takes over the server's HTML.
     await page.waitForLoadState("networkidle");
     await page.evaluate(() => {
       const line = document.querySelector("main p.terms-line")!;
       const probe = line.cloneNode(false) as HTMLElement;
-      probe.removeAttribute("lang");
-      probe.removeAttribute("dir");
-      probe.id = "translated-probe";
-      probe.textContent = "ہم آپ کا فون نمبر محفوظ رکھتے ہیں اور آپ کی زبان اور آپ کا محلہ بھی محفوظ رکھتے ہیں تاکہ پیغام صحیح جگہ پہنچے۔";
+      probe.setAttribute("lang", "en");
+      probe.setAttribute("dir", "ltr");
+      probe.id = "english-probe";
+      probe.textContent = "Reply STOP to any text from the Hub.";
       line.before(probe);
     });
-    await expect(page.locator("#translated-probe")).toBeAttached();
-    return edges("/ur/terms#probe", "#translated-probe", false);
+    await expect(page.locator("#english-probe")).toBeAttached();
+    return edges("/ur/terms#probe", "#english-probe", false);
   };
   const english = {
     heading: await edges("/en/terms", "main h2"),
     line: await edges("/en/terms", "main p.terms-line"),
   };
-  const urdu = {
-    heading: await edges("/ur/terms", "main h2[lang=en][dir=ltr]"),
-    line: await edges("/ur/terms", "main p.terms-line[lang=en][dir=ltr]"),
-    translated: await translatedLine(),
+  const urduPage = {
+    heading: await edges("/ur/terms", "main h2"),
+    line: await edges("/ur/terms", "main p.terms-line"),
+    standIn: await englishStandIn(),
   };
   const gutter = english.heading.fromLeft;
   expect(gutter).toBeGreaterThan(10);
 
-  // English standing in on the Urdu page starts at the left gutter, exactly where the English page starts.
-  expect(Math.abs(urdu.heading.fromLeft - gutter)).toBeLessThanOrEqual(1);
-  expect(Math.abs(urdu.line.fromLeft - english.line.fromLeft)).toBeLessThanOrEqual(1);
   // Urdu's own text starts at the right gutter, the mirror of the English page.
-  expect(Math.abs(urdu.translated.fromRight - gutter)).toBeLessThanOrEqual(1);
-  expect(urdu.translated.fromLeft).toBeGreaterThan(gutter);
+  expect(Math.abs(urduPage.heading.fromRight - gutter)).toBeLessThanOrEqual(1);
+  expect(Math.abs(urduPage.line.fromRight - english.line.fromLeft)).toBeLessThanOrEqual(1);
+  // English standing in on the Urdu page starts at the left gutter, exactly where the English page starts.
+  expect(Math.abs(urduPage.standIn.fromLeft - english.line.fromLeft)).toBeLessThanOrEqual(1);
+  expect(urduPage.standIn.fromRight).toBeGreaterThan(gutter);
 });
 
 for (const code of ["en", "ur"]) {

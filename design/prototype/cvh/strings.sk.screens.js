@@ -319,7 +319,7 @@
    "protoTag": "Prototyp",
    "howStop": "Ak už nechcete dostávať žiadne správy od Hubu, odpovedzte STOP na ktorúkoľvek SMS.",
    "howChange": "Ak chcete zmeniť skupiny, odpovedzte GROUPS.",
-   "toHome": "Prejsť na Teraz",
+   "toHome": "Prejsť na Upozornenia",
    "sample": "Ukážková budova",
    "moreBuildings": "Ďalšie budovy: {n}. Napíšte časť adresy."
   },
@@ -414,7 +414,7 @@
    "emptyBody": "Keď upozornenie skončí, presunie sa sem a dá sa stále čítať.",
    "lead": "Každé upozornenie sa tu dá čítať aj po tom, čo skončí.",
    "endedOn": "Zverejnené {posted}",
-   "backHome": "Späť na Teraz"
+   "backHome": "Späť na Upozornenia"
   },
   "R09": {
    "title": "Nájsť pomoc",
@@ -979,10 +979,10 @@
     "winter": "Pred zimnými búrkami"
    },
    "readGuide": "Prečítajte si návod: {hazard}",
-   "turnedOn": "Pripomienky zapnuté. Uvidíte ich na obrazovke Teraz, len v CVH.",
+   "turnedOn": "Pripomienky zapnuté. Uvidíte ich na obrazovke Upozornenia, len v CVH.",
    "turnedOff": "Pripomienky vypnuté. Nič iné sa nezmenilo.",
    "offLine": "Pripomienky sú vypnuté, kým ich nezapnete.",
-   "whereLine": "Zobrazujú sa na obrazovke Teraz, pár týždňov pred každou sezónou."
+   "whereLine": "Zobrazujú sa na obrazovke Upozornenia, pár týždňov pred každou sezónou."
   },
   "R33": {
    "title": "Požiadať o kontrolu",
@@ -1116,7 +1116,7 @@
    "floorOf": "{building}, poschodie {floor}",
    "checkinBy": "Kontroly: {method}",
    "changeAll": "Zmeniť, čo ste vybrali",
-   "toHome": "Prejsť na Teraz",
+   "toHome": "Prejsť na Upozornenia",
    "manyLine": "Vyberte svoju budovu alebo budovu príbuzného. Môžete ich vybrať koľko chcete.",
    "chosenNone": "Zatiaľ nie je vybraná žiadna budova",
    "chosenOne": "1 vybraná budova",

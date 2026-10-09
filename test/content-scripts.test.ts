@@ -319,13 +319,15 @@ describe("review status (review_translations.py --content)", { timeout: 60_000 }
   });
 
   it("leaves the committed catalogue's content files untouched by a copy of itself", () => {
-    // The committed files are the null skeleton: nothing translated, nothing reviewed.
+    // The committed files hold current translations (machine or reviewed), none stale.
     cpSync(path.join(ROOT, "data", "catalogue", "translations", "content"), path.join(dir, "translations", "content"), { recursive: true });
     cpSync(path.join(ROOT, "data", "catalogue", "guides.json"), path.join(dir, "guides.json"));
     cpSync(path.join(ROOT, "data", "catalogue", "numbers.json"), path.join(dir, "numbers.json"));
+    const before = readFileSync(path.join(dir, "translations", "content", "ur.json"), "utf8");
 
     const out = run(REVIEW, ["--content"]);
 
-    expect(out).toContain("ur: 0 reviewed, 0 machine, 0 stale, 76 not translated");
+    expect(out).toMatch(/ur: \d+ reviewed, \d+ machine, 0 stale, \d+ not translated/);
+    expect(readFileSync(path.join(dir, "translations", "content", "ur.json"), "utf8")).toBe(before);
   });
 });

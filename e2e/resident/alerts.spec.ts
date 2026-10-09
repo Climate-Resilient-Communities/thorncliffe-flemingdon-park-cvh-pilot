@@ -279,7 +279,7 @@ test.describe("alert detail (R-07)", () => {
     expect((await openResident(page, `/en/alerts/nosuchslug/verified`, 390))!.status()).toBe(404);
   });
 
-  test("marks Now as the current page in the navigation", async ({ page }) => {
+  test("marks Alerts as the current page in the navigation", async ({ page }) => {
     await openResident(page, `/en/alerts/${T1}`, 390);
 
     await expect(page.getByTestId("shell-nav-now")).toHaveAttribute("aria-current", "page");
