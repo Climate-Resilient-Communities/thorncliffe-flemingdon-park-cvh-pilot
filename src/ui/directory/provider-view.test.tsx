@@ -184,9 +184,9 @@ describe("ProviderView", () => {
     const shout = { ...topic, body: topic.body.toUpperCase(), original: { lang: "en" as const, body: topic.original.body.toUpperCase() } };
     const html = render("en", "P101", "page", { subcategories: [topic, other, shout, other] });
 
-    const chips = [...html.matchAll(/<li[^>]*class="dir-tag[^"]*"[^>]*>(.*?)<\/li>/g)].map((m) => m[1]!.replace(/<[^>]+>/g, ""));
-    expect(chips.filter((chip) => chip.toLowerCase() === topic.body.toLowerCase())).toHaveLength(1);
-    expect(chips.filter((chip) => chip === "Multi-Service Agencies")).toHaveLength(1);
+    const chips = (text: string) => html.split(`>${text}</`).length - 1;
+    expect(chips(topic.body) + chips(topic.body.toUpperCase())).toBe(1);
+    expect(chips("Multi-Service Agencies")).toBe(1);
     expect(subcategoryChips([topic], [topic, other, shout, other])).toEqual([other]);
   });
 
