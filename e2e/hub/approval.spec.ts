@@ -150,16 +150,17 @@ test("fits the phone without scrolling sideways in every state", async ({ page }
 
 /** When the Hub home is read in the pictures: the waits it shows are counted to it, so the pictures do not change with the clock. */
 const NOW = new Date("2026-10-04T14:12:00.000Z");
+const IN_MILEPOST = { scope: "buildings" as const, buildings: [{ rsn: "4154146", floors: null }], groups: [], types: ["elevator"] };
 const RUNNING: RunningThread[] = [
-  { alertId: OTHER_ALERT, slug: "abcd2345", isDrill: false, reportedAt: new Date("2026-10-04T13:30:00.000Z"), types: ["elevator"], phase: "in_progress", validUntil: new Date("2026-10-05T14:00:00.000Z"), publishedAt: new Date("2026-10-04T14:40:00.000Z"), coveringKind: "update", ackOnly: false, entries: 2 },
+  { alertId: OTHER_ALERT, slug: "abcd2345", isDrill: false, reportedAt: new Date("2026-10-04T13:30:00.000Z"), types: ["elevator"], phase: "in_progress", validUntil: new Date("2026-10-05T14:00:00.000Z"), publishedAt: new Date("2026-10-04T14:40:00.000Z"), coveringKind: "update", ackOnly: false, entries: 2, audience: IN_MILEPOST },
   { alertId: "01900000-0000-7000-8000-00000000a1e9", slug: "wxyz2345", isDrill: false, reportedAt: new Date("2026-10-04T13:50:00.000Z"), types: ["water", "power"], phase: "problem", validUntil: new Date("2026-10-05T15:20:00.000Z"), publishedAt: new Date("2026-10-04T15:20:00.000Z"), coveringKind: "ack", ackOnly: true, entries: 1 },
   { alertId: "01900000-0000-7000-8000-00000000a1ea", slug: "drll2345", isDrill: true, reportedAt: new Date("2026-10-04T13:00:00.000Z"), types: ["fire"], phase: "problem", validUntil: new Date("2026-10-05T15:20:00.000Z"), publishedAt: new Date("2026-10-04T13:10:00.000Z"), coveringKind: "ack", ackOnly: true, entries: 1 },
 ];
 const HOME = {
   waiting: [
-    { alertId: OTHER_ALERT, entryId: OTHER_ENTRY, kind: "ack" as const, status: "pending_approval" as const, types: ["elevator"], isDrill: false, version: 1, submittedAt: new Date("2026-10-04T14:00:00.000Z"), returnedNote: null },
-    { alertId: OTHER_ALERT, entryId: "01900000-0000-7000-8000-00000000e179", kind: "update" as const, status: "pending_approval" as const, types: ["power", "water"], isDrill: true, version: 2, submittedAt: new Date("2026-10-04T14:05:00.000Z"), returnedNote: null },
-    { alertId: "01900000-0000-7000-8000-00000000a1e9", entryId: "01900000-0000-7000-8000-00000000e17b", kind: "update" as const, status: "pending_approval" as const, types: ["water", "power"], isDrill: false, version: 1, submittedAt: new Date("2026-10-04T13:20:00.000Z"), returnedNote: null },
+    { alertId: OTHER_ALERT, entryId: OTHER_ENTRY, kind: "ack" as const, status: "pending_approval" as const, types: ["elevator"], isDrill: false, version: 1, submittedAt: new Date("2026-10-04T14:00:00.000Z"), returnedNote: null, audience: IN_MILEPOST },
+    { alertId: OTHER_ALERT, entryId: "01900000-0000-7000-8000-00000000e179", kind: "update" as const, status: "pending_approval" as const, types: ["power", "water"], isDrill: true, version: 2, submittedAt: new Date("2026-10-04T14:05:00.000Z"), returnedNote: null, followUp: true },
+    { alertId: "01900000-0000-7000-8000-00000000a1e9", entryId: "01900000-0000-7000-8000-00000000e17b", kind: "update" as const, status: "pending_approval" as const, types: ["water", "power"], isDrill: false, version: 1, submittedAt: new Date("2026-10-04T13:20:00.000Z"), returnedNote: null, followUp: true },
   ],
   mine: [
     { alertId: OTHER_ALERT, entryId: "01900000-0000-7000-8000-00000000e17a", kind: "ack" as const, status: "draft" as const, types: ["water"], isDrill: false, version: 1, submittedAt: null, returnedNote: "Say which floors, and when the water will be back." },
@@ -168,13 +169,15 @@ const HOME = {
 
 for (const width of [390, 1280]) {
   test(`the Hub home lists what waits for a person with how long, the open threads, the note an approver sent back and the drills apart, at ${width}px`, async ({ page }) => {
-    const view = incidentsView(HOME, "coordinator", undefined, RUNNING, NOW);
+    const view = incidentsView(HOME, "coordinator", undefined, RUNNING, NOW, [], PLANS);
     await page.setViewportSize({ width, height: 800 });
     await mount(page, "IncidentsFixture", { texts: REAL_TEXTS, brand, view });
     await fitToPage(page, width);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Right now");
-    // The longest wait first.
-    await expect(page.getByTestId("incidents-waiting").getByTestId("waited")).toHaveText(["Waiting 52 minutes", "Waiting 12 minutes"]);
+    // The longest wait first; the drill waiting for approval is in the queue too, titled as a drill (UAT F-6); a card names its place (UAT note 4).
+    await expect(page.getByTestId("incidents-waiting").getByTestId("waited")).toHaveText(["Waiting 52 minutes", "Waiting 12 minutes", "Waiting 7 minutes"]);
+    await expect(page.getByTestId("incidents-waiting").locator('[data-drill="true"]')).toContainText("Drill · Power, Water · Update");
+    await expect(page.getByTestId("incidents-waiting").getByTestId("item-place")).toHaveText(["4 Milepost Pl"]);
     await expect(page.getByTestId("returned-note")).toContainText("Note from the approver: Say which floors");
     await expect(page.getByTestId("incidents-drills")).toBeVisible();
     await expectBaseline(page, `incidents-${width}.png`);
