@@ -5,8 +5,37 @@ import { KEYWORD_SATURATION, bm25Scores, buildKeywordIndex, keywordBoosts, keywo
 describe("keywordTokens", () => {
   it("lower-cases, keeps runs of a to z, drops stop words and one-letter words, and takes a plural off", () => {
     expect(keywordTokens("Where can I get FOOD for my kids?")).toEqual(["food", "kid"]);
-    expect(keywordTokens("groceries, libraries; classes")).toEqual(["grocery", "library", "classe"]);
+    expect(keywordTokens("groceries, libraries; classes")).toEqual(["grocery", "library", "class"]);
     expect(keywordTokens("bus is free")).toEqual(["bus", "free"]); // a word of three letters keeps its s
+  });
+
+  it("leaves out the language names of a list of the languages a service is offered in, but not English as a subject", () => {
+    expect(keywordTokens("Care offered in English, Spanish, Gujarati and Ukrainian")).toEqual(["care", "offered"]);
+    expect(keywordTokens("Multilingual staff (English, Arabic, French, Farsi, Dari and others)")).toEqual(["multilingual", "staff", "other"]);
+    expect(keywordTokens("an enriched math/science/English program")).toEqual(["enriched", "math", "science", "english", "program"]);
+  });
+
+  it("adds the English-class concept for the residents' words and the listings' alike, once per phrase", () => {
+    const concept = "concept:english-class";
+    for (const question of ["where can I learn english", "Where are English classes held?", "english lessons for my mother", "ESL near me", "I want to improve my English"]) {
+      expect(keywordTokens(question), question).toContain(concept);
+    }
+    expect(keywordTokens("women-only LINC English classes, English conversation circles").filter((t) => t === concept)).toHaveLength(3);
+    expect(keywordTokens("offering ESL, special education and Empower Reading supports")).toContain(concept);
+    expect(keywordTokens("employment services, language training, and counselling")).toContain(concept);
+  });
+
+  it("finds no English-class concept in other languages' classes, in a list of languages, or in a clause that says it is not offered", () => {
+    const concept = "concept:english-class";
+    for (const text of [
+      "Japanese language classes for adults",
+      "Care offered in English, Spanish, Gujarati and Ukrainian",
+      "staff speak English and Urdu",
+      "no French immersion, ESL, or special education programs were listed",
+      "English",
+    ]) {
+      expect(keywordTokens(text), text).not.toContain(concept);
+    }
   });
 
   it("reads no word of another script", () => {
@@ -48,6 +77,37 @@ describe("BM25 and the boost", () => {
     expect(boosts.get("A")).toBeCloseTo((0.15 * a) / (a + KEYWORD_SATURATION), 12);
     expect(boosts.get("A")!).toBeLessThan(0.15);
     expect(keywordBoosts(index, "food bank groceries", 0)).toEqual(new Map());
+  });
+});
+
+describe("the English-class concept (production UAT, 2026-10-08: \"where can I learn english\")", () => {
+  // The listings as the catalogue words them: a childcare centre whose care is offered in English, LINC classes, a school with ESL,
+  // a school whose listing says it has none, and a bike hub with learn-to-ride lessons.
+  const index = buildKeywordIndex([
+    { id: "childcare", text: "Champions Children's Centre Schools & Child Services Childminding & EarlyON Licensed childcare. Care offered in English, Spanish, Gujarati and Ukrainian." },
+    { id: "linc", text: "Afghan Women's Organization Non-Profits Free settlement services: women-only LINC English classes, English conversation circles." },
+    { id: "esl", text: "Saint John XXIII Catholic School Schools Elementary school offering ESL, special education and Empower Reading supports." },
+    { id: "no-esl", text: "Valley Park Middle School Schools A middle school; no French immersion, ESL, or special education programs were listed." },
+    { id: "bike", text: "Gateway Bike Hub Free bike repairs, learn-to-ride lessons and group rides." },
+  ]);
+
+  it("adds the keyword weight once more to each provider that holds the concept, so it can add up to twice the weight", () => {
+    const boosts = keywordBoosts(index, "where can I learn english", 0.15);
+
+    expect(boosts.get("linc")!).toBeGreaterThan(0.15);
+    expect(boosts.get("linc")!).toBeLessThan(0.3);
+    expect(boosts.get("esl")).toBeCloseTo(0.15, 12);
+    expect(boosts.get("childcare")).toBeUndefined();
+    expect(boosts.get("no-esl")).toBeUndefined();
+    expect(boosts.get("bike")!).toBeLessThan(boosts.get("esl")!);
+  });
+
+  it("is only the words' boost for a question that names no concept", () => {
+    const scores = bm25Scores(index, "bike repairs");
+    const boosts = keywordBoosts(index, "bike repairs", 0.15);
+
+    expect([...boosts.keys()]).toEqual(["bike"]);
+    expect(boosts.get("bike")).toBeCloseTo((0.15 * scores.get("bike")!) / (scores.get("bike")! + KEYWORD_SATURATION), 12);
   });
 });
 
