@@ -47,6 +47,7 @@ are in `src/platform/config/env.ts`.
 | `SEARCH_EMBED_MONTHLY_CALLS` | no | the embedding calls of the search model (`SEARCH_EMBED_MODEL`) a calendar month (America/Toronto) is budgeted, counted from `spend_event` rows of kind `embed` of that model, every purpose (searches, publishes, test-set runs), or `off`. Default `1000`, the per-model monthly cap Cohere applies to the other models on the key (whether it applies to `embed-v4.0` too is not confirmed). A warning only: at 80% ops gets one `search.leg_failed` `embed_quota_near`; nothing is refused. See "The search embedding's monthly budget" below | default |
 | `SEARCH_CRISIS_PHRASES` | no | `on` or `off`: whether a question that describes an emergency in words (someone not breathing or unconscious, a heart attack or stroke, choking, severe bleeding, an overdose, suicide or self-harm, fire or smoke in a home, a gas leak or carbon monoxide, a flood, a car accident, an assault or a weapon, a break-in, a missing child, "call an ambulance / the police / 911") puts the 911 block first (`emergency_first`), whatever the ranking found. The phrases are in `src/modules/directory/domain/crisisPhrases.ts`, in English (also read in the English translation of a translated question) and every launch language; every list but English is machine-assisted and is checked by native readers before launch ([launch checklist](procedures/launch-checklist.md)). It only ever turns the flag on and never changes the results. Default `on`; `off` is for measuring the ranking alone. Read at search time | default |
 
+| `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` | no | `on` (default, also when unset) or `off`; anything else fails start-up. The product owner's pilot decision of 2026-10-09: with `on`, the directory release (Publish) and the terms page show every current machine translation whose facts match the English, safety-critical ones included, with no label and no "Not yet available in this language" note. The seeds read the same variable from their own environment (see "Translations residents see" below). Set it to `off` only together with the GitHub repository variable of the same name, then re-seed and Publish | default (on) |
 | `MAP_TILE_URL` | no (the CARTO key in it is a public browser key, but it is not stored in the repository) | `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=…` (CARTO Positron, confirmed by IT); production and preview. The code's keyless default is a fallback whose legacy access ends 2026-11-30 | 2026-10-02 |
 | `MAP_TILE_SUBDOMAINS` | no | empty (the keyed URL has no `{s}`); the default `abcd` applies only to the keyless fallback | 2026-10-02 |
 | `MAP_TILE_ATTRIBUTION`, `MAP_TILE_ATTRIBUTION_URL` | no | `© OpenStreetMap contributors © CARTO`, `https://carto.com/attributions`; required whenever `MAP_TILE_URL` is set | 2026-10-02 |
@@ -764,6 +765,31 @@ allowance. Units, not money, while Cohere's prices are unknown. Each call it mak
 
 From a shell, with the same values exported: `npm run search-test-set -- guard --checkpoint week_4 --yes` (`--plan-only` prints the
 plan; `--bar <file>` measures against another bar file).
+
+### Translations residents see (`CATALOGUE_PILOT_MACHINE_TRANSLATIONS`)
+
+The product owner's pilot decision of 2026-10-09: residents see everything in their chosen language, in all 15 languages,
+with no "Not yet available in this language" note and no machine-translation label or "Show English" toggle. One setting,
+`CATALOGUE_PILOT_MACHINE_TRANSLATIONS` (`on` by default; `src/platform/config/pilotTranslations.ts`), decides what the
+translation rules let through, in four places:
+
+| Where | Reads it from | With `on` (default) | With `off` |
+|---|---|---|---|
+| `npm run seed:providers` | the shell; the "Seed production" workflow passes the GitHub repository variable `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` (unset: on) | every current machine translation of a category, subcategory, description and emergency role loads, safety-critical providers included | reviewed only, and machine translations of ordinary descriptions (AD-11, decision 42) |
+| `npm run seed:guides` | the same | current machine translations of guides and numbers load, 911 texts included | reviewed only |
+| Publish directory (the release) | Vercel's environment | ships what the seed loaded, checked again | refuses the machine texts the rules above refuse |
+| The terms page and the web sign-up | Vercel's environment | current machine translations of the terms show | reviewed only |
+
+Whatever it says, a translation is **not** shown when its facts differ from the English (a number, phone number, time,
+weekday, postal code, email or web address lost, changed, reordered or added), when it lost a 911 the English has, or when
+the English changed since it was translated (stale); such a text shows in English, marked `lang="en"` for screen readers, with
+no visible note. A blank 911 translation still refuses the guides seed. The seed reports say which way the setting was
+(`Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS on: ...`), count what loaded by language and list what did not and
+why; `seed.run` records `pilot_machine_translations` (1 or 0). Provider names and addresses are never translated.
+
+To change it: set the Vercel variable (Production) and the GitHub repository variable to the same value, redeploy, run both
+seeds ("Seed production", `providers` and `guides`, dry run first), then press **Publish directory**. The guides and numbers
+change as soon as their seed runs; the directory only with the publish.
 
 ### Rolling out a change to what the directory listing shows (for example the AD-11 pilot change, PR #60)
 
