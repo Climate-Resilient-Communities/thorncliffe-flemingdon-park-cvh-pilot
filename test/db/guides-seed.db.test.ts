@@ -120,6 +120,8 @@ describe("guide and essential_number seed", () => {
       guides_removed: 0,
       numbers_removed: 0,
       translations_loaded: 0,
+      translations_machine: 0,
+      pilot_machine_translations: 0,
       translations_not_yet: 15 * 13 - 1,
     },
     warnings: 1,
@@ -395,5 +397,62 @@ describe("guide and essential_number seed", () => {
     expect(loaded.numbers).toHaveLength(5);
     // a complete run is audited as ok, never as refused
     expect((await auditEvents()).slice(before.length)).toMatchObject([{ action: "seed.run", outcome: "ok" }]);
+  });
+
+  describe("the pilot setting on (product owner, 2026-10-09: every translation shown, no warning)", () => {
+    const pilotSeed = (input: ContentInput) => seedGuidesAndNumbers(db, stamp(input), { today: TODAY, pilotMachineTranslations: true });
+    const machine = (english: string, text: string, change: Partial<TranslationRecord> = {}): TranslationRecord => ({
+      source: english,
+      sourceHash: sourceHash(english),
+      text,
+      model: "command-a-translate-08-2025",
+      status: "machine",
+      ...change,
+    });
+
+    it("loads current machine translations, 911 texts included, as `machine`; keeps out a stale one, one whose facts changed and one that lost 911", async () => {
+      const input = validInput();
+      input.guides[0].before = ["Call the Hub at 416-421-8997."];
+      input.translations = {
+        es: {
+          texts: {
+            "guide.power.when911": machine(WHEN_911, "Llame al 911 si alguien está en peligro."),
+            "guide.flood.when911": machine(WHEN_911, "Llame a emergencias si alguien está en peligro."),
+            "guide.power.title": machine("Title of power", "Título", { sourceHash: sourceHash("Title of power (old)") }),
+            "guide.power.before.0": machine("Call the Hub at 416-421-8997.", "Llame al Hub al 416-421-8999."),
+            "number.hub.label": machine("Talk to someone at the Hub", "Hable con alguien del Hub"),
+          },
+        },
+      };
+
+      const result = await pilotSeed(input);
+
+      const power = (await sql.unsafe("select texts, translations from guide where id = 'power'"))[0];
+      const flood = (await sql.unsafe("select texts from guide where id = 'flood'"))[0];
+      const hub = (await sql.unsafe("select texts, translations from essential_number where id = 'hub'"))[0];
+      expect(power.texts.when911).toEqual({ en: WHEN_911, es: "Llame al 911 si alguien está en peligro." });
+      expect(power.translations.when911.es).toEqual({ model: "command-a-translate-08-2025", status: "machine", sourceHash: sourceHash(WHEN_911) });
+      expect(hub.texts.label).toEqual({ en: "Talk to someone at the Hub", es: "Hable con alguien del Hub" });
+      // The 911 rule, the stale check and the facts check still hold.
+      expect(flood.texts.when911).toEqual({ en: WHEN_911 });
+      expect(power.texts.title).toEqual({ en: "Title of power" });
+      expect(power.texts["before.0"]).toEqual({ en: "Call the Hub at 416-421-8997." });
+      expect(result.report.translations.unavailable).toEqual(
+        expect.arrayContaining([
+          { key: "guide.flood.when911", lang: "es", reason: "lost_911" },
+          { key: "guide.power.title", lang: "es", reason: "stale" },
+          { key: "guide.power.before.0", lang: "es", reason: "facts_changed" },
+        ]),
+      );
+      expect((await auditEvents()).at(-1)?.meta).toMatchObject({ counts: { translations_loaded: 2, translations_machine: 2, pilot_machine_translations: 1 } });
+    });
+
+    it("still refuses the whole run, loading nothing, when a 911 text is blank in a language", async () => {
+      const input = validInput();
+      input.translations = { es: { texts: { "number.911.when": machine("Call 911 right now.", " ") } } };
+
+      await expect(pilotSeed(input)).rejects.toBeInstanceOf(SeedRefusedError);
+      expect(await rows()).toEqual({ guides: [], numbers: [] });
+    });
   });
 });

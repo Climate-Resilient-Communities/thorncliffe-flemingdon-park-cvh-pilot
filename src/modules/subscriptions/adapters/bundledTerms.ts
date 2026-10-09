@@ -1,9 +1,12 @@
 // The terms read from the committed files, bundled into the build: the JSON is imported, so a page prerendered at
 // build time and a route that runs later (the web sign-up, S07.02) read the same text and need no file access at
-// run time. A language without reviewed text has null entries and shows English with translation.unavailable.
+// run time. A language without reviewed text has null entries and shows English with translation.unavailable; under
+// CATALOGUE_PILOT_MACHINE_TRANSLATIONS (default on, the product owner's pilot decision of 2026-10-09) a current machine
+// translation whose facts match the English is shown too.
 import type { LangCode } from "@/contracts/lang";
 import type { TranslationFile } from "@/contracts/contentReview";
 import { sha256Hex } from "@/platform/hash";
+import { PILOT_MACHINE_TRANSLATIONS_VAR, parsePilotMachineTranslations } from "@/platform/config/pilotTranslations";
 import { createTermsService } from "../application/termsService";
 import type { TermsInput, TermsSource } from "../domain/terms";
 import terms from "../../../../data/catalogue/terms.json";
@@ -34,4 +37,9 @@ export const termsService = createTermsService({
   load: bundledTermsInput,
   hash: sha256Hex,
   today: () => new Date().toISOString().slice(0, 10),
+  // Read on each use, like the date; a bad value fails start-up (src/platform/config/env.ts), so here it is only the default.
+  pilotMachineTranslations: () => {
+    const parsed = parsePilotMachineTranslations(process.env[PILOT_MACHINE_TRANSLATIONS_VAR]);
+    return "ok" in parsed ? parsed.ok : true;
+  },
 });

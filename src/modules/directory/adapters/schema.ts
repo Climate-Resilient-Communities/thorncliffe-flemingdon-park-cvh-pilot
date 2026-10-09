@@ -63,6 +63,8 @@ export type ProviderWithheld = Record<string, Record<string, string>>;
 export interface ProviderSubcategory {
   name: string;
   labels: Record<string, string>;
+  /** language -> where the translation of the name came from; absent on rows seeded before the pilot decision of 2026-10-09 (reviewed only then). */
+  translations?: Record<string, Record<string, unknown>>;
 }
 
 export const provider = pgTable(

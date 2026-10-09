@@ -676,6 +676,14 @@ describe("Cohere and the search settings (S03.02)", () => {
     });
   });
 
+  it("reads CATALOGUE_PILOT_MACHINE_TRANSLATIONS: on by default (the product owner's pilot decision), off, and refuses anything else", () => {
+    expect(parseEnv({ ...production }).pilotMachineTranslations).toBe(true);
+    expect(parseEnv({ ...production, CATALOGUE_PILOT_MACHINE_TRANSLATIONS: "" }).pilotMachineTranslations).toBe(true);
+    expect(parseEnv({ ...production, CATALOGUE_PILOT_MACHINE_TRANSLATIONS: " OFF " }).pilotMachineTranslations).toBe(false);
+    expect(parseEnv({ ...production, CATALOGUE_PILOT_MACHINE_TRANSLATIONS: "on" }).pilotMachineTranslations).toBe(true);
+    expect(() => parseEnv({ ...production, CATALOGUE_PILOT_MACHINE_TRANSLATIONS: "yes" })).toThrow(/CATALOGUE_PILOT_MACHINE_TRANSLATIONS: must be `on` or `off`/);
+  });
+
   it("reads the direct route's reranker settings: SEARCH_RERANK on or off, SEARCH_RERANK_MIN from 0 to 1, SEARCH_RERANK_MONTHLY_CALLS a whole number", () => {
     expect(parseEnv({ ...production, SEARCH_RERANK: " OFF ", SEARCH_RERANK_MIN: "0.08", SEARCH_RERANK_MONTHLY_CALLS: "500" }).search).toMatchObject({ rerank: false, rerankMin: 0.08, rerankMonthlyCalls: 500 });
     expect(parseEnv({ ...production, SEARCH_RERANK: "on" }).search.rerank).toBe(true);

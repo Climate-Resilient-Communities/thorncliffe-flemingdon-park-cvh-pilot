@@ -79,6 +79,9 @@ jobs:
       - name: Run the seed
         env:
           SEED_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          # The product owner's pilot decision (2026-10-09): unset means on (every current machine translation whose
+          # facts match the English loads). Set the repository variable to `off` to go back to reviewed-only.
+          CATALOGUE_PILOT_MACHINE_TRANSLATIONS: ${{ vars.CATALOGUE_PILOT_MACHINE_TRANSLATIONS }}
         run: |
           set -o pipefail
           args=()

@@ -162,6 +162,13 @@ export interface EvaluateOptions {
    * names a crisis or emergency line (safetyCriticalTerms) is refused that way whatever the caller says.
    */
   safetyCritical?: boolean;
+  /**
+   * The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, src/platform/config/pilotTranslations.ts):
+   * with allowMachine, a safety-critical text (`safetyCritical`, or English naming a crisis or emergency line) loads as a machine
+   * translation too, instead of being refused `safety_critical`. The facts check (lostFacts) and the `required` strings (911) still apply,
+   * and a stale translation still never loads.
+   */
+  allowSafetyCritical?: boolean;
 }
 
 // The facts an unreviewed machine translation must keep: translationFacts.ts.
@@ -211,7 +218,8 @@ function machineChecksOf(record: TranslationRecord): MachineCheck[] | undefined 
  *
  * With `allowMachine` (AD-11 pilot change) a current, complete machine translation no person has reviewed loads too,
  * with `status: "machine"` and no reviewer, unless its English is safety-critical (safetyCriticalTerms: a crisis or
- * emergency line; `safety_critical`) or lostFacts finds something (`facts_changed`); for zh-Hant
+ * emergency line; `safety_critical`, lifted by `allowSafetyCritical`, the pilot decision of 2026-10-09) or lostFacts finds
+ * something (`facts_changed`, never lifted); for zh-Hant
  * the zh it was converted from may then be a machine translation as well. A record marked reviewed is held to the
  * review rules either way: a machine translation never passes as reviewed, whatever `machineChecks` it lists.
  */
@@ -233,7 +241,9 @@ export function evaluateTranslation(
   if (machine && !options.allowMachine) return { unavailable: "machine" };
   if (!machine && (isPlaceholder(record.reviewer) || !isIsoDate(record.reviewedOn))) return { unavailable: "review_incomplete" };
   // Crisis and emergency lines keep human review, whatever the translation says (decided on the English).
-  if (machine && (options.safetyCritical || safetyCriticalTerms(english).length > 0)) return { unavailable: "safety_critical" };
+  if (machine && !options.allowSafetyCritical && (options.safetyCritical || safetyCriticalTerms(english).length > 0)) {
+    return { unavailable: "safety_critical" };
+  }
 
   const provenance: Record<string, unknown> = machine
     ? { model: record.model, status: "machine", sourceHash: record.sourceHash }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { parseUntranslatedKeys } from "../../i18n/untranslated";
 import { PRODUCTION_HOST } from "./hosts";
+import { parsePilotMachineTranslations } from "./pilotTranslations";
 
 /**
  * Environment schema (AD-15), checked at boot by instrumentation.ts and on first use by getEnv().
@@ -223,6 +224,13 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        `true` in production starts and turns the gate on. Previews and local development
  *                                                        run with it on unless it is set to false. A value that is neither fails
  *                                                        start-up (a typo must not switch the gate)
+ * CATALOGUE_PILOT_MACHINE_TRANSLATIONS
+ *                      server   optional                 `on` (default) or `off` (src/platform/config/pilotTranslations.ts; product
+ *                                                        owner's pilot decision, 2026-10-09): with `on`, the directory release and
+ *                                                        the terms show every current machine translation whose facts match the
+ *                                                        English, safety-critical ones included, with no warning; the seeds read
+ *                                                        the same variable from their own environment. A value that is neither
+ *                                                        fails start-up
  * MAP_TILE_*           build    optional                 the resident map's tile provider, its credit and whether and how long a
  *                                                        phone may keep viewed tiles: read by src/platform/config/mapTiles.ts
  *                                                        when the map pages are built, not here (S02.07)
@@ -309,6 +317,7 @@ const rawSchema = z.object({
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_FEED_FILE: optionalText,
   RESIDENT_ALERTS_ENABLED: optionalText,
+  CATALOGUE_PILOT_MACHINE_TRANSLATIONS: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   CVH_FAKE_TRANSLATOR: optionalText,
@@ -533,6 +542,11 @@ export interface Env {
   fakeFeedFile?: string;
   /** Whether the feed and the alert pages tell residents about any alert (the launch gate, see RESIDENT_ALERTS_RELEASED). */
   residentAlertsEnabled: boolean;
+  /**
+   * CATALOGUE_PILOT_MACHINE_TRANSLATIONS (default on, the product owner's pilot decision of 2026-10-09): the directory release and the terms
+   * ship every current machine translation whose facts match the English, safety-critical ones included, with no warning.
+   */
+  pilotMachineTranslations: boolean;
   fakeGuidesFile?: string;
   /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
   fakeDirectoryDir?: string;
@@ -1092,6 +1106,8 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_FEED_FILE: the feed fake is only allowed in local development, never on Vercel");
   }
   const residentAlertsEnabled = parseResidentAlerts(raw.RESIDENT_ALERTS_ENABLED, environment, problems);
+  const pilotTranslations = parsePilotMachineTranslations(raw.CATALOGUE_PILOT_MACHINE_TRANSLATIONS);
+  if ("problem" in pilotTranslations) problems.push(pilotTranslations.problem);
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_GUIDES_FILE !== undefined) {
     problems.push("CVH_FAKE_GUIDES_FILE: the guides fake is only allowed in local development, never on Vercel");
   }
@@ -1183,6 +1199,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
     fakeFeedFile: raw.CVH_FAKE_FEED_FILE,
     residentAlertsEnabled,
+    pilotMachineTranslations: "ok" in pilotTranslations ? pilotTranslations.ok : true,
     fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     fakeTranslator: raw.CVH_FAKE_TRANSLATOR === "sample" ? "sample" : undefined,

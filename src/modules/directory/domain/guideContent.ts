@@ -9,6 +9,10 @@
 //  - a translation is loaded only when it is `reviewed` (reviewer and date) and current, i.e.
 //    its source hash matches the English now; any other text shows in English with
 //    translation.unavailable and the report says why;
+//  - the product owner's pilot decision of 2026-10-09 (PlanOptions.pilotMachineTranslations, the setting
+//    CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): a current machine translation (`status: "machine"`)
+//    loads too, 911 texts included, with provenance `status: "machine"`, as long as its facts match the
+//    English (lostFacts: else `facts_changed`) and it keeps 911 (else `lost_911`). A stale one never loads;
 //  - the 911 number and every "when to call 911" text (the 911 keys, see is911Key) can never be
 //    missing or blank, in any language: if one is, the whole run is refused (nothing is loaded);
 //  - the English review is tied to the English it reviewed (a hash of the English texts) and
@@ -95,6 +99,11 @@ export interface PlanOptions {
   hash: Hasher;
   /** Today as YYYY-MM-DD; no date in the files may be later. */
   today: string;
+  /**
+   * The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on, read by the seed script): load
+   * current machine translations whose facts match the English and that keep 911. False (or absent): reviewed only.
+   */
+  pilotMachineTranslations?: boolean;
 }
 
 /** Text keys of a guide, relative to the guide: title, when911, before.0 ... after.n. */
@@ -141,23 +150,26 @@ export function is911Key(key: string): boolean {
 
 // ---------------------------------------------------------------- checks
 // ---------------------------------------------------------------- translations
-// The guides never load an unreviewed machine translation (no allowMachine), so `facts_changed` and `safety_critical` never come up.
-export type UnavailableReason = Exclude<SharedUnavailableReason, "lost_required" | "facts_changed" | "safety_critical"> | "lost_911";
+// Without the pilot setting the guides never load an unreviewed machine translation, so `facts_changed` never comes up; with it a
+// safety-critical text loads like any other (allowSafetyCritical), so `safety_critical` never comes up either way.
+export type UnavailableReason = Exclude<SharedUnavailableReason, "lost_required" | "safety_critical"> | "lost_911";
 
 export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   not_translated: "not translated yet",
   stale: "stale: the English changed since it was translated",
-  machine: "machine translation, no review recorded",
+  machine: "machine translation, no review recorded (loads only while CATALOGUE_PILOT_MACHINE_TRANSLATIONS is on)",
   review_incomplete: "marked reviewed without a named reviewer and review date",
   incomplete_record: "translation record is missing its text, model or source hash",
   zh_changed_or_not_reviewed: "converted from a zh text that has changed or is not reviewed",
   lost_911: "does not contain 911",
+  facts_changed: "machine translation that lost, changed, reordered or added a number, phone number, time, weekday, postal code, email or web address of the English",
 };
 
 type GuideEvaluation = { loaded: LoadedTranslation } | { unavailable: UnavailableReason } | { blank: true };
 
-function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, input: ContentInput, hash: Hasher): GuideEvaluation {
-  const result = evaluateTranslation(lang, key, english, input.translations, hash, ["911"]);
+function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, input: ContentInput, hash: Hasher, pilot = false): GuideEvaluation {
+  const options = pilot ? { allowMachine: true, allowSafetyCritical: true } : {};
+  const result = evaluateTranslation(lang, key, english, input.translations, hash, ["911"], options);
   if ("unavailable" in result && result.unavailable === "lost_required") return { unavailable: "lost_911" };
   return result as GuideEvaluation;
 }
@@ -188,9 +200,19 @@ export interface UnavailableText {
 }
 
 export interface SeedReport {
+  /** True when the pilot setting let current machine translations load. */
+  pilot: boolean;
   guides: { id: string; loaded: boolean; reasons: string[] }[];
   numbers: { loaded: boolean; reasons: string[] };
-  translations: { loaded: number; unavailable: UnavailableText[] };
+  translations: {
+    /** Every translation loaded, reviewed or machine. */
+    loaded: number;
+    /** Of `loaded`, the machine translations no person has reviewed (pilot setting). */
+    machine: number;
+    /** Every translation loaded, by language. */
+    byLang: Partial<Record<Exclude<LangCode, "en">, number>>;
+    unavailable: UnavailableText[];
+  };
 }
 
 export interface SeedPlan {
@@ -215,11 +237,13 @@ function planTexts(
   for (const [key, english] of Object.entries(texts)) {
     planned.texts[key] = { en: english };
     for (const lang of TRANSLATED_LANGS) {
-      const result = evaluate(lang, keyOf(key), english, input, hash);
+      const result = evaluate(lang, keyOf(key), english, input, hash, report.pilot);
       if ("loaded" in result) {
         planned.texts[key][lang] = result.loaded.text;
         (planned.translations[key] ??= {})[lang] = result.loaded.provenance;
         report.translations.loaded += 1;
+        if (result.loaded.provenance.status === "machine") report.translations.machine += 1;
+        report.translations.byLang[lang] = (report.translations.byLang[lang] ?? 0) + 1;
       } else if ("blank" in result) {
         if (is911Key(keyOf(key))) {
           refusals.push(`${keyOf(key)} is blank in ${lang}: a 911 text can never be empty in any language`);
@@ -234,11 +258,12 @@ function planTexts(
 }
 
 /** What the seed may load from the files, and why the rest is refused or shown in English. */
-export function planSeed(input: ContentInput, { hash, today }: PlanOptions): SeedPlan {
+export function planSeed(input: ContentInput, { hash, today, pilotMachineTranslations }: PlanOptions): SeedPlan {
   const report: SeedReport = {
+    pilot: pilotMachineTranslations === true,
     guides: [],
     numbers: { loaded: false, reasons: [] },
-    translations: { loaded: 0, unavailable: [] },
+    translations: { loaded: 0, machine: 0, byLang: {}, unavailable: [] },
   };
   const refusals: string[] = [];
 
@@ -327,18 +352,28 @@ export function formatSeedReport(report: SeedReport): string[] {
   if (report.numbers.loaded) lines.push("Essential numbers loaded");
   else lines.push(`  REFUSED essential numbers: ${report.numbers.reasons.join("; ")}`);
 
-  lines.push(`Translations loaded: ${report.translations.loaded}`);
+  lines.push(
+    report.pilot
+      ? "Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS on: current machine translations whose facts match the English (and that keep 911) load, shown with no label"
+      : "Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS off: reviewed translations only",
+  );
+  const byLang = Object.entries(report.translations.byLang).map(([lang, count]) => `${lang} ${count}`).join(", ");
+  lines.push(
+    `Translations loaded: ${report.translations.loaded}` +
+      (report.translations.machine > 0 ? ` (machine translations, not reviewed: ${report.translations.machine})` : "") +
+      (byLang ? ` (${byLang})` : ""),
+  );
   const notYet = report.translations.unavailable.filter((u) => u.reason === "not_translated");
   const others = report.translations.unavailable.filter((u) => u.reason !== "not_translated");
   const perLang = new Map<string, number>();
   for (const u of notYet) perLang.set(u.lang, (perLang.get(u.lang) ?? 0) + 1);
   if (notYet.length > 0) {
     lines.push(
-      `Not translated yet (English with translation.unavailable): ${notYet.length} (${[...perLang].map(([l, n]) => `${l} ${n}`).join(", ")})`,
+      `Not translated yet (shown in English): ${notYet.length} (${[...perLang].map(([l, n]) => `${l} ${n}`).join(", ")})`,
     );
   }
   if (others.length > 0) {
-    lines.push(`Not loaded, shown in English with translation.unavailable: ${others.length}`);
+    lines.push(`Not loaded, shown in English: ${others.length}`);
     for (const u of others) lines.push(`  ${u.lang} ${u.key}: ${UNAVAILABLE_TEXT[u.reason]}`);
   }
   return lines;
@@ -354,7 +389,8 @@ export interface LaunchGap {
 /**
  * Every launch language x 911 key (`number.911.*`, `guide.*.when911`) that has no current,
  * reviewed translation. The seed still loads such a text in English with translation.unavailable
- * (owner decision 2026-10-02); launch is not ready until this list is empty.
+ * (owner decision 2026-10-02), or, under the pilot setting (2026-10-09), its current machine
+ * translation. A native reader's review of these comes first after the pilot (launch checklist).
  */
 export function launchGaps(input: ContentInput, { hash }: Pick<PlanOptions, "hash">): LaunchGap[] {
   const gaps: LaunchGap[] = [];
@@ -373,7 +409,7 @@ export function launchGaps(input: ContentInput, { hash }: Pick<PlanOptions, "has
 export function formatLaunchGaps(gaps: LaunchGap[]): string[] {
   if (gaps.length === 0) return ["Launch check passed: every launch language has a reviewed, current 911 translation"];
   return [
-    `Launch check FAILED: ${gaps.length} 911 text(s) without a reviewed, current translation (shown in English with translation.unavailable)`,
+    `Launch check FAILED: ${gaps.length} 911 text(s) without a reviewed, current translation (shown in English, or as a machine translation under CATALOGUE_PILOT_MACHINE_TRANSLATIONS)`,
     ...gaps.map((g) => `  ${g.lang} ${g.key}: ${UNAVAILABLE_TEXT[g.reason]}`),
   ];
 }

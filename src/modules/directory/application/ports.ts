@@ -94,6 +94,11 @@ export interface PublishDeps {
   onFailure: (failure: PublishFailure) => Promise<void>;
   /** S03.02: with this, the release carries the search data of its own listings; without it the release has none (search then says "unavailable"). */
   search?: SearchBuild;
+  /**
+   * The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on, from the environment): the release
+   * ships every current machine translation the seed loaded whose facts match the English, safety-critical ones included. Absent: false.
+   */
+  pilotMachineTranslations?: boolean;
   /** Test seams. */
   now?: () => Date;
   sleep?: (ms: number) => Promise<void>;

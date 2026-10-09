@@ -276,6 +276,7 @@ describe("provider catalogue (S02.04)", () => {
             providers_safety_critical: 40,
             translations_safety_critical: 560,
             translations_not_yet: 0,
+            pilot_machine_translations: 0,
           },
           // Not loaded although they exist: 1050 unreviewed emergency roles and names, 560 descriptions of the 40
           // safety-critical providers (14 languages), 170 descriptions whose facts changed.
@@ -449,6 +450,64 @@ describe("provider catalogue (S02.04)", () => {
       expect((await row("M001")).translations).toEqual({});
       expect((await row("M001")).withheld).toEqual({ emergency_role: { ur: "machine" }, services: { ur: "safety_critical" } });
       expect(result.report.safetyCritical).toEqual({ emergency_role: 1, emergency_category: 0, crisis_text: 0, providers: 1 });
+    });
+  });
+
+  describe("the seed with the pilot setting on (product owner, 2026-10-09: every translation shown, no warning)", () => {
+    const pilotSeed = (catalogue: ProviderCatalogueInput) => seedProviders(owner, catalogue, VERSION, { pilotMachineTranslations: true });
+
+    it("loads the real catalogue's machine translations of every text, safety-critical providers included; only facts-check failures stay out", async () => {
+      const files = readProviderCatalogue(path.join(ROOT, "data", "catalogue"));
+      const result = await pilotSeed(files);
+
+      const reasons = new Set(result.report.translations.unavailable.map((u) => u.reason));
+      expect(reasons.has("machine")).toBe(false);
+      expect(reasons.has("safety_critical")).toBe(false);
+      // A safety-critical provider (an emergency role) now has its role and description in other languages.
+      const [critical] = await sql.unsafe(
+        "select id, texts, translations, withheld from provider where texts ? 'emergency_role' and jsonb_typeof(texts->'emergency_role'->'es') = 'string' order by id limit 1",
+      );
+      expect(critical).toBeDefined();
+      expect(critical.translations.emergency_role.es).toMatchObject({ status: "machine" });
+      expect(critical.translations.emergency_role.es).not.toHaveProperty("reviewer");
+      // Every withheld translation is withheld for a reason the pilot keeps: the facts check (or 911, or stale).
+      const withheld = (await sql.unsafe("select withheld from provider")).flatMap((r) => Object.values(r.withheld ?? {}).flatMap((byLang) => Object.values(byLang as object)));
+      expect(new Set(withheld).size).toBeGreaterThan(0);
+      expect([...new Set(withheld)].every((why) => ["facts_changed", "lost_required", "stale"].includes(why as string))).toBe(true);
+      // Category and subcategory names load too, with their provenance.
+      const [category] = await sql.unsafe("select labels, translations from category order by sort_order limit 1");
+      expect(Object.keys(category.labels).length).toBeGreaterThan(1);
+      const [withSub] = await sql.unsafe("select subcategories from provider where jsonb_array_length(subcategories) > 0 order by id limit 1");
+      expect(withSub.subcategories[0].translations).toBeDefined();
+      expect((await seedRuns()).at(-1)?.meta).toMatchObject({ counts: { translations_safety_critical: 0, pilot_machine_translations: 1 } });
+
+      // Running it again changes nothing.
+      const again = await pilotSeed(files);
+      expect(again.changed).toEqual({ providers: 0, locations: 0, categories: 0, categoryLinks: 0 });
+    });
+
+    it("keeps a machine translation whose facts changed, and a stale one, out, and an emergency role that lost 911", async () => {
+      const role = "Warm room in cold alerts. Call 911 in danger.";
+      const services = "Fire rescue for the area. Non-emergency line: 416-338-9050.";
+      const record = (english: string, text: string, change: Record<string, unknown> = {}) => ({ source: english, text, model: "command-a-translate-08-2025", ...change });
+      const catalogue = (roleText: string, servicesRecord: Record<string, unknown>) =>
+        input([entry("M001", { services: { id: catalogueTextId(services), en: services }, emergencyRole: { id: catalogueTextId(role), en: role } })], {
+          ps: { texts: { [catalogueTextId(role)]: record(role, roleText), [catalogueTextId(services)]: servicesRecord } },
+        });
+      const PS_ROLE = "په سړو خبرتیاوو کې تود ځای. په خطر کې 911 ته زنګ ووهئ.";
+      const PS_SERVICES = "د سیمې لپاره د اور ژغورنه. غیر بیړنۍ کرښه: 416-338-9050.";
+
+      await pilotSeed(catalogue(PS_ROLE, record(services, PS_SERVICES)));
+      expect((await row("M001")).texts).toEqual({ services: { en: services, ps: PS_SERVICES }, emergency_role: { en: role, ps: PS_ROLE } });
+      expect((await row("M001")).withheld).toEqual({});
+
+      await pilotSeed(catalogue(PS_ROLE.replace("911", ""), record(services, PS_SERVICES.replace("9050", "9051"))));
+      expect((await row("M001")).texts).toEqual({ services: { en: services }, emergency_role: { en: role } });
+      expect((await row("M001")).withheld).toEqual({ services: { ps: "facts_changed" }, emergency_role: { ps: "lost_required" } });
+
+      await pilotSeed(catalogue(PS_ROLE, record("Fire rescue (older text). Non-emergency line: 416-338-9050.", PS_SERVICES)));
+      expect((await row("M001")).texts.services).toEqual({ en: services });
+      expect((await row("M001")).withheld).toEqual({ services: { ps: "stale" } });
     });
   });
 
