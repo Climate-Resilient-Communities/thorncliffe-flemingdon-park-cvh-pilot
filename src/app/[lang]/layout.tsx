@@ -4,7 +4,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 import { preload } from "react-dom";
 import type { CSSProperties } from "react";
-import { BASIC_BOOT_SCRIPT, BasicSync } from "@/ui/basic";
+import { BasicSync } from "@/ui/basic";
 import { ResidentShell, type NavItem } from "@/ui/shell";
 import { OfflineSupport } from "@/ui/offline";
 import { InstallCount } from "@/ui/usage";
@@ -80,15 +80,13 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
       lang={language.bcp47}
       dir={language.dir}
       data-script={language.font}
-      // The boot script below sets data-basic before React hydrates, so the attribute is expected to differ from the server's.
+      // The boot script (BasicSync) sets data-basic before React hydrates, so the attribute is expected to differ from the server's.
       suppressHydrationWarning
       style={{ "--font-script": fontStack(language.font) } as CSSProperties}
     >
-      <head>
-        {/* Basic mode (X-07, S02.14): before the first paint, from cvh.choices, so the page never shows in normal size first. */}
-        <script dangerouslySetInnerHTML={{ __html: BASIC_BOOT_SCRIPT }} />
-      </head>
       <body>
+        {/* Basic mode (X-07, S02.14): its boot script in the <head> of every resident page, the 404 and error pages too, so the
+            page never shows in normal size first. */}
         <BasicSync />
         <ResidentShell
           header={{

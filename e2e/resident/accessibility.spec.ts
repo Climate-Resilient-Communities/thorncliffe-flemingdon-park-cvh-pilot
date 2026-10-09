@@ -21,6 +21,9 @@ test.describe.configure({ mode: "parallel" });
 const LANGS = ["en", "ur", "ta"] as const;
 type Lang = (typeof LANGS)[number];
 const SIGNED_BUILDING = BUILDINGS[0].rsn;
+// The building page (S02.08) is drawn by the server from the sample buildings of fixtures/buildings.json (CVH_FAKE_BUILDINGS_FILE),
+// not from choices-fixture's list, whose numbers it does not have: this is its first, 4 Milepost Pl.
+const PAGE_BUILDING = "4154146";
 const ALERT = "qrstvwxz";
 
 type PageCase = {
@@ -63,7 +66,7 @@ const PAGES: PageCase[] = [
   { name: "numbers", path: (l) => `/${l}/ready/numbers`, stub: stubBuildingList },
   // S08.05: Ask for a check-in (R-33).
   { name: "ask for a check-in", path: (l) => `/${l}/ready/check-in` },
-  { name: "building", path: (l) => `/${l}/buildings/${SIGNED_BUILDING}` },
+  { name: "building", path: (l) => `/${l}/buildings/${PAGE_BUILDING}` },
   { name: "my choices", path: (l) => `/${l}/choices`, stub: stubBuildingList },
   { name: "choose language", path: (l) => `/${l}/choices/language` },
   { name: "choose place", path: (l) => `/${l}/choices/place`, stub: stubBuildingList },
@@ -120,7 +123,9 @@ async function open(page: Page, entry: PageCase, lang: Lang, basic: boolean, wid
   await seed(page, basic, entry.firstRun);
   await entry.stub?.(page);
   const url = entry.alerts ? `${ALERTS_URL}${entry.path(lang)}` : entry.path(lang);
-  await openResident(page, url, width);
+  const response = await openResident(page, url, width);
+  // The page itself, not a 404 drawn in its place: every entry is a page that exists.
+  expect(response?.status(), `${entry.name}: ${url}`).toBe(200);
   await page.waitForLoadState("networkidle");
   await entry.settle?.(page, basic);
   await expect(page.locator("main h1").first()).toBeVisible();
