@@ -26,9 +26,9 @@
     "text": "پینٹیکوسٹل چرچ، 5 گرینوبل ڈرائیو پر واقع، عبادت کی خدمات اور سنڈے اسکول فراہم کرتا ہے، جس میں ایک چیپل، لاؤنج اور کلیسیا کی سرگرمیوں کے لیے دفاتر موجود ہیں۔ حال ہی میں اس کی 50 ویں سالگرہ منائی گئی (ستمبر 2025)۔"
    },
    "model": "claude-correction",
-   "note": "Address back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
-   "text": "پینٹیکوسٹل چرچ، 5 Grenoble Drive پر واقع، عبادت کی خدمات اور سنڈے اسکول فراہم کرتا ہے، جس میں ایک چیپل، لاؤنج اور کلیسیا کی سرگرمیوں کے لیے دفاتر موجود ہیں۔ حال ہی میں اس کی 50 ویں سالگرہ منائی گئی (ستمبر 2025)۔"
+   "text": "پینٹیکوسٹل چرچ، 5 Grenoble Drive پر واقع، عبادت کی خدمات اور اتوار کا اسکول (بچوں کی دینی کلاسیں) فراہم کرتا ہے، جس میں ایک چیپل، لاؤنج اور کلیسیا کی سرگرمیوں کے لیے دفاتر موجود ہیں۔ حال ہی میں اس کی 50 ویں سالگرہ منائی گئی (ستمبر 2025)۔"
   },
   "0b810534f69d": {
    "correctedFrom": {
@@ -76,14 +76,16 @@
     "text": "گھر اور کمیونٹی کی صحت کی دیکھ بھال فراہم کرنے والا ادارہ جو گھر پر اور کلینک میں خدمات پیش کرتا ہے: نرسنگ (RN/RPN)، ذاتی مدد، گھریلو معاونت (کھانے کی تیاری، گھر کی صفائی، ساتھی کا ساتھ، ادویات کی یاد دہانی)، فزیوتھراپی، آکيوپیشنل تھراپی، اسپیچ لینگویج پیتھالوجی، سوشل ورک اور ڈائٹکس۔ نرسیں مختصر یا طویل مدتی دیکھ بھال کی ضروریات کے لیے چوبیس گھنٹے دستیاب ہیں؛ اس کے علاوہ نرسنگ اور فزیوتھراپی کلینکس بھی چلائے جاتے ہیں۔"
    },
    "model": "claude-correction",
-   "note": "Replaced Arabic letter ي with Urdu ی.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
-   "text": "گھر اور کمیونٹی کی صحت کی دیکھ بھال فراہم کرنے والا ادارہ جو گھر پر اور کلینک میں خدمات پیش کرتا ہے: نرسنگ (RN/RPN)، ذاتی مدد، گھریلو معاونت (کھانے کی تیاری، گھر کی صفائی، ساتھی کا ساتھ، ادویات کی یاد دہانی)، فزیوتھراپی، آکیوپیشنل تھراپی، اسپیچ لینگویج پیتھالوجی، سوشل ورک اور ڈائٹکس۔ نرسیں مختصر یا طویل مدتی دیکھ بھال کی ضروریات کے لیے چوبیس گھنٹے دستیاب ہیں؛ اس کے علاوہ نرسنگ اور فزیوتھراپی کلینکس بھی چلائے جاتے ہیں۔"
+   "text": "گھر اور کمیونٹی کی صحت کی دیکھ بھال فراہم کرنے والا ادارہ جو گھر پر اور کلینک میں خدمات پیش کرتا ہے: نرسنگ (RN/RPN)، ذاتی مدد، گھریلو معاونت (کھانے کی تیاری، گھر کی صفائی، ساتھی کا ساتھ، ادویات کی یاد دہانی)، فزیوتھراپی، آکیوپیشنل تھراپی، اسپیچ لینگویج پیتھالوجی، سوشل ورک اور ڈائٹکس۔ نرسیں مختصر یا طویل مدتی دیکھ بھال کی ضروریات کے لیے 24/7 (دن رات، ہر روز) دستیاب ہیں؛ اس کے علاوہ نرسنگ اور فزیوتھراپی کلینکس بھی چلائے جاتے ہیں۔"
   },
   "1330dcebcb5e": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "تھورن کلف اور فلیمنگڈون پارکس کے مختلف علاقوں سے 75 خاندانوں کے تقریباً 80 ارکان پر مشتمل ایک مقامی گروپ، جو مختلف ثقافتوں اور مذاہب سے تعلق رکھتے ہیں۔ اس گروپ کا مقصد کمیونٹی کی تنظیموں اور رہائشیوں کو آپس میں جوڑنے میں قائدانہ کردار ادا کرنا ہے تاکہ ایک مضبوط پڑوس تشکیل دیا جا سکے۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
-   "text": "تھورن کلف اور فلیمنگڈون پارکس کے مختلف علاقوں سے 75 خاندانوں کے تقریباً 80 ارکان پر مشتمل ایک مقامی گروپ، جو مختلف ثقافتوں اور مذاہب سے تعلق رکھتے ہیں۔ اس گروپ کا مقصد کمیونٹی کی تنظیموں اور رہائشیوں کو آپس میں جوڑنے میں قائدانہ کردار ادا کرنا ہے تاکہ ایک مضبوط پڑوس تشکیل دیا جا سکے۔"
+   "text": "تقریباً 80 ارکان پر مشتمل ایک مقامی گروپ، جو تھورن کلف اور فلیمنگڈون پارکس کے مختلف علاقوں کے 75 خاندانوں سے ہیں اور مختلف ثقافتوں اور مذاہب سے تعلق رکھتے ہیں۔ اس گروپ کا مقصد کمیونٹی کی تنظیموں اور رہائشیوں کو آپس میں جوڑنے میں قائدانہ کردار ادا کرنا ہے تاکہ ایک مضبوط پڑوس تشکیل دیا جا سکے۔"
   },
   "145d746d96ec": {
    "correctedFrom": {
@@ -101,9 +103,9 @@
     "text": "مرکز خدمات کثیرالاضافہ جو 45 اوورلیا بیلڈنگ، دوسرا منزل (ایست یارک ٹاؤن سنٹر کے اندر)، پیر سے اتوار صبح 8:00 بجے سے شام 8:00 بجے تک کھلتا ہے۔ ایک ایک جگہ جہاں رہائشی صحت اور سماجی خدمات، پروگراموں اور پارٹنر تنظیموں کی کمیونٹی جگہوں تک رسائی حاصل کر سکتے ہیں۔"
    },
    "model": "claude-correction",
-   "note": "Retranslated: garbled wording and 'Blvd' rendered as 'building'; address in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
-   "text": "کئی اداروں کی خدمات والا کمیونٹی مرکز، 45 Overlea Blvd, 2nd Floor (دوسری منزل)، East York Town Centre کے اندر۔ پیر سے اتوار صبح 8:00 بجے سے شام 8:00 بجے تک کھلا رہتا ہے۔ یہ ایک ہی جگہ ہے جہاں رہائشی شراکت دار تنظیموں کی صحت اور سماجی خدمات، پروگراموں اور کمیونٹی کی جگہوں سے فائدہ اٹھا سکتے ہیں۔"
+   "text": "کئی اداروں کی خدمات والا کمیونٹی مرکز، 45 Overlea Blvd, 2nd Floor (دوسری منزل)، East York Town Centre کے اندر۔ پیر سے اتوار صبح 8:00 AM سے رات 8:00 PM تک کھلا رہتا ہے۔ یہ ایک ہی جگہ ہے جہاں رہائشی شراکت دار تنظیموں کی صحت اور سماجی خدمات، پروگراموں اور کمیونٹی کی جگہوں سے فائدہ اٹھا سکتے ہیں۔"
   },
   "1538ea5a988e": {
    "correctedFrom": {
@@ -121,9 +123,9 @@
     "text": "فلیمنگڈون پارک میں مقامی لوگوں کی کوششوں سے قائم کردہ ایک فارم ہے جہاں رہائشیوں کے لیے صحت بخش خوراک اگائی جاتی ہے۔ یہاں کمیونٹی گارڈننگ کی سہولت موجود ہے، 150 گرینوبل ڈرائیو پر ہر ہفتے گرمیوں میں کسانوں کی مارکیٹ لگتی ہے (جمعرات کو دوپہر 3 سے شام 6 بجے تک، جون کے آخر سے اکتوبر کے شروع تک)، اور 'کمیونٹی فارمر' پروگرام کے ذریعے رہائشیوں کو چھوٹے فارم بزنس چلانے کے کاروباری مواقع فراہم کیے جاتے ہیں۔"
    },
    "model": "claude-correction",
-   "note": "Address and program name back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
-   "text": "فلیمنگڈون پارک میں مقامی لوگوں کی کوششوں سے قائم کردہ ایک فارم ہے جہاں رہائشیوں کے لیے صحت بخش خوراک اگائی جاتی ہے۔ یہاں کمیونٹی گارڈننگ کی سہولت موجود ہے، 150 Grenoble Drive پر ہر ہفتے گرمیوں میں کسانوں کی مارکیٹ لگتی ہے (جمعرات کو دوپہر 3 سے شام 6 بجے تک، جون کے آخر سے اکتوبر کے شروع تک)، اور 'Community Farmer' پروگرام کے ذریعے رہائشیوں کو چھوٹے فارم بزنس چلانے کے کاروباری مواقع فراہم کیے جاتے ہیں۔"
+   "text": "فلیمنگڈون پارک میں مقامی لوگوں کی کوششوں سے قائم کردہ ایک فارم ہے جہاں رہائشیوں کے لیے صحت بخش خوراک اگائی جاتی ہے۔ یہاں کمیونٹی گارڈننگ کی سہولت موجود ہے، 150 Grenoble Drive پر گرمیوں میں ہر جمعرات کو کسانوں کی مارکیٹ لگتی ہے (سہ پہر 3-6pm، جون کے آخر سے اکتوبر کے شروع تک)، اور 'Community Farmer' پروگرام کے ذریعے رہائشیوں کو چھوٹے فارم بزنس چلانے کے کاروباری مواقع فراہم کیے جاتے ہیں۔"
   },
   "16b01b9ea5a7": {
    "model": "north-small-translate-09-2026",
@@ -136,9 +138,9 @@
     "text": "دائی گیری کا کلینک (ایسٹ یارک/ڈون ملز) جو وزارت صحت کے تعاون سے حمل، زچگی اور ولادت کے دوران مفت طبی خدمات فراہم کرتا ہے، اور بچے کی پیدائش کے بعد چھ ہفتوں تک ماں اور بچے کی دیکھ بھال کرتا ہے۔ زچگی گھر پر، ٹورنٹو برتھ سینٹر یا مائیکل گیرون ہسپتال میں ممکن ہے۔ دائیوں کی ٹیم ہنگامی حالات کے لیے چوبیس گھنٹے دستیاب رہتی ہے، جبکہ پیچیدگیوں کی صورت میں مریضوں کو ماہرینِ امراضِ نسواں، ماہرینِ اطفال اور دودھ پلانے کی ماہرین کے پاس بھیجا جاتا ہے۔ یہاں کثیر لسانی عملہ (انگریزی، عربی، فرانسیسی، ہسپانوی، فارسی، دری اور دیگر زبانیں) موجود ہے، اور قبل از پیدائش تربیتی کلاسیں بھی دی جاتی ہیں، جن میں نوزائیدہ بچوں کی دیکھ بھال سے متعلق بنیادی معلومات بھی شامل ہیں۔"
    },
    "model": "claude-correction",
-   "note": "glossary alignment: دائی گیری کا کلینک -> مڈوائف کلینک (midwife); دائیوں کی ٹیم -> مڈوائفز (دائیوں) کی ٹیم (midwife)",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
-   "text": "مڈوائف کلینک (ایسٹ یارک/ڈون ملز) جو وزارت صحت کے تعاون سے حمل، زچگی اور ولادت کے دوران مفت طبی خدمات فراہم کرتا ہے، اور بچے کی پیدائش کے بعد چھ ہفتوں تک ماں اور بچے کی دیکھ بھال کرتا ہے۔ زچگی گھر پر، Toronto Birth Centre یا Michael Garron Hospital میں ممکن ہے۔ مڈوائفز (دائیوں) کی ٹیم ہنگامی حالات کے لیے چوبیس گھنٹے دستیاب رہتی ہے، جبکہ پیچیدگیوں کی صورت میں مریضوں کو ماہرینِ امراضِ نسواں، ماہرینِ اطفال اور دودھ پلانے کی ماہرین کے پاس بھیجا جاتا ہے۔ یہاں کثیر لسانی عملہ (انگریزی، عربی، فرانسیسی، ہسپانوی، فارسی، دری اور دیگر زبانیں) موجود ہے، اور قبل از پیدائش تربیتی کلاسیں بھی دی جاتی ہیں، جن میں Newborn 101 (نوزائیدہ بچے کی دیکھ بھال کی بنیادی باتیں) بھی شامل ہے۔"
+   "text": "مڈوائف کلینک (ایسٹ یارک/ڈون ملز) جو وزارت صحت کے تعاون سے حمل، زچگی اور ولادت کے دوران مفت طبی خدمات فراہم کرتا ہے، اور بچے کی پیدائش کے بعد 6 ہفتوں تک ماں اور بچے کی دیکھ بھال کرتا ہے۔ زچگی گھر پر، Toronto Birth Centre یا Michael Garron Hospital میں ممکن ہے۔ مڈوائفز (دائیوں) کی ٹیم ہنگامی حالات کے لیے 24/7 (دن رات، ہر روز) دستیاب رہتی ہے، جبکہ پیچیدگیوں کی صورت میں مریضوں کو ماہرینِ امراضِ نسواں، ماہرینِ اطفال اور دودھ پلانے کی ماہرین کے پاس بھیجا جاتا ہے۔ یہاں کثیر لسانی عملہ (انگریزی، عربی، فرانسیسی، ہسپانوی، فارسی، دری اور دیگر زبانیں) موجود ہے، اور قبل از پیدائش تربیتی کلاسیں بھی دی جاتی ہیں، جن میں Newborn 101 (نوزائیدہ بچے کی دیکھ بھال کی بنیادی باتیں) بھی شامل ہے۔"
   },
   "1a3c95cbc0e2": {
    "correctedFrom": {
@@ -146,9 +148,9 @@
     "text": "کم آمدنی والے افراد کے لیے، جن کا تعلق متعین علاقے (لییک اونٹاریو سے یورک ملز/401، یونگ/ڈون ریور سے وکٹوریا پارک ایونیو تک) سے ہو، چار شعبوں میں مفت قانونی مشاورت اور نمائندگی دستیاب ہے: ہاؤسنگ قانون (بے دخلی سے بچاؤ، غیر قانونی طور پر تالے لگانا، کرایہ داروں کے حقوق)، ملازمت کا قانون (روزگار کے معیارات، غیر قانونی برطرفی، الاؤنس، EI)، امیگریشن قانون (PR کی درخواستیں، ورک پرمٹ، شہریت) اور آمدنی کی امداد (ODSP, OW, CPP, OAS, GIS, کینیڈا ڈس ایبلٹی بینیفٹ)؛ اس کے علاوہ عوامی قانونی آگاہی اور محدود دستاویزی خدمات (حلف نامے، نوٹری شدہ مصدقہ نقل) بھی فراہم کی جاتی ہیں۔ رابطہ لائن: 416-441-1764 ext. 1، پیر تا جمعرات صبح 9:00 سے دوپہر 12:30 تک (وائس میل پر پیغام چھوڑیں، 1 سے 3 کاروباری دنوں میں کال بیک کیا جائے گا؛ براہِ راست آنے والوں کے لیے سہولت نہیں ہے؛ ذاتی ملاقات کے لیے پہلے سے وقت لینا ضروری ہے، پیر اور بدھ دوپہر 1:30 سے شام 4:30 تک)۔"
    },
    "model": "claude-correction",
-   "note": "glossary alignment: غیر قانونی طور پر تالے لگانا -> غیر قانونی طور پر گھر سے باہر بند کر دینا (lockout) (illegal lockout); ذاتی ملاقات کے لیے پہلے سے وقت لینا ضروری ہے -> ذاتی ملاقات کے لیے اپائنٹمنٹ لینا ضروری ہے (appointment)",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
-   "text": "کم آمدنی والے افراد کے لیے، جن کا تعلق متعین علاقے (Lake Ontario سے York Mills/401 تک، اور Yonge/Don River سے Victoria Park Ave تک) سے ہو، چار شعبوں میں مفت قانونی مشاورت اور نمائندگی دستیاب ہے: ہاؤسنگ قانون (بے دخلی سے بچاؤ، غیر قانونی طور پر گھر سے باہر بند کر دینا (lockout)، کرایہ داروں کے حقوق)، ملازمت کا قانون (روزگار کے معیارات، غیر قانونی برطرفی، برطرفی کا معاوضہ (severance)، EI)، امیگریشن قانون (PR کی درخواستیں، ورک پرمٹ، شہریت) اور آمدنی کی امداد (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit)؛ اس کے علاوہ عوامی قانونی آگاہی اور محدود دستاویزی خدمات (حلف نامے، نوٹری شدہ مصدقہ نقل) بھی فراہم کی جاتی ہیں۔ رابطہ لائن: 416-441-1764 ext. 1، پیر تا جمعرات صبح 9:00 سے دوپہر 12:30 تک (وائس میل پر پیغام چھوڑیں، 1 سے 3 کاروباری دنوں میں کال بیک کیا جائے گا؛ براہِ راست آنے والوں کے لیے سہولت نہیں ہے؛ ذاتی ملاقات کے لیے اپائنٹمنٹ لینا ضروری ہے، پیر اور بدھ دوپہر 1:30 سے شام 4:30 تک)۔"
+   "text": "کم آمدنی والے افراد کے لیے، جن کا تعلق متعین علاقے (Lake Ontario سے York Mills/401 تک، اور Yonge/Don River سے Victoria Park Ave تک) سے ہو، چار شعبوں میں مفت قانونی مشاورت اور نمائندگی دستیاب ہے: ہاؤسنگ قانون (بے دخلی سے بچاؤ، غیر قانونی طور پر گھر سے باہر بند کر دینا (lockout)، کرایہ داروں کے حقوق)، ملازمت کا قانون (روزگار کے معیارات، غیر قانونی برطرفی، برطرفی کا معاوضہ (severance)، EI)، امیگریشن قانون (PR کی درخواستیں، ورک پرمٹ، شہریت) اور آمدنی کی امداد (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit)؛ اس کے علاوہ عوامی قانونی آگاہی اور محدود دستاویزی خدمات (حلف نامے، نوٹری شدہ مصدقہ نقل) بھی فراہم کی جاتی ہیں۔ رابطہ لائن: 416-441-1764 ext. 1، پیر تا جمعرات صبح 9:00 AM سے دوپہر 12:30 PM تک (وائس میل پر پیغام چھوڑیں، 1 سے 3 کاروباری دنوں میں کال بیک کیا جائے گا؛ براہِ راست آنے والوں کے لیے سہولت نہیں ہے؛ ذاتی ملاقات کے لیے اپائنٹمنٹ لینا ضروری ہے، پیر اور بدھ دوپہر 1:30 سے شام 4:30 PM تک)۔"
   },
   "1ae4b85c3a4e": {
    "correctedFrom": {
@@ -166,9 +168,9 @@
     "text": "ٹورنٹو فائر سروسز کے اسٹیشنز علاقے میں چوبیس گھنٹے آگ بجھانے اور ہنگامی امداد فراہم کرتے ہیں: اسٹیشن 321 (231 McRae Dr)، اسٹیشن 235 (200 Bermondsey Rd)، اسٹیشن 322 (256 Cosburn Ave)، اسٹیشن 224 (1313 Woodbine Ave)۔ غیر ہنگامی صورتحال کے لیے رابطہ نمبر: 416-338-9050۔"
    },
    "model": "claude-correction",
-   "note": "Organisation name back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
-   "text": "Toronto Fire Services کے اسٹیشنز علاقے میں چوبیس گھنٹے آگ بجھانے اور ہنگامی امداد فراہم کرتے ہیں: اسٹیشن 321 (231 McRae Dr)، اسٹیشن 235 (200 Bermondsey Rd)، اسٹیشن 322 (256 Cosburn Ave)، اسٹیشن 224 (1313 Woodbine Ave)۔ غیر ہنگامی صورتحال کے لیے رابطہ نمبر: 416-338-9050۔"
+   "text": "Toronto Fire Services کے اسٹیشنز علاقے میں 24/7 (دن رات، ہر روز) آگ بجھانے اور ہنگامی امداد فراہم کرتے ہیں: اسٹیشن 321 (231 McRae Dr)، اسٹیشن 235 (200 Bermondsey Rd)، اسٹیشن 322 (256 Cosburn Ave)، اسٹیشن 224 (1313 Woodbine Ave)۔ غیر ہنگامی صورتحال کے لیے رابطہ نمبر: 416-338-9050۔"
   },
   "235e1072c4f3": {
    "correctedFrom": {
@@ -316,9 +318,9 @@
     "text": "تھورن کلف پارک ڈرائیو نمبر 30 پر واقع یونانی آرتھوڈوکس پیرش (جہاں 600 سے زائد افراد کے بیٹھنے کی گنجائش ہے اور پارکنگ کی وافر جگہ موجود ہے)، جس کی قیادت پیرش پادری فادر اپوسٹولوس گکولیاس کر رہے ہیں (apostolosgkolias@yahoo.com؛ چرچ کا فون نمبر +1 (416) 425-2485، info@togreekcom.org)۔ اتوار اور تہواروں کے دنوں کی عبادات: اورتھروس (صبح کی عبادت) صبح 8:30 سے 10:00 بجے تک اور ڈیوائن لیٹرجی صبح 10:00 سے دوپہر 12:00 بجے تک؛ یہاں سنڈے اسکول کی رجسٹریشن اور چرچ کے دیگر پروگرام بھی چلائے جاتے ہیں۔"
    },
    "model": "claude-correction",
-   "note": "Address back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
-   "text": "30 Thorncliffe Park Drive پر واقع یونانی آرتھوڈوکس پیرش (جہاں 600 سے زائد افراد کے بیٹھنے کی گنجائش ہے اور پارکنگ کی وافر جگہ موجود ہے)، جس کی قیادت پیرش پادری فادر اپوسٹولوس گکولیاس کر رہے ہیں (apostolosgkolias@yahoo.com؛ چرچ کا فون نمبر +1 (416) 425-2485، info@togreekcom.org)۔ اتوار اور تہواروں کے دنوں کی عبادات: اورتھروس (صبح کی عبادت) صبح 8:30 سے 10:00 بجے تک اور ڈیوائن لیٹرجی صبح 10:00 سے دوپہر 12:00 بجے تک؛ یہاں سنڈے اسکول کی رجسٹریشن اور چرچ کے دیگر پروگرام بھی چلائے جاتے ہیں۔"
+   "text": "30 Thorncliffe Park Drive پر واقع یونانی آرتھوڈوکس پیرش (جہاں 600 سے زائد افراد کے بیٹھنے کی گنجائش ہے اور پارکنگ کی وافر جگہ موجود ہے)، جس کی قیادت پیرش پادری فادر اپوسٹولوس گکولیاس کر رہے ہیں (apostolosgkolias@yahoo.com؛ چرچ کا فون نمبر +1 (416) 425-2485، info@togreekcom.org)۔ اتوار اور تہواروں کے دنوں کی عبادات: اورتھروس (صبح کی عبادت) صبح 8:30 سے 10:00 AM تک اور ڈیوائن لیٹرجی صبح 10:00 AM سے دوپہر 12:00 بجے تک؛ یہاں اتوار اسکول کی رجسٹریشن اور چرچ کے دیگر پروگرام بھی چلائے جاتے ہیں۔"
   },
   "4341d8807857": {
    "correctedFrom": {
@@ -351,9 +353,9 @@
     "text": "ایک میوزیم جہاں وقتاً فوقتاً نمائشیں بدلتی رہتی ہیں، موسیقی کے کنسرٹس اور عملی ورکشاپس (مثلاً فنون لطیفہ کی ورکشاپس اور موسیقی کی تقریبات) منعقد کیے جاتے ہیں۔ یہاں اسکولوں کے لیے مختلف پروگرامز چلائے جاتے ہیں جن میں اسکول کے اندر اور آن لائن دونوں طرح کے تعلیمی دورے، اساتذہ کے لیے تعلیمی مواد اور آن لائن کورسز شامل ہیں۔ اس کے علاوہ یہاں پوڈ کاسٹ، تھری ڈی ٹورز اور فنکاروں کے لیکچرز پر مشتمل مفت آن لائن مواد کا ذخیرہ بھی موجود ہے۔"
    },
    "model": "claude-correction",
-   "note": "'Onsite' field trips were rendered as 'inside the school'; they are at the museum.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Museum with rotating exhibitions, concerts and hands-on workshops (e.g., art workshops, music events). Runs school programs including onsite and virtual field trips, teacher resources and online courses, plus a free online content library with podcasts, 3D tours and artist talks.",
-   "text": "ایک میوزیم جہاں وقتاً فوقتاً نمائشیں بدلتی رہتی ہیں، موسیقی کے کنسرٹس اور عملی ورکشاپس (مثلاً فنون لطیفہ کی ورکشاپس اور موسیقی کی تقریبات) منعقد کیے جاتے ہیں۔ یہاں اسکولوں کے لیے مختلف پروگرامز چلائے جاتے ہیں جن میں میوزیم میں آ کر اور آن لائن دونوں طرح کے تعلیمی دورے، اساتذہ کے لیے تعلیمی مواد اور آن لائن کورسز شامل ہیں۔ اس کے علاوہ یہاں پوڈ کاسٹ، تھری ڈی ٹورز اور فنکاروں کے لیکچرز پر مشتمل مفت آن لائن مواد کا ذخیرہ بھی موجود ہے۔"
+   "text": "ایک میوزیم جہاں وقتاً فوقتاً نمائشیں بدلتی رہتی ہیں، موسیقی کے کنسرٹس اور عملی ورکشاپس (مثلاً فنون لطیفہ کی ورکشاپس اور موسیقی کی تقریبات) منعقد کیے جاتے ہیں۔ یہاں اسکولوں کے لیے مختلف پروگرامز چلائے جاتے ہیں جن میں میوزیم میں آ کر اور آن لائن دونوں طرح کے تعلیمی دورے، اساتذہ کے لیے تعلیمی مواد اور آن لائن کورسز شامل ہیں۔ اس کے علاوہ یہاں پوڈ کاسٹ، 3D ٹورز اور فنکاروں کے لیکچرز پر مشتمل مفت آن لائن مواد کا ذخیرہ بھی موجود ہے۔"
   },
   "4c0ad54aefbb": {
    "correctedFrom": {
@@ -386,9 +388,9 @@
     "text": "سٹی ایرینا، 165 گرینوبل ڈرائیو (جس کا نام 2009 میں کینیڈین ہاکی اسٹار اینجیلا جیمز کے نام پر رکھا گیا) میں آئس اسکیٹنگ اور ہاکی پروگراموں کے لیے ہے، اور اس کے ساتھ ہی عوامی ٹینس کورٹس بھی موجود ہیں۔ نوٹ: شہر نے 165 گرینوبل ڈرائیو پر ایک نیا فلیمنگڈون فائر ہال بنانے کے منصوبے (2026) کا اعلان کیا ہے، جس کی وجہ سے چار میں سے دو ٹینس کورٹس ختم ہو جائیں گی — اس بارے میں صورتحال غیر یقینی ہے۔"
    },
    "model": "claude-correction",
-   "note": "glossary alignment: فائر ہال -> فائر اسٹیشن (fire station)",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
-   "text": "سٹی ایرینا، 165 Grenoble Dr (جس کا نام 2009 میں کینیڈین ہاکی اسٹار اینجیلا جیمز کے نام پر رکھا گیا) میں آئس اسکیٹنگ اور ہاکی پروگراموں کے لیے ہے، اور اس کے ساتھ ہی عوامی ٹینس کورٹس بھی موجود ہیں۔ نوٹ: شہر نے 165 Grenoble Dr پر ایک نیا فلیمنگڈون فائر اسٹیشن بنانے کے منصوبے (2026) کا اعلان کیا ہے، جس کی وجہ سے چار میں سے دو ٹینس کورٹس ختم ہو جائیں گی — اس بارے میں صورتحال غیر یقینی ہے۔"
+   "text": "سٹی ایرینا، 165 Grenoble Dr (جس کا نام 2009 میں کینیڈین ہاکی اسٹار اینجیلا جیمز کے نام پر رکھا گیا) میں آئس اسکیٹنگ اور ہاکی پروگراموں کے لیے ہے، اور اس کے ساتھ ہی عوامی ٹینس کورٹس بھی موجود ہیں۔ نوٹ: شہر نے منصوبوں (2026) کا اعلان کیا ہے کہ 165 Grenoble Dr پر ایک نیا فلیمنگڈون فائر اسٹیشن بنایا جائے گا، جس کی وجہ سے چار میں سے دو ٹینس کورٹس ختم ہو جائیں گی — اس بارے میں صورتحال غیر یقینی ہے۔"
   },
   "5b54b1c20dbc": {
    "model": "north-small-translate-09-2026",
@@ -431,9 +433,9 @@
     "text": "ویلی پارک مڈل اسکول ٹی ڈی ایس بی کا ایک مڈل اسکول ہے جو چھٹی سے آٹھویں جماعت کے طلباء کو تعلیم فراہم کرتا ہے۔ اس میں تھورن کلف پارک اور فلیمنگڈون پارک کے علاقوں سے تقریباً 1,100 طلباء زیرِ تعلیم ہیں، اور یہ 130 اوورلیا بلیوارڈ، ایسٹ یارک میں واقع ہے۔ اسکول کا مقصد احترام، ذمہ داری اور حفاظت پر مبنی ایک محفوظ اور معاون تعلیمی ماحول فراہم کرنا ہے۔ حاصل کردہ ہوم پیج کے متن میں فرانسیسی زبان کے خصوصی پروگرام، ای ایس ایل (ESL) یا خصوصی تعلیم کے کوئی پروگرام درج نہیں تھے۔"
    },
    "model": "claude-correction",
-   "note": "School name and address back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
-   "text": "Valley Park Middle School، TDSB کا ایک مڈل اسکول ہے جو چھٹی سے آٹھویں جماعت کے طلباء کو تعلیم فراہم کرتا ہے۔ اس میں تھورن کلف پارک اور فلیمنگڈون پارک کے علاقوں سے تقریباً 1,100 طلباء زیرِ تعلیم ہیں، اور یہ 130 Overlea Blvd, East York میں واقع ہے۔ اسکول کا مقصد احترام، ذمہ داری اور حفاظت پر مبنی ایک محفوظ اور معاون تعلیمی ماحول فراہم کرنا ہے۔ حاصل کردہ ہوم پیج کے متن میں فرانسیسی زبان کے خصوصی پروگرام، ای ایس ایل (ESL) یا خصوصی تعلیم کے کوئی پروگرام درج نہیں تھے۔"
+   "text": "Valley Park Middle School، TDSB کا ایک مڈل اسکول ہے جو گریڈ 6 سے 8 تک کے طلباء کو تعلیم فراہم کرتا ہے۔ اس میں تھورن کلف پارک اور فلیمنگڈون پارک کے علاقوں سے تقریباً 1,100 طلباء زیرِ تعلیم ہیں، اور یہ 130 Overlea Blvd, East York میں واقع ہے۔ اسکول کا مقصد احترام، ذمہ داری اور حفاظت پر مبنی ایک محفوظ اور معاون تعلیمی ماحول فراہم کرنا ہے۔ حاصل کردہ ہوم پیج کے متن میں فرانسیسی زبان کے خصوصی پروگرام، ای ایس ایل (ESL) یا خصوصی تعلیم کے کوئی پروگرام درج نہیں تھے۔"
   },
   "62d55110cf7b": {
    "correctedFrom": {
@@ -441,17 +443,16 @@
     "text": "TCDSB کے زیرِ انتظام 175 Grenoble Dr پر واقع مفت EarlyON چائلڈ اینڈ فیملی سینٹر، جہاں 0 سے 6 سال تک کے بچوں کے لیے ان کے والدین یا دیکھ بھال کرنے والوں کے ساتھ کھلے طور پر کھیلنے اور سیکھنے کے پروگرامز دستیاب ہیں (والدین کی شرکت ضروری ہے، رجسٹریشن کی ضرورت نہیں)۔ TCDSB کے شیڈول کے مطابق، سینٹ جان XXIII پیر سے جمعرات صبح 8:45 سے دوپہر 12:45 تک اور جمعہ صبح 8:45 سے دوپہر 12:45 تک کھلا رہتا ہے۔"
    },
    "model": "claude-correction",
-   "note": "School name back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
-   "text": "TCDSB کے زیرِ انتظام 175 Grenoble Dr پر واقع مفت EarlyON چائلڈ اینڈ فیملی سینٹر، جہاں 0 سے 6 سال تک کے بچوں کے لیے ان کے والدین یا دیکھ بھال کرنے والوں کے ساتھ کھلے طور پر کھیلنے اور سیکھنے کے پروگرامز دستیاب ہیں (والدین کی شرکت ضروری ہے، رجسٹریشن کی ضرورت نہیں)۔ TCDSB کے شیڈول کے مطابق، St. John XXIII پیر سے جمعرات صبح 8:45 سے دوپہر 12:45 تک اور جمعہ صبح 8:45 سے دوپہر 12:45 تک کھلا رہتا ہے۔"
+   "text": "TCDSB کے زیرِ انتظام 175 Grenoble Dr پر واقع مفت EarlyON چائلڈ اینڈ فیملی سینٹر، جہاں 0 سے 6 سال تک کے بچوں کے لیے ان کے والدین یا دیکھ بھال کرنے والوں کے ساتھ کھلے طور پر کھیلنے اور سیکھنے کے پروگرامز دستیاب ہیں (والدین کی شرکت ضروری ہے، رجسٹریشن کی ضرورت نہیں)۔ TCDSB کے شیڈول کے مطابق، St. John XXIII پیر سے جمعرات صبح 8:45am سے دوپہر 12:45pm تک اور جمعہ صبح 8:45am سے دوپہر 12:45pm تک کھلا رہتا ہے۔"
   },
   "63c710ddedbb": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "گھر پر دیکھ بھال کے لیے نرسیں چوبیس گھنٹے دستیاب ہیں؛ کوئی مخصوص ہنگامی سروس درج نہیں ہے (یہ 911 یا فوری طبی امداد فراہم کرنے والا ادارہ نہیں ہے)۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
-   "text": "گھر پر دیکھ بھال کے لیے نرسیں چوبیس گھنٹے دستیاب ہیں؛ کوئی مخصوص ہنگامی سروس درج نہیں ہے (یہ 911 یا فوری طبی امداد فراہم کرنے والا ادارہ نہیں ہے)۔",
-   "warnings": [
-    "numbers missing from translation: 24, 7"
-   ]
+   "text": "گھر پر دیکھ بھال کے لیے نرسیں 24/7 (دن رات، ہر روز) دستیاب ہیں؛ کوئی مخصوص ہنگامی سروس درج نہیں ہے (یہ 911 یا فوری طبی امداد فراہم کرنے والا ادارہ نہیں ہے)۔"
   },
   "67d4ed5dfe5d": {
    "correctedFrom": {
@@ -459,9 +460,9 @@
     "text": "مسجد دارالسلام، 20 اوورلیا بلیوارڈ پر واقع، 1995 سے تھورن کلف پارک، فلیمنگڈون پارک اور اس سے ملحقہ علاقوں کی مسلم کمیونٹی کی خدمت کر رہی ہے۔ یہاں پانچ وقت کی نمازیں اور جمعہ کی نماز ادا کی جاتی ہے، ساتھ ہی حفظِ قرآن اور عالم/عالمة کے مکمل وقت کے پروگرام، شام کے قرآن کلاسز (مدرسہ)، اتوار اسکول، تفسیر اور اسلامی بنیادی علوم کی تعلیم، نوجوانوں کے پروگرام، نکاح کی خدمات اور کمیونٹی کی تقریبات بھی منعقد کی جاتی ہیں۔"
    },
    "model": "claude-correction",
-   "note": "Name and address in English; Arabic ة replaced with Urdu spelling عالمہ.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
-   "text": "Masjid Darus Salaam (مسجد دارالسلام)، 20 Overlea Blvd پر واقع، 1995 سے تھورن کلف پارک، فلیمنگڈون پارک اور اس سے ملحقہ علاقوں کی مسلم کمیونٹی کی خدمت کر رہی ہے۔ یہاں پانچ وقت کی نمازیں اور جمعہ کی نماز ادا کی جاتی ہے، ساتھ ہی حفظِ قرآن اور عالم/عالمہ کے مکمل وقت کے پروگرام، شام کے قرآن کلاسز (مدرسہ)، اتوار اسکول، تفسیر اور اسلامی بنیادی علوم کی تعلیم، نوجوانوں کے پروگرام، نکاح کی خدمات اور کمیونٹی کی تقریبات بھی منعقد کی جاتی ہیں۔"
+   "text": "Masjid Darus Salaam (مسجد دارالسلام)، 20 Overlea Blvd پر واقع، 1995 سے تھورن کلف پارک، فلیمنگڈون پارک اور اس سے ملحقہ علاقوں کی مسلم کمیونٹی کی خدمت کر رہی ہے۔ یہاں پانچ وقت کی نمازیں اور صلاۃ الجمعہ ادا کی جاتی ہے، ساتھ ہی حفظِ قرآن اور عالم/عالمہ کے مکمل وقت کے پروگرام، شام کے قرآن کلاسز (مدرسہ)، اتوار اسکول، تفسیر اور اسلامی بنیادی علوم کی تعلیم، نوجوانوں کے پروگرام، نکاح کی خدمات اور کمیونٹی کی تقریبات بھی منعقد کی جاتی ہیں۔"
   },
   "68c635426ffe": {
    "model": "north-small-translate-09-2026",
@@ -529,9 +530,9 @@
     "text": "TDSB کا ایک پرائمری اسکول جو 9 Grenoble Drive پر واقع ہے اور یہاں کنڈرگارٹن سے چھٹی جماعت تک 960 سے زائد طلباء پڑھتے ہیں (تقریباً 93 فیصد خاندان کینیڈا ہجرت کر کے آئے ہیں؛ یہاں 73 سے زائد زبانیں بولی جاتی ہیں)۔ اسکول کی ویب سائٹ پر فرینچ امرسیون جیسے کسی خاص پروگرام کا ذکر نہیں ہے۔"
    },
    "model": "claude-correction",
-   "note": "Program name back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
-   "text": "TDSB کا ایک پرائمری اسکول جو 9 Grenoble Drive پر واقع ہے اور یہاں کنڈرگارٹن سے چھٹی جماعت تک 960 سے زائد طلباء پڑھتے ہیں (تقریباً 93 فیصد خاندان کینیڈا ہجرت کر کے آئے ہیں؛ یہاں 73 سے زائد زبانیں بولی جاتی ہیں)۔ اسکول کی ویب سائٹ پر French Immersion جیسے کسی خاص پروگرام کا ذکر نہیں ہے۔"
+   "text": "TDSB کا ایک پرائمری اسکول جو 9 Grenoble Drive پر واقع ہے اور یہاں 960 سے زائد طلباء کنڈرگارٹن سے گریڈ 6 تک پڑھتے ہیں (تقریباً 93 فیصد خاندان کینیڈا ہجرت کر کے آئے ہیں؛ یہاں 73 سے زائد زبانیں بولی جاتی ہیں)۔ اسکول کی ویب سائٹ پر French Immersion جیسے کسی خاص پروگرام کا ذکر نہیں ہے۔"
   },
   "7bd551d09cd0": {
    "model": "north-small-translate-09-2026",
@@ -544,9 +545,9 @@
     "text": "ٹورنٹو شہر کے ان رہائشیوں کے لیے جو 0 سے 6 سال کی عمر کے بچوں کے والدین یا دیکھ بھال کرنے والے ہیں، 'EarlyON' چائلڈ اینڈ فیملی سینٹر بالکل مفت خدمات فراہم کرتا ہے۔ یہاں بچوں کی نشوونما کے لیے معاون پروگرام، والدین کے لیے مددگار خدمات، اسکول کی تیاری کے پروگرام، زبان کی تاخیر سے متعلق مدد، اور انفرادی کیس مینجمنٹ کے ساتھ خصوصی ضروریات کی خدمات دستیاب ہیں۔ مرکزی مقام: TNO-Thorncliffe Park کمیونٹی ہب، 45 Overlea Blvd یونٹ 200 (پیر تا جمعہ صبح 9 بجے سے شام 5 بجے تک)؛ جمعے کو جِم اور کھیل کود کی سہولت Jenner Jean Marie کمیونٹی سینٹر، 48 Thorncliffe Park Dr پر دستیاب ہے۔"
    },
    "model": "claude-correction",
-   "note": "Full venue names and unit number in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
-   "text": "ٹورنٹو شہر کے ان رہائشیوں کے لیے جو 0 سے 6 سال کی عمر کے بچوں کے والدین یا دیکھ بھال کرنے والے ہیں، 'EarlyON' چائلڈ اینڈ فیملی سینٹر بالکل مفت خدمات فراہم کرتا ہے۔ یہاں بچوں کی نشوونما کے لیے معاون پروگرام، والدین کے لیے مددگار خدمات، اسکول کی تیاری کے پروگرام، زبان کی تاخیر سے متعلق مدد، اور انفرادی کیس مینجمنٹ کے ساتھ خصوصی ضروریات کی خدمات دستیاب ہیں۔ مرکزی مقام: TNO-Thorncliffe Park Community Hub، 45 Overlea Blvd Unit 200 (پیر تا جمعہ صبح 9 بجے سے شام 5 بجے تک)؛ جمعے کو جِم اور کھیل کود کی سہولت Jenner Jean Marie Community Centre، 48 Thorncliffe Park Dr پر دستیاب ہے۔"
+   "text": "ٹورنٹو شہر کے ان رہائشیوں کے لیے جو 0 سے 6 سال کی عمر کے بچوں کے والدین یا دیکھ بھال کرنے والے ہیں، 'EarlyON' چائلڈ اینڈ فیملی سینٹر بالکل مفت خدمات فراہم کرتا ہے۔ یہاں بچوں کی نشوونما کے لیے معاون پروگرام، والدین کے لیے مددگار خدمات، اسکول کی تیاری کے پروگرام، زبان کی تاخیر سے متعلق مدد، اور انفرادی کیس مینجمنٹ کے ساتھ خصوصی ضروریات کی خدمات دستیاب ہیں۔ مرکزی مقام: TNO-Thorncliffe Park Community Hub، 45 Overlea Blvd Unit 200 (پیر تا جمعہ صبح 9am سے شام 5pm تک)؛ جمعے کو جِم اور کھیل کود کی سہولت Jenner Jean Marie Community Centre، 48 Thorncliffe Park Dr پر دستیاب ہے۔"
   },
   "7d47cf9e0e64": {
    "correctedFrom": {
@@ -554,9 +555,9 @@
     "text": "ٹورنٹو کیتھولک ڈسٹرکٹ اسکول بورڈ کا ایک پرائمری اسکول (جے کے سے آٹھویں جماعت تک) جو فلیمنگڈون پارک میں 175 گرینوبل ڈرائیو پر واقع ہے۔ یہ اسکول ESL، خصوصی تعلیم اور ایمپاور ریڈنگ کی سہولیات کے ساتھ ساتھ کھیلوں کی ٹیمیں بھی فراہم کرتا ہے۔ اس عمارت میں ریڈ ایپل ڈے کیئر (اسکول سے پہلے اور بعد کی دیکھ بھال)، ایک مفت ارلی آن (EarlyON) چائلڈ اینڈ فیملی سینٹر (پیدائش سے 6 سال تک کے بچوں اور والدین کے لیے پروگرام)، اور نئے آنے والوں کی مدد کے لیے سیٹلمنٹ ورکر کا دفتر بھی موجود ہے۔"
    },
    "model": "claude-correction",
-   "note": "Board, address and program names back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
-   "text": "Toronto Catholic District School Board کا ایک پرائمری اسکول (جے کے سے آٹھویں جماعت تک) جو فلیمنگڈون پارک میں 175 Grenoble Drive پر واقع ہے۔ یہ اسکول ESL، خصوصی تعلیم اور Empower Reading کی سہولیات کے ساتھ ساتھ کھیلوں کی ٹیمیں بھی فراہم کرتا ہے۔ اس عمارت میں Red Apple Daycare (اسکول سے پہلے اور بعد کی دیکھ بھال)، ایک مفت EarlyON Child and Family Centre (پیدائش سے 6 سال تک کے بچوں اور والدین کے لیے پروگرام)، اور نئے آنے والوں کی مدد کے لیے سیٹلمنٹ ورکر کا دفتر بھی موجود ہے۔"
+   "text": "Toronto Catholic District School Board کا ایک پرائمری اسکول (JK سے گریڈ 8 تک) جو فلیمنگڈون پارک میں 175 Grenoble Drive پر واقع ہے۔ یہ اسکول ESL، خصوصی تعلیم اور Empower Reading کی سہولیات کے ساتھ ساتھ کھیلوں کی ٹیمیں بھی فراہم کرتا ہے۔ اس عمارت میں Red Apple Daycare (اسکول سے پہلے اور بعد کی دیکھ بھال)، ایک مفت EarlyON Child and Family Centre (پیدائش سے 6 سال تک کے بچوں اور والدین کے لیے پروگرام)، اور نئے آنے والوں کی مدد کے لیے سیٹلمنٹ ورکر کا دفتر بھی موجود ہے۔"
   },
   "7d8fe058aabe": {
    "correctedFrom": {
@@ -619,9 +620,9 @@
     "text": "صوبائی حکومت کی سروسز آفس، 945 ایگلینٹن ایونیو ایسٹ (اسٹیپلز کے اندر)۔ یہاں ڈرائیونگ لائسنس، گاڑیوں کی رجسٹریشن اور نمبر پلیٹیں، اونٹاریو ہیلتھ کارڈز اور پیدائش کے سرٹیفکیٹ جاری کیے جاتے ہیں۔ پیر سے جمعہ صبح 9:00 بجے سے رات 9:00 بجے تک اور ہفتے کو صبح 9:00 بجے سے شام 5:00 بجے تک کھلا رہتا ہے۔"
    },
    "model": "claude-correction",
-   "note": "Address and store name back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
-   "text": "صوبائی حکومت کی سروسز آفس، 945 Eglinton Avenue East (Staples کے اندر)۔ یہاں ڈرائیونگ لائسنس، گاڑیوں کی رجسٹریشن اور نمبر پلیٹیں، اونٹاریو ہیلتھ کارڈز اور پیدائش کے سرٹیفکیٹ جاری کیے جاتے ہیں۔ پیر سے جمعہ صبح 9:00 بجے سے رات 9:00 بجے تک اور ہفتے کو صبح 9:00 بجے سے شام 5:00 بجے تک کھلا رہتا ہے۔"
+   "text": "صوبائی حکومت کی سروسز آفس، 945 Eglinton Avenue East (Staples کے اندر)۔ یہاں ڈرائیونگ لائسنس، گاڑیوں کی رجسٹریشن اور نمبر پلیٹیں، اونٹاریو ہیلتھ کارڈز اور پیدائش کے سرٹیفکیٹ جاری کیے جاتے ہیں۔ پیر سے جمعہ صبح 9:00 AM سے رات 9:00 PM تک اور ہفتے کو صبح 9:00 AM سے شام 5:00 PM تک کھلا رہتا ہے۔"
   },
   "912f65f2191e": {
    "correctedFrom": {
@@ -649,9 +650,9 @@
     "text": "گیٹ وے پبلک اسکول (Gateway Public School) ٹی ڈی ایس بی (TDSB) کا ایک ایلیمنٹری اسکول ہے جو نارتھ یارک کے فلمنگڈون پارک میں 55 گیٹ وے بلویڈ (55 Gateway Blvd) پر جونیئر کنڈرگارٹن سے گریڈ 6 تک کے طلباء (تقریباً 950 طلباء) کو تعلیم فراہم کرتا ہے۔ اسکول ایک جامع اور کثیر الثقافتی تعلیمی ماحول پر زور دیتا ہے جہاں کارکردگی اور اخلاقیات کے لیے اعلیٰ معیارات رکھے جاتے ہیں؛ حاصل کردہ ہوم پیج کی تحریر میں فرانسیسی امرسیون (French immersion)، ای ایس ایل (ESL) یا خصوصی تعلیم کے کسی پروگرام کا ذکر نہیں تھا۔"
    },
    "model": "claude-correction",
-   "note": "Removed Urdu-script duplicates of school name and address.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
-   "text": "Gateway Public School، TDSB کا ایک ایلیمنٹری اسکول ہے جو نارتھ یارک کے فلمنگڈون پارک میں 55 Gateway Blvd پر جونیئر کنڈرگارٹن سے گریڈ 6 تک کے طلباء (تقریباً 950 طلباء) کو تعلیم فراہم کرتا ہے۔ اسکول ایک جامع اور کثیر الثقافتی تعلیمی ماحول پر زور دیتا ہے جہاں کارکردگی اور اخلاقیات کے لیے اعلیٰ معیارات رکھے جاتے ہیں؛ حاصل کردہ ہوم پیج کی تحریر میں فرانسیسی امرسیون (French immersion)، ای ایس ایل (ESL) یا خصوصی تعلیم کے کسی پروگرام کا ذکر نہیں تھا۔"
+   "text": "Gateway Public School، TDSB کا ایک ایلیمنٹری اسکول ہے جو جونیئر کنڈرگارٹن سے گریڈ 6 تک کے طلباء (تقریباً 950 طلباء) کو تعلیم فراہم کرتا ہے۔ یہ نارتھ یارک کے فلمنگڈون پارک میں 55 Gateway Blvd پر واقع ہے۔ اسکول ایک جامع اور کثیر الثقافتی تعلیمی ماحول پر زور دیتا ہے جہاں کارکردگی اور اخلاقیات کے لیے اعلیٰ معیارات رکھے جاتے ہیں؛ حاصل کردہ ہوم پیج کی تحریر میں فرانسیسی امرسیون (French immersion)، ای ایس ایل (ESL) یا خصوصی تعلیم کے کسی پروگرام کا ذکر نہیں تھا۔"
   },
   "95c8c42be839": {
    "correctedFrom": {
@@ -679,9 +680,11 @@
    "text": "Gateway Blvd پر کمیونٹی سائیکل ہب، جسے TNO چلاتا ہے۔ یہاں سائیکلوں کی مفت مرمت (اپائنٹمنٹ لے کر) ہوتی ہے، اس کے علاوہ اوزار اور جگہ کے ساتھ خود مرمت کرنے کے اوقات، سائیکل کی مرمت سیکھنے کی ورکشاپس، سائیکل چلانا سیکھنے کی کلاسیں اور مل کر سائیکل سواری بھی ہوتی ہے۔ سائیکلیں 'Earn-a-Bike' پروگرام، سال میں دو بار سائیکلوں کی مفت تقسیم، اور سائیکل کے لیے درخواست دے کر حاصل کی جا سکتی ہیں۔"
   },
   "99a408333e20": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "فلیمنگڈون پارک کے علاقے میں ایک مسجد (جو 2001 میں قائم ہوئی اور جس میں 250 سے 300 نمازیوں کی گنجائش ہے) جہاں پانچ وقت کی باجماعت نمازیں اور جمعہ کی نماز ادا کی جاتی ہے۔ یہاں بچوں اور بڑوں کے لیے اسلامی تعلیم اور رہنمائی فراہم کی جاتی ہے، اور یہ مسلمانوں کے ساتھ ساتھ غیر مسلم زائرین کا بھی خیرمقدم کرتی ہے۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Mosque in the Flemingdon Park area (established 2001, holds 250-300 worshippers) offering five daily congregational prayers and Jummah Salah. Provides Islamic education and guidance for children and adults, and welcomes both Muslim and non-Muslim visitors.",
-   "text": "فلیمنگڈون پارک کے علاقے میں ایک مسجد (جو 2001 میں قائم ہوئی اور جس میں 250 سے 300 نمازیوں کی گنجائش ہے) جہاں پانچ وقت کی باجماعت نمازیں اور جمعہ کی نماز ادا کی جاتی ہے۔ یہاں بچوں اور بڑوں کے لیے اسلامی تعلیم اور رہنمائی فراہم کی جاتی ہے، اور یہ مسلمانوں کے ساتھ ساتھ غیر مسلم زائرین کا بھی خیرمقدم کرتی ہے۔"
+   "text": "فلیمنگڈون پارک کے علاقے میں ایک مسجد (جو 2001 میں قائم ہوئی اور جس میں 250 سے 300 نمازیوں کی گنجائش ہے) جہاں پانچ وقت کی باجماعت نمازیں اور صلاۃ الجمعہ ادا کی جاتی ہے۔ یہاں بچوں اور بڑوں کے لیے اسلامی تعلیم اور رہنمائی فراہم کی جاتی ہے، اور یہ مسلمانوں کے ساتھ ساتھ غیر مسلم زائرین کا بھی خیرمقدم کرتی ہے۔"
   },
   "9aab0433db11": {
    "model": "north-small-translate-09-2026",
@@ -719,9 +722,9 @@
     "text": "ٹورنٹو پبلک لائبریری کا 29 سینٹ ڈینس ڈرائیو پر واقع برانچ: کتابیں ادھار لینا، عوامی کمپیوٹرز، بچوں کے پروگرامز، بچوں کے لیے 'لیڈنگ ٹو ریڈنگ' خواندگی پروگرام، اور مفت فنانشل ایمپاورمنٹ سروس (ٹیکس فائلنگ، بینیفٹس کے لیے درخواستیں، بجٹ بنانے میں مدد — یہ سہولیات تھورن کلف برانچ میں بھی دستیاب ہیں)۔ اوقاتِ کار: پیر تا جمعہ صبح 9 بجے سے رات 8:30 بجے تک، ہفتہ صبح 9 بجے سے شام 5 بجے تک، اتوار دوپہر 12 بجے سے شام 5 بجے تک۔ نوٹ: یہ برانچ تزئین و آرائش کے منصوبے کے لیے یکم دسمبر 2025 کو بند ہو جائے گی اور اس کے دوبارہ کھلنے کی توقع 2026 کی تیسری سہ ماہی کے آغاز میں ہے؛ موجودہ اوقاتِ کار کی فہرست سے ایسا لگتا ہے کہ یہ دوبارہ کھل چکی ہے، لیکن وہاں جانے سے پہلے تصدیق کر لیں۔"
    },
    "model": "claude-correction",
-   "note": "Fixed tense (branch closed, not 'will close'); address and program names in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
-   "text": "Toronto Public Library کی 29 St. Dennis Drive پر واقع برانچ: کتابیں ادھار لینا، عوامی کمپیوٹرز، بچوں کے پروگرامز، بچوں کے لیے 'Leading to Reading' خواندگی پروگرام، اور مفت Financial Empowerment Service (ٹیکس فائلنگ، بینیفٹس کے لیے درخواستیں، بجٹ بنانے میں مدد — یہ سہولیات تھورن کلف برانچ میں بھی دستیاب ہیں)۔ اوقاتِ کار: پیر تا جمعہ صبح 9 بجے سے رات 8:30 بجے تک، ہفتہ صبح 9 بجے سے شام 5 بجے تک، اتوار دوپہر 12 بجے سے شام 5 بجے تک۔ نوٹ: یہ برانچ تزئین و آرائش کے منصوبے کے لیے 1 دسمبر 2025 کو بند ہو گئی تھی اور اس کے دوبارہ کھلنے کی توقع 2026 کی تیسری سہ ماہی کے آغاز میں ہے؛ موجودہ اوقاتِ کار کی فہرست سے ایسا لگتا ہے کہ یہ دوبارہ کھل چکی ہے، لیکن وہاں جانے سے پہلے تصدیق کر لیں۔"
+   "text": "Toronto Public Library کی 29 St. Dennis Drive پر واقع برانچ: کتابیں ادھار لینا، عوامی کمپیوٹرز، بچوں کے پروگرامز، بچوں کے لیے 'Leading to Reading' خواندگی پروگرام، اور مفت Financial Empowerment Service (ٹیکس فائلنگ، بینیفٹس کے لیے درخواستیں، بجٹ بنانے میں مدد — یہ سہولیات تھورن کلف برانچ میں بھی دستیاب ہیں)۔ اوقاتِ کار: پیر تا جمعہ صبح 9am سے رات 8:30pm تک، ہفتہ صبح 9am سے شام 5pm تک، اتوار دوپہر 12 سے شام 5pm تک۔ نوٹ: یہ برانچ تزئین و آرائش کے منصوبے کے لیے 1 دسمبر 2025 کو بند ہو گئی تھی اور اس کے دوبارہ کھلنے کی توقع Q3 2026 (جولائی سے ستمبر والی سہ ماہی) کے آغاز میں ہے؛ موجودہ اوقاتِ کار کی فہرست سے ایسا لگتا ہے کہ یہ دوبارہ کھل چکی ہے، لیکن وہاں جانے سے پہلے تصدیق کر لیں۔"
   },
   "a5c931e58836": {
    "correctedFrom": {
@@ -749,12 +752,11 @@
    "text": "پناہ گاہ"
   },
   "aa052d1c9356": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "TDSB کا ایک سرکاری ہائی اسکول (نویں سے بارہویں جماعت) جو 135 Overlea Blvd پر واقع ہے، Flemingdon Park اور Thorncliffe Park کے طلباء کے لیے ہے (تقریباً 1800 طلباء)۔ یہ TOPS پروگرام (Talented Offerings for Programs in the Sciences) کا میزبان اسکول ہے، جو ریاضی، سائنس اور انگریزی کا چار سالہ خصوصی پروگرام ہے جس میں AP لیول کے کورسز شامل ہیں؛ یہاں SHSM، باغبانی، فنانشل سیکیورٹیز پروگرامز، ESL سپورٹ، 90 سے زائد طلباء کے زیرِ انتظام کلب اور مقابلے کی ٹیم اسپورٹس بھی دستیاب ہیں۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "TDSB public high school (grades 9-12) at 135 Overlea Blvd serving Flemingdon Park and Thorncliffe Park (~1800 students). Host school of the TOPS program (Talented Offerings for Programs in the Sciences), a four-year enriched math/science/English program with AP-level courses; also offers SHSM, horticulture, financial securities programs, ESL supports, 90+ student-led clubs and competitive team sports.",
-   "text": "TDSB کا ایک سرکاری ہائی اسکول (نویں سے بارہویں جماعت) جو 135 Overlea Blvd پر واقع ہے، Flemingdon Park اور Thorncliffe Park کے طلباء کے لیے ہے (تقریباً 1800 طلباء)۔ یہ TOPS پروگرام (Talented Offerings for Programs in the Sciences) کا میزبان اسکول ہے، جو ریاضی، سائنس اور انگریزی کا چار سالہ خصوصی پروگرام ہے جس میں AP لیول کے کورسز شامل ہیں؛ یہاں SHSM، باغبانی، فنانشل سیکیورٹیز پروگرامز، ESL سپورٹ، 90 سے زائد طلباء کے زیرِ انتظام کلب اور مقابلے کی ٹیم اسپورٹس بھی دستیاب ہیں۔",
-   "warnings": [
-    "numbers missing from translation: 12, 9"
-   ]
+   "text": "TDSB کا ایک سرکاری ہائی اسکول (گریڈ 9 سے 12) جو 135 Overlea Blvd پر واقع ہے، Flemingdon Park اور Thorncliffe Park کے طلباء کے لیے ہے (تقریباً 1800 طلباء)۔ یہ TOPS پروگرام (Talented Offerings for Programs in the Sciences) کا میزبان اسکول ہے، جو ریاضی، سائنس اور انگریزی کا چار سالہ خصوصی پروگرام ہے جس میں AP لیول کے کورسز شامل ہیں؛ یہاں SHSM، باغبانی، فنانشل سیکیورٹیز پروگرامز، ESL سپورٹ، 90 سے زائد طلباء کے زیرِ انتظام کلب اور مقابلے کی ٹیم اسپورٹس بھی دستیاب ہیں۔"
   },
   "ac4875864ec7": {
    "model": "north-small-translate-09-2026",
@@ -767,9 +769,9 @@
     "text": "چیپل ان دی پارک یونائیٹڈ چرچ ٹورنٹو میں 16 تھورن کلف پارک ڈرائیو (416-421-0792) پر واقع ایک چھوٹی اور کثیر الثقافتی مذہبی جماعت ہے، جو تھورن کلف پارک اور ڈون ملز کی خدمت کرتی ہے۔ یہاں اتوار کی عبادت صبح 10:00 بجے ذاتی طور پر، زوم کے ذریعے اور لائیو اسٹریم پر ہوتی ہے، اور نئے آنے والوں کو ایک 'ایمانی خاندان' کے طور پر شامل ہونے کی دعوت دی جاتی ہے۔"
    },
    "model": "claude-correction",
-   "note": "Church name and address back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
-   "text": "Chapel in the Park United Church، 16 Thorncliffe Park Drive, Toronto (416-421-0792) پر واقع ایک چھوٹی اور کثیر الثقافتی مذہبی جماعت ہے، جو تھورن کلف پارک اور ڈون ملز کی خدمت کرتی ہے۔ یہاں اتوار کی عبادت صبح 10:00 بجے ذاتی طور پر، زوم کے ذریعے اور لائیو اسٹریم پر ہوتی ہے، اور نئے آنے والوں کو ایک 'ایمانی خاندان' کے طور پر شامل ہونے کی دعوت دی جاتی ہے۔"
+   "text": "Chapel in the Park United Church، 16 Thorncliffe Park Drive, Toronto (416-421-0792) پر واقع ایک چھوٹی اور کثیر الثقافتی مذہبی جماعت ہے، جو تھورن کلف پارک اور ڈون ملز کی خدمت کرتی ہے۔ یہاں اتوار کی عبادت صبح 10:00 a.m. ذاتی طور پر، زوم کے ذریعے اور لائیو اسٹریم پر ہوتی ہے، اور نئے آنے والوں کو ایک 'ایمانی خاندان' کے طور پر شامل ہونے کی دعوت دی جاتی ہے۔"
   },
   "b0e486b1a83e": {
    "model": "north-small-translate-09-2026",
@@ -797,9 +799,9 @@
     "text": "ایم 4 ایچ (M4H) پوسٹل کوڈ کے رہائشیوں کے لیے مفت جامع بنیادی طبی سہولیات دستیاب ہیں؛ اس کے لیے کسی ہیلتھ کارڈ یا ریفرل کی ضرورت نہیں ہے، اور ترجمانی کی خدمات بھی فراہم کی جاتی ہیں۔ خدمات میں مسلسل بنیادی طبی دیکھ بھال، اسکولوں میں بچوں کا کلینک، بزرگوں اور دائمی بیماریوں میں مبتلا افراد کے لیے پاؤں کی دیکھ بھال، غذائی مشاورت، سماجی خدمات اور ذہنی صحت کی کونسلنگ، صحت سے متعلق تعلیمی ورکشاپس، خاندانی تعاون، اور آمدنی کی امداد، آبادکاری، رہائش، روزگار اور زبان سیکھنے کے پروگراموں کے لیے ریفرل شامل ہیں۔ یہ سہولت تھورن کلف پارک کمیونٹی ہب، 45 اوورلیا بلیوارڈ، دوسری منزل پر واقع ہے۔"
    },
    "model": "claude-correction",
-   "note": "glossary alignment: آبادکاری، -> سیٹلمنٹ، (settlement services); کونسلنگ -> کاؤنسلنگ (counselling)",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
-   "text": "ایم 4 ایچ (M4H) پوسٹل کوڈ کے رہائشیوں کے لیے مفت جامع بنیادی طبی سہولیات دستیاب ہیں؛ اس کے لیے کسی ہیلتھ کارڈ یا ریفرل کی ضرورت نہیں ہے، اور ترجمانی کی خدمات بھی فراہم کی جاتی ہیں۔ خدمات میں مسلسل بنیادی طبی دیکھ بھال، اسکولوں میں بچوں کا کلینک، بزرگوں اور دائمی بیماریوں میں مبتلا افراد کے لیے پاؤں کی دیکھ بھال، غذائی مشاورت، سماجی خدمات اور ذہنی صحت کی کاؤنسلنگ، صحت سے متعلق تعلیمی ورکشاپس، خاندانی تعاون، اور آمدنی کی امداد، سیٹلمنٹ، رہائش، روزگار اور زبان سیکھنے کے پروگراموں کے لیے ریفرل شامل ہیں۔ یہ سہولت Thorncliffe Park Community Hub، 45 Overlea Blvd, 2nd Floor (دوسری منزل) پر واقع ہے۔"
+   "text": "M4H پوسٹل کوڈ کے رہائشیوں کے لیے مفت جامع بنیادی طبی سہولیات دستیاب ہیں؛ اس کے لیے کسی ہیلتھ کارڈ یا ریفرل کی ضرورت نہیں ہے، اور ترجمانی کی خدمات بھی فراہم کی جاتی ہیں۔ خدمات میں مسلسل بنیادی طبی دیکھ بھال، اسکولوں میں بچوں کا کلینک، بزرگوں اور دائمی بیماریوں میں مبتلا افراد کے لیے پاؤں کی دیکھ بھال، غذائی مشاورت، سماجی خدمات اور ذہنی صحت کی کاؤنسلنگ، صحت سے متعلق تعلیمی ورکشاپس، خاندانی تعاون، اور آمدنی کی امداد، سیٹلمنٹ، رہائش، روزگار اور زبان سیکھنے کے پروگراموں کے لیے ریفرل شامل ہیں۔ یہ سہولت Thorncliffe Park Community Hub، 45 Overlea Blvd, 2nd Floor (دوسری منزل) پر واقع ہے۔"
   },
   "ba5f23dbc690": {
    "correctedFrom": {
@@ -827,9 +829,9 @@
     "text": "ٹورنٹو حفص اکیڈمی، 45 اوورلیا بلیوارڈ، یونٹ 201، ٹورنٹو (M4H 1C3؛ 647-505-8622) ایک قرآنی مدرسہ ہے جو مکمل وقت اور جزوی وقت کی حفظِ قرآن، حفظِ قرآن کی تیاری (پرِی-حفص)، حفظ کی نظرثانی، کلاسیکی عربی اور خواتین کے لیے قرآن کی کلاسیں فراہم کرتا ہے۔ کلاسیں پیر سے جمعرات صبح 9 بجے سے دوپہر 1 بجے تک اور شام 4 بجے سے شام 7 بجے تک، جبکہ جمعہ کو صبح 9 بجے سے دوپہر 2 بجے تک اور شام 4 بجے سے شام 7 بجے تک ہوتی ہیں۔"
    },
    "model": "claude-correction",
-   "note": "'حفص' (Hafs) misspelled Hifz; academy name and address in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
-   "text": "Toronto Hifz Academy، 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3؛ 647-505-8622) ایک قرآنی مدرسہ ہے جو مکمل وقت اور جزوی وقت کی حفظِ قرآن، حفظِ قرآن کی تیاری (Pre-Hifz)، حفظ کی نظرثانی، کلاسیکی عربی اور خواتین کے لیے قرآن کی کلاسیں فراہم کرتا ہے۔ کلاسیں پیر سے جمعرات صبح 9 بجے سے دوپہر 1 بجے تک اور شام 4 بجے سے شام 7 بجے تک، جبکہ جمعہ کو صبح 9 بجے سے دوپہر 2 بجے تک اور شام 4 بجے سے شام 7 بجے تک ہوتی ہیں۔"
+   "text": "Toronto Hifz Academy، 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3؛ 647-505-8622) ایک قرآنی مدرسہ ہے جو مکمل وقت اور جزوی وقت کی حفظِ قرآن، حفظِ قرآن کی تیاری (Pre-Hifz)، حفظ کی نظرثانی، کلاسیکی عربی اور خواتین کے لیے قرآن کی کلاسیں فراہم کرتا ہے۔ کلاسیں پیر سے جمعرات صبح 9am سے دوپہر 1pm تک اور سہ پہر 4pm سے شام 7pm تک، جبکہ جمعہ کو صبح 9am سے دوپہر 2pm تک اور سہ پہر 4pm سے شام 7pm تک ہوتی ہیں۔"
   },
   "c04bdbce2472": {
    "correctedFrom": {
@@ -847,9 +849,9 @@
     "text": "کمیونٹی فوڈ بینک، 10 گیٹ وے بلیوڈ (تہہ خانہ)، نارتھ یارک، ضرورت مند خاندانوں کو مفت خوراک اور وسائل فراہم کرتا ہے؛ اب یہ ایک رجسٹرڈ چیریٹی ہے۔ ویب سائٹ پر اوقاتِ کار مختلف درج ہیں (ایک جگہ پیر اور بدھ صبح 11:00 سے دوپہر 3:30 تک، جبکہ دوسری جگہ پیر سے جمعرات دوپہر 1:30 سے 3:30 تک) - آنے سے پہلے تصدیق کے لیے 416-422-4322 پر کال کریں۔"
    },
    "model": "claude-correction",
-   "note": "Address back in English.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
-   "text": "کمیونٹی فوڈ بینک، 10 Gateway Blvd (تہہ خانہ)، North York، ضرورت مند خاندانوں کو مفت خوراک اور وسائل فراہم کرتا ہے؛ اب یہ ایک رجسٹرڈ چیریٹی ہے۔ ویب سائٹ پر اوقاتِ کار مختلف درج ہیں (ایک جگہ پیر اور بدھ صبح 11:00 سے دوپہر 3:30 تک، جبکہ دوسری جگہ پیر سے جمعرات دوپہر 1:30 سے 3:30 تک) - آنے سے پہلے تصدیق کے لیے 416-422-4322 پر کال کریں۔"
+   "text": "کمیونٹی فوڈ بینک، 10 Gateway Blvd (تہہ خانہ)، North York، ضرورت مند خاندانوں کو مفت خوراک اور وسائل فراہم کرتا ہے؛ اب یہ ایک رجسٹرڈ چیریٹی ہے۔ ویب سائٹ پر اوقاتِ کار مختلف درج ہیں (ایک جگہ پیر اور بدھ صبح 11:00am سے سہ پہر 3:30pm تک، جبکہ دوسری جگہ پیر سے جمعرات دوپہر 1:30 سے سہ پہر 3:30pm تک) - آنے سے پہلے تصدیق کے لیے 416-422-4322 پر کال کریں۔"
   },
   "c6efc2c01c02": {
    "correctedFrom": {
@@ -952,9 +954,9 @@
     "text": "فریزر مسٹارڈ ارلی آن (Fraser Mustard EarlyON) چائلڈ اینڈ فیملی سینٹر (فریزر مسٹارڈ ارلی لرننگ اکیڈمی، 82 تھورن کلف پارک ڈرائیو، ایسٹ یارک؛ 416-394-2104) والدین اور بچوں کی دیکھ بھال کرنے والوں کے لیے ایک مفت پروگرام ہے، جس میں شیر خوار بچوں سے لے کر 6 سال تک کی عمر کے بچے شامل ہو سکتے ہیں۔ یہ پروگرام پیر سے جمعرات تک صبح 8:45 سے دوپہر 1:45 تک جاری رہتا ہے۔ بچے یہاں کھیل سکتے ہیں، نئی چیزیں دریافت کر سکتے ہیں، سیکھ سکتے ہیں اور صحت بخش ناشتے سے لطف اندوز ہو سکتے ہیں، جبکہ والدین دوسرے خاندانوں سے ملتے ہیں اور کمیونٹی کے پروگراموں اور خدمات کے بارے میں معلومات حاصل کرتے ہیں۔ اس عمل میں ایک ماہرِ ابتدائی تعلیم ان کی رہنمائی کرتا ہے۔ اس پروگرام میں شرکت کے لیے پہلے سے رجسٹریشن کی ضرورت نہیں ہے۔"
    },
    "model": "claude-correction",
-   "note": "Names and address in English; restored dropped 'drop-in'.",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
-   "text": "Fraser Mustard EarlyON Child and Family Centre (Fraser Mustard Early Learning Academy، 82 Thorncliffe Park Dr, East York؛ 416-394-2104) والدین اور بچوں کی دیکھ بھال کرنے والوں کے لیے ایک مفت ڈراپ اِن پروگرام ہے (بغیر وقت لیے آ سکتے ہیں)، جس میں شیر خوار بچوں سے لے کر 6 سال تک کی عمر کے بچے شامل ہو سکتے ہیں۔ یہ پروگرام پیر سے جمعرات تک صبح 8:45 سے دوپہر 1:45 تک جاری رہتا ہے۔ بچے یہاں کھیل سکتے ہیں، نئی چیزیں دریافت کر سکتے ہیں، سیکھ سکتے ہیں اور صحت بخش ناشتے سے لطف اندوز ہو سکتے ہیں، جبکہ والدین دوسرے خاندانوں سے ملتے ہیں اور کمیونٹی کے پروگراموں اور خدمات کے بارے میں معلومات حاصل کرتے ہیں۔ اس عمل میں ایک ماہرِ ابتدائی تعلیم ان کی رہنمائی کرتا ہے۔ اس پروگرام میں شرکت کے لیے پہلے سے رجسٹریشن کی ضرورت نہیں ہے۔"
+   "text": "Fraser Mustard EarlyON Child and Family Centre (Fraser Mustard Early Learning Academy، 82 Thorncliffe Park Dr, East York؛ 416-394-2104) والدین اور بچوں کی دیکھ بھال کرنے والوں کے لیے ایک مفت ڈراپ اِن پروگرام ہے (بغیر وقت لیے آ سکتے ہیں)، جس میں شیر خوار بچوں سے لے کر 6 سال تک کی عمر کے بچے شامل ہو سکتے ہیں۔ یہ پروگرام پیر سے جمعرات تک صبح 8:45am سے دوپہر 1:45pm تک جاری رہتا ہے۔ بچے یہاں کھیل سکتے ہیں، نئی چیزیں دریافت کر سکتے ہیں، سیکھ سکتے ہیں اور صحت بخش ناشتے سے لطف اندوز ہو سکتے ہیں، جبکہ والدین دوسرے خاندانوں سے ملتے ہیں اور کمیونٹی کے پروگراموں اور خدمات کے بارے میں معلومات حاصل کرتے ہیں۔ اس عمل میں ایک ماہرِ ابتدائی تعلیم ان کی رہنمائی کرتا ہے۔ اس پروگرام میں شرکت کے لیے پہلے سے رجسٹریشن کی ضرورت نہیں ہے۔"
   },
   "e04d44a05f5d": {
    "model": "north-small-translate-09-2026",
@@ -1012,9 +1014,11 @@
    "text": "مقدونی آرتھوڈوکس کیتھیڈرل جو 60 سال سے زائد عرصے سے ٹورنٹو کی مقدونی کمیونٹی کی خدمت کر رہا ہے۔ یہاں باقاعدگی سے عبادات اور مذہبی تہوار منعقد کیے جاتے ہیں، اور یہ ایسی تعلیمی، ثقافتی اور خیراتی تنظیموں کو جگہ فراہم کرتا ہے جو مقدونی ورثے کو محفوظ رکھتی اور اسے فروغ دیتی ہیں۔"
   },
   "ea49f2274ddf": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "ڈون ملز میں کیتھولک پیرش (150 Gateway Blvd) جو روزانہ اور ہفتہ وار میس، مذہبی رسومات (بپتسمہ، توبہ، یوکرسٹ، تصدیق، شادی، بیماروں کی مسح، جنازے)، مذہبی خدمات، نوجوانوں اور نوجوان بالغوں کے لیے پروگرام، رضاکارانہ مواقع اور پیرش کی کمیونٹی کی تقریبات فراہم کرتا ہے۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
-   "text": "ڈون ملز میں کیتھولک پیرش (150 Gateway Blvd) جو روزانہ اور ہفتہ وار میس، مذہبی رسومات (بپتسمہ، توبہ، یوکرسٹ، تصدیق، شادی، بیماروں کی مسح، جنازے)، مذہبی خدمات، نوجوانوں اور نوجوان بالغوں کے لیے پروگرام، رضاکارانہ مواقع اور پیرش کی کمیونٹی کی تقریبات فراہم کرتا ہے۔"
+   "text": "ڈون ملز میں کیتھولک پیرش (150 Gateway Blvd) جو روزانہ اور ہر سات دن بعد ہونے والی میس (Mass)، مذہبی رسومات (بپتسمہ، توبہ، یوکرسٹ، تصدیق، شادی، بیماروں کی مسح، جنازے)، مذہبی خدمات، نوجوانوں اور نوجوان بالغوں کے لیے پروگرام، رضاکارانہ مواقع اور پیرش کی کمیونٹی کی تقریبات فراہم کرتا ہے۔"
   },
   "ebed9e902f38": {
    "correctedFrom": {
@@ -1027,9 +1031,11 @@
    "text": "یہ رہائشیوں کا ایک گروپ ہے جو مختلف پس منظر رکھنے والے خاندانوں کو اجتماعات، ثقافتی تقریبات، تعلیم اور رضاکارانہ سرگرمیوں کے ذریعے ایک ساتھ لانے کا کام کرتا ہے۔ اس کا مقصد سماجی تنہائی اور اکیلے پن کا خاتمہ کرنا ہے، اور یہ Gateway Public School، Valley Park Middle School اور Marc Garneau Collegiate Institute کی Parent Councils (والدین کونسلز) میں فعال شرکت کے ذریعے بچوں کی تعلیم میں مدد کرتا ہے۔"
   },
   "ec5b5ffd97a8": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "ہنگامی مرمت کی درخواستیں (راتوں، ہفتے کے آخر میں اور تعطیلات کے دوران): 416-207-8253۔ عمارت کے فوری مسائل کے لیے سیکیورٹی عملے کے رابطے بھی اوپر دیے گئے ہیں۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Emergency maintenance requests (nights, weekends & holidays): 416-207-8253. Building security contacts are also listed above for urgent building issues.",
-   "text": "ہنگامی مرمت کی درخواستیں (راتوں، ہفتے کے آخر میں اور تعطیلات کے دوران): 416-207-8253۔ عمارت کے فوری مسائل کے لیے سیکیورٹی عملے کے رابطے بھی اوپر دیے گئے ہیں۔"
+   "text": "ہنگامی مرمت کی درخواستیں (رات کو، ویک اینڈ پر اور چھٹیوں کے دنوں میں): 416-207-8253۔ عمارت کے فوری مسائل کے لیے سیکیورٹی عملے کے رابطے بھی اوپر دیے گئے ہیں۔"
   },
   "ef9e53e990a8": {
    "correctedFrom": {
@@ -1072,9 +1078,9 @@
     "text": "دائیوں کی خدمات حمل اور زچگی سے متعلق ہنگامی مسائل کے لیے چوبیس گھنٹے دستیاب ہیں؛ اس کے لیے کوئی الگ ایمرجنسی پروگرام نہیں ہے۔"
    },
    "model": "claude-correction",
-   "note": "glossary alignment: دائیوں کی خدمات -> مڈوائفز (دائیوں) کی خدمات (midwife)",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
-   "text": "مڈوائفز (دائیوں) کی خدمات حمل اور زچگی سے متعلق ہنگامی مسائل کے لیے چوبیس گھنٹے دستیاب ہیں؛ اس کے لیے کوئی الگ ایمرجنسی پروگرام نہیں ہے۔"
+   "text": "مڈوائفز (دائیوں) کی خدمات حمل اور زچگی سے متعلق ہنگامی مسائل کے لیے 24/7 (دن رات، ہر روز) دستیاب ہیں؛ اس کے لیے کوئی الگ ایمرجنسی پروگرام نہیں ہے۔"
   },
   "fa4e99c2c2ea": {
    "model": "north-small-translate-09-2026",
@@ -1087,9 +1093,11 @@
    "text": "روزگار اور ہنر سازی کی تربیت"
   },
   "ff411a340bcb": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": "ایک مقامی غیر منافع بخش تنظیم (جو 2018 میں آٹزم کے شکار بچوں کے والدین نے قائم کی اور 2020 میں رجسٹرڈ ہوئی) جو ایسٹ یارک میں آٹزم اور دیگر اعصابی نشوونما کے مسائل کا شکار بچوں اور نوجوانوں کے لیے مفت، کمیونٹی پر مبنی اور خاندانوں کے لیے موزوں خدمات فراہم کرتی ہے۔ اس کے پروگراموں میں پیر سے ہفتے تک چلنے والے 'Roots' نوجوانوں کے پروگرام، ہفتے کے آخر میں آرام و سکون کی سہولت، والدین کے لیے ماہانہ معاونت کے اجلاس، اسکول کے بعد ہوم ورک میں مدد، موسم گرما اور مارچ کی چھٹیوں کے مفت جامع کیمپ، اسکول واپسی کی تقریبات، تعلیمی ورکشاپس اور آٹزم و معذوری کے بارے میں آگاہی کی مہمات شامل ہیں۔",
+   "model": "claude-correction",
+   "note": "2026-10-09: corrected so the facts of the English (times with AM/PM, digits, weekdays, in order) are kept exactly; the meaning is unchanged.",
    "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
-   "text": "ایک مقامی غیر منافع بخش تنظیم (جو 2018 میں آٹزم کے شکار بچوں کے والدین نے قائم کی اور 2020 میں رجسٹرڈ ہوئی) جو ایسٹ یارک میں آٹزم اور دیگر اعصابی نشوونما کے مسائل کا شکار بچوں اور نوجوانوں کے لیے مفت، کمیونٹی پر مبنی اور خاندانوں کے لیے موزوں خدمات فراہم کرتی ہے۔ اس کے پروگراموں میں پیر سے ہفتے تک چلنے والے 'Roots' نوجوانوں کے پروگرام، ہفتے کے آخر میں آرام و سکون کی سہولت، والدین کے لیے ماہانہ معاونت کے اجلاس، اسکول کے بعد ہوم ورک میں مدد، موسم گرما اور مارچ کی چھٹیوں کے مفت جامع کیمپ، اسکول واپسی کی تقریبات، تعلیمی ورکشاپس اور آٹزم و معذوری کے بارے میں آگاہی کی مہمات شامل ہیں۔"
+   "text": "ایک مقامی غیر منافع بخش تنظیم (جو 2018 میں آٹزم کے شکار بچوں کے والدین نے قائم کی اور 2020 میں رجسٹرڈ ہوئی) جو ایسٹ یارک میں آٹزم اور دیگر اعصابی نشوونما کے مسائل کا شکار بچوں اور نوجوانوں کے لیے مفت، کمیونٹی پر مبنی اور خاندانوں کے لیے موزوں خدمات فراہم کرتی ہے۔ اس کے پروگراموں میں پیر سے ہفتے تک چلنے والے 'Roots' نوجوانوں کے پروگرام، ویک اینڈ پر آرام و سکون (respite) کی سہولت، والدین کے لیے ماہانہ معاونت کے اجلاس، اسکول کے بعد ہوم ورک میں مدد، موسم گرما اور مارچ کی چھٹیوں کے مفت جامع کیمپ، اسکول واپسی کی تقریبات، تعلیمی ورکشاپس اور آٹزم و معذوری کے بارے میں آگاہی کی مہمات شامل ہیں۔"
   },
   "fff820dc79f3": {
    "model": "north-small-translate-09-2026",
@@ -1097,5 +1105,5 @@
    "text": "بچوں کی دیکھ بھال اور EarlyON"
   }
  },
- "updated": "2026-10-01T04:35:31+00:00"
+ "updated": "2026-10-09T04:07:56+00:00"
 }
