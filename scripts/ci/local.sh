@@ -202,8 +202,8 @@ PRODUCTION_URL="${PRODUCTION_URL:-}" step npm run db:check-destructive -- --base
 APP_VERSION="$GITHUB_SHA" step npm run build
 CI=true step npm run test:layout:docker
 CI=true STAFF_TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:staff:docker
-CI=true step npm run test:resident:docker
-CI=true step npm run test:hub:docker
+CI=true always_step npm run test:resident:docker
+CI=true always_step npm run test:hub:docker
 EXPECTED_VERSION="$GITHUB_SHA" step npm run test:smoke
 
 # --- result ------------------------------------------------------------------

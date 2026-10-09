@@ -642,6 +642,22 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
   once (`checks.yml`): `Static` (lint, types, CSS and string checks, unit tests, dependency rules), `Database` (the disposable Supabase
   Postgres: migrations, RLS, `test:db`, the destructive-change check) and `Browser` (one build; the layout, staff, resident and Hub suites in
   the pinned Playwright image, so the runner installs no browser; then the smoke check of the build). `npm run ci:local` runs the same steps one after the other.
+- **Screenshot baselines (one CI round).** The resident and Hub suites compare pages with the baselines in `e2e/resident/__screenshots__`
+  and `e2e/hub/__screenshots__`, made only in the pinned image. The comparison is `expect.soft` (`expectBaseline` in each suite's
+  `helpers.ts`): a mismatch still fails the test and the `Browser` job, but the test goes on to its later screenshots, and the Hub step
+  runs even when the resident step failed. So one failed run holds every new picture, in the `browser-test-results` artifact (uploaded on
+  failure, 14 days): `resident/` and `hub/` (each suite's `outputDir`), one folder per test attempt (`<test>`, `<test>-retry1`,
+  `<test>-retry2`, all kept), each with `<name>-actual.png`, `-expected.png` and `-diff.png`. Take each test's **last** attempt: it is
+  the one that failed the test, so a picture that matched on a retry (flaky) is not taken; a missing baseline is never retried and is in
+  the first folder. Then, after a UI change, in one round:
+  1. Push and let `Checks` fail; note the run id (`gh run list -w ci.yml -b <branch> -L 1`).
+  2. `node scripts/ci/baselines-from-run.mjs <run id>`: it runs `gh run download <run id> -n browser-test-results`, then copies each
+     last attempt's `<name>-actual.png` over `e2e/<suite>/__screenshots__/<name>.png` (`--dir <folder>` reads an artifact already
+     downloaded, or a local `test-results/`). It skips a picture whose page never held still (a `-previous.png` beside it).
+  3. Look at every `-diff.png` and the changed pictures: each difference must be the change you meant. Commit them as
+     "Baselines from CI run <run id>: …" and push. The next run must pass with no new picture; a second round means a test failed
+     before its screenshots (a hard assertion), which the job log names.
+  Locally, `npm run test:resident:update` / `test:hub:update` remake them in the same image.
 - **Skip on main.** On a push to `main`, `scripts/ci/tested-tree.sh` skips the three jobs, and `Checks` passes as "tested at `<sha>`", only
   when the pushed commit is a merge commit whose tree equals the tree of the merged pull request's head, and that head has a successful
   `Checks` of `ci.yml`. The decision is in the job summary. Anything else (a squash, main moved, no passing run, an API error) runs everything.
