@@ -219,7 +219,7 @@ test.describe("the archive screen (R-08)", () => {
 test.describe("the archive screen with nothing to show", () => {
   test.use({ baseURL: PLAIN_URL, storageState: welcomed(PLAIN_URL) });
 
-  test("says that no alert has ended yet and offers the way back to Now", async ({ page }) => {
+  test("says that no alert has ended yet and offers the way back to Alerts", async ({ page }) => {
     await openResident(page, "/en/archive", 390);
 
     await expect(page.getByTestId("archive-empty")).toContainText(catalogText("en", "R08.empty"));

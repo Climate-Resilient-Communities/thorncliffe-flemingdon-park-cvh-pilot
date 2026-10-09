@@ -153,7 +153,7 @@
   m(en, { O06: { logged: 'Logged {t}', ackAfter: 'Acknowledged {t} after it was logged', ackNow: 'Acknowledged within a minute of logging',
   titleAck: 'The acknowledgement is out', titleAlert: 'The alert is out', titleExercise: 'Practice publish: nothing was sent to residents',
   leadExercise: 'This is an exercise. The rows below show what would have gone where.',
-  whereTitle: 'What went where', kApp: 'App and web', vApp: 'On Now for residents who follow {where}. It shows "Verified by {org}".',
+  whereTitle: 'What went where', kApp: 'App and web', vApp: 'On Alerts for residents who follow {where}. It shows "Verified by {org}".',
   kText: 'Text messages', vText: 'About {n} phones, each in the language the resident chose. Illustrative.',
   kLangs: 'Languages', vLangs: '{n} launch languages from the checked template {id}.', vLangsNoTpl: '{n} launch languages.', kAudio: 'Audio', vAudio: 'An audio version in every language, {t} each.',
   kTailored: 'Tailored blocks', vTailored: 'Added for residents who chose a group. Nobody is told why they got it.', kValid: 'Valid until', notSent: 'Not sent: practice only.',
@@ -292,9 +292,9 @@
   tailoredTitle: 'Tailored blocks that come with this template', tailoredLead: 'Read-only. Written and checked with the template, in every language. A resident sees a block only for a group they chose, and is never told why.',
   tailoredNone: 'No tailored blocks for this type.', checkinGroup: 'I would like a check-in',
   channelsTitle: 'Where it goes', channelsLead: 'One publish sends to every channel. Nothing to tick.',
-  chApp: 'App and web: on Now for everyone who follows this area', chText: 'Text messages: about {n} phones', chAudio: 'Audio: {n} languages',
+  chApp: 'App and web: on Alerts for everyone who follows this area', chText: 'Text messages: about {n} phones', chAudio: 'Audio: {n} languages',
   chAmb: 'Floor ambassadors: follow-up to {n}', chAmbNone: 'Floor ambassadors: none cover this area', illustrative: 'Numbers are illustrative',
-  validTitle: 'Valid until', validHint: 'It stays on Now until then. You can change this with any update.',
+  validTitle: 'Valid until', validHint: 'It stays on Alerts until then. You can change this with any update.',
   valid: { resolved: 'Until resolved', tonight: 'Until 11 pm tonight', morning: 'Until tomorrow at 9 am' },
   publish: 'Publish to every channel', publishing: 'Publishing to every channel', oneAction: 'One action publishes in every language, on every channel.',
   exercise: 'Exercise: publishing is practice. Nothing will be sent to residents.', exercisePublish: 'Publish as practice',
@@ -362,7 +362,7 @@
   needFinal: 'Write a short final entry to resolve.',
   deleteTitle: 'Check-in records', deleteLine: 'Individual check-in records for this disruption will be deleted. Counts are kept.',
   counts: 'Counts kept: {done} done, {nr} not reached, {help} needed help, {conn} connected to a service, {waiting} not yet reached.',
-  nextTitle: 'What happens when you resolve', next1: 'The alert leaves Now and moves to archived alerts. Opened from there, the final entry is on top and the thread below.',
+  nextTitle: 'What happens when you resolve', next1: 'The alert leaves Alerts and moves to archived alerts. Opened from there, the final entry is on top and the thread below.',
   next2: 'Text subscribers get the final entry: Resolved: "{headline}".', next3: 'The incident closes on operator home. The shared space, if open, is told.',
   resolve: 'Resolve and close', resolveEx: 'Resolve as practice', exercise: 'Exercise: nothing will be sent to residents, and no records are deleted.',
   doneTitle: 'Resolved and moved to archived alerts', doneLine: 'Residents now find it under archived alerts, final entry on top. Check-in records for this disruption are deleted; counts are kept.',
@@ -928,7 +928,7 @@
   change: 'Change', noFloor: 'No floor, just the building', floorN: 'Floor {n}', step1: 'Step 1 of 2', step2: 'Step 2 of 2', continue: 'Continue',
   groupsLead: 'This is optional. Choosing a group brings alerts and advice for it.', consent: 'The person with this phone agrees by replying YES, including to any groups chosen here.',
   resent: 'We sent it again to {phone}.', protoSee: 'See the message arrive on the phone', protoTag: 'Prototype',
-  howStop: 'To stop all messages from the Hub, reply STOP to any text.', howChange: 'To change your groups, reply GROUPS.', toHome: 'Go to Now',
+  howStop: 'To stop all messages from the Hub, reply STOP to any text.', howChange: 'To change your groups, reply GROUPS.', toHome: 'Go to Alerts',
   sample: 'Sample building', moreBuildings: '{n} more. Type part of the address.' } });
   /* R06_SignupConfirm.html */
   m(en, { R06: { deviceLabel: 'Text messages on a basic phone', back: 'Back to the app', replyHint: 'Tap a reply to send it', you: 'You',
@@ -943,7 +943,7 @@
   endedResolved: 'This alert has ended. It was resolved {t}.', endedWithdrawn: 'The Hub withdrew this alert. {reason}', withdrawn: 'Withdrawn', endedExpired: 'This alert has ended. It expired {t} without a final update.', validLine: 'Valid {until}',
   timeLine: 'Posted {posted} · Updated {updated}', timeLineOne: 'Posted {posted}', basicMore: 'Earlier updates: {n}' } });
   /* R08_Archive.html */
-  m(en, { R08: { lead: 'Each alert stays readable here after it ends.', endedOn: 'Posted {posted}', backHome: 'Back to Now' } });
+  m(en, { R08: { lead: 'Each alert stays readable here after it ends.', endedOn: 'Posted {posted}', backHome: 'Back to Alerts' } });
   /* R09_SearchEntry.html */
   m(en, { R09: { lead: 'Say what is wrong, the way you would tell a friend. You do not need the name of a service.',
   focusHint: 'Other things people write', topic: 'Topic: {cat}', seeAll: 'See everything in {cat}', moreTopics: 'Show all {n} topics',
@@ -1077,8 +1077,8 @@
   /* R32_HeadsUp.html */
   m(en, { R32: { switchLabel: 'Show me a heads-up before each season', what: 'What you would see', whatOn: 'What you will see',
   titles: { heat: 'Before the hot weather', smoke: 'Before wildfire smoke season', winter: 'Before winter storms' },
-  readGuide: 'Read the {hazard} guide', turnedOn: 'Heads-ups on. You will see them on Now, in the CVH only.', turnedOff: 'Heads-ups off. Nothing else has changed.',
-  offLine: 'Heads-ups are off until you turn them on.', whereLine: 'They show on the Now screen, a few weeks before each season.' } });
+  readGuide: 'Read the {hazard} guide', turnedOn: 'Heads-ups on. You will see them on Alerts, in the CVH only.', turnedOff: 'Heads-ups off. Nothing else has changed.',
+  offLine: 'Heads-ups are off until you turn them on.', whereLine: 'They show on the Alerts screen, a few weeks before each season.' } });
   /* R33_CheckIn.html */
   m(en, { R33: { whatTitle: 'What a check-in is', askPlace: 'We need your building and floor to know whether a floor ambassador can check on you.',
   chooseBuilding: 'Choose your building', chooseFloor: 'Choose your floor', floorN: 'Floor {n}', change: 'Change', placeLine: '{building}, floor {floor}',
@@ -1101,7 +1101,7 @@
   nextCheckin: 'Next: how you would like to be checked on.', helperNeeded: 'Please ask them first. Tick the box when they have agreed, or skip this question.',
   save: 'Save', saved: 'Saved. This takes effect now.', both: 'Thorncliffe Park and Flemingdon Park',
   nothingSummary: 'Nothing yet. You will see every alert for Thorncliffe Park and Flemingdon Park.', everyAlert: 'Every alert for {nbhd}',
-  floorOf: '{building}, floor {floor}', checkinBy: 'Check-ins by {method}', changeAll: 'Change what you chose', toHome: 'Go to Now' } });
+  floorOf: '{building}, floor {floor}', checkinBy: 'Check-ins by {method}', changeAll: 'Change what you chose', toHome: 'Go to Alerts' } });
   /* The Hub shell (S01.09): the menu drawer's close button, People and the Administration section. Not a prototype screen. */
   m(en, { hub: { closeMenu: 'Close menu', nav: { people: 'People' }, sections: { admin: 'Administration' } } });
   /* Staff accounts (S01.05): Add a person, the first-Admin script and the setup gate. Not a prototype screen. */

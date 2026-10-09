@@ -319,7 +319,7 @@
    "protoTag": "Prototipo",
    "howStop": "Para dejar de recibir todos los mensajes del Hub, responda STOP a cualquier mensaje.",
    "howChange": "Para cambiar sus grupos, responda GROUPS.",
-   "toHome": "Ir a Ahora",
+   "toHome": "Ir a Alertas",
    "sample": "Edificio de ejemplo",
    "moreBuildings": "{n} más. Escriba parte de la dirección."
   },
@@ -414,7 +414,7 @@
    "emptyBody": "Cuando una alerta termina, pasa aquí y se puede seguir leyendo.",
    "lead": "Cada alerta se puede seguir leyendo aquí después de terminar.",
    "endedOn": "Publicado {posted}",
-   "backHome": "Volver a Ahora"
+   "backHome": "Volver a Alertas"
   },
   "R09": {
    "title": "Buscar ayuda",
@@ -979,10 +979,10 @@
     "winter": "Antes de las tormentas de invierno"
    },
    "readGuide": "Leer la guía sobre {hazard}",
-   "turnedOn": "Avisos previos activados. Los verá en Ahora, solo en el CVH.",
+   "turnedOn": "Avisos previos activados. Los verá en Alertas, solo en el CVH.",
    "turnedOff": "Avisos previos desactivados. No cambió nada más.",
    "offLine": "Los avisos previos están desactivados hasta que usted los active.",
-   "whereLine": "Aparecen en la pantalla Ahora, unas semanas antes de cada temporada."
+   "whereLine": "Aparecen en la pantalla Alertas, unas semanas antes de cada temporada."
   },
   "R33": {
    "title": "Pedir un chequeo de bienestar",
@@ -1116,7 +1116,7 @@
    "floorOf": "{building}, piso {floor}",
    "checkinBy": "Chequeos de bienestar por {method}",
    "changeAll": "Cambiar lo que eligió",
-   "toHome": "Ir a Ahora",
+   "toHome": "Ir a Alertas",
    "manyLine": "Elija su propio edificio o el de un familiar. Puede elegir todos los que quiera.",
    "chosenNone": "Todavía no eligió ningún edificio",
    "chosenOne": "1 edificio elegido",

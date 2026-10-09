@@ -26,7 +26,7 @@ describe("isCurrent", () => {
     expect(isCurrent("/en/ready", help, false)).toBe(false);
   });
 
-  it("marks home on the alerts' pages when it is given them, and still on no other page below it (R-07 is on Now)", () => {
+  it("marks home on the alerts' pages when it is given them, and still on no other page below it (R-07 is on Alerts)", () => {
     const now = { href: "/en", alsoCurrentOn: ["/en/alerts"] };
 
     expect(isCurrent("/en", now, true)).toBe(true);

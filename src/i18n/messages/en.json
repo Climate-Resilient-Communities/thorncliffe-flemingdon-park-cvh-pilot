@@ -56,7 +56,7 @@
     "choices": "What I have told the CVH",
     "choicesShort": "My choices",
     "nav": {
-      "now": "Now",
+      "now": "Alerts",
       "help": "Find help",
       "map": "Map",
       "ready": "Be ready"
@@ -637,7 +637,7 @@
     "protoTag": "Prototype",
     "howStop": "To stop all messages from the Hub, reply STOP to any text.",
     "howChange": "To change your groups, reply GROUPS.",
-    "toHome": "Go to Now",
+    "toHome": "Go to Alerts",
     "sample": "Sample building",
     "moreBuildings": "{n} more. Type part of the address."
   },
@@ -734,7 +734,7 @@
     "emptyBody": "When an alert ends, it moves here and stays readable.",
     "lead": "Each alert stays readable here after it ends.",
     "endedOn": "Posted {posted}",
-    "backHome": "Back to Now",
+    "backHome": "Back to Alerts",
     "withdrawn": "Withdrawn {t}",
     "more": "Show older alerts",
     "moreFailed": "We could not load older alerts. Check that you have signal and try again."
@@ -1321,10 +1321,10 @@
       "winter": "Before winter storms"
     },
     "readGuide": "Read the {hazard} guide",
-    "turnedOn": "Heads-ups on. You will see them on Now, in the CVH only.",
+    "turnedOn": "Heads-ups on. You will see them on Alerts, in the CVH only.",
     "turnedOff": "Heads-ups off. Nothing else has changed.",
     "offLine": "Heads-ups are off until you turn them on.",
-    "whereLine": "They show on the Now screen, a few weeks before each season."
+    "whereLine": "They show on the Alerts screen, a few weeks before each season."
   },
   "R33": {
     "title": "Ask for a check-in",
@@ -1462,7 +1462,7 @@
     "floorOf": "{building}, floor {floor}",
     "checkinBy": "Check-ins by {method}",
     "changeAll": "Change what you chose",
-    "toHome": "Go to Now",
+    "toHome": "Go to Alerts",
     "manyLine": "Choose your own building or a relative's. You can choose as many as you like.",
     "chosenNone": "No buildings chosen yet",
     "chosenOne": "1 building chosen",
@@ -2137,7 +2137,7 @@
     "leadExercise": "This is an exercise. The rows below show what would have gone where.",
     "whereTitle": "What went where",
     "kApp": "App and web",
-    "vApp": "On Now for residents who follow {where}. It shows \"Verified by {org}\".",
+    "vApp": "On Alerts for residents who follow {where}. It shows \"Verified by {org}\".",
     "kText": "Text messages",
     "vText": "About {n} phones, each in the language the resident chose. Illustrative.",
     "kLangs": "Languages",
@@ -2554,14 +2554,14 @@
     "checkinGroup": "I would like a check-in",
     "channelsTitle": "Where it goes",
     "channelsLead": "One publish sends to every channel. Nothing to tick.",
-    "chApp": "App and web: on Now for everyone who follows this area",
+    "chApp": "App and web: on Alerts for everyone who follows this area",
     "chText": "Text messages: about {n} phones",
     "chAudio": "Audio: {n} languages",
     "chAmb": "Floor ambassadors: follow-up to {n}",
     "chAmbNone": "Floor ambassadors: none cover this area",
     "illustrative": "Numbers are illustrative",
     "validTitle": "Valid until",
-    "validHint": "It stays on Now until then. You can change this with any update.",
+    "validHint": "It stays on Alerts until then. You can change this with any update.",
     "valid": {
       "resolved": "Until resolved",
       "tonight": "Until 11 pm tonight",
@@ -2814,7 +2814,7 @@
     "deleteLine": "Individual check-in records for this disruption will be deleted. Counts are kept.",
     "counts": "Counts kept: {done} done, {nr} not reached, {help} needed help, {conn} connected to a service, {waiting} not yet reached.",
     "nextTitle": "What happens when you resolve",
-    "next1": "The alert leaves Now and moves to archived alerts. Opened from there, the final entry is on top and the thread below.",
+    "next1": "The alert leaves Alerts and moves to archived alerts. Opened from there, the final entry is on top and the thread below.",
     "next2": "Text subscribers get the final entry: Resolved: \"{headline}\".",
     "next3": "The incident closes on operator home. The shared space, if open, is told.",
     "resolve": "Resolve and close",

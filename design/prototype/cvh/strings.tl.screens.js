@@ -308,7 +308,7 @@
    "protoTag": "Prototype",
    "howStop": "Para itigil ang lahat ng mensahe mula sa Hub, sumagot ng STOP sa anumang text.",
    "howChange": "Para palitan ang iyong mga grupo, sumagot ng GROUPS.",
-   "toHome": "Pumunta sa Ngayon",
+   "toHome": "Pumunta sa Mga alerto",
    "sample": "Halimbawang gusali",
    "moreBuildings": "{n} pa. I-type ang bahagi ng address."
   },
@@ -403,7 +403,7 @@
    "emptyBody": "Kapag natapos ang isang alerto, lilipat ito rito at mababasa pa rin.",
    "lead": "Mababasa pa rin dito ang bawat alerto pagkatapos nito.",
    "endedOn": "Ipinost {posted}",
-   "backHome": "Bumalik sa Ngayon"
+   "backHome": "Bumalik sa Mga alerto"
   },
   "R09": {
    "title": "Humanap ng tulong",
@@ -968,10 +968,10 @@
     "winter": "Bago ang mga bagyo ng taglamig"
    },
    "readGuide": "Basahin ang gabay sa {hazard}",
-   "turnedOn": "Nakabukas ang mga paalala. Makikita mo ang mga ito sa Ngayon, sa CVH lang.",
+   "turnedOn": "Nakabukas ang mga paalala. Makikita mo ang mga ito sa Mga alerto, sa CVH lang.",
    "turnedOff": "Nakasara ang mga paalala. Walang ibang nagbago.",
    "offLine": "Nakasara ang mga paalala hanggang buksan mo ang mga ito.",
-   "whereLine": "Lumalabas ang mga ito sa screen na Ngayon, ilang linggo bago ang bawat season."
+   "whereLine": "Lumalabas ang mga ito sa screen na Mga alerto, ilang linggo bago ang bawat season."
   },
   "R33": {
    "title": "Humiling ng pangungumusta",
@@ -1105,7 +1105,7 @@
    "floorOf": "{building}, palapag {floor}",
    "checkinBy": "Pangungumusta sa pamamagitan ng {method}",
    "changeAll": "Palitan ang pinili mo",
-   "toHome": "Pumunta sa Ngayon",
+   "toHome": "Pumunta sa Mga alerto",
    "manyLine": "Piliin ang sarili mong gusali o ang sa isang kamag-anak. Puwede kang pumili ng kahit ilan.",
    "chosenNone": "Wala pang napiling gusali",
    "chosenOne": "1 gusali ang napili",

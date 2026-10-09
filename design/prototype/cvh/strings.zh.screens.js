@@ -319,7 +319,7 @@
    "protoTag": "原型",
    "howStop": "如要停止接收中心的所有短信，请对任何一条短信回复 STOP。",
    "howChange": "如要更改您的群体，请回复 GROUPS。",
-   "toHome": "前往“现在”",
+   "toHome": "前往“警报”",
    "sample": "示例楼宇",
    "moreBuildings": "还有 {n} 栋。请输入部分地址。"
   },
@@ -414,7 +414,7 @@
    "emptyBody": "警报结束后会移到这里，仍然可以阅读。",
    "lead": "每条警报结束后都会保留在这里，可以阅读。",
    "endedOn": "{posted}发布",
-   "backHome": "返回“现在”"
+   "backHome": "返回“警报”"
   },
   "R09": {
    "title": "寻求帮助",
@@ -979,10 +979,10 @@
     "winter": "冬季风暴之前"
    },
    "readGuide": "阅读{hazard}指南",
-   "turnedOn": "提前提醒已开启。您会在“现在”页面看到，只在 CVH 中显示。",
+   "turnedOn": "提前提醒已开启。您会在“警报”页面看到，只在 CVH 中显示。",
    "turnedOff": "提前提醒已关闭。其他设置没有改变。",
    "offLine": "提前提醒处于关闭状态，直到您开启。",
-   "whereLine": "它们会在每个季节前几周显示在“现在”页面上。"
+   "whereLine": "它们会在每个季节前几周显示在“警报”页面上。"
   },
   "R33": {
    "title": "申请探望",
@@ -1116,7 +1116,7 @@
    "floorOf": "{building}，{floor} 楼",
    "checkinBy": "探望方式：{method}",
    "changeAll": "更改您的选择",
-   "toHome": "前往“现在”",
+   "toHome": "前往“警报”",
    "manyLine": "选择您自己的楼宇或亲属的楼宇。想选几栋都可以。",
    "chosenNone": "还没有选择楼宇",
    "chosenOne": "已选择 1 栋楼",
