@@ -57,7 +57,7 @@ class ResetRefusal {
  *     revoked (`session.revoked`) and `password.reset` is audited;
  *  2. the provider's password becomes the (peppered) starting password, which also ends every
  *     session the account has at the provider (Supabase's only global sign-out);
- *  3. a second transaction makes the account active with a new 24-hour window and counts one more
+ *  3. a second transaction makes the account active with a new 72-hour window and counts one more
  *     revocation, so a sign-in that checked the old password before step 2 cannot keep its session.
  * If step 2 or 3 fails the account stays locked, and another reset or a re-issue (S01.07) finishes
  * it.

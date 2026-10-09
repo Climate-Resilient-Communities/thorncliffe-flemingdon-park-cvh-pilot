@@ -9,7 +9,7 @@ describe("staff entry and account help", () => {
     expect(html).toContain('href="/en"');
     expect(html).toContain("Forgot your password?");
     expect(html).toContain("does not send automatic password-reset emails");
-    expect(html).toContain("within 24 hours");
+    expect(html).toContain("within 72 hours");
     expect(html).toContain("Admins and Coordinators");
     expect(html).toContain('autoComplete="current-password"');
     expect(html).not.toContain('href="/staff/register"');

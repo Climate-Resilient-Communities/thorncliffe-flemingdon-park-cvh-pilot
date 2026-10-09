@@ -58,7 +58,7 @@ const USAGE =
   "Nothing needs deleting by hand in the Supabase dashboard.\n\n" +
   "--reissue: when the first Admin's starting password expired, or was used without being replaced,\n" +
   "before the two Admins finished setting up, nobody can sign in to re-issue it. This issues it again\n" +
-  "(a new 24-hour window), ends every session of that account and prints it once. It is refused unless\n" +
+  "(a new 72-hour window), ends every session of that account and prints it once. It is refused unless\n" +
   "setup is still in progress and the username is the first Admin's, still on a starting password.\n\n" +
   "Passwords: Supabase Auth stores hex(HMAC-SHA-256(STAFF_PASSWORD_PEPPER, password)), never the\n" +
   "password itself, so the script refuses to run without STAFF_PASSWORD_PEPPER (at least 32 random\n" +

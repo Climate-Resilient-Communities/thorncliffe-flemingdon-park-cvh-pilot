@@ -31,7 +31,7 @@ After any rotation: check `GET /api/health/heartbeat` answers 200, the Hub shows
 
 ## When someone leaves
 
-1. **Same day, a Hub Admin, on People** (`/staff/people`): **Reset a password** for the person (they are signed out on every device; the new starting password is never given to anyone and expires in 24 hours), and for an Admin or Coordinator also **Reset an authenticator**. The pilot has no Remove button on People: note the person in the rotation record so the account is removed once the screen exists.
+1. **Same day, a Hub Admin, on People** (`/staff/people`): **Reset a password** for the person (they are signed out on every device; the new starting password is never given to anyone and expires in 72 hours), and for an Admin or Coordinator also **Reset an authenticator**. The pilot has no Remove button on People: note the person in the rotation record so the account is removed once the screen exists.
 2. A Hub Admin removes their phone from **On-call numbers** and from the **Drill roster**, and from the uptime monitor's email list (IT).
 3. IT removes them from Vercel, Supabase, Twilio, Cohere, GitHub and the uptime monitor.
 4. IT rotates every secret in the table they could have seen (anyone who pulled the production environment, or had Vercel, Supabase, Twilio, Cohere or GitHub admin access, could see all of them).
