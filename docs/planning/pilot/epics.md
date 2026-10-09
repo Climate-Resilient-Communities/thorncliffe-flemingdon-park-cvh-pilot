@@ -63,7 +63,7 @@ FR-E2: Ambassador posts updates or incidents for any floor of assigned buildings
 FR-E3: Rounds reported to the Hub as counts by building and floor.
 FR-E5: Hub staff see which buildings and floors have an assigned ambassador.
 FR-G1: Roles Admin, Coordinator, Director, Ambassador with the PRD permission table; every account is a named person; residents have no accounts.
-FR-G2: Admin-only account lifecycle; usernames, email on record, no email sent; starting password rvh-firstname-lastname valid once with forced change, locked if unused in 24 hours; Admin-only resets (audited); at least two Admins; removal ends access everywhere immediately.
+FR-G2: Admin-only account lifecycle; usernames, email on record, no email sent; starting password rvh-firstname-lastname valid once with forced change, locked if unused in 24 hours (as built: changed to 72 h by the product owner 2026-10-08); Admin-only resets (audited); at least two Admins; removal ends access everywhere immediately.
 FR-G3: Hub maintains the 43 buildings and floors from the register, with last-updated dates; ambassadors assigned from this list.
 FR-G4: Hub maintains providers (from the reviewed catalogue) with last-confirmed dates.
 FR-G5: Every send, approval, correction, withdrawal, drill and account change is audited; resident actions are not recorded individually.
@@ -94,7 +94,7 @@ NFR-N9: Total build and running cost within about CAD 1,000 for two months (curr
 - AR-3: one app, two surfaces: `/[lang]` resident (service worker cached) and `/staff` (no-store, network-only except the in-memory round page) (AD-1).
 - AR-4: environments: Vercel Hobby yul1 + one Supabase Free project in ca-central-1, shared by production and previews (staging deferred to the MVP); previews run no cron and apply no migrations; `SMS_MODE` live only in production, log elsewhere; env schema validated at boot; secrets in Vercel env and Supabase Vault; CI applies SQL migrations before production deploy (AD-15).
 - AR-5: database: SQL migrations canonical (Supabase CLI), Drizzle schema with drift check, RLS enabled with no policies, pg_cron and pg_net enabled in the first migration (Conventions, AD-4).
-- AR-6: staff auth with Supabase Auth: Admin-created usernames, one-time starting password with forced change and 24-hour lock, TOTP aal2 for Admin and Coordinator, status check every request, global sign-out on suspension, table-driven `policy.ts#can`, session limits (AD-4).
+- AR-6: staff auth with Supabase Auth: Admin-created usernames, one-time starting password with forced change and 24-hour lock (as built: changed to 72 h by the product owner 2026-10-08), TOTP aal2 for Admin and Coordinator, status check every request, global sign-out on suspension, table-driven `policy.ts#can`, session limits (AD-4).
 - AR-7: wire contracts as versioned zod schemas in `src/contracts` (LangCode, Audience + matcher, Translated, FeedV1, Thread, Entry, DirectoryManifestV1, SearchV1 with query_lang), contract-tested both sides (AD-20).
 - AR-8: alert thread/entry state machine in `lifecycle.ts` mirrored by triggers; editor_ids; content_hash (RFC 8785); D-1 predicate; supersession; single close path; system entries; duplicate hint (AD-5).
 - AR-9: lifecycle concurrency: thread lock first, fixed lock order, ALERT_CLOSED, close discards pending and cancels queued (AD-18).
@@ -292,8 +292,8 @@ Admins create staff accounts; staff sign in safely; the 43 buildings and floors 
 
 | Term | Meaning |
 | --- | --- |
-| Starting password | `rvh-<firstname>-<lastname>`, lower case, spaces removed, accents stripped. Valid for one successful sign-in and for 24 hours from issue. |
-| Expired starting password | Unused 24 hours after issue. Signing in with it fails with "Your starting password has expired. Ask an Admin to re-issue it." and sets the account to `locked_pending_reissue`. Only an Admin's re-issue (new 24-hour window, audited) unlocks it. |
+| Starting password | `rvh-<firstname>-<lastname>`, lower case, spaces removed, accents stripped. Valid for one successful sign-in and for 24 hours from issue (as built: changed to 72 h by the product owner 2026-10-08). |
+| Expired starting password | Unused 24 hours after issue (as built: changed to 72 h by the product owner 2026-10-08). Signing in with it fails with "Your starting password has expired. Ask an Admin to re-issue it." and sets the account to `locked_pending_reissue`. Only an Admin's re-issue (new 24-hour window, audited; as built: 72 h) unlocks it. |
 | Own password | At least 10 characters, not containing the username, not equal to the starting password. |
 | Failed-sign-in throttle | 5 failed attempts for one username within 15 minutes lock that username for 15 minutes; 20 failures from one client (salted IP hash) within an hour block that client for an hour. The message is always "Username or password is incorrect" (no hint whether the username exists). |
 | Session limits | Ambassadors: signed out after 30 minutes with no authenticated request, and after 12 hours in any case. Coordinators, Directors, Admins: signed out 12 hours after sign-in. |
@@ -522,10 +522,10 @@ So that only I can act under my name.
 **Then** they are at gate 1 of the setup sequence: only "Choose your password", `POST /api/staff/password`, `GET /api/staff/me` and `POST /api/staff/sign-out` are reachable; every other `/staff` page redirects there and every other `/api/staff` call returns 403 with `setup_incomplete`
 **And** after a valid own password is saved, the starting password no longer works, `password.changed` is audited, and the person moves to the next gate (authenticator enrolment for Admins and Coordinators, otherwise the Hub)
 
-**Given** a starting password unused for 24 hours
+**Given** a starting password unused for 24 hours (as built: changed to 72 h by the product owner 2026-10-08)
 **When** the person signs in with it
 **Then** sign-in fails with the expired message, the account becomes `locked_pending_reissue`, and `auth.locked` is audited
-**And** after an Admin re-issues it, a new 24-hour window starts
+**And** after an Admin re-issues it, a new 24-hour window starts (as built: 72 h)
 
 **Given** 5 wrong passwords for one username within 15 minutes, or 20 failures from one client within an hour
 **When** another attempt is made
@@ -560,7 +560,7 @@ So that a lost phone or a departed volunteer cannot keep access.
 
 **Given** a staff member forgets their password
 **When** an Admin chooses "Reset password"
-**Then** a new starting password is issued with the same 24-hour rule, all sessions are revoked, and `password.reset` is audited; there is no self-service reset in the pilot
+**Then** a new starting password is issued with the same 24-hour rule (as built: changed to 72 h by the product owner 2026-10-08), all sessions are revoked, and `password.reset` is audited; there is no self-service reset in the pilot
 **And** resetting an Admin's password is a recovery action: it is allowed even if it leaves fewer than two usable Admins (S01.06 exception)
 
 ### Story S01.16 — Developer generates the shared design tokens and layout primitives

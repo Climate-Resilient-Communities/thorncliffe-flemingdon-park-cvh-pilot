@@ -102,7 +102,7 @@ function setup(accounts: Partial<StaffAccount>[], options: { bootstrap?: Bootstr
 const admin = (n: string, username: string, extra: Partial<StaffAccount> = {}) => ({ id: n, username, ...extra });
 
 describe("an Admin's Reset password (S01.08)", () => {
-  it("issues a new starting password for 24 hours, ends every session and audits password.reset and session.revoked", async () => {
+  it("issues a new starting password for 72 hours, ends every session and audits password.reset and session.revoked", async () => {
     const t = setup([admin(A, "admina"), admin(B, "adminb"), { id: C, username: "aokafor", role: "ambassador" }]);
     const before = t.rows.get(C)!.authUserId;
 

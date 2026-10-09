@@ -36,7 +36,7 @@ describe("Add a person (server action)", () => {
       heading: "Account created for Omar Farouk",
       username: "Username: ofarouk",
       password: "Starting password: rvh-omar-farouk",
-      line: expect.stringContaining("works once, within 24 hours"),
+      line: expect.stringContaining("works once, within 72 hours"),
     });
   });
 

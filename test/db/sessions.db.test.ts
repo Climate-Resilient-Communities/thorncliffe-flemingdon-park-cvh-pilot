@@ -223,7 +223,7 @@ describe("revocation", () => {
 });
 
 describe("an Admin's Reset password", () => {
-  it("issues a new starting password for 24 hours, ends every session and audits password.reset", async () => {
+  it("issues a new starting password for 72 hours, ends every session and audits password.reset", async () => {
     const [adminA] = await admins();
     const id = await account("aokafor", "ambassador");
     const phone = device();
@@ -243,7 +243,7 @@ describe("an Admin's Reset password", () => {
     // The old password no longer works; the starting password does, once, at gate 1.
     expect(await signIn(device(), "aokafor")).toEqual({ ok: false, error: "sign_in_failed" });
     expect(await signIn(phone, "aokafor", "rvh-ann-okafor")).toEqual({ ok: true, staffId: id, gate: "choose_password" });
-    advance(hours(24));
+    advance(hours(72));
     expect(await signIn(device(), "aokafor", "rvh-ann-okafor")).toEqual({ ok: false, error: "starting_password_expired" });
   });
 

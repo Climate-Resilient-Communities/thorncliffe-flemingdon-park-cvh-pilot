@@ -93,7 +93,7 @@ export type SignInOutcome =
   | { ok: true; staffId: string; gate: SetupGate }
   /** Always the same generic message: never says whether the username exists or why. */
   | { ok: false; error: "sign_in_failed" }
-  /** The right starting password, unused for 24 hours (or already used once). */
+  /** The right starting password, unused for 72 hours (or already used once). */
   | { ok: false; error: "starting_password_expired" }
   /** The identity provider could not be reached; nothing was counted. */
   | { ok: false; error: "unavailable" };
@@ -254,7 +254,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
   }
 
   /**
-   * The right starting password, but expired (unused 24 hours after issue) or already used. It is
+   * The right starting password, but expired (unused 72 hours after issue) or already used. It is
    * counted as a failed attempt against the username and the client like a wrong password
    * (recordFailure, under the throttle's locks), so it cannot be tried without limit; the person
    * still sees the expired message. An expired one on an `active` account makes it
@@ -620,7 +620,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
      * An Admin re-issues a starting password that expired or was used without being replaced: the
      * provider's password is set to the starting password again (which ends every provider session
      * of the account), every staff session of the account is revoked, the account is active again
-     * and a new 24-hour window starts. Audited as `password.reissued`. Not for someone who already
+     * and a new 72-hour window starts. Audited as `password.reissued`. Not for someone who already
      * chose their own password (that is S01.08's "Reset password").
      */
     async reissueStartingPassword(actorId: string, usernameInput: string): Promise<Result<{ username: string; startingPassword: string }, ReissueError>> {
@@ -654,7 +654,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     /**
      * IT's way out of a first-Admin lockout (scripts/create-first-admin --reissue): while bootstrap
      * is in progress, and only for the first Admin while they are still on a starting password
-     * (active or `locked_pending_reissue`), issues the starting password again with a new 24-hour
+     * (active or `locked_pending_reissue`), issues the starting password again with a new 72-hour
      * window, revokes every session of the account (at the provider too) and audits
      * `password.reissued` with the system as actor. Refused in every other state.
      */
