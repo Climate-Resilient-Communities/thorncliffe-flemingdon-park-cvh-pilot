@@ -6,11 +6,11 @@
  "guides": [
   {
    "id": "power",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas, Tech Director, Sprout",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08"
    },
    "readMins": 3,
    "title": "Power outage",
@@ -35,11 +35,11 @@
   },
   {
    "id": "flood",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas, Tech Director, Sprout",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08"
    },
    "readMins": 3,
    "title": "Flood or plumbing failure",
@@ -63,11 +63,11 @@
   },
   {
    "id": "elevator",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas, Tech Director, Sprout",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08"
    },
    "readMins": 2,
    "title": "Elevator failure",
@@ -89,11 +89,11 @@
   },
   {
    "id": "heat",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas, Tech Director, Sprout",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08"
    },
    "readMins": 3,
    "title": "Extreme heat",
@@ -117,11 +117,11 @@
   },
   {
    "id": "smoke",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas, Tech Director, Sprout",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08"
    },
    "readMins": 3,
    "title": "Wildfire smoke",
@@ -145,11 +145,11 @@
   },
   {
    "id": "fire",
-   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "owner": "Luis Ticas, Tech Director, Sprout",
    "lastUpdated": "2026-10-02",
    "englishReview": {
-    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
-    "date": null
+    "reviewer": "Luis Ticas",
+    "date": "2026-10-08"
    },
    "readMins": 2,
    "title": "Fire and evacuation",
