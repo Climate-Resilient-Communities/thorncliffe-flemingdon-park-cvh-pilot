@@ -76,6 +76,19 @@ async function expectNoSeriousViolation(page: Page, state: string) {
 /** The test id of the element that has focus, or its tag when it has none. */
 const focused = (page: Page) => page.evaluate(() => (document.activeElement as HTMLElement | null)?.getAttribute("data-testid") ?? document.activeElement?.tagName ?? "none");
 
+/** Whether the element `first` comes before each of `after`, in the page's order and on the screen (its top above theirs). */
+const firstOnScreen = (page: Page, first: string, after: string[]) =>
+  page.evaluate(
+    ({ first, after }) => {
+      const block = document.querySelector(`[data-testid="${first}"]`)!;
+      return after.every((id) => {
+        const other = document.querySelector(`[data-testid="${id}"]`)!;
+        return Boolean(block.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING) && block.getBoundingClientRect().top < other.getBoundingClientRect().top;
+      });
+    },
+    { first, after },
+  );
+
 const listed = (page: Page) => page.locator("[data-testid=ask-results] > li > article").evaluateAll((cards) => cards.map((card) => card.getAttribute("data-provider-id")));
 
 test("with search available the box and the topics show, with the 911 line; with search unavailable only the topics and the 911 line", async ({ page }) => {
@@ -168,15 +181,14 @@ test("emergency_first puts the shared 911 block above the results, once", async 
   await ask(page, "the power is out and it is very hot");
   await expect(page.getByTestId("ask-results")).toBeVisible();
 
-  // One block above the results (the inline note at the end of the screen is the other variant).
+  // One block above the results and their heading (the inline note at the end of the screen is the other variant), with the call.
   await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toHaveCount(1);
-  const order = await page.evaluate(() => {
-    const block = document.querySelector('[data-component="not-911"][data-variant="block"]')!;
-    const results = document.querySelector('[data-testid="ask-results"]')!;
-    return Boolean(block.compareDocumentPosition(results) & Node.DOCUMENT_POSITION_FOLLOWING);
-  });
-  expect(order).toBe(true);
+  expect(await firstOnScreen(page, "ask-emergency-first", ["ask-results-title", "ask-results"])).toBe(true);
   await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toContainText("The CVH is not an emergency service.");
+  await expect(page.getByTestId("ask-emergency-call911")).toHaveAttribute("href", "tel:911");
+  await expect(page.getByTestId("ask-emergency-call911")).toHaveText("Call 911");
+  // Focus goes to the 911 block, so it is read before the results.
+  expect(await focused(page)).toBe("ask-emergency-first");
   await shot(page, 390, "search-emergency-en-390.png");
 });
 
@@ -190,16 +202,45 @@ test("no_clear_match with emergency_first shows one 911 block above the no-match
   await expect(page.getByTestId("ask-none-title")).toBeVisible();
   await expect(page.getByTestId("ask-emergency-first")).toHaveCount(1);
   await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toHaveCount(1);
-  const above = await page.evaluate(() => {
-    const block = document.querySelector('[data-testid="ask-emergency-first"]')!;
-    const help = document.querySelector('[data-testid="ask-help"]')!;
-    return Boolean(block.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING);
-  });
-  expect(above).toBe(true);
+  // Above "We could not find that yet" itself, in the page and on the screen (production UAT, 2026-10-08), with the call.
+  expect(await firstOnScreen(page, "ask-emergency-first", ["ask-none-title", "ask-help"])).toBe(true);
+  await expect(page.getByTestId("ask-emergency-call911")).toHaveAttribute("href", "tel:911");
+  expect(await focused(page)).toBe("ask-emergency-first");
   await expect(page.getByTestId("ask-topic-food")).toBeVisible();
   await expect(page.getByTestId("ask-help").getByTestId("hub-call")).toHaveAttribute("href", /^tel:\+1/);
   await expect(page.getByTestId("ask-911-link")).toBeVisible();
   await expect(page.getByTestId("ask-results")).toHaveCount(0);
+});
+
+test("in Urdu, no_clear_match with emergency_first puts the 911 block and the call above the no-match state", async ({ page }) => {
+  const { reply } = await setUp(page);
+  reply.current = { json: answer({ status: "no_clear_match", emergency: true, lang: "ur" }) };
+  await openResident(page, "/ur/search", 390);
+  await ready(page);
+  await ask(page, "میرے والد سانس نہیں لے رہے");
+
+  await expect(page.getByTestId("ask-none-title")).toBeVisible();
+  expect(await firstOnScreen(page, "ask-emergency-first", ["ask-none-title", "ask-help"])).toBe(true);
+  await expect(page.getByTestId("ask-emergency-call911")).toHaveAttribute("href", "tel:911");
+  await expect(page.getByTestId("ask-emergency-call911")).toContainText("911");
+  await shot(page, 390, "search-emergency-no-match-ur-390.png");
+});
+
+test("an unavailable answer with emergency_first hides the box but shows the 911 block and the call first", async ({ page }) => {
+  const { reply } = await setUp(page);
+  await openResident(page, "/en/search", 390);
+  await ready(page);
+  reply.current = { json: answer({ status: "unavailable", emergency: true }) };
+  await ask(page, "my father is not breathing");
+
+  await expect(page.getByTestId("ask-form")).toHaveCount(0);
+  await expect(page.getByTestId("ask-emergency-first")).toBeVisible();
+  await expect(page.getByTestId("ask-emergency-call911")).toHaveAttribute("href", "tel:911");
+  expect(await firstOnScreen(page, "ask-emergency-first", ["ask-topics-title"])).toBe(true);
+  await expect(page.getByTestId("ask-busy-title")).toHaveCount(0);
+  await expect(page.getByTestId("ask-help")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("Search is busy");
+  expect(await focused(page)).toBe("ask-emergency-first");
 });
 
 test("no_clear_match shows the prototype's R-11: the topics, the Hub's number and the 911 line", async ({ page }) => {

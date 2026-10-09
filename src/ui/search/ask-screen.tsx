@@ -17,7 +17,7 @@ import { Not911 } from "../emergency";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { withIsolated } from "../text/isolated";
-import { ResidentText } from "../text/resident-text";
+import { isEnglishFallback, ResidentText } from "../text/resident-text";
 import { contentLangOf, resolveResults, type ResolvedResults } from "./resolve-results";
 import { createRetryGate } from "./retry-gate";
 import { askSearch } from "./search-client";
@@ -40,6 +40,8 @@ function phoneStorage(): KeptStorage | null {
 type Outcome =
   | { kind: "results"; resolved: Extract<ResolvedResults, { kind: "results" }>; asked: string; emergency: boolean }
   | { kind: "none"; emergency: boolean }
+  /** The server said search is off ("unavailable") for a question that describes an emergency: only the 911 block shows. */
+  | { kind: "off"; emergency: true }
   | { kind: "signal" }
   | { kind: "busy" }
   | { kind: "updating" };
@@ -69,6 +71,8 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
   const retryGate = useRef(createRetryGate());
   // Where focus goes when an outcome is on screen (its heading), and when the box goes away (the topics' heading).
   const statusRef = useRef<HTMLDivElement>(null);
+  // The 911 block that comes first when the answer says `emergency_first`: focus goes to it before anything else.
+  const emergencyRef = useRef<HTMLDivElement>(null);
   const topicsRef = useRef<HTMLElement>(null);
   // The server said search is off ("unavailable"): the box is hidden for this visit and only the topics show.
   const [searchOff, setSearchOff] = useState(false);
@@ -138,9 +142,11 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
           case "answer": {
             const { answer } = result;
             if (answer.status === "unavailable") {
-              // Search is off: the box goes, the topics stay, and nothing says "busy" (the AC for an unavailable answer).
+              // Search is off: the box goes, the topics stay, and nothing says "busy" (the AC for an unavailable answer). A question
+              // that describes an emergency still gets the 911 block first.
               settled = true;
               setSearchOff(true);
+              if (answer.emergency_first) return done({ kind: "off", emergency: true });
               setPhase({ kind: "idle" });
               return;
             }
@@ -171,12 +177,15 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
   );
 
   // Submitting, then reading the outcome: focus moves to its heading (the button that had it is still there, only inert).
+  // When the 911 block comes first, it is what focus goes to: a screen reader reads it before the results or the no-match state.
   useEffect(() => {
-    if (phase.kind === "done") statusRef.current?.querySelector<HTMLElement>("h2")?.focus();
+    if (phase.kind !== "done") return;
+    if (emergencyRef.current) emergencyRef.current.focus();
+    else statusRef.current?.querySelector<HTMLElement>("h2")?.focus();
   }, [phase]);
-  // The box went away under the resident's focus: the topics are what is left to read.
+  // The box went away under the resident's focus: the topics are what is left to read (after the 911 block, when there is one).
   useEffect(() => {
-    if (searchOff) topicsRef.current?.querySelector<HTMLElement>("h2")?.focus();
+    if (searchOff && !emergencyRef.current) topicsRef.current?.querySelector<HTMLElement>("h2")?.focus();
   }, [searchOff]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -196,7 +205,8 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
   const outcome = phase.kind === "done" ? phase.outcome : null;
   const x01 = (key: "text" | "call" | "short") => t(`x01.${key}`);
   const shown = languageOf((outcome?.kind === "results" ? outcome.resolved.shownLang : lang) as LaunchCode);
-  const withHub = outcome !== null && outcome.kind !== "results";
+  const withHub = outcome !== null && outcome.kind !== "results" && outcome.kind !== "off";
+  const emergencyFirst = outcome !== null && "emergency" in outcome && outcome.emergency;
   const resultTopics: CategoryNames | null = useMemo(() => (outcome?.kind === "results" ? new Map(outcome.resolved.listing.categories.map((c) => [c.id, c.name])) : null), [outcome]);
 
   return (
@@ -263,6 +273,25 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
           </form>
         )}
 
+        {/* S03.06: when the answer says `emergency_first`, the one 911 block comes first, above the results, the no-match state or
+            anything else, with the call itself. It takes focus (below), so it is read before the rest. */}
+        {emergencyFirst && (
+          <div ref={emergencyRef} className="ask-emergency" tabIndex={-1} data-testid="ask-emergency-first">
+            <Stack gap="related">
+              <Not911 t={x01} />
+              <a
+                className="dir-btn dir-btn--primary tap ask-call911"
+                href="tel:911"
+                data-testid="ask-emergency-call911"
+                {...(isEnglishFallback(t("R31.call911")) ? { dir: "ltr", lang: "en" } : {})}
+              >
+                <span className="shell-ico shell-ico--phone" aria-hidden="true" />
+                <ResidentText>{t("R31.call911")}</ResidentText>
+              </a>
+            </Stack>
+          </div>
+        )}
+
         {/* The live region: always in the page, so that what is put into it is announced. */}
         <div ref={statusRef} className="ask-status" role="status" aria-live="polite" data-testid="ask-status">
           {searching && (
@@ -298,12 +327,6 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
             </ResidentText>
           )}
         </div>
-
-        {outcome && "emergency" in outcome && outcome.emergency && (
-          <div data-testid="ask-emergency-first">
-            <Not911 t={x01} />
-          </div>
-        )}
 
         {outcome?.kind === "results" && (
           <Stack gap="related">
