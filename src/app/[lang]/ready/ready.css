@@ -38,7 +38,7 @@
     text-decoration: none;
   }
 
-  /* Something to say once: part of the page is in English, or the content could not be loaded. A note, not an error. */
+  /* Something to say once: the content could not be loaded, or there is none. A note, not an error. */
   .ready-note {
     padding: var(--inset-card-compact);
     border: 1.5px dashed var(--control-border);

@@ -31,7 +31,6 @@ const query = Promise.resolve({});
 const numbers = async (lang: string) => renderToStaticMarkup((await NumbersPage({ params: Promise.resolve({ lang }), searchParams: query })) as ReactElement);
 const guide = async (lang: string, id: string) => renderToStaticMarkup((await GuidePage({ params: Promise.resolve({ lang, guide: id }), searchParams: query })) as ReactElement);
 const ready = async (lang: string) => renderToStaticMarkup((await ReadyPage({ params: Promise.resolve({ lang }), searchParams: query })) as ReactElement);
-const NOTE = (html: string, testId: string) => new RegExp(`data-testid="${testId}"[^>]*>(.*?)</div>`).exec(html)?.[1] ?? null;
 
 describe("the numbers' format", () => {
   it("writes a ten-digit number the way the buildings' contacts are written, in the text and in what a screen reader says, and dials it unchanged", async () => {
@@ -55,41 +54,47 @@ describe("the numbers' format", () => {
   });
 });
 
+// Product-owner decision 2026-10-09 (pilot): no "not yet available in this language" note anywhere; English standing in for a
+// translation is shown silently, marked lang="en" dir="ltr" on its own element for the browser and a screen reader.
 describe("text with no translation yet", () => {
-  it("is announced on the numbers page with the catalog's own x04 words, naming the language in its script", async () => {
-    const note = NOTE(await numbers("ur"), "numbers-unavailable");
+  const NOTES = ["numbers-unavailable", "guide-unavailable", "ready-unavailable"];
 
-    expect(note).toContain(ur.x04.unavailable);
-    expect(note).toContain(ur.x04.unavailableBody.replace("{lang}", "اردو"));
+  it("is shown in English with no note on the numbers page, marked lang=en", async () => {
+    const html = await numbers("ur");
+
+    for (const id of NOTES) expect(html).not.toContain(`data-testid="${id}"`);
+    expect(html).not.toContain(ur.x04.unavailable);
+    expect(html).toMatch(/lang="en" dir="ltr" data-translation="unavailable"/);
   });
 
-  it("is announced on a partly translated guide the same way, and on a guide with nothing translated with the guide's own words", async () => {
-    const part = NOTE(await guide("ur", "power"), "guide-unavailable");
-    const all = NOTE(await guide("ur", "flood"), "guide-unavailable");
+  it("is shown in English with no note on a partly translated guide and on a guide with nothing translated", async () => {
+    for (const id of ["power", "flood"]) {
+      const html = await guide("ur", id);
 
-    expect(part).toContain(ur.x04.unavailable);
-    expect(part).toContain(ur.x04.unavailableBody.replace("{lang}", "اردو"));
-    expect(all).toContain(ur.R25.unavailable.replace("{lang}", "اردو"));
-    expect(all).not.toContain(ur.x04.unavailable);
+      for (const note of NOTES) expect(html).not.toContain(`data-testid="${note}"`);
+      expect(html).not.toContain(ur.x04.unavailable);
+      expect(html).not.toContain(ur.R25.unavailable.replace("{lang}", "اردو"));
+      expect(html).toMatch(/lang="en" dir="ltr" data-translation="unavailable"/);
+    }
   });
 
-  it("is announced once on Be ready when a guide's title shows in English, and not in English", async () => {
+  it("is shown in English with no note on Be ready when a guide's title has no translation", async () => {
     const html = await ready("ur");
-    const note = NOTE(html, "ready-unavailable");
 
-    expect(html.match(/data-testid="ready-unavailable"/g)).toHaveLength(1);
-    expect(note).toContain(ur.x04.unavailable);
-    expect(note).toContain(ur.x04.unavailableBody.replace("{lang}", "اردو"));
-    expect(await ready("en")).not.toContain("ready-unavailable");
+    expect(html).not.toContain('data-testid="ready-unavailable"');
+    expect(html).not.toContain(ur.x04.unavailable);
+    expect(html).toMatch(/lang="en" dir="ltr" data-translation="unavailable"/);
   });
 
-  it("is not announced on Be ready when every title is translated", async () => {
+  it("shows a translated title in the page language, unmarked", async () => {
     const translated: ResidentContent = JSON.parse(JSON.stringify(content));
     for (const record of translated.guides) record.texts.title.ur = "عنوان";
     const source = await import("./source");
     vi.spyOn(source, "loadResidentContent").mockResolvedValue(translated);
 
-    expect(await ready("ur")).not.toContain("ready-unavailable");
+    const html = await ready("ur");
+    expect(html).toContain("عنوان");
+    expect(html).not.toContain('data-testid="ready-unavailable"');
   });
 
   it("uses no English-only words of its own: the catalog has no partlyUnavailable text", () => {

@@ -8,8 +8,8 @@ import "../shell/icons.css";
 /**
  * An alert on home (R-03's `cvh-acard`, S04.08): its types (X-13), its words, who sent it and whether the Hub checked it (X-02, in the same
  * words as on the alert's own page), when it was posted, and the whole card is the link to the alert (R-07). The verification here is text, not
- * a second link: a card that is a link holds no other. An English text standing in for a translation is set in English on its own element (the
- * page says once that part of it is in English); a machine translation is labelled on the alert's page, where "Read it in English" is.
+ * a second link: a card that is a link holds no other. An English text standing in for a translation is set in English on its own element,
+ * silently, and a machine translation carries no label (product-owner decision 2026-10-09, pilot).
  *
  * Tailored on the phone (S04.09): `highlighted` draws the card with a heavier start edge (a shape as well as a colour, and no words, so it does
  * not say why), and `advice` adds the X-12 block with one line under the card, outside the link.

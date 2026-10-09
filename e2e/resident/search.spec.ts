@@ -319,9 +319,9 @@ test("a question in another language shows the listings in that language with a 
   await expect(page.getByTestId("ask-shown-in")).toHaveText("Shown in اردو");
   await expect(page.getByTestId("provider-P101").getByTestId("provider-services")).toContainText("مفت راشن");
   await expect(page.getByTestId("provider-P101").getByTestId("provider-services").locator("p")).toHaveAttribute("lang", "ur");
-  // The Urdu listing is machine translated: the card says so, and offers the English original.
-  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toBeVisible();
-  await expect(page.getByTestId("provider-P101").getByTestId("show-english")).toBeVisible();
+  // The Urdu listing is machine translated: shown with no label and no English toggle (decision 2026-10-09).
+  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toHaveCount(0);
+  await expect(page.getByTestId("provider-P101").getByTestId("show-english")).toHaveCount(0);
   // The language's name inside the note is isolated, with its own language and direction.
   await expect(page.getByTestId("ask-shown-in").locator("bdi")).toHaveAttribute("lang", "ur");
   await expect(page.getByTestId("ask-shown-in").locator("bdi")).toHaveAttribute("dir", "rtl");
@@ -371,7 +371,7 @@ test("a question typed in Latin script on the Urdu screen does not run under the
   await shot(page, 390, "search-latin-question-ur-390.png");
 });
 
-test("results in another language: the machine-translation label, axe and a screenshot, on the English page with Urdu results and the Urdu page with English results", async ({ page }) => {
+test("results in another language: no machine-translation label, axe and a screenshot, on the English page with Urdu results and the Urdu page with English results", async ({ page }) => {
   const { reply } = await setUp(page);
   await openResident(page, "/en/search", 390);
   await ready(page);
@@ -379,7 +379,7 @@ test("results in another language: the machine-translation label, axe and a scre
   await ask(page, "مجھے کھانا چاہیے");
   await expect(page.getByTestId("ask-results")).toBeVisible();
   await expect(page.getByTestId("ask-shown-in")).toHaveText("Shown in اردو");
-  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toBeVisible();
+  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toHaveCount(0);
   await expectNoSeriousViolation(page, "en page, ur results");
   await shot(page, 390, "search-results-other-en-390.png");
 

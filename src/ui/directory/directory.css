@@ -18,7 +18,7 @@
     color: var(--ink);
   }
 
-  /* A note that part of the page is English: a note, not an error. */
+  /* A note under a heading (search: "Shown in {language}"): a note, not an error. */
   .dir-note {
     display: flex;
     flex-direction: column;
@@ -28,10 +28,6 @@
     border-radius: var(--radius-card);
     background-color: var(--surface-warm);
     color: var(--text-on-warm);
-  }
-
-  .dir-note__title {
-    font-weight: 700;
   }
 
   /* Buttons and links. */
@@ -386,36 +382,6 @@
   .dir-tag--emergency {
     border: 2px solid var(--ink);
     background-color: var(--surface-raised);
-  }
-
-  /* Machine translation (x04): the label, and the way back to the English. */
-  .dir-mt {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: var(--gap-related);
-    row-gap: var(--gap-subline);
-    font-size: var(--type-caption-size);
-  }
-
-  /* A solid, filled tag in upright bold: never the dashed ring and italics of "Not known". */
-  .dir-mt__label {
-    padding-block: var(--gap-subline);
-    padding-inline: var(--gap-tight);
-    border: 1.5px solid var(--accent-text);
-    border-radius: var(--radius-card);
-    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
-    font-style: normal;
-    font-weight: 700;
-    color: var(--ink);
-  }
-
-  .dir-mt__shown {
-    color: var(--text-muted);
-  }
-
-  .dir-mt__shown:empty {
-    display: none;
   }
 
   /* The facts of one provider. */

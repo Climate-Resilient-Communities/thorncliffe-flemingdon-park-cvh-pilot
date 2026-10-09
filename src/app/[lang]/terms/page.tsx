@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { FALLBACK_MARKER, ResidentText, Screen, Stack } from "@/ui";
-import { isLaunchCode, languageOf } from "@/i18n/languages";
+import { ResidentText, Screen, Stack } from "@/ui";
+import { isLaunchCode } from "@/i18n/languages";
 import { failClosedEnvironment } from "@/platform/config/env";
 import { termsPageMode, termsPageView, type TermsText } from "@/modules/subscriptions";
 import { residentDataDeletedOnCached } from "../../pilotEnd";
@@ -16,14 +16,12 @@ export const dynamic = "force-dynamic";
 /**
  * One text of the terms, as the whole content of its element: a translation as is, and English standing in for a
  * missing one with lang="en" dir="ltr" on the element itself (so it reads and wraps from the left in a right-to-left
- * page). `marked` puts the visible "[EN]" in front of it. The terms come from the content pipeline, not from UI string
- * keys, so where the page says once that part of it is in English the body paragraphs go without the marker.
+ * page), silently: no "[EN]" and no note (product-owner decision 2026-10-09, pilot).
  */
-function TermsBlock({ text, as, marked, className }: { text: TermsText; as: "h1" | "h2" | "p"; marked: boolean; className?: string }) {
-  const english = text.unavailable;
+function TermsBlock({ text, as, className }: { text: TermsText; as: "h1" | "h2" | "p"; className?: string }) {
   return (
-    <ResidentText as={as} className={className} fallback={english}>
-      {english && marked ? FALLBACK_MARKER + text.text : text.text}
+    <ResidentText as={as} className={className} fallback={text.unavailable}>
+      {text.text}
     </ResidentText>
   );
 }
@@ -57,9 +55,6 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
   // S09.08: the day the pilot's resident data was deleted, once the end-of-pilot purge has completed (null before, and when it cannot be read).
   const deletedOn = await residentDataDeletedOnCached();
   const { document } = view;
-  const someInEnglish = [document.title, ...document.sections.flatMap((s) => [s.heading, ...s.lines])].some((x) => x.unavailable);
-  // Where the page says once that part of it is in English, its body paragraphs go without the per-paragraph "[EN]".
-  const showNote = someInEnglish && lang !== "en";
 
   return (
     <Screen surface="resident" testId="terms">
@@ -88,7 +83,7 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
 
         <Stack gap="related">
           <div id="terms-title">
-            <TermsBlock as="h1" text={document.title} marked />
+            <TermsBlock as="h1" text={document.title} />
           </div>
           <dl className="terms-facts" data-testid="terms-facts">
             <div className="terms-facts__item">
@@ -129,11 +124,6 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
               {t("dataDeletedNote")}
             </ResidentText>
           )}
-          {showNote && (
-            <ResidentText as="p" testId="terms-translation-note">
-              {t("translationNote", { lang: languageOf(lang).native })}
-            </ResidentText>
-          )}
         </Stack>
 
         {/* From the desktop breakpoint (desktop.css) the contents are a column beside the text that stays on screen while it scrolls.
@@ -155,11 +145,11 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
         {document.sections.map((section) => (
           <Stack key={section.id} as="section" gap="related" testId={`terms-section-${section.id}`}>
             <div id={`terms-${section.id}`} tabIndex={-1}>
-              <TermsBlock as="h2" text={section.heading} marked />
+              <TermsBlock as="h2" text={section.heading} />
             </div>
             <Stack gap="paragraph">
               {section.lines.map((line, index) => (
-                <TermsBlock key={index} as="p" className="terms-line" text={line} marked={!showNote} />
+                <TermsBlock key={index} as="p" className="terms-line" text={line} />
               ))}
               {section.id === "contact" && (
                 <p className="terms-contact">

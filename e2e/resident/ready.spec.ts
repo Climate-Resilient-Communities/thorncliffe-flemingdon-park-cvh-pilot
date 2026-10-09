@@ -72,10 +72,9 @@ test.describe("Be ready (R-24)", () => {
     await expect(flood).toHaveAttribute("lang", "en");
     await expect(flood).toHaveAttribute("dir", "ltr");
     await expect(flood).toHaveAttribute("data-translation", "unavailable");
-    // Some titles are English, so the page says so once, in the catalog's x04 words.
-    await expect(page.getByTestId("ready-unavailable")).toHaveCount(1);
-    await expect(page.getByTestId("ready-unavailable")).toContainText("ابھی اس زبان میں دستیاب نہیں");
-    await expect(page.getByTestId("ready-unavailable")).toContainText("اس کا ابھی اردو میں ترجمہ نہیں ہوا۔");
+    // Some titles are English: shown silently, with no note (product-owner decision 2026-10-09).
+    await expect(page.getByTestId("ready-unavailable")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText("ابھی اس زبان میں دستیاب نہیں");
   });
 
   test("says nothing about translation in English", async ({ page }) => {
@@ -213,14 +212,12 @@ test.describe("a guide (R-25)", () => {
     await expect(english).toHaveAttribute("data-translation", "unavailable");
     const translated = page.getByTestId("guide-before").locator("li").first();
     await expect(translated).not.toHaveAttribute("lang", "en");
-    // The page says so once.
-    await expect(page.getByTestId("guide-unavailable")).toHaveCount(1);
-    await expect(page.getByTestId("guide-unavailable")).toContainText("ابھی اس زبان میں دستیاب نہیں");
-    await expect(page.getByTestId("guide-unavailable")).toContainText("اس کا ابھی اردو میں ترجمہ نہیں ہوا۔");
-    await expect(page.getByTestId("guide-unavailable")).not.toContainText("[EN]");
-    // A guide with no translated text at all says it is not available in the language.
+    // No note (product-owner decision 2026-10-09): the English is shown silently.
+    await expect(page.getByTestId("guide-unavailable")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText("ابھی اس زبان میں دستیاب نہیں");
+    // A guide with no translated text at all is shown in English, silently too.
     await openResident(page, "/ur/ready/flood", 390);
-    await expect(page.getByTestId("guide-unavailable")).toContainText("اردو");
+    await expect(page.getByTestId("guide-unavailable")).toHaveCount(0);
     await expect(page.getByTestId("guide-title")).toHaveAttribute("lang", "en");
     // English needs no note.
     await openResident(page, POWER, 390);
@@ -358,11 +355,9 @@ test.describe("the essential numbers (R-31)", () => {
     await expect(purpose).toHaveAttribute("lang", "en");
     await expect(purpose).toHaveAttribute("dir", "ltr");
     await expect(purpose).toHaveAttribute("data-translation", "unavailable");
-    // The note is the catalog's own x04 wording, in Urdu, with the language named in its own script.
-    await expect(page.getByTestId("numbers-unavailable")).toHaveCount(1);
-    await expect(page.getByTestId("numbers-unavailable")).toContainText("ابھی اس زبان میں دستیاب نہیں");
-    await expect(page.getByTestId("numbers-unavailable")).toContainText("اس کا ابھی اردو میں ترجمہ نہیں ہوا۔");
-    await expect(page.getByTestId("numbers-unavailable")).not.toContainText("[EN]");
+    // No note (product-owner decision 2026-10-09): the English is shown silently.
+    await expect(page.getByTestId("numbers-unavailable")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText("ابھی اس زبان میں دستیاب نہیں");
     // A number is a left-to-right run whatever the page's direction.
     await expect(page.getByTestId("number-hydro-digits")).toHaveText("(416) 542-8000");
     await expect(page.getByTestId("number-hydro-digits")).toHaveAttribute("dir", "ltr");

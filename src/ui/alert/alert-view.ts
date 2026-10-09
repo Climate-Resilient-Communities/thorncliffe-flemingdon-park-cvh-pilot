@@ -1,10 +1,10 @@
 // What a resident reads of an alert (R-03's card, R-07, R-28), worked out from the feed's thread as a pure function: the words come from
 // the catalog through `t`, the times from the feed's own `server_now` (never the phone's clock), and nothing here is drawn. The components
 // (alert-card.tsx, alert-detail.tsx, verified-explainer.tsx) only draw it, so the rules below are unit tests (alert-view.test.ts):
-//  - the words of the type (X-13), the origin and verification (X-02) and the machine-translation label (X-04) are the catalog's, in the same
-//    words wherever they appear;
-//  - a text that is English standing in for a translation that failed (`fallback_en`) is set left to right in English and says so, in the
-//    resident's language ("Not yet available in this language"); a machine translation carries its label and "Read it in English";
+//  - the words of the type (X-13) and the origin and verification (X-02) are the catalog's, in the same words wherever they appear;
+//  - a text that is English standing in for a translation that failed (`fallback_en`) is set left to right in English, silently: product-owner
+//    decision 2026-10-09 (pilot), no "Not yet available in this language" note, and a machine translation carries no label (X-04) and no
+//    "Read it in English";
 //  - the attribution is the Hub's whole sentence (R04.fromHub): "the Hub" is never joined to a preposition word by word (spine AD-21);
 //  - a correction is shown above the entry it replaces, which stays readable and is marked "Corrected"; a withdrawn entry is marked "Withdrawn" and shows
 //    the reason in its place, and the withdrawal notice is not an entry of its own (S05.02). What is true now (`current`, the card, the share preview) is the
@@ -33,9 +33,9 @@ export interface TextView {
   lang: string;
   /** Left to right for English, the language's own direction for a translation. */
   dir: "ltr" | "rtl";
-  /** English standing in for a translation that failed or was never made: set in English, with the note that says so. */
+  /** English standing in for a translation that failed or was never made: set in English (lang="en"), with no note. */
   fallback: boolean;
-  /** A machine translation: it carries the label and "Read it in English". */
+  /** A machine translation (shown with no label since the decision of 2026-10-09). */
   machine: boolean;
 }
 
@@ -82,8 +82,6 @@ export interface EntryView {
   /** The phase the entry reported ("Active problem", "Work in progress"), in the catalog's status words; null where it reported none. */
   phase: string | null;
   text: TextView;
-  /** The English the entry was written in, for "Read it in English"; null where the text is English already or it is not a machine translation. */
-  english: string | null;
 }
 
 export interface AlertView {
@@ -107,17 +105,6 @@ export interface AlertView {
   ended: string | null;
   /** Set when the thread closed (S05.03): how, and when; the alert is then no longer valid or live, and its final message is the entry on top. Null for an open thread. */
   closed: ClosedView | null;
-  /** "Not yet available in this language". */
-  unavailableTitle: string;
-  /** "This has not been translated into اردو yet." */
-  unavailableBody: string;
-  /** "Read it in English". */
-  showEnglish: string;
-  /** "Original (English)". */
-  originalLabel: string;
-  /** The label and its "from English": the machine-translation mark (X-04). */
-  machineLabel: string;
-  machineFrom: string;
   guides: { id: string; label: string; href: string }[];
   /** Every entry, newest first (R-07's "Updates, newest first"); more than one only once the thread has an update. A withdrawal notice is not among them. */
   entries: EntryView[];
@@ -134,8 +121,6 @@ export interface AlertView {
 
 /** The longest description a link preview carries: the facts in front (never cut) and as many of the alert's words as fit after them. */
 const PREVIEW_MAX = 300;
-
-const ENGLISH = languageOf("en");
 
 /** The catalog's `x13` word for a type; "Other" for a type it has no word for. */
 function typeOf(id: string, t: Translate): TypeView {
@@ -178,7 +163,6 @@ function entryOf(entry: FeedEntry, serverNow: Date, t: Translate, replacedBy?: F
     time: ago(entry.published_at),
     phase: entry.phase === "problem" ? t("status.active") : entry.phase === "in_progress" ? t("status.progress") : null,
     text,
-    english: text.machine ? shown.original.body : null,
   };
 }
 
@@ -261,12 +245,6 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     mayHaveEnded: t("R07.mayHaveEnded"),
     ended: closed === null && valid === null ? t("R07.expiredNote") : null,
     closed,
-    unavailableTitle: t("x04.unavailable"),
-    unavailableBody: t("x04.unavailableBody", { lang: language.native }),
-    showEnglish: t("x04.showSource", { lang: ENGLISH.native }),
-    originalLabel: t("x04.original", { lang: ENGLISH.native }),
-    machineLabel: t("x04.label"),
-    machineFrom: t("x04.from", { lang: ENGLISH.native }),
     guides: guidesFor(thread.types).map((id) => ({ id, label: t("R07.guide", { hazard: lowerHazard(id) }), href: guideDuringHref(lang, id) })),
     entries: newestFirst.map((entry) => entryOf(entry, serverNow, t, replacers.get(entry.id))),
     place,

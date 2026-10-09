@@ -120,7 +120,7 @@ test.describe("home", () => {
     await expect(page.getByTestId("alert-detail")).toBeVisible();
   });
 
-  test("sets an English text that stands in for a translation left to right in English, and says so once in the page's language", async ({ page }) => {
+  test("sets an English text that stands in for a translation left to right in English, silently: no note (decision 2026-10-09)", async ({ page }) => {
     await openResident(page, "/tl", 390);
     await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
 
@@ -129,8 +129,8 @@ test.describe("home", () => {
     await expect(text).toHaveAttribute("lang", "en");
     await expect(text).toHaveAttribute("dir", "ltr");
     await expect(text).toHaveAttribute("data-translation", "unavailable");
-    await expect(page.getByTestId("home-content-fallback")).toBeVisible();
-    await expect(page.getByTestId("home-content-fallback")).toContainText(catalogText("tl", "x04.unavailable").replace(/^\[EN\] /, ""));
+    await expect(page.getByTestId("home-content-fallback")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText(catalogText("tl", "x04.unavailable").replace(/^\[EN\] /, ""));
   });
 
   for (const lang of ["en", "ur"] as const) {
@@ -237,30 +237,21 @@ test.describe("alert detail (R-07)", () => {
     await expect(page.getByTestId("alert-valid")).toHaveCount(0);
   });
 
-  test("says in Urdu that part of it is machine translated, shows the label, and 'Read it in English' shows the English, left to right", async ({ page }) => {
+  test("shows the Urdu translation with no machine-translation label and no 'Read it in English' (decision 2026-10-09)", async ({ page }) => {
     await openResident(page, `/ur/alerts/${T1}`, 390);
 
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     const text = page.getByTestId("alert-text");
     await expect(text).toHaveAttribute("lang", "ur");
     await expect(text).toHaveAttribute("dir", "rtl");
-    await expect(page.getByTestId("alert-mt")).toContainText(catalogText("ur", "x04.label"));
-    const toggle = page.getByTestId("alert-english-toggle");
-    await expect(toggle).toHaveText(catalogText("ur", "x04.showSource").replace("{lang}", "English"));
-    // Closed until the resident opens it.
-    await expect(page.getByTestId("alert-english-body")).toBeHidden();
-    await toggle.click();
-    const english = page.getByTestId("alert-english-body");
-    await expect(english).toBeVisible();
-    await expect(english).toHaveText(UPDATE);
-    await expect(english).toHaveAttribute("lang", "en");
-    await expect(english).toHaveAttribute("dir", "ltr");
-    await toggle.click();
-    await expect(english).toBeHidden();
+    await expect(page.getByTestId("alert-mt")).toHaveCount(0);
+    await expect(page.getByTestId("alert-english")).toHaveCount(0);
+    await expect(page.getByTestId("alert-english-toggle")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText(catalogText("ur", "x04.label"));
   });
 
   for (const lang of ["ps", "tl"] as const) {
-    test(`${lang}: a language the alert was not translated into shows the English with the note that says so, in ${lang}`, async ({ page }) => {
+    test(`${lang}: a language the alert was not translated into shows the English silently, marked lang=en, with no note (decision 2026-10-09)`, async ({ page }) => {
       await openResident(page, `/${lang}/alerts/${T1}`, 390);
 
       const text = page.getByTestId("alert-text");
@@ -268,13 +259,9 @@ test.describe("alert detail (R-07)", () => {
       await expect(text).toHaveAttribute("lang", "en");
       await expect(text).toHaveAttribute("dir", "ltr");
       await expect(text).toHaveAttribute("data-translation", "unavailable");
-      // The note is the catalog's, in the resident's language (or its English behind the [EN] marker where that language has none yet).
-      const note = page.getByTestId("alert-unavailable");
-      await expect(note).toBeVisible();
-      await expect(note).toHaveAttribute("role", "note");
+      await expect(page.getByTestId("alert-unavailable")).toHaveCount(0);
       const title = catalogText(lang, "x04.unavailable");
-      await expect(note).toContainText(isFallback(title) ? title.slice("[EN] ".length) : title);
-      // It was not machine translated, so no label and no second English.
+      await expect(page.locator("main")).not.toContainText(isFallback(title) ? title.slice("[EN] ".length) : title);
       await expect(page.getByTestId("alert-mt")).toHaveCount(0);
       await expect(page.getByTestId("alert-english")).toHaveCount(0);
     });
@@ -336,7 +323,6 @@ test.describe("alert detail (R-07)", () => {
     for (const width of lang === "en" || lang === "ur" ? ([390, 1280] as const) : ([390] as const)) {
       test(`${lang} ${name} alert at ${width}px has no horizontal scrolling, every link is a tap target and it matches its baseline screenshot`, async ({ page }) => {
         await openResident(page, `/${lang}/alerts/${slug}`, width, 900);
-        if (lang === "ur") await page.getByTestId("alert-english-toggle").click();
         await showWholePage(page, width);
 
         expect(await overflow(page)).toEqual({ page: 0, main: 0 });

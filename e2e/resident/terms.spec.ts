@@ -102,7 +102,7 @@ for (const language of LANGUAGES) {
   }
 }
 
-test("a translation that is not available shows in English, in a left-to-right English block, inside a right-to-left page", async ({ page }) => {
+test("a translation that is not available shows in English, silently, in a left-to-right English block, inside a right-to-left page", async ({ page }) => {
   await openResident(page, "/ur/terms", 390);
 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
@@ -115,12 +115,11 @@ test("a translation that is not available shows in English, in a left-to-right E
   await expect(page.locator("main p.terms-line:not([lang=en])")).toHaveCount(0);
   await expect(page.locator("main h1:not([lang=en]), main h2:not([lang=en])")).toHaveCount(0);
   await expect(page.locator("main :is(h1, h2, p.terms-line) bdi")).toHaveCount(0);
-  // The headings keep the visible "[EN]". The body paragraphs do not repeat it: the page says once that part of it is in English.
-  for (let index = 0; index < (await headings.count()); index += 1) expect(await headings.nth(index).innerText()).toMatch(/^\[EN\] /);
+  // Shown silently (product-owner decision 2026-10-09): no visible "[EN]" on any heading or paragraph, and no note.
+  for (let index = 0; index < (await headings.count()); index += 1) expect(await headings.nth(index).innerText()).not.toMatch(/^\[EN\]/);
   for (let index = 0; index < (await lines.count()); index += 1) expect(await lines.nth(index).innerText()).not.toMatch(/^\[EN\]/);
-  await expect(page.locator("main h1[lang=en]")).toHaveText("[EN] Terms and privacy");
-  // The page's own words are Urdu's, and the note says that some of the page is in English.
-  await expect(page.getByTestId("terms-translation-note")).toBeVisible();
+  await expect(page.locator("main h1[lang=en]")).toHaveText("Terms and privacy");
+  await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
   // The facts that are not words (version, date, contact) are left-to-right runs.
   for (const id of ["terms-version", "terms-updated", "terms-contact"]) await expect(page.getByTestId(id)).toHaveAttribute("dir", "ltr");
 });

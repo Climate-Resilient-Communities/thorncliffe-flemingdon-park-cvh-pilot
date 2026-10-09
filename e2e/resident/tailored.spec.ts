@@ -83,7 +83,7 @@ test("a phone with a group and no building is tailored to nothing: the feed's or
   await expect(page.locator('[data-testid^="alert-advice-"]')).toHaveCount(0);
 });
 
-test("an advice line with no translation is shown in English, left to right, and the page says once that part of it is in English", async ({ page }) => {
+test("an advice line with no translation is shown in English, left to right, silently: no note (decision 2026-10-09)", async ({ page }) => {
   await openHome(page, SAVED, "/ur");
 
   const line = page.getByTestId(`alert-advice-${THREADS.MINE}-line`);
@@ -91,7 +91,7 @@ test("an advice line with no translation is shown in English, left to right, and
   await expect(line).toHaveAttribute("lang", "en");
   await expect(line).toHaveAttribute("dir", "ltr");
   await expect(line).toHaveAttribute("data-translation", "unavailable");
-  await expect(page.getByTestId("home-content-fallback")).toHaveCount(1);
+  await expect(page.getByTestId("home-content-fallback")).toHaveCount(0);
   expect(await page.getByTestId(`alert-advice-${THREADS.MINE}`).innerText()).not.toContain("[EN]");
 });
 

@@ -48,19 +48,16 @@ describe("alert detail (R-07)", () => {
     expect(html).not.toContain("Verified by the Hub");
   });
 
-  it("shows the text with the machine-translation label (X-04) and 'Read it in English', whose body is the English in English, left to right", () => {
+  it("shows a translation in its own language with no machine-translation label (X-04) and no 'Read it in English' (decision 2026-10-09)", () => {
     const html = render({ entries: [entry()] }, "ur");
+    const ur = translatorFor("ur");
 
     expect(html).toContain(`lang="ur" dir="rtl" data-testid="alert-text">${URDU}</p>`);
-    expect(html).toContain('data-testid="alert-mt"');
-    expect(html).toContain('alert-ico--language');
-    expect(html).toContain('data-testid="alert-english"');
-    expect(html).toContain('<summary class="tap" data-testid="alert-english-toggle">');
-    expect(html).toContain(`<p class="alert-text" lang="en" dir="ltr" data-testid="alert-english-body">${ENGLISH}</p>`);
-    // Native disclosure: closed until the resident opens it, and it works with no script.
-    // Basic mode leaves it out (the prototype's showOriginal: !own && !basic), so it carries hide-basic.
-    expect(html).toContain('<details class="alert-english hide-basic"');
-    expect(html).not.toContain("<details open");
+    expect(html).not.toContain('data-testid="alert-mt"');
+    expect(html).not.toContain("alert-ico--language");
+    expect(html).not.toContain('data-testid="alert-english"');
+    expect(html).not.toContain(ur("x04.label"));
+    expect(html).not.toContain(ENGLISH);
   });
 
   it("has no label and nothing to show for text that is English already, and no note", () => {
@@ -72,23 +69,16 @@ describe("alert detail (R-07)", () => {
     expect(html).toContain(`data-testid="alert-text">${ENGLISH}</p>`);
   });
 
-  it("shows the English with 'Translation not available' in the resident's language for a fallback language", () => {
+  it("shows the English standing in for a failed translation silently, marked lang=en for a screen reader, with no note (decision 2026-10-09)", () => {
     const html = render({ entries: [fallbackEntry()] }, "ur");
     const ur = translatorFor("ur");
 
     // The English, left to right, marked as unavailable for a test and for a screen reader's voice.
     expect(html).toContain(`lang="en" dir="ltr" data-testid="alert-text" data-translation="unavailable">${ENGLISH}</p>`);
-    // The note, in the resident's language: the catalog's `translation.unavailable` and its body, naming Urdu by its own name.
-    expect(html).toContain('data-testid="alert-unavailable"');
-    expect(html).toContain(ur("x04.unavailable"));
-    expect(html).toContain(ur("x04.unavailableBody", { lang: "اردو" }));
-    // It was not machine translated, so no label and no second English.
+    expect(html).not.toContain('data-testid="alert-unavailable"');
+    expect(html).not.toContain(ur("x04.unavailable"));
     expect(html).not.toContain('data-testid="alert-mt"');
     expect(html).not.toContain('data-testid="alert-english"');
-  });
-
-  it("says in English what the note says, for an English reader of a thread that fell back (the catalog's own words)", () => {
-    expect(translatorFor("en")("x04.unavailable")).toBe("Not yet available in this language");
   });
 
   it("shows when it was posted and how long it is valid, against the feed's clock", () => {

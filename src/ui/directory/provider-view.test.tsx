@@ -6,7 +6,6 @@ import { buildListing } from "../../../e2e/resident/directory-fixture";
 import { DirectoryListingV1, type ListingProvider } from "@/contracts/directory";
 import en from "@/i18n/messages/en.json";
 import ur from "@/i18n/messages/ur.json";
-import { hasFallbackText } from "./directory-browser";
 import { Inline911 } from "./listing-text";
 import { addressLines, postalText, ProviderView, type CategoryNames } from "./provider-view";
 
@@ -97,38 +96,26 @@ describe("ProviderView", () => {
     expect(html).not.toContain('data-testid="how-they-help"');
   });
 
-  it("carries the machine-translation label on machine-translated text, and nowhere in English", () => {
-    expect(render("ur", "P101")).toContain('data-testid="machine-label"');
-    expect(render("ur", "P101")).toContain(ur.x04.label);
-    expect(render("en", "P101")).not.toContain('data-testid="machine-label"');
-  });
-
-  it("labels a description no person has reviewed 'Machine-translated; not reviewed by a person', with the English one tap away (AD-11 pilot change)", () => {
+  it("shows every translation with no machine-translation label and no Read it in English, reviewed or not (decision 2026-10-09)", () => {
     const listing = DirectoryListingV1.parse(buildListing("ur", 7));
     const services = { ...listing.providers.find((p) => p.id === "P101")!.services, review_status: "none" as const, reviewed_on: null };
-    const html = render("ur", "P101", "card", { services });
-
-    expect(html).toContain('data-review="none"');
-    expect(html).toContain(ur.x04.unreviewed);
-    expect(html).not.toContain(`>${ur.x04.label}<`);
-    expect(html).toContain('data-testid="show-english"');
-    expect(html).toContain(services.body);
-    expect(ur.x04.unreviewed).not.toMatch(/^\[EN\]/);
-    expect(en.x04.unreviewed).toBe("Machine-translated; not reviewed by a person");
+    for (const html of [render("ur", "P101"), render("ur", "P101", "page"), render("ur", "P101", "card", { services }), render("en", "P101")]) {
+      expect(html).not.toContain('data-testid="machine-label"');
+      expect(html).not.toContain('data-testid="show-english"');
+      expect(html).not.toContain('data-testid="original-shown"');
+      expect(html).not.toContain(ur.x04.label);
+      expect(html).not.toContain(ur.x04.unreviewed);
+      expect(html).not.toContain('data-translation="machine"');
+    }
+    expect(render("ur", "P101", "card", { services })).toContain(services.body);
   });
 
-  it("keeps the reviewed label on reviewed text: no 'not reviewed by a person'", () => {
-    const html = render("ur", "P101");
-
-    expect(html).toContain('data-review="reviewed"');
-    expect(html).not.toContain(ur.x04.unreviewed);
-    expect(html).toContain(`>${ur.x04.label}<`);
-  });
-
-  it("marks English standing in for a missing translation, with no machine label for it, and no [EN] in the content", () => {
+  it("shows English standing in for a missing translation silently: lang=\"en\" on its element, no note, no [EN] in the content", () => {
     const html = render("ur", "P105");
 
     expect(html).toContain('data-translation="unavailable"');
+    expect(html).toMatch(/<p lang="en" dir="ltr" data-translation="unavailable">Help for newcomers/);
+    expect(html).not.toContain(ur.x04.unavailable);
     expect(html).toContain("Help for newcomers: forms, job search and language classes.");
     expect(html).not.toContain("[EN] Help for newcomers");
   });
@@ -153,19 +140,9 @@ describe("ProviderView", () => {
     expect(render("en", "P103")).not.toMatch(/dir-card__address"><span class="dir-unknown"/);
   });
 
-  it("describes Read it in English by the provider's name, and makes Original (English) a status", () => {
-    for (const variant of ["card", "page"] as const) {
-      const html = render("ur", "P101", variant);
-
-      expect(html).toMatch(/<h[12] class="dir-card__name" id="provider-name-P101">/);
-      expect(html).toMatch(/<button [^>]*aria-describedby="provider-name-P101"[^>]*data-testid="show-english"/);
-      expect(html).toMatch(/<span class="dir-mt__shown" role="status" data-testid="original-shown"><\/span>/);
-    }
-  });
-
-  it("gives each provider's name its own id, so the buttons of a list each point at their own listing", () => {
+  it("gives each provider's name its own id", () => {
+    for (const variant of ["card", "page"] as const) expect(render("ur", "P101", variant)).toMatch(/<h[12] class="dir-card__name" id="provider-name-P101">/);
     expect(render("ur", "P104")).toContain('id="provider-name-P104"');
-    expect(render("ur", "P104")).toContain('aria-describedby="provider-name-P104"');
     expect(render("ur", "P104")).not.toContain("provider-name-P101");
   });
 
@@ -179,14 +156,6 @@ describe("ProviderView", () => {
   it("is a heading 2 with a link on the list and the heading 1 of its own page", () => {
     expect(render("en", "P101")).toMatch(/<h2[^>]*><a [^>]*href="\/en\/directory\/P101"/);
     expect(render("en", "P101", "page")).toMatch(/<h1[^>]*><bdi/);
-  });
-});
-
-describe("hasFallbackText", () => {
-  it("is true only for a listing in which some text is English standing in for a translation", () => {
-    expect(hasFallbackText(DirectoryListingV1.parse(buildListing("ur", 7)))).toBe(true);
-    expect(hasFallbackText(DirectoryListingV1.parse(buildListing("en", 7)))).toBe(false);
-    expect(hasFallbackText(DirectoryListingV1.parse(buildListing("ur", 7, { drop: ["P105"] })))).toBe(false);
   });
 });
 
