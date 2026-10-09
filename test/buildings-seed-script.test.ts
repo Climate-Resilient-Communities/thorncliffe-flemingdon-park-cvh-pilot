@@ -21,14 +21,16 @@ function capture() {
 afterEach(() => vi.restoreAllMocks());
 
 describe("npm run seed:buildings -- --dry-run", () => {
-  it("reads the committed register and merge file, says it would load the 43 buildings and warns about 85-95 Thorncliffe Park Dr", async () => {
+  it("reads the committed register and merge file, says it would load 42 buildings: 85-95 Thorncliffe Park Dr is one (UAT F-5)", async () => {
     const { out, err } = capture();
 
     expect(await main(["--dry-run"], NO_ENV, ROOT)).toBe(0);
 
-    expect(out[0]).toBe("Register: 103 rows; 43 in the pilot's postal areas (M4H 32, M3C 11); 60 elsewhere, not loaded.");
-    expect(out).toContain("Would load: 43 buildings.");
-    expect(out.join("\n")).toContain("2 registrations share this address (rsn 4154159, 4237447)");
+    expect(out).toEqual([
+      "Register: 103 rows; 43 in the pilot's postal areas (M4H 32, M3C 11); 60 elsewhere, not loaded.",
+      "Merge file: 1 registration folded into another building.",
+      "Would load: 42 buildings.",
+    ]);
     expect(err).toEqual([]);
   });
 

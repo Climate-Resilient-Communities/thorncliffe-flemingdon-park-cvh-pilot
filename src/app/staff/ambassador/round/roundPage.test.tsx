@@ -18,7 +18,7 @@ const ROUND: RoundResponse = {
               kind: "contacts",
               label: "3",
               requests: [
-                { round_ref: REF_A, phone: "+14165550181", method: "call", status: "pending" },
+                { round_ref: REF_A, phone: "+14165550181", method: "call", status: "pending", language: "Urdu" },
                 { round_ref: REF_B, phone: "+14165550182", method: "text", status: "needs_help" },
               ],
             },
@@ -49,6 +49,15 @@ describe("the round's words (A-04, S08.07)", () => {
   it("makes a call a tel: link and a text an sms: link, on the number in E.164", () => {
     expect(contactHref("call", "+14165550181")).toBe("tel:+14165550181");
     expect(contactHref("text", "+14165550181")).toBe("sms:+14165550181");
+  });
+});
+
+describe("the resident's language (UAT note 9)", () => {
+  it("is under the number, in the screen's words, when the round names it", () => {
+    expect(screen.language).toBe("Language: {language}");
+    const html = draw({ phase: "ready", round: ROUND });
+    expect(html).toContain('<p class="hub-wrap" data-testid="round-language">Language: Urdu</p>');
+    expect(html.match(/data-testid="round-language"/g)).toHaveLength(1);
   });
 });
 

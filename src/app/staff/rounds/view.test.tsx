@@ -69,20 +69,31 @@ describe("Check-in rounds (O-17): the escalations to follow up", () => {
 });
 
 describe("an escalation's page: the resident's details (Admins only) and the handling", () => {
-  it("shows an Admin at aal2 the resident's number as a call link, the floor and the method, while the row names her", () => {
+  it("shows an Admin at aal2 the resident's number as a call link, formatted to read, the floor and the method, while the row names her", () => {
     const view = residentView(base, ADMIN, LINKED);
     expect(view).toEqual({
       kind: "shown",
-      phone: PHONE,
+      phone: "(416) 555-0181",
       telHref: `tel:${PHONE}`,
-      callLabel: `Call ${PHONE}`,
+      callLabel: "Call (416) 555-0181",
+      language: null,
       floor: "3",
       method: "a call",
       note: "Only Admins see this. The Hub keeps it until the escalation is handled, or for 24 hours after the alert ends.",
     });
     const html = renderToStaticMarkup(<EscalationBody screen={escalationScreen(base, ADMIN, LINKED)} />);
     expect(html).toContain(`href="tel:${PHONE}"`);
+    expect(html).toContain("(416) 555-0181");
     expect(html).toContain("Needs help: 4 Milepost Pl, floor 3");
+    expect(html).not.toContain('data-testid="escalation-language"');
+  });
+
+  it("says the resident's language beside the number, so the Hub calls in it (UAT note 9)", () => {
+    expect(residentView(base, ADMIN, { ...LINKED, lang: "ur" })).toMatchObject({ kind: "shown", language: "Urdu" });
+    const html = renderToStaticMarkup(<EscalationBody screen={escalationScreen(base, ADMIN, { ...LINKED, lang: "ur" })} />);
+    expect(html).toContain('<div data-testid="escalation-language"><dt>Language</dt><dd>Urdu</dd></div>');
+    // Nobody else sees it either: it is part of what only an Admin at aal2 sees.
+    expect(renderToStaticMarkup(<EscalationBody screen={escalationScreen(base, COORDINATOR, { ...LINKED, lang: "ur" })} />)).not.toContain("Urdu");
   });
 
   it("shows anyone else no number: a Coordinator or Director is told only an Admin sees it, an Admin below aal2 to sign in with the code", () => {

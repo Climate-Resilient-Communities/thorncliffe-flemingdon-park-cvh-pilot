@@ -2,7 +2,9 @@
 // screenshots draw the very same words. Never a resident's number but on an escalation's page, for an Admin at aal2 (`resident.kind === "shown"`).
 import type { EscalationStatus } from "@/modules/checkins";
 import { englishText } from "@/i18n/text";
+import { displayPhone } from "@/contracts/phone";
 import { formatTorontoDateTime } from "@/platform/clock";
+import { staffLanguageName } from "../languageName";
 
 /** The Hub's list of escalations (O-17): the page the nav item "Check-in rounds" opens. */
 export const ROUNDS_PAGE = "/staff/rounds";
@@ -85,10 +87,21 @@ export interface EscalationViewer {
 }
 
 /** The resident's details as the row an escalation is about still has them, composed by the app: only when the row names its subscriber. */
-export type ResidentFacts = { kind: "linked"; phone: string | null; method: "call" | "text" } | { kind: "unlinked" };
+export type ResidentFacts = { kind: "linked"; phone: string | null; method: "call" | "text"; /** UAT note 9: the language the resident chose. */ lang?: string | null } | { kind: "unlinked" };
 
 export type ResidentView =
-  | { kind: "shown"; phone: string; telHref: string; callLabel: string; floor: string; method: string; note: string }
+  | {
+      kind: "shown";
+      /** As people read it, "(416) 555-0172" (UAT note 9); the link calls the stored number. */
+      phone: string;
+      telHref: string;
+      callLabel: string;
+      /** UAT note 9: the resident's language, "Urdu", so the Hub calls in it; null when it is not known. */
+      language: string | null;
+      floor: string;
+      method: string;
+      note: string;
+    }
   | { kind: "gone" | "admin_only" | "aal2"; text: string };
 
 export interface EscalationScreen {
@@ -127,11 +140,13 @@ export function residentView(escalation: Pick<DescribedEscalation, "late" | "flo
   if (!viewer.followUp) return { kind: "admin_only", text: e("adminOnly") };
   if (!viewer.aal2) return { kind: "aal2", text: e("aal2") };
   if (facts.kind === "unlinked" || facts.phone === null) return { kind: "gone", text: e("residentGone") };
+  const shown = displayPhone(facts.phone);
   return {
     kind: "shown",
-    phone: facts.phone,
+    phone: shown,
     telHref: telOf(facts.phone),
-    callLabel: e("call", { phone: facts.phone }),
+    callLabel: e("call", { phone: shown }),
+    language: facts.lang ? staffLanguageName(facts.lang) : null,
     floor: escalation.floor,
     method: e(`methods.${facts.method}`),
     note: e("residentNote"),

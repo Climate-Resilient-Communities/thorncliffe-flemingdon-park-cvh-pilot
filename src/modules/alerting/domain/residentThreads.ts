@@ -111,9 +111,23 @@ export type ResidentCloseReason = "resolved" | "expired" | "withdrawn";
 
 const CLOSE_REASONS: readonly string[] = ["resolved", "expired", "withdrawn"];
 
+/**
+ * The expire job's final message (S05.04) is the only final residents read that nobody approved: a final is published by its approval or, `published_system`, by the
+ * expire job (a final is never D-1: `D1_KINDS`), so here a final that is not verified is that system final. Its words are the Hub's catalog text, written by the Hub's
+ * rule; it vouches for nothing new. So it reads with the origin of the entry it closed (UAT F-2): "Verified by the Hub" for an alert the Hub approved, and the
+ * attribution and "Not yet verified" of an ambassador's post that ran out before anyone approved it. It never makes an alert read as less checked than it was.
+ */
+function withSystemFinalOrigin(entries: readonly ResidentEntryRow[]): ResidentEntryRow[] {
+  return entries.map((entry, index) => {
+    if (entry.kind !== "final" || entry.verified) return entry;
+    const closed = entries.slice(0, index).filter((earlier) => !earlier.superseded && SUBSTANTIVE_KINDS.has(earlier.kind) && earlier.kind !== "final").at(-1);
+    return closed ? { ...entry, verified: closed.verified, attributedRsn: closed.attributedRsn ?? null } : entry;
+  });
+}
+
 /** One thread's entries as the feed's thread: its fields follow the covering entry. `closed` says the thread closed and how (S05.03: R-07 reads a closed thread by its address). */
 function threadOf(unsorted: readonly ResidentEntryRow[], lang: LangCode, closed?: ResidentCloseReason): { thread: FeedThread; latest: number } {
-  const entries = [...unsorted].sort(byPublication);
+  const entries = withSystemFinalOrigin([...unsorted].sort(byPublication));
   const covering = coveringOf(entries);
   const thread: FeedThread = {
     id: covering.threadId,

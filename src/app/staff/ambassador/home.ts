@@ -26,7 +26,8 @@ export async function loadAssigned(
   session: Pick<StaffSession, "staffId">,
 ): Promise<{ assigned: AssignedBuilding[]; scope: AmbassadorScope; current: readonly PolicyAssignment[]; floorLabels: ReadonlyMap<string, string> }> {
   const current = await assignments().assignmentsOf(session.staffId);
-  const plans = await buildings().listFloorPlans();
+  // With the merged buildings (UAT F-5): an assignment made before a merge still names its building, which is shown by its address.
+  const plans = await buildings().listFloorPlans({ includeMerged: true });
   const assigned: AssignedBuilding[] = [];
   for (const assignment of current) {
     const plan = plans.find((candidate) => candidate.rsn === assignment.rsn);

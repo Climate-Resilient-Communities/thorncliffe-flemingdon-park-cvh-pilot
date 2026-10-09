@@ -3,9 +3,10 @@
 // this one list, the same for every visitor, and the phone picks its own buildings out of it. Only what the page
 // shows leaves the database: the register number, the address and the contact the Hub entered (the same contact
 // the building page shows); nothing about floors, facts or who confirmed what.
-import { asc } from "drizzle-orm";
+import { isNull } from "drizzle-orm";
 import type { Db } from "../../../platform/db";
 import { building } from "../adapters/schema";
+import { compareAddresses } from "../domain/street";
 import { contactOf, type BuildingContact } from "./floors";
 
 export interface BuildingWithContact {
@@ -15,7 +16,10 @@ export interface BuildingWithContact {
   contact: BuildingContact | null;
 }
 
-/** Every building by address, with its contact if the Hub has entered one. A building flagged "not in latest register" is still listed: its page still opens. */
+/**
+ * Every building by address (street, then number), with its contact if the Hub has entered one. A building flagged "not in latest register" is still listed: its page
+ * still opens. One merged into another by the buildings seed (UAT F-5) is not.
+ */
 export async function listBuildingContacts(db: Db): Promise<BuildingWithContact[]> {
   const rows = await db
     .select({
@@ -26,6 +30,8 @@ export async function listBuildingContacts(db: Db): Promise<BuildingWithContact[
       contactUpdatedAt: building.contactUpdatedAt,
     })
     .from(building)
-    .orderBy(asc(building.address), asc(building.rsn));
-  return rows.map((row) => ({ rsn: row.rsn, address: row.address, contact: contactOf(row) }));
+    .where(isNull(building.mergedInto));
+  return rows
+    .sort((a, b) => compareAddresses(a.address, b.address) || a.rsn.localeCompare(b.rsn, "en", { numeric: true }))
+    .map((row) => ({ rsn: row.rsn, address: row.address, contact: contactOf(row) }));
 }

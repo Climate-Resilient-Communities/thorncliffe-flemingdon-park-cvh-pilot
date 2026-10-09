@@ -10,13 +10,18 @@ import { migrate } from "../../scripts/db/migrate.mjs";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
 import {
   BuildingImportRefusedError,
+  compareAddresses,
   createBuildingService,
+  createResidentBuildings,
   formatImportReport,
   importBuildings,
+  listBuildingContacts,
+  listBuildings,
   planBuildingImport,
   readMergeFile,
   readPublicBuilding,
   readRegisterFile,
+  streetOf,
   type AssignedAmbassador,
   type BuildingService,
   type FloorAssignments,
@@ -124,14 +129,14 @@ const buildingRow = async (rsn: string) => (await owner`select * from building w
 describe("the buildings seed, with the real City register", () => {
   const realPlan = () => planBuildingImport(readRegisterFile(REGISTER), readMergeFile(path.join(ROOT, "data", "seed", "building-merge.csv")).entries);
 
-  it("upserts exactly the 43 buildings of M4H and M3C by rsn, with floors 1 to N unconfirmed, and audits seed.run with counts", async () => {
+  it("upserts the 42 buildings of M4H and M3C by rsn (43 rows, one merged into another), with floors 1 to N unconfirmed, and audits seed.run with counts", async () => {
     const plan = realPlan();
     const result = await seed(plan);
 
-    expect((await owner`select count(*)::int as n from building`)[0].n).toBe(43);
+    expect((await owner`select count(*)::int as n from building`)[0].n).toBe(42);
     expect(await owner`select neighbourhood_id, count(*)::int as n from building group by 1 order by 1`).toMatchObject([
       { neighbourhood_id: "FP", n: 11 },
-      { neighbourhood_id: "TP", n: 32 },
+      { neighbourhood_id: "TP", n: 31 },
     ]);
     expect(await owner`select id, name, fsa from neighbourhood order by id`).toMatchObject([
       { id: "FP", name: "Flemingdon Park", fsa: "M3C" },
@@ -155,7 +160,7 @@ describe("the buildings seed, with the real City register", () => {
     });
 
     const storeys = (await owner`select coalesce(sum(storeys), 0)::int as n from building`)[0].n as number;
-    expect(result.counts).toMatchObject({ buildings_loaded: 43, buildings_inserted: 43, buildings_updated: 0, buildings_unchanged: 0, floors_created: storeys });
+    expect(result.counts).toMatchObject({ buildings_loaded: 42, buildings_inserted: 42, buildings_updated: 0, buildings_unchanged: 0, floors_created: storeys });
     expect((await owner`select count(*)::int as n from building_floor`)[0].n).toBe(storeys);
     const floors = await floorsOf("4154146");
     expect(floors.map((f) => [f.label, f.sort_order, f.confirmed])).toEqual([1, 2, 3, 4, 5, 6].map((n) => [String(n), n, false]));
@@ -163,10 +168,10 @@ describe("the buildings seed, with the real City register", () => {
     expect((await owner`select count(*)::int as n from building_floor where confirmed`)[0].n).toBe(0);
     expect((await floorsOf("4154159")).map((f) => f.label)).toHaveLength(43);
 
-    // The duplicate address stays two buildings, with the warning in the report.
-    expect(await owner`select rsn from building where address = '85-95 Thorncliffe Park Dr' order by rsn`).toMatchObject([{ rsn: "4154159" }, { rsn: "4237447" }]);
-    expect(result.warnings).toHaveLength(1);
-    expect(formatImportReport(plan, { counts: { ...result.counts }, warnings: result.warnings }).join("\n")).toContain("2 registrations share this address");
+    // UAT F-5: the register's two registrations of 85-95 Thorncliffe Park Dr are one building, by the merge file; nothing to warn about.
+    expect(await owner`select rsn, merged_into from building where address = '85-95 Thorncliffe Park Dr' order by rsn`).toEqual([{ rsn: "4154159", merged_into: null }]);
+    expect(result.warnings).toEqual([]);
+    expect(formatImportReport(plan, { counts: { ...result.counts }, warnings: result.warnings })).toContain("Merge file: 1 registration folded into another building.");
 
     expect(await auditRows()).toEqual([
       {
@@ -177,8 +182,19 @@ describe("the buildings seed, with the real City register", () => {
         subject_id: null,
         meta: {
           seed: "buildings",
-          counts: { buildings_loaded: 43, buildings_inserted: 43, buildings_updated: 0, buildings_unchanged: 0, buildings_restored: 0, buildings_flagged: 0, buildings_merged: 0, floors_created: storeys },
-          warnings: 1,
+          counts: {
+            buildings_loaded: 42,
+            buildings_inserted: 42,
+            buildings_updated: 0,
+            buildings_unchanged: 0,
+            buildings_restored: 0,
+            buildings_flagged: 0,
+            buildings_merged: 1,
+            buildings_hidden: 0,
+            buildings_unmerged: 0,
+            floors_created: storeys,
+          },
+          warnings: 0,
           failures: 0,
         },
       },
@@ -192,9 +208,71 @@ describe("the buildings seed, with the real City register", () => {
 
     const second = await seed(plan, { now: new Date("2026-11-01T12:00:00Z") });
 
-    expect(second.counts).toMatchObject({ buildings_inserted: 0, buildings_updated: 0, buildings_unchanged: 43, buildings_restored: 0, buildings_flagged: 0, floors_created: 0 });
+    expect(second.counts).toMatchObject({ buildings_inserted: 0, buildings_updated: 0, buildings_unchanged: 42, buildings_restored: 0, buildings_flagged: 0, buildings_hidden: 0, floors_created: 0 });
     expect({ buildings: await owner`select * from building order by rsn`, floors: await owner`select * from building_floor order by rsn, sort_order` }).toEqual(before);
     expect((await auditRows()).map((row) => row.action)).toEqual(["seed.run", "seed.run"]);
+  });
+
+  // UAT F-5, as production has it: the first seed (2026-10-02) ran before the merge file had its line, so production holds both registrations.
+  it("marks the second 85-95 Thorncliffe Park Dr loaded before the merge as merged: kept with its floors, out of every list, still opened by its rsn", async () => {
+    const register = readRegisterFile(REGISTER);
+    await seed(planBuildingImport(register, []), { now: new Date("2026-10-02T20:35:00Z") });
+    const floorsBefore = await floorsOf("4237447");
+    expect(floorsBefore).toHaveLength(43);
+    const listed = async () => ({
+      staff: (await service.listBuildings()).map((b) => b.rsn),
+      plans: (await service.listFloorPlans()).map((b) => b.rsn),
+      sms: (await listBuildings(app)).map((b) => b.rsn),
+      resident: (await createResidentBuildings({ db: app }).list()).map((b) => b.rsn),
+      feed: (await createResidentBuildings({ db: app }).placeIds()).buildings,
+      contacts: (await listBuildingContacts(app)).map((b) => b.rsn),
+    });
+    for (const list of Object.values(await listed())) expect(list.filter((rsn) => rsn === "4154159" || rsn === "4237447").sort()).toEqual(["4154159", "4237447"]);
+
+    const merged = await seed(realPlan(), { now: new Date("2026-10-09T12:00:00Z") });
+
+    expect(merged.counts).toMatchObject({ buildings_loaded: 42, buildings_inserted: 0, buildings_updated: 0, buildings_unchanged: 42, buildings_flagged: 0, buildings_merged: 1, buildings_hidden: 1, floors_created: 0 });
+    expect(merged.notInRegister).toEqual([]);
+    expect(merged.warnings.map((warning) => [warning.rsn, warning.message])).toEqual([["4237447", expect.stringContaining("merged into rsn 4154159 by building-merge.csv: kept with its floors and left out of every building list")]]);
+    expect(formatImportReport(realPlan(), { counts: { ...merged.counts }, warnings: merged.warnings })).toContain(
+      "Merged into another building by this run (kept, left out of every list): 1. Listed again (their merge line is gone): 0.",
+    );
+    expect(await buildingRow("4237447")).toMatchObject({ merged_into: "4154159", not_in_register_since: null });
+    expect(await floorsOf("4237447")).toEqual(floorsBefore);
+    for (const [name, list] of Object.entries(await listed())) {
+      expect(list, name).toContain("4154159");
+      expect(list, name).not.toContain("4237447");
+      expect(list, name).toHaveLength(42);
+    }
+    // Read by its rsn it is still there: an assignment, a sign-up or an alert that names it keeps working.
+    expect((await service.getBuilding("4237447"))?.address).toBe("85-95 Thorncliffe Park Dr");
+    expect((await service.listFloorPlans({ includeMerged: true })).find((plan) => plan.rsn === "4237447")).toMatchObject({ mergedInto: "4154159", floors: expect.any(Array) });
+    expect((await service.listFloorPlans({ includeMerged: true })).find((plan) => plan.rsn === "4154159")).not.toHaveProperty("mergedInto");
+
+    // Run again, nothing changes; take the line out of the merge file and it is a building of its own again.
+    const again = await seed(realPlan(), { now: new Date("2026-10-10T12:00:00Z") });
+    expect(again.counts).toMatchObject({ buildings_hidden: 0, buildings_unmerged: 0 });
+    const apart = await seed(planBuildingImport(register, []), { now: new Date("2026-10-11T12:00:00Z") });
+    expect(apart.counts).toMatchObject({ buildings_loaded: 43, buildings_unchanged: 43, buildings_unmerged: 1 });
+    expect(await buildingRow("4237447")).toMatchObject({ merged_into: null });
+    expect((await service.listFloorPlans()).map((b) => b.rsn)).toContain("4237447");
+  });
+
+  it("lists the buildings by neighbourhood, then by street and house number as a number (UAT F-7)", async () => {
+    await seed(realPlan());
+    const order = (rows: readonly { address: string; neighbourhoodName: string }[]) => rows.map((row) => `${row.neighbourhoodName}|${row.address}`);
+    const staff = await service.listBuildings();
+    const expected = [...staff].sort((a, b) => a.neighbourhoodName.localeCompare(b.neighbourhoodName) || compareAddresses(a.address, b.address));
+    expect(order(staff)).toEqual(order(expected));
+    expect(order(await service.listFloorPlans())).toEqual(order(expected));
+    const addresses = staff.map((row) => row.address);
+    // Not as text: a two-digit number after the one-digit numbers of its street.
+    const street = (name: string) => addresses.filter((address) => address.endsWith(` ${name}`)).map((address) => Number.parseInt(address, 10));
+    for (const name of new Set(addresses.map((address) => streetOf(address).street))) {
+      const numbers = street(name).filter((n) => !Number.isNaN(n));
+      expect(numbers, name).toEqual([...numbers].sort((a, b) => a - b));
+    }
+    expect((await listBuildingContacts(app)).map((row) => row.address)).toEqual([...addresses].sort(compareAddresses));
   });
 });
 
@@ -323,7 +401,10 @@ describe("the buildings seed, with fixture registers", () => {
     expect(merged.counts.buildings_flagged).toBe(0);
     expect(merged.warnings.map((warning) => warning.message)).toEqual([expect.stringContaining("merged into rsn 201")]);
     expect(merged.warnings.some((warning) => warning.message.includes("not in latest register"))).toBe(false);
-    expect((await owner`select rsn, not_in_register_since from building order by rsn`).map((row) => [row.rsn, row.not_in_register_since])).toEqual([["201", null], ["202", null]]);
+    expect((await owner`select rsn, not_in_register_since, merged_into from building order by rsn`).map((row) => [row.rsn, row.not_in_register_since, row.merged_into])).toEqual([
+      ["201", null, null],
+      ["202", null, "201"],
+    ]);
   });
 });
 

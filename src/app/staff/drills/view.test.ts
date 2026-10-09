@@ -33,6 +33,16 @@ describe("a drill as the Drills page shows it", () => {
     expect(drillView({ ...thread, status: "closed", entries: [] }, [], labels)).toMatchObject({ status: { id: "closed", text: "Ended" }, entries: "Entries: -" });
   });
 
+  it("links to the approval of each entry waiting for one while the drill runs, so a second Admin can review it from here (UAT F-6)", () => {
+    expect(drillView(thread, [], labels).review).toEqual([{ href: `/staff/alerts/approve?alert=${thread.id}&entry=e2`, label: "Review the drill correction" }]);
+    expect(drillView({ ...thread, entries: [{ id: "e1", kind: "ack", status: "pending_approval", approvedAt: null }] }, [], labels).review).toEqual([
+      { href: `/staff/alerts/approve?alert=${thread.id}&entry=e1`, label: "Review the drill acknowledgement" },
+    ]);
+    // Nothing to review once every entry is decided, or once the drill has ended.
+    expect(drillView({ ...thread, entries: [thread.entries[0]] }, [], labels).review).toEqual([]);
+    expect(drillView({ ...thread, status: "closed" }, [], labels).review).toEqual([]);
+  });
+
   it("says no text was written for a drill with no results", () => {
     expect(drillView(thread, [], labels).results).toMatchObject({ none: "No text has been written for this drill yet.", rows: [], waiting: null, notSent: null, unknownNote: null });
   });

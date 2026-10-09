@@ -1,13 +1,14 @@
 // Floor editing and building confirmation (S01.13): what an Admin does at /staff/buildings. The
 // staff guard has already refused anyone but an Admin (policy action `buildings.manage`); every
 // change is audited in its own transaction, and a refused change is audited as refused with a reason.
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
 import { CONTACT_OWNER, checkContact, isContactRole, type ContactError, type ContactRole } from "../domain/buildingContact";
 import { checkFloorLabel, type FloorLabelError } from "../domain/floorLabel";
+import { compareAddresses } from "../domain/street";
 import type { AssignedAmbassador, FloorAssignments, PlacesAudit, PlacesAuditEvent } from "./ports";
 
 export interface FloorView {
@@ -74,7 +75,18 @@ export interface BuildingFloorPlan {
   neighbourhoodId: string;
   neighbourhoodName: string;
   floors: FloorPlanFloor[];
+  /**
+   * UAT F-5: the building data/seed/building-merge.csv folded this one into. Only a list read with `includeMerged` has merged buildings (each with this set);
+   * every other list leaves them out.
+   */
+  mergedInto?: string;
 }
+
+/**
+ * The order of every building list (UAT F-7): by neighbourhood, then by street and house number as a number (`compareAddresses`), then rsn.
+ */
+export const byNeighbourhoodAndAddress = (a: { neighbourhoodName: string; address: string; rsn: string }, b: { neighbourhoodName: string; address: string; rsn: string }): number =>
+  a.neighbourhoodName.localeCompare(b.neighbourhoodName, "en") || compareAddresses(a.address, b.address) || a.rsn.localeCompare(b.rsn, "en", { numeric: true });
 
 export type FloorRefusal = FloorLabelError | ContactError | "building_not_found" | "floor_not_found" | "floor_has_assignments" | "no_change" | "already_confirmed" | "no_floors";
 
@@ -194,13 +206,15 @@ export function createBuildingService(deps: BuildingServiceDeps) {
   }
 
   return {
-    /** Every building, by neighbourhood and address. */
+    /** Every building, by neighbourhood and address (street, then number). A building merged into another (UAT F-5) is not listed. */
     async listBuildings(): Promise<BuildingSummary[]> {
-      const rows = await db
-        .select({ building, neighbourhoodName: neighbourhood.name })
-        .from(building)
-        .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
-        .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));
+      const rows = (
+        await db
+          .select({ building, neighbourhoodName: neighbourhood.name })
+          .from(building)
+          .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
+          .where(isNull(building.mergedInto))
+      ).sort((a, b) => byNeighbourhoodAndAddress({ ...a.building, neighbourhoodName: a.neighbourhoodName }, { ...b.building, neighbourhoodName: b.neighbourhoodName }));
       const counts = new Map(
         (await db.select({ rsn: buildingFloor.rsn, floors: sql<number>`count(*)::int` }).from(buildingFloor).groupBy(buildingFloor.rsn)).map((row) => [row.rsn, row.floors]),
       );
@@ -217,19 +231,23 @@ export function createBuildingService(deps: BuildingServiceDeps) {
     },
 
     /**
-     * Every building with its floors, lowest first, by neighbourhood and address: what the coverage view
-     * (S01.14) lays the assignments over. A building with no floors yet has an empty list.
+     * Every building with its floors, lowest first, by neighbourhood and address (street, then number): what the coverage view
+     * (S01.14) lays the assignments over, and every place picker. A building with no floors yet has an empty list. A building merged
+     * into another (UAT F-5) is left out, unless `includeMerged` asks for it (with `mergedInto` set): for the screens that look a building
+     * up by its rsn (an audience written before the merge, an assignment on it), never for a list to choose from.
      */
-    async listFloorPlans(): Promise<BuildingFloorPlan[]> {
-      const rows = await db
-        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhoodName: neighbourhood.name })
-        .from(building)
-        .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
-        .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));
+    async listFloorPlans(options: { includeMerged?: boolean } = {}): Promise<BuildingFloorPlan[]> {
+      const rows = (
+        await db
+          .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhoodName: neighbourhood.name, mergedInto: building.mergedInto })
+          .from(building)
+          .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
+          .where(options.includeMerged ? undefined : isNull(building.mergedInto))
+      ).sort(byNeighbourhoodAndAddress);
       const floors = await db.select().from(buildingFloor).orderBy(asc(buildingFloor.sortOrder), asc(buildingFloor.label));
       const byBuilding = new Map<string, FloorPlanFloor[]>();
       for (const floor of floors) byBuilding.set(floor.rsn, [...(byBuilding.get(floor.rsn) ?? []), { id: floor.id, label: floor.label, sortOrder: floor.sortOrder }]);
-      return rows.map((row) => ({ ...row, floors: byBuilding.get(row.rsn) ?? [] }));
+      return rows.map(({ mergedInto, ...row }) => ({ ...row, floors: byBuilding.get(row.rsn) ?? [], ...(mergedInto === null ? {} : { mergedInto }) }));
     },
 
     /** One building with its facts and floors; null when there is none with that rsn. */

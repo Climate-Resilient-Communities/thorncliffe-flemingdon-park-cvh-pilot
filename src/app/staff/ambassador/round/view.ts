@@ -29,6 +29,8 @@ export interface RoundScreen {
   marksFor: string;
   call: string;
   text: string;
+  /** "Language: {language}" (UAT note 9): the resident's language under their number. */
+  language: string;
   methodWord: { call: string; text: string };
   noRound: string;
   deleted: string;
@@ -65,6 +67,7 @@ export function roundScreen(role: StaffRole): RoundScreen {
     marksFor: t("staff.round.marksFor", { phone: slot("phone") }),
     call: t("staff.round.call", { phone: slot("phone") }),
     text: t("staff.round.text", { phone: slot("phone") }),
+    language: t("staff.round.language", { language: slot("language") }),
     methodWord: { call: t("A04.methodWord.call"), text: t("A04.methodWord.text") },
     noRound: t("A04.noRound"),
     deleted: t("A04.deleted"),

@@ -70,10 +70,29 @@ describe("the approval of a withdrawal", () => {
 });
 
 describe("a correction or a withdrawal whose entry was replaced since", () => {
-  it("says it cannot be approved, and why, and the approval refuses it with the reason", () => {
+  it("says it cannot be approved, and why, at the top, offers Discard only (UAT F-3), and the approval refuses it with the reason", () => {
+    for (const kind of ["correction", "withdrawal"]) {
+      const gone = screenOf({ kind, supersedesId: TARGET.id, ...(kind === "withdrawal" ? { withdrawalReason: "duplicate" } : {}) }, { target: { ...TARGET, status: "superseded", valid: false } });
+      expect(gone.status).toBe("review");
+      expect(gone.approveBlocked).toBe("The entry this replaces was corrected or withdrawn since it was written, so this cannot be approved. Discard it.");
+      // Said once: at the top, not again in the section about the entry it replaces.
+      expect(gone.replaces?.gone).toBeNull();
+      const out = html(gone);
+      expect(out).toContain('role="alert" class="hub-error hub-wrap" data-testid="approve-blocked"');
+      expect(out).not.toContain('data-testid="approve-button"');
+      expect(out).not.toContain('data-testid="return-button"');
+      expect(out).toContain('data-testid="discard-button"');
+      expect(out).not.toContain('data-testid="replaces-gone"');
+    }
+    // An entry whose target still stands offers Approve, with nothing blocking it.
+    const standing = screenOf({ kind: "correction", supersedesId: TARGET.id });
+    expect(standing.approveBlocked).toBeNull();
+    expect(html(standing)).toContain('data-testid="approve-button"');
+    // Once it no longer waits (discarded, say), the section says why it was never approved.
+    const discarded = screenOf({ kind: "correction", supersedesId: TARGET.id, status: "discarded" }, { target: { ...TARGET, status: "superseded", valid: false } });
+    expect(discarded.approveBlocked).toBeNull();
+    expect(discarded.replaces?.gone).toMatch(/^The entry this replaces was corrected or withdrawn/);
     const gone = screenOf({ kind: "correction", supersedesId: TARGET.id }, { target: { ...TARGET, status: "superseded", valid: false } });
-    expect(gone.replaces?.gone).toBe("The entry this replaces was corrected or withdrawn since it was written, so this cannot be approved. Discard it.");
-    expect(html(gone)).toContain('role="alert" class="hub-error hub-wrap" data-testid="replaces-gone"');
     for (const code of ["TARGET_NOT_VALID", "TARGET_SUPERSEDED", "TARGET_NOT_PUBLISHED"]) {
       expect(APPROVAL_MESSAGE_CODES).toContain(code);
       expect(gone.messages.errors[code]).toMatch(/Discard this/);

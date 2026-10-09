@@ -8,7 +8,7 @@ import { countsByPlace, escalationList, escalationOf, residentShown, roundTallie
 import { readStaffName } from "@/modules/identity";
 import { stdoutMessagingLog } from "@/modules/messaging";
 import { addressesOfBuildings, floorsOfBuilding } from "@/modules/places";
-import { escalationNumberOf } from "@/modules/subscriptions";
+import { escalationContactOf } from "@/modules/subscriptions";
 import { getDb, type Db, type DbExecutor } from "@/platform/db";
 import { openRoundRows, roundPlansOf } from "../ambassador/round/load";
 import { CLOSED_ROUNDS_DAYS, CLOSED_THREADS_READ, progressScreen, unreadableProgress, type ProgressRow, type ProgressScreen } from "./progress";
@@ -57,7 +57,8 @@ export async function loadEscalation(id: unknown, viewer: EscalationViewer, exec
   const [described] = await describeEscalations(executor, [found.escalation]);
   let facts: ResidentFacts = { kind: "unlinked" };
   if (viewer.followUp && viewer.aal2 && found.row.linked && residentShown(found.escalation, found.row)) {
-    facts = { kind: "linked", phone: await escalationNumberOf(executor, found.row.subscriberId), method: found.row.method };
+    const contact = await escalationContactOf(executor, found.row.subscriberId);
+    facts = { kind: "linked", phone: contact?.phone ?? null, lang: contact?.lang ?? null, method: found.row.method };
   }
   return escalationScreen(described!, viewer, facts);
 }

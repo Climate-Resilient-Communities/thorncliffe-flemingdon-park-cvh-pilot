@@ -220,6 +220,11 @@ export function RoundPage({ screen, initial, env }: { screen: RoundScreen; initi
                                       {fill(request.method === "call" ? screen.call : screen.text, { phone: number })}
                                     </a>
                                   </p>
+                                  {request.language !== undefined && (
+                                    <p className="hub-wrap" data-testid="round-language">
+                                      {fill(screen.language, { language: request.language })}
+                                    </p>
+                                  )}
                                   {request.status !== "pending" && (
                                     <p className="hub-wrap" data-testid="round-marked">
                                       {fill(screen.marked, { mark: screen.marks[request.status] })}

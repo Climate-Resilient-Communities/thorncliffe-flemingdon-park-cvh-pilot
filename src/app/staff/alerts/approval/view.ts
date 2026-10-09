@@ -127,6 +127,17 @@ export interface ApprovalScreen {
   /** Why the entry is not waiting for this person (a locked screen), and the note sent with a return. */
   locked?: { message: string; note?: string };
   /**
+   * UAT F-4: the entry is a draft again (returned to its author, or pulled back): its texts were cleared, so there is nothing to count, price or read in another
+   * language until it is submitted again. The screen then says only that it waits for its author, with the note sent, and the English text as it stands; it does
+   * not show the recipients, the cost or the languages, which would read as an outage.
+   */
+  awaitingAuthor: boolean;
+  /**
+   * UAT F-3: why Approve is not offered although the entry waits for approval: a correction or a withdrawal whose entry was corrected or withdrawn since. Only
+   * Discard is offered then. Null when Approve is offered.
+   */
+  approveBlocked: string | null;
+  /**
    * "Texts are paused; this will send when resumed" while all texts are paused (S06.06's `pauseNoticeForApprover()`), on the approval view and on
    * the confirmation of an approval (the screen of an approved entry); null otherwise. It informs and never changes or refuses the approval.
    */
@@ -301,7 +312,8 @@ function replacesOf(review: EntryReview, t: Text, compose: Text): ApprovalScreen
     // The rule of AD-7, in words for the approver: a correction or a withdrawal reaches everyone who got the original, as well as the people in its own audience now.
     reach: t("reachesOriginal"),
     closes: review.closesThread === true ? t("closesThread") : null,
-    gone: target.valid ? null : t("targetGone"),
+    // Said once, at the top of the screen, while it waits for approval (UAT F-3: `approveBlocked`); here for an entry that no longer waits.
+    gone: target.valid || entry.status === "pending_approval" ? null : t("targetGone"),
   };
 }
 
@@ -474,6 +486,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     lead: entry.kind === "correction" ? t("correctionLead") : entry.kind === "withdrawal" ? t("withdrawalLead") : entry.kind === "final" ? t("finalLead") : variant === "alert" ? t("lead") : t("ambassadorLead"),
     status: locked ? "locked" : "review",
     ...(locked ? { locked } : {}),
+    awaitingAuthor: entry.status === "draft",
+    approveBlocked: !locked && review.target && !review.target.valid && (entry.kind === "correction" || entry.kind === "withdrawal") ? t("targetGone") : null,
     // Told where it matters: to the approver deciding (an entry waiting for them), and on the confirmation (an approved entry), not on an entry that
     // was returned, discarded or is waiting for someone else, whose texts the pause does not hold.
     pauseNotice: input.pauseNotice && (!locked || entry.status === "approved") ? input.pauseNotice : null,

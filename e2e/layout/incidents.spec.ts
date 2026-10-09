@@ -175,8 +175,11 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     expect(await top("incidents-running")).toBeLessThan(await top("incidents-closed"));
     expect(await top("incidents-closed")).toBeLessThan(await top("incidents-mine"));
     expect(await top("incidents-mine")).toBeLessThan(await top("incidents-drills"));
-    await expect(page.getByTestId("waiting-item")).toHaveCount(2);
-    await expect(page.getByTestId("incidents-waiting").getByTestId("waited")).toHaveText(["Waiting 52 minutes", "Waiting 12 minutes"]);
+    // UAT F-6: the drill waiting for approval is in the queue too, titled as a drill.
+    await expect(page.getByTestId("waiting-item")).toHaveCount(3);
+    await expect(page.getByTestId("incidents-waiting").getByTestId("waited")).toHaveText(["Waiting 52 minutes", "Waiting 12 minutes", "Waiting 12 minutes"]);
+    await expect(page.getByTestId("incidents-waiting").locator('[data-drill="true"]')).toHaveCount(1);
+    await expect(page.getByTestId("incidents-waiting").locator('[data-drill="true"]')).toContainText("Drill · Elevator, Power · Acknowledgement");
     // Open threads, the most recently published first.
     const running = page.getByTestId("running-item");
     await expect(running).toHaveCount(2);
@@ -190,10 +193,10 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(closed.nth(2)).toContainText("Withdrawn ");
     await expect(closed.nth(2).getByTestId("closed-final")).toHaveText("Final entry: Sent for the wrong building.");
     await expect(page.getByTestId("incidents-closed").locator("a[href]")).toHaveCount(0);
-    // Drills are in a labelled section of their own and nowhere else.
+    // Drills are in a labelled section of their own, and nowhere else but the queue of what waits for approval.
     await expect(page.getByRole("complementary", { name: "Drills" })).toBeVisible();
     await expect(page.getByTestId("incidents-drills").getByTestId("drill-item")).toHaveCount(4);
-    for (const id of ["incidents-waiting", "incidents-running", "incidents-closed", "incidents-mine"]) await expect(page.getByTestId(id).locator('[data-drill="true"]')).toHaveCount(0);
+    for (const id of ["incidents-running", "incidents-closed", "incidents-mine"]) await expect(page.getByTestId(id).locator('[data-drill="true"]')).toHaveCount(0);
   });
 
   test("gives a Director every open thread to read, and not one link to anything that changes it", async ({ page }) => {
