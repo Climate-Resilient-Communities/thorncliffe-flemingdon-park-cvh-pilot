@@ -93,9 +93,14 @@ describe("search composition (S03.05)", () => {
   });
 
   it("starts no quota check where no monthly limit is configured, and gives both engines the same hook where one is", async () => {
-    const none = await load();
+    const none = await load({ embedMonthlyCalls: null });
     none.app.searchService();
     expect(none.deps().onSpendWritten).toBeUndefined();
+
+    // The search embedding's budget is on by default (SEARCH_EMBED_MONTHLY_CALLS 1000), so a default deployment has the hook.
+    const byDefault = await load();
+    byDefault.app.searchService();
+    expect(byDefault.deps().onSpendWritten).toBeTypeOf("function");
 
     const limited = await load({ translateMonthlyCalls: { [NORTH]: 1000 } });
     limited.app.searchService();
@@ -103,6 +108,16 @@ describe("search composition (S03.05)", () => {
     expect(hook).toBeTypeOf("function");
     limited.app.searchTestSetEngine();
     expect(limited.deps().onSpendWritten).toBe(hook); // one watch per instance: once per model per month
+  });
+
+  it("hands each embedding row of the search model to the embedding budget's watch, after the response", async () => {
+    const { app, deps } = await load({ embedMonthlyCalls: 10 });
+    app.searchService();
+
+    deps().onSpendWritten!({ kind: "embed", purpose: "search", model: "embed-v4.0", releaseV: 3, tokens: 4 });
+    deps().onSpendWritten!({ kind: "embed", purpose: "search", model: "another-embed-model", releaseV: 3, tokens: 4 });
+
+    expect(mocks.after).toHaveBeenCalledTimes(1); // the search model's row only; the count itself runs after the response
   });
 
   it("hands the quota check to after() as a function, which only runs after the response, and runs it at once outside a request", async () => {

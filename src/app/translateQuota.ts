@@ -6,6 +6,13 @@
 // gets one `search.leg_failed` event with reason `translate_quota_near` and the model: once per model per month per
 // instance. The count runs after the response (`defer`), never in a search's time: the hook that starts it returns at once.
 // It is a warning, not a gate: a failed count or a failed event changes nothing for the resident, and the next row tries again.
+//
+// The same watch warns before the search embedding model's month runs out (SEARCH_EMBED_MONTHLY_CALLS, SIT of 2026-10-08): every
+// search makes one embedding call (two on the translated route), so if Cohere's per-model monthly cap applies to the embedding
+// model, reaching it would make every search in every language answer `search_unavailable`. At 80% of the budget ops gets one
+// `search.leg_failed` event with reason `embed_quota_near` and the model. Nothing is refused at the budget: past the vendor's cap
+// its 429s already end the search honestly (`search_unavailable`, and `search.unavailable` `embed_failed` for ops).
+import { EMBED_SPEND_KIND } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
 import { monthlyModelCalls, type SpendEventInput } from "@/modules/spend";
 import { TRANSLATE_SPEND_KIND } from "@/modules/translation";
@@ -23,9 +30,11 @@ export function torontoMonth(now: Date): string {
 }
 
 export interface TranslateQuotaWatchDeps {
+  /** The kind of spend row watched: `translate` (the default) or `embed`. */
+  kind?: string;
   /** The calls a model may use in a month, by model id (SEARCH_TRANSLATE_MONTHLY_CALLS); a model not in it is never counted. */
   limits: Readonly<Record<string, number>>;
-  /** The translate calls the model has used in the month `now` falls in. */
+  /** The calls of that kind the model has used in the month `now` falls in. */
   count: (model: string, now: Date) => Promise<number>;
   /** Tells ops that the model is near its limit. */
   warn: (model: string) => Promise<void>;
@@ -37,10 +46,11 @@ export interface TranslateQuotaWatchDeps {
 /** The hook for `SearchDeps.onSpendWritten`: hand it each spend row; it returns at once, and checks the month after the response. */
 export function createTranslateQuotaWatch(deps: TranslateQuotaWatchDeps): (event: SpendEventInput) => void {
   const now = deps.now ?? (() => new Date());
+  const kind = deps.kind ?? TRANSLATE_SPEND_KIND;
   // Models already warned of this month, as `model:month`. Kept in memory: an instance that starts later may warn again.
   const warned = new Set<string>();
   return (event) => {
-    if (event.kind !== TRANSLATE_SPEND_KIND || !Object.hasOwn(deps.limits, event.model)) return;
+    if (event.kind !== kind || !Object.hasOwn(deps.limits, event.model)) return;
     const limit = deps.limits[event.model]!;
     const at = now();
     const key = `${event.model}:${torontoMonth(at)}`;
@@ -73,5 +83,20 @@ export function translateQuotaWatch(options: { db: () => Db; limits: Readonly<Re
     count: (model, now) => monthlyModelCalls(options.db(), TRANSLATE_SPEND_KIND, model, now),
     // Not a search that failed: no request, so no duration.
     warn: (model) => recordOpsEvent(options.db(), { kind: "search.leg_failed", detail: { reason: "translate_quota_near", ms: 0, model } }),
+  });
+}
+
+/**
+ * The warning before the search embedding model's monthly budget (SEARCH_EMBED_MONTHLY_CALLS): the same watch over the embedding
+ * rows of that one model, every purpose (a publish's and a test-set run's calls are on the same key and model).
+ */
+export function embedQuotaWatch(options: { db: () => Db; model: string; limit: number; defer: TranslateQuotaWatchDeps["defer"]; now?: () => Date }) {
+  return createTranslateQuotaWatch({
+    kind: EMBED_SPEND_KIND,
+    limits: { [options.model]: options.limit },
+    defer: options.defer,
+    now: options.now,
+    count: (model, now) => monthlyModelCalls(options.db(), EMBED_SPEND_KIND, model, now),
+    warn: (model) => recordOpsEvent(options.db(), { kind: "search.leg_failed", detail: { reason: "embed_quota_near", ms: 0, model } }),
   });
 }

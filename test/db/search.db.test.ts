@@ -32,7 +32,7 @@ import {
 import { SPEND_LOCK_KEY } from "@/modules/spend";
 import { recordOpsEvent } from "@/modules/ops";
 import { recordSearchNote } from "../../src/app/searchOps";
-import { translateQuotaWatch } from "../../src/app/translateQuota";
+import { embedQuotaWatch, translateQuotaWatch } from "../../src/app/translateQuota";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
 import { TRANSLATE_FIRST_OFF, TranslateError, cohereTranslator, createQuestionTranslator, type CohereChatClient, type QuestionRoute, type Translator } from "@/modules/translation";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
@@ -858,6 +858,35 @@ describe("search", () => {
         await ask();
         await ask(); // 10 of 10, and over: still the one event
         expect(await rows("ops_event")).toHaveLength(1);
+      });
+
+      it("tells ops the search embedding model is near its monthly budget once (SEARCH_EMBED_MONTHLY_CALLS): every purpose's embedding rows of the model count, another model's do not", async () => {
+        await publish();
+        await sql.unsafe("delete from ops_event; delete from spend_event");
+        const model = fakeQueryEmbedder();
+        const checks: Promise<unknown>[] = [];
+        const watch = embedQuotaWatch({ db: () => app, model: MODEL, limit: 10, defer: (work) => void checks.push(work()) });
+        const ask = async () => {
+          await service(model.embedder, { onSpendWritten: watch }).search({ q: "lawyer", lang: "en" });
+          await Promise.all(checks.splice(0));
+        };
+        // Five calls this month (a publish's among them), three from two months ago, and another model's.
+        for (let i = 0; i < 4; i++) await sql`insert into spend_event (kind, purpose, model, tokens) values ('embed', 'search', ${MODEL}, 4)`;
+        await sql`insert into spend_event (kind, purpose, model, calls, tokens) values ('embed', 'publish', ${MODEL}, 1, 4000)`;
+        for (let i = 0; i < 3; i++) await sql`insert into spend_event (at, kind, purpose, model, tokens) values (now() - interval '62 days', 'embed', 'search', ${MODEL}, 4)`;
+        for (let i = 0; i < 9; i++) await sql`insert into spend_event (kind, purpose, model, tokens) values ('embed', 'search', 'embed-multilingual-v3.0', 4)`;
+
+        await ask();
+        await ask(); // 7 of 10
+        expect(await rows("ops_event")).toEqual([]);
+
+        await ask(); // 8 of 10: 80%
+        expect(await rows("ops_event")).toMatchObject([{ kind: "search.leg_failed", severity: "warning", subject_type: null, subject_id: null, detail: { reason: "embed_quota_near", ms: 0, model: MODEL } }]);
+
+        await ask();
+        await ask(); // 10 of 10: still the one event, and the search still answers (a warning, not a gate)
+        expect(await rows("ops_event")).toHaveLength(1);
+        expect((await rows("search_log")).every((row) => row.status !== "error")).toBe(true);
       });
 
       it("does nothing about a model with no limit configured: no count, no event", async () => {

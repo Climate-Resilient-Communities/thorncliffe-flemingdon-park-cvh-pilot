@@ -10,12 +10,14 @@
 // directory may not import ops, so the app writes the ops event of a search that could not answer, from the reason and
 // the duration the use case hands it; the same for a rate limiter that could not count, and for a search the route cut at
 // its hard deadline. Writes still pending when the
-// response is ready (spend_event, search_log, the ops events) finish after it, through `after()`; so does the count that
-// warns ops when a translation model nears its monthly limit (SEARCH_TRANSLATE_MONTHLY_CALLS).
+// response is ready (spend_event, search_log, the ops events) finish after it, through `after()`; so do the counts that
+// warn ops when a translation model nears its monthly limit (SEARCH_TRANSLATE_MONTHLY_CALLS) and when the search embedding
+// model nears its monthly budget (SEARCH_EMBED_MONTHLY_CALLS).
 import "server-only";
 import { after } from "next/server";
 import { cohereQueryEmbedder, cohereReranker, createSearch, type SearchService } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
+import type { SpendEventInput } from "@/modules/spend";
 import { createRateLimiter, rateLimitKeyFromSecret, type RateLimiter } from "@/modules/subscriptions";
 import { cohereTranslator, createQuestionTranslator, type QuestionRoute, type QuestionTranslator } from "@/modules/translation";
 import { getEnv } from "@/platform/config/env";
@@ -23,11 +25,14 @@ import { getDb } from "@/platform/db";
 import { directoryStorage } from "./directoryRelease";
 import { releaseFileCache } from "./releaseFileCache";
 import { recordSearchNote } from "./searchOps";
-import { translateQuotaWatch } from "./translateQuota";
+import { embedQuotaWatch, translateQuotaWatch } from "./translateQuota";
 
 let service: SearchService | undefined;
 let limiter: RateLimiter | undefined;
 let quotaWatch: ReturnType<typeof translateQuotaWatch> | undefined;
+let embedWatch: ReturnType<typeof embedQuotaWatch> | undefined;
+/** The composed spend hook (`spendWatches`): undefined until it is made, null when no watch is configured. */
+let spendHook: ((event: SpendEventInput) => void) | null | undefined;
 
 /**
  * Finishes `work` after the response is sent (`after()`); outside a request (a script, a test) it simply runs on. Given a
@@ -64,6 +69,33 @@ function translateQuota() {
 }
 
 /**
+ * The hook that warns ops when the search embedding model nears its monthly budget (SEARCH_EMBED_MONTHLY_CALLS, default 1000;
+ * undefined when it is `off`), one per instance like the translation one. A warning only: nothing is refused at the budget.
+ */
+function embedQuota() {
+  const { embedMonthlyCalls, embedModel } = getEnv().search;
+  if (embedMonthlyCalls === null) return undefined;
+  embedWatch ??= embedQuotaWatch({ db: getDb, model: embedModel, limit: embedMonthlyCalls, defer: deferAfterResponse });
+  return embedWatch;
+}
+
+/**
+ * Every spend row of a search is handed to each watch that is configured; undefined when none is. One hook per instance, shared by
+ * the resident search and the test-set engine, so that each warning is made once per model per month.
+ */
+function spendWatches(): ((event: SpendEventInput) => void) | undefined {
+  if (spendHook !== undefined) return spendHook ?? undefined;
+  const watches = [translateQuota(), embedQuota()].filter((watch) => watch !== undefined);
+  spendHook =
+    watches.length === 0
+      ? null
+      : (event) => {
+          for (const watch of watches) watch(event);
+        };
+  return spendHook ?? undefined;
+}
+
+/**
  * The direct route's reranker (Cohere rerank-v3.5, interim tuning arm R2), where a key is configured and SEARCH_RERANK is not
  * `off`, with its relevance bar and monthly limit; nothing otherwise (the direct route then ranks by similarity alone).
  */
@@ -91,7 +123,7 @@ export function searchService(): SearchService {
     fallbackMinBudgetMs: getEnv().search.fallbackMinBudgetMs,
     translateFirstMonthlyCalls: getEnv().search.translateFirstMonthlyCalls,
     defer: deferAfterResponse,
-    onSpendWritten: translateQuota(),
+    onSpendWritten: spendWatches(),
     ...rankingSettings(),
     ...directReranker(),
     onFailure: (note) => recordSearchNote(getDb(), note),
@@ -113,7 +145,7 @@ export function searchTestSetEngine(options: { translatedLeg?: boolean } = {}): 
     embedder: questionEmbedder(),
     translator: options.translatedLeg === false ? null : questionTranslator(null),
     translateFirstMonthlyCalls: getEnv().search.translateFirstMonthlyCalls,
-    onSpendWritten: translateQuota(),
+    onSpendWritten: spendWatches(),
     ...rankingSettings(),
     spendPurpose: "test_set",
     log: false,

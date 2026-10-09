@@ -40,8 +40,8 @@
 //    deadline, whichever comes first; it is made only while the month's rerank calls (spend_event kind `rerank`, counted beside the
 //    embedding, application/rerank.ts) are below SEARCH_RERANK_MONTHLY_CALLS (900), and not for 5 minutes after a 429. On any
 //    failure, timeout, limit or lack of time the question is ranked by the floor and gap as before, silently for the resident; a
-//    failed or timed-out call, and the monthly limit, are told to ops (`search.leg_failed`, `rerank_failed` / `rerank_quota`, with
-//    the model and a class, never the question). `emergency_first` is decided on the legs' similarities as before, never on the
+//    failed or timed-out call, the monthly limit, and a rerank not tried for lack of time or while backing off a 429, are told to
+//    ops (`search.leg_failed`, `rerank_failed` / `rerank_quota` / `rerank_skipped`, with the model and a class, never the question). `emergency_first` is decided on the legs' similarities as before, never on the
 //    rerank, so a rerank cannot hide the 911 block.
 //  - `emergency_first` (owner decision 41, as changed by the interim tuning): set when the best match of either completed leg
 //    is an emergency-category provider at the emergency top threshold, or one is in the top 3 of either leg at the
@@ -200,9 +200,10 @@ export type SearchStageReason = "snapshot_failed" | "embed_failed" | "embed_inva
  * A vendor call of a leg failed while the search still answered (the other leg completed). `translate_quota`: the
  * translation model is past the vendor's limit; `translate_fallback_used`: the fallback model made the translation instead.
  * `rerank_failed`: the direct route's rerank failed or timed out (the question was ranked by similarity instead); `rerank_quota`:
- * the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS, or could not be counted.
+ * the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS, or could not be counted; `rerank_skipped`: the rerank was not tried
+ * (`error` `no_time`: too little of the leg's time was left; `limited`: backing off after a 429).
  */
-export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used" | "rerank_failed" | "rerank_quota";
+export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used" | "rerank_failed" | "rerank_quota" | "rerank_skipped";
 
 /**
  * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
@@ -946,20 +947,28 @@ export function createSearch(deps: SearchDeps): SearchService {
     /**
      * The direct route's rerank (see the header): its results and what it did, or null results when the question is to be ranked
      * by the floor and gap instead. Never throws. The call is counted in spend_event (kind `rerank`, one call) when the vendor
-     * answered or the call was cut at its deadline (it may have been billed), not when the vendor refused it.
+     * answered or the call was cut at its deadline, not when the vendor refused it. A cut call has reached the vendor, and Cohere does
+     * not document whether a request the caller abandons is billed or counted against the model's monthly cap, so it is counted:
+     * the conservative side of SEARCH_RERANK_MONTHLY_CALLS.
      */
     const rerankDirect = async (legs: readonly LegSimilarities[], texts: ReadonlyMap<string, string>): Promise<{ outcome: RerankOutcome; results: SearchHit[] | null }> => {
       const model = reranker!.model;
       const quota = rerankQuota!;
-      if (deadline - clock() < RERANK_MIN_BUDGET_MS) return { outcome: "no_time", results: null };
+      // A rerank that is not even tried (too little time left, or backing off a 429) is told to ops too, as `rerank_skipped`: the
+      // resident gets the floor and gap all the same, and nothing else would show how often that happens.
+      const skipped = (outcome: "no_time" | "limited") => {
+        reportVendorFailure("rerank_skipped", model, outcome);
+        return { outcome, results: null };
+      };
+      if (deadline - clock() < RERANK_MIN_BUDGET_MS) return skipped("no_time");
       const allowance = await quota.check(deadline - clock() - RERANK_MIN_BUDGET_MS);
-      if (allowance === "limited") return { outcome: "limited", results: null };
+      if (allowance === "limited") return skipped("limited");
       if (allowance !== "ok") {
         reportVendorFailure("rerank_quota", model, allowance === "unknown" ? "count_failed" : undefined);
         return { outcome: "quota", results: null };
       }
       const left = deadline - clock();
-      if (left < RERANK_MIN_BUDGET_MS) return { outcome: "no_time", results: null };
+      if (left < RERANK_MIN_BUDGET_MS) return skipped("no_time");
       const candidates = rerankCandidates(legs);
       const documents = candidates.map((hit) => texts.get(hit.provider_id));
       if (candidates.length === 0 || documents.some((text) => text === undefined)) return { outcome: "failed", results: null };

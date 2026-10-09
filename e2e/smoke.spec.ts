@@ -53,6 +53,27 @@ test("staff sign-in is never stored", async ({ request }) => {
   expect(directives).toContain("no-store");
 });
 
+// SIT F3: the security headers, on a resident page and on staff sign-in (which is also never indexed), and robots.txt.
+test("pages carry the security headers, staff pages are noindex, and robots.txt keeps crawlers off the staff surface", async ({
+  request,
+}) => {
+  for (const path of ["/en", "/staff/sign-in"]) {
+    const headers = (await get(request, path)).headers();
+    expect(headers["content-security-policy"] ?? "", path).toContain(
+      "frame-ancestors 'none'",
+    );
+    expect(headers["x-frame-options"], path).toBe("DENY");
+    expect(headers["x-content-type-options"], path).toBe("nosniff");
+    expect(headers["x-powered-by"], path).toBeUndefined();
+  }
+  expect((await get(request, "/staff/sign-in")).headers()["x-robots-tag"]).toBe(
+    "noindex, nofollow",
+  );
+  const robots = await get(request, "/robots.txt");
+  expect(robots.status()).toBe(200);
+  expect(await robots.text()).toMatch(/^Disallow: \/staff$/m);
+});
+
 // One real search in English: it spends a Cohere call, so it runs only where the workflow asks for it (SMOKE_SEARCH=on): the
 // production job (a repository variable SMOKE_SEARCH=off turns it off) and a preview when SMOKE_SEARCH_PREVIEW=on is set. The
 // checks' own smoke of the local build never sets it (no key there). It records the response time and Server-Timing total.

@@ -2,12 +2,18 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { SHARED_CACHE_GUIDES } from "./src/app/guideCache";
 import { LAUNCH_CODES } from "./src/i18n/languages";
+import { readMapTileConfig } from "./src/platform/config/mapTiles";
+import { NO_INDEX, securityHeaders, tileOrigins } from "./src/platform/config/securityHeaders";
 
 const noStore = [{ key: "Cache-Control", value: "no-store" }];
 // S07.06: the one-time web link's page and API carry a token in their address or body: never stored, and the page sends no referrer.
 const subscriptionHeaders = [...noStore, { key: "Referrer-Policy", value: "no-referrer" }];
+// SIT F3: every response's security headers, with the map tile hosts of the same MAP_TILE_* settings the map pages are built with.
+const everyResponse = securityHeaders({ tileOrigins: tileOrigins(readMapTileConfig()), development: process.env.NODE_ENV === "development" });
 
 const nextConfig: NextConfig = {
+  // SIT F3: no `X-Powered-By: Next.js`.
+  poweredByHeader: false,
   env: {
     APP_VERSION: process.env.APP_VERSION ?? "dev",
   },
@@ -15,8 +21,14 @@ const nextConfig: NextConfig = {
   // source version, so the files are shipped with that route's function (S02.05).
   outputFileTracingIncludes: { "/staff/directory": ["./data/catalogue/**/*"] },
   async headers() {
-    // AD-1: nothing on the staff surface may be stored by a browser or a cache.
+    // When two rules set the same header on a path, the later one wins: the site-wide rule comes first, so the subscription rules
+    // below replace its Referrer-Policy with no-referrer.
     return [
+      { source: "/:path*", headers: everyResponse },
+      // SIT F3: the staff surface and the API are never indexed (robots.txt says the same, src/app/robots.ts).
+      { source: "/staff/:path*", headers: [NO_INDEX] },
+      { source: "/api/:path*", headers: [NO_INDEX] },
+      // AD-1: nothing on the staff surface may be stored by a browser or a cache.
       { source: "/staff/:path*", headers: noStore },
       { source: "/api/staff/:path*", headers: noStore },
       // S02.08 / NFR-N7: a building page is public and the same for everyone, so a shared cache may keep it for five

@@ -141,6 +141,8 @@ test("text starts at the edge its own direction says: English blocks at the left
   // page's own, with Urdu text and no lang or dir of its own (a translated block inherits both from the page).
   const translatedLine = async () => {
     await openResident(page, "/ur/terms", 390);
+    // Only once the page is hydrated: a node added before that is dropped when React takes over the server's HTML.
+    await page.waitForLoadState("networkidle");
     await page.evaluate(() => {
       const line = document.querySelector("main p.terms-line")!;
       const probe = line.cloneNode(false) as HTMLElement;
@@ -150,6 +152,7 @@ test("text starts at the edge its own direction says: English blocks at the left
       probe.textContent = "ہم آپ کا فون نمبر محفوظ رکھتے ہیں اور آپ کی زبان اور آپ کا محلہ بھی محفوظ رکھتے ہیں تاکہ پیغام صحیح جگہ پہنچے۔";
       line.before(probe);
     });
+    await expect(page.locator("#translated-probe")).toBeAttached();
     return edges("/ur/terms#probe", "#translated-probe", false);
   };
   const english = {

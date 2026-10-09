@@ -170,6 +170,45 @@ describe("the translation quota warning", () => {
   });
 });
 
+describe("the search embedding budget warning (SEARCH_EMBED_MONTHLY_CALLS)", () => {
+  const EMBED = "embed-v4.0";
+  const embedOf = (model: string, purpose: SpendEventInput["purpose"] = "search"): SpendEventInput => ({ kind: "embed", purpose, model, releaseV: 3, tokens: 7 });
+
+  function embedWatch(calls: number) {
+    const count = vi.fn(async () => calls);
+    const warn = vi.fn<(model: string) => Promise<void>>(async () => undefined);
+    const pending: (() => Promise<unknown>)[] = [];
+    const onSpend = createTranslateQuotaWatch({ kind: "embed", limits: { [EMBED]: 1000 }, count, warn, defer: (work) => void pending.push(work), now: () => new Date("2026-10-15T15:00:00Z") });
+    const afterResponse = async () => void (await Promise.all(pending.splice(0).map((w) => w())));
+    return { onSpend, count, warn, afterResponse };
+  }
+
+  it("watches the embedding rows of the search model only: not translations, not another embedding model", async () => {
+    const w = embedWatch(999);
+    w.onSpend(translateRow(EMBED));
+    w.onSpend(embedOf("embed-multilingual-v3.0"));
+    await w.afterResponse();
+    expect(w.count).not.toHaveBeenCalled();
+    expect(w.warn).not.toHaveBeenCalled();
+  });
+
+  it("is silent at 799 of 1000 and warns once at 800, after the response", async () => {
+    const below = embedWatch(799);
+    below.onSpend(embedOf(EMBED));
+    await below.afterResponse();
+    expect(below.count).toHaveBeenCalledWith(EMBED, new Date("2026-10-15T15:00:00Z"));
+    expect(below.warn).not.toHaveBeenCalled();
+
+    const at = embedWatch(800);
+    at.onSpend(embedOf(EMBED));
+    expect(at.count).not.toHaveBeenCalled(); // not in the search's time
+    await at.afterResponse();
+    at.onSpend(embedOf(EMBED));
+    await at.afterResponse();
+    expect(at.warn.mock.calls).toEqual([[EMBED]]);
+  });
+});
+
 describe("torontoMonth", () => {
   it("names the calendar month in America/Toronto, across the clock changes", () => {
     expect(torontoMonth(new Date("2026-10-15T15:00:00Z"))).toBe("2026-10");

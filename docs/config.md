@@ -13,10 +13,10 @@ are in `src/platform/config/env.ts`.
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | no | the Supabase project | yes |
 | `PUBLIC_BASE_URL` | no | `https://project-6qcs4.vercel.app` | yes |
 | `STAFF_PASSWORD_PEPPER` | yes | 32+ random bytes (`openssl rand -hex 32`); never change it once staff exist | 2026-10-02 |
-| `SMS_MODE` | no | `live` (production only) | in progress |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 that residents are told to text START to (R-06, S07.02). The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
-| `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`, `/api/jobs/subscriber-measures`, `/api/jobs/campaign-end`, `/api/jobs/end-of-pilot-purge`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | 2026-10-06 |
+| `SMS_MODE` | no | `live` (production only) | set by 2026-10-06 (SIT 2026-10-08: present, Production only; the value was not read, so the owner confirms it is `live`) |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 that residents are told to text START to (R-06, S07.02). The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | set by 2026-10-06 (SIT 2026-10-08: present, Production only; `/api/twilio/status` and `/api/twilio/inbound` answer 403 to an unsigned POST, so the token is read). Untested: toll-free verification is pending |
+| `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | set by 2026-10-06 (SIT 2026-10-08: present, Production only). Untested: toll-free verification is pending |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`, `/api/jobs/subscriber-measures`, `/api/jobs/campaign-end`, `/api/jobs/end-of-pilot-purge`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | 2026-10-06 (SIT 2026-10-08: all eight job routes answer 401 without it, not 503) |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. The code lock is released as of E05 (`RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is true), so `true` now starts in production and turns the gate on. The switch is only this Vercel variable: an Admin sets it with a production redeploy and records it in the launch-readiness checklist. Previews and local development run with it on unless it is `false` | default (off) |
@@ -27,7 +27,7 @@ are in `src/platform/config/env.ts`.
 | `EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH` | no | `1000000` | 2026-10-02 |
 | `SPEND_PILOT_BUDGET_CENTS` | no | the pilot's budget in whole cents CAD that the Spend page (S07.08) shows spending against: a whole number of at least 1; default `100000` (CAD 1,000). It is a figure to show, not a limit: the monthly cap an Admin sets on the Hub is stored in the database (`spend_cap`). Any environment may set it | default |
 | `SPEND_TOKEN_ESTIMATE_CAD_PER_MILLION` | no | an estimate rate, in dollars (CAD) per million tokens, for Cohere usage whose price is unknown (S07.08): a positive number with at most four decimals, at most 10000. Unset, such usage is shown on the Spend page as "price unknown" with its calls and tokens and is left out of the totals (which then say so); set, it is shown as a labelled estimate and counted. Not a `COHERE_` variable (it is no credential), so any environment may set it | not set |
-| `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | not yet |
+| `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | set by 2026-10-02 (SIT 2026-10-08: present, Production only, and live searches answered). Whether a spend limit is set on the key cannot be seen from the app: the owner confirms it in Cohere's dashboard |
 | `SEARCH_THRESHOLD` | no | the score (0 to 1) below which a question has no clear match on the ranking's hybrid route (English questions, and those the translated-question leg answered: the score is the similarity plus the keyword boost). Recorded on each release when it is published, so a new value reaches search only with the next release (Publish copies the vectors; no new embedding). Default `0.27` (interim tuning, 2026-10-07, `data/search-test-set/reports/2026-10-07-interim-tuning.md`; provisional, confirmed or revised by S03.08 on the ambassadors' questions; it was `0.3`) | default |
 | `SEARCH_EMBED_MODEL` | no | default `embed-v4.0` | default |
 | `SEARCH_EMERGENCY_CATEGORIES` | no | default `Support & Emergency Services` | default |
@@ -44,6 +44,7 @@ are in `src/platform/config/env.ts`.
 | `SEARCH_RERANK` | no | `on` or `off`: whether a question in another language that takes no translated leg (the direct route: es, fr, zh, tl, ta, pa, bn, gu, hi, el, sk… in their own script) has its 20 best providers by similarity reranked with Cohere `rerank-v3.5` (interim tuning arm R2). Applies only where `COHERE_API_KEY` is set (production). Default `on`. On any failure the question is ranked by `SEARCH_DIRECT_FLOOR` and `SEARCH_DIRECT_GAP`. See "The direct route's reranker" below | default |
 | `SEARCH_RERANK_MIN` | no | the least rerank relevance (0 to 1, the model's own scale) a reranked provider needs to be a result. Default `0.05`. Read at search time | default |
 | `SEARCH_RERANK_MONTHLY_CALLS` | no | the rerank calls (a whole number of at least 1) a calendar month (America/Toronto) may use, counted from `spend_event` rows of kind `rerank` (every purpose); at it the reranker is not called again that month and direct-route questions are ranked by floor and gap. Default `900`: Cohere allows about 1,000 calls a month per model, paid keys too | default |
+| `SEARCH_EMBED_MONTHLY_CALLS` | no | the embedding calls of the search model (`SEARCH_EMBED_MODEL`) a calendar month (America/Toronto) is budgeted, counted from `spend_event` rows of kind `embed` of that model, every purpose (searches, publishes, test-set runs), or `off`. Default `1000`, the per-model monthly cap Cohere applies to the other models on the key (whether it applies to `embed-v4.0` too is not confirmed). A warning only: at 80% ops gets one `search.leg_failed` `embed_quota_near`; nothing is refused. See "The search embedding's monthly budget" below | default |
 | `SEARCH_CRISIS_PHRASES` | no | `on` or `off`: whether a question that describes an emergency in words (someone not breathing or unconscious, a heart attack or stroke, choking, severe bleeding, an overdose, suicide or self-harm, fire or smoke in a home, a gas leak or carbon monoxide, a flood, a car accident, an assault or a weapon, a break-in, a missing child, "call an ambulance / the police / 911") puts the 911 block first (`emergency_first`), whatever the ranking found. The phrases are in `src/modules/directory/domain/crisisPhrases.ts`, in English (also read in the English translation of a translated question) and every launch language; every list but English is machine-assisted and is checked by native readers before launch ([launch checklist](procedures/launch-checklist.md)). It only ever turns the flag on and never changes the results. Default `on`; `off` is for measuring the ranking alone. Read at search time | default |
 
 | `MAP_TILE_URL` | no (the CARTO key in it is a public browser key, but it is not stored in the repository) | `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=…` (CARTO Positron, confirmed by IT); production and preview. The code's keyless default is a fallback whose legacy access ends 2026-11-30 | 2026-10-02 |
@@ -94,13 +95,60 @@ providers most similar to it (the texts their vectors were made from) to `rerank
 reranked, and `emergency_first` is decided on the similarities as before, so the rerank cannot hide the 911 block.
 
 It runs inside the search's 2.2 s: only when at least 0.3 s is left after the embedding, and cut at 1.2 s or at the deadline. Each call
-is one `spend_event` row (kind `rerank`, `calls` 1, `tokens` 0: the vendor bills rerank per call). Each instance counts the model's rows of
+is one `spend_event` row (kind `rerank`, `calls` 1, `tokens` 0: the vendor bills rerank per call). A call cut at its deadline is counted
+too: it reached the vendor, and Cohere does not document whether a request the caller abandons is billed or counted against the
+model's monthly cap, so the app counts it (the conservative side of the limit below; Cohere's dashboard is the real figure). A 429 is
+not counted, and neither is a rerank that was never called. Each instance counts the model's rows of
 the month at most every 30 s, beside the embedding (no search waits for it), and adds its own calls in between; at
 `SEARCH_RERANK_MONTHLY_CALLS` it stops calling. After a 429 it does not call for 5 minutes. On a timeout, a failure, a 429, the limit
 or too little time, the resident gets the floor-and-gap ranking with no sign of it; ops gets `search.leg_failed` with reason
-`rerank_failed` (and `error` `timed_out`, `rerank_failed:limited`, …) or `rerank_quota` (`error` `count_failed` when the month could
-not be counted), once a minute per reason and model. The phase shows as `rerank` in the search's `Server-Timing`. `SEARCH_RERANK=off`
+`rerank_failed` (and `error` `timed_out`, `rerank_failed:limited`, …), `rerank_quota` (`error` `count_failed` when the month could
+not be counted) or, when the rerank was not tried at all, `rerank_skipped` (`error` `no_time`: less than 0.3 s of the leg was left after
+the embedding; `limited`: backing off after a 429), once a minute per reason and model. None of them holds the question. (Until the
+SIT of 2026-10-08, finding F4, a skipped rerank wrote nothing: a slow embedding left residents with the floor and gap unseen.) The phase shows as `rerank` in the search's `Server-Timing`. `SEARCH_RERANK=off`
 switches it off at the next deployment. The search test-set runner does not rerank (its plan counts embedding and translation calls only).
+
+## The search embedding's monthly budget
+
+Every search makes one embedding call with `SEARCH_EMBED_MODEL` (`embed-v4.0`), two on the translated route; a publish makes a few
+more. If Cohere's per-model monthly cap (about 1,000 calls, paid keys too: seen on North Small Translate and assumed for the reranker)
+also applies to the embedding model on the production key, reaching it would make **every** search in every language answer
+`search_unavailable` until the month ends (and stop a publish). Whether it applies to embeddings is not confirmed: ask Cohere, and check
+the dashboard's usage of `embed-v4.0` once a month (SIT of 2026-10-08, observation O2; 266 calls in the first 8 days of October, almost
+all testing).
+
+`SEARCH_EMBED_MONTHLY_CALLS` (default `1000`) is that budget. Each time a search writes an embedding `spend_event` row of the model, the
+month's rows of the model (America/Toronto, every purpose: searches, publishes and test-set runs share the key) are counted after the
+response, and at 80% of the budget ops gets one `ops_event` `search.leg_failed` with reason `embed_quota_near` and the model (`ms` 0),
+once per month per instance. It is a warning only: the app refuses nothing at the budget. Past the vendor's cap the embedding answers
+429, and the search fails honestly as it does today: the resident sees search unavailable (the directory still works) and ops gets
+`search.unavailable` `embed_failed` with the vendor class. An app-side stop before the vendor's cap would only move that outage
+earlier; it would be worth having only to keep embedding calls for a publish, which is the product owner's call once Cohere says
+whether the cap applies. If Cohere confirms no cap on embeddings, set `SEARCH_EMBED_MONTHLY_CALLS` to the plan's real limit, or `off`.
+
+## Security headers and robots.txt
+
+Every response carries (`next.config.ts`, from `src/platform/config/securityHeaders.ts`; SIT of 2026-10-08, finding F3):
+`Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin` (the subscription pages and API keep `no-referrer`: their address holds a token) and
+`Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()` (the map never asks for the phone's location). There
+is no `X-Powered-By`. The staff surface and the API also answer `X-Robots-Tag: noindex, nofollow`, and `/robots.txt`
+(`src/app/robots.ts`) allows `/` and disallows `/staff` and `/api/`.
+
+The policy: `default-src 'self'`; scripts and styles from the app's origin plus inline ones (Next.js writes its own inline scripts, the
+resident layout has one inline boot script, React and Leaflet set inline styles; a nonce would make every prerendered and shared-cache
+page dynamic); images from the origin, `data:` (the authenticator's QR code, CSS masks), `blob:` (a map tile kept on the phone) and the
+map tile hosts; fetches to the origin and the map tile hosts (the map fetches tiles to keep them); fonts, workers and the manifest from
+the origin; no frame, plugin or `<base>` elsewhere, forms post only to the origin, and `frame-ancestors 'none'`. The tile hosts are
+worked out from the same `MAP_TILE_*` settings the map pages are built with, so a change of provider changes the policy at the same
+deploy: production's keyed CARTO URL gives `https://basemaps.cartocdn.com`, the keyless fallback `https://a.basemaps.cartocdn.com` to
+`d.`. The browser talks to nothing else: Supabase, Cohere and Twilio are called by the server only, and there is no analytics script.
+`next dev` adds `'unsafe-eval'` (React needs it in development). Zod is told not to probe for eval in the browser
+(`src/instrumentation-client.ts`), which the policy would otherwise report on every page. The Vercel toolbar on preview deployments is
+blocked by the policy (it loads from `vercel.live`); that is accepted, nothing of the app depends on it.
+
+`e2e/resident/security.spec.ts` and `e2e/staff/security.spec.ts` load the pages, the map with its tiles and the service worker and fail
+on any policy violation; `e2e/smoke.spec.ts` checks the headers and robots.txt after every production deploy.
 
 ## Messaging outbox (S06.01)
 
@@ -579,7 +627,7 @@ drill's, a closed thread's or one whose types are no longer round types), so ass
 
 | Environment | Secrets and variables | Rules |
 |---|---|---|
-| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
+| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: set, confirmed by the SIT on 2026-10-08); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: set, confirmed by the SIT on 2026-10-08) | deploys from `main` only |
 | `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for open pull requests of this repository that carry the label `preview` |
 | `search-guard` | `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY`, `SUPABASE_SECRET_KEY` (the same values as `production`'s); variable `NEXT_PUBLIC_SUPABASE_URL`, and the optional `SEARCH_*` and `SEARCH_TEST_*` variables below. Not created yet: create it before the Hub approves the launch bar (S03.08) | required reviewer: the owner (each measurement of a pull request waits for approval: it spends Cohere calls and runs the branch's code with the key); deployment branches: all |
 
