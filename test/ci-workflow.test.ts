@@ -333,8 +333,24 @@ describe("the checks jobs", () => {
       );
     }
     expect(all[stepIndex(all, /actions\/upload-artifact/)]).toMatch(
-      /if: failure\(\)/,
+      /if: \$\{\{ failure\(\) \|\| cancelled\(\) \}\}/,
     );
+  });
+
+  it("run both screenshot suites even after an earlier failure, each in its own output folder, so one run uploads every difference", () => {
+    const all = steps(job("browser", checksWorkflow));
+    const root = path.join(__dirname, "..");
+    for (const suite of ["resident", "hub"]) {
+      expect(all[stepIndex(all, new RegExp(`npm run test:${suite}:docker`))], suite).toMatch(/if: \$\{\{ !cancelled\(\) \}\}/);
+      expect(readFileSync(path.join(root, `playwright.${suite}.config.ts`), "utf8"), suite).toMatch(
+        new RegExp(`outputDir: "test-results/${suite}"`),
+      );
+      // Soft, never skipped: a mismatch still fails the test (and so this job), after the test's later screenshots are taken.
+      const helpers = readFileSync(path.join(root, "e2e", suite, "helpers.ts"), "utf8");
+      expect(helpers, suite).toMatch(/await expect\.soft\(page\)\.toHaveScreenshot\(/);
+      expect(helpers, suite).not.toMatch(/continue-on-error|test\.fail|\.skip\(|ignoreSnapshots/);
+    }
+    expect(all[stepIndex(all, /actions\/upload-artifact/)]).toMatch(/path: test-results\/$/m);
   });
 
   it("never run the one real search (no SMOKE_SEARCH): the build has no Cohere key", () => {

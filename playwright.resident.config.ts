@@ -28,6 +28,9 @@ export default defineConfig({
   testDir: "./e2e/resident",
   // Baseline screenshots (S02.02): one per language and width, stored beside the specs and committed.
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",
+  // A folder of its own: CI runs the Hub suite after this one even when this one failed, and each run empties its outputDir first,
+  // so the -actual images of both reach the browser-test-results artifact (docs/config.md, "Screenshot baselines").
+  outputDir: "test-results/resident",
   expect: {
     toHaveScreenshot: {
       animations: "disabled",
