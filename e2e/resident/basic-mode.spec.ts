@@ -102,6 +102,40 @@ test.describe("display settings (X-07)", () => {
     }
   });
 
+  // A page whose render ends in notFound() (a building the register does not have, a path with no page) is not drawn by the server:
+  // Next sends a document of its own (<html id="__next_error__">, an empty body) and React draws the page in the browser, replacing
+  // every attribute of <html> as it does. The boot script must be in that document's <head> too, and the attribute must be back by
+  // the time React has put the header in: at the end of every task (the only time the browser may paint), never a header without it.
+  test("a 404 page with basic mode saved is in basic mode from its first paint", async ({ page }) => {
+    type Seen = { setBeforeBody: boolean | null; headerWithout: number; firstButtonHeight: number | null };
+    await phoneHolds(page, { basic: true });
+    await page.addInitScript(() => {
+      const w = window as unknown as { __seen: Seen };
+      w.__seen = { setBeforeBody: null, headerWithout: 0, firstButtonHeight: null };
+      // A MutationObserver's callback runs at the end of the task that changed the document, before the browser can paint it.
+      new MutationObserver(() => {
+        const root = document.documentElement;
+        if (!root) return;
+        const basic = root.getAttribute("data-basic") === "true";
+        if (basic && w.__seen.setBeforeBody === null) w.__seen.setBeforeBody = document.body === null;
+        const button = document.querySelector('[data-testid="shell-lang-button"]');
+        if (!button) return;
+        if (!basic) w.__seen.headerWithout += 1;
+        if (w.__seen.firstButtonHeight === null) w.__seen.firstButtonHeight = button.getBoundingClientRect().height;
+      }).observe(document, { attributes: true, childList: true, subtree: true });
+    });
+    for (const path of ["/ta/buildings/700000041", "/ta/no-such-page", "/ur/ready/no-such-guide", "/en/no/such/page"]) {
+      const response = await page.goto(path);
+      expect(response!.status(), path).toBe(404);
+      await expect(page.locator("main h1")).toHaveText(catalogText(path.split("/")[1], "shell.pageNotFound"));
+      const seen = await page.evaluate(() => (window as unknown as { __seen: Seen }).__seen);
+      expect(seen.setBeforeBody, `${path}: the boot script set the attribute in <head>, before the body was parsed`).toBe(true);
+      expect(seen.headerWithout, `${path}: times the header was in the document without basic mode`).toBe(0);
+      expect(seen.firstButtonHeight, `${path}: the language button the first time the header was in the document`).toBeGreaterThanOrEqual(56);
+      expect(await htmlBasic(page)).toBe("true");
+    }
+  });
+
   test("a saved value that is not exactly true leaves the page in normal mode", async ({ page }) => {
     for (const raw of ['{"v":1,"basic":"true"}', '{"v":1,"basic":1}', '{"v":2,"basic":true}', "not json", '{"v":1,"basic":false}']) {
       await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [CHOICES, raw] as const);

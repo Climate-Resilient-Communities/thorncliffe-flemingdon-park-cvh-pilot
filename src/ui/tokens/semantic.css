@@ -85,6 +85,7 @@
   --type-h3-size: var(--app-fs-h3);
   --type-h2-size: var(--app-fs-h2);
   --type-h1-size: var(--app-fs-h1);
+  --type-nav-size: var(--app-fs-nav);
   --type-family-sans: var(--app-font-sans);
   --type-body-line-height: var(--app-lh-body);
   --type-tight-line-height: var(--app-lh-h2);

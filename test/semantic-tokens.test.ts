@@ -86,6 +86,7 @@ const SEMANTIC_TOKENS: [string, string, string][] = [
   ["--type-h3-size", "--app-fs-h3", "20px"],
   ["--type-h2-size", "--app-fs-h2", "23px"],
   ["--type-h1-size", "--app-fs-h1", "27px"],
+  ["--type-nav-size", "--app-fs-nav", "14px"],
   ["--type-family-sans", "--app-font-sans", '"Public Sans", Calibri, Carlito, Arial, sans-serif'],
   ["--type-body-line-height", "--app-lh-body", "var(--lh-body)"],
   ["--type-tight-line-height", "--app-lh-h2", "var(--lh-tight)"],

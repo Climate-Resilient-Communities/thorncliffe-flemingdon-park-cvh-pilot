@@ -46,7 +46,7 @@ const BUILD_TIME = [
 
 // Semantic type tokens (section 3.4): role -> which line height it takes. Each role is --type-{role}-size
 // (and --text-{role} in Tailwind); the line heights are --type-body-line-height and --type-tight-line-height.
-const TYPE_ROLES = { caption: "body", body: "body", alert: "body", lead: "body", h3: "tight", h2: "tight", h1: "tight" };
+const TYPE_ROLES = { caption: "body", body: "body", alert: "body", lead: "body", h3: "tight", h2: "tight", h1: "tight", nav: "tight" };
 
 // Arabic-script text uses body 1.9 / tight 1.6 on staff screens too, so lh-body-arabic also replaces
 // lh-body-staff (owner decision of 2026-10-02, section 11); Indic and Chinese keep lh-body-staff.

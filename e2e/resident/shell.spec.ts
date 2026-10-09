@@ -124,6 +124,112 @@ for (const code of ["en", "ur"] as const) {
   }
 }
 
+// How the bottom navigation's labels wrap (design owner, 2026-10-09): at the nav's own type size (--type-nav-size: 14px, 16px with large
+// text or in basic mode), a label stays inside its item, so it never overflows its column or overlaps a neighbour, and it wraps between
+// words. A word breaks inside only when that word alone, unbroken, is wider than the label's column. Words are the language's own
+// (Intl.Segmenter), so a break between two Chinese words is a break between words; lines are found from the boxes of the label's
+// graphemes. Every language, at 320 and 390 px, with standard text, large text and basic mode. The breaks inside a word that remain are
+// recorded as annotations of the test ("inside a word"), so a run lists them.
+type Box = { left: number; right: number; top: number; bottom: number };
+type LabelLayout = {
+  label: string;
+  fontSize: number;
+  item: Box;
+  text: Box;
+  column: number;
+  breaks: { insideWord: string | null; wordWidth: number }[];
+};
+
+async function navLabelLayout(page: Page): Promise<LabelLayout[]> {
+  return page.evaluate(() => {
+    const lang = document.documentElement.lang;
+    const words = new Intl.Segmenter(lang, { granularity: "word" });
+    const graphemes = new Intl.Segmenter(lang, { granularity: "grapheme" });
+    const box = (rect: DOMRect) => ({ left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
+    return [...document.querySelectorAll('[data-testid="shell-nav"] a')].map((item) => {
+      const label = item.querySelector<HTMLElement>(".shell-nav__label")!;
+      const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+      const nodes: Text[] = [];
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node as Text);
+      if (nodes.length !== 1) throw new Error(`a navigation label is one text node, not ${nodes.length}: ${label.textContent}`);
+      const node = nodes[0];
+      const text = node.data;
+      const rectOf = (start: number, end: number) => {
+        const range = document.createRange();
+        range.setStart(node, start);
+        range.setEnd(node, end);
+        return range.getBoundingClientRect();
+      };
+      // The start of every line after the first: a grapheme whose box is below the one before it.
+      const lineStarts: number[] = [];
+      let previous: DOMRect | null = null;
+      for (const { index, segment } of graphemes.segment(text)) {
+        if (/^\s+$/.test(segment)) continue;
+        const current = rectOf(index, index + segment.length);
+        if (previous && current.top >= previous.bottom - current.height / 2) lineStarts.push(index);
+        previous = current;
+      }
+      // The width of a broken word set on one line in the label's own font.
+      const probe = document.createElement("span");
+      probe.style.whiteSpace = "nowrap";
+      probe.style.position = "absolute";
+      label.append(probe);
+      const segments = [...words.segment(text)];
+      const breaks = lineStarts.map((at) => {
+        const word = segments.find(({ index, segment }) => index < at && at < index + segment.length);
+        if (!word) return { insideWord: null, wordWidth: 0 };
+        probe.textContent = word.segment;
+        return { insideWord: word.segment, wordWidth: probe.getBoundingClientRect().width };
+      });
+      probe.remove();
+      const style = getComputedStyle(label);
+      const whole = document.createRange();
+      whole.selectNodeContents(label);
+      return {
+        label: text,
+        fontSize: parseFloat(style.fontSize),
+        item: box(item.getBoundingClientRect()),
+        text: box(whole.getBoundingClientRect()),
+        column: label.getBoundingClientRect().width,
+        breaks,
+      };
+    });
+  });
+}
+
+for (const language of LANGUAGES) {
+  for (const mode of DISPLAY_MODES) {
+    test(`${language.code}, ${mode.name}: the navigation labels stay in their columns at the nav size, and break inside a word only when it is wider than the column`, async ({ page }) => {
+      await page.addInitScript(([key, value]) => localStorage.setItem(key, value), ["cvh.choices", JSON.stringify({ v: 1, welcomed: true, ...mode.choices })] as const);
+      await openResident(page, `/${language.code}`, 390);
+      expect(await page.locator("html").getAttribute("data-basic")).toBe(mode.basic ? "true" : null);
+      const navSize = mode.name === "standard text" ? 14 : 16;
+      for (const width of [320, 390] as const) {
+        await page.setViewportSize({ width, height: HEIGHTS[width] });
+        const labels = await navLabelLayout(page);
+        expect(labels).toHaveLength(4);
+        for (const [index, label] of labels.entries()) {
+          const where = `${width}px, "${label.label}"`;
+          expect(label.fontSize, `${where}: font size`).toBeGreaterThanOrEqual(navSize);
+          expect(label.text.left, `${where}: inside its item (start)`).toBeGreaterThanOrEqual(label.item.left - 0.5);
+          expect(label.text.right, `${where}: inside its item (end)`).toBeLessThanOrEqual(label.item.right + 0.5);
+          expect(label.text.bottom, `${where}: inside its item (bottom)`).toBeLessThanOrEqual(label.item.bottom + 0.5);
+          const next = labels[index + 1];
+          if (next) {
+            const apart = Math.max(next.text.left - label.text.right, label.text.left - next.text.right);
+            expect(apart, `${where}: apart from "${next.label}"`).toBeGreaterThanOrEqual(0);
+          }
+          for (const { insideWord, wordWidth } of label.breaks) {
+            if (insideWord === null) continue;
+            expect(wordWidth, `${where}: "${insideWord}" is broken inside, so alone it is wider than its column (${label.column.toFixed(1)}px)`).toBeGreaterThan(label.column);
+            test.info().annotations.push({ type: "inside a word", description: `${language.code}, ${mode.name}, ${width}px: "${insideWord}" (${wordWidth.toFixed(1)}px in a ${label.column.toFixed(1)}px column)` });
+          }
+        }
+      }
+    });
+  }
+}
+
 test("every right-to-left page sets dir=rtl, and no other does", async ({ page }) => {
   const dirs: Record<string, string | null> = {};
   for (const { code } of LANGUAGES) {

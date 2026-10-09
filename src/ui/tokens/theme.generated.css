@@ -67,6 +67,8 @@
   --text-h2--line-height: var(--type-tight-line-height);
   --text-h1: var(--type-h1-size);
   --text-h1--line-height: var(--type-tight-line-height);
+  --text-nav: var(--type-nav-size);
+  --text-nav--line-height: var(--type-tight-line-height);
 
   /* Radius (rounded-card). `reference` keeps Tailwind from emitting these as variables, so
      --radius-card: var(--radius-card) is never declared and cannot be circular. */
