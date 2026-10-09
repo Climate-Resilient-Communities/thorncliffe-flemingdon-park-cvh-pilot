@@ -6,7 +6,7 @@ window.CVH_STRINGS.es = {
    days7: { mon: 'lunes', tue: 'martes', wed: 'miércoles', thu: 'jueves', fri: 'viernes', sat: 'sábado', sun: 'domingo' } },
  shell: { cvhName: 'Centro Virtual Comunitario', prototype: 'Prototipo', prototypeNote: 'No es un servicio real. Todo el contenido fue generado con IA.',
    language: 'Idioma', changeLanguage: 'Cambiar idioma', languageTitle: 'Elija su idioma', languageCurrent: 'Se muestra ahora', languageReturn: 'La pantalla se queda donde estaba.',
-   choices: 'Lo que le he dicho al CVH', choicesShort: 'Mis opciones', nav: { now: 'Ahora', help: 'Buscar ayuda', map: 'Mapa', ready: 'Estar listo' }, navLabel: 'Principal',
+   choices: 'Lo que le he dicho al CVH', choicesShort: 'Mis opciones', nav: { now: 'Alertas', help: 'Buscar ayuda', map: 'Mapa', ready: 'Prepararse' }, navLabel: 'Principal',
    close: 'Cerrar', back: 'Atrás', next: 'Continuar', skip: 'Omitir', done: 'Listo', cancel: 'Cancelar', more: 'Más',
    notInPrototype: 'No está en este prototipo', notInPrototypeBody: 'Esta parte no está construida en el prototipo. No cambió nada.', ok: 'De acuerdo',
    about: 'Acerca del CVH', aboutBody: 'El Centro Virtual Comunitario lo gestiona Thorncliffe Park Community Hub para Thorncliffe Park y Flemingdon Park.', builtBy: 'Creado con Sprout Climate',

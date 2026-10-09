@@ -6,7 +6,7 @@ window.CVH_STRINGS.prs = {
    days7: { mon: 'دوشنبه', tue: 'سه‌شنبه', wed: 'چهارشنبه', thu: 'پنج‌شنبه', fri: 'جمعه', sat: 'شنبه', sun: 'یکشنبه' } },
  shell: { cvhName: 'مرکز مجازی اجتماعی', prototype: 'نمونه آزمایشی', prototypeNote: 'این یک خدمت واقعی نیست. تمام محتوا با هوش مصنوعی ساخته شده است.',
    language: 'زبان', changeLanguage: 'تغییر زبان', languageTitle: 'زبان خود را انتخاب کنید', languageCurrent: 'اکنون نمایش داده می‌شود', languageReturn: 'صفحه در همان جایی که بودید می‌ماند.',
-   choices: 'آنچه به CVH گفته‌ام', choicesShort: 'انتخاب‌های من', nav: { now: 'اکنون', help: 'یافتن کمک', map: 'نقشه', ready: 'آماده باشید' }, navLabel: 'اصلی',
+   choices: 'آنچه به CVH گفته‌ام', choicesShort: 'انتخاب‌های من', nav: { now: 'هشدارها', help: 'یافتن کمک', map: 'نقشه', ready: 'آماده باشید' }, navLabel: 'اصلی',
    close: 'بستن', back: 'برگشت', next: 'ادامه', skip: 'رد کردن', done: 'انجام شد', cancel: 'لغو', more: 'بیشتر',
    notInPrototype: 'در این نمونه نیست', notInPrototypeBody: 'این بخش در نمونه ساخته نشده است. چیزی تغییر نکرد.', ok: 'خوب',
    about: 'درباره CVH', aboutBody: 'مرکز مجازی اجتماعی را Thorncliffe Park Community Hub برای تورنکلیف پارک و فلمینگدن پارک اداره می‌کند.', builtBy: 'ساخته شده با Sprout Climate',

@@ -6,7 +6,7 @@ window.CVH_STRINGS.ta = {
    days7: { mon: 'திங்கள்', tue: 'செவ்வாய்', wed: 'புதன்', thu: 'வியாழன்', fri: 'வெள்ளி', sat: 'சனி', sun: 'ஞாயிறு' } },
  shell: { cvhName: 'சமூக மெய்நிகர் மையம்', prototype: 'முன்மாதிரி', prototypeNote: 'இது உண்மையான சேவை அல்ல. எல்லா உள்ளடக்கமும் AI மூலம் உருவானது.',
    language: 'மொழி', changeLanguage: 'மொழியை மாற்று', languageTitle: 'உங்கள் மொழியைத் தேர்ந்தெடுங்கள்', languageCurrent: 'இப்போது காட்டப்படுவது', languageReturn: 'நீங்கள் இருந்த இடத்திலேயே திரை இருக்கும்.',
-   choices: 'நான் CVH-இடம் சொன்னவை', choicesShort: 'என் தேர்வுகள்', nav: { now: 'இப்போது', help: 'உதவி தேடு', map: 'வரைபடம்', ready: 'தயாராக இரு' }, navLabel: 'முதன்மை',
+   choices: 'நான் CVH-இடம் சொன்னவை', choicesShort: 'என் தேர்வுகள்', nav: { now: 'எச்சரிக்கை', help: 'உதவி தேடு', map: 'வரைபடம்', ready: 'தயாராக இரு' }, navLabel: 'முதன்மை',
    close: 'மூடு', back: 'பின்', next: 'தொடர்', skip: 'தவிர்', done: 'முடிந்தது', cancel: 'ரத்து', more: 'மேலும்',
    notInPrototype: 'இந்த முன்மாதிரியில் இல்லை', notInPrototypeBody: 'இந்தப் பகுதி முன்மாதிரியில் உருவாக்கப்படவில்லை. எதுவும் மாறவில்லை.', ok: 'சரி',
    about: 'CVH பற்றி', aboutBody: 'Thorncliffe Park Community Hub, தோர்ன்கிளிஃப் பார்க் மற்றும் ஃபிளெமிங்டன் பார்க்கிற்காக இந்த சமூக மெய்நிகர் மையத்தை நடத்துகிறது.', builtBy: 'Sprout Climate உடன் உருவாக்கப்பட்டது',

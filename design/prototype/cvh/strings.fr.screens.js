@@ -208,7 +208,7 @@
    "everyday": "Tous les jours",
    "findHelp": "Trouver de l'aide",
    "map": "Carte",
-   "beReady": "Être prêt",
+   "beReady": "Se préparer",
    "findHelpLine": "Services et soutien près de chez vous",
    "mapLine": "Lieux près de chez vous, et ce qui est ouvert maintenant",
    "beReadyLine": "Guides, numéros et prises de nouvelles",
@@ -794,7 +794,7 @@
    }
   },
   "R24": {
-   "title": "Être prêt",
+   "title": "Se préparer",
    "lead": "Quoi faire avant, pendant et après les six types de perturbations qui arrivent ici.",
    "numbers": "Numéros dont je pourrais avoir besoin",
    "headsUp": "Un avertissement avant chaque saison",

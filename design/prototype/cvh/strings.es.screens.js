@@ -208,7 +208,7 @@
    "everyday": "Todos los días",
    "findHelp": "Buscar ayuda",
    "map": "Mapa",
-   "beReady": "Estar listo",
+   "beReady": "Prepararse",
    "findHelpLine": "Servicios y apoyo cerca de usted",
    "mapLine": "Lugares cerca de usted y qué está abierto ahora",
    "beReadyLine": "Guías, números y chequeos de bienestar",
@@ -794,7 +794,7 @@
    }
   },
   "R24": {
-   "title": "Estar listo",
+   "title": "Prepararse",
    "lead": "Qué hacer antes, durante y después de los seis problemas que pasan aquí.",
    "numbers": "Números que podría necesitar",
    "headsUp": "Un aviso previo antes de cada temporada",
