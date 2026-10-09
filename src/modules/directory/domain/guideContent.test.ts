@@ -401,6 +401,42 @@ describe("the pilot setting on (product owner, 2026-10-09: every translation sho
     expect(formatSeedReport(result.report)).toContain("Translations loaded: 4 (machine translations, not reviewed: 4) (es 4)");
   });
 
+  it("loads the safety-critical texts too (the 911 texts and a non-emergency line's label), with no person's review, while their facts hold", () => {
+    const NON_EMERGENCY = "City of Toronto services and non-emergency problems";
+    const WHEN = "Call 911 if someone's life or safety is in danger right now: fire, a medical emergency, or a crime happening now.";
+    const base = input();
+    base.numbers.numbers = [
+      { id: "911", number: "911", emergency: true, label: "Emergency", when: WHEN, lastChecked: "2026-10-03" },
+      { id: "311", number: "311", label: NON_EMERGENCY, lastChecked: "2026-10-03" },
+    ];
+    base.numbers.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: numbersHash(base.numbers) };
+    base.translations = {
+      es: {
+        texts: {
+          "number.311.label": machine(NON_EMERGENCY, "Servicios de la Ciudad de Toronto y problemas que no son emergencias"),
+          "number.911.label": machine("Emergency", "Emergencia"),
+          "number.911.when": machine(WHEN, "Llame al 911 si la vida o la seguridad de alguien está en peligro ahora: un incendio, una emergencia médica o un delito."),
+          "guide.power.when911": machine(WHEN_911, "Llame al 911 si alguien está en peligro."),
+        },
+      },
+    };
+
+    const result = pilotSeed(base);
+
+    expect(result.refusals).toEqual([]);
+    expect(result.numbers.find((n) => n.id === "311")!.texts.label.es).toBe("Servicios de la Ciudad de Toronto y problemas que no son emergencias");
+    expect(result.numbers.find((n) => n.id === "911")!.texts.when.es).toMatch(/^Llame al 911/);
+    expect(result.numbers.find((n) => n.id === "911")!.texts.label.es).toBe("Emergencia");
+    expect(result.guides.find((g) => g.id === "power")!.texts.when911.es).toMatch(/911/);
+    expect(result.report.translations.unavailable.filter((u) => u.lang === "es")).toEqual(
+      expect.not.arrayContaining([expect.objectContaining({ reason: "machine" })]),
+    );
+    // Without the setting none of them loads.
+    const off = planSeed(base);
+    expect(off.numbers.find((n) => n.id === "311")!.texts.label).toEqual({ en: NON_EMERGENCY });
+    expect(off.numbers.find((n) => n.id === "911")!.texts.when).toEqual({ en: WHEN });
+  });
+
   it("still does not load a machine translation of a 911 text that lost 911", () => {
     const result = pilotSeed(input({ translations: { es: { texts: { "guide.power.when911": machine(WHEN_911, "Llame a emergencias si alguien está en peligro.") } } } }));
 

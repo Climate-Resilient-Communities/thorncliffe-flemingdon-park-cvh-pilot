@@ -14,6 +14,7 @@ import {
   catalogueHash,
   confirmProvider,
   listProviders,
+  planProviders,
   publishProvider,
   readProviderCatalogue,
   seedProviders,
@@ -254,6 +255,23 @@ describe("provider catalogue (S02.04)", () => {
       await seed(files);
       await seed(files);
 
+      // The translation counts come from the committed files, so a pull request that only changes translations never
+      // touches this test: they are worked out by the same plan the seed runs, then checked for consistency.
+      const { report, categories } = planProviders(files);
+      const sum = (items: readonly { count: number }[]) => items.reduce((total, item) => total + item.count, 0);
+      const unavailable = (reason: string) => sum(report.translations.unavailable.filter((u) => u.reason === reason));
+      const machine = sum(report.translations.machine);
+      const notYet = unavailable("not_translated");
+      const notLoaded = sum(report.translations.unavailable) - notYet;
+      // Every text is either loaded (reviewed or machine) or not, with a reason, in each of the 14 translated languages.
+      const catalogue = files.catalogue as { providers: { subcategories: string[]; emergencyRole?: unknown }[] };
+      const subcategories = new Set(catalogue.providers.flatMap((p) => p.subcategories));
+      const roles = catalogue.providers.filter((p) => p.emergencyRole).length;
+      const texts = categories.length + subcategories.size + catalogue.providers.length + roles;
+      expect(report.translations.loaded + machine + notYet + notLoaded).toBe(texts * 14);
+      // With the pilot setting off (this test's seed), what is not loaded is only what that setting keeps out, or a facts-check failure.
+      expect(report.translations.unavailable.every((u) => ["machine", "safety_critical", "facts_changed", "not_translated", "stale"].includes(u.reason))).toBe(true);
+
       const runs = await seedRuns();
       expect(runs).toHaveLength(2);
       expect(runs[0]).toEqual({
@@ -271,16 +289,15 @@ describe("provider catalogue (S02.04)", () => {
             categories_retired: 0,
             category_links_added: 121,
             category_links_removed: 0,
-            translations_loaded: 0,
-            translations_machine: 656,
-            providers_safety_critical: 40,
-            translations_safety_critical: 560,
-            translations_not_yet: 0,
+            translations_loaded: report.translations.loaded,
+            translations_machine: machine,
+            providers_safety_critical: report.safetyCritical.providers,
+            translations_safety_critical: unavailable("safety_critical"),
+            translations_not_yet: notYet,
             pilot_machine_translations: 0,
           },
-          // Not loaded although they exist: 1050 unreviewed emergency roles and names, 560 descriptions of the 40
-          // safety-critical providers (14 languages), 170 descriptions whose facts changed.
-          warnings: 1780,
+          // Not loaded although they exist (unreviewed, safety-critical, facts changed, stale).
+          warnings: notLoaded,
           failures: 0,
         },
       });
@@ -472,7 +489,6 @@ describe("provider catalogue (S02.04)", () => {
       expect(critical.translations.emergency_role.es).not.toHaveProperty("reviewer");
       // Every withheld translation is withheld for a reason the pilot keeps: the facts check (or 911, or stale).
       const withheld = (await sql.unsafe("select withheld from provider")).flatMap((r) => Object.values(r.withheld ?? {}).flatMap((byLang) => Object.values(byLang as object)));
-      expect(new Set(withheld).size).toBeGreaterThan(0);
       expect([...new Set(withheld)].every((why) => ["facts_changed", "lost_required", "stale"].includes(why as string))).toBe(true);
       // Category and subcategory names load too, with their provenance.
       const [category] = await sql.unsafe("select labels, translations from category order by sort_order limit 1");

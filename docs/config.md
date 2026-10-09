@@ -776,7 +776,7 @@ translation rules let through, in four places:
 | Where | Reads it from | With `on` (default) | With `off` |
 |---|---|---|---|
 | `npm run seed:providers` | the shell; the "Seed production" workflow passes the GitHub repository variable `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` (unset: on) | every current machine translation of a category, subcategory, description and emergency role loads, safety-critical providers included | reviewed only, and machine translations of ordinary descriptions (AD-11, decision 42) |
-| `npm run seed:guides` | the same | current machine translations of guides and numbers load, 911 texts included | reviewed only |
+| `npm run seed:guides` | the same | current machine translations of guides and numbers load, the safety-critical ones included (every guide's "when to call 911", the 911 number's texts, the 311 "non-emergency" label): nothing is held back for a person's review; the English 911 rules still refuse the run | reviewed only |
 | Publish directory (the release) | Vercel's environment | ships what the seed loaded, checked again | refuses the machine texts the rules above refuse |
 | The terms page and the web sign-up | Vercel's environment | current machine translations of the terms show | reviewed only |
 

@@ -1204,7 +1204,7 @@ So that residents read checked text, not a live machine translation.
 **Given** the seed script runs
 **When** a guide's English review, owner or last-updated date is missing, or a number has no last-checked date
 **Then** the script refuses to load that guide or the numbers list and reports why
-**And** a translation not marked `reviewed` is not loaded; that text shows in English with `translation.unavailable` until its review is recorded *(pilot change, product owner 2026-10-09: with `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` on, a current machine translation loads too, 911 texts included, with provenance `status: "machine"`, unless its facts changed or it lost 911; a stale one never loads; a blank 911 text still refuses the run)*
+**And** a translation not marked `reviewed` is not loaded; that text shows in English with `translation.unavailable` until its review is recorded *(pilot change, product owner 2026-10-09: with `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` on, a current machine translation loads too, with provenance `status: "machine"`, the safety-critical texts included (each guide's `when911`, `number.911.*` and the 311 "non-emergency" label are no longer held back for a person's review), unless its facts changed (numbers, phone numbers, times ... must match the English) or it lost 911; a stale one never loads; the English 911 rules and a blank 911 translation still refuse the run)*
 
 **Given** the guide and numbers seed script
 **When** it runs
