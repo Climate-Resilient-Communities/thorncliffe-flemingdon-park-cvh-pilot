@@ -333,7 +333,7 @@ describe("the checks jobs", () => {
       );
     }
     expect(all[stepIndex(all, /actions\/upload-artifact/)]).toMatch(
-      /if: failure\(\)/,
+      /if: \$\{\{ failure\(\) \|\| cancelled\(\) \}\}/,
     );
   });
 

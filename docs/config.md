@@ -645,8 +645,8 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
 - **Screenshot baselines (one CI round).** The resident and Hub suites compare pages with the baselines in `e2e/resident/__screenshots__`
   and `e2e/hub/__screenshots__`, made only in the pinned image. The comparison is `expect.soft` (`expectBaseline` in each suite's
   `helpers.ts`): a mismatch still fails the test and the `Browser` job, but the test goes on to its later screenshots, and the Hub step
-  runs even when the resident step failed. So one failed run holds every new picture, in the `browser-test-results` artifact (uploaded on
-  failure, 14 days): `resident/` and `hub/` (each suite's `outputDir`), one folder per test attempt (`<test>`, `<test>-retry1`,
+  runs even when the resident step failed. So one failed run holds every new picture, in the `browser-test-results` artifact (uploaded when
+  the job fails or is cancelled, 14 days): `resident/` and `hub/` (each suite's `outputDir`), one folder per test attempt (`<test>`, `<test>-retry1`,
   `<test>-retry2`, all kept), each with `<name>-actual.png`, `-expected.png` and `-diff.png`. Take each test's **last** attempt: it is
   the one that failed the test, so a picture that matched on a retry (flaky) is not taken; a missing baseline is never retried and is in
   the first folder. Then, after a UI change, in one round:
@@ -657,7 +657,9 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
   3. Look at every `-diff.png` and the changed pictures: each difference must be the change you meant. Commit them as
      "Baselines from CI run <run id>: …" and push. The next run must pass with no new picture; a second round means a test failed
      before its screenshots (a hard assertion), which the job log names.
-  Locally, `npm run test:resident:update` / `test:hub:update` remake them in the same image.
+  A failed test is tried three times (two retries), so very many failing tests can reach the job's 25-minute limit; the artifact
+  then still holds what was taken before it, and the next run the rest. Locally, `npm run test:resident:update` /
+  `test:hub:update` remake the baselines in the same image.
 - **Skip on main.** On a push to `main`, `scripts/ci/tested-tree.sh` skips the three jobs, and `Checks` passes as "tested at `<sha>`", only
   when the pushed commit is a merge commit whose tree equals the tree of the merged pull request's head, and that head has a successful
   `Checks` of `ci.yml`. The decision is in the job summary. Anything else (a squash, main moved, no passing run, an API error) runs everything.
