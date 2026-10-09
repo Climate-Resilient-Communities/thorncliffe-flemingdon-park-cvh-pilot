@@ -26,7 +26,10 @@ function sharedAlertRewrite(request: NextRequest, slug: string) {
 /**
  * Resident URLs are /{lang}/… (AD-1). An unknown language code goes to the same path under /en/; a known one
  * passes through next-intl, which here sets no cookie (routing.ts). Staff and API paths are not touched. The share link `/a/{slug}` is
- * answered by the alert page of its `l` language (above).
+ * answered by the alert page of its `l` language (above). The bare `/` is its own page (src/app/(site)/page.tsx). Any other path
+ * with no language in it (`/nope`) is answered by the English resident page of that path behind the same address (a rewrite, so
+ * a page that does not exist is the resident 404 in the shell, with status 404, not the framework's bare one; production UAT,
+ * 2026-10-08); the phone then shows it in the resident's own language (SavedLanguageNotFound).
  */
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -35,7 +38,8 @@ export function proxy(request: NextRequest) {
   const redirect = unknownLanguageRedirect(pathname);
   if (redirect) return NextResponse.redirect(new URL(`${redirect}${search}`, request.url));
   if (isLaunchCode(pathname.split("/")[1])) return withLocale(request);
-  return NextResponse.next();
+  if (pathname === "/") return NextResponse.next();
+  return NextResponse.rewrite(new URL(`/${DEFAULT_LANGUAGE}${pathname}${search}`, request.url));
 }
 
 export const config = {
