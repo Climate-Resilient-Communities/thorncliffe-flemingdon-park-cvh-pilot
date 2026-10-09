@@ -2,7 +2,7 @@
  "failed": {},
  "language": "tl",
  "models": {
-  "north-small-translate-09-2026": 123
+  "north-small-translate-09-2026": 113
  },
  "texts": {
   "06c76a46e432": {
@@ -26,9 +26,14 @@
    "text": "Iglesiang Pentecostal sa 5 Grenoble Drive na nag-aalok ng mga serbisyo ng pagsamba at Sunday school, na may kapilya, lounge, at mga opisina para sa buhay ng kongregasyon. Kamakailan lang ay nagdiwang ng ika-50 anibersaryo (Setyembre 2025)."
   },
   "0b810534f69d": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Ang TNO Food Collaborative (pinapatakbo ng The Neighbourhood Organization) ay nagbibigay ng libreng pagkain sa libu-libong indibidwal sa mga komunidad ng Thorncliffe Park at Flemingdon Park, kabilang ang mga sariwang gulay at prutas, mga itlog, at mga produktong dairy na ipinamamahagi dalawang beses sa isang buwan, na may distribusyon sa buong taon sa tulong ng mga katuwang sa komunidad gaya ng Greenwin Cares.\n\nIsang ahensya para sa tulong sa pag-aayos ng buhay (settlement agency) na nagbibigay ng iba't ibang serbisyo sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang suporta sa pag-aayos ng buhay (pagtatasa ng pangangailangan, oryentasyon sa pamumuhay sa Canada/Ontario, mga klase sa paghahanda para sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng tirahan, aplikasyon para sa subsidized na pabahay, tulong sa upa, tulong sa bayarin sa kuryente), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre; tumawag o pumunta lang doon."
+   },
+   "model": "claude-opus-5.5",
+   "note": "TNO check: 'pag-aayos ng buhay' (fixing one's life) for settlement replaced; Rent Bank name kept with a gloss; matches the TNO listing",
    "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
-   "text": "Ang TNO Food Collaborative (pinapatakbo ng The Neighbourhood Organization) ay nagbibigay ng libreng pagkain sa libu-libong indibidwal sa mga komunidad ng Thorncliffe Park at Flemingdon Park, kabilang ang mga sariwang gulay at prutas, mga itlog, at mga produktong dairy na ipinamamahagi dalawang beses sa isang buwan, na may distribusyon sa buong taon sa tulong ng mga katuwang sa komunidad gaya ng Greenwin Cares.\n\nIsang ahensya para sa tulong sa pag-aayos ng buhay (settlement agency) na nagbibigay ng iba't ibang serbisyo sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang suporta sa pag-aayos ng buhay (pagtatasa ng pangangailangan, oryentasyon sa pamumuhay sa Canada/Ontario, mga klase sa paghahanda para sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng tirahan, aplikasyon para sa subsidized na pabahay, tulong sa upa, tulong sa bayarin sa kuryente), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre; tumawag o pumunta lang doon."
+   "text": "Ang TNO Food Collaborative (pinapatakbo ng The Neighbourhood Organization) ay nagbibigay ng libreng pagkain sa libu-libong tao sa mga komunidad ng Thorncliffe Park at Flemingdon Park, kabilang ang mga sariwang gulay at prutas, mga itlog, at mga produktong dairy na ipinamamahagi dalawang beses sa isang buwan, na may distribusyon sa buong taon sa tulong ng mga katuwang sa komunidad gaya ng Greenwin Cares.\n\nAhensya para sa mga bagong dating na may iba't ibang serbisyo, na naglilingkod sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang tulong sa pag-aadjust sa bagong bayan (pagtatasa ng mga pangangailangan, oryentasyon sa buhay sa Canada/Ontario, mga klase para sa paghahanda sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng matitirhan, pag-aaplay para sa subsidized na pabahay, access sa Rent Bank (tulong pang-emergency sa pagbabayad ng upa), tulong sa bayarin sa kuryente at heating), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre ito; tumawag o pumunta lang sa opisina."
   },
   "0baa182fc012": {
    "model": "north-small-translate-09-2026",
@@ -86,9 +91,14 @@
    "text": "Ang St. Michael's Hospital ay may emergency department (30 Bond St.); nakalista ang MyChart ng Unity Health at ang mga telepono ng ospital. Walang natagpuang emergency services na partikular para sa kidney care centre — sa oras ng medical emergency, tumawag sa 911."
   },
   "1621e2da2a65": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Sakahan na binuo ng komunidad sa Flemingdon Park na nagpapalaki ng masustansyang pagkain para sa mga residente. Nag-aalok ito ng pagtatanim ng pagkain para sa komunidad, isang lingguhang farmers' market tuwing tag-araw sa 150 Grenoble Drive (Huwebes, 3-6 ng hapon, mula huling bahagi ng Hunyo hanggang unang bahagi ng Oktubre), at isang Community Farmer program na nagbibigay sa mga residente ng pagkakataong magnegosyo sa pamamagitan ng pagpapatakbo ng maliliit na sakahan."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: time keeps 6pm as in the English",
    "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
-   "text": "Sakahan na binuo ng komunidad sa Flemingdon Park na nagpapalaki ng masustansyang pagkain para sa mga residente. Nag-aalok ito ng pagtatanim ng pagkain para sa komunidad, isang lingguhang farmers' market tuwing tag-araw sa 150 Grenoble Drive (Huwebes, 3-6 ng hapon, mula huling bahagi ng Hunyo hanggang unang bahagi ng Oktubre), at isang Community Farmer program na nagbibigay sa mga residente ng pagkakataong magnegosyo sa pamamagitan ng pagpapatakbo ng maliliit na sakahan."
+   "text": "Sakahan na binuo ng komunidad sa Flemingdon Park na nagtatanim ng masustansyang pagkain para sa mga residente. Nag-aalok ito ng sama-samang pagtatanim ng pagkain, isang lingguhang farmers' market tuwing tag-araw sa 150 Grenoble Drive (tuwing Huwebes, 3-6pm, mula huling bahagi ng Hunyo hanggang unang bahagi ng Oktubre), at isang Community Farmer program na nagbibigay sa mga residente ng pagkakataong magnegosyo sa pamamagitan ng pagpapatakbo ng maliliit na sakahan."
   },
   "16b01b9ea5a7": {
    "model": "north-small-translate-09-2026",
@@ -96,9 +106,14 @@
    "text": "Nagbibigay ng emergency at agarang pangangalagang dental para sa mga problema gaya ng sakit ng ngipin at mga sira sa ngipin."
   },
   "170900592261": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Klinika para sa panganganak (East York/Don Mills) na nagbibigay ng libreng pangangalaga na pinopondohan ng Ministry of Health mula sa panahon ng pagbubuntis, panganganak, hanggang sa pagsilang ng sanggol, at para sa magulang at sanggol hanggang ika-6 na linggo pagkatapos manganak. Ang panganganak ay tinutulungan sa bahay, sa Toronto Birth Centre o sa Michael Garron Hospital; ang mga midwife ay nakahandang tumugon 24/7 para sa mga urgent na problema, at ang mga komplikasyon ay isinasangguni sa mga obstetrician, pediatrician at lactation consultant. May mga kawani na marunong ng iba't ibang wika (Ingles, Arabic, Pranses, Espanyol, Farsi, Dari at iba pa) at may mga prenatal class kabilang ang Newborn 101."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'linggo' (week) is read as Sunday; written as 'weeks'",
    "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
-   "text": "Klinika para sa panganganak (East York/Don Mills) na nagbibigay ng libreng pangangalaga na pinopondohan ng Ministry of Health mula sa panahon ng pagbubuntis, panganganak, hanggang sa pagsilang ng sanggol, at para sa magulang at sanggol hanggang ika-6 na linggo pagkatapos manganak. Ang panganganak ay tinutulungan sa bahay, sa Toronto Birth Centre o sa Michael Garron Hospital; ang mga midwife ay nakahandang tumugon 24/7 para sa mga urgent na problema, at ang mga komplikasyon ay isinasangguni sa mga obstetrician, pediatrician at lactation consultant. May mga kawani na marunong ng iba't ibang wika (Ingles, Arabic, Pranses, Espanyol, Farsi, Dari at iba pa) at may mga prenatal class kabilang ang Newborn 101."
+   "text": "Klinika ng mga midwife (East York/Don Mills) na nagbibigay ng libreng pangangalaga na pinopondohan ng Ministry of Health habang nagbubuntis, naglalabor at nanganganak, at para sa magulang at sanggol hanggang 6 na weeks pagkatapos manganak. Ang panganganak ay ginagawa sa bahay, sa Toronto Birth Centre o sa Michael Garron Hospital; maaaring tawagan ang mga midwife 24/7 para sa mga urgent na alalahanin, at ang mga komplikasyon ay isinasangguni sa mga obstetrician, pediatrician at lactation consultant. May mga kawaning nagsasalita ng iba't ibang wika (Ingles, Arabic, Pranses, Espanyol, Farsi, Dari at iba pa) at may mga prenatal class kabilang ang Newborn 101."
   },
   "1a3c95cbc0e2": {
    "correctedFrom": {
@@ -121,12 +136,14 @@
    "text": "Programa ng TNO (pinopondohan ng IRCC) na tumutulong sa mga bagong dating na may edad 18 pataas na kumuha ng mga skilled trade at teknikal na karera. Nag-aalok ng pagsasanay at mga oportunidad sa trabaho sa konstruksyon, HVAC (para sa lisensyang G2/G3), IT kabilang ang data science at AI, pagmamaneho ng trak (para sa lisensyang DZ), pagpapatakbo ng forklift, at traffic control sa konstruksyon. Bukas ito para sa mga permanenteng residente, mga refugee sa ilalim ng konbensyon, at mga mamamayang Canadian na may antas ng Ingles na CLB 5-6+."
   },
   "1be560c4691c": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Mga istasyon ng Toronto Fire Services na nagbibigay ng serbisyo laban sa sunog at emergency rescue 24 oras bawat araw sa lugar: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Numero para sa mga hindi emergency: 416-338-9050."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was written as '24 oras bawat araw' (lost the 7)",
    "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
-   "text": "Mga istasyon ng Toronto Fire Services na nagbibigay ng serbisyo laban sa sunog at emergency rescue 24 oras bawat araw sa lugar: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Numero para sa mga hindi emergency: 416-338-9050.",
-   "warnings": [
-    "numbers missing from translation: 7"
-   ]
+   "text": "Mga istasyon ng Toronto Fire Services na nagbibigay ng proteksyon laban sa sunog at emergency rescue nang 24/7 sa lugar: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Numero para sa hindi emergency: 416-338-9050."
   },
   "235e1072c4f3": {
    "correctedFrom": {
@@ -199,9 +216,14 @@
    "text": "Isang lokal na organisasyon ng mga kababaihan sa komunidad na nanguna sa pagpapanibago ng R.V. Burgess Park, kung saan sama-samang itinayo ang mga pasilidad gaya ng community garden, park cafe, splash pad, mga upuan, ilaw, at ang tanging outdoor tandoor oven sa isang pampublikong parke sa North America. Nakatuon ito sa pagpapalakas ng komunidad at pagtatrabaho para sa pag-uugnayan ng iba't ibang kultura sa Thorncliffe Park."
   },
   "32dfa11d6223": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Ahensya para sa iba't ibang serbisyo para sa mga bagong dating, na nagsisilbi sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang tulong sa pag-aadjust sa bagong bayan (pagtatasa ng mga pangangailangan, oryentasyon sa buhay sa Canada/Ontario, mga klase para sa paghahanda sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng matitirhan, pag-aaplay para sa subsidized na pabahay, tulong sa upa, at tulong sa bayad sa kuryente), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre ito; tumawag o pumunta lang sa opisina."
+   },
+   "model": "claude-opus-5.5",
+   "note": "TNO check: 'rent bank access' keeps the Rent Bank name with a gloss",
    "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
-   "text": "Ahensya para sa iba't ibang serbisyo para sa mga bagong dating, na nagsisilbi sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang tulong sa pag-aadjust sa bagong bayan (pagtatasa ng mga pangangailangan, oryentasyon sa buhay sa Canada/Ontario, mga klase para sa paghahanda sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng matitirhan, pag-aaplay para sa subsidized na pabahay, tulong sa upa, at tulong sa bayad sa kuryente), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre ito; tumawag o pumunta lang sa opisina."
+   "text": "Ahensya para sa mga bagong dating na may iba't ibang serbisyo, na naglilingkod sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang tulong sa pag-aadjust sa bagong bayan (pagtatasa ng mga pangangailangan, oryentasyon sa buhay sa Canada/Ontario, mga klase para sa paghahanda sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng matitirhan, pag-aaplay para sa subsidized na pabahay, access sa Rent Bank (tulong pang-emergency sa pagbabayad ng upa), tulong sa bayarin sa kuryente at heating), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre ito; tumawag o pumunta lang sa opisina."
   },
   "33eb20802497": {
    "model": "north-small-translate-09-2026",
@@ -559,9 +581,14 @@
    "text": "Istasyon ng Pulisya"
   },
   "ae69792878f8": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Ang Chapel in the Park United Church ay isang maliit na multikultural na kongregasyon sa 16 Thorncliffe Park Drive, Toronto (416-421-0792), na nagsisilbi sa mga residente ng Thorncliffe Park at Don Mills. Nagdaraos ito ng mga misa tuwing Linggo ng 10:00 n.u. nang personal, sa pamamagitan ng Zoom, at sa live stream, at inaanyayahan ang mga bagong dating na sumali bilang isang 'pamilya sa pananampalataya.'"
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: time keeps a.m. as in the English",
    "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
-   "text": "Ang Chapel in the Park United Church ay isang maliit na multikultural na kongregasyon sa 16 Thorncliffe Park Drive, Toronto (416-421-0792), na nagsisilbi sa mga residente ng Thorncliffe Park at Don Mills. Nagdaraos ito ng mga misa tuwing Linggo ng 10:00 n.u. nang personal, sa pamamagitan ng Zoom, at sa live stream, at inaanyayahan ang mga bagong dating na sumali bilang isang 'pamilya sa pananampalataya.'"
+   "text": "Ang Chapel in the Park United Church ay isang maliit na multikultural na kongregasyon sa 16 Thorncliffe Park Drive, Toronto (416-421-0792), na naglilingkod sa Thorncliffe Park at Don Mills. Nagdaraos ito ng pagsamba tuwing Linggo ng 10:00 a.m. nang personal, sa Zoom, at sa live stream, at inaanyayahan ang mga bagong dating na sumali bilang isang 'pamilya sa pananampalataya.'"
   },
   "b0e486b1a83e": {
    "model": "north-small-translate-09-2026",
@@ -614,9 +641,14 @@
    "text": "Ang Leaside Park (malapit sa Millwood Road at Overlea Boulevard) ay may pampublikong inuming tubig sa pamamagitan ng 1 drinking fountain at 2 bottle filling station. Ang parkeng may lawak na 3.4 ektarya ay mayroon ding may ilaw na baseball field, anim na may ilaw na tennis court, isang multipurpose sports field, palaruan para sa mga bata, community garden, mga palikuran, at ang Leaside Outdoor Pool."
   },
   "c0b5b18276a1": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Community Food Bank sa 10 Gateway Blvd (basement), North York, nagbibigay ng libreng pagkain at tulong sa mga pamilyang nangangailangan; rehistradong charity na ito ngayon. Magkakaiba ang oras ng operasyon na nakasaad sa website (Lunes at Miyerkules, 11:00 n.u.-3:30 n.h. sa isang bahagi, Lunes-Huwebes, 1:30-3:30 n.h. sa iba) - tumawag muna sa 416-422-4322 para kumpirmahin bago pumunta."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: times keep am/pm as in the English (n.u./n.h. not read)",
    "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
-   "text": "Community Food Bank sa 10 Gateway Blvd (basement), North York, nagbibigay ng libreng pagkain at tulong sa mga pamilyang nangangailangan; rehistradong charity na ito ngayon. Magkakaiba ang oras ng operasyon na nakasaad sa website (Lunes at Miyerkules, 11:00 n.u.-3:30 n.h. sa isang bahagi, Lunes-Huwebes, 1:30-3:30 n.h. sa iba) - tumawag muna sa 416-422-4322 para kumpirmahin bago pumunta."
+   "text": "Community food bank sa 10 Gateway Blvd (basement), North York, na nagbibigay ng libreng pagkain at tulong sa mga pamilyang nangangailangan; rehistradong charity na ito ngayon. Magkakaiba ang oras na nakasaad sa website (Lunes at Miyerkules 11:00am-3:30pm sa isang bahagi, Lunes-Huwebes 1:30-3:30pm sa iba) - tumawag muna sa 416-422-4322 para kumpirmahin bago pumunta."
   },
   "c6efc2c01c02": {
    "model": "north-small-translate-09-2026",
@@ -744,9 +776,14 @@
    "text": "Isang grupong pinamumunuan ng mga residente na pinagbubuklod ang mga pamilya mula sa iba't ibang pinagmulan sa pamamagitan ng mga pagtitipon, pagdiriwang ng kultura, edukasyon, at mga programa para sa pagboboluntaryo. Layunin nitong labanan ang pagkakahiwalay sa lipunan at kalungkutan, at sinusuportahan ang edukasyon ng mga bata sa pamamagitan ng aktibong pakikilahok sa mga Parent Council ng Gateway Public School, Valley Park Middle School, at Marc Garneau Collegiate Institute."
   },
   "ec5b5ffd97a8": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Mga kahilingan para sa emergency maintenance (gabi, Sabado't Linggo at mga pista): 416-207-8253. Nakalista rin sa itaas ang mga contact sa seguridad ng gusali para sa mga urgent na problema sa gusali."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'Sabado't Linggo' added weekdays the English does not name; written as 'weekend'",
    "source": "Emergency maintenance requests (nights, weekends & holidays): 416-207-8253. Building security contacts are also listed above for urgent building issues.",
-   "text": "Mga kahilingan para sa emergency maintenance (gabi, Sabado't Linggo at mga pista): 416-207-8253. Nakalista rin sa itaas ang mga contact sa seguridad ng gusali para sa mga urgent na problema sa gusali."
+   "text": "Mga kahilingan para sa emergency maintenance (gabi, weekend at holiday): 416-207-8253. Nakalista rin sa itaas ang mga contact ng seguridad ng gusali para sa mga urgent na problema sa gusali."
   },
   "ef9e53e990a8": {
    "model": "north-small-translate-09-2026",
@@ -774,12 +811,14 @@
    "text": "Tumawag sa 911 para sa mga emergency. Maaaring kontakin ang 55 Division sa 416-808-5500."
   },
   "f630f0f0b145": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Ang mga midwife ay maaaring tawagan anumang oras para sa mga urgent na problema sa pagbubuntis at panganganak; walang nakalistang hiwalay na emergency program."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: '24/7' was dropped ('anumang oras')",
    "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
-   "text": "Ang mga midwife ay maaaring tawagan anumang oras para sa mga urgent na problema sa pagbubuntis at panganganak; walang nakalistang hiwalay na emergency program.",
-   "warnings": [
-    "numbers missing from translation: 24, 7"
-   ]
+   "text": "Maaaring tawagan ang mga midwife 24/7 para sa mga urgent na alalahanin sa pagbubuntis at panganganak; walang nakalistang hiwalay na emergency program."
   },
   "fa4e99c2c2ea": {
    "model": "north-small-translate-09-2026",
@@ -802,5 +841,5 @@
    "text": "Pag-aalaga sa Bata & EarlyON"
   }
  },
- "updated": "2026-10-01T04:36:19+00:00"
+ "updated": "2026-10-09T04:00:44+00:00"
 }

@@ -2,7 +2,7 @@
  "failed": {},
  "language": "sk",
  "models": {
-  "north-small-translate-09-2026": 79
+  "north-small-translate-09-2026": 71
  },
  "texts": {
   "06c76a46e432": {
@@ -25,10 +25,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Pentekostálny zbor na adrese Grenoble Drive 5, kde sa konajú bohoslužby a nedeľná škola. K dispozícii je kaplnka, spoločenská miestnosť a kancelárie pre život zboru. Nedávno oslávil svoje 50. výročie (september 2025)."
    },
-   "model": "claude-correction",
-   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "model": "claude-opus-5.5",
+   "note": "facts check: Sunday kept",
    "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
-   "text": "Pentekostálny zbor na adrese 5 Grenoble Drive, kde sa konajú bohoslužby a nedeľná škola. K dispozícii je kaplnka, spoločenská miestnosť a kancelárie pre život zboru. Nedávno oslávil svoje 50. výročie (september 2025)."
+   "text": "Letničná (pentekostálna) cirkev na adrese 5 Grenoble Drive, kde sa konajú bohoslužby a náboženská škola v nedeľu; má kaplnku, spoločenskú miestnosť a kancelárie pre život zboru. Nedávno oslávila 50. výročie (september 2025)."
   },
   "0b810534f69d": {
    "correctedFrom": {
@@ -65,10 +65,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia jedla dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, chladiacich centier ani krízových liniek, ktoré by boli špecifické pre Food Collaborative."
    },
-   "model": "claude-correction",
-   "note": "Cooling centre = place to cool down in heat, not refrigeration",
+   "model": "claude-opus-5.5",
+   "note": "TNO review: shelter rendered as útulok",
    "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
-   "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia jedla dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, miest na ochladenie počas horúčav ani krízových liniek, ktoré by boli špecifické pre Food Collaborative."
+   "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatné rozdávanie potravín dvakrát mesačne). Útulok, miesto na ochladenie ani krízová linka priamo pri Food Collaborative neboli potvrdené."
   },
   "0f7fe1d38b46": {
    "correctedFrom": {
@@ -105,10 +105,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Viacúčelové komunitné centrum na adrese Overlea Blvd 45, 2. poschodie (vnútri East York Town Centre), otvorené od pondelka do nedele od 8:00 do 20:00. Je to miesto, kde obyvatelia nájdu všetko potrebné – zdravotné a sociálne služby, programy aj komunitné priestory od partnerských organizácií."
    },
-   "model": "claude-correction",
-   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 8:00 a.m. kept",
    "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
-   "text": "Viacúčelové komunitné centrum na adrese 45 Overlea Blvd, 2. poschodie (vnútri East York Town Centre), otvorené od pondelka do nedele od 8:00 do 20:00. Je to miesto, kde obyvatelia nájdu všetko potrebné – zdravotné a sociálne služby, programy aj komunitné priestory od partnerských organizácií."
+   "text": "Komunitné centrum s mnohými službami na adrese 45 Overlea Blvd, 2. poschodie (v East York Town Centre), otvorené od pondelka do nedele 8:00 a.m. – 20:00. Na jednom mieste tu obyvatelia nájdu zdravotné a sociálne služby, programy a komunitné priestory partnerských organizácií."
   },
   "1538ea5a988e": {
    "model": "north-small-translate-09-2026",
@@ -116,12 +116,14 @@
    "text": "Nemocnica St. Michael's má oddelenie urgentnej starostlivosti (30 Bond St.). Uvádzajú sa kontaktné údaje na portál MyChart organizácie Unity Health a telefónne linky nemocnice. Žiadne špeciálne služby urgentnej starostlivosti pre centrum liečby obličiek neboli nájdené – v prípade zdravotnej núdze volajte číslo 911."
   },
   "1621e2da2a65": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Farma vytvorená miestnou komunitou vo štvrti Flemingdon Park, kde sa pestujú zdravé potraviny pre obyvateľov. Ponúka spoločné pestovanie potravín, týždenný letný farmársky trh na adrese 150 Grenoble Drive (štvrtky od 15:00 do 18:00, od konca júna do začiatku októbra) a program Community Farmer, ktorý poskytuje obyvateľom podnikateľské príležitosti na prevádzkovanie malých poľnohospodárskych podnikov."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 3 and 6 p.m. kept as in the English",
    "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
-   "text": "Farma vytvorená miestnou komunitou vo štvrti Flemingdon Park, kde sa pestujú zdravé potraviny pre obyvateľov. Ponúka spoločné pestovanie potravín, týždenný letný farmársky trh na adrese 150 Grenoble Drive (štvrtky od 15:00 do 18:00, od konca júna do začiatku októbra) a program Community Farmer, ktorý poskytuje obyvateľom podnikateľské príležitosti na prevádzkovanie malých poľnohospodárskych podnikov.",
-   "warnings": [
-    "numbers missing from translation: 3, 6"
-   ]
+   "text": "Farma vytvorená komunitou vo Flemingdon Parku, ktorá pestuje zdravé potraviny pre obyvateľov. Ponúka spoločné pestovanie potravín, letný farmársky trh raz za týždeň na adrese 150 Grenoble Drive (vo štvrtok 3 – 6 p.m., od konca júna do začiatku októbra) a program Community Farmer, ktorý dáva obyvateľom príležitosť podnikať a viesť malú farmu."
   },
   "16b01b9ea5a7": {
    "model": "north-small-translate-09-2026",
@@ -133,20 +135,20 @@
     "model": "north-small-translate-09-2026",
     "text": "Pôrodnícka poradňa (East York/Don Mills) poskytuje bezplatnú starostlivosť financovanú Ministerstvom zdravotníctva počas tehotenstva, pôrodu a po narodení dieťaťa, ako aj starostlivosť o rodičov a dieťa až do šiestich týždňov po pôrode. Pôrody sa realizujú doma, v Torontskom pôrodníckom centre alebo v nemocnici Michael Garron; pôrodné asistentky sú k dispozícii nepretržite 24 hodín denne, 7 dní v týždni pri naliehavých problémoch a v prípade komplikácií zabezpečia odoslanie k gynekológom, pediatrom a laktačným poradcom. Personál hovorí viacerými jazykmi (angličtina, arabčina, francúzština, španielčina, perzština, darí a ďalšie) a ponúka predpôrodné kurzy vrátane kurzu starostlivosti o novorodenca."
    },
-   "model": "claude-correction",
-   "note": "Restored names Toronto Birth Centre and Newborn 101; obstetricians = pôrodníci",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 6 weeks kept as a digit",
    "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
-   "text": "Pôrodnícka poradňa (East York/Don Mills) poskytuje bezplatnú starostlivosť financovanú Ministerstvom zdravotníctva počas tehotenstva, pôrodu a po narodení dieťaťa, ako aj starostlivosť o rodičov a dieťa až do šiestich týždňov po pôrode. Pôrody sa realizujú doma, v Toronto Birth Centre (pôrodné centrum) alebo v nemocnici Michael Garron; pôrodné asistentky sú k dispozícii nepretržite 24 hodín denne, 7 dní v týždni pri naliehavých problémoch a v prípade komplikácií zabezpečia odoslanie k pôrodníkom, pediatrom a laktačným poradcom. Personál hovorí viacerými jazykmi (angličtina, arabčina, francúzština, španielčina, perzština, darí a ďalšie) a ponúka predpôrodné kurzy vrátane kurzu Newborn 101 (starostlivosť o novorodenca)."
+   "text": "Pôrodná asistencia (East York/Don Mills): bezplatná starostlivosť hradená ministerstvom zdravotníctva počas tehotenstva, pôrodu a po ňom, pre matku aj dieťa až 6 týždňov po pôrode. Pôrody prebiehajú doma, v Toronto Birth Centre alebo v nemocnici Michael Garron Hospital; pôrodné asistentky sú pri naliehavých problémoch k dispozícii 24/7 a pri komplikáciách posielajú k pôrodníkom, pediatrom a laktačným poradkyniam. Personál hovorí viacerými jazykmi (angličtina, arabčina, francúzština, španielčina, perzština, darí a ďalšie); ponúka aj predpôrodné kurzy vrátane kurzu Newborn 101 (starostlivosť o novorodenca)."
   },
   "1a3c95cbc0e2": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "Bezplatné právne poradenstvo a zastupovanie pre ľudí s nízkymi príjmami v danej oblasti (od jazera Ontário po York Mills/diaľnica 401, od ulice Yonge a rieky Don po Victoria Park Ave) v štyroch oblastiach: bytové právo (predchádzanie vystahovaniu, nezákonné uzamknutie priestorov, práva nájomcov), pracovné právo (pracovné normy, neoprávnené prepustenie, odstupné, dávka v nezamestnanosti EI), imigračné právo (žiadosti o trvalý pobyt, pracovné povolenia, občianstvo) a sociálne dávky (ODSP, OW, CPP, OAS, GIS, kanadská dávka pre ľudí so zdravotným postihnutím); ďalej verejné právne vzdelávanie a obmedzené služby týkajúce sa dokumentov (písomné vyhlásenia pod prísahou, notársky overené kópie). Linka pre prvý kontakt: 416-441-1764, linka 1, pondelok – štvrtok 9:00 – 12:30 (hlasová schránka s návratným volaním do 1 – 3 pracovných dní; osobné návštevy bez objednania nie sú možné; osobné vybavenie žiadostí je možné len po predchádzajúcom objednání v pondelok a stredu od 13:30 do 16:30)."
    },
-   "model": "claude-correction",
-   "note": "Illegal lockouts clarified (landlord locks tenant out); typo; ext. = klapka",
+   "model": "claude-opus-5.5",
+   "note": "facts check: times written as in the English (a.m./p.m.)",
    "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
-   "text": "Bezplatné právne poradenstvo a zastupovanie pre ľudí s nízkymi príjmami v danej oblasti (od jazera Ontário po York Mills/diaľnica 401, od ulice Yonge a rieky Don po Victoria Park Ave) v štyroch oblastiach: bytové právo (predchádzanie vysťahovaniu, nezákonné zamknutie nájomcu mimo bytu prenajímateľom, práva nájomcov), pracovné právo (pracovné normy, neoprávnené prepustenie, odstupné, dávka v nezamestnanosti EI), imigračné právo (žiadosti o trvalý pobyt, pracovné povolenia, občianstvo) a sociálne dávky (ODSP, OW, CPP, OAS, GIS, kanadská dávka pre ľudí so zdravotným postihnutím); ďalej verejné právne vzdelávanie a obmedzené služby týkajúce sa dokumentov (písomné vyhlásenia pod prísahou, notársky overené kópie). Linka pre prvý kontakt: 416-441-1764, klapka 1, pondelok – štvrtok 9:00 – 12:30 (hlasová schránka s návratným volaním do 1 – 3 pracovných dní; osobné návštevy bez objednania nie sú možné; osobné vybavenie žiadostí je možné len po predchádzajúcom objednání v pondelok a stredu od 13:30 do 16:30)."
+   "text": "Bezplatné právne poradenstvo a zastupovanie pre ľudí s nízkym príjmom v spádovej oblasti (od jazera Ontário po York Mills/401, od Yonge/rieky Don po Victoria Park Ave) v štyroch oblastiach: bytové právo (predchádzanie vysťahovaniu, nezákonné zamknutie bytu prenajímateľom, práva nájomcov), pracovné právo (pracovné normy, neoprávnené prepustenie, odstupné, dávka v nezamestnanosti EI), imigračné právo (žiadosti o trvalý pobyt, pracovné povolenia, občianstvo) a podpora príjmu (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit – kanadská dávka pre ľudí so zdravotným postihnutím); ďalej verejné právne vzdelávanie a obmedzené služby s dokumentmi (čestné vyhlásenia pod prísahou, notársky overené kópie). Linka pre príjem žiadostí: 416-441-1764, klapka 1, pondelok – štvrtok 9:00 a.m. – 12:30 p.m. (hlasová schránka, spätné volanie do 1 – 3 pracovných dní; bez objednania neprijímajú; osobný príjem len po objednaní v pondelok a stredu 1:30 – 4:30 p.m.)."
   },
   "1ae4b85c3a4e": {
    "model": "north-small-translate-09-2026",
@@ -158,10 +160,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Požiarne stanice Torontských hasičských zborov, ktoré zabezpečujú nepretržitú požiarnu ochranu a záchranné zásahy v tejto oblasti: Stanica 321 (231 McRae Dr), Stanica 235 (200 Bermondsey Rd), Stanica 322 (256 Cosburn Ave), Stanica 224 (1313 Woodbine Ave). Linka pre nehroziace núdzové situácie: 416-338-9050."
    },
-   "model": "claude-correction",
-   "note": "Restored service name; clearer wording for non-emergency line",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 24/7 kept",
    "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
-   "text": "Požiarne stanice Toronto Fire Services (hasiči mesta Toronto), ktoré zabezpečujú nepretržitú požiarnu ochranu a záchranné zásahy v tejto oblasti: Stanica 321 (231 McRae Dr), Stanica 235 (200 Bermondsey Rd), Stanica 322 (256 Cosburn Ave), Stanica 224 (1313 Woodbine Ave). Linka pre situácie, ktoré nie sú núdzové: 416-338-9050."
+   "text": "Požiarne stanice Toronto Fire Services (hasiči mesta Toronto), ktoré zabezpečujú požiarnu ochranu a záchranné zásahy v tejto oblasti 24/7 (nepretržite): Stanica 321 (231 McRae Dr), Stanica 235 (200 Bermondsey Rd), Stanica 322 (256 Cosburn Ave), Stanica 224 (1313 Woodbine Ave). Linka pre situácie, ktoré nie sú núdzové: 416-338-9050."
   },
   "235e1072c4f3": {
    "correctedFrom": {
@@ -303,10 +305,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Grécka pravoslávna farnosť na adrese Thorncliffe Park Drive 30 (kapacita viac ako 600 miest na sedenie, dostatok parkovacích miest), ktorej predstaveným je farnosťny kňaz otec Apostolos Gkolias (apostolosgkolias@yahoo.com; telefón do kostola: +1 (416) 425-2485, info@togreekcom.org). Bohoslužby v nedeľu a počas sviatkov: Orthros (ranná bohoslužba) od 8:30 do 10:00 a Božská liturgia od 10:00 do 12:00; farnosť zabezpečuje zápis do nedeľnej školy a ďalšie cirkevné programy."
    },
-   "model": "claude-correction",
-   "note": "Address order; non-word fixed",
+   "model": "claude-opus-5.5",
+   "note": "facts check: times and both Sundays kept",
    "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
-   "text": "Grécka pravoslávna farnosť na adrese 30 Thorncliffe Park Drive (kapacita viac ako 600 miest na sedenie, dostatok parkovacích miest), ktorej predstaveným je farár otec Apostolos Gkolias (apostolosgkolias@yahoo.com; telefón do kostola: +1 (416) 425-2485, info@togreekcom.org). Bohoslužby v nedeľu a počas sviatkov: Orthros (ranná bohoslužba) od 8:30 do 10:00 a Božská liturgia od 10:00 do 12:00; farnosť zabezpečuje zápis do nedeľnej školy a ďalšie cirkevné programy."
+   "text": "Grécka pravoslávna farnosť na adrese 30 Thorncliffe Park Drive (viac ako 600 miest na sedenie, dostatok parkovacích miest), ktorú vedie farár otec Apostolos Gkolias (apostolosgkolias@yahoo.com; telefón do kostola +1 (416) 425-2485, info@togreekcom.org). Bohoslužby v nedeľu a vo sviatky: Orthros (ranná bohoslužba) 8:30 – 10:00 a.m. a Božská liturgia 10:00 a.m. – 12:00 (poludnie); farnosť zapisuje deti do nedeľnej školy (Sunday School) a má aj ďalšie cirkevné programy."
   },
   "4341d8807857": {
    "model": "north-small-translate-09-2026",
@@ -383,10 +385,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Polícia Toronta, oddelenie 55 (101 Coxwell Ave, 416-808-5500) – toto oddelenie pôsobi v východnej časti mesta vrátane štvrte Thorncliffe/Flemingdon; zabezpečuje komunitnú políciu, nahlasovanie nehôd, ktoré nie sú naliehavé, a pomoc obetiam. Poznámka: Oddelenia 54 a 55 sa majú zlúčiť a vytvoriť novú spoločnú stanovišťu na adrese 1627 Danforth Ave (bývalá garáž TTC Danforth)."
    },
-   "model": "claude-correction",
-   "note": "Names restored; typos and wrong words fixed",
+   "model": "claude-opus-5.5",
+   "note": "facts check: duplicated 55 removed",
    "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
-   "text": "Toronto Police Service (polícia Toronta), 55 Division (oddelenie 55) (101 Coxwell Ave, 416-808-5500) – toto oddelenie pôsobí vo východnej časti mesta vrátane štvrte Thorncliffe/Flemingdon; zabezpečuje komunitnú políciu, nahlasovanie udalostí, ktoré nie sú naliehavé, a pomoc obetiam. Poznámka: Oddelenia 54 a 55 sa majú zlúčiť a vytvoriť novú spoločnú stanicu na adrese 1627 Danforth Ave (bývalá garáž TTC Danforth)."
+   "text": "Toronto Police Service (polícia mesta Toronto), 55 Division (policajný okrsok; 101 Coxwell Ave, 416-808-5500) – okrsok pre východnú časť mesta vrátane štvrte Thorncliffe/Flemingdon; zabezpečuje komunitnú políciu, nahlasovanie udalostí, ktoré nie sú naliehavé, a pomoc obetiam. Poznámka: okrsky 54 a 55 sa majú zlúčiť do novej spoločnej stanice na adrese 1627 Danforth Ave (bývalá garáž TTC Danforth)."
   },
   "5d959a5ff47c": {
    "correctedFrom": {
@@ -399,12 +401,14 @@
    "text": "Detské centrum Pride In Heritage je neziskové, komunitné multikultúrne zariadenie starostlivosti o deti, ktoré sídli v škole Gateway Public School na adrese 55 Gateway Blvd, Toronto (416-467-5981). Ponúka inkluzívnu a nestrannú starostlivosť o deti v bezpečnom a podporujúcom prostredí; centrum riadi dobrovoľnícka rada a ku každému človeku pristupuje s dôstojnosťou bez ohľadu na jeho pôvod."
   },
   "6112e2d3ed72": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Poskytuje bezplatnú a dôvernú nepretržitú telefonickú pomoc od lekárov (416-429-4991). Jasne uvádza, že neposkytuje urgentnú ani ambulantnú starostlivosť bez objednania – v prípade núdze volajte číslo 911."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 24 kept",
    "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
-   "text": "Poskytuje bezplatnú a dôvernú nepretržitú telefonickú pomoc od lekárov (416-429-4991). Jasne uvádza, že neposkytuje urgentnú ani ambulantnú starostlivosť bez objednania – v prípade núdze volajte číslo 911.",
-   "warnings": [
-    "numbers missing from translation: 24"
-   ]
+   "text": "Poskytuje bezplatnú a dôvernú pomoc od lekárov na telefóne 24 hodín denne (416-429-4991). Výslovne uvádza, že neposkytuje urgentnú pomoc ani návštevy bez objednania – v núdzi volajte 911."
   },
   "6166d8860ebc": {
    "correctedFrom": {
@@ -417,9 +421,14 @@
    "text": "Valley Park Middle School je škola TDSB pre 6. – 8. ročník (zodpovedá vyšším ročníkom základnej školy, nie je to stredná škola), ktorú navštevuje približne 1 100 žiakov zo štvrti Thorncliffe Park a Flemingdon Park. Nachádza sa na adrese 130 Overlea Blvd, East York. Jej cieľom je vytvoriť bezpečné a podporujúce prostredie pre vzdelávanie, založené na rešpekte, zodpovednosti a bezpečnosti. Na webovej stránke neboli uvedené žiadne programy francúzskeho vyučovania, výučby angličtiny pre cudzincov (ESL) ani špeciálnej pedagogiky."
   },
   "62d55110cf7b": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Bezplatné centrum EarlyON pre deti a rodiny, ktoré prevádzkuje TCDSB na adrese 175 Grenoble Dr, ponúka voľný prístup k hrám a vzdelávacím programom pre deti vo veku 0 – 6 rokov spolu s ich rodičmi alebo opatrovateľmi (účasť rodičov je potrebná, registrácia nie je nutná). Podľa harmonogramu TCDSB je centrum St. John XXIII otvorené od pondelka do štvrtka od 8:45 do 12:45 a v piatok od 8:45 do 12:45."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: times written as in the English (a.m./p.m.)",
    "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
-   "text": "Bezplatné centrum EarlyON pre deti a rodiny, ktoré prevádzkuje TCDSB na adrese 175 Grenoble Dr, ponúka voľný prístup k hrám a vzdelávacím programom pre deti vo veku 0 – 6 rokov spolu s ich rodičmi alebo opatrovateľmi (účasť rodičov je potrebná, registrácia nie je nutná). Podľa harmonogramu TCDSB je centrum St. John XXIII otvorené od pondelka do štvrtka od 8:45 do 12:45 a v piatok od 8:45 do 12:45."
+   "text": "Bezplatné centrum pre deti a rodiny EarlyON, ktoré prevádzkuje TCDSB na adrese 175 Grenoble Dr, s programami hier a učenia bez objednania pre deti vo veku 0 – 6 rokov spolu s rodičmi alebo opatrovateľmi (rodič sa musí zúčastniť, registrácia nie je potrebná). Podľa rozvrhu TCDSB je St. John XXIII otvorené pondelok – štvrtok 8:45 a.m. – 12:45 p.m. a v piatok 8:45 a.m. – 12:45 p.m."
   },
   "63c710ddedbb": {
    "model": "north-small-translate-09-2026",
@@ -427,9 +436,14 @@
    "text": "Sestry sú k dispozícii nepretržite, 24 hodín denne, 7 dní v týždni, pre potreby domácej starostlivosti; žiadna špecializovaná záchranná služba nie je uvedená (nie je to tiesňová linka 911 ani zariadenie urgentnej starostlivosti)."
   },
   "67d4ed5dfe5d": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Mešita Darus Salaam na adrese 20 Overlea Blvd slúži moslimskej komunite v štvrti Thorncliffe Park, Flemingdon Park a okolitých oblastiach už od roku 1995. Ponúka päť denných modlitieb a spoločnú modlitbu Jummah, celodenné programy Hifz a štúdium na Alima/Alimu, večerné hodiny Koránu (Madrasah), nedeľnú školu, výučbu výkladu Koránu (Tafseer) a základov islámu, programy pre mládež, služby spojené so sobášom (Nikah) a komunitné podujatia."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: Sunday kept",
    "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
-   "text": "Mešita Darus Salaam na adrese 20 Overlea Blvd slúži moslimskej komunite v štvrti Thorncliffe Park, Flemingdon Park a okolitých oblastiach už od roku 1995. Ponúka päť denných modlitieb a spoločnú modlitbu Jummah, celodenné programy Hifz a štúdium na Alima/Alimu, večerné hodiny Koránu (Madrasah), nedeľnú školu, výučbu výkladu Koránu (Tafseer) a základov islámu, programy pre mládež, služby spojené so sobášom (Nikah) a komunitné podujatia."
+   "text": "Mešita Darus Salaam na adrese 20 Overlea Blvd slúži moslimskej komunite v štvrtiach Thorncliffe Park, Flemingdon Park a v okolí už od roku 1995. Ponúka päť denných modlitieb a piatkovú modlitbu Jummah, denné programy Hifz a Alim/Alima, večerné hodiny Koránu (Madrasah), náboženskú školu v nedeľu, štúdium výkladu Koránu (Tafseer) a základov islámu, programy pre mládež, sobášne obrady (Nikah) a komunitné podujatia."
   },
   "68c635426ffe": {
    "correctedFrom": {
@@ -511,10 +525,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Bezplatné centrum EarlyON pre deti a rodiny pre obyvateľov mesta Toronto s deťmi vo veku 0 – 6 rokov a ich rodičmi či opatrovateľmi: programy na podporu vývoja dieťaťa, služby podpory pre rodičov, programy prípravy na školu, pomoc pri oneskorenom vývine reči a služby pre deti so špeciálnymi potrebami vrátane individuálneho prístupu ku každému prípadu. Hlavné sídlo: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd, jednotka 200 (pondelok – piatok 9:00 – 17:00); vo piatok sú k dispozícii hry v telocvični v centre Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
    },
-   "model": "claude-correction",
-   "note": "Preposition form",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 9 a.m. kept",
    "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
-   "text": "Bezplatné centrum EarlyON pre deti a rodiny pre obyvateľov mesta Toronto s deťmi vo veku 0 – 6 rokov a ich rodičmi či opatrovateľmi: programy na podporu vývoja dieťaťa, služby podpory pre rodičov, programy prípravy na školu, pomoc pri oneskorenom vývine reči a služby pre deti so špeciálnymi potrebami vrátane individuálneho prístupu ku každému prípadu. Hlavné sídlo: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd, jednotka 200 (pondelok – piatok 9:00 – 17:00); v piatok sú k dispozícii hry v telocvični v centre Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+   "text": "Bezplatné centrum pre deti a rodiny EarlyON pre obyvateľov mesta Toronto s deťmi vo veku 0 – 6 rokov a ich rodičov či opatrovateľov: programy na podporu vývinu dieťaťa, podpora pre rodičov, príprava na školu, pomoc pri oneskorenom vývine reči a služby pre deti so špeciálnymi potrebami s individuálnym vedením prípadu. Hlavné miesto: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (pondelok – piatok 9 a.m. – 17:00); v piatok hry v telocvični v Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
   },
   "7d47cf9e0e64": {
    "model": "north-small-translate-09-2026",
@@ -576,10 +590,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Krajský úrad štátnych služieb na adrese 945 Eglinton Avenue East (v predajni Staples). Vydáva vodičské preukazy, eviduje vozidlá a vydáva evidenčné značky, vydáva zdravotné karty provincie Ontario a rodné listy. Otvorené od pondelka do piatka od 9:00 do 21:00 a v sobotu od 9:00 do 17:00."
    },
-   "model": "claude-correction",
-   "note": "Provincial, not regional",
+   "model": "claude-opus-5.5",
+   "note": "facts check: a.m. times kept",
    "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
-   "text": "Úrad provinčnej vlády Ontária pre služby občanom na adrese 945 Eglinton Avenue East (v predajni Staples). Vydáva vodičské preukazy, eviduje vozidlá a vydáva evidenčné značky, vydáva zdravotné karty provincie Ontario a rodné listy. Otvorené od pondelka do piatka od 9:00 do 21:00 a v sobotu od 9:00 do 17:00."
+   "text": "Úrad provinčnej vlády pre služby občanom na adrese 945 Eglinton Avenue East (v predajni Staples). Vydáva vodičské preukazy, evidenciu vozidiel a evidenčné čísla, zdravotné karty Ontária a rodné listy. Otvorené od pondelka do piatka 9:00 a.m. – 21:00 a v sobotu 9:00 a.m. – 17:00."
   },
   "912f65f2191e": {
    "correctedFrom": {
@@ -676,10 +690,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Pobočka Torontskej verejnej knižnice na adrese 29 St. Dennis Drive ponúka požičiavanie kníh, verejné počítače, programy pre deti, vzdelávací program Leading to Reading na podporu gramotnosti pre deti a bezplatnú službu finančného poradenstva Financial Empowerment Service (pomoc s daňovým priznaním, žiadosťami o dávky a plánovaním rozpočtu – táto služba je dostupná aj na pobočke Thorncliffe). Otváracie hodiny: Po–Pia 9:00–20:30, So 9:00–17:00, Ne 12:00–17:00. Poznámka: pobočka bude od 1. decembra 2025 zatvorená kvôli rekonštrukcii a jej opätovné otvorenie sa očakáva začiatkom tretieho štvrťroka 2026; uvedené otváracie hodiny naznačujú, že už bola znovu otvorená, ale pred návštevou si to overte."
    },
-   "model": "claude-correction",
-   "note": "Name restored; tense",
+   "model": "claude-opus-5.5",
+   "note": "facts check: times, numbers and weekdays kept",
    "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
-   "text": "Pobočka Toronto Public Library (verejná knižnica) na adrese 29 St. Dennis Drive ponúka požičiavanie kníh, verejné počítače, programy pre deti, vzdelávací program Leading to Reading na podporu gramotnosti pre deti a bezplatnú službu finančného poradenstva Financial Empowerment Service (pomoc s daňovým priznaním, žiadosťami o dávky a plánovaním rozpočtu – táto služba je dostupná aj na pobočke Thorncliffe). Otváracie hodiny: Po–Pia 9:00–20:30, So 9:00–17:00, Ne 12:00–17:00. Poznámka: pobočka bola od 1. decembra 2025 zatvorená kvôli rekonštrukcii a jej opätovné otvorenie sa očakáva začiatkom tretieho štvrťroka 2026; uvedené otváracie hodiny naznačujú, že už bola znovu otvorená, ale pred návštevou si to overte."
+   "text": "Pobočka Toronto Public Library (verejná knižnica) na adrese 29 St. Dennis Drive: požičiavanie kníh, verejné počítače, programy pre deti, program čítania pre deti Leading to Reading a bezplatná služba Financial Empowerment Service (pomoc s daňovým priznaním, žiadosťami o dávky a rozpočtom – ponúka ju aj pobočka Thorncliffe). Uvedené otváracie hodiny: pondelok – piatok 9 a.m. – 20:30, sobota 9 a.m. – 17:00, nedeľa 12 – 17:00. Poznámka: pobočka sa 1. decembra 2025 zatvorila kvôli obnove a znovu otvoriť sa mala začiatkom 3. štvrťroka 2026; podľa aktuálnych otváracích hodín sa zdá, že je opäť otvorená, ale pred návštevou si to overte."
   },
   "a5c931e58836": {
    "model": "north-small-translate-09-2026",
@@ -712,9 +726,14 @@
    "text": "Policajná stanica"
   },
   "ae69792878f8": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Zbor Chapel in the Park United Church je malé multikultúrne spoločenstvo so sídlom na adrese 16 Thorncliffe Park Drive, Toronto (416-421-0792), ktoré slúži obyvateľom štvrte Thorncliffe Park a Don Mills. Nedeľné bohoslužby sa konajú o 10:00 osobne, cez Zoom aj ako priamy prenos na internete. Zbor pozýva nových ľudí, aby sa pripojili a stali sa súčasťou jeho „veriacej rodiny\"."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 10:00 a.m. and Sunday kept",
    "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
-   "text": "Zbor Chapel in the Park United Church je malé multikultúrne spoločenstvo so sídlom na adrese 16 Thorncliffe Park Drive, Toronto (416-421-0792), ktoré slúži obyvateľom štvrte Thorncliffe Park a Don Mills. Nedeľné bohoslužby sa konajú o 10:00 osobne, cez Zoom aj ako priamy prenos na internete. Zbor pozýva nových ľudí, aby sa pripojili a stali sa súčasťou jeho „veriacej rodiny\"."
+   "text": "Chapel in the Park United Church je malý multikultúrny zbor na adrese 16 Thorncliffe Park Drive, Toronto (416-421-0792), ktorý slúži štvrtiam Thorncliffe Park a Don Mills. Bohoslužby sa konajú v nedeľu o 10:00 a.m. osobne, cez Zoom a ako priamy prenos. Zbor pozýva nových ľudí, aby sa pridali k jeho „rodine viery“."
   },
   "b0e486b1a83e": {
    "model": "north-small-translate-09-2026",
@@ -757,32 +776,34 @@
    "text": "Požiarna stanica"
   },
   "bc208860cefc": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Toronto Hifz Academy na adrese 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) je koránska škola, ktorá ponúka denné aj externé štúdium Hifz (memorovanie Koránu), prípravný kurz pred Hifz, opakovanie pre Hafizov, klasickú arabčinu a kurzy Koránu pre ženy. Vyučovanie prebieha od pondelka do štvrtka od 9.00 do 13.00 a od 16.00 do 19.00, v piatok od 9.00 do 14.00 a od 16.00 do 19.00."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: a.m. times kept, 24-hour times with a colon",
    "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
-   "text": "Toronto Hifz Academy na adrese 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) je koránska škola, ktorá ponúka denné aj externé štúdium Hifz (memorovanie Koránu), prípravný kurz pred Hifz, opakovanie pre Hafizov, klasickú arabčinu a kurzy Koránu pre ženy. Vyučovanie prebieha od pondelka do štvrtka od 9.00 do 13.00 a od 16.00 do 19.00, v piatok od 9.00 do 14.00 a od 16.00 do 19.00.",
-   "warnings": [
-    "numbers missing from translation: 2, 7"
-   ]
+   "text": "Toronto Hifz Academy na adrese 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) je koránska škola, ktorá ponúka denné aj čiastočné štúdium Hifz (učenie sa Koránu naspamäť), prípravu na Hifz, opakovanie pre hafizov, klasickú arabčinu a hodiny Koránu pre ženy. Vyučovanie je pondelok – štvrtok 9 a.m. – 13:00 a 16:00 – 19:00 a v piatok 9 a.m. – 14:00 a 16:00 – 19:00."
   },
   "c04bdbce2472": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "Park Leaside (neďaleko cesty Millwood Road a bulvára Overlea Boulevard) ponúka verejný prístup k pitnej vode prostredníctvom jednej pitnej fontány a dvoch staníc na plnenie fliaš. Tento 3,4-hektárový park má aj osvetlené ihrisko na bejzbal, šesť osvetlených tenisových kurtov, viacúčelové športovisko, detské ihrisko, komunitnú záhradu, toalety a vonkajší bazén Leaside."
    },
-   "model": "claude-correction",
-   "note": "Name restored",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 1 and 2 kept as digits",
    "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
-   "text": "Park Leaside (neďaleko cesty Millwood Road a bulvára Overlea Boulevard) ponúka verejný prístup k pitnej vode prostredníctvom jednej pitnej fontány a dvoch staníc na plnenie fliaš. Tento 3,4-hektárový park má aj osvetlené ihrisko na bejzbal, šesť osvetlených tenisových kurtov, viacúčelové športovisko, detské ihrisko, komunitnú záhradu, toalety a vonkajší bazén Leaside Outdoor Pool."
+   "text": "Leaside Park (pri Millwood Road a Overlea Boulevard) poskytuje verejnú pitnú vodu: 1 pitná fontánka a 2 stanice na plnenie fliaš. Park s rozlohou 3,4 hektára má aj osvetlené bejzbalové ihrisko, šesť osvetlených tenisových kurtov, viacúčelové športové ihrisko, detské ihrisko, komunitnú záhradu, toalety a vonkajší bazén Leaside Outdoor Pool."
   },
   "c0b5b18276a1": {
    "correctedFrom": {
     "model": "north-small-translate-09-2026",
     "text": "Obecná potravinová banka na adrese 10 Gateway Blvd (suterén), North York, poskytuje bezplatné potraviny a pomoc rodinám v núdzi; teraz je registrovanou charitatívnou organizáciou. Na stránke sú uvedené rozdielne otváracie hodiny (v jednej časti pondelky a stredy od 11:00 do 15:30, v inej pondelok až štvrtok od 13:30 do 15:30) – pred návštevou si to overte telefonicky na čísle 416-422-4322."
    },
-   "model": "claude-correction",
-   "note": "Community, not municipal",
+   "model": "claude-opus-5.5",
+   "note": "facts check: times written as in the English (a.m./p.m.)",
    "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
-   "text": "Komunitná potravinová banka na adrese 10 Gateway Blvd (suterén), North York, poskytuje bezplatné potraviny a pomoc rodinám v núdzi; teraz je registrovanou charitatívnou organizáciou. Na stránke sú uvedené rozdielne otváracie hodiny (v jednej časti pondelky a stredy od 11:00 do 15:30, v inej pondelok až štvrtok od 13:30 do 15:30) – pred návštevou si to overte telefonicky na čísle 416-422-4322."
+   "text": "Komunitná potravinová banka na adrese 10 Gateway Blvd (suterén), North York, poskytuje bezplatné potraviny a pomoc rodinám v núdzi; teraz je registrovanou charitatívnou organizáciou. Na stránke sú uvedené rozdielne otváracie hodiny (na jednom mieste pondelky a stredy 11:00 a.m. – 3:30 p.m., na inom pondelok až štvrtok 1:30 – 3:30 p.m.) – pred návštevou si to overte telefonicky na čísle 416-422-4322."
   },
   "c6efc2c01c02": {
    "correctedFrom": {
@@ -839,10 +860,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia potravín dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, chladiacich centier alebo krízovej linky špecifické pre Food Collaborative. Poskytuje krízovú intervenciu a poradenstvo v rámci svojho programu proti násiliu na ženách; funguje ako kontaktné miesto pre Toronto Rent Bank a call centrum fondu núdzovej pomoci na úhradu energií (416-397-7368)."
    },
-   "model": "claude-correction",
-   "note": "Cooling centre meaning; program name restored",
+   "model": "claude-opus-5.5",
+   "note": "TNO review: shelter rendered as útulok",
    "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
-   "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia potravín dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, miest na ochladenie počas horúčav alebo krízovej linky špecifické pre Food Collaborative. Poskytuje krízovú intervenciu a poradenstvo v rámci svojho programu proti násiliu na ženách; funguje ako kontaktné miesto pre Toronto Rent Bank a call centrum Emergency Energy Fund (núdzový fond na úhradu energií) (416-397-7368)."
+   "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatné rozdávanie potravín dvakrát mesačne). Útulok, miesto na ochladenie ani krízová linka priamo pri Food Collaborative neboli potvrdené. Ponúka krízovú intervenciu a poradenstvo v rámci programu proti násiliu na ženách; je kontaktným miestom Toronto Rent Bank (pomoc s nájomným) a call centrom Emergency Energy Fund (núdzový fond na úhradu energií) (416-397-7368)."
   },
   "d9ee2590bc2e": {
    "correctedFrom": {
@@ -879,10 +900,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Centrum pre deti a rodiny Fraser Mustard EarlyON (pri Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) je bezplatný program, kam môžete prísť kedykoľvek, určený pre rodičov a opatrovateľov s deťmi od narodenia do 6 rokov. Funguje od pondelka do štvrtka od 8:45 do 13:45. Deti si môžu hrať, objavovať svet, učiť sa a vychutnať si zdravú desiatu, zatiaľ čo rodičia sa môžu spoznať s ďalšími rodinami a získať informácie o komunitných programoch a službách. Všetko prebieha pod vedením kvalifikovaného odborníka na rané detstvo a nie je potrebná žiadna predbežná registrácia."
    },
-   "model": "claude-correction",
-   "note": "Grammar",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 8:45 a.m. kept",
    "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
-   "text": "Centrum pre deti a rodiny Fraser Mustard EarlyON (pri Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) je bezplatný program, kam môžete prísť kedykoľvek, určený pre rodičov a opatrovateľov s deťmi od narodenia do 6 rokov. Funguje od pondelka do štvrtka od 8:45 do 13:45. Deti sa môžu hrať, objavovať svet, učiť sa a vychutnať si zdravú desiatu, zatiaľ čo rodičia sa môžu spoznať s ďalšími rodinami a získať informácie o komunitných programoch a službách. Všetko prebieha pod vedením kvalifikovaného odborníka na rané detstvo a nie je potrebná žiadna predbežná registrácia."
+   "text": "Centrum pre deti a rodiny Fraser Mustard EarlyON (v Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) je bezplatný program bez objednania pre rodičov a opatrovateľov s deťmi od bábätiek do 6 rokov, otvorený pondelok – štvrtok 8:45 a.m. – 13:45. Deti sa môžu hrať, objavovať, učiť sa a dostanú zdravú desiatu, zatiaľ čo rodičia sa spoznávajú s inými rodinami a dostávajú informácie o komunitných programoch a službách; pomáha im kvalifikovaný odborník na rané detstvo. Registrácia vopred nie je potrebná."
   },
   "e04d44a05f5d": {
    "correctedFrom": {
@@ -969,10 +990,10 @@
     "model": "north-small-translate-09-2026",
     "text": "Miestne združenie Cirkvi Ježiša Krista Svätých neskorších dní na adrese 24 Ferrand Drive, North York. Nedeľné bohoslužby zahŕňajú stretnutie pri svätosti a tiež skupinové stretnutia podľa vekových kategórií pre všetkých od 18 mesiacov nahor; všetci sú srdečne vítaní."
    },
-   "model": "claude-correction",
-   "note": "Sacrament meeting; name restored with gloss",
+   "model": "claude-opus-5.5",
+   "note": "facts check: Sunday kept",
    "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
-   "text": "Miestny zbor cirkvi The Church of Jesus Christ of Latter-day Saints (Cirkev Ježiša Krista Svätých neskorších dní) na adrese 24 Ferrand Drive, North York. Nedeľné bohoslužby zahŕňajú sviatostné zhromaždenie a tiež skupinové stretnutia podľa vekových kategórií pre všetkých od 18 mesiacov nahor; všetci sú srdečne vítaní."
+   "text": "Miestny zbor cirkvi The Church of Jesus Christ of Latter-day Saints (Cirkev Ježiša Krista Svätých neskorších dní) na adrese 24 Ferrand Drive, North York. Bohoslužba v nedeľu zahŕňa sviatostné zhromaždenie a hodiny podľa vekových skupín pre všetkých od 18 mesiacov; všetci sú vítaní."
   },
   "f0173151ade9": {
    "model": "north-small-translate-09-2026",
@@ -985,12 +1006,14 @@
    "text": "Park Leonard Linton na adrese 135 Vanderhoof Ave; zoznam zariadení mesta uvádza, že súčasťou areálu je stanica na doplnenie vody do fliaš. Úplný zoznam vybavenia sa nepodarilo získať."
   },
   "f2e70e53d615": {
-   "model": "north-small-translate-09-2026",
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Poskytuje núdzové ubytovanie, vrátane nepretržite otvoreného centra pre dočasný pobyt (351 Lake Shore Blvd East), ako aj služby zamerané na znižovanie rizík pre ľudí v útulkoch a v rámci bytových programov."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 24 kept",
    "source": "Provides emergency shelter services, including a 24-hour respite centre (351 Lake Shore Blvd East), plus harm reduction supports for people in shelters and housing programs.",
-   "text": "Poskytuje núdzové ubytovanie, vrátane nepretržite otvoreného centra pre dočasný pobyt (351 Lake Shore Blvd East), ako aj služby zamerané na znižovanie rizík pre ľudí v útulkoch a v rámci bytových programov.",
-   "warnings": [
-    "numbers missing from translation: 24"
-   ]
+   "text": "Poskytuje núdzové ubytovanie vrátane centra na dočasný pobyt otvoreného 24 hodín denne (351 Lake Shore Blvd East), ako aj služby na znižovanie rizík (harm reduction) pre ľudí v útulkoch a v bytových programoch."
   },
   "f53b3121ceff": {
    "model": "north-small-translate-09-2026",
@@ -1028,5 +1051,5 @@
    "text": "Opatrovanie detí a EarlyON"
   }
  },
- "updated": "2026-10-01T04:39:33+00:00"
+ "updated": "2026-10-09T04:01:01+00:00"
 }
