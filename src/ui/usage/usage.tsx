@@ -44,16 +44,32 @@ async function chosenNeighbourhood(): Promise<NeighbourhoodId | undefined> {
  */
 export function InstallCount({ lang }: { lang: LangCode }) {
   useEffect(() => {
+    // Whether the page is going away; a page brought back from the browser's page cache (`pageshow`) is here again.
+    let leaving = false;
+    const onPagehide = () => {
+      leaving = true;
+    };
+    const onPageshow = () => {
+      leaving = false;
+    };
     const report = () =>
       void reportInstall(lang, {
         storage: phoneStorage(),
         online: () => navigator.onLine !== false,
         neighbourhood: chosenNeighbourhood,
         send: (event) => sendUsage(event, { keepalive: true }),
+        // Answered in a task of its own, after the one in which the browser may be firing pagehide (see InstallDeps.leaving).
+        leaving: () => new Promise((resolve) => setTimeout(() => resolve(leaving), 0)),
       });
+    window.addEventListener("pagehide", onPagehide);
+    window.addEventListener("pageshow", onPageshow);
     if (isStandalone(window)) report();
     window.addEventListener("appinstalled", report);
-    return () => window.removeEventListener("appinstalled", report);
+    return () => {
+      window.removeEventListener("appinstalled", report);
+      window.removeEventListener("pagehide", onPagehide);
+      window.removeEventListener("pageshow", onPageshow);
+    };
   }, [lang]);
   return null;
 }
