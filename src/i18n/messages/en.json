@@ -5104,8 +5104,8 @@
       "locked": {
         "approved": "This alert was approved and is published.",
         "discarded": "This alert was discarded.",
-        "returned": "This alert was sent back to its author with a note, and is waiting for the author to submit it again.",
-        "draft": "Its author pulled it back to a draft, so it is not waiting for approval.",
+        "returned": "Returned to the author, waiting for their changes. Nothing goes out until they submit it again.",
+        "draft": "Its author pulled it back to a draft, so it is not waiting for approval. Nothing goes out until they submit it again.",
         "own": "You wrote or changed this alert, so a second person has to approve it.",
         "closed": "This alert is closed.",
         "other": "This alert is not waiting for approval."
@@ -5209,7 +5209,8 @@
         "update": "Update",
         "correction": "Correction",
         "withdrawal": "Withdrawal",
-        "final": "Final"
+        "final": "Final",
+        "newAlert": "New alert"
       },
       "state": {
         "draft": "Draft",
@@ -5872,6 +5873,7 @@
         "superseded": "replaced",
         "discarded": "discarded"
       },
+      "review": "Review the drill {kind}",
       "results": {
         "title": "What happened to the texts",
         "none": "No text has been written for this drill yet.",
@@ -6115,6 +6117,7 @@
       "notSent": "Not sent yet.",
       "call": "Call {phone}",
       "text": "Text {phone}",
+      "language": "Language: {language}",
       "marked": "Marked: {mark}",
       "marksFor": "What happened with {phone}",
       "hubTold": "The Hub has been told; call the Hub if you can",
@@ -6188,6 +6191,7 @@
         "residentHeading": "The resident",
         "phone": "Phone",
         "call": "Call {phone}",
+        "language": "Language",
         "floor": "Floor",
         "method": "Asked to be checked on by",
         "methods": {

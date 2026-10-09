@@ -1,8 +1,9 @@
 // The floors of a building as other modules read them (S01.14): identity's assignments refer to floors by
 // id and may not import places (AD-2), so the composition root hands identity this reader as its port.
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray, isNull } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
 import { building, buildingFloor, disruptionType, neighbourhood } from "../adapters/schema";
+import { compareAddresses } from "../domain/street";
 
 /** A floor as an assignment needs it: the stable id, the label people see, and the place in the building's order. */
 export interface FloorRecord {
@@ -90,12 +91,14 @@ export async function roundTypes(executor: DbExecutor): Promise<string[]> {
 }
 
 /**
- * Every pilot building, by address then rsn, read through the executor given: what the SMS building menu lists by street (S07.05).
- * subscriptions may not import the table, so it reads it here. A building flagged `not_in_register_since` is listed, as on R-35.
+ * Every pilot building, by address (street, then number) then rsn, read through the executor given: what the SMS building menu lists by street (S07.05).
+ * subscriptions may not import the table, so it reads it here. A building flagged `not_in_register_since` is listed, as on R-35; one merged into
+ * another by the buildings seed (UAT F-5) is not.
  */
 export async function listBuildings(executor: DbExecutor): Promise<BuildingRecord[]> {
-  return executor
+  const rows = await executor
     .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId })
     .from(building)
-    .orderBy(asc(building.address), asc(building.rsn));
+    .where(isNull(building.mergedInto));
+  return rows.sort((a, b) => compareAddresses(a.address, b.address) || a.rsn.localeCompare(b.rsn, "en", { numeric: true }));
 }

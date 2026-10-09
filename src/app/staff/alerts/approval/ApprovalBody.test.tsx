@@ -225,8 +225,25 @@ describe("an entry that is not waiting for this person", () => {
 
   it("shows the note an approver sent back with", () => {
     const out = html(screenOf({ entry: { status: "draft", contentHash: null, submittedAt: null, returnedFor: "return", returnedNote: "Say which floors." } }));
-    expect(out).toContain("sent back to its author with a note");
+    expect(out).toContain("Returned to the author, waiting for their changes.");
     expect(out).toContain("The note sent: Say which floors.");
+  });
+
+  it("for a draft (returned, or pulled back) says it waits for its author, with its English text, and nothing that reads as an outage (UAT F-4)", () => {
+    for (const entry of [
+      { status: "draft" as const, contentHash: null, submittedAt: null, returnedFor: "return" as const, returnedNote: "Say which floors." },
+      { status: "draft" as const, contentHash: null, submittedAt: null },
+    ]) {
+      const out = html(screenOf({ entry, fallback: ["ur", "ps"] }));
+      expect(out).toContain('data-testid="locked-note"');
+      expect(out).toContain(ENGLISH);
+      for (const gone of ["facts", "sms-not-open", "estimated-cost", "fallback", "all-translated", "approval-aside", "recipients-by-language"]) expect(out, gone).not.toContain(`data-testid="${gone}"`);
+      for (const words of ["Text sign-up is not open yet", "The cost cannot be estimated", "Not translated", "Translation not available"]) expect(out, words).not.toContain(words);
+      expect(out).not.toContain("layout-screen__actions");
+    }
+    // An entry waiting for approval still shows all of it.
+    const waiting = html(screenOf());
+    for (const shown of ["facts", "approval-aside"]) expect(waiting, shown).toContain(`data-testid="${shown}"`);
   });
 });
 

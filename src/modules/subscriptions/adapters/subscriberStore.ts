@@ -3,7 +3,7 @@
 // `phoneOf` (the ContactResolver's source, at the hand-off point, and S07.06's deletion, which deletes by number); the router and the web
 // sign-up find a subscriber by number and read back its id, language and prompt, never the number; S07.06's edit page reads its last two
 // digits only; S08.07's round page reads the numbers of the requesters in a round (`checkinContactsOf`); S08.08's escalation page reads the number of
-// the subscriber an escalation's row still names, for an Admin (`escalationNumberOf`).
+// the subscriber an escalation's row still names, for an Admin (`escalationContactOf`). Both with the subscriber's language (UAT note 9).
 import { and, asc, count, countDistinct, eq, gt, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import { RECONSENT_PROMPT_KIND } from "../domain/campaign";
@@ -33,6 +33,12 @@ export interface NewSubscriber {
 }
 
 /** S08.05: a subscriber's check-in request: the method, the "where I live" building and floor, and the consent version confirmed. */
+/** A subscriber as the staff who check in on them reach them (S08.07, S08.08): the number in E.164 and the language they chose (UAT note 9). */
+export interface SubscriberContact {
+  phone: string;
+  lang: string;
+}
+
 export interface SubscriberCheckin {
   method: "call" | "text";
   rsn: string;
@@ -120,10 +126,13 @@ export const subscriberStore = {
     return deleted.length > 0;
   },
 
-  /** S08.08: the number of a subscriber an escalation's check-in row still names, for the Admin following it up; null when the subscriber is gone. */
-  async escalationNumberOf(executor: DbExecutor, id: string): Promise<string | null> {
-    const [row] = await executor.select({ phone: subscriber.phone }).from(subscriber).where(eq(subscriber.id, id));
-    return row?.phone ?? null;
+  /**
+   * S08.08: the number of a subscriber an escalation's check-in row still names, for the Admin following it up, and (UAT note 9) the language they chose, so the
+   * Hub calls or texts them in it; null when the subscriber is gone.
+   */
+  async escalationContactOf(executor: DbExecutor, id: string): Promise<SubscriberContact | null> {
+    const [row] = await executor.select({ phone: subscriber.phone, lang: subscriber.lang }).from(subscriber).where(eq(subscriber.id, id));
+    return row ? { phone: row.phone, lang: row.lang } : null;
   },
 
   /** The number of a receiving subscriber, for the resolver's source only; null when the subscriber is gone or does not receive texts. */
@@ -318,13 +327,13 @@ export const subscriberStore = {
    * a request withdrawn or a subscriber lapsed is never shown. Read without a lock; the app composes the round from it and sends it no-store. The one
    * reader of numbers for staff eyes.
    */
-  async checkinContactsOf(executor: DbExecutor, ids: readonly string[]): Promise<Map<string, string>> {
+  async checkinContactsOf(executor: DbExecutor, ids: readonly string[]): Promise<Map<string, SubscriberContact>> {
     if (ids.length === 0) return new Map();
     const rows = await executor
-      .select({ id: subscriber.id, phone: subscriber.phone })
+      .select({ id: subscriber.id, phone: subscriber.phone, lang: subscriber.lang })
       .from(subscriber)
       .where(and(inArray(subscriber.id, [...ids]), isNotNull(subscriber.checkinMethod), receivingSql(subscriber.retentionState)));
-    return new Map(rows.map((row) => [row.id, row.phone]));
+    return new Map(rows.map((row) => [row.id, { phone: row.phone, lang: row.lang }]));
   },
 
   /** S08.05: writes the request, or clears it (null); the caller holds the subscriber's row lock. */

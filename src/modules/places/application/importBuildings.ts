@@ -40,6 +40,10 @@ export interface ImportCounts {
   buildings_flagged: number;
   /** Rows folded into another building by the merge file. */
   buildings_merged: number;
+  /** Buildings loaded before that this run marked merged into another (UAT F-5): kept, and left out of every list from now on. */
+  buildings_hidden: number;
+  /** Merged buildings whose line left the merge file: listed again. */
+  buildings_unmerged: number;
   floors_created: number;
 }
 
@@ -93,6 +97,8 @@ export async function importBuildings(db: Db, plan: ImportPlan, deps: ImportDeps
     buildings_restored: 0,
     buildings_flagged: 0,
     buildings_merged: plan.counts.merged,
+    buildings_hidden: 0,
+    buildings_unmerged: 0,
     floors_created: 0,
   };
   let notInRegister: ImportResult["notInRegister"] = [];
@@ -130,15 +136,18 @@ export async function importBuildings(db: Db, plan: ImportPlan, deps: ImportDeps
       }
       const changed = !sameFacts(row, planned);
       const restored = row.notInRegisterSince !== null;
-      if (changed || restored) {
+      // A building the merge file folded into another before, whose line is gone: it is a building of its own again, and listed.
+      const unmerged = row.mergedInto !== null;
+      if (changed || restored || unmerged) {
         await tx
           .update(building)
-          .set({ ...(changed ? { ...factsOf(planned), factsUpdatedAt: now } : {}), notInRegisterSince: null })
+          .set({ ...(changed ? { ...factsOf(planned), factsUpdatedAt: now } : {}), notInRegisterSince: null, mergedInto: null })
           .where(eq(building.rsn, planned.rsn));
       }
       if (changed) counts.buildings_updated += 1;
       else counts.buildings_unchanged += 1;
       if (restored) counts.buildings_restored += 1;
+      if (unmerged) counts.buildings_unmerged += 1;
       if (planned.storeys !== null && row.storeys !== null && planned.storeys !== row.storeys) {
         warnings.push({
           source: "database",
@@ -153,16 +162,35 @@ export async function importBuildings(db: Db, plan: ImportPlan, deps: ImportDeps
     }
 
     // A building loaded before that the merge file now folds into another is not missing from the
-    // register: it is reported as merged into its primary, and not flagged.
+    // register: it is marked merged into its primary (UAT F-5), so it leaves every building list, and it
+    // is kept, with its floors, so nothing that names it breaks. It is not flagged.
     const mergedInto = new Map(plan.buildings.flatMap((planned) => planned.mergedRsns.map((rsn) => [rsn, planned.rsn] as const)));
     const absent = [...existing.values()].filter((row) => !loaded.has(row.rsn));
     for (const row of absent) {
       const primary = mergedInto.get(row.rsn);
-      if (primary !== undefined) {
-        warnings.push({ source: "merge", row: null, rsn: row.rsn, address: row.address, message: `merged into rsn ${primary} by building-merge.csv: kept as it was, not flagged; check its floors and assignments at /staff/buildings` });
+      if (primary === undefined) continue;
+      if (row.mergedInto !== primary) {
+        await tx.update(building).set({ mergedInto: primary }).where(eq(building.rsn, row.rsn));
+        counts.buildings_hidden += 1;
       }
+      warnings.push({
+        source: "merge",
+        row: null,
+        rsn: row.rsn,
+        address: row.address,
+        message: `merged into rsn ${primary} by building-merge.csv: kept with its floors and left out of every building list; an ambassador assigned to it is listed at /staff/coverage?building=${row.rsn}: assign them to rsn ${primary} instead`,
+      });
     }
     const missing = absent.filter((row) => !mergedInto.has(row.rsn));
+    // A building that was merged and whose line left the merge file, and that the register no longer lists either: it is listed again, flagged below.
+    const unmergedMissing = missing.filter((row) => row.mergedInto !== null);
+    if (unmergedMissing.length > 0) {
+      await tx
+        .update(building)
+        .set({ mergedInto: null })
+        .where(inArray(building.rsn, unmergedMissing.map((row) => row.rsn)));
+      counts.buildings_unmerged += unmergedMissing.length;
+    }
     const newlyMissing = missing.filter((row) => row.notInRegisterSince === null);
     if (newlyMissing.length > 0) {
       await tx

@@ -188,6 +188,8 @@ test("an Ambassador opens My round from their home: the requests on their floors
   const [onFirst, onSecond, onThird] = residents;
   await expect(rowOf(page, onFirst!.roundRef).getByRole("link", { name: `Call ${onFirst!.shown}` })).toHaveAttribute("href", `tel:${onFirst!.phone}`);
   await expect(rowOf(page, onSecond!.roundRef).getByRole("link", { name: `Text ${onSecond!.shown}` })).toHaveAttribute("href", `sms:${onSecond!.phone}`);
+  // UAT note 9: each request says the resident's language, so they are called or texted in it.
+  await expect(rowOf(page, onFirst!.roundRef).getByTestId("round-language")).toHaveText("Language: English");
   await expect(page.getByText("Floor 1", { exact: true })).toBeVisible();
   // Floor 3 is not theirs: counts only, never the number.
   await expect(page.getByTestId("round-floor-counts")).toContainText("1 to do · 0 done · 0 not reached · 0 need help");

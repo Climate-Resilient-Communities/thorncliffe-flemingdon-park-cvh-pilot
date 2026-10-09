@@ -45,11 +45,12 @@ export default staffPage(
     const rsn = Array.isArray(query.building) ? query.building[0] : query.building;
     const notice = savedNotice(query);
     // S08.05: the check-in requests per building and floor (counts only), for the count of those on floors nobody covers.
-    const [plans, all, requests] = await Promise.all([buildings().listFloorPlans(), assignments().allAssignments(), checkinRequestsByFloor()]);
+    // With the merged buildings (UAT F-5): the list leaves them out, but one is still opened by its rsn, so an assignment made on it before the merge can be removed.
+    const [plans, all, requests] = await Promise.all([buildings().listFloorPlans({ includeMerged: true }), assignments().allAssignments(), checkinRequestsByFloor()]);
     let screen;
     if (rsn === undefined) {
       const rounds = roundTypesView(await roundTypes().list(), { editable: can(session.role, "checkins.round_types") });
-      screen = { ...coverageListView(plans, all, notice, requests), rounds };
+      screen = { ...coverageListView(plans.filter((plan) => plan.mergedInto === undefined), all, notice, requests), rounds };
     } else {
       const plan = plans.find((candidate) => candidate.rsn === rsn);
       const ambassadors = plan && can(session.role, "accounts.manage") ? await assignments().ambassadors() : undefined;

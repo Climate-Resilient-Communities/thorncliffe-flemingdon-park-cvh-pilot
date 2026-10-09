@@ -41,6 +41,12 @@ export function EscalationBody({ screen, form }: { screen: EscalationScreen; for
                         </a>
                       </dd>
                     </div>
+                    {resident.language && (
+                      <div data-testid="escalation-language">
+                        <dt>{t("language")}</dt>
+                        <dd>{resident.language}</dd>
+                      </div>
+                    )}
                     <div>
                       <dt>{t("floor")}</dt>
                       <dd>{resident.floor}</dd>

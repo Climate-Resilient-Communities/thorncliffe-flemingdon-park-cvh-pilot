@@ -18,6 +18,11 @@ function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
             <p className="hub-wrap">
               <strong>{item.title}</strong>
             </p>
+            {item.place && (
+              <p className="hub-wrap" data-testid="item-place">
+                {item.place}
+              </p>
+            )}
             <p className="hub-wrap">{[item.state, item.since].filter(Boolean).join(" · ")}</p>
             {item.waited && (
               <p className="hub-wrap" data-testid="waited">

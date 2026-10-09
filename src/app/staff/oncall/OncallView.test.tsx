@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { englishText } from "@/i18n/text";
 import type { OncallState } from "./control";
-import { OncallFormsView, latestAnswer, type OncallLabels, type OncallRow } from "./OncallFormsView";
+import { OncallFormsView, fieldsAfter, latestAnswer, shownAnswer, type OncallLabels, type OncallRow } from "./OncallFormsView";
 import { OncallView } from "./OncallView";
 import { onDutyView, type OnDutyEntry } from "./view";
 
@@ -192,5 +192,35 @@ describe("the on-duty Admin for check-ins (S08.08)", () => {
     const two: OncallState = { status: "done", at: 2, lines: ["b"] };
     expect(latestAnswer(IDLE, one, two, IDLE)).toBe(two);
     expect(latestAnswer(IDLE, IDLE, IDLE, IDLE)).toEqual(IDLE);
+  });
+});
+
+describe("the add form after a press (UAT F-1)", () => {
+  const refused: OncallState = { status: "refused", message: t("errors.number_invalid"), at: 2 };
+  const done: OncallState = { status: "done", lines: ["IT lead was added. The list now has 1 number."], at: 3 };
+  const typed = { label: "Night IT", number: "12345" };
+
+  it("keeps what was typed after a refusal and empties both fields once a number was added", () => {
+    expect(fieldsAfter(refused, typed)).toEqual(typed);
+    expect(fieldsAfter(done, typed)).toEqual({ label: "", number: "" });
+    expect(fieldsAfter(IDLE, typed)).toEqual(typed);
+  });
+
+  it("shows a refusal until the person changes a field after it, and then never again", () => {
+    expect(shownAnswer(refused, null)).toBe(refused);
+    expect(shownAnswer(refused, 1)).toBe(refused);
+    expect(shownAnswer(refused, 2)).toEqual(IDLE);
+    expect(shownAnswer(done, 3)).toBe(done);
+  });
+
+  it("draws the fields with what the page keeps, and the refusal only while it is shown", () => {
+    const fields = { label: "Night IT", number: "416-555-0123", onChange: () => {} };
+    const kept = renderToStaticMarkup(<OncallFormsView rows={[]} labels={labels} answer={refused} addFields={fields} />);
+    expect(kept).toContain('value="Night IT"');
+    expect(kept).toContain('value="416-555-0123"');
+    expect(kept).toContain('data-testid="oncall-error"');
+    const typedAgain = renderToStaticMarkup(<OncallFormsView rows={[]} labels={labels} answer={shownAnswer(refused, 2)} addFields={fields} />);
+    expect(typedAgain).not.toContain('data-testid="oncall-error"');
+    expect(typedAgain).toContain('aria-describedby="oncall-number-hint"');
   });
 });

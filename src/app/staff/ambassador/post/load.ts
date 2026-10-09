@@ -23,7 +23,8 @@ export type PostLoad = { ok: true; data: PostData } | { ok: false; reason: "not_
  */
 export async function loadPost(session: Pick<StaffSession, "staffId">, alertParam: string | undefined, now: Date = new Date()): Promise<PostLoad> {
   const current = await assignments().assignmentsOf(session.staffId);
-  const plans = await buildings().listFloorPlans();
+  // With the merged buildings (UAT F-5): an assignment made before a merge still names its building, which is shown by its address.
+  const plans = await buildings().listFloorPlans({ includeMerged: true });
   const mine: PostBuilding[] = [];
   for (const assignment of current) {
     const plan = plans.find((candidate) => candidate.rsn === assignment.rsn);

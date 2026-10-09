@@ -8,7 +8,9 @@
 // what the person is an editor of: a draft an approver sent back shows the approver's note until it is submitted again (the note's only other place is the
 // composer). Drills are listed apart from real alerts, in their own labelled section, and tagged, so a rehearsal is never mistaken for one.
 import type { ClosedThread, IncidentRow, Incidents, RunningThread } from "@/modules/alerting";
+import type { Audience } from "@/contracts/audience";
 import type { StaffRole } from "@/contracts/staffRoles";
+import type { BuildingFloorPlan } from "@/modules/places";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
 import { approveHref, COMPOSE_PAGE, composerHref, correctHref, LOG_PAGE, resolveHref, updateHref, withdrawHref } from "../pages";
@@ -24,8 +26,10 @@ export const catalogText: Text = (key, values) => englishText(`staff.incidents.$
 
 export interface IncidentItemView {
   key: string;
-  /** "Elevator, Power · Acknowledgement". */
+  /** "Elevator, Power · Acknowledgement"; a drill's starts "Drill · " where it is listed beside real alerts. */
   title: string;
+  /** UAT note 4: where it is, "12 Thorncliffe Park Dr" or "Thorncliffe Park", so two alerts of one type are told apart; null when it is not known. */
+  place?: string | null;
   /** Where it stands, in words. */
   state: string;
   /** "Submitted 2026-10-04 14:00" for a pending entry. */
@@ -84,12 +88,34 @@ export function durationText(ms: number, t: Text): string {
   return unit("day", "days", days);
 }
 
-const itemOf = (row: IncidentRow, kind: "waiting" | "mine", t: Text, now: Date): IncidentItemView => {
+/** The words of a list: "A", "A and B", "A, B and C". */
+const listWords = (items: readonly string[]): string => (items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
+
+/**
+ * Where an alert is, in a few words (UAT note 4): the addresses of its buildings, or the names of its neighbourhoods, from the plans given. A building or a
+ * neighbourhood the plans do not name is given by its id. Null with no audience.
+ */
+export function placeOf(audience: Audience | undefined, plans: readonly BuildingFloorPlan[]): string | null {
+  if (!audience) return null;
+  if (audience.scope === "neighbourhood") return listWords(audience.neighbourhood_ids.map((id) => plans.find((plan) => plan.neighbourhoodId === id)?.neighbourhoodName ?? id));
+  return listWords(audience.buildings.map((chosen) => plans.find((plan) => plan.rsn === chosen.rsn)?.address ?? chosen.rsn)) || null;
+}
+
+/**
+ * The kind of an entry in words. A thread's first entry written on the alert composer is an `update` in the lifecycle; the Hub reads it as a new alert (UAT note 5),
+ * not as an update to something already running.
+ */
+const kindWords = (row: IncidentRow, t: Text) => (row.kind === "update" && row.followUp !== true ? t("kind.newAlert") : t(`kind.${row.kind}`));
+
+const itemOf = (row: IncidentRow, kind: "waiting" | "mine", t: Text, now: Date, plans: readonly BuildingFloorPlan[]): IncidentItemView => {
   const ref = { alertId: row.alertId, entryId: row.entryId };
   const returned = row.status === "draft" && row.returnedNote !== null;
+  const title = `${row.types.map(typeName).join(", ")} · ${kindWords(row, t)}`;
   return {
     key: `${kind}-${row.entryId}`,
-    title: `${row.types.map(typeName).join(", ")} · ${t(`kind.${row.kind}`)}`,
+    // UAT F-6: a drill waiting for approval is in the queue beside real alerts, so it says it is a drill first.
+    title: kind === "waiting" && row.isDrill ? `${t("drillTag")} · ${title}` : title,
+    place: placeOf(row.audience, plans),
     state: kind === "waiting" ? t("state.pending") : returned ? t("state.returned") : row.status === "draft" ? t("state.draft") : t("state.pending"),
     since: row.submittedAt ? t("waitingSince", { time: formatTorontoDateTime(row.submittedAt) }) : null,
     waited: kind === "waiting" && row.submittedAt ? t("waitedFor", { time: durationText(now.getTime() - row.submittedAt.getTime(), t) }) : null,
@@ -105,9 +131,10 @@ const itemOf = (row: IncidentRow, kind: "waiting" | "mine", t: Text, now: Date):
 };
 
 /** A running thread: what residents read last, until when, and the one way to add to it (none for a person who only reads). */
-const runningOf = (thread: RunningThread, t: Text, readOnly: boolean): IncidentItemView => ({
+const runningOf = (thread: RunningThread, t: Text, readOnly: boolean, plans: readonly BuildingFloorPlan[]): IncidentItemView => ({
   key: `running-${thread.alertId}`,
   title: thread.types.map(typeName).join(", "),
+  place: placeOf(thread.audience, plans),
   state: t("runningLine", { kind: t(`kind.${thread.coveringKind}`), phase: englishText(`staff.compose.phase.${thread.phase}`), time: formatTorontoDateTime(thread.validUntil) }),
   since: t("runningPublished", { time: formatTorontoDateTime(thread.publishedAt) }),
   waited: null,
@@ -145,6 +172,7 @@ export function incidentsView(
   running: readonly RunningThread[] = [],
   now: Date = new Date(),
   closed: readonly ClosedThread[] = [],
+  plans: readonly BuildingFloorPlan[] = [],
 ): IncidentsView {
   // The roles that approve are the ones that write to a running alert: Coordinators and Admins (the policy actions alert.approve and alert.author_wide).
   const approver = role === "coordinator" || role === "admin";
@@ -154,10 +182,10 @@ export function incidentsView(
   // A Director has nothing waiting and nothing of their own, and is handed no link to either, whatever rows they were given.
   const waiting = [...(director ? [] : incidents.waiting)]
     .sort((a, b) => (a.submittedAt?.getTime() ?? Infinity) - (b.submittedAt?.getTime() ?? Infinity))
-    .map((row) => itemOf(row, "waiting", t, now));
-  const mine = (director ? [] : incidents.mine).map((row) => itemOf(row, "mine", t, now));
+    .map((row) => itemOf(row, "waiting", t, now, plans));
+  const mine = (director ? [] : incidents.mine).map((row) => itemOf(row, "mine", t, now, plans));
   // Open threads, the most recently published first.
-  const runningItems = author || director ? [...running].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()).map((thread) => runningOf(thread, t, director)) : [];
+  const runningItems = author || director ? [...running].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()).map((thread) => runningOf(thread, t, director, plans)) : [];
   // Closed threads, the most recently closed first.
   const closedItems = author || director ? [...closed].sort((a, b) => b.closedAt.getTime() - a.closedAt.getTime()).map((thread) => closedOf(thread, t)) : [];
   const drills = [...waiting.filter((item) => item.drill), ...runningItems.filter((item) => item.drill), ...closedItems.filter((item) => item.drill), ...mine.filter((item) => item.drill)];
@@ -179,7 +207,8 @@ export function incidentsView(
           ],
         }
       : null,
-    waiting: approver ? { title: t("waitingTitle"), lead: t("waitingLead"), none: t("waitingNone"), items: waiting.filter((item) => !item.drill) } : null,
+    // UAT F-6: a drill waiting for approval is in the queue too (tagged "Drill"), so the second Admin who must approve it sees it there; the Drills section lists it as well.
+    waiting: approver ? { title: t("waitingTitle"), lead: t("waitingLead"), none: t("waitingNone"), items: waiting } : null,
     running:
       author || director
         ? { title: t("runningTitle"), lead: director ? t("readOnlyRunningLead") : t("runningLead"), none: t("runningNone"), items: runningItems.filter((item) => !item.drill) }

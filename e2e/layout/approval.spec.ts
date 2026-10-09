@@ -90,6 +90,12 @@ const PAGES: Page_[] = [
     actions: ["approve-button", "return-button", "discard-button"],
   },
   {
+    // UAT F-3: a correction whose entry was corrected since can never be approved: the reason is at the top, and only Discard is offered.
+    name: "O-05 a correction of an entry that was corrected since",
+    review: { entry: { kind: "correction", supersedesId: REPLACED.id }, target: { ...REPLACED, status: "superseded", valid: false } },
+    actions: ["discard-button"],
+  },
+  {
     name: "O-05 a withdrawal that closes the alert, with texting open",
     review: { entry: { kind: "withdrawal", supersedesId: REPLACED.id, withdrawalReason: "duplicate" }, target: REPLACED, closesThread: true, recipients: OPEN },
     actions: ["approve-button", "return-button", "discard-button"],

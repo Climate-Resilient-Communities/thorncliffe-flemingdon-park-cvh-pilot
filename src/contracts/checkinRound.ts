@@ -21,12 +21,16 @@ export const RoundRefSchema = z.uuid({ version: "v4" });
 /** The body of a round's read: nothing but the version (the person is the session; their floors are their assignments now). */
 export const RoundRequestSchema = z.strictObject({ v: z.literal(1) });
 
-/** One request on a floor the person may see: its name in the round, the number in E.164, the method and its latest mark. */
+/**
+ * One request on a floor the person may see: its name in the round, the number in E.164, the method, its latest mark and (UAT note 9) the language the
+ * resident chose, in the staff surface's words ("Urdu"), so they are called or texted in it.
+ */
 export const RoundContactSchema = z.strictObject({
   round_ref: RoundRefSchema,
   phone: z.string().regex(/^\+1[2-9][0-9]{9}$/),
   method: z.enum(["call", "text"]),
   status: z.enum(["pending", ...MARK_STATUSES]),
+  language: z.string().min(1).max(80).optional(),
 });
 export type RoundContact = z.infer<typeof RoundContactSchema>;
 

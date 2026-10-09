@@ -25,6 +25,7 @@ import postgres from "postgres";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { displayPhone } from "../../src/contracts/phone";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { escalationLink, escalationTexts } from "../../src/app/escalations";
 import { onDutyNoticeFor } from "../../src/app/staff/onDutyNotice";
@@ -405,7 +406,7 @@ describe("an escalation texts the on-duty Admin, in the mark's transaction (E08 
       { status: "not_reached", late: false, escalated: true },
     ]);
     // The handled escalation's page still finds its row (named by `handled_ref` now), live in its round.
-    expect(((await loadEscalation(help!.id, { followUp: true, aal2: true }, app)) as EscalationScreen).resident).toMatchObject({ kind: "shown", phone: her.phone });
+    expect(((await loadEscalation(help!.id, { followUp: true, aal2: true }, app)) as EscalationScreen).resident).toMatchObject({ kind: "shown", phone: displayPhone(her.phone) });
 
     // The open escalations keep both rows, with their numbers, for the follow-up after the close.
     await expire();
@@ -834,9 +835,11 @@ describe("who sees what on the Hub's list and an escalation's page (direct reque
 
     expect((await open({ followUp: true, aal2: true })).resident).toEqual({
       kind: "shown",
-      phone: her.phone,
+      // UAT note 9: the number formatted to read (the link calls it as stored), and the resident's language.
+      phone: displayPhone(her.phone),
       telHref: `tel:${her.phone}`,
-      callLabel: `Call ${her.phone}`,
+      callLabel: `Call ${displayPhone(her.phone)}`,
+      language: "English",
       floor: "3",
       method: "a text",
       note: expect.stringContaining("Only Admins see this.") as unknown as string,
@@ -875,7 +878,7 @@ describe("who sees what on the Hub's list and an escalation's page (direct reque
     expect(lateScreen.late).toMatch(/Call the ambassador to follow up/);
     expect(JSON.stringify(lateScreen)).not.toContain(people[0]!.phone.slice(2));
 
-    expect(((await loadEscalation(kept.id, adminView, app)) as EscalationScreen).resident).toMatchObject({ kind: "shown", phone: people[1]!.phone });
+    expect(((await loadEscalation(kept.id, adminView, app)) as EscalationScreen).resident).toMatchObject({ kind: "shown", phone: displayPhone(people[1]!.phone) });
     await handling().handle({ actorStaffId: admin.staffId, escalationId: kept.id, note: "Reached her." });
     const handled = (await loadEscalation(kept.id, adminView, app)) as EscalationScreen;
     expect(handled.resident).toMatchObject({ kind: "gone" });
