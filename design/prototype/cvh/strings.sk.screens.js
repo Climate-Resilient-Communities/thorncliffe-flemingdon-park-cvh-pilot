@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.sk;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "Nastavenia zobrazenia", "close": "Hotovo", "textSize": "Veľkosť písma", "standard": "Štandardná", "large": "Veľká", "simpler": "Jednoduchšie zobrazenie", "help": "Zobrazí menej podrobností a namiesto mapy zoznamy. Veľkosť písma sa nemení.", "saved": "Uložené v tomto zariadení.", "sessionOnly": "Váš prehliadač toto nastavenie nemôže uložiť. Platí len pre túto návštevu."},
+    "R07": {"withdrawn": "Stiahnuté", "mayHaveEnded": "Toto upozornenie už možno skončilo. Skontrolujte to znova, keď budete mať signál"},
+    "R08": {"withdrawn": "Stiahnuté {t}", "more": "Zobraziť staršie upozornenia", "moreFailed": "Staršie upozornenia sa nepodarilo načítať. Skontrolujte, či máte signál, a skúste to znova."},
+    "R29": {"copy": "Kopírovať správu", "copied": "Skopírované. Môžete to vložiť do ľubovoľnej aplikácie.", "copyFailed": "Váš telefón to neskopíroval. Ak to chcete skopírovať, podržte prst na správe vyššie.", "whatsapp": "Poslať cez WhatsApp", "noSheet": "Váš telefón tu neponúka možnosti zdieľania. Skopírujte správu alebo ju pošlite cez WhatsApp."},
+    "shell": {"staffSignIn": "Prihlásenie pre zamestnancov", "termsLink": "Podmienky a ochrana súkromia"}
+  });
   m(t, {
   "terms": {
    "version": "Verzia",

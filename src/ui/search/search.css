@@ -129,6 +129,13 @@
     cursor: pointer;
   }
 
+  /* S03.06: the 911 block first, when the answer says emergency_first, with the call itself as a large button (as on a guide). */
+  .ask-call911 {
+    gap: var(--gap-label);
+    min-block-size: 64px;
+    font-size: var(--type-lead-size);
+  }
+
   /* "In an emergency, call 911": a link of the screen's own, always at its end. */
   .ask-911 {
     margin: 0;

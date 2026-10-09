@@ -29,6 +29,23 @@ export function addressLines(provider: Pick<ListingProvider, "locations">): stri
     .filter((line) => line !== "");
 }
 
+/** The English a listing text stands for, compared without case: a topic and a subcategory that say the same thing are one chip. */
+const sameChip = (text: ListingText) => text.original.body.trim().toLocaleLowerCase("en");
+
+/**
+ * The subcategories the page shows as chips after the topics: one that names the same thing as a topic of the provider, or as a
+ * subcategory before it, is left out (production UAT, 2026-10-08: "Non-Profits" showed twice, as a topic and as a subcategory).
+ */
+export function subcategoryChips(topics: readonly ListingText[], subcategories: readonly ListingText[]): ListingText[] {
+  const seen = new Set(topics.map(sameChip));
+  return subcategories.filter((sub) => {
+    const key = sameChip(sub);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 /** Every text on the card that a model translated, for the label. */
 function machineTexts(provider: ListingProvider, categories: CategoryNames): ListingText[] {
   const names = provider.category_ids.map((id) => categories.get(id)).filter((text): text is ListingText => text !== undefined);
@@ -169,7 +186,7 @@ export function ProviderView({
             </li>
           ))}
           {variant === "page" &&
-            provider.subcategories.map((sub) => (
+            subcategoryChips(names, provider.subcategories).map((sub) => (
               <li key={sub.body} className="dir-tag dir-tag--quiet">
                 <ListingBlock text={sub} english={english} as="span" contentLang={contentLang} />
               </li>

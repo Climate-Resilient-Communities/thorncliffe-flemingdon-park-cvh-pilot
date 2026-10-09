@@ -181,3 +181,41 @@ for (const width of [320, 768] as const) {
     expect(overflow).toBe(0);
   });
 }
+
+// Production UAT, 2026-10-08: on an Urdu building page at 390 px the main scrolled with nothing in it a keyboard could reach
+// (axe scrollable-region-focusable, WCAG 2.1.1). The main is then a tab stop of its own; a main with a link in it is not.
+test("a main that scrolls with nothing focusable in it is a tab stop, and only then", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 500 });
+  await page.goto("/ur/buildings/4154159");
+  const main = page.getByTestId("shell-main");
+  const state = () =>
+    main.evaluate((element) => ({
+      scrolls: element.scrollHeight > element.clientHeight + 1,
+      focusable: element.querySelector('a[href], button:not([disabled]), input, select, textarea, summary, [tabindex]:not([tabindex="-1"])') !== null,
+      tabindex: element.getAttribute("tabindex"),
+    }));
+  await expect.poll(async () => {
+    const now = await state();
+    return now.scrolls && !now.focusable ? now.tabindex === "0" : now.tabindex === null;
+  }).toBe(true);
+  // With the main made to scroll and its links taken out, it becomes a tab stop; with a link back, it is not one any more.
+  await main.evaluate((element) => {
+    for (const link of element.querySelectorAll("a, button, summary")) link.remove();
+    const tall = document.createElement("div");
+    tall.style.blockSize = "3000px";
+    tall.id = "tall";
+    element.append(tall);
+  });
+  await expect(main).toHaveAttribute("tabindex", "0");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(main).toBeFocused();
+  await main.evaluate((element) => {
+    const link = document.createElement("a");
+    link.href = "/ur";
+    link.textContent = "x";
+    element.querySelector("#tall")!.append(link);
+  });
+  await expect(main).not.toHaveAttribute("tabindex");
+});

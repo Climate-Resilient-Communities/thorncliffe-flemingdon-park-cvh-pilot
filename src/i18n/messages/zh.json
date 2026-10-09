@@ -81,7 +81,9 @@
     "ambassador": "楼层联络员",
     "offline": "您已离线。显示{t}加载的内容。",
     "aiLabel": "为原型由人工智能生成",
-    "illustrative": "示例"
+    "illustrative": "示例",
+    "staffSignIn": "工作人员登录",
+    "termsLink": "条款和隐私"
   },
   "x01": {
     "text": "CVH 不是紧急服务。",
@@ -716,13 +718,13 @@
     "amberBody": "Amber Alert（安珀警报）是关于儿童失踪的官方警报。真正的措辞总是来自 Alert Ready。",
     "endedResolved": "这条警报已结束。已于{t}解决。",
     "endedWithdrawn": "中心撤回了这条警报。{reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "已撤回",
     "endedExpired": "这条警报已结束。它于{t}过期，没有最后更新。",
     "validLine": "有效期：{until}",
     "timeLine": "{posted}发布 · {updated}更新",
     "timeLineOne": "{posted}发布",
     "basicMore": "较早的更新：{n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "这条警报可能已经结束。有信号时请再查看"
   },
   "R08": {
     "title": "已结束的警报",
@@ -733,9 +735,9 @@
     "lead": "每条警报结束后都会保留在这里，可以阅读。",
     "endedOn": "{posted}发布",
     "backHome": "返回“现在”",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "{t}已撤回",
+    "more": "显示更早的警报",
+    "moreFailed": "无法加载更早的警报。请检查您是否有信号，然后再试一次。"
   },
   "R09": {
     "title": "寻求帮助",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} {time}",
     "linkLine": "最新更新和任何更正：{url}",
     "sendLine": "您的手机会问您用哪个应用发送。",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "复制消息",
+    "copied": "已复制。您可以把它粘贴到任何应用中。",
+    "copyFailed": "您的手机没有复制成功。请长按上面的消息来复制。",
+    "whatsapp": "通过 WhatsApp 发送",
+    "noSheet": "您的手机在这里没有分享选项。请复制消息，或通过 WhatsApp 发送。",
     "placeMore": "以及另外 {n} 处"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "显示设置",
+    "close": "完成",
+    "textSize": "文字大小",
+    "standard": "标准",
+    "large": "大",
+    "simpler": "简化视图",
+    "help": "显示更少的细节，用列表代替地图。文字大小不变。",
+    "saved": "已保存在这台设备上。",
+    "sessionOnly": "您的浏览器无法保存这项设置。它只在这次访问中有效。"
   }
 }

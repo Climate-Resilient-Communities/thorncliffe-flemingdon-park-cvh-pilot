@@ -108,6 +108,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the map opened, if it names one place.
   const [viewed] = useState(() => singleNeighbourhood(applied.neighbourhoods));
   const element = useRef<HTMLDivElement>(null);
+  // The bar above the map that holds its zoom buttons, so no control is drawn over a pin.
+  const controls = useRef<HTMLDivElement>(null);
   const handle = useRef<MapHandle | null>(null);
   const card = useRef<HTMLElement>(null);
   /** Set when "Show the whole area" was used in the list: the map shows it once it is on screen again. */
@@ -171,7 +173,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         return words.current!.zoomOut;
       },
     };
-    createMap(at, tiles, proxy, { onView: setBounds, onSelect: setSelected, onMissingTiles: setMissingTiles })
+    createMap(at, tiles, proxy, { onView: setBounds, onSelect: setSelected, onMissingTiles: setMissingTiles }, controls.current ?? undefined)
       .then((made) => {
         if (!live) return made.destroy();
         handle.current = made;
@@ -267,6 +269,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
       <div className="map-work" data-view={view} data-layout="columns" data-testid="map-work">
       <section className="map-frame" hidden={view !== "map"} aria-label={plain(t("R14.mapLabel"))} data-testid="map-frame">
         {/* The map is a picture: Leaflet lays it out left to right in every language; the words on it carry their own direction. */}
+        <div ref={controls} className="map-tools" dir="ltr" data-testid="map-tools" />
         <div ref={element} className="map-canvas" dir="ltr" data-testid="map-canvas" data-status={mapStatus} />
         <p className="map-credit" lang="en" dir="ltr" data-testid="map-credit">
           {tiles.attributionUrl ? (

@@ -81,7 +81,9 @@
     "ambassador": "एम्बेसडर",
     "offline": "आप ऑफ़लाइन हैं। {t} लोड हुई सामग्री दिखाई जा रही है।",
     "aiLabel": "प्रोटोटाइप के लिए AI से बना",
-    "illustrative": "उदाहरण मात्र"
+    "illustrative": "उदाहरण मात्र",
+    "staffSignIn": "स्टाफ़ साइन इन",
+    "termsLink": "शर्तें और गोपनीयता"
   },
   "x01": {
     "text": "CVH आपातकालीन सेवा नहीं है।",
@@ -716,13 +718,13 @@
     "amberBody": "Amber Alert किसी लापता बच्चे के बारे में आधिकारिक अलर्ट होते हैं। असली शब्द हमेशा Alert Ready से आते हैं।",
     "endedResolved": "यह अलर्ट खत्म हो गया है। यह {t} हल हुआ।",
     "endedWithdrawn": "हब ने यह अलर्ट वापस ले लिया। {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "वापस लिया गया",
     "endedExpired": "यह अलर्ट खत्म हो गया है। यह {t} बिना आखिरी अपडेट के समाप्त हो गया।",
     "validLine": "{until} मान्य",
     "timeLine": "{posted} पोस्ट किया गया · {updated} अपडेट किया गया",
     "timeLineOne": "{posted} पोस्ट किया गया",
     "basicMore": "पहले के अपडेट: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "हो सकता है यह अलर्ट खत्म हो गया हो। सिग्नल मिलने पर फिर से देखें"
   },
   "R08": {
     "title": "खत्म हो चुके अलर्ट",
@@ -733,9 +735,9 @@
     "lead": "हर अलर्ट खत्म होने के बाद भी यहाँ पढ़ा जा सकता है।",
     "endedOn": "{posted} पोस्ट किया गया",
     "backHome": "\"अभी\" स्क्रीन पर वापस जाएँ",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "{t} वापस लिया गया",
+    "more": "पुराने अलर्ट दिखाएँ",
+    "moreFailed": "हम पुराने अलर्ट लोड नहीं कर सके। देखें कि आपके पास सिग्नल है, फिर दोबारा कोशिश करें।"
   },
   "R09": {
     "title": "मदद खोजें",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} को {time}",
     "linkLine": "सबसे नए अपडेट और कोई भी सुधार: {url}",
     "sendLine": "आपका फ़ोन पूछेगा कि इसे किस ऐप से भेजना है।",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "संदेश कॉपी करें",
+    "copied": "कॉपी हो गया। आप इसे किसी भी ऐप में पेस्ट कर सकते हैं।",
+    "copyFailed": "आपके फ़ोन ने इसे कॉपी नहीं किया। कॉपी करने के लिए ऊपर वाले संदेश को दबाकर रखें।",
+    "whatsapp": "WhatsApp पर भेजें",
+    "noSheet": "आपका फ़ोन यहाँ शेयर करने के विकल्प नहीं देता। संदेश कॉपी करें, या उसे WhatsApp पर भेजें।",
     "placeMore": "और {n} और"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "डिस्प्ले सेटिंग्स",
+    "close": "हो गया",
+    "textSize": "लिखावट का आकार",
+    "standard": "सामान्य",
+    "large": "बड़ा",
+    "simpler": "सरल दृश्य",
+    "help": "कम जानकारी दिखाता है और नक्शे की जगह सूचियाँ इस्तेमाल करता है। लिखावट का आकार वही रहता है।",
+    "saved": "इस फ़ोन पर सहेजा गया।",
+    "sessionOnly": "आपका ब्राउज़र यह सेटिंग सहेज नहीं सकता। यह सिर्फ़ इस बार के लिए रहेगी।"
   }
 }

@@ -81,7 +81,9 @@
     "ambassador": "Ambasádor",
     "offline": "Ste offline. Zobrazuje sa obsah načítaný {t}.",
     "aiLabel": "Vytvorené umelou inteligenciou pre prototyp",
-    "illustrative": "Ilustračné"
+    "illustrative": "Ilustračné",
+    "staffSignIn": "Prihlásenie pre zamestnancov",
+    "termsLink": "Podmienky a ochrana súkromia"
   },
   "x01": {
     "text": "CVH nie je záchranná služba.",
@@ -716,13 +718,13 @@
     "amberBody": "Amber Alert je oficiálne upozornenie o nezvestnom dieťati. Skutočné znenie vždy pochádza od Alert Ready.",
     "endedResolved": "Toto upozornenie skončilo. Vyriešené {t}.",
     "endedWithdrawn": "Hub toto upozornenie stiahol. {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "Stiahnuté",
     "endedExpired": "Toto upozornenie skončilo. Platnosť skončila {t} bez poslednej aktualizácie.",
     "validLine": "Platí {until}",
     "timeLine": "Zverejnené {posted} · Aktualizované {updated}",
     "timeLineOne": "Zverejnené {posted}",
     "basicMore": "Staršie aktualizácie: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "Toto upozornenie už možno skončilo. Skontrolujte to znova, keď budete mať signál"
   },
   "R08": {
     "title": "Skončené upozornenia",
@@ -733,9 +735,9 @@
     "lead": "Každé upozornenie sa tu dá čítať aj po tom, čo skončí.",
     "endedOn": "Zverejnené {posted}",
     "backHome": "Späť na Teraz",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "Stiahnuté {t}",
+    "more": "Zobraziť staršie upozornenia",
+    "moreFailed": "Staršie upozornenia sa nepodarilo načítať. Skontrolujte, či máte signál, a skúste to znova."
   },
   "R09": {
     "title": "Nájsť pomoc",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} o {time}",
     "linkLine": "Najnovšie aktualizácie a opravy: {url}",
     "sendLine": "Telefón sa vás opýta, cez ktorú aplikáciu to chcete poslať.",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "Kopírovať správu",
+    "copied": "Skopírované. Môžete to vložiť do ľubovoľnej aplikácie.",
+    "copyFailed": "Váš telefón to neskopíroval. Ak to chcete skopírovať, podržte prst na správe vyššie.",
+    "whatsapp": "Poslať cez WhatsApp",
+    "noSheet": "Váš telefón tu neponúka možnosti zdieľania. Skopírujte správu alebo ju pošlite cez WhatsApp.",
     "placeMore": "a {n} ďalších"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "Nastavenia zobrazenia",
+    "close": "Hotovo",
+    "textSize": "Veľkosť písma",
+    "standard": "Štandardná",
+    "large": "Veľká",
+    "simpler": "Jednoduchšie zobrazenie",
+    "help": "Zobrazí menej podrobností a namiesto mapy zoznamy. Veľkosť písma sa nemení.",
+    "saved": "Uložené v tomto zariadení.",
+    "sessionOnly": "Váš prehliadač toto nastavenie nemôže uložiť. Platí len pre túto návštevu."
   }
 }

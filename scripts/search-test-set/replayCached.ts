@@ -31,7 +31,7 @@
 // or any result for a no_match question; share of all questions).
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { buildKeywordIndex, createSearch, searchTextsOfListing, type Reranker } from "@/modules/directory";
+import { buildKeywordIndex, createSearch, keywordDocumentsOf, searchTextsOfListing, type Reranker } from "@/modules/directory";
 import type { SearchV1, TestQuestion } from "@/contracts/searchTestSet";
 import { QuestionTranslationError, type QuestionTranslator } from "@/modules/translation";
 import { EnvError, parseSearchEnv } from "@/platform/config/env";
@@ -159,7 +159,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const emergencyNames = new Set(settings.emergencyCategories);
   // The providers' search texts as the release's English listing rebuilds them (categories in the catalogue's order).
   const categoryOrder = Object.keys((JSON.parse(providersJson) as { labels: { categories: Record<string, unknown> } }).labels.categories);
-  const searchTexts = searchTextsOfListing({
+  const englishListing = {
     categories: categoryOrder.map((name, sortOrder) => ({ id: name, sort_order: sortOrder, name: { body: name } })),
     providers: catalogue.map((p) => ({
       id: p.id,
@@ -169,7 +169,8 @@ export async function main(argv: string[], env: Record<string, string | undefine
       services: { body: p.services?.en ?? "" },
       emergency_role: p.emergencyRole?.en ? { body: p.emergencyRole.en } : null,
     })),
-  });
+  };
+  const searchTexts = searchTextsOfListing(englishListing);
   const data = {
     releaseV: 1,
     model: settings.embedModel,
@@ -179,7 +180,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     vectors: ids.map((id) => cache.providers[id]!),
     known: new Set(ids),
     emergency: new Set(catalogue.filter((p) => p.categories.some((c) => emergencyNames.has(c))).map((p) => p.id)),
-    keywords: buildKeywordIndex(catalogue.map((p) => ({ id: p.id, text: [p.name, ...p.categories, ...p.subcategories, p.services?.en ?? ""].join(" ") }))),
+    keywords: buildKeywordIndex(keywordDocumentsOf(englishListing)),
     searchTexts,
   };
 

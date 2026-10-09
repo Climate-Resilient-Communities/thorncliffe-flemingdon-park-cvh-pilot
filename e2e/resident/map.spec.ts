@@ -1,3 +1,4 @@
+import axe from "axe-core";
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { IN_HOME_VIEW, IN_MIDDLE, MAP_BUILDINGS, stubMap, TILE_URL, type MapServer } from "./map-fixture";
 import { expectBaseline, openResident, waitForFonts } from "./helpers";
@@ -71,6 +72,26 @@ test.describe("the map (R-14)", () => {
     await expect(page.getByTestId("map-credit")).toHaveText(CREDIT);
     await expectBaseline(page, "map-en-390.png");
   });
+
+  // Production UAT, 2026-10-08: at 390 px a pin under the zoom buttons was a 44 by 13 px target (axe target-size, WCAG 2.5.8).
+  for (const lang of ["en", "ur"]) {
+    test(`nothing is drawn over a pin: the zoom buttons are in a bar above the map and the credit under it (${lang})`, async ({ page }) => {
+      await openMap(page, lang, 390);
+      await expect(page.getByTestId("map-canvas").locator(".leaflet-control")).toHaveCount(0);
+      await expect(page.getByTestId("map-tools").locator(".leaflet-control-zoom-in")).toBeVisible();
+      const [tools, canvas, credit] = await Promise.all(["map-tools", "map-canvas", "map-credit"].map((id) => page.getByTestId(id).boundingBox()));
+      expect(tools!.y + tools!.height).toBeLessThanOrEqual(canvas!.y + 1);
+      expect(credit!.y).toBeGreaterThanOrEqual(canvas!.y + canvas!.height - 1);
+      await zoom(page, "in");
+      await zoom(page, "out");
+      await page.addScriptTag({ content: axe.source });
+      const found = await page.evaluate(async () => {
+        const result = await (window as unknown as { axe: typeof axe }).axe.run(document, { runOnly: ["target-size", "scrollable-region-focusable"] });
+        return result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`);
+      });
+      expect(found).toEqual([]);
+    });
+  }
 
   test("the credit and the labels are shown in a right-to-left language too", async ({ page }) => {
     await openMap(page, "ur");

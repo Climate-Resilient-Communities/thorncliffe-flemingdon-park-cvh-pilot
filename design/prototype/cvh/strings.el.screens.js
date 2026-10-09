@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.el;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "Ρυθμίσεις εμφάνισης", "close": "Έτοιμο", "textSize": "Μέγεθος κειμένου", "standard": "Κανονικό", "large": "Μεγάλο", "simpler": "Απλούστερη προβολή", "help": "Εμφανίζει λιγότερες λεπτομέρειες και λίστες αντί για τον χάρτη. Το μέγεθος του κειμένου μένει το ίδιο.", "saved": "Αποθηκεύτηκε σε αυτή τη συσκευή.", "sessionOnly": "Το πρόγραμμα περιήγησής σας δεν μπορεί να αποθηκεύσει αυτή τη ρύθμιση. Θα ισχύει μόνο για αυτή την επίσκεψη."},
+    "R07": {"withdrawn": "Αποσύρθηκε", "mayHaveEnded": "Αυτή η ειδοποίηση μπορεί να έχει λήξει. Ελέγξτε ξανά όταν έχετε σήμα"},
+    "R08": {"withdrawn": "Αποσύρθηκε {t}", "more": "Εμφάνιση παλαιότερων ειδοποιήσεων", "moreFailed": "Δεν μπορέσαμε να φορτώσουμε τις παλαιότερες ειδοποιήσεις. Ελέγξτε ότι έχετε σήμα και δοκιμάστε ξανά."},
+    "R29": {"copy": "Αντιγραφή του μηνύματος", "copied": "Αντιγράφηκε. Μπορείτε να το επικολλήσετε σε οποιαδήποτε εφαρμογή.", "copyFailed": "Το τηλέφωνό σας δεν το αντέγραψε. Πατήστε παρατεταμένα το μήνυμα παραπάνω για να το αντιγράψετε.", "whatsapp": "Αποστολή στο WhatsApp", "noSheet": "Το τηλέφωνό σας δεν προσφέρει επιλογές κοινοποίησης εδώ. Αντιγράψτε το μήνυμα ή στείλτε το στο WhatsApp."},
+    "shell": {"staffSignIn": "Σύνδεση προσωπικού", "termsLink": "Όροι και απόρρητο"}
+  });
   m(t, {
   "terms": {
    "version": "Έκδοση",

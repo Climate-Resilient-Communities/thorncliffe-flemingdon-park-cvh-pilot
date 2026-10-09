@@ -18,7 +18,7 @@
 export const MAX_RESULTS = 5;
 /** The emergency-only threshold of the top-3 fail-safe when none is configured (SEARCH_EMERGENCY_THRESHOLD, owner decision 41). */
 export const DEFAULT_EMERGENCY_THRESHOLD = 0.25;
-/** SEARCH_KEYWORD_WEIGHT: the most the keyword match can add to a similarity. */
+/** SEARCH_KEYWORD_WEIGHT: the most the keyword match's words can add to a similarity (a concept the question names adds it once more, searchKeywords.ts). */
 export const DEFAULT_KEYWORD_WEIGHT = 0.15;
 /** SEARCH_DIRECT_FLOOR: the best similarity a direct-route question needs for any result. */
 export const DEFAULT_DIRECT_FLOOR = 0.24;

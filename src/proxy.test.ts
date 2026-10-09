@@ -49,10 +49,11 @@ describe("proxy", () => {
       for (const path of ["/a/AB?l=en", "/a/kbcdfghj%20x?l=en", "/a/KBCDFGHJ?l=en"]) {
         expect(rewrite(path), path).toBe("http://localhost:3000/en/a/invalid");
       }
-      // The URL parser already folds an encoded dot segment into the path it names, so the share rewrite is never reached with one.
-      for (const path of ["/a/%2e%2e?l=en", "/a/.%2e?l=en", "/a/%2e?l=en"]) {
-        expect(rewrite(path), path).toBeNull();
-      }
+      // The URL parser already folds an encoded dot segment into the path it names, so the share rewrite is never reached with one:
+      // what is left is the root (its own page) or a path with no language, answered by the English page of that path (a 404).
+      expect(rewrite("/a/%2e%2e?l=en")).toBeNull();
+      expect(rewrite("/a/.%2e?l=en")).toBeNull();
+      expect(rewrite("/a/%2e?l=en")).toBe("http://localhost:3000/en/a/?l=en");
     });
 
     it("is English when `l` is missing, empty or not one of our languages, and never redirects to guess one", () => {
@@ -67,12 +68,28 @@ describe("proxy", () => {
 
     it("answers only an address of one segment after /a, and a trailing slash is the same address", () => {
       expect(rewrite("/a/kbcdfghj/?l=ur")).toBe("http://localhost:3000/ur/a/kbcdfghj");
-      for (const path of ["/a", "/a/", "/a/kbcdfghj/more", "/ab/kbcdfghj"]) expect(rewrite(path), path).toBeNull();
+      // Anything else is not a share link: a path with no language is the English page of that path (a 404), "ab" a language code.
+      for (const path of ["/a", "/a/", "/a/kbcdfghj/more"]) expect(rewrite(path), path).toBe(`http://localhost:3000/en${path}`);
+      expect(rewrite("/ab/kbcdfghj")).toBeNull();
     });
   });
 
+  it("answers a path with no language in it by the English resident page behind the same address, so a missing page is the resident 404 (UAT 2026-10-08)", () => {
+    for (const [path, page] of [
+      ["/nope", "/en/nope"],
+      ["/hello/there?x=1", "/en/hello/there?x=1"],
+      ["/a", "/en/a"],
+    ]) {
+      const response = proxy(request(path));
+
+      expect(response.headers.get("x-middleware-rewrite"), path).toBe(`http://localhost:3000${page}`);
+      expect(response.headers.get("location"), path).toBeNull();
+      expect(response.headers.get("set-cookie"), path).toBeNull();
+    }
+  });
+
   it("leaves the root, staff and other paths alone", () => {
-    for (const path of ["/", "/staff/sign-in", "/api/health", "/hello"]) {
+    for (const path of ["/", "/staff/sign-in", "/api/health"]) {
       const response = proxy(request(path));
 
       expect(response.headers.get("location"), path).toBeNull();

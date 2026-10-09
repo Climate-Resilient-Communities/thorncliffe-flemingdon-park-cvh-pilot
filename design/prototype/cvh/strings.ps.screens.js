@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.ps;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "د ښودنې تنظیمات", "close": "وشو", "textSize": "د متن اندازه", "standard": "عادي", "large": "لوی", "simpler": "ساده بڼه", "help": "لږ جزئیات وښایاست او د نقشې پر ځای لیستونه وکاروئ. د متن اندازه همداسې پاتې کېږي.", "saved": "په دې تلیفون کې خوندي شو.", "sessionOnly": "ستاسو براوزر دا تنظیم نشي خوندي کولی. دا به یوازې د همدې ځل لپاره پاتې وي."},
+    "R07": {"withdrawn": "بېرته واخیستل شوه", "mayHaveEnded": "کېدای شي دا خبرتیا پای ته رسېدلې وي. کله چې سیګنال ولرئ بیا یې وګورئ"},
+    "R08": {"withdrawn": "بېرته واخیستل شوه {t}", "more": "زړې خبرتیاوې وښایاست", "moreFailed": "موږ زړې خبرتیاوې پورته نه کړای شوې. وګورئ چې سیګنال لرئ، بیا هڅه وکړئ."},
+    "R29": {"copy": "پیغام کاپي کړئ", "copied": "کاپي شو. تاسو یې په هر اپ کې ایښودلی شئ.", "copyFailed": "ستاسو تلیفون دا کاپي نه کړ. د کاپي کولو لپاره پورته پیغام ټینګ ونیسئ.", "whatsapp": "په WhatsApp یې ولېږئ", "noSheet": "ستاسو تلیفون دلته د شریکولو انتخابونه نه لري. پیغام کاپي کړئ، یا یې په WhatsApp ولېږئ."},
+    "shell": {"staffSignIn": "د کارکوونکو ننوتل", "termsLink": "شرایط او محرمیت"}
+  });
   m(t, {
   "terms": {
    "version": "نسخه",

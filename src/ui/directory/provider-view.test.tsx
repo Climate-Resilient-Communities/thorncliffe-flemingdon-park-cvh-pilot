@@ -8,7 +8,7 @@ import en from "@/i18n/messages/en.json";
 import ur from "@/i18n/messages/ur.json";
 import { hasFallbackText } from "./directory-browser";
 import { Inline911 } from "./listing-text";
-import { addressLines, postalText, ProviderView, type CategoryNames } from "./provider-view";
+import { addressLines, postalText, ProviderView, subcategoryChips, type CategoryNames } from "./provider-view";
 
 const NBSP = "\u00a0";
 // Urdu with the Hub's confirmation line as an English fallback, as a catalog that has not translated it holds it: the fallback tests
@@ -174,6 +174,20 @@ describe("ProviderView", () => {
 
     expect(html.match(/dir-tag--quiet"><bdi lang="en" dir="ltr">(Thorncliffe Park|Flemingdon Park)<\/bdi>/g)).toHaveLength(2);
     expect(render("en", "P101", "page", { neighbourhood_ids: [] })).not.toMatch(/dir-tag--quiet"><bdi lang="en" dir="ltr">(Thorncliffe Park|Flemingdon Park)/);
+  });
+
+  it("shows a topic once on the provider's page when a subcategory names the same thing (UAT 2026-10-08: \"Non-Profits\" twice)", () => {
+    const listing = DirectoryListingV1.parse(buildListing("en", 7));
+    const provider = listing.providers.find((p) => p.id === "P101")!;
+    const topic = listing.categories.find((c) => c.id === provider.category_ids[0])!.name;
+    const other = { ...topic, body: "Multi-Service Agencies", original: { lang: "en" as const, body: "Multi-Service Agencies" } };
+    const shout = { ...topic, body: topic.body.toUpperCase(), original: { lang: "en" as const, body: topic.original.body.toUpperCase() } };
+    const html = render("en", "P101", "page", { subcategories: [topic, other, shout, other] });
+
+    const chips = (text: string) => html.split(`>${text}</`).length - 1;
+    expect(chips(topic.body) + chips(topic.body.toUpperCase())).toBe(1);
+    expect(chips("Multi-Service Agencies")).toBe(1);
+    expect(subcategoryChips([topic], [topic, other, shout, other])).toEqual([other]);
   });
 
   it("is a heading 2 with a link on the list and the heading 1 of its own page", () => {

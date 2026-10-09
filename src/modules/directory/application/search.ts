@@ -1213,7 +1213,9 @@ export function createSearch(deps: SearchDeps): SearchService {
       translatedRun?.cancel();
       log({ status: "unavailable", resultCount: 0, topScore: null, translatedLeg: "not_needed" });
       await finish();
-      return { v: 1, release_v: ready.releaseV ?? 0, query_lang: queryLang, status: "unavailable", emergency_first: false, results: [] };
+      // No model ran, but a question that describes an emergency in words still gets the 911 block first (UAT 2026-10-08).
+      const crisis = (deps.crisisPhrases ?? true) && describesEmergency([q]);
+      return { v: 1, release_v: ready.releaseV ?? 0, query_lang: queryLang, status: "unavailable", emergency_first: crisis, results: [] };
     }
     const data = ready.data;
 

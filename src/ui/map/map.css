@@ -166,9 +166,22 @@
 
   .map-frame {
     position: relative;
+    display: flex;
+    flex-direction: column;
     border: 1.5px solid var(--control-border);
     border-radius: var(--radius-card);
     overflow: hidden;
+  }
+
+  /* The map's zoom buttons, in a bar of their own above it, and the credit in a line under it: nothing of the page is drawn over a
+     pin, so no pin is ever a target half hidden under a control (production UAT, 2026-10-08). */
+  .map-tools {
+    display: flex;
+    justify-content: flex-end;
+    min-block-size: var(--tap);
+    padding: var(--gap-label);
+    border-block-end: 1.5px solid var(--control-border);
+    background-color: var(--surface-raised);
   }
 
   .map-frame[hidden],
@@ -176,18 +189,16 @@
     display: none;
   }
 
-  /* Short enough that the whole map, its credit included, fits on a phone screen under the heading and the switch. */
+  /* Short enough that the whole map, its zoom bar and its credit included, fits on a phone screen under the heading and the switch. */
   .map-canvas {
-    block-size: clamp(16rem, calc(100dvh - 27rem), 34rem);
+    flex: none;
+    block-size: clamp(16rem, calc(100dvh - 31rem), 34rem);
   }
 
   .map-credit {
-    position: absolute;
-    inset-block-end: 0;
-    inset-inline-end: 0;
-    z-index: 1001;
-    max-inline-size: 100%;
+    margin: 0;
     padding-inline: var(--gap-label);
+    border-block-start: 1.5px solid var(--control-border);
     background-color: var(--surface-raised);
     color: var(--ink);
     font-size: var(--type-caption-size);
@@ -456,7 +467,26 @@
   font-family: var(--type-family-sans);
 }
 
-.map-frame .map-canvas .leaflet-bar a {
+.map-frame .map-tools .leaflet-control-zoom {
+  display: flex;
+  margin: 0;
+  border: 1.5px solid var(--control-border);
+  border-radius: var(--radius-card);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.map-frame .map-tools .leaflet-bar a {
+  border-block-end: 0;
+  border-radius: 0;
+  background-color: var(--surface-raised);
+}
+
+.map-frame .map-tools .leaflet-bar a + a {
+  border-inline-start: 1.5px solid var(--control-border);
+}
+
+.map-frame .leaflet-bar a {
   inline-size: var(--tap);
   block-size: var(--tap);
   line-height: var(--tap);

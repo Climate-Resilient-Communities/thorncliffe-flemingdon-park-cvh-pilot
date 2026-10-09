@@ -81,7 +81,9 @@
     "ambassador": "Ambassadeur",
     "offline": "Vous êtes hors ligne. Contenu chargé {t}.",
     "aiLabel": "Généré par IA pour le prototype",
-    "illustrative": "Illustratif"
+    "illustrative": "Illustratif",
+    "staffSignIn": "Connexion du personnel",
+    "termsLink": "Conditions et confidentialité"
   },
   "x01": {
     "text": "Le CVH n'est pas un service d'urgence.",
@@ -716,13 +718,13 @@
     "amberBody": "Les alertes AMBER sont des alertes officielles au sujet d'un enfant disparu. Le vrai texte vient toujours d'En Alerte.",
     "endedResolved": "Cette alerte est terminée. Le problème a été réglé {t}.",
     "endedWithdrawn": "Le Hub a retiré cette alerte. {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "Retirée",
     "endedExpired": "Cette alerte est terminée. Elle a expiré {t} sans dernière mise à jour.",
     "validLine": "Valide {until}",
     "timeLine": "Publié {posted} · Mis à jour {updated}",
     "timeLineOne": "Publié {posted}",
     "basicMore": "Mises à jour précédentes : {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "Cette alerte est peut-être terminée. Vérifiez de nouveau quand vous aurez du réseau"
   },
   "R08": {
     "title": "Alertes terminées",
@@ -733,9 +735,9 @@
     "lead": "Chaque alerte reste lisible ici une fois terminée.",
     "endedOn": "Publié {posted}",
     "backHome": "Retour à Maintenant",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "Retirée {t}",
+    "more": "Afficher les alertes plus anciennes",
+    "moreFailed": "Nous n'avons pas pu charger les alertes plus anciennes. Vérifiez que vous avez du réseau et réessayez."
   },
   "R09": {
     "title": "Trouver de l'aide",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} à {time}",
     "linkLine": "Dernières mises à jour et corrections : {url}",
     "sendLine": "Votre téléphone vous demandera avec quelle application l'envoyer.",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "Copier le message",
+    "copied": "Copié. Vous pouvez le coller dans n'importe quelle application.",
+    "copyFailed": "Votre téléphone ne l'a pas copié. Appuyez longuement sur le message ci-dessus pour le copier.",
+    "whatsapp": "Envoyer par WhatsApp",
+    "noSheet": "Votre téléphone ne propose pas d'options de partage ici. Copiez le message ou envoyez-le par WhatsApp.",
     "placeMore": "et {n} de plus"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "Paramètres d'affichage",
+    "close": "Terminé",
+    "textSize": "Taille du texte",
+    "standard": "Normale",
+    "large": "Grande",
+    "simpler": "Affichage simplifié",
+    "help": "Affiche moins de détails et des listes au lieu de la carte. La taille du texte ne change pas.",
+    "saved": "Enregistré sur cet appareil.",
+    "sessionOnly": "Votre navigateur ne peut pas enregistrer ce réglage. Il ne durera que pour cette visite."
   }
 }

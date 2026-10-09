@@ -81,7 +81,9 @@
     "ambassador": "Ambassador",
     "offline": "Offline ka. Ipinapakita ang huling na-load {t}.",
     "aiLabel": "Gawa ng AI para sa prototype",
-    "illustrative": "Halimbawa lamang"
+    "illustrative": "Halimbawa lamang",
+    "staffSignIn": "Pag-sign in ng staff",
+    "termsLink": "Mga tuntunin at privacy"
   },
   "x01": {
     "text": "Hindi pang-emergency na serbisyo ang CVH.",
@@ -716,13 +718,13 @@
     "amberBody": "Ang Amber Alert ay opisyal na alerto tungkol sa nawawalang bata. Laging galing sa Alert Ready ang totoong pagkakasulat.",
     "endedResolved": "Natapos na ang alertong ito. Naayos ito {t}.",
     "endedWithdrawn": "Binawi ng Hub ang alertong ito. {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "Binawi",
     "endedExpired": "Natapos na ang alertong ito. Nag-expire ito {t} nang walang huling update.",
     "validLine": "May bisa {until}",
     "timeLine": "Ipinost {posted} · Na-update {updated}",
     "timeLineOne": "Ipinost {posted}",
     "basicMore": "Mga naunang update: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "Maaaring tapos na ang alertong ito. Tingnan ulit kapag may signal ka na"
   },
   "R08": {
     "title": "Mga alertong natapos na",
@@ -733,9 +735,9 @@
     "lead": "Mababasa pa rin dito ang bawat alerto pagkatapos nito.",
     "endedOn": "Ipinost {posted}",
     "backHome": "Bumalik sa Ngayon",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "Binawi {t}",
+    "more": "Ipakita ang mas lumang mga alerto",
+    "moreFailed": "Hindi namin ma-load ang mas lumang mga alerto. Tiyaking may signal ka at subukan ulit."
   },
   "R09": {
     "title": "Humanap ng tulong",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} nang {time}",
     "linkLine": "Pinakabagong update at anumang pagtatama: {url}",
     "sendLine": "Itatanong ng iyong telepono kung anong app ang gagamitin sa pagpapadala.",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "Kopyahin ang mensahe",
+    "copied": "Nakopya na. Maaari mo itong i-paste sa kahit anong app.",
+    "copyFailed": "Hindi ito kinopya ng iyong telepono. Pindutin nang matagal ang mensahe sa itaas para kopyahin ito.",
+    "whatsapp": "Ipadala sa WhatsApp",
+    "noSheet": "Walang mga opsyon sa pagbabahagi ang iyong telepono dito. Kopyahin ang mensahe, o ipadala ito sa WhatsApp.",
     "placeMore": "at {n} pa"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "Mga setting ng display",
+    "close": "Tapos na",
+    "textSize": "Laki ng teksto",
+    "standard": "Karaniwan",
+    "large": "Malaki",
+    "simpler": "Mas simpleng view",
+    "help": "Magpakita ng mas kaunting detalye at gumamit ng mga listahan sa halip na mapa. Hindi nagbabago ang laki ng teksto.",
+    "saved": "Naka-save sa device na ito.",
+    "sessionOnly": "Hindi kayang i-save ng iyong browser ang setting na ito. Para lang ito sa pagbisitang ito."
   }
 }
