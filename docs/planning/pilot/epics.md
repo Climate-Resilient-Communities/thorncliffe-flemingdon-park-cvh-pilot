@@ -65,7 +65,7 @@ FR-E2: Ambassador posts updates or incidents for any floor of assigned buildings
 FR-E3: Rounds reported to the Hub as counts by building and floor.
 FR-E5: Hub staff see which buildings and floors have an assigned ambassador.
 FR-G1: Roles Admin, Coordinator, Director, Ambassador with the PRD permission table; every account is a named person; residents have no accounts.
-FR-G2: Admin-only account lifecycle; usernames, email on record, no email sent; starting password rvh-firstname-lastname valid once with forced change, locked if unused in 24 hours (as built: changed to 72 h by the product owner 2026-10-08); Admin-only resets (audited); at least two Admins; removal ends access everywhere immediately.
+FR-G2: Admin-only account lifecycle; usernames, email on record, no email sent; starting password cvh-firstname-lastname valid once with forced change, locked if unused in 24 hours (as built: changed to 72 h by the product owner 2026-10-08); Admin-only resets (audited); at least two Admins; removal ends access everywhere immediately.
 FR-G3: Hub maintains the 43 buildings and floors from the register, with last-updated dates; ambassadors assigned from this list.
 FR-G4: Hub maintains providers (from the reviewed catalogue) with last-confirmed dates.
 FR-G5: Every send, approval, correction, withdrawal, drill and account change is audited; resident actions are not recorded individually.
@@ -294,7 +294,7 @@ Admins create staff accounts; staff sign in safely; the 43 buildings and floors 
 
 | Term | Meaning |
 | --- | --- |
-| Starting password | `rvh-<firstname>-<lastname>`, lower case, spaces removed, accents stripped. Valid for one successful sign-in and for 24 hours from issue (as built: changed to 72 h by the product owner 2026-10-08). |
+| Starting password | `cvh-<firstname>-<lastname>`, lower case, spaces removed, accents stripped. Valid for one successful sign-in and for 24 hours from issue (as built: changed to 72 h by the product owner 2026-10-08). |
 | Expired starting password | Unused 24 hours after issue (as built: changed to 72 h by the product owner 2026-10-08). Signing in with it fails with "Your starting password has expired. Ask an Admin to re-issue it." and sets the account to `locked_pending_reissue`. Only an Admin's re-issue (new 24-hour window, audited; as built: 72 h) unlocks it. |
 | Own password | At least 10 characters, not containing the username, not equal to the starting password. |
 | Failed-sign-in throttle | 5 failed attempts for one username within 15 minutes lock that username for 15 minutes; 20 failures from one client (salted IP hash) within an hour block that client for an hour. The message is always "Username or password is incorrect" (no hint whether the username exists). |

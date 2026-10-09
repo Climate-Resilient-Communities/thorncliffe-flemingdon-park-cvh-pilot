@@ -151,7 +151,7 @@ interface Person {
 let nextId = 1;
 /** As the owner: an account and its login, like S01.05 makes them. Returns the staff id. */
 async function account(person: Person): Promise<string> {
-  const starting = `rvh-${person.firstName.toLowerCase()}-${person.lastName.toLowerCase()}`;
+  const starting = `cvh-${person.firstName.toLowerCase()}-${person.lastName.toLowerCase()}`;
   // As S01.05 makes them: Supabase Auth holds the peppered password.
   const authUserId = idp.plant(`${person.username}@staff.cvh.invalid`, { password: peppered(person.own ?? starting) });
   if (person.enrolled) idp.enrol(authUserId);
@@ -164,7 +164,7 @@ async function account(person: Person): Promise<string> {
 }
 
 const ann = { username: "aokafor", firstName: "Ann", lastName: "Okafor" };
-const ANN_START = "rvh-ann-okafor";
+const ANN_START = "cvh-ann-okafor";
 const CLIENT = "203.0.113.7";
 
 const signIn = (who: ReturnType<typeof browser>, username: string, password: string, client = CLIENT) =>
@@ -233,7 +233,7 @@ describe("signing in with a starting password", () => {
     await account(ann);
     advance(minutes(73 * 60));
 
-    expect(await signIn(browser(), "aokafor", "rvh-ann-okafo")).toEqual({ ok: false, error: "sign_in_failed" });
+    expect(await signIn(browser(), "aokafor", "cvh-ann-okafo")).toEqual({ ok: false, error: "sign_in_failed" });
   });
 });
 
@@ -253,7 +253,7 @@ describe("choosing an own password", () => {
   it("refuses the starting password itself, in any case", async () => {
     const id = await account({ ...ann, username: "annok", firstName: "Annabelle" });
 
-    expect(await auth.changePassword(id, { password: "RVH-Annabelle-Okafor", confirm: "RVH-Annabelle-Okafor" })).toEqual({ ok: false, error: "password_is_starting_password" });
+    expect(await auth.changePassword(id, { password: "CVH-Annabelle-Okafor", confirm: "CVH-Annabelle-Okafor" })).toEqual({ ok: false, error: "password_is_starting_password" });
   });
 
   it("replaces it: the starting password stops working, password.changed is audited, and an Ambassador goes to the Hub", async () => {
@@ -634,7 +634,7 @@ describe("the password pepper", () => {
     expect(await signIn(browser(), "aokafor", "the right password")).toMatchObject({ ok: true, gate: "hub" });
   });
 
-  it("is applied to a starting password too: the derivable rvh-first-last does not open a provider session", async () => {
+  it("is applied to a starting password too: the derivable cvh-first-last does not open a provider session", async () => {
     await account(ann);
 
     expect(idp.grant("aokafor@staff.cvh.invalid", ANN_START)).toBeNull();
@@ -992,18 +992,18 @@ describe("IT's re-issue of the first Admin's starting password (scripts/create-f
   it("re-issues it while bootstrap is in progress, revokes the account's sessions, and audits it with the system as actor", async () => {
     const first = await bootstrapWith(jane);
     const old = browser();
-    await signIn(old, "jdoe", "rvh-jane-doe");
+    await signIn(old, "jdoe", "cvh-jane-doe");
     advance(minutes(73 * 60));
-    expect(await signIn(browser(), "jdoe", "rvh-jane-doe")).toEqual({ ok: false, error: "starting_password_expired" });
+    expect(await signIn(browser(), "jdoe", "cvh-jane-doe")).toEqual({ ok: false, error: "starting_password_expired" });
 
-    expect(await auth.reissueFirstAdminStartingPassword("JDoe")).toEqual({ ok: true, value: { username: "jdoe", startingPassword: "rvh-jane-doe" } });
+    expect(await auth.reissueFirstAdminStartingPassword("JDoe")).toEqual({ ok: true, value: { username: "jdoe", startingPassword: "cvh-jane-doe" } });
 
     expect(await row(first)).toMatchObject({ status: "active", must_change_password: true, starting_password_issued_at: clock, starting_password_used_at: null });
     expect((await auditsOf("password.reissued")).at(-1)).toEqual({ actor_staff_id: null, action: "password.reissued", subject_id: first, outcome: "ok", meta: {} });
     expect(await auth.currentSession(old.sessions())).toBeNull();
     expect((await sessionRows(first)).every((session) => session.revoked_at !== null)).toBe(true);
     advance(minutes(71 * 60));
-    expect(await signIn(browser(), "jdoe", "rvh-jane-doe")).toMatchObject({ ok: true, gate: "choose_password" });
+    expect(await signIn(browser(), "jdoe", "cvh-jane-doe")).toMatchObject({ ok: true, gate: "choose_password" });
   });
 
   it.each([
@@ -1041,8 +1041,8 @@ describe("IT's re-issue of the first Admin's starting password (scripts/create-f
     const deps = { env, out: (l: string) => void out.push(l), error: (l: string) => void error.push(l), connect: () => ({ identity: accounts, staffAuth: auth, close: async () => {} }) };
 
     expect(await runCreateFirstAdmin(["--reissue", "--username", "jdoe"], deps)).toBe(0);
-    expect(out.join("\n")).toContain("New starting password for jdoe: rvh-jane-doe");
-    expect(out.join("\n").match(/rvh-jane-doe/g)).toHaveLength(1);
+    expect(out.join("\n")).toContain("New starting password for jdoe: cvh-jane-doe");
+    expect(out.join("\n").match(/cvh-jane-doe/g)).toHaveLength(1);
     expect(await runCreateFirstAdmin(["--reissue", "--username", "nobody"], deps)).toBe(1);
     expect(error.join("\n")).toBe("Refused: that username is not the first Admin's (not_first_admin)");
   });
@@ -1210,7 +1210,7 @@ describe("choosing a password and a re-issue of the same account are serialised"
       await (reissueFirst ? reissue(lead) : change(lead));
       await finished();
 
-      await expectConsistent(first, "rvh-jane-doe");
+      await expectConsistent(first, "cvh-jane-doe");
     }
   });
 
@@ -1360,7 +1360,7 @@ describe("expired or used starting-password sign-ins are throttled (P3-3)", () =
     advance(minutes(73 * 60));
 
     const outcomes = [];
-    for (let i = 0; i < 7; i++) outcomes.push(await signIn(browser(), "admin1", "rvh-ada-admin"));
+    for (let i = 0; i < 7; i++) outcomes.push(await signIn(browser(), "admin1", "cvh-ada-admin"));
 
     expect(outcomes.slice(0, 5)).toEqual(Array(5).fill({ ok: false, error: "starting_password_expired" }));
     expect(outcomes.slice(5)).toEqual(Array(2).fill({ ok: false, error: "sign_in_failed" }));

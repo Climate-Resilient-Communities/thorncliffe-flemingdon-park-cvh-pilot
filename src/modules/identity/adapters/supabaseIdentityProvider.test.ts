@@ -37,12 +37,12 @@ describe("Supabase Auth identity provider", () => {
     const { fetch, calls } = fakeFetch(() => ({ status: 200, body: { id: USER_ID, email: "jdoe@staff.cvh.invalid" } }));
     const idp = supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch });
 
-    expect(await idp.createLogin({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" })).toEqual({ ok: true, authUserId: USER_ID });
+    expect(await idp.createLogin({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" })).toEqual({ ok: true, authUserId: USER_ID });
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({
       url: `${URL_BASE}/auth/v1/admin/users`,
       method: "POST",
-      body: { email: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe", email_confirm: true, app_metadata: { cvh_staff: true } },
+      body: { email: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe", email_confirm: true, app_metadata: { cvh_staff: true } },
     });
     expect(calls[0].headers.get("apikey")).toBe(SECRET);
   });
@@ -57,7 +57,7 @@ describe("Supabase Auth identity provider", () => {
     const { fetch } = fakeFetch(() => ({ status, body }));
     const idp = supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch });
 
-    expect(await idp.createLogin({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" })).toEqual({ ok: false, error: expected });
+    expect(await idp.createLogin({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" })).toEqual({ ok: false, error: expected });
   });
 
   it("treats a network failure as unavailable", async () => {
@@ -66,7 +66,7 @@ describe("Supabase Auth identity provider", () => {
     }) as typeof globalThis.fetch;
     const idp = supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch });
 
-    expect(await idp.createLogin({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" })).toEqual({ ok: false, error: "unavailable" });
+    expect(await idp.createLogin({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" })).toEqual({ ok: false, error: "unavailable" });
   });
 
   it("deletes a user, and throws when Supabase refuses", async () => {
@@ -164,7 +164,7 @@ describe("Supabase Auth calls never hang (S01.06: Admin rows can be locked while
     const { fetch, signals } = hangingFetch();
     const started = Date.now();
 
-    expect(await idp(fetch).createLogin({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" })).toEqual({ ok: false, error: "unavailable" });
+    expect(await idp(fetch).createLogin({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" })).toEqual({ ok: false, error: "unavailable" });
     expect(Date.now() - started).toBeLessThan(WITHIN);
     expect(signals).toHaveLength(1);
   });

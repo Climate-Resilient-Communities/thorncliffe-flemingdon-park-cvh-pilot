@@ -2,23 +2,23 @@ import { describe, expect, it } from "vitest";
 import { deriveStartingPassword, startingPasswordPart } from "./startingPassword";
 
 describe("starting password", () => {
-  it("is rvh-firstname-lastname in lower case", () => {
-    expect(deriveStartingPassword("Jane", "Doe")).toEqual({ ok: true, value: "rvh-jane-doe" });
+  it("is cvh-firstname-lastname in lower case", () => {
+    expect(deriveStartingPassword("Jane", "Doe")).toEqual({ ok: true, value: "cvh-jane-doe" });
   });
 
   it.each([
-    ["accents are stripped", "José", "Muñoz", "rvh-jose-munoz"],
-    ["stacked diacritics are stripped", "Nguyễn", "Thị Ánh", "rvh-nguyen-thianh"],
-    ["spaces inside a name are removed", "Mary Ann", "Van der Berg", "rvh-maryann-vanderberg"],
-    ["apostrophes are removed", "D'Arcy", "O'Brien", "rvh-darcy-obrien"],
-    ["typographic apostrophes are removed", "Ngā", "O’Neil", "rvh-nga-oneil"],
-    ["hyphens are removed, so the password's own hyphens stay separators", "Jean-Luc", "Al-Hassan", "rvh-jeanluc-alhassan"],
-    ["dots and digits are removed", "J.", "Smith 3rd", "rvh-j-smithrd"],
-    ["Latin letters that do not decompose are spelled out", "Søren", "Łukasz-Straße", "rvh-soren-lukaszstrasse"],
-    ["ligatures and Nordic letters", "Ægir", "Þórsdóttir", "rvh-aegir-thorsdottir"],
-    ["Turkish dotted and dotless i", "İlkay", "Yıldız", "rvh-ilkay-yildiz"],
-    ["full-width letters", "Ａｎｎ", "Ｌｅｅ", "rvh-ann-lee"],
-    ["leading and trailing spaces", "  Ali ", " Khan  ", "rvh-ali-khan"],
+    ["accents are stripped", "José", "Muñoz", "cvh-jose-munoz"],
+    ["stacked diacritics are stripped", "Nguyễn", "Thị Ánh", "cvh-nguyen-thianh"],
+    ["spaces inside a name are removed", "Mary Ann", "Van der Berg", "cvh-maryann-vanderberg"],
+    ["apostrophes are removed", "D'Arcy", "O'Brien", "cvh-darcy-obrien"],
+    ["typographic apostrophes are removed", "Ngā", "O’Neil", "cvh-nga-oneil"],
+    ["hyphens are removed, so the password's own hyphens stay separators", "Jean-Luc", "Al-Hassan", "cvh-jeanluc-alhassan"],
+    ["dots and digits are removed", "J.", "Smith 3rd", "cvh-j-smithrd"],
+    ["Latin letters that do not decompose are spelled out", "Søren", "Łukasz-Straße", "cvh-soren-lukaszstrasse"],
+    ["ligatures and Nordic letters", "Ægir", "Þórsdóttir", "cvh-aegir-thorsdottir"],
+    ["Turkish dotted and dotless i", "İlkay", "Yıldız", "cvh-ilkay-yildiz"],
+    ["full-width letters", "Ａｎｎ", "Ｌｅｅ", "cvh-ann-lee"],
+    ["leading and trailing spaces", "  Ali ", " Khan  ", "cvh-ali-khan"],
   ])("%s", (_, first, last, expected) => {
     expect(deriveStartingPassword(first, last)).toEqual({ ok: true, value: expected });
   });
@@ -40,14 +40,14 @@ describe("starting password", () => {
   });
 
   it.each([
-    ["Kɔfi", "Boateng", "rvh-kofi-boateng"],
-    ["Ama", "Mɛnsah", "rvh-ama-mensah"],
-    ["Ərəb", "Əliyev", "rvh-ereb-eliyev"],
-    ["Ɖela", "Ƙofi", "rvh-dela-kofi"],
-    ["Ɓello", "Ɗanjuma", "rvh-bello-danjuma"],
-    ["Ʋivi", "Ƒiador", "rvh-vivi-fiador"],
-    ["Oʻzbek", "Hawaiʻi", "rvh-ozbek-hawaii"],
-    ["Ɛ", "Ɔ", "rvh-e-o"],
+    ["Kɔfi", "Boateng", "cvh-kofi-boateng"],
+    ["Ama", "Mɛnsah", "cvh-ama-mensah"],
+    ["Ərəb", "Əliyev", "cvh-ereb-eliyev"],
+    ["Ɖela", "Ƙofi", "cvh-dela-kofi"],
+    ["Ɓello", "Ɗanjuma", "cvh-bello-danjuma"],
+    ["Ʋivi", "Ƒiador", "cvh-vivi-fiador"],
+    ["Oʻzbek", "Hawaiʻi", "cvh-ozbek-hawaii"],
+    ["Ɛ", "Ɔ", "cvh-e-o"],
   ])("spells African and Azerbaijani letters: %s %s", (first, last, expected) => {
     expect(deriveStartingPassword(first, last)).toEqual({ ok: true, value: expected });
   });
@@ -66,13 +66,13 @@ describe("starting password", () => {
       const letter = String.fromCodePoint(code);
       if (!/\p{L}/u.test(letter)) continue;
       const result = deriveStartingPassword(`${letter}a`, "Doe");
-      if (result.ok) expect(result.value, letter).toMatch(/^rvh-[a-z]+-doe$/);
+      if (result.ok) expect(result.value, letter).toMatch(/^cvh-[a-z]+-doe$/);
       else expect(result.error, letter).toBe("starting_password_unsupported_letter");
     }
   });
 
   describe("length", () => {
-    // "rvh-" + first + "-" + last: 5 characters beside the two names.
+    // "cvh-" + first + "-" + last: 5 characters beside the two names.
     const name = (length: number) => "a".repeat(length);
 
     it("accepts a starting password of exactly 72 bytes", () => {
@@ -86,7 +86,7 @@ describe("starting password", () => {
 
     it("accepts the whole of a long compound name while the password fits", () => {
       const full = "Maria del Carmen Guadalupe Fernandez de la Torre y Gutierrez de Castro";
-      expect(deriveStartingPassword(full, "Ruiz")).toEqual({ ok: true, value: "rvh-mariadelcarmenguadalupefernandezdelatorreygutierrezdecastro-ruiz" });
+      expect(deriveStartingPassword(full, "Ruiz")).toEqual({ ok: true, value: "cvh-mariadelcarmenguadalupefernandezdelatorreygutierrezdecastro-ruiz" });
     });
 
     it("refuses a very long compound name", () => {
@@ -98,7 +98,7 @@ describe("starting password", () => {
 
     it("measures the password, not the typed name: spaces and accents do not count", () => {
       const result = deriveStartingPassword("María del Carmen", "Fernández de la Torre y Gutiérrez");
-      expect(result).toEqual({ ok: true, value: "rvh-mariadelcarmen-fernandezdelatorreygutierrez" });
+      expect(result).toEqual({ ok: true, value: "cvh-mariadelcarmen-fernandezdelatorreygutierrez" });
     });
   });
 });

@@ -108,10 +108,10 @@ describe("an Admin's Reset password (S01.08)", () => {
 
     const result = await t.service.resetPassword(A, " AOkafor ");
 
-    expect(result).toEqual({ ok: true, value: { username: "aokafor", startingPassword: "rvh-ann-okafor" } });
+    expect(result).toEqual({ ok: true, value: { username: "aokafor", startingPassword: "cvh-ann-okafor" } });
     expect(t.rows.get(C)).toMatchObject({ status: "active", mustChangePassword: true, startingPasswordIssuedAt: NOW, startingPasswordUsedAt: null });
     // The provider stores the peppered starting password; its admin password update is its global sign-out.
-    expect(t.idp.users.get(before)!.password).toBe("peppered(rvh-ann-okafor)");
+    expect(t.idp.users.get(before)!.password).toBe("peppered(cvh-ann-okafor)");
     expect(t.openSessions.get(C)).toBe(0);
     // Once with the revocation, once when the reset finishes: a sign-in that checked the old password in between cannot keep its session.
     expect(t.generations.get(C)).toBe(2);

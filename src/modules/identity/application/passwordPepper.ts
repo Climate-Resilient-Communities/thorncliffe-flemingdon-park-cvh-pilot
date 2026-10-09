@@ -3,7 +3,7 @@ import { createHmac } from "node:crypto";
 /**
  * The password pepper (S01.07). The identity provider never stores a staff member's password as
  * typed: it stores `hex(HMAC-SHA-256(STAFF_PASSWORD_PEPPER, password))`. Usernames and starting
- * passwords (`rvh-first-last`) can be guessed, and the provider accepts a password grant from
+ * passwords (`cvh-first-last`) can be guessed, and the provider accepts a password grant from
  * anyone holding the public key; without the server-only pepper that grant cannot be made with
  * the human password, so the only way to a session is the app's own sign-in (valid once, 72 hours,
  * throttled, audited). The app also binds every session it opens (staff_session).

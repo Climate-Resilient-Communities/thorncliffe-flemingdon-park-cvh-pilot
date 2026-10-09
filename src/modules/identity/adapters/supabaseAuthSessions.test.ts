@@ -69,7 +69,7 @@ describe("Supabase Auth sessions", () => {
     const { fetch, calls } = fakeFetch((call) => (call.url.includes("/token") ? { status: 200, body: session() } : { status: 200, body: user() }));
     const { jar, cookies, writes } = memoryJar();
 
-    const check = await supabaseAuthSessions(config(fetch), jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" });
+    const check = await supabaseAuthSessions(config(fetch), jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" });
 
     expect(check).toMatchObject({ ok: true, authUserId: USER_ID, sessionKey: sha256(SESSION_ID), tokenLifetimeSeconds: 43_200 });
     expect(calls[0]).toMatchObject({ url: `${URL_BASE}/auth/v1/token?grant_type=password`, method: "POST" });
@@ -90,7 +90,7 @@ describe("Supabase Auth sessions", () => {
     const { fetch, calls } = fakeFetch((call) => (call.url.includes("/token") ? { status: 200, body: session() } : { status: 204, body: {} }));
     const { jar, writes } = memoryJar();
 
-    const check = await supabaseAuthSessions(config(fetch), jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" });
+    const check = await supabaseAuthSessions(config(fetch), jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" });
     if (!check.ok) throw new Error("expected a session");
     await check.discard();
 
@@ -121,7 +121,7 @@ describe("Supabase Auth sessions", () => {
   async function signedInJar() {
     const { fetch } = fakeFetch(() => ({ status: 200, body: session() }));
     const memory = memoryJar();
-    const check = await supabaseAuthSessions(config(fetch), memory.jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" });
+    const check = await supabaseAuthSessions(config(fetch), memory.jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "cvh-jane-doe" });
     if (!check.ok) throw new Error("expected a session");
     await check.accept();
     return memory;

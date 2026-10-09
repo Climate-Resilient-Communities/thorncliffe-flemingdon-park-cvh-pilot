@@ -231,7 +231,7 @@ describe("an Admin's Reset password", () => {
     await signIn(phone, "aokafor");
     await signIn(laptop, "aokafor");
 
-    expect(await accounts.resetPassword(adminA, "aokafor")).toEqual({ ok: true, value: { username: "aokafor", startingPassword: "rvh-ann-okafor" } });
+    expect(await accounts.resetPassword(adminA, "aokafor")).toEqual({ ok: true, value: { username: "aokafor", startingPassword: "cvh-ann-okafor" } });
 
     expect(await request(phone)).toBeNull();
     expect(await request(laptop)).toBeNull();
@@ -242,9 +242,9 @@ describe("an Admin's Reset password", () => {
 
     // The old password no longer works; the starting password does, once, at gate 1.
     expect(await signIn(device(), "aokafor")).toEqual({ ok: false, error: "sign_in_failed" });
-    expect(await signIn(phone, "aokafor", "rvh-ann-okafor")).toEqual({ ok: true, staffId: id, gate: "choose_password" });
+    expect(await signIn(phone, "aokafor", "cvh-ann-okafor")).toEqual({ ok: true, staffId: id, gate: "choose_password" });
     advance(hours(72));
-    expect(await signIn(device(), "aokafor", "rvh-ann-okafor")).toEqual({ ok: false, error: "starting_password_expired" });
+    expect(await signIn(device(), "aokafor", "cvh-ann-okafor")).toEqual({ ok: false, error: "starting_password_expired" });
   });
 
   it("resets an Admin's password even when it leaves fewer than two usable Admins (recovery), audited admin_shortfall", async () => {
@@ -300,7 +300,7 @@ describe("an Admin's Reset password", () => {
     expect(await sessionRows(id)).toEqual([]);
     expect((await owner`select starting_password_used_at from staff_account where id = ${id}`)[0].starting_password_used_at).toBeNull();
     // Not counted as a failed attempt: the person can use the new starting password at once.
-    expect((await signIn(device(), "aokafor", "rvh-ann-okafor")).ok).toBe(true);
+    expect((await signIn(device(), "aokafor", "cvh-ann-okafor")).ok).toBe(true);
   });
 
   it("leaves no usable old-password session when resets and sign-ins run concurrently", async () => {
@@ -322,7 +322,7 @@ describe("an Admin's Reset password", () => {
 });
 
 describe("an Admin's Reset password racing the person's \"Choose your password\" (S01.07 serialisation, S01.08)", () => {
-  const START = "rvh-ann-okafor";
+  const START = "cvh-ann-okafor";
   const OWN = "a long new password";
 
   /** An account still on its starting password (gate 1), issued at the clock's time. */

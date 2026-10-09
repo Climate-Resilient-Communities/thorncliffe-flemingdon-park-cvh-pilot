@@ -29,7 +29,7 @@ export const pepperedPassword = (password: string) => pepperPassword(pepper as s
 /** A new account on its starting password; usernames are unique per run. */
 export async function newAccount(sql: postgres.Sql, role: "ambassador" | "coordinator", firstName: string, lastName: string) {
   const username = `${firstName.toLowerCase()}${randomBytes(3).toString("hex")}`;
-  const startingPassword = `rvh-${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
+  const startingPassword = `cvh-${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
   const authUserId = identityFake().plant(`${username}@staff.cvh.invalid`, { password: pepperedPassword(startingPassword), createdAt: new Date() });
   await sql`
     insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)

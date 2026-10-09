@@ -121,14 +121,14 @@ describe("the first Admin", () => {
   it("is created with a starting password, audited with the system as actor, and starts bootstrap", async () => {
     const created = await identity.createFirstAdmin(jane);
 
-    expect(created).toEqual({ ok: true, value: { staffId: expect.any(String), username: "jdoe", startingPassword: "rvh-jane-doe", role: "admin" } });
+    expect(created).toEqual({ ok: true, value: { staffId: expect.any(String), username: "jdoe", startingPassword: "cvh-jane-doe", role: "admin" } });
     const staffId = created.ok ? created.value.staffId : "";
     expect(await accounts()).toEqual([
       { username: "jdoe", first_name: "Jane", last_name: "Doe", email: "jane.doe@example.org", role: "admin", status: "active", must_change_password: true, issued: true, created_by: null },
     ]);
     expect(await bootstrap()).toEqual({ first_admin_id: staffId, second_admin_id: null, completed_at: null });
     // Supabase Auth is given the peppered starting password, never the one handed over.
-    expect([...idp.users.values()]).toEqual([{ login: "jdoe@staff.cvh.invalid", password: pepperPassword(PEPPER, "rvh-jane-doe"), authenticatorEnrolled: false }]);
+    expect([...idp.users.values()]).toEqual([{ login: "jdoe@staff.cvh.invalid", password: pepperPassword(PEPPER, "cvh-jane-doe"), authenticatorEnrolled: false }]);
     const [{ auth_user_id }] = await owner`select auth_user_id from staff_account where id = ${staffId}`;
     expect(idp.users.has(auth_user_id)).toBe(true);
     expect(await auditRecords()).toEqual([
@@ -303,7 +303,7 @@ describe("scripts/create-first-admin", () => {
 
     expect(code).toBe(0);
     expect(out).toContain("Username: jdoe");
-    expect(out).toContain("Starting password: rvh-jane-doe");
+    expect(out).toContain("Starting password: cvh-jane-doe");
     expect(out).toContain("Finish setting up two Admins first");
     expect(await accounts()).toHaveLength(1);
   });
@@ -333,7 +333,7 @@ describe("Add a person", () => {
 
     const created = await identity.addPerson(firstId, omar);
 
-    expect(created).toEqual({ ok: true, value: { staffId: expect.any(String), username: "ofarouk", startingPassword: "rvh-omar-farouk", role: "admin" } });
+    expect(created).toEqual({ ok: true, value: { staffId: expect.any(String), username: "ofarouk", startingPassword: "cvh-omar-farouk", role: "admin" } });
     const secondId = created.ok ? created.value.staffId : "";
     expect((await accounts())[1]).toMatchObject({ username: "ofarouk", role: "admin", must_change_password: true, issued: true, created_by: firstId });
     expect(await bootstrap()).toEqual({ first_admin_id: firstId, second_admin_id: secondId, completed_at: null });

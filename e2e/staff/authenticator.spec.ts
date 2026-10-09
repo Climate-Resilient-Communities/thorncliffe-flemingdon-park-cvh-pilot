@@ -39,7 +39,7 @@ async function newAccount(role: Role, options: { starting?: boolean; enrolled?: 
   const firstName = "Ann";
   const lastName = "Okafor";
   const username = `${role.slice(0, 3)}${randomBytes(3).toString("hex")}`;
-  const password = options.starting ? "rvh-ann-okafor" : `${username} own password`;
+  const password = options.starting ? "cvh-ann-okafor" : `${username} own password`;
   const fake = memoryIdentityProvider({ file: fakeFile });
   const authUserId = fake.plant(`${username}@staff.cvh.invalid`, { password: pepperPassword(pepper as string, password), createdAt: new Date() });
   if (options.enrolled) fake.enrol(authUserId);

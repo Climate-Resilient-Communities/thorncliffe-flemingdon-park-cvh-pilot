@@ -60,12 +60,12 @@ describe("Add a person (screen)", () => {
       <AddPersonForm
         labels={addPersonLabels()}
         roles={[]}
-        initialState={{ status: "created", heading: "Account created for Omar Farouk", username: "Username: ofarouk", password: "Starting password: rvh-omar-farouk", line: "Give them these in person." }}
+        initialState={{ status: "created", heading: "Account created for Omar Farouk", username: "Username: ofarouk", password: "Starting password: cvh-omar-farouk", line: "Give them these in person." }}
       />,
     );
 
     expect(html).toContain("<h2>Account created for Omar Farouk</h2>");
-    expect(html).toContain("<p>Starting password: rvh-omar-farouk</p>");
+    expect(html).toContain("<p>Starting password: cvh-omar-farouk</p>");
     expect(html).toContain('href="/staff/people">Add another person</a>');
   });
 });

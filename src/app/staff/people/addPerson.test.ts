@@ -24,7 +24,7 @@ describe("Add a person (server action)", () => {
   it("passes the signed-in staff member and the fields to the identity module, and shows what to hand over", async () => {
     const addPerson = vi.fn(async () => ({
       ok: true as const,
-      value: { staffId: "x", username: "ofarouk", startingPassword: "rvh-omar-farouk", role: "coordinator" as const },
+      value: { staffId: "x", username: "ofarouk", startingPassword: "cvh-omar-farouk", role: "coordinator" as const },
     }));
     const { deps: d } = deps({ addPerson });
 
@@ -35,7 +35,7 @@ describe("Add a person (server action)", () => {
       status: "created",
       heading: "Account created for Omar Farouk",
       username: "Username: ofarouk",
-      password: "Starting password: rvh-omar-farouk",
+      password: "Starting password: cvh-omar-farouk",
       line: expect.stringContaining("works once, within 72 hours"),
     });
   });

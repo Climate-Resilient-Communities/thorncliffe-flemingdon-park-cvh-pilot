@@ -1,7 +1,7 @@
 import { err, ok, type Result } from "./result";
 
 /** The prefix of every starting password (epic E01 definitions). */
-export const STARTING_PASSWORD_PREFIX = "rvh";
+export const STARTING_PASSWORD_PREFIX = "cvh";
 
 // Latin letters that Unicode decomposition does not reduce to a plain a to z letter, as a
 // reader of the name would spell them (African and Azerbaijani orthographies included).
@@ -63,7 +63,7 @@ export type StartingPasswordError =
   | "starting_password_too_long";
 
 /**
- * `rvh-<firstname>-<lastname>` (epic E01 definitions), each name reduced by startingPasswordPart.
+ * `cvh-<firstname>-<lastname>` (epic E01 definitions), each name reduced by startingPasswordPart.
  * Refused when either name reduces to nothing (for example only symbols, or only non-Latin letters),
  * when a name has a letter that cannot be spelled with a to z (never dropped silently), and when the
  * password would be longer than STARTING_PASSWORD_MAX_BYTES (the Admin shortens the name used).

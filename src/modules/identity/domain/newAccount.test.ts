@@ -20,7 +20,7 @@ describe("new account", () => {
         lastName: "Doe",
         email: "jane@example.org",
         role: "coordinator",
-        startingPassword: "rvh-janemary-doe",
+        startingPassword: "cvh-janemary-doe",
       },
     });
   });

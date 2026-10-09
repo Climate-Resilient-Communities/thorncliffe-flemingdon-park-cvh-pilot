@@ -130,11 +130,11 @@ describe("toAuditRecord", () => {
   });
 
   it("rejects a field outside the action's schema, naming the field but not its value", () => {
-    const attempt = () => toAuditRecord(event({ meta: { password: "rvh-jane-doe" } as never }), "ok");
+    const attempt = () => toAuditRecord(event({ meta: { password: "cvh-jane-doe" } as never }), "ok");
 
     expect(attempt).toThrow(AuditRecordError);
     expect(attempt).toThrow("password.changed: meta has fields outside the schema: password");
-    expect(attempt).not.toThrow(/rvh-jane-doe/);
+    expect(attempt).not.toThrow(/cvh-jane-doe/);
   });
 
   it.each([
@@ -296,7 +296,7 @@ describe("toAuditRecord", () => {
     ["colons", "416:555:0199"],
     ["underscores between digits", "416_555_0199"],
     ["a username with a dot", "jane.doe"],
-    ["a kebab-case username", "rvh-jane-doe"],
+    ["a kebab-case username", "cvh-jane-doe"],
     ["a ten digit number", "4165550199"],
     ["a SID of the wrong length", "SM0123"],
     ["an upper case SID", "SM0123456789ABCDEF0123456789ABCDEF"],
@@ -317,7 +317,7 @@ describe("toAuditRecord", () => {
     ["/api/staff/416/555/0199"],
     ["/api/x/416_555_0199"],
     ["/api/staff/jane.doe"],
-    ["/staff/accounts/rvh-jane-doe-1"],
+    ["/staff/accounts/cvh-jane-doe-1"],
     ["/staff/accounts/Jane"],
     ["/staff/[id"],
     ["api/staff"],

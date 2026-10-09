@@ -44,7 +44,7 @@ async function newAccount(role: "ambassador" | "admin") {
 /** A new Ambassador still on the starting password issued a moment ago (gate 1). */
 async function newAccountOnStartingPassword() {
   const username = `amb${randomBytes(3).toString("hex")}`;
-  const password = "rvh-ann-okafor";
+  const password = "cvh-ann-okafor";
   const fake = memoryIdentityProvider({ file: fakeFile });
   const authUserId = fake.plant(`${username}@staff.cvh.invalid`, { password: pepperPassword(pepper as string, password), createdAt: new Date() });
   const id = randomUUID();
@@ -120,7 +120,7 @@ test("an Admin's Reset password shows the new starting password once and signs t
   const reset = desk.page.getByRole("region", { name: "Reset a password" });
   await reset.getByLabel("Their username").fill(target.username);
   await reset.getByRole("button", { name: "Reset password" }).click();
-  await expect(reset.getByText(`New starting password for ${target.username}: rvh-ann-okafor`)).toBeVisible();
+  await expect(reset.getByText(`New starting password for ${target.username}: cvh-ann-okafor`)).toBeVisible();
 
   const me = await phone.page.request.get("/api/staff/me");
   expect(me.status()).toBe(401);
@@ -131,7 +131,7 @@ test("an Admin's Reset password shows the new starting password once and signs t
 
   // The new starting password works, at gate 1.
   await phone.page.getByLabel("Username").fill(target.username);
-  await phone.page.getByLabel("Password", { exact: true }).fill("rvh-ann-okafor");
+  await phone.page.getByLabel("Password", { exact: true }).fill("cvh-ann-okafor");
   await phone.page.getByRole("button", { name: "Sign in" }).click();
   await expect(phone.page).toHaveURL(/\/staff\/setup\/password$/);
   await phone.context.close();

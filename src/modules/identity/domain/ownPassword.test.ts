@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validateOwnPassword } from "./ownPassword";
 
-const account = { username: "jdoe", startingPassword: "rvh-jane-doe" };
+const account = { username: "jdoe", startingPassword: "cvh-jane-doe" };
 const check = (password: string, confirm = password) => validateOwnPassword({ password, confirm }, account);
 
 describe("own password", () => {
@@ -28,12 +28,12 @@ describe("own password", () => {
   });
 
   it("refuses the starting password in any case", () => {
-    const longStart = { username: "jdoe", startingPassword: "rvh-janemary-doe" };
-    expect(validateOwnPassword({ password: "RVH-JaneMary-Doe", confirm: "RVH-JaneMary-Doe" }, longStart)).toEqual({
+    const longStart = { username: "jdoe", startingPassword: "cvh-janemary-doe" };
+    expect(validateOwnPassword({ password: "CVH-JaneMary-Doe", confirm: "CVH-JaneMary-Doe" }, longStart)).toEqual({
       ok: false,
       error: "password_is_starting_password",
     });
-    expect(validateOwnPassword({ password: "rvh-janemary-doe!", confirm: "rvh-janemary-doe!" }, longStart).ok).toBe(true);
+    expect(validateOwnPassword({ password: "cvh-janemary-doe!", confirm: "cvh-janemary-doe!" }, longStart).ok).toBe(true);
   });
 
   it("refuses a confirmation that differs", () => {
