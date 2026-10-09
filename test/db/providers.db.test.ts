@@ -272,14 +272,14 @@ describe("provider catalogue (S02.04)", () => {
             category_links_added: 121,
             category_links_removed: 0,
             translations_loaded: 0,
-            translations_machine: 656,
+            translations_machine: 725,
             providers_safety_critical: 40,
             translations_safety_critical: 560,
             translations_not_yet: 0,
           },
           // Not loaded although they exist: 1050 unreviewed emergency roles and names, 560 descriptions of the 40
-          // safety-critical providers (14 languages), 170 descriptions whose facts changed.
-          warnings: 1780,
+          // safety-critical providers (14 languages), 101 descriptions whose facts changed.
+          warnings: 1711,
           failures: 0,
         },
       });
