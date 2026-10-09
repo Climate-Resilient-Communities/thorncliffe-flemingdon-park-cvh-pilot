@@ -19,6 +19,13 @@
     color: var(--text-on-warm);
   }
 
+  /* The facts and the contact side by side from the desktop breakpoint (desktop.css). On a phone, a stack with the section gap. */
+  .building-cols {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section-resident);
+  }
+
   .building-facts {
     margin: 0;
   }

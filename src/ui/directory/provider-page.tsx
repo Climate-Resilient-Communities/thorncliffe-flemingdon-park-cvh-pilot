@@ -13,7 +13,9 @@ import { CallHub } from "./call-hub";
 import { formatMoment } from "./format";
 import { Inline911, isFallbackText, UnavailableNote } from "./listing-text";
 import { NumbersLink } from "./numbers-link";
+import { ProviderSide } from "./provider-side";
 import { ProviderView, type CategoryNames } from "./provider-view";
+import type { MiniMapTiles } from "../map/mini-map";
 import { useDirectory } from "./use-directory";
 import "./directory.css";
 
@@ -21,7 +23,7 @@ import "./directory.css";
  * One provider's own page (R-12, and R-13 for the organisation: in the pilot's listing file a provider is the
  * organisation, so they are one page). Read from the same downloaded release as the list, on the phone.
  */
-export function ProviderPage({ lang, id }: { lang: LaunchCode; id: string }) {
+export function ProviderPage({ lang, id, tiles = null }: { lang: LaunchCode; id: string; tiles?: MiniMapTiles | null }) {
   const t = useTranslations();
   const directory = useDirectory(lang);
   const listing = directory.status === "ready" ? directory.listing : null;
@@ -67,11 +69,16 @@ export function ProviderPage({ lang, id }: { lang: LaunchCode; id: string }) {
           </section>
         )}
         {provider && (
-          <>
-            {lang !== "en" && [provider.services, ...(provider.emergency_role ? [provider.emergency_role] : []), ...provider.subcategories].some(isFallbackText) && <UnavailableNote lang={lang} />}
-            <ProviderView provider={provider} categories={categories} lang={lang} variant="page" />
-            <Inline911 />
-          </>
+          // From the desktop breakpoint (desktop.css): the details, then the side panel with the place and the quick actions. On a
+          // phone the wrappers are stacks with the screen's gap and the panel is not displayed, so the page is the one column it was.
+          <div className="provider-cols" data-layout="columns" data-testid="provider-columns">
+            <div className="provider-main" data-testid="provider-main">
+              {lang !== "en" && [provider.services, ...(provider.emergency_role ? [provider.emergency_role] : []), ...provider.subcategories].some(isFallbackText) && <UnavailableNote lang={lang} />}
+              <ProviderView provider={provider} categories={categories} lang={lang} variant="page" />
+              <Inline911 />
+            </div>
+            <ProviderSide provider={provider} lang={lang} tiles={tiles} />
+          </div>
         )}
       </Stack>
     </Screen>

@@ -201,7 +201,10 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
 
   return (
     <Screen surface="resident" testId="search-page">
-      <Stack gap="section-resident">
+      {/* From the desktop breakpoint (desktop.css): the question and what it found, then the topics and the 911 note as a side column.
+          On a phone both wrappers are stacks with the screen's gap, so the screen is one stack, in the same order. */}
+      <div className="ask-cols" data-layout="columns" data-testid="ask-columns">
+      <div className="ask-main" data-testid="ask-main">
         <Stack gap="related">
           <ResidentText as="h1">{t("R09.title")}</ResidentText>
           {searchAvailable && <ResidentText as="p" className="hide-basic">{t("R09.lead")}</ResidentText>}
@@ -340,6 +343,8 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
           </section>
         )}
 
+      </div>
+      <div className="ask-side" data-testid="ask-side">
         <section ref={topicsRef} className="ask-topics-section" aria-labelledby="ask-topics-title" data-testid="ask-topics-section">
           <Stack gap="related">
             <ResidentText as="h2" testId="ask-topics-title" tabIndex={-1}>
@@ -374,7 +379,8 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
             </a>
           </p>
         </Stack>
-      </Stack>
+      </div>
+      </div>
     </Screen>
   );
 }

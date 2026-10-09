@@ -1,7 +1,7 @@
 import axe from "axe-core";
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { newServer, stubDirectory, type DirectoryServer } from "./directory-fixture";
-import { expectBaseline, openResident, waitForFonts } from "./helpers";
+import { expectBaseline, openResident, waitForFonts, wholePageHeight } from "./helpers";
 
 // S03.06: a resident asks a question (/{lang}/search) and sees the right listings. The release routes are answered by
 // directory-fixture.ts and /api/search by the stub below (the resident server has no database and no embedding key here).
@@ -57,10 +57,7 @@ const ready = async (page: Page) => {
 /** Grows the viewport to the whole page and compares it with the baseline. */
 async function shot(page: Page, width: number, name: string) {
   await waitForFonts(page);
-  const needed = await page.evaluate(() => {
-    const main = document.querySelector("main")!;
-    return Math.ceil(main.scrollHeight + document.documentElement.clientHeight - main.clientHeight);
-  });
+  const needed = await wholePageHeight(page);
   await page.setViewportSize({ width, height: needed });
   await expectBaseline(page, name);
 }

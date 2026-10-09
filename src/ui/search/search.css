@@ -4,6 +4,15 @@
  * the directory's (directory.css); this holds only what the question box and the topic buttons add.
  */
 @layer components {
+  /* The columns of Find help from the desktop breakpoint (desktop.css); on a phone, stacks with the screen's section gap. */
+  .ask-cols,
+  .ask-main,
+  .ask-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section-resident);
+  }
+
   .ask-form {
     display: flex;
     flex-direction: column;

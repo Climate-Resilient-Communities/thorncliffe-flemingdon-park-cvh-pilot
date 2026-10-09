@@ -5,6 +5,7 @@ import { ListingProviderSchema } from "@/contracts/directory";
 import { FALLBACK_MARKER } from "@/ui";
 import { isLaunchCode } from "@/i18n/languages";
 import { ProviderPage } from "@/ui/directory";
+import { pageMapTiles } from "../../map/tiles";
 import { DirectoryFrame } from "../frame";
 
 // A provider's page is a shell too: the phone finds the provider in the release file it downloaded. Any well-formed
@@ -25,9 +26,11 @@ export default async function ProviderRoute({ params }: PageProps<"/[lang]/direc
   const { lang, id } = await params;
   if (!isLaunchCode(lang) || !ID.safeParse(id).success) notFound();
   setRequestLocale(lang);
+  // The desktop side panel's small map uses the map page's tile settings (the provider page draws it only from the desktop breakpoint).
+  const tiles = pageMapTiles();
   return (
     <DirectoryFrame lang={lang}>
-      <ProviderPage lang={lang} id={id} />
+      <ProviderPage lang={lang} id={id} tiles={tiles} />
     </DirectoryFrame>
   );
 }

@@ -3,7 +3,7 @@ import { FeedV1 } from "../../src/contracts/feed";
 import { LAUNCH_LANGUAGES } from "../../src/i18n/languages";
 import { ALERTS_URL } from "./alerts-server";
 import { PUBLIC_ORIGIN } from "./public-origin";
-import { catalogText, expectBaseline, isFallback, openResident } from "./helpers";
+import { catalogText, expectBaseline, isFallback, openResident, wholePageHeight } from "./helpers";
 
 // S04.08: alert detail (R-07), what "verified" means (R-28) and the alert cards on home (R-03), against the production build with the feed's
 // threads read from fixtures/feed.json (CVH_FAKE_FEED_FILE; the second server of playwright.resident.config.ts, so no other test sees an alert).
@@ -39,10 +39,7 @@ const noCookie = (response: { headersArray(): { name: string }[] }) => response.
 
 /** Grows the viewport to the whole page, so the baseline shows the whole alert, not the first screen. */
 async function showWholePage(page: Page, width: number) {
-  const needed = await page.evaluate(() => {
-    const main = document.querySelector("main")!;
-    return Math.ceil(main.scrollHeight + document.documentElement.clientHeight - main.clientHeight);
-  });
+  const needed = await wholePageHeight(page);
   await page.setViewportSize({ width, height: needed });
 }
 

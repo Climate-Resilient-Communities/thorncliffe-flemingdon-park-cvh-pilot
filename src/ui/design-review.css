@@ -32,26 +32,6 @@
 .shell .ask-input, .shell .ask-topic, .shell .home-card, .shell .home-place { border-radius: var(--gap-target); }
 .shell .ask-topic { justify-content: flex-start; text-align: start; }
 
-@variant resident-wide {
-  .shell { grid-template-rows: auto auto minmax(0, 1fr) auto; }
-  .shell-header { padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
-  .shell-nav { grid-row: 2; display: flex; gap: var(--gap-stack); padding-inline: max(var(--inset-card), calc((100% - var(--size-page-resident)) / 2)); border-block-end: 1px solid var(--border); } /* spacing-exception: percentage computes the approved centered shell gutter; all pixel dimensions come from tokens. */
-  .shell-nav__item { display: flex; flex-direction: row; align-items: center; gap: var(--gap-target); padding-inline: var(--gap-stack); border-block-start: 0; border-block-end: 3px solid transparent; }
-  .shell-nav__item > * { align-self: center; }
-  .shell-nav__item[aria-current="page"] { border-block-end-color: currentColor; background: var(--surface); }
-  .shell__main { grid-row: 3; }
-  .shell-footer { grid-row: 4; }
-  .shell .layout-screen, .shell-footer { max-inline-size: var(--size-page-resident); margin-inline: auto; }
-  .shell .layout-screen { padding-block: var(--inset-card); }
-  .shell .layout-screen:not([data-testid="directory-page"]):not([data-testid="map-page"]) > .layout-screen__body { max-inline-size: var(--size-page-reading); }
-  .shell .dir-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--inset-card); align-items: start; }
-  .shell .dir-filters { max-inline-size: 70ch; }
-  .shell .dir-card--card .dir-facts { font-size: var(--type-caption-size); }
-  .shell .shell-sheet { max-inline-size: var(--size-language-sheet); margin-inline: auto; }
-  .dir-workspace { grid-template-columns: var(--size-side-directory) minmax(0, 1fr); align-items: start; }
-  .dir-workspace > :first-child { position: sticky; inset-block-start: var(--gap-stack); }
-  .dir-card--card { gap: var(--gap-label); }
-}
 
 /* Topic browsing is a list of choices, not a wall of outlined buttons. */
 .shell .dir-btn { justify-content: flex-start; }
@@ -60,23 +40,15 @@
 .shell .ask-topic:hover { background: var(--surface); }
 .shell .ask-form > .dir-btn { align-self: flex-start; min-inline-size: 9rem; }
 :root[data-basic="true"] .shell .ask-topics { grid-template-columns: minmax(0, 1fr); }
-@variant resident-wide {
-  .dir-workspace > :first-child { max-block-size: calc(100dvh - var(--size-filter-viewport-offset)); overflow-y: auto; }
-}
 
 /* Consistent, start-aligned controls throughout resident workflows. Icon-only map controls retain their geometry. */
 .shell :is(.choice-btn,.alert-button,.share-btn,.map-btn,.map-segment__btn) { text-align: start; justify-content: flex-start; border-radius: var(--gap-tight); }
 .shell :is(.choice-option,.choice-input,.signup-input,.signup-errorbox,.checkin-card,.alert-card,.share-box,.map-frame) { border-radius: var(--gap-target); }
 .shell .map-segment__btn { padding-inline: var(--gap-stack); }
-@variant resident-wide { .shell .map-canvas { block-size: clamp(24rem, 55dvh, 40rem); } }
 
 .dir-filters [data-testid="filter-panel"][data-open="false"] { display: none; }
 
-/* The desktop sidebar stays open; the same controls collapse behind Filters on phones. */
-@variant resident-wide {
-  .dir-filters [data-testid="filter-panel"][data-open] { display: block; }
-  .dir-filters :is([data-testid="filters-toggle"], [data-testid="filters-apply"]) { display: none; }
-}
+/* The same filter controls collapse behind Filters on phones; from the desktop breakpoint they are an open column (desktop.css). */
 .shell :is(.checkin-consent,.checkin-answer,.offline-notice,.not-911) { border-radius: var(--gap-target); }
 
 .shell-header__tools { display: flex; align-items: center; gap: var(--gap-target); min-inline-size: 0; }

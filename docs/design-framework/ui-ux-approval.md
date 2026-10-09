@@ -51,3 +51,17 @@ Checked at 1440, 390 and 320px, with the recovery disclosure open and closed. Ad
 - Hub Providers: compact two-line rows (name with a Published / Hidden pill and a "⋯" actions menu; badge with "Confirmed Oct 2, 2026" or "Not confirmed" and Change / Confirm opening the date field), filter tabs with counts, and a search by name or code. Server actions and their validation are unchanged.
 - Hub Buildings: the badge with "Floors confirmed Oct 2, 2026" or "Floors not confirmed", in the list and on a building's page.
 - Resident directory card and provider page: the badge with "Checked by the Hub · {date}" (`directory.checkedByHub`, machine-translated into the 14 other languages; it replaces `directory.lastConfirmed`).
+
+## Desktop layout — October 8
+
+The product owner asked for two views ("on desktop it still looks like it's meant for phone; there should be 2 views"). From the resident-wide breakpoint (1000 px; tuned at 1024, 1280 and 1440) the resident app has its own layout, in one stylesheet (`src/ui/desktop.css`) over the same pages. The phone layout is unchanged.
+
+- Shell: the logo, the four destinations and the language and Aa buttons share the header row. The navigation is drawn twice and CSS shows one: the header copy (desktop) comes before the page in the source, so the keyboard and screen readers reach it first; the bottom bar (phone) is unchanged. The page is centred within 1200 px and scrolls as a whole; the footer is a full-width band after it.
+- Home: the places and the alerts in the main column (buildings and the neighbourhood as cards two to a row, the current alerts, the alerts that have ended); Every day, the 911 note and "What I have told the CVH" in a side column. Every day adds "Get text alerts" on a desktop only.
+- Find help: the question box with its button beside it, results as cards two to a row; the topics, the full list link and the 911 note in the side column. Directory: the filters as an open start column that stays on screen; the cards two to a row (one with large text).
+- Provider: the details as a card, and a side panel with a small still map of the whole area marking the place (the same view the map opens on, so the tiles say nothing about which provider is open; none in simpler view), the address, Call, Directions (Google Maps in a new tab, opened only by the resident) and See on the map.
+- Map: the map fills the window's height beside the list of the places on screen, which follows the map; the Map / List switch is for phones. Simpler view is the list alone, as before.
+- Be ready: the guides and the other destinations as grids of cards. A guide: "Jump to" as a start column that stays on screen beside its parts; the 911 block stays above. Terms: the contents as a start column that stays on screen. Building: the facts in two columns and the contact as a card beside them. Alerts, the archive, choices and sign-up keep a readable column at the start.
+- Order: a side column is later in the source than the main one, and a start column (filters, "Jump to", contents) earlier, so the reading order is the order on screen. Logical properties only, so Urdu, Pashto and Dari mirror.
+
+Tests: `e2e/resident/desktop.spec.ts` (columns side by side, the navigation in the header row and first in the tab order, no horizontal scrolling at 1024, 1280 and 1440 and at 200% zoom, in English and Urdu, with standard and large text and in simpler view).

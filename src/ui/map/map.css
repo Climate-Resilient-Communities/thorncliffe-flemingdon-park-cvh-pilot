@@ -126,6 +126,44 @@
   }
 
   /* R-14: the map, with its messages and the preview card over it. */
+  /* The map and its list (R-14, R-15): on a phone, one at a time with the screen's section gap; side by side from the desktop
+     breakpoint (desktop.css). In the map view a phone does not display the list. */
+  .map-work {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-section-resident);
+  }
+
+  .map-work[data-view="map"] > .map-list {
+    display: none;
+  }
+
+  /* The small map of a provider's page on a desktop (mini-map.tsx). */
+  .map-mini {
+    position: relative;
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  .map-mini__canvas {
+    aspect-ratio: 4 / 3;
+    background-color: var(--surface);
+  }
+
+  .map-mini__credit {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border-block-start: 1px solid var(--border);
+    background-color: var(--surface-raised);
+    font-size: var(--type-caption-size);
+    overflow-wrap: anywhere;
+  }
+
+  .map-mini__credit a {
+    color: var(--accent-text);
+  }
+
   .map-frame {
     position: relative;
     border: 1.5px solid var(--control-border);

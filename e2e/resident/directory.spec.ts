@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { stubBuildingList } from "./choices-fixture";
 import { newServer, stubDirectory, type DirectoryServer } from "./directory-fixture";
 import { isUsageRequest } from "./usage-fixture";
-import { catalogText, expectBaseline, filledPattern, isFallback, openResident, waitForFonts } from "./helpers";
+import { catalogText, expectBaseline, filledPattern, isFallback, openResident, waitForFonts, wholePageHeight } from "./helpers";
 
 // S02.06: a resident browses and filters the directory (/{lang}/directory, /{lang}/directory/{id}). The release routes
 // are answered by directory-fixture.ts (the resident server has no database in these tests): release 7 has five sample
@@ -41,10 +41,7 @@ async function shot(page: Page, width: number, name: string) {
 
 /** Grows the viewport to the whole page, so the baseline shows every card, not the first screen. */
 async function showWholePage(page: Page, width: number) {
-  const needed = await page.evaluate(() => {
-    const main = document.querySelector("main")!;
-    return Math.ceil(main.scrollHeight + document.documentElement.clientHeight - main.clientHeight);
-  });
+  const needed = await wholePageHeight(page);
   await page.setViewportSize({ width, height: needed });
 }
 

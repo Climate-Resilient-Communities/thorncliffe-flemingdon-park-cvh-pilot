@@ -143,7 +143,10 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
           </Link>
         </Stack>
 
-        <nav aria-label={t("R25.stagesNav")} data-testid="guide-jump">
+        {/* From the desktop breakpoint (desktop.css) "Jump to" is a column beside the guide that stays on screen while it scrolls. On a
+            phone the wrappers are stacks with the screen's section gap, so the page is drawn as before, in the same order. */}
+        <div className="guide-cols" data-layout="columns" data-testid="guide-columns">
+        <nav aria-label={t("R25.stagesNav")} className="guide-nav" data-testid="guide-jump">
           <Stack gap="label">
             <ResidentText as="p" className="ready-eyebrow">
               {t("R25.stagesNav")}
@@ -160,6 +163,7 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
           </Stack>
         </nav>
 
+        <div className="guide-body" data-testid="guide-body">
         {GUIDE_PARTS.map((section) => (
           <section key={section} id={section} className="guide-section" aria-labelledby={headingId(section)} data-testid={`guide-${section}`}>
             <Stack gap="related">
@@ -180,6 +184,8 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
         <ResidentText as="p" className="ready-updated" testId="guide-reviewed">
           {withDate(t, "guides.reviewed", dayOf(view.lastUpdated), language.bcp47)}
         </ResidentText>
+        </div>
+        </div>
       </Stack>
     </Screen>
   );

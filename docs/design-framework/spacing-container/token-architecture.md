@@ -428,10 +428,22 @@ Approved in the UI/UX review. These resident dimensions are generated from the s
 
 | Semantic token | Primitive | Value |
 | --- | --- | --- |
-| `--size-page-resident` | `--app-page-resident` | 1120px |
+| `--size-page-resident` | `--app-page-resident` | 1120px (1200px from October 8) |
 | `--size-page-reading` | `--app-page-reading` | 760px |
 | `--size-side-directory` | `--app-side-directory` | 260px |
 | `--size-language-sheet` | `--app-language-sheet` | 640px |
-| `--size-filter-viewport-offset` | `--app-filter-viewport-offset` | 220px |
 
 `app-breakpoint-resident-wide` is 1000px. Mobile remains the default. Basic mode retains its larger targets. Text aligns to logical start, preserving RTL. Staff styling remains in the staff CSS bundle.
+
+## October 8 desktop layout
+
+Approved by the product owner ("there should be 2 views"): from `app-breakpoint-resident-wide` the resident app has its own desktop layout (`src/ui/desktop.css`): the navigation in the header row, the page scrolling as a whole with the footer after it, and main and side columns. The page maximum is now 1200px (it was 1120px); the desktop filter column no longer needs a viewport offset (`--size-filter-viewport-offset` is removed), because the header no longer stays on screen.
+
+| Semantic token | Primitive | Value |
+| --- | --- | --- |
+| `--size-page-resident` | `--app-page-resident` | 1200px |
+| `--size-aside-resident` | `--app-aside-resident` | 360px |
+| `--size-map-viewport-offset` | `--app-map-viewport-offset` | 260px |
+| `--size-map-min` | `--app-map-min` | 420px |
+| `--gap-columns-resident` | `--app-space-28px` | 28px |
+| `--gutter-resident-wide` | `--app-space-10` | 24px |

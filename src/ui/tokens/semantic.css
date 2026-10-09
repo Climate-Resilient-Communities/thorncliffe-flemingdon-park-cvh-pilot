@@ -8,7 +8,9 @@
   --size-page-reading: var(--app-page-reading);
   --size-side-directory: var(--app-side-directory);
   --size-language-sheet: var(--app-language-sheet);
-  --size-filter-viewport-offset: var(--app-filter-viewport-offset);
+  --size-aside-resident: var(--app-aside-resident);
+  --size-map-viewport-offset: var(--app-map-viewport-offset);
+  --size-map-min: var(--app-map-min);
   /* 3.1 Spacing */
   --gap-subline: var(--app-space-1);
   --gap-label: var(--app-space-2);
@@ -30,7 +32,9 @@
   --gap-meta-block: var(--app-space-2);
   --gap-type-grid-block: var(--app-space-7);
   --gap-columns-inner: var(--app-space-5);
+  --gap-columns-resident: var(--app-space-28px);
   --gutter-resident: var(--app-space-8);
+  --gutter-resident-wide: var(--app-space-10);
   --inset-screen-end: var(--app-space-10);
   --inset-page-staff: var(--app-space-10);
   --inset-page-staff-narrow: var(--app-space-8);

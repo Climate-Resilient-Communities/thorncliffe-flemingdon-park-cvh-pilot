@@ -189,6 +189,12 @@ export type DirectoryServer = {
 
 export const newServer = (release: number): DirectoryServer => ({ release, requests: [] });
 
+/** The tile provider's tile URLs (the default MAP_TILE_URL): the map, and the small map of a provider's page on a desktop. */
+export const TILE_URL = /^https:\/\/[a-d]\.basemaps\.cartocdn\.com\/light_all\/\d+\/\d+\/\d+\.png$/;
+
+// A 1 by 1 grey PNG: Leaflet draws each tile 256 pixels square.
+export const GREY_TILE = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGN4AQAA6gDp3uJOLwAAAABJRU5ErkJggg==", "base64");
+
 /**
  * Answers the release routes from `server`, for every page of the browser context (a second tab, a popup, a page opened by a
  * link), not only the one that was passed.
@@ -216,4 +222,8 @@ export async function stubDirectory(page: Page, server: DirectoryServer) {
         return route.fulfill({ json: listing, headers: { "Cache-Control": "public, max-age=31536000, immutable" } });
     }
   });
+  // A provider's page on a desktop draws a small map of the whole area: its tiles are a plain grey tile here, as on the map.
+  await context.route(TILE_URL, (route: Route) =>
+    route.fulfill({ body: GREY_TILE, contentType: "image/png", headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "max-age=86400" } }),
+  );
 }

@@ -100,6 +100,18 @@ export async function openResident(page: Page, path: string, width: number, heig
   return response;
 }
 
+/**
+ * The viewport height that shows the whole page. On a phone the shell's main is what scrolls, so it is the main's content plus the
+ * frame around it; from the desktop breakpoint the page scrolls as a whole (src/ui/desktop.css), so it is the document's height.
+ */
+export async function wholePageHeight(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const main = document.querySelector("main")!;
+    const root = document.documentElement;
+    return Math.ceil(Math.max(root.scrollHeight, main.scrollHeight + root.clientHeight - main.clientHeight));
+  });
+}
+
 /** The elements whose mirrored placement the tests compare: the same in every language. */
 export const SHELL_PARTS = [
   "shell-header",

@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
 import { FEED_URL, feedOf, stubFeed } from "./home-fixture";
-import { catalogText, expectBaseline, isFallback, openResident } from "./helpers";
+import { catalogText, expectBaseline, isFallback, openResident, wholePageHeight } from "./helpers";
 
 // S02.11: home (R-03) shows the resident's buildings first, each with its status in words, icon and colour and a link
 // to its page; the neighbourhood; and the current alerts. The feed is fetched again every 60 seconds and an answer older
@@ -452,7 +452,9 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await expect(notice.locator("p")).toHaveText(SHORT);
 
     await expect(page.getByTestId("home-every-day-title")).toHaveText("Every day");
-    await expect(page.getByTestId("home-every-day").locator("li")).toHaveCount(3);
+    // Three on a phone; the fourth, the way to text alerts, is drawn only from the desktop breakpoint (src/ui/desktop.css).
+    await expect(page.getByTestId("home-every-day").locator("li:visible")).toHaveCount(3);
+    await expect(page.getByTestId("home-dest-getTextAlerts")).toBeHidden();
     await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help");
     await expect(page.getByTestId("home-dest-findHelp")).toHaveAttribute("href", "/en/directory");
     await expect(page.getByTestId("home-dest-map")).toContainText("Map");
@@ -460,14 +462,16 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await expect(page.getByTestId("home-dest-beReady")).toContainText("Be ready");
     await expect(page.getByTestId("home-dest-beReady")).toHaveAttribute("href", "/en/ready");
 
-    // The last three children of the home content, in order: the "Every day" section, the notice (nothing sits between
-    // them), and the link to what the resident has told the CVH, which ends the screen.
+    // The end of the home content (its side column on a desktop), in order: the "Every day" section, the notice (nothing sits
+    // between them), and the link to what the resident has told the CVH, which ends the screen.
     const order = await page.evaluate(() => {
       const content = document.querySelector('[data-testid="home-now"]')!.firstElementChild!;
+      const side = document.querySelector('[data-testid="home-side"]')!;
       const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
-      return [...content.children].slice(-3).map(describe);
+      const last = (element: Element): Element => (element.lastElementChild ? last(element.lastElementChild) : element);
+      return { side: [...side.children].map(describe), endsTheScreen: last(content) === last(side) };
     });
-    expect(order).toEqual(["home-every-day", "not-911", "choices-link"]);
+    expect(order).toEqual({ side: ["home-every-day", "not-911", "choices-link"], endsTheScreen: true });
   };
 
   test("come after the buildings, the neighbourhood and the alerts, with chosen buildings and a feed that answered", async ({ page }) => {
@@ -552,17 +556,18 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
       test(`${language}: Every day with its three links, then the notice, then the link to what the resident has told the CVH`, async ({ page }) => {
         await openResident(page, `/${language}`, 390);
 
-        await expect(page.getByTestId("home-every-day").locator("a")).toHaveCount(3);
+        await expect(page.getByTestId("home-every-day").locator("a:visible")).toHaveCount(3);
         for (const [key, path] of [["findHelp", "directory"], ["map", "map"], ["beReady", "ready"]] as const) {
           await expect(page.getByTestId(`home-dest-${key}`)).toHaveAttribute("href", `/${language}/${path}`);
         }
         await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
         const order = await page.evaluate(() => {
           const content = document.querySelector('[data-testid="home"] .layout-screen__body')!.firstElementChild!;
+          const side = document.querySelector('[data-testid="home-side"]')!;
           const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
-          return [...content.children].map(describe);
+          return { side: [...side.children].map(describe), last: content.lastElementChild?.lastElementChild === side };
         });
-        expect(order.slice(-3)).toEqual(["home-every-day", "not-911", "choices-link"]);
+        expect(order).toEqual({ side: ["home-every-day", "not-911", "choices-link"], last: true });
       });
     }
   });
@@ -575,8 +580,9 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await openResident(page, "/en", 390);
     await ready(page);
 
-    const heights = () => page.getByTestId("home-every-day").locator("a").evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().height)));
-    const lines = page.getByTestId("home-every-day").locator(".home-dest__line");
+    const heights = () => page.getByTestId("home-every-day").locator("a:visible").evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().height)));
+    // The three of a phone (the way to text alerts is drawn only from the desktop breakpoint).
+    const lines = page.getByTestId("home-every-day").locator("li:not(.home-dest--wide) .home-dest__line");
     await expect(lines).toHaveCount(3);
     for (const line of await lines.all()) await expect(line).toBeVisible();
     await expect(page.getByTestId("home-dest-findHelp")).toContainText(catalogText("en", "R03.findHelpLine"));
@@ -716,10 +722,7 @@ for (const language of ["en", "ur"] as const) {
       await page.waitForLoadState("networkidle");
       await expect(page.getByTestId("home-every-day")).toBeVisible();
 
-      const needed = await page.evaluate(() => {
-        const main = document.querySelector("main")!;
-        return Math.ceil(main.scrollHeight + (document.documentElement.clientHeight - main.clientHeight));
-      });
+      const needed = await wholePageHeight(page);
       await page.setViewportSize({ width, height: needed });
 
       const overflow = await page.evaluate(() => ({

@@ -184,7 +184,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
         )}
 
         {listing && (
-          <div className="dir-workspace">
+          <div className="dir-workspace" data-layout="columns" data-testid="directory-workspace">
             <Stack gap="related">
               <section className="dir-filters" aria-label={t("R27.title")} data-testid="filters">
                 <Stack gap="related">

@@ -136,7 +136,10 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
           )}
         </Stack>
 
-        <nav aria-label={document.title.text} className="terms-contents">
+        {/* From the desktop breakpoint (desktop.css) the contents are a column beside the text that stays on screen while it scrolls.
+            On a phone the wrappers are stacks with this stack's gap, so the page is drawn as before, in the same order. */}
+        <div className="terms-cols" data-layout="columns" data-testid="terms-columns">
+        <nav aria-label={document.title.text} className="terms-contents" data-testid="terms-contents">
           <ul>
             {document.sections.map((section) => (
               <li key={section.id}>
@@ -148,6 +151,7 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
           </ul>
         </nav>
 
+        <div className="terms-sections">
         {document.sections.map((section) => (
           <Stack key={section.id} as="section" gap="related" testId={`terms-section-${section.id}`}>
             <div id={`terms-${section.id}`} tabIndex={-1}>
@@ -170,6 +174,8 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
             </Stack>
           </Stack>
         ))}
+        </div>
+        </div>
       </Stack>
       </div>
     </Screen>

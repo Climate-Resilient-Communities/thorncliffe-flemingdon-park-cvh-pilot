@@ -1,0 +1,411 @@
+/*
+ * The resident desktop layout (approved by the product owner 2026-10-08: "on desktop it still looks like it's meant for phone; there
+ * should be 2 views"). From the resident-wide breakpoint only: below it every rule here is absent, so a phone is drawn exactly as it
+ * was. One set of pages: the same elements in the same order, laid out by grid. A page that has columns marks its layout element
+ * with data-layout; the side column is always later in the source than the main one, or, for a column at the start (filters,
+ * "Jump to", the terms' contents), earlier, so the order a keyboard and a screen reader follow is the order on screen.
+ *
+ * Not in a cascade layer, after design-review.css: these rules outrank the components' phone rules and that file's. Spacing comes
+ * from the semantic tokens and direction from logical properties only, so the layout mirrors in Urdu, Pashto and Dari.
+ */
+@variant resident-wide {
+  /* ---- Shell: header row with the navigation, the page, the footer. The page scrolls as a whole. ---- */
+  .shell {
+    block-size: auto;
+    min-block-size: 100dvh;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  /* On a desktop the header's row is the navigation; the bottom bar is not displayed (and so not in the accessibility tree). */
+  .shell > .shell-nav {
+    display: none;
+  }
+
+  .shell__main {
+    overflow: visible;
+  }
+
+  .shell-header {
+    padding-block: 0;
+    padding-inline: 0;
+  }
+
+  .shell-header > .layout-inline {
+    inline-size: 100%;
+    max-inline-size: var(--size-page-resident);
+    margin-inline: auto;
+    padding-inline: var(--gutter-resident-wide);
+    column-gap: var(--gap-panel);
+  }
+
+  .shell-header .shell-logo {
+    block-size: 40px;
+  }
+
+  .shell-header__tools {
+    flex: 0 1 auto;
+  }
+
+  .shell-header__tools .shell-langbtn:not(.shell-display-button) {
+    max-inline-size: 14em;
+  }
+
+  /* The four destinations in the header row: icon and label side by side, the current one in the accent colour and underlined at
+     the header's edge. A long translation or large text wraps the label, then the row, never past the window. */
+  .shell-topnav {
+    display: flex;
+    flex: 1 1 0;
+    flex-wrap: wrap;
+    align-self: stretch;
+    align-items: stretch;
+    column-gap: var(--gap-target);
+    min-inline-size: 0;
+  }
+
+  .shell-topnav__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-target);
+    min-inline-size: 0;
+    min-block-size: var(--size-nav-item-resident-min);
+    padding-inline: var(--gap-stack);
+    border-block: var(--offset-align-icon) solid transparent;
+    color: var(--text-muted);
+    font-weight: 700;
+    line-height: 1.15;
+    text-decoration: none;
+  }
+
+  .shell-topnav__item:hover {
+    color: var(--ink);
+  }
+
+  .shell-topnav__item[aria-current="page"] {
+    color: var(--accent-text);
+    border-block-end-color: currentcolor;
+  }
+
+  :root[data-basic="true"] .shell-topnav__item {
+    min-block-size: var(--size-nav-item-resident-min-basic);
+  }
+
+  :root[data-basic="true"] .shell-topnav__item .shell-ico {
+    inline-size: var(--size-icon-basic);
+    block-size: var(--size-icon-basic);
+  }
+
+  .shell-topnav__label {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* The footer follows the page: a full-width band, its links lined up with the page. */
+  .shell-footer {
+    padding-block: var(--gap-panel);
+    padding-inline: max(var(--gutter-resident-wide), calc((100% - var(--size-page-resident)) / 2 + var(--gutter-resident-wide))); /* spacing-exception: the page's centred inset (100% less the page token, halved), so the links line up with the page; every length is a token. */
+    background-color: var(--surface-raised);
+  }
+
+  .shell .shell-sheet {
+    max-inline-size: var(--size-language-sheet);
+    margin-inline: auto;
+  }
+
+  /* ---- The page: centred in the shell's width; a page without columns keeps a readable column at the start. ---- */
+  .shell .layout-screen {
+    inline-size: 100%;
+    max-inline-size: var(--size-page-resident);
+    margin-inline: auto;
+  }
+
+  .shell .layout-screen[data-surface="resident"] {
+    --screen-inset-inline: var(--gutter-resident-wide);
+    --screen-inset-block-start: var(--gutter-resident-wide);
+    --screen-inset-block-end: var(--gap-panel);
+  }
+
+  .shell .layout-screen > .layout-screen__body:not(:has([data-layout])) {
+    max-inline-size: var(--size-page-reading);
+  }
+
+  /* ---- Columns: a main column and a side column at the end (home, Find help, a provider, a building, the map). ---- */
+  .shell :is(.home-cols, .ask-cols, .provider-cols, .building-cols) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--size-aside-resident);
+    column-gap: var(--gap-columns-resident);
+    row-gap: var(--gap-section-resident);
+    align-items: start;
+  }
+
+  .shell :is(.home-main, .ask-main, .provider-main) {
+    grid-column: 1;
+  }
+
+  .shell :is(.home-side, .ask-side, .provider-side) {
+    grid-column: 2;
+  }
+
+  /* Cards in a grid where there is room: two in the main column, one with large text. */
+  .shell .home-main .home-list:not(.home-list--dest),
+  .shell .ask-main .dir-list,
+  .shell .dir-workspace .dir-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+    gap: var(--gap-stack);
+    align-items: start;
+  }
+
+  /* Home: the side column holds Every day (with the way to text alerts), the 911 note and "What I have told the CVH". */
+  .shell .home-list--dest > li.home-dest--wide {
+    display: flex;
+  }
+
+  /* Find help: a large question box with its button beside it; the topics as one list in the side column. */
+  .shell .ask-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--gap-target);
+    row-gap: var(--gap-related);
+    align-items: start;
+  }
+
+  .shell .ask-form > .ask-label {
+    grid-column: 1 / -1;
+  }
+
+  .shell .ask-input {
+    font-size: var(--type-lead-size);
+  }
+
+  .shell .ask-side .ask-topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The directory: the filters as an open column at the start that stays on screen and scrolls by itself, the cards in a grid. */
+  .shell .dir-workspace {
+    grid-template-columns: var(--size-side-directory) minmax(0, 1fr);
+    column-gap: var(--gap-columns-resident);
+    align-items: start;
+  }
+
+  .shell .dir-workspace > :first-child {
+    position: sticky;
+    inset-block-start: var(--gutter-resident-wide);
+    max-block-size: calc(100dvh - 2 * var(--gutter-resident-wide));
+    overflow-y: auto;
+  }
+
+  .dir-filters [data-testid="filter-panel"][data-open] {
+    display: block;
+  }
+
+  .dir-filters :is([data-testid="filters-toggle"], [data-testid="filters-apply"]) {
+    display: none;
+  }
+
+  .shell .dir-card--card {
+    gap: var(--gap-label);
+  }
+
+  .shell .dir-card--card .dir-facts {
+    font-size: var(--type-caption-size);
+  }
+
+  /* A provider: the details as a card, the place and the quick actions in a panel beside them that stays on screen. */
+  .shell .provider-main .dir-card--page {
+    padding: var(--inset-card);
+    border: 1px solid var(--border);
+    border-radius: var(--gap-target);
+    background-color: var(--surface-raised);
+  }
+
+  .shell .provider-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+    position: sticky;
+    inset-block-start: var(--gutter-resident-wide);
+    padding: var(--inset-card);
+    border: 1px solid var(--border);
+    border-radius: var(--gap-target);
+    background-color: var(--surface-raised);
+  }
+
+  .shell .provider-side__address {
+    font-weight: 700;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+    unicode-bidi: isolate;
+  }
+
+  .shell .provider-side__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-target);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shell .provider-side__actions :is(.dir-call, .dir-btn) {
+    inline-size: 100%;
+  }
+
+  /* A building: the register's facts in two columns, and the contact as a card beside them. */
+  .shell .building-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14em), 1fr));
+    column-gap: var(--gap-columns-resident);
+  }
+
+  .shell .building-cols > [data-testid="building-contact"] {
+    padding: var(--inset-card);
+    border: 1px solid var(--border);
+    border-radius: var(--gap-target);
+    background-color: var(--surface-raised);
+  }
+
+  .shell [data-testid="building-page"] .layout-stack:has(> .building-cols) > :not(.building-cols) {
+    max-inline-size: var(--size-page-reading);
+  }
+
+  /* ---- The map beside its list. The map fills the window's height under the title; the list scrolls by itself. ---- */
+  .shell .map-work {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--size-aside-resident);
+    column-gap: var(--gap-columns-resident);
+    align-items: start;
+  }
+
+  .shell .map-work[data-view="list"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell .map-work > .map-list {
+    display: block;
+  }
+
+  .shell .map-work[data-view="map"] .map-canvas,
+  .shell .map-work[data-view="map"] > .map-list {
+    block-size: max(var(--size-map-min), calc(100dvh - var(--size-map-viewport-offset)));
+  }
+
+  .shell .map-work[data-view="map"] > .map-list {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--inset-card);
+    border: 1px solid var(--border);
+    border-radius: var(--gap-target);
+    background-color: var(--surface-raised);
+  }
+
+  .shell .map-work[data-view="list"] .map-entries {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+    gap: var(--gap-stack);
+  }
+
+  /* The Map / List switch is for a phone; on a desktop both are on screen. It comes back only when the list was asked for alone
+     (the map could not load, or there was no signal), as the way back to the map. */
+  .shell [data-testid="map-page"]:not(:has(.map-work[data-view="list"])) .map-segment {
+    display: none;
+  }
+
+  .shell .map-segment {
+    max-inline-size: var(--size-page-reading);
+  }
+
+  /* ---- Be ready: the guides and the other destinations as grids of cards. ---- */
+  .shell [data-testid="ready-guides"] ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
+    gap: var(--gap-stack);
+  }
+
+  .shell [data-testid="ready-more"] > .layout-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
+    gap: var(--gap-stack);
+  }
+
+  .shell [data-testid="ready-more"] > .layout-stack > h2 {
+    grid-column: 1 / -1;
+  }
+
+  .shell :is([data-testid="ready-guides"] li, [data-testid="ready-more"] .ready-dest) {
+    display: flex;
+  }
+
+  .shell [data-testid="ready-guides"] .ready-dest {
+    flex: 1;
+  }
+
+  .shell [data-testid="ready-page"] > .layout-screen__body > .layout-stack > :not([data-layout]) {
+    max-inline-size: var(--size-page-reading);
+  }
+
+  /* A guide: "Jump to" as a column at the start that stays on screen; the parts of the guide in a readable column beside it. */
+  .shell .guide-cols {
+    display: grid;
+    grid-template-columns: var(--size-side-directory) minmax(0, var(--size-page-reading));
+    column-gap: var(--gap-columns-resident);
+    align-items: start;
+  }
+
+  .shell .guide-nav {
+    position: sticky;
+    inset-block-start: var(--gutter-resident-wide);
+  }
+
+  .shell .guide-jump {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell .guide-jump li + li {
+    border-inline-start: 0;
+    border-block-start: 1.5px solid var(--control-border);
+  }
+
+  .shell .guide-jump__link {
+    justify-content: flex-start;
+    min-block-size: var(--tap-current);
+    padding-inline: var(--gap-stack);
+    font-size: var(--type-body-size);
+    text-align: start;
+  }
+
+  .shell [data-testid="guide-page"] .layout-stack:has(> .guide-cols) > :not(.guide-cols) {
+    max-inline-size: calc(var(--size-side-directory) + var(--gap-columns-resident) + var(--size-page-reading));
+  }
+
+  /* The terms: the contents as a column at the start that stays on screen; the text in a readable column. */
+  .shell .terms-cols {
+    display: grid;
+    grid-template-columns: var(--size-side-directory) minmax(0, var(--size-page-reading));
+    column-gap: var(--gap-columns-resident);
+    align-items: start;
+  }
+
+  .shell .terms-contents {
+    position: sticky;
+    inset-block-start: var(--gutter-resident-wide);
+    max-block-size: calc(100dvh - 2 * var(--gutter-resident-wide));
+    overflow-y: auto;
+    padding-block: var(--gap-target);
+    padding-inline: var(--gap-stack);
+    border-inline-start: var(--offset-align-icon) solid var(--border);
+  }
+
+  .shell .terms-contents ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shell .terms-body > .layout-stack > :not(.terms-cols) {
+    max-inline-size: calc(var(--size-side-directory) + var(--gap-columns-resident) + var(--size-page-reading));
+  }
+}

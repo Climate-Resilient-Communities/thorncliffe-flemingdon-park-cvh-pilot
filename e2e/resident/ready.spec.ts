@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { catalogText, expectBaseline, filledPattern, isFallback, openResident } from "./helpers";
+import { catalogText, expectBaseline, filledPattern, isFallback, openResident, wholePageHeight } from "./helpers";
 
 // S02.10: Be ready (R-24), a guide (R-25) and the essential numbers (R-31) in the resident shell. The server runs with
 // CVH_FAKE_GUIDES_FILE and CVH_FAKE_BUILDINGS_FILE (playwright.resident.config.ts), so the sample guides and buildings in
@@ -20,11 +20,7 @@ async function chooseBuildings(page: Page, choices = CHOICES) {
 
 /** Grows the viewport to the whole page, so the baseline shows everything, not the first screen. */
 async function showWholePage(page: Page, width: number) {
-  const needed = await page.evaluate(() => {
-    const main = document.querySelector("main")!;
-    const around = document.documentElement.clientHeight - main.clientHeight;
-    return Math.ceil(main.scrollHeight + around);
-  });
+  const needed = await wholePageHeight(page);
   await page.setViewportSize({ width, height: needed });
 }
 
@@ -138,7 +134,7 @@ test.describe("a guide (R-25)", () => {
     }
     await expect(page.getByTestId("guide-reviewed")).toHaveText("Reviewed by the Hub, last updated September 30, 2026");
     // It is the last thing in the guide.
-    expect(await page.locator("main .layout-screen__body > div > *:last-child").getAttribute("data-testid")).toBe("guide-reviewed");
+    expect(await page.locator("main .layout-screen__body > div > *:last-child > *:last-child > *:last-child").getAttribute("data-testid")).toBe("guide-reviewed");
     await expect(page.getByTestId("guide-numbers")).toHaveAttribute("href", "/en/ready/numbers");
   });
 

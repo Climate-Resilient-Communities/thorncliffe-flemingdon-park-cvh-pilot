@@ -82,10 +82,16 @@ declare module "leaflet" {
         maxBounds?: [LatLngTuple, LatLngTuple];
         maxBoundsViscosity?: number;
         keyboard?: boolean;
+        dragging?: boolean;
+        touchZoom?: boolean;
+        scrollWheelZoom?: boolean;
+        doubleClickZoom?: boolean;
+        boxZoom?: boolean;
+        zoomSnap?: number;
       },
     ): LeafletMap;
     divIcon(options: { html: string; className: string; iconSize: [number, number]; iconAnchor?: [number, number] }): DivIcon;
-    marker(at: LatLngTuple, options: { icon: DivIcon; keyboard?: boolean; riseOnHover?: boolean }): Marker;
+    marker(at: LatLngTuple, options: { icon: DivIcon; keyboard?: boolean; riseOnHover?: boolean; interactive?: boolean }): Marker;
     control: {
       zoom(options: { position?: string; zoomInTitle?: string; zoomOutTitle?: string; zoomInText?: string; zoomOutText?: string }): Layer & { addTo(map: LeafletMap): unknown };
     };

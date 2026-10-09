@@ -135,6 +135,12 @@
     block-size: var(--size-icon-basic);
   }
 
+  /* The header's copy of the navigation is for the desktop layout (src/ui/desktop.css); a phone has the bottom bar. Not displayed,
+     it is out of the accessibility tree, so a page always has one navigation landmark. */
+  .shell-topnav {
+    display: none;
+  }
+
   /* Language sheet (R-02): a modal dialog fixed to the block end of the viewport, the prototype's .cvh-sheet. */
   .shell-sheet {
     inset-block: auto 0;

@@ -17,11 +17,13 @@ function declarations(file: string, only?: string) {
 
 // token-architecture.md sections 3.1, 3.2 and 3.4: semantic token, the primitive it resolves to, its value.
 const SEMANTIC_TOKENS: [string, string, string][] = [
-  ["--size-page-resident", "--app-page-resident", "1120px"],
+  ["--size-page-resident", "--app-page-resident", "1200px"],
   ["--size-page-reading", "--app-page-reading", "760px"],
   ["--size-side-directory", "--app-side-directory", "260px"],
   ["--size-language-sheet", "--app-language-sheet", "640px"],
-  ["--size-filter-viewport-offset", "--app-filter-viewport-offset", "220px"],
+  ["--size-aside-resident", "--app-aside-resident", "360px"],
+  ["--size-map-viewport-offset", "--app-map-viewport-offset", "260px"],
+  ["--size-map-min", "--app-map-min", "420px"],
   ["--gap-subline", "--app-space-1", "2px"],
   ["--gap-label", "--app-space-2", "4px"],
   ["--gap-tight", "--app-space-3", "6px"],
@@ -42,7 +44,9 @@ const SEMANTIC_TOKENS: [string, string, string][] = [
   ["--gap-meta-block", "--app-space-2", "4px"],
   ["--gap-type-grid-block", "--app-space-7", "14px"],
   ["--gap-columns-inner", "--app-space-5", "10px"],
+  ["--gap-columns-resident", "--app-space-28px", "28px"],
   ["--gutter-resident", "--app-space-8", "16px"],
+  ["--gutter-resident-wide", "--app-space-10", "24px"],
   ["--inset-screen-end", "--app-space-10", "24px"],
   ["--inset-page-staff", "--app-space-10", "24px"],
   ["--inset-page-staff-narrow", "--app-space-8", "16px"],
