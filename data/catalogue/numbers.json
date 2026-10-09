@@ -3,11 +3,12 @@
   "source": "design/prototype/cvh/data.js (numbers) and design/prototype/cvh/strings.en.js (R31, for the labels and the 911 text)",
   "note": "English source of the essential numbers page. The list needs a named owner, a last-updated date and an English review by that owner; every number needs the date it was last checked as correct (lastChecked). Phone numbers are never translated. Values starting with PLACEHOLDER are refused by the seed."
  },
- "owner": "Luis Ticas, Tech Director, Sprout",
+ "owner": "Luis Ticas",
  "lastUpdated": "2026-10-02",
  "englishReview": {
   "reviewer": "Luis Ticas",
-  "date": "2026-10-08"
+  "date": "2026-10-08",
+  "sourceHash": "34638113149cb7cd9104b2a81cb89efad189a7ff19628b2e67a1505fb9e773f9"
  },
  "numbers": [
   {
