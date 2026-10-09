@@ -185,7 +185,7 @@ for (const width of [390, 1280]) {
 }
 
 test("the Hub home of a Director is read-only: the open threads and no link to act on one, at 390px", async ({ page }) => {
-  const view = incidentsView({ waiting: [], mine: [] }, "director", undefined, RUNNING, NOW);
+  const view = incidentsView({ waiting: [], mine: [] }, "director", undefined, RUNNING, NOW, [], PLANS);
   await page.setViewportSize({ width: 390, height: 800 });
   await mount(page, "IncidentsFixture", { texts: REAL_TEXTS, brand, view });
   await fitToPage(page, 390);
