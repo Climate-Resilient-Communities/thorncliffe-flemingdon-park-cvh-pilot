@@ -190,7 +190,16 @@ test("an Admin starts a drill, a second Admin approves it, only the roster is te
 
     const second = await personOnAPhone(browser, baseURL, approver);
     try {
-      await second.page.goto(`/staff/alerts/approve?alert=${ref.alertId}&entry=${ref.entryId}`);
+      // UAT F-6: the second Admin finds it in "Waiting for your approval", titled as a drill, and on the Drills page with a link to review it.
+      const reviewHref = `/staff/alerts/approve?alert=${ref.alertId}&entry=${ref.entryId}`;
+      await second.page.goto("/staff");
+      const queued = second.page.getByTestId("waiting-item").filter({ has: second.page.locator(`a[href="${reviewHref}"]`) });
+      await expect(queued).toHaveCount(1);
+      await expect(queued).toContainText("Drill · ");
+      await expect(queued).toHaveAttribute("data-drill", "true");
+      await second.page.goto("/staff/drills");
+      await second.page.locator(`[data-testid="drill-review"][href="${reviewHref}"]`).click();
+      await expect(second.page).toHaveURL(new RegExp(`/staff/alerts/approve\\?alert=${ref.alertId}&entry=${ref.entryId}$`));
       await expect(second.page.getByTestId("exercise-marker")).toContainText("Exercise. This is practice.");
       await expect(second.page.getByTestId("drill-note")).toContainText("This is a drill. It never reaches residents.");
       await expect(second.page.getByTestId("recipient-count")).toHaveText("2");

@@ -33,6 +33,12 @@ describe("the Drills page with a drill", () => {
     expect(html).toContain('data-testid="drill-result-entry"');
   });
 
+  it("links to the approval of an entry waiting for one (UAT F-6), and to none when nothing waits", () => {
+    expect(html).not.toContain('data-testid="drill-review"');
+    const waiting = page([drillView({ ...thread, entries: [{ id: "e2", kind: "ack", status: "pending_approval", approvedAt: null }] }, [], new Map())]);
+    expect(waiting).toContain(`<a class="tap hub-link" href="/staff/alerts/approve?alert=${thread.id}&amp;entry=e2" data-testid="drill-review">Review the drill acknowledgement</a>`);
+  });
+
   it("says who a drill reaches and links to the roster", () => {
     expect(html).toContain("2 people are on the drill roster.");
     expect(html).toContain('href="/staff/drills/roster"');

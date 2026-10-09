@@ -242,6 +242,25 @@ describe("a closed thread (S05.03, R-07)", () => {
     expect(thread.valid_until).toBe("2026-10-02T16:00:00.000Z");
   });
 
+  it("reads the expire job's final with the origin of the entry it closed: verified by the Hub for an alert the Hub approved (UAT F-2)", () => {
+    // The system final is the only final nobody approves: verified false, no attribution of its own.
+    const expiry = row({ entryId: E(5), kind: "final", phase: "in_progress", verified: false, publishedAt: new Date("2026-10-02T15:01:00Z"), originalText: "This alert has expired without a further update." });
+    const thread = assembleClosedThread([ack, update, expiry], "en", "expired")!;
+    expect(thread.entries.at(-1)).toMatchObject({ kind: "final", verified: true, attribution: HUB_ATTRIBUTION });
+    // The entries before it keep their own.
+    expect(thread.entries.map((entry) => entry.verified)).toEqual([true, true, true]);
+    // An ambassador's post residents read as "Not yet verified" (D-1) that ran out before anyone approved it stays the post's: its building, not yet verified.
+    const post = row({ entryId: E(6), kind: "update", verified: false, attributedRsn: "4154146", publishedAt: new Date("2026-10-01T14:00:00Z") });
+    const ranOut = assembleClosedThread([post, expiry], "en", "expired")!;
+    expect(ranOut.entries.at(-1)).toMatchObject({ kind: "final", verified: false, attribution: { role: "ambassador", rsn: "4154146" } });
+    // A corrected entry is not what the final closed: the correction that replaced it is.
+    const corrected = row({ entryId: E(7), verified: false, superseded: true, attributedRsn: "4154146", publishedAt: new Date("2026-10-01T14:00:00Z") });
+    const correction = row({ entryId: E(8), kind: "correction", supersedesId: E(7), publishedAt: new Date("2026-10-01T14:30:00Z") });
+    expect(assembleClosedThread([corrected, correction, expiry], "en", "expired")!.entries.at(-1)).toMatchObject({ verified: true, attribution: HUB_ATTRIBUTION });
+    // An approved final is its own.
+    expect(assembleClosedThread([post, final], "en", "resolved")!.entries.at(-1)).toMatchObject({ verified: true, attribution: HUB_ATTRIBUTION });
+  });
+
   it("takes each of the three reasons, and none that is not one of them, and nothing for no rows", () => {
     for (const reason of ["resolved", "expired", "withdrawn"]) expect(assembleClosedThread([ack], "en", reason)?.close_reason, reason).toBe(reason);
     expect(assembleClosedThread([ack], "en", "archived")).toBeNull();

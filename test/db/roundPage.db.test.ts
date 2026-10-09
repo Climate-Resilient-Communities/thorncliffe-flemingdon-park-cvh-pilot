@@ -245,8 +245,8 @@ describe("the round as each person sees it (direct requests)", () => {
             {
               address: "1 Mark Street",
               floors: [
-                { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: people[0]!.phone, method: "call", status: "pending" }] },
-                { kind: "contacts", label: "2", requests: [{ round_ref: refs[1], phone: people[1]!.phone, method: "text", status: "pending" }] },
+                { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: people[0]!.phone, method: "call", status: "pending", language: "English" }] },
+                { kind: "contacts", label: "2", requests: [{ round_ref: refs[1], phone: people[1]!.phone, method: "text", status: "pending", language: "English" }] },
                 { kind: "counts", label: "3", counts: { pending: 1, done: 0, not_reached: 0, needs_help: 0 } },
               ],
             },
@@ -266,7 +266,7 @@ describe("the round as each person sees it (direct requests)", () => {
     const { refs, people } = await setUp();
     const other = await person("ambassador", [{ rsn: RSN_B, floors: null }]);
     expect((await reads().load(other)).rounds[0]!.buildings).toEqual([
-      { address: "3 Mark Street", floors: [{ kind: "contacts", label: "1", requests: [{ round_ref: refs[3], phone: people[3]!.phone, method: "call", status: "pending" }] }] },
+      { address: "3 Mark Street", floors: [{ kind: "contacts", label: "1", requests: [{ round_ref: refs[3], phone: people[3]!.phone, method: "call", status: "pending", language: "English" }] }] },
     ]);
     expect(await reads().load(await person("ambassador"))).toEqual({ rounds: [] });
     await owner`update staff_account set status = 'suspended' where id = ${other.staffId}`;
@@ -309,7 +309,7 @@ describe("the round as each person sees it (direct requests)", () => {
     const coverage = createAssignments(app);
     const rashid = await person("ambassador", [{ rsn: RSN_A, floors: [A1] }]);
     expect((await reads().load(rashid)).rounds[0]!.buildings[0]!.floors).toEqual([
-      { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: onA1.phone, method: "call", status: "pending" }] },
+      { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: onA1.phone, method: "call", status: "pending", language: "English" }] },
       { kind: "counts", label: "3", counts: { pending: 1, done: 0, not_reached: 0, needs_help: 0 } },
     ]);
     expect(await reads().summary.openFor(await coverage.assignmentsOf(rashid.staffId))).toEqual({ requests: 1 });
@@ -330,8 +330,8 @@ describe("the round as each person sees it (direct requests)", () => {
     await removeFloor(A3);
     const seen = await reads().load(whole);
     expect(seen.rounds[0]!.buildings[0]!.floors).toEqual([
-      { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: people[0]!.phone, method: "call", status: "pending" }] },
-      { kind: "contacts", label: "2", requests: [{ round_ref: refs[1], phone: people[1]!.phone, method: "text", status: "pending" }] },
+      { kind: "contacts", label: "1", requests: [{ round_ref: refs[0], phone: people[0]!.phone, method: "call", status: "pending", language: "English" }] },
+      { kind: "contacts", label: "2", requests: [{ round_ref: refs[1], phone: people[1]!.phone, method: "text", status: "pending", language: "English" }] },
       { kind: "counts", label: "", counts: { pending: 1, done: 0, not_reached: 0, needs_help: 0 } },
     ]);
     expect(JSON.stringify(seen)).not.toContain(people[2]!.phone);

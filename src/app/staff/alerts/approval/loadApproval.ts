@@ -53,7 +53,8 @@ export interface ApprovalLoadDeps {
 
 const live: ApprovalLoadDeps = {
   review: (ref) => alerting().review(ref),
-  plans: () => buildings().listFloorPlans(),
+  // With the merged buildings (UAT F-5): an audience written before a merge still names its building by address.
+  plans: () => buildings().listFloorPlans({ includeMerged: true }),
   pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents,
   residentAlertsEnabled: () => residentAlertsEnabled(),
   pauseNotice: () => pauseNoticeForApprover(),

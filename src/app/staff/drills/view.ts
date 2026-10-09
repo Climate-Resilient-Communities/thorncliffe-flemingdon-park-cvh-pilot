@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import type { DrillThreadSummary } from "@/modules/alerting";
 import type { DrillResultRow } from "@/modules/messaging";
 import { formatTorontoDateTime } from "@/platform/clock";
+import { approveHref } from "../alerts/pages";
 import { exerciseWords, type ExerciseWords } from "../ExerciseMarker";
 
 /** The Drills page, the drill roster page and "Start a drill". */
@@ -37,6 +38,8 @@ export interface DrillView {
   exercise: ExerciseWords;
   status: { id: "open" | "closed"; text: string };
   entries: string;
+  /** UAT F-6: a link to the approval of each entry waiting for one, so a second Admin finds it from here as well as from their home's queue. */
+  review: { href: string; label: string }[];
   results: {
     title: string;
     none: string | null;
@@ -96,6 +99,11 @@ export function drillView(
     heading: t("heading", { time: formatTorontoDateTime(thread.reportedAt) }),
     status: { id: thread.status, text: t(`status.${thread.status}`) },
     entries: t("entries", { entries: kinds.length === 0 ? "-" : kinds.join(", ") }),
+    review: thread.status === "open"
+      ? thread.entries
+          .filter((entry) => entry.status === "pending_approval")
+          .map((entry) => ({ href: approveHref({ alertId: thread.id, entryId: entry.id }), label: t("review", { kind: compose(`thread.kind.${entry.kind}`).toLocaleLowerCase("en") }) }))
+      : [],
     results: {
       title: t("results.title"),
       none: rows.length === 0 ? t("results.none") : null,

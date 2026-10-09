@@ -18,6 +18,9 @@ export function formatImportReport(plan: ImportPlan, done?: { counts: ReportCoun
     const c = done.counts;
     lines.push(`Buildings: ${c.buildings_inserted} added, ${c.buildings_updated} with changed facts, ${c.buildings_unchanged} unchanged, ${c.buildings_restored} back in the register.`);
     lines.push(`Floors created for new buildings: ${c.floors_created}. Flagged "not in latest register" by this run: ${c.buildings_flagged}.`);
+    if (c.buildings_hidden > 0 || c.buildings_unmerged > 0) {
+      lines.push(`Merged into another building by this run (kept, left out of every list): ${c.buildings_hidden ?? 0}. Listed again (their merge line is gone): ${c.buildings_unmerged ?? 0}.`);
+    }
   }
   const warnings = done ? done.warnings : plan.warnings;
   if (warnings.length > 0) {

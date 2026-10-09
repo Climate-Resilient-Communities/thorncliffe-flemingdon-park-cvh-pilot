@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { addOncallAction, clearOnDutyAction, removeOncallAction, setOnDutyAction } from "./actions";
 import type { OncallState } from "./control";
-import { OncallFormsView, latestAnswer, type OncallLabels, type OncallRow } from "./OncallFormsView";
+import { OncallFormsView, fieldsAfter, latestAnswer, shownAnswer, type OncallLabels, type OncallRow } from "./OncallFormsView";
 import type { OnDutyView } from "./view";
 
 const IDLE: OncallState = { status: "idle" };
@@ -18,11 +18,26 @@ export function OncallForms({ rows, labels, onDuty }: { rows: readonly OncallRow
   const [removeState, remove, removing] = useActionState(removeOncallAction, IDLE);
   const [setState, set, setting] = useActionState(setOnDutyAction, IDLE);
   const [clearState, clear, clearing] = useActionState(clearOnDutyAction, IDLE);
+  // UAT F-1: the add form's fields live here, so a refusal leaves them as typed (React empties a form's own fields after its action) and a number added empties
+  // them; a change to either takes the refusal off the screen. Page memory only: the server never sends a number back.
+  const [fields, setFields] = useState({ label: "", number: "" });
+  const [answeredAdd, setAnsweredAdd] = useState(addState);
+  if (answeredAdd !== addState) {
+    setAnsweredAdd(addState);
+    setFields(fieldsAfter(addState, fields));
+  }
+  const answer = latestAnswer(addState, removeState, setState, clearState);
+  const [dismissed, setDismissed] = useState<number | null>(null);
+  const onChange = (field: "label" | "number", value: string) => {
+    setFields((current) => ({ ...current, [field]: value }));
+    if (answer.status === "refused") setDismissed(answer.at);
+  };
   return (
     <OncallFormsView
       rows={rows}
       labels={labels}
-      answer={latestAnswer(addState, removeState, setState, clearState)}
+      answer={shownAnswer(answer, dismissed)}
+      addFields={{ ...fields, onChange }}
       adding={adding}
       removing={removing}
       addAction={add}

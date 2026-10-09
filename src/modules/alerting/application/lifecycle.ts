@@ -266,6 +266,8 @@ export interface IncidentRow {
    * thread's first entry, written on the acknowledgement or alert composer.
    */
   followUp?: boolean;
+  /** Who the entry is for, as written: the Hub home names its place (UAT note 4). Absent when the reader has none. */
+  audience?: Audience;
 }
 
 /** What waits for a person, and what they have in hand. */
@@ -2123,10 +2125,11 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         version: alertEntry.version,
         submittedAt: alertEntry.submittedAt,
         returnedNote: alertEntry.returnedNote,
+        audience: alertEntry.audience,
         // Another entry was made before this one in its thread: an update (S05.01), written on the update composer.
         followUp: sql<boolean>`exists (select 1 from alert_entry earlier where earlier.alert_id = ${alertEntry.alertId} and earlier.id <> ${alertEntry.id} and earlier.web_published_at is not null and earlier.status not in ('draft', 'discarded') and (earlier.created_at, earlier.id) < (${alertEntry.createdAt}, ${alertEntry.id}))`,
       };
-      const rowOf = (row: { alertId: string; entryId: string; kind: string; status: string; types: string[]; isDrill: boolean; version: number; submittedAt: Date | null; returnedNote: string | null; followUp: boolean }): IncidentRow => ({
+      const rowOf = (row: { alertId: string; entryId: string; kind: string; status: string; types: string[]; isDrill: boolean; version: number; submittedAt: Date | null; returnedNote: string | null; audience: unknown; followUp: boolean }): IncidentRow => ({
         alertId: row.alertId,
         entryId: row.entryId,
         kind: row.kind as EntryKind,
@@ -2137,6 +2140,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         submittedAt: row.submittedAt,
         returnedNote: row.returnedNote,
         followUp: row.followUp === true,
+        audience: row.audience as Audience,
       });
       const open = and(eq(alert.status, "open"), inArray(alertEntry.status, ["draft", "pending_approval"]));
       const mine = await db

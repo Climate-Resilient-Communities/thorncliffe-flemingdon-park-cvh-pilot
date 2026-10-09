@@ -59,6 +59,8 @@ export interface RunningThread {
   ackOnly: boolean;
   /** How many entries residents can read. */
   entries: number;
+  /** Who the covering entry is for: the Hub home names its place (UAT note 4). */
+  audience?: Audience;
 }
 
 /** A thread that closed lately, as the Hub home lists it (S05.03): how it closed, when, and the final message residents read last (null when it has none). */
@@ -140,6 +142,7 @@ export async function readRunningThreads(executor: DbExecutor, limit = 100): Pro
       coveringKind: covering.kind,
       ackOnly: isAckOnly(entries),
       entries: entries.length,
+      audience: covering.audience,
     });
   }
   return running.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
