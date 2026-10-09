@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.zh;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "显示设置", "close": "完成", "textSize": "文字大小", "standard": "标准", "large": "大", "simpler": "简化视图", "help": "显示更少的细节，用列表代替地图。文字大小不变。", "saved": "已保存在这台设备上。", "sessionOnly": "您的浏览器无法保存这项设置。它只在这次访问中有效。"},
+    "R07": {"withdrawn": "已撤回", "mayHaveEnded": "这条警报可能已经结束。有信号时请再查看"},
+    "R08": {"withdrawn": "{t}已撤回", "more": "显示更早的警报", "moreFailed": "无法加载更早的警报。请检查您是否有信号，然后再试一次。"},
+    "R29": {"copy": "复制消息", "copied": "已复制。您可以把它粘贴到任何应用中。", "copyFailed": "您的手机没有复制成功。请长按上面的消息来复制。", "whatsapp": "通过 WhatsApp 发送", "noSheet": "您的手机在这里没有分享选项。请复制消息，或通过 WhatsApp 发送。"},
+    "shell": {"staffSignIn": "工作人员登录", "termsLink": "条款和隐私"}
+  });
   m(t, {
   "terms": {
    "version": "版本",

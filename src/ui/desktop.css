@@ -285,9 +285,16 @@
     display: block;
   }
 
-  .shell .map-work[data-view="map"] .map-canvas,
+  /* The frame (zoom bar, map, credit) and the list are the same height; the map takes what the bar and the credit leave. */
+  .shell .map-work[data-view="map"] > .map-frame,
   .shell .map-work[data-view="map"] > .map-list {
     block-size: max(var(--size-map-min), calc(100dvh - var(--size-map-viewport-offset)));
+  }
+
+  .shell .map-work[data-view="map"] .map-canvas {
+    flex: 1 1 0;
+    block-size: auto;
+    min-block-size: 0;
   }
 
   .shell .map-work[data-view="map"] > .map-list {

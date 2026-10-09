@@ -173,10 +173,17 @@ function addTiles(L: Leaflet, map: LeafletMap, tiles: TileSettings, onMissing: (
   }
 }
 
-export async function createMap(element: HTMLElement, tiles: TileSettings, words: PinWords, callbacks: MapCallbacks): Promise<MapHandle> {
+/**
+ * The map, drawn into `element`. Its zoom buttons are moved into `controls`, a bar outside the map's own area, so that no
+ * control is drawn over a pin (production UAT, 2026-10-08: at 390 px a pin under the zoom buttons left a 44 by 13 px target).
+ */
+export async function createMap(element: HTMLElement, tiles: TileSettings, words: PinWords, callbacks: MapCallbacks, controls?: HTMLElement): Promise<MapHandle> {
   const L = await loadLeaflet();
   const map = L.map(element, { zoomControl: false, attributionControl: false, minZoom: MIN_ZOOM, maxZoom: tiles.maxZoom, maxBounds: MAX_BOUNDS, maxBoundsViscosity: 0.8 });
-  L.control.zoom({ position: "topright", zoomInTitle: words.zoomIn, zoomOutTitle: words.zoomOut }).addTo(map);
+  const zoom = L.control.zoom({ position: "topright", zoomInTitle: words.zoomIn, zoomOutTitle: words.zoomOut });
+  zoom.addTo(map);
+  const zoomButtons = zoom.getContainer();
+  if (controls && zoomButtons) controls.replaceChildren(zoomButtons);
   addTiles(L, map, tiles, callbacks.onMissingTiles);
 
   const clusters = L.markerClusterGroup!({

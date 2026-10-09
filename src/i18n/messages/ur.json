@@ -81,7 +81,9 @@
     "ambassador": "ایمبیسڈر",
     "offline": "آپ آف لائن ہیں۔ {t} لوڈ ہونے والا مواد دکھایا جا رہا ہے۔",
     "aiLabel": "پروٹوٹائپ کے لیے AI سے بنایا گیا",
-    "illustrative": "مثالی"
+    "illustrative": "مثالی",
+    "staffSignIn": "عملے کا سائن ان",
+    "termsLink": "شرائط اور رازداری"
   },
   "x01": {
     "text": "CVH ہنگامی سروس نہیں ہے۔",
@@ -662,7 +664,7 @@
     "notYetKnown": "ابھی معلوم نہیں",
     "where": "کہاں",
     "whatToDo": "کیا کریں",
-    "validUntil": "{until} تک لاگو",
+    "validUntil": "{until} لاگو",
     "untilResolved": "حل ہونے تک",
     "posted": "{t} پوسٹ ہوا",
     "updated": "{t} اپ ڈیٹ ہوا",
@@ -716,13 +718,13 @@
     "amberBody": "Amber Alert گمشدہ بچے کے بارے میں سرکاری الرٹ ہوتے ہیں۔ اصل الفاظ ہمیشہ Alert Ready سے آتے ہیں۔",
     "endedResolved": "یہ الرٹ ختم ہو گیا ہے۔ یہ {t} حل ہوا۔",
     "endedWithdrawn": "ہب نے یہ الرٹ واپس لے لیا۔ {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "واپس لے لیا گیا",
     "endedExpired": "یہ الرٹ ختم ہو گیا ہے۔ یہ {t} آخری اپ ڈیٹ کے بغیر ختم ہوا۔",
-    "validLine": "{until} تک لاگو",
+    "validLine": "{until} لاگو",
     "timeLine": "{posted} پوسٹ ہوا · {updated} اپ ڈیٹ ہوا",
     "timeLineOne": "{posted} پوسٹ ہوا",
     "basicMore": "پچھلی اپ ڈیٹس: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "ہو سکتا ہے یہ الرٹ ختم ہو گیا ہو۔ سگنل ملنے پر دوبارہ دیکھیں"
   },
   "R08": {
     "title": "وہ الرٹ جو ختم ہو گئے",
@@ -733,9 +735,9 @@
     "lead": "ہر الرٹ ختم ہونے کے بعد یہاں پڑھا جا سکتا ہے۔",
     "endedOn": "{posted} پوسٹ ہوا",
     "backHome": "\"ابھی\" پر واپس",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "{t} واپس لے لیا گیا",
+    "more": "پرانے الرٹ دکھائیں",
+    "moreFailed": "ہم پرانے الرٹ لوڈ نہیں کر سکے۔ دیکھیں کہ آپ کے پاس سگنل ہے، پھر دوبارہ کوشش کریں۔"
   },
   "R09": {
     "title": "مدد تلاش کریں",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} {time} بجے",
     "linkLine": "تازہ ترین اپ ڈیٹس اور کوئی بھی تصحیح: {url}",
     "sendLine": "آپ کا فون پوچھے گا کہ اسے کس ایپ سے بھیجنا ہے۔",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "پیغام کاپی کریں",
+    "copied": "کاپی ہو گیا۔ آپ اسے کسی بھی ایپ میں پیسٹ کر سکتے ہیں۔",
+    "copyFailed": "آپ کے فون نے اسے کاپی نہیں کیا۔ کاپی کرنے کے لیے اوپر والے پیغام کو دبا کر رکھیں۔",
+    "whatsapp": "WhatsApp پر بھیجیں",
+    "noSheet": "آپ کا فون یہاں شیئر کرنے کے اختیارات نہیں دیتا۔ پیغام کاپی کریں، یا اسے WhatsApp پر بھیجیں۔",
     "placeMore": "اور {n} مزید"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "ڈسپلے کی ترتیبات",
+    "close": "ہو گیا",
+    "textSize": "متن کا سائز",
+    "standard": "عام",
+    "large": "بڑا",
+    "simpler": "آسان منظر",
+    "help": "کم تفصیلات دکھائیں اور نقشے کی جگہ فہرستیں استعمال کریں۔ متن کا سائز وہی رہتا ہے۔",
+    "saved": "اس فون پر محفوظ ہو گیا۔",
+    "sessionOnly": "آپ کا براؤزر یہ ترتیب محفوظ نہیں کر سکتا۔ یہ صرف اسی بار کے لیے رہے گی۔"
   }
 }

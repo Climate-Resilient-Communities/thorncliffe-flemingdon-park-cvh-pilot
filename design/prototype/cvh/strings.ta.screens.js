@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.ta;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "காட்சி அமைப்புகள்", "close": "முடிந்தது", "textSize": "எழுத்தின் அளவு", "standard": "வழக்கமான", "large": "பெரியது", "simpler": "எளிய தோற்றம்", "help": "குறைவான விவரங்களைக் காட்டி, வரைபடத்துக்குப் பதிலாகப் பட்டியல்களைப் பயன்படுத்தும். எழுத்தின் அளவு மாறாது.", "saved": "இந்த ஃபோனில் சேமிக்கப்பட்டது.", "sessionOnly": "உங்கள் உலாவியால் இந்த அமைப்பைச் சேமிக்க முடியாது. இந்த முறை மட்டுமே இது இருக்கும்."},
+    "R07": {"withdrawn": "திரும்பப் பெறப்பட்டது", "mayHaveEnded": "இந்த எச்சரிக்கை முடிந்திருக்கலாம். சிக்னல் கிடைக்கும்போது மீண்டும் பாருங்கள்"},
+    "R08": {"withdrawn": "{t} திரும்பப் பெறப்பட்டது", "more": "பழைய எச்சரிக்கைகளைக் காட்டு", "moreFailed": "பழைய எச்சரிக்கைகளை ஏற்ற முடியவில்லை. சிக்னல் உள்ளதா என்று பார்த்து மீண்டும் முயலுங்கள்."},
+    "R29": {"copy": "செய்தியை நகலெடு", "copied": "நகலெடுக்கப்பட்டது. எந்த ஆப்பிலும் இதை ஒட்டலாம்.", "copyFailed": "உங்கள் ஃபோன் இதை நகலெடுக்கவில்லை. நகலெடுக்க, மேலே உள்ள செய்தியை அழுத்திப் பிடியுங்கள்.", "whatsapp": "WhatsApp-இல் அனுப்பு", "noSheet": "உங்கள் ஃபோன் இங்கே பகிரும் வசதிகளைத் தரவில்லை. செய்தியை நகலெடுங்கள், அல்லது WhatsApp-இல் அனுப்புங்கள்."},
+    "shell": {"staffSignIn": "பணியாளர் உள்நுழைவு", "termsLink": "விதிமுறைகளும் தனியுரிமையும்"}
+  });
   m(t, {
   "terms": {
    "version": "பதிப்பு",

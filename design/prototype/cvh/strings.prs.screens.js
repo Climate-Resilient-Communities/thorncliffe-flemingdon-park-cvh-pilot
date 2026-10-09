@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.prs;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "تنظیمات نمایش", "close": "انجام شد", "textSize": "اندازهٔ متن", "standard": "عادی", "large": "بزرگ", "simpler": "نمای ساده‌تر", "help": "جزئیات کمتر نشان دهید و به جای نقشه از فهرست‌ها استفاده کنید. اندازهٔ متن تغییر نمی‌کند.", "saved": "در این تلفون ذخیره شد.", "sessionOnly": "مرورگر شما نمی‌تواند این تنظیم را ذخیره کند. فقط برای همین بار باقی می‌ماند."},
+    "R07": {"withdrawn": "پس گرفته شد", "mayHaveEnded": "شاید این هشدار ختم شده باشد. وقتی سیگنال داشتید دوباره ببینید"},
+    "R08": {"withdrawn": "{t} پس گرفته شد", "more": "نمایش هشدارهای قدیمی‌تر", "moreFailed": "نتوانستیم هشدارهای قدیمی‌تر را باز کنیم. ببینید که سیگنال دارید و دوباره کوشش کنید."},
+    "R29": {"copy": "پیام را کاپی کنید", "copied": "کاپی شد. می‌توانید آن را در هر اپلیکیشن بچسپانید.", "copyFailed": "تلفون شما آن را کاپی نکرد. برای کاپی کردن، پیام بالا را فشار داده نگه دارید.", "whatsapp": "در WhatsApp بفرستید", "noSheet": "تلفون شما اینجا گزینه‌های شریک‌سازی ندارد. پیام را کاپی کنید، یا آن را در WhatsApp بفرستید."},
+    "shell": {"staffSignIn": "ورود کارمندان", "termsLink": "شرایط و حریم خصوصی"}
+  });
   m(t, {
   "terms": {
    "version": "نسخه",

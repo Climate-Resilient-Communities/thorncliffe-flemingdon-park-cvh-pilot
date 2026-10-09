@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.tl;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "Mga setting ng display", "close": "Tapos na", "textSize": "Laki ng teksto", "standard": "Karaniwan", "large": "Malaki", "simpler": "Mas simpleng view", "help": "Magpakita ng mas kaunting detalye at gumamit ng mga listahan sa halip na mapa. Hindi nagbabago ang laki ng teksto.", "saved": "Naka-save sa device na ito.", "sessionOnly": "Hindi kayang i-save ng iyong browser ang setting na ito. Para lang ito sa pagbisitang ito."},
+    "R07": {"withdrawn": "Binawi", "mayHaveEnded": "Maaaring tapos na ang alertong ito. Tingnan ulit kapag may signal ka na"},
+    "R08": {"withdrawn": "Binawi {t}", "more": "Ipakita ang mas lumang mga alerto", "moreFailed": "Hindi namin ma-load ang mas lumang mga alerto. Tiyaking may signal ka at subukan ulit."},
+    "R29": {"copy": "Kopyahin ang mensahe", "copied": "Nakopya na. Maaari mo itong i-paste sa kahit anong app.", "copyFailed": "Hindi ito kinopya ng iyong telepono. Pindutin nang matagal ang mensahe sa itaas para kopyahin ito.", "whatsapp": "Ipadala sa WhatsApp", "noSheet": "Walang mga opsyon sa pagbabahagi ang iyong telepono dito. Kopyahin ang mensahe, o ipadala ito sa WhatsApp."},
+    "shell": {"staffSignIn": "Pag-sign in ng staff", "termsLink": "Mga tuntunin at privacy"}
+  });
   m(t, {
   "terms": {
    "version": "Bersyon",

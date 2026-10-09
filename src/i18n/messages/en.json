@@ -81,7 +81,9 @@
     "ambassador": "Ambassador",
     "offline": "You are offline. Showing what was last loaded {t}.",
     "aiLabel": "AI-generated for the prototype",
-    "illustrative": "Illustrative"
+    "illustrative": "Illustrative",
+    "staffSignIn": "Staff sign in",
+    "termsLink": "Terms and privacy"
   },
   "x01": {
     "text": "The CVH is not an emergency service.",

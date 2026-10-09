@@ -1303,6 +1303,15 @@ describe("the translated-question leg", () => {
       expect(logs).toMatchObject([{ status: "no_clear_match", resultCount: 0 }]);
     });
 
+    it("sets emergency_first when search is unavailable (no key, so no model is called) for a question that describes an emergency (UAT 2026-10-08)", async () => {
+      const off = { embedder: undefined };
+
+      expect((await run("my dad collapsed and is not breathing", off)).result).toEqual({ v: 1, release_v: 3, query_lang: "en", status: "unavailable", emergency_first: true, results: [] });
+      expect((await run("میرے والد سانس نہیں لے رہے", off, "ur")).result).toMatchObject({ status: "unavailable", emergency_first: true });
+      expect((await run("I need a lawyer", off)).result).toMatchObject({ status: "unavailable", emergency_first: false });
+      expect((await run("my dad collapsed and is not breathing", { ...off, crisisPhrases: false })).result).toMatchObject({ status: "unavailable", emergency_first: false });
+    });
+
     it("is switched off by crisisPhrases: false (the ranking's rules alone)", async () => {
       expect((await run("my dad collapsed and is not breathing", { crisisPhrases: false })).result).toMatchObject({ emergency_first: false });
     });

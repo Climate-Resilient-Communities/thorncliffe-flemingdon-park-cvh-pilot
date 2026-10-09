@@ -93,7 +93,7 @@ declare module "leaflet" {
     divIcon(options: { html: string; className: string; iconSize: [number, number]; iconAnchor?: [number, number] }): DivIcon;
     marker(at: LatLngTuple, options: { icon: DivIcon; keyboard?: boolean; riseOnHover?: boolean; interactive?: boolean }): Marker;
     control: {
-      zoom(options: { position?: string; zoomInTitle?: string; zoomOutTitle?: string; zoomInText?: string; zoomOutText?: string }): Layer & { addTo(map: LeafletMap): unknown };
+      zoom(options: { position?: string; zoomInTitle?: string; zoomOutTitle?: string; zoomInText?: string; zoomOutText?: string }): Layer & { getContainer(): HTMLElement | undefined };
     };
     TileLayer: TileLayerClass;
     /** The map's handlers; only the keyboard handler's first-press focus is replaced (leaflet-map.ts). */

@@ -705,3 +705,44 @@ flood insurance, "where is the hospital") and every phrase was also run over the
 words of one language that are ordinary in another (Slovak "ambulancia" is a clinic; "horí" is not "horizons"; the fire-service
 words of each language are masked). The non-English lists and examples are machine-assisted and wait for native readers.
 S03.08's ambassador questions are the real measure.
+
+## 14. The English-class concept and language lists in the keyword match (production UAT, 2026-10-08)
+
+**Why.** On production, "where can I learn english" answered five childcare centres, schools and a trades programme (M040, M032,
+M033, M027, M080) and missed the Afghan Women's Organization (M051, "women-only LINC English classes") and Saint John XXIII
+(M028, "offering ESL"). The keyword index already reads the services text, but it could not help: "english" is in many listings
+as the language a service is offered in ("Care offered in English, Spanish, Gujarati and Ukrainian", "Multilingual staff
+(English, Arabic, …)"), so M040 got the same boost as M051; "ESL", "LINC" and "language training" share no word with the
+question; and "classes" was stemmed to "classe", which never matched "class".
+
+**What was built** (`src/modules/directory/domain/searchKeywords.ts`, pure, no model):
+- a language name in a list of two or more language names is not a keyword (it says what language the help is in);
+- a *concept*: one more token found by phrase in the question and the listing alike. The one concept is learning English
+  (questions: "learn / study / practise / improve / speak English", "English class / lessons / course / school / tutor /
+  conversation", "ESL", "LINC", "language class / training"; listings: the same phrases, not another language's "Japanese
+  language classes", and not a clause that says it is not offered: "no French immersion, ESL, or special education programs").
+  A provider that holds a concept the question names gets the keyword weight once more, so the keyword match adds at most
+  twice `SEARCH_KEYWORD_WEIGHT` (0.30 by default);
+- "-sses" plurals keep their "ss" ("classes" is "class").
+
+**Measured** offline with the cached vectors and rerank answers (no vendor call), all 235 questions, production's defaults
+(translate-first ta, pa, bn, el, zh, tl; rerank on the direct route; crisis phrases on):
+
+| | hit@3 | shown | no-match ok | emergency flag | false alarm | false positives |
+|---|---|---|---|---|---|---|
+| before | 80.7 | 85.6 | 75.8 | 100.0 | 2.3 | 6.8 |
+| after | **81.2** | 85.6 | 75.8 | 100.0 | 2.3 | **6.4** |
+
+One hit gained, none lost: pa-09 ("english sikhan di class kithe hundi aa", translated "Where are English classes held?") now
+shows M027, M051, M028 first instead of M090, M069, M040. pa-04 (daycare) no longer shows a provider none of whose listings is
+expected (false positive). The other English-class questions (ur-07, ps-07, prs-05, gu-04, el-07, bn-06, zh-08) already had
+M051 first and now show M049 and M007 (TNO's "language training") and the ESL schools after it, instead of a Quran school, a
+Japanese cultural centre and a midwife clinic.
+
+**The UAT question itself** is not in the cache, so it cannot be replayed. Its production scores bound it: M051's similarity was
+below 0.219 (its score was under the fifth result's 0.292 with a 0.073 boost); it now gets 0.227 of keyword boost. The childcare
+centres that led lose their boost or never had one (M040 0.280, M032 0.317, M033 about 0.30), so M051 is above all of them
+unless its similarity is below about 0.09; what it now shares the first places with is the other English-class listings (M027 and
+M028 with ESL, M049 and M007 with language training), which is the answer the question wants.
+Three cached English questions of the same need: "Where can I learn English for free?" M051 first (0.540, then M049, M007);
+"English classes for adults" and "English courses for adults" M051 in the top two.

@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.bn;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "প্রদর্শনের সেটিংস", "close": "হয়ে গেছে", "textSize": "লেখার আকার", "standard": "সাধারণ", "large": "বড়", "simpler": "সহজ দৃশ্য", "help": "কম বিবরণ দেখায় এবং মানচিত্রের বদলে তালিকা ব্যবহার করে। লেখার আকার একই থাকে।", "saved": "এই ফোনে সংরক্ষিত হয়েছে।", "sessionOnly": "আপনার ব্রাউজার এই সেটিং সংরক্ষণ করতে পারে না। এটি শুধু এইবারের জন্য থাকবে।"},
+    "R07": {"withdrawn": "তুলে নেওয়া হয়েছে", "mayHaveEnded": "এই সতর্কতা হয়তো শেষ হয়ে গেছে। সিগন্যাল পেলে আবার দেখুন"},
+    "R08": {"withdrawn": "তুলে নেওয়া হয়েছে {t}", "more": "পুরোনো সতর্কতা দেখুন", "moreFailed": "আমরা পুরোনো সতর্কতাগুলো লোড করতে পারিনি। আপনার সিগন্যাল আছে কি না দেখে আবার চেষ্টা করুন।"},
+    "R29": {"copy": "বার্তাটি কপি করুন", "copied": "কপি হয়েছে। আপনি এটি যেকোনো অ্যাপে পেস্ট করতে পারেন।", "copyFailed": "আপনার ফোন এটি কপি করেনি। কপি করতে ওপরের বার্তাটি চেপে ধরে রাখুন।", "whatsapp": "WhatsApp-এ পাঠান", "noSheet": "আপনার ফোন এখানে শেয়ার করার বিকল্প দেয় না। বার্তাটি কপি করুন, অথবা WhatsApp-এ পাঠান।"},
+    "shell": {"staffSignIn": "কর্মীদের সাইন ইন", "termsLink": "শর্তাবলি ও গোপনীয়তা"}
+  });
   m(t, {
   "terms": {
    "version": "সংস্করণ",

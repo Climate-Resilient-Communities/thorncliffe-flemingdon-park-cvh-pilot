@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.fr;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "Paramètres d'affichage", "close": "Terminé", "textSize": "Taille du texte", "standard": "Normale", "large": "Grande", "simpler": "Affichage simplifié", "help": "Affiche moins de détails et des listes au lieu de la carte. La taille du texte ne change pas.", "saved": "Enregistré sur cet appareil.", "sessionOnly": "Votre navigateur ne peut pas enregistrer ce réglage. Il ne durera que pour cette visite."},
+    "R07": {"withdrawn": "Retirée", "mayHaveEnded": "Cette alerte est peut-être terminée. Vérifiez de nouveau quand vous aurez du réseau"},
+    "R08": {"withdrawn": "Retirée {t}", "more": "Afficher les alertes plus anciennes", "moreFailed": "Nous n'avons pas pu charger les alertes plus anciennes. Vérifiez que vous avez du réseau et réessayez."},
+    "R29": {"copy": "Copier le message", "copied": "Copié. Vous pouvez le coller dans n'importe quelle application.", "copyFailed": "Votre téléphone ne l'a pas copié. Appuyez longuement sur le message ci-dessus pour le copier.", "whatsapp": "Envoyer par WhatsApp", "noSheet": "Votre téléphone ne propose pas d'options de partage ici. Copiez le message ou envoyez-le par WhatsApp."},
+    "shell": {"staffSignIn": "Connexion du personnel", "termsLink": "Conditions et confidentialité"}
+  });
   m(t, {
   "terms": {
    "version": "Version",

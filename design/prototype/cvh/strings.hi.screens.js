@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.hi;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "डिस्प्ले सेटिंग्स", "close": "हो गया", "textSize": "लिखावट का आकार", "standard": "सामान्य", "large": "बड़ा", "simpler": "सरल दृश्य", "help": "कम जानकारी दिखाता है और नक्शे की जगह सूचियाँ इस्तेमाल करता है। लिखावट का आकार वही रहता है।", "saved": "इस फ़ोन पर सहेजा गया।", "sessionOnly": "आपका ब्राउज़र यह सेटिंग सहेज नहीं सकता। यह सिर्फ़ इस बार के लिए रहेगी।"},
+    "R07": {"withdrawn": "वापस लिया गया", "mayHaveEnded": "हो सकता है यह अलर्ट खत्म हो गया हो। सिग्नल मिलने पर फिर से देखें"},
+    "R08": {"withdrawn": "{t} वापस लिया गया", "more": "पुराने अलर्ट दिखाएँ", "moreFailed": "हम पुराने अलर्ट लोड नहीं कर सके। देखें कि आपके पास सिग्नल है, फिर दोबारा कोशिश करें।"},
+    "R29": {"copy": "संदेश कॉपी करें", "copied": "कॉपी हो गया। आप इसे किसी भी ऐप में पेस्ट कर सकते हैं।", "copyFailed": "आपके फ़ोन ने इसे कॉपी नहीं किया। कॉपी करने के लिए ऊपर वाले संदेश को दबाकर रखें।", "whatsapp": "WhatsApp पर भेजें", "noSheet": "आपका फ़ोन यहाँ शेयर करने के विकल्प नहीं देता। संदेश कॉपी करें, या उसे WhatsApp पर भेजें।"},
+    "shell": {"staffSignIn": "स्टाफ़ साइन इन", "termsLink": "शर्तें और गोपनीयता"}
+  });
   m(t, {
   "terms": {
    "version": "संस्करण",

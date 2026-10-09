@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.gu;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "ડિસ્પ્લે સેટિંગ્સ", "close": "થઈ ગયું", "textSize": "લખાણનું કદ", "standard": "સામાન્ય", "large": "મોટું", "simpler": "સરળ દેખાવ", "help": "ઓછી વિગતો બતાવો અને નકશાને બદલે યાદીઓ વાપરો. લખાણનું કદ એ જ રહે છે.", "saved": "આ ફોન પર સાચવ્યું.", "sessionOnly": "તમારું બ્રાઉઝર આ સેટિંગ સાચવી શકતું નથી. તે ફક્ત આ વખત માટે રહેશે."},
+    "R07": {"withdrawn": "પાછી ખેંચી", "mayHaveEnded": "આ ચેતવણી કદાચ પૂરી થઈ ગઈ હોય. સિગ્નલ મળે ત્યારે ફરી જુઓ"},
+    "R08": {"withdrawn": "{t} પાછી ખેંચી", "more": "જૂની ચેતવણીઓ બતાવો", "moreFailed": "અમે જૂની ચેતવણીઓ લોડ કરી શક્યા નહીં. તમારી પાસે સિગ્નલ છે કે નહીં તે જુઓ અને ફરી પ્રયાસ કરો."},
+    "R29": {"copy": "સંદેશ કૉપિ કરો", "copied": "કૉપિ થયું. તમે તેને કોઈ પણ ઍપમાં પેસ્ટ કરી શકો છો.", "copyFailed": "તમારા ફોને તે કૉપિ કર્યું નહીં. કૉપિ કરવા માટે ઉપરના સંદેશને દબાવી રાખો.", "whatsapp": "WhatsApp પર મોકલો", "noSheet": "તમારો ફોન અહીં શેર કરવાના વિકલ્પો આપતો નથી. સંદેશ કૉપિ કરો, અથવા તેને WhatsApp પર મોકલો."},
+    "shell": {"staffSignIn": "સ્ટાફ સાઇન ઇન", "termsLink": "શરતો અને ગોપનીયતા"}
+  });
   m(t, {
   "terms": {
    "version": "આવૃત્તિ",

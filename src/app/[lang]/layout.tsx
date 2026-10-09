@@ -104,6 +104,7 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
             },
           }}
           nav={{ label: shell("navLabel"), items: nav }}
+          footer={{ staffSignIn: shell("staffSignIn"), termsLink: shell("termsLink") }}
         >
           <NextIntlClientProvider locale={lang} messages={clientMessages}>
             <OfflineSupport />

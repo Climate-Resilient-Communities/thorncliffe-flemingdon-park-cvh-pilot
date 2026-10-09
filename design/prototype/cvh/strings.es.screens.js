@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.es;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "Ajustes de pantalla", "close": "Listo", "textSize": "Tamaño del texto", "standard": "Normal", "large": "Grande", "simpler": "Vista más sencilla", "help": "Muestra menos detalles y usa listas en lugar del mapa. El tamaño del texto no cambia.", "saved": "Guardado en este dispositivo.", "sessionOnly": "Su navegador no puede guardar este ajuste. Solo durará esta visita."},
+    "R07": {"withdrawn": "Retirada", "mayHaveEnded": "Es posible que esta alerta haya terminado. Vuelva a revisar cuando tenga señal"},
+    "R08": {"withdrawn": "Retirada {t}", "more": "Mostrar alertas anteriores", "moreFailed": "No pudimos cargar las alertas anteriores. Revise que tenga señal e inténtelo de nuevo."},
+    "R29": {"copy": "Copiar el mensaje", "copied": "Copiado. Puede pegarlo en cualquier aplicación.", "copyFailed": "Su teléfono no lo copió. Mantenga presionado el mensaje de arriba para copiarlo.", "whatsapp": "Enviar por WhatsApp", "noSheet": "Su teléfono no ofrece opciones para compartir aquí. Copie el mensaje o envíelo por WhatsApp."},
+    "shell": {"staffSignIn": "Acceso del personal", "termsLink": "Términos y privacidad"}
+  });
   m(t, {
   "terms": {
    "version": "Versión",

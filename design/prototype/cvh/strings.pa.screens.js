@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.pa;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "ਡਿਸਪਲੇ ਸੈਟਿੰਗਾਂ", "close": "ਹੋ ਗਿਆ", "textSize": "ਲਿਖਤ ਦਾ ਆਕਾਰ", "standard": "ਆਮ", "large": "ਵੱਡਾ", "simpler": "ਸੌਖਾ ਦ੍ਰਿਸ਼", "help": "ਘੱਟ ਵੇਰਵੇ ਦਿਖਾਉਂਦਾ ਹੈ ਅਤੇ ਨਕਸ਼ੇ ਦੀ ਥਾਂ ਸੂਚੀਆਂ ਵਰਤਦਾ ਹੈ। ਲਿਖਤ ਦਾ ਆਕਾਰ ਉਹੀ ਰਹਿੰਦਾ ਹੈ।", "saved": "ਇਸ ਫ਼ੋਨ ਤੇ ਸੰਭਾਲਿਆ ਗਿਆ।", "sessionOnly": "ਤੁਹਾਡਾ ਬ੍ਰਾਊਜ਼ਰ ਇਹ ਸੈਟਿੰਗ ਸੰਭਾਲ ਨਹੀਂ ਸਕਦਾ। ਇਹ ਸਿਰਫ਼ ਇਸ ਵਾਰ ਲਈ ਰਹੇਗੀ।"},
+    "R07": {"withdrawn": "ਵਾਪਸ ਲਈ ਗਈ", "mayHaveEnded": "ਹੋ ਸਕਦਾ ਹੈ ਇਹ ਚੇਤਾਵਨੀ ਖ਼ਤਮ ਹੋ ਗਈ ਹੋਵੇ। ਸਿਗਨਲ ਮਿਲਣ ਤੇ ਦੁਬਾਰਾ ਦੇਖੋ"},
+    "R08": {"withdrawn": "{t} ਵਾਪਸ ਲਈ ਗਈ", "more": "ਪੁਰਾਣੀਆਂ ਚੇਤਾਵਨੀਆਂ ਦਿਖਾਓ", "moreFailed": "ਅਸੀਂ ਪੁਰਾਣੀਆਂ ਚੇਤਾਵਨੀਆਂ ਲੋਡ ਨਹੀਂ ਕਰ ਸਕੇ। ਦੇਖੋ ਕਿ ਤੁਹਾਡੇ ਕੋਲ ਸਿਗਨਲ ਹੈ, ਫਿਰ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"},
+    "R29": {"copy": "ਸੁਨੇਹਾ ਕਾਪੀ ਕਰੋ", "copied": "ਕਾਪੀ ਹੋ ਗਿਆ। ਤੁਸੀਂ ਇਸਨੂੰ ਕਿਸੇ ਵੀ ਐਪ ਵਿੱਚ ਪੇਸਟ ਕਰ ਸਕਦੇ ਹੋ।", "copyFailed": "ਤੁਹਾਡੇ ਫ਼ੋਨ ਨੇ ਇਸਨੂੰ ਕਾਪੀ ਨਹੀਂ ਕੀਤਾ। ਕਾਪੀ ਕਰਨ ਲਈ ਉੱਪਰਲੇ ਸੁਨੇਹੇ ਨੂੰ ਦਬਾ ਕੇ ਰੱਖੋ।", "whatsapp": "WhatsApp ਤੇ ਭੇਜੋ", "noSheet": "ਤੁਹਾਡਾ ਫ਼ੋਨ ਇੱਥੇ ਸਾਂਝਾ ਕਰਨ ਦੇ ਵਿਕਲਪ ਨਹੀਂ ਦਿੰਦਾ। ਸੁਨੇਹਾ ਕਾਪੀ ਕਰੋ, ਜਾਂ ਇਸਨੂੰ WhatsApp ਤੇ ਭੇਜੋ।"},
+    "shell": {"staffSignIn": "ਸਟਾਫ਼ ਸਾਈਨ ਇਨ", "termsLink": "ਸ਼ਰਤਾਂ ਅਤੇ ਪਰਦੇਦਾਰੀ"}
+  });
   m(t, {
   "terms": {
    "version": "ਸੰਸਕਰਣ",

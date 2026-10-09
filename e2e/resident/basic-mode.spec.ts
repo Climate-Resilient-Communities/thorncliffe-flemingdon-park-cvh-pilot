@@ -26,9 +26,11 @@ async function phoneHolds(page: Page, choices: Record<string, unknown>) {
 const mainTextSize = (page: Page) => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("main p")!).fontSize));
 
 async function toggleSimpler(page: Page) {
+  const lang = (await page.locator("html").getAttribute("lang")) ?? "en";
   await page.getByTestId("display-settings-button").click();
   await page.getByTestId("basic-switch").click();
-  await page.locator("dialog[open]").getByRole("button", { name: /Done/ }).click();
+  // The dialog's Done in the page's language (translated in every language since the production UAT of 2026-10-08).
+  await page.locator("dialog[open]").getByRole("button", { name: catalogText(lang, "display.close") }).click();
 }
 
 test.describe("display settings (X-07)", () => {

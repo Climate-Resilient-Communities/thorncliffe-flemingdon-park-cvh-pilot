@@ -81,7 +81,9 @@
     "ambassador": "தூதர்",
     "offline": "நீங்கள் இணையத்தில் இல்லை. {t} ஏற்றப்பட்டவை காட்டப்படுகின்றன.",
     "aiLabel": "முன்மாதிரிக்காக AI உருவாக்கியது",
-    "illustrative": "எடுத்துக்காட்டு"
+    "illustrative": "எடுத்துக்காட்டு",
+    "staffSignIn": "பணியாளர் உள்நுழைவு",
+    "termsLink": "விதிமுறைகளும் தனியுரிமையும்"
   },
   "x01": {
     "text": "CVH அவசர சேவை அல்ல.",
@@ -716,13 +718,13 @@
     "amberBody": "Amber Alerts என்பவை காணாமல் போன குழந்தை பற்றிய அதிகாரப்பூர்வ எச்சரிக்கைகள். உண்மையான வாசகம் எப்போதும் Alert Ready-இடமிருந்து வரும்.",
     "endedResolved": "இந்த எச்சரிக்கை முடிந்துவிட்டது. இது {t} தீர்க்கப்பட்டது.",
     "endedWithdrawn": "மையம் இந்த எச்சரிக்கையைத் திரும்பப் பெற்றது. {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "திரும்பப் பெறப்பட்டது",
     "endedExpired": "இந்த எச்சரிக்கை முடிந்துவிட்டது. இறுதிப் புதுப்பிப்பு இல்லாமல் இது {t} காலாவதியானது.",
     "validLine": "செல்லுபடி: {until}",
     "timeLine": "{posted} பதிவிடப்பட்டது · {updated} புதுப்பிக்கப்பட்டது",
     "timeLineOne": "{posted} பதிவிடப்பட்டது",
     "basicMore": "முந்தைய புதுப்பிப்புகள்: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "இந்த எச்சரிக்கை முடிந்திருக்கலாம். சிக்னல் கிடைக்கும்போது மீண்டும் பாருங்கள்"
   },
   "R08": {
     "title": "முடிந்த எச்சரிக்கைகள்",
@@ -733,9 +735,9 @@
     "lead": "ஒவ்வொரு எச்சரிக்கையும் முடிந்த பின்னும் இங்கே படிக்கக்கூடியதாக இருக்கும்.",
     "endedOn": "{posted} பதிவிடப்பட்டது",
     "backHome": "\"இப்போது\" பக்கத்துக்குத் திரும்பு",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "{t} திரும்பப் பெறப்பட்டது",
+    "more": "பழைய எச்சரிக்கைகளைக் காட்டு",
+    "moreFailed": "பழைய எச்சரிக்கைகளை ஏற்ற முடியவில்லை. சிக்னல் உள்ளதா என்று பார்த்து மீண்டும் முயலுங்கள்."
   },
   "R09": {
     "title": "உதவி தேடு",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} {time}-க்கு",
     "linkLine": "புதிய புதுப்பிப்புகளும் திருத்தங்களும்: {url}",
     "sendLine": "எந்தச் செயலி மூலம் அனுப்ப வேண்டும் என்று உங்கள் தொலைபேசி கேட்கும்.",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "செய்தியை நகலெடு",
+    "copied": "நகலெடுக்கப்பட்டது. எந்த ஆப்பிலும் இதை ஒட்டலாம்.",
+    "copyFailed": "உங்கள் ஃபோன் இதை நகலெடுக்கவில்லை. நகலெடுக்க, மேலே உள்ள செய்தியை அழுத்திப் பிடியுங்கள்.",
+    "whatsapp": "WhatsApp-இல் அனுப்பு",
+    "noSheet": "உங்கள் ஃபோன் இங்கே பகிரும் வசதிகளைத் தரவில்லை. செய்தியை நகலெடுங்கள், அல்லது WhatsApp-இல் அனுப்புங்கள்.",
     "placeMore": "மற்றும் {n} மேலும்"
   },
   "R30": {
@@ -6478,14 +6480,14 @@
     "digits": "0123456789"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "காட்சி அமைப்புகள்",
+    "close": "முடிந்தது",
+    "textSize": "எழுத்தின் அளவு",
+    "standard": "வழக்கமான",
+    "large": "பெரியது",
+    "simpler": "எளிய தோற்றம்",
+    "help": "குறைவான விவரங்களைக் காட்டி, வரைபடத்துக்குப் பதிலாகப் பட்டியல்களைப் பயன்படுத்தும். எழுத்தின் அளவு மாறாது.",
+    "saved": "இந்த ஃபோனில் சேமிக்கப்பட்டது.",
+    "sessionOnly": "உங்கள் உலாவியால் இந்த அமைப்பைச் சேமிக்க முடியாது. இந்த முறை மட்டுமே இது இருக்கும்."
   }
 }
