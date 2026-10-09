@@ -27,6 +27,8 @@ This document breaks the CVH pilot into epics and stories, built from the pilot 
 
 **Pilot lean cut (approved 2026-10-01).** This is the lean pilot plan from the approved Sprint Change Proposal. Some stories were simplified to pilot scale and some deferred to the MVP (see "Deferred to MVP" at the end). The approved full plan is kept unchanged as the MVP reference in `docs/planning/mvp/reference/pilot-epics-full.md`.
 
+**Pilot decision (product owner, 2026-10-09): every translation shown, no warnings.** Residents see everything in their chosen language, in all 15 launch languages, with no "Not yet available in this language" notice and no "Machine-translated; not reviewed by a person" (or "Translated by machine") label and its "Show English" / "Read it in English" toggle, in any resident view (directory list, provider page, map, search results, Be ready, guides, essential numbers, terms, alerts). For the pilot this reverses decision 42 (safety-critical provider text stays English until a person reviews it) and the visible machine-translation label of the AD-11 pilot change (decision 39), and overrides FR-A3's and NFR-N1's "labelled ... with the English original one tap away" for resident views. It is the setting `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` (default `on`; `docs/config.md`): the provider seed, the guides and numbers seed, the directory release and the terms then load every current machine translation (categories, subcategories, descriptions, emergency roles, guides, numbers, terms), safety-critical ones included; provider names and addresses stay as written (proper names). Two invisible safeguards stay whatever the setting says: the **facts check** (every number, phone number, time, weekday, postal code, email and web address must match the English, else that translation is not shown) and the **911 rules** (a translation of a text with 911 must keep 911; a blank 911 text refuses the guides seed; the 911 lines and blocks stay on every screen). A translation of English that has changed since (stale) never loads either. Where a text truly has no usable translation it falls back to English silently (marked `lang="en"` for screen readers). Native-reader review of the translations (safety-critical first) moves to after the pilot (launch checklist). The criteria below that require a label, a "Show English" toggle, a `translation.unavailable` notice on screen, or reviewed-only loading are superseded for the pilot by this decision while the setting is on; the listing contract (`DirectoryListingV1`) is unchanged.
+
 **Totals.** Build 491.5 h across 91 stories (E01–E09). Manual operations during the pilot: 15 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). The build estimate became 494 h with the approved spacing framework change (2026-10-01; S01.16 added). Only the build saving against the full plan (532 h → 488 h before that change) is comparable, because the full plan left operations unstated. With the single-Supabase change (2026-10-02) it became 491.5 h: backups, restore and the deletion ledger moved to the MVP.
 
 ## Requirements Inventory
@@ -980,6 +982,8 @@ So that residents only see listings the Hub has checked.
 **And** the description of a safety-critical provider (it has an emergency role, is in "Support & Emergency Services", or its English names a crisis or emergency line: 911, 988, crisis, helpline, hotline, non-emergency line, emergency department, ...) is not loaded unreviewed (reason `safety_critical`, decision 42) and shows in English until reviewed; the report counts the providers by criterion
 **And** the report and the `seed.run` audit count reviewed, machine-labelled (`translations_machine`) and not-loaded translations (with why) separately
 
+> **Pilot change (product owner, 2026-10-09; see "Pilot decision" in the Overview):** with `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` on (the default), every current machine translation in the catalogue's translation files loads, category and subcategory names, emergency roles and the descriptions of safety-critical providers included (no `machine` or `safety_critical` refusal); it is still refused when its facts changed (`facts_changed`), when it lost 911 (`lost_required`) or when it is stale. Subcategory names now keep their provenance like the other texts. The report and `seed.run` say whether the setting was on (`pilot_machine_translations`).
+
 **Given** the catalogue file fails its zod schema (missing `id`, duplicate `id`, coordinates outside Toronto, a category not in `labels`)
 **When** the script runs
 **Then** nothing is loaded and the report lists every failing entry
@@ -1029,6 +1033,8 @@ So that every resident gets the same, complete set of listings in their language
 **And** an emergency role, a category or subcategory name is still published only when reviewed; a reviewed translation is published as before, without that label
 **And** a safety-critical provider's description (decision 42) is published in English with `translation.unavailable` until its translation is reviewed (`safety_critical`, counted in the release), and the facts of a machine description must match the English in order and count, times with their a.m./p.m. and weekdays included
 **And** `DirectoryListingV1` gains no field or value, so releases written before the change still parse; the release counts the labelled texts (`machine`)
+
+> **Pilot change (product owner, 2026-10-09):** with `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` on, the release ships every machine translation the seed loaded (emergency roles, category and subcategory names, safety-critical descriptions included) as `review_status: "none"`, and the resident sees it with no label and no "Show English"; the facts, 911 and stale checks are applied again by the release. A text that falls back to English still carries `translation.unavailable` in the file, but the resident views show no notice.
 
 **Given** the job is stopped part way (function time limit or failure)
 **When** it runs again
@@ -1090,7 +1096,7 @@ So that I can find help near me in my language.
 
 **Given** any listing text that was machine-translated
 **When** shown
-**Then** it carries the machine-translation label and "Show English" reveals the English text in place
+**Then** it carries the machine-translation label and "Show English" reveals the English text in place *(superseded for the pilot, product owner 2026-10-09: no label, no "Show English", no "Not yet available in this language" note; English fallback is silent, marked `lang="en"`)*
 
 **Given** the manifest reports a newer release than the one loaded
 **When** the directory is opened
@@ -1198,15 +1204,17 @@ So that residents read checked text, not a live machine translation.
 **Given** the seed script runs
 **When** a guide's English review, owner or last-updated date is missing, or a number has no last-checked date
 **Then** the script refuses to load that guide or the numbers list and reports why
-**And** a translation not marked `reviewed` is not loaded; that text shows in English with `translation.unavailable` until its review is recorded
+**And** a translation not marked `reviewed` is not loaded; that text shows in English with `translation.unavailable` until its review is recorded *(pilot change, product owner 2026-10-09: with `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` on, a current machine translation loads too, with provenance `status: "machine"`, the safety-critical texts included (each guide's `when911`, `number.911.*` and the 311 "non-emergency" label are no longer held back for a person's review), unless its facts changed (numbers, phone numbers, times ... must match the English) or it lost 911; a stale one never loads; the English 911 rules and a blank 911 translation still refuse the run)*
 
 **Given** the guide and numbers seed script
 **When** it runs
 **Then** `guide` and `essential_number` are upserted from those files, running it twice changes nothing, and `seed.run` is audited
 **And** the 911 number and "when to call 911" text cannot be null in any language (the script refuses to load)
-**And** a null 911 translation falls back to the checked English with `translation.unavailable`; launch is refused by the launch check (`npm run seed:guides -- --launch-check`) until every launch language has a reviewed, current 911 translation (owner decision 2026-10-02)
+**And** a null 911 translation falls back to the checked English with `translation.unavailable`; launch is refused by the launch check (`npm run seed:guides -- --launch-check`) until every launch language has a reviewed, current 911 translation (owner decision 2026-10-02) *(pilot change, product owner 2026-10-09: the native-reader review this check asks for moves to after the pilot, launch checklist section 8; under `CATALOGUE_PILOT_MACHINE_TRANSLATIONS` a current machine translation of a 911 text that keeps 911 and its facts is shown meanwhile)*
 
 ### Story S02.10 — Resident reads a guide and the essential numbers
+
+> **Pilot change (product owner, 2026-10-09):** no "Not yet available in this language" notice, machine-translation label or "Show English" / "Read it in English" toggle is shown to residents here; text with no usable translation falls back to English silently (`lang="en"`). See "Pilot decision" in the Overview.
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** 7 h 5 min (started 2026-10-02 15:03 UTC, merged 2026-10-02 22:08 UTC)
 - **Traces:** FR-D7, UX-DR13, AR-27 (911 block) · **Depends on:** S02.09, S02.08 · **Branch:** `e02-s10-guides-numbers`
@@ -1689,6 +1697,8 @@ So that I am not disadvantaged by the language or script I use.
 
 ### Story S03.06 — Resident asks a question and sees the right listings
 
+> **Pilot change (product owner, 2026-10-09):** no "Not yet available in this language" notice, machine-translation label or "Show English" / "Read it in English" toggle is shown to residents here; text with no usable translation falls back to English silently (`lang="en"`). See "Pilot decision" in the Overview.
+
 - **Size:** M · **Estimate:** 7 h · **Actual:** 7 h 41 min (started 2026-10-02 23:21 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-D2-Q, UX-DR10, AR-27 (911 block), NFR-N2 · **Depends on:** S03.04, S02.06, S02.10 · **Branch:** `e03-s06-ask-screens`
 
@@ -2162,6 +2172,8 @@ So that a mistake is caught by a second person before residents see it.
 **Then** below 800 px of content width it is one column with the main content first and the aside filling the width, at 800 px and above it is two columns with the page's approved gap, the approval actions stay in the sticky actions region in both layouts, and no layout overflows horizontally (S01.16 boundary helper)
 
 ### Story S04.08 — Residents read approved alerts in their language, with origin and verification
+
+> **Pilot change (product owner, 2026-10-09):** no "Not yet available in this language" notice, machine-translation label or "Show English" / "Read it in English" toggle is shown to residents here; text with no usable translation falls back to English silently (`lang="en"`). See "Pilot decision" in the Overview.
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 56 min (started 2026-10-03 09:57 UTC, built 11:53 UTC, across a container restart)
 - **Traces:** FR-A1 (web), FR-A3, FR-A5, AR-7 (`FeedV1`), AR-6 (drill isolation), UX-DR6 · **Depends on:** S04.07, S02.11, S02.10 · **Branch:** `e04-s08-feed-and-alert-detail`
@@ -3032,6 +3044,8 @@ Residents read plain-language terms, sign up for texts on the web or with a staf
 | Overnight notice | The welcome text says, in the resident's language, that messages are checked by Hub staff and may not be sent overnight (accepted risk R-11). |
 
 ### Story S07.01 — Residents can read plain terms before signing up
+
+> **Pilot change (product owner, 2026-10-09):** no "Not yet available in this language" notice, machine-translation label or "Show English" / "Read it in English" toggle is shown to residents here; text with no usable translation falls back to English silently (`lang="en"`). See "Pilot decision" in the Overview.
 
 - **Size:** S · **Estimate:** 4 h · **Actual:** 40 min (started 2026-10-02 05:33 UTC, merged 2026-10-02 06:13 UTC)
 - **Traces:** NFR-N5 (terms), AR-17, FR-A2 · **Depends on:** S02.09 · **Branch:** `e07-s01-terms`

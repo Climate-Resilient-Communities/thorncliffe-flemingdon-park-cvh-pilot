@@ -40,7 +40,7 @@ test("no request carries the saved selection, the filters applied or the provide
     await openResident(page, path, 390);
     await page.waitForLoadState("networkidle");
   }
-  // And the actions: filter by every kind of filter, open a listing, show the English, go back.
+  // And the actions: filter by every kind of filter, open a listing, go back, and the Urdu list.
   await openResident(page, "/en/directory", 390);
   await page.getByTestId("filters-toggle").click();
   await page.getByTestId("filter-category-food").check();
@@ -50,7 +50,6 @@ test("no request carries the saved selection, the filters applied or the provide
   await page.getByTestId("back-to-directory").click();
   await page.getByTestId("clear-all").click();
   await openResident(page, "/ur/directory", 390);
-  await page.getByTestId("show-english").first().click();
   await page.waitForLoadState("networkidle");
 
   const seen = await Promise.all(pending);

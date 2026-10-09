@@ -12,6 +12,8 @@
 //    ...), by text key and language, which is how the directory release reports the stale ones (S02.05);
 //  - an unreviewed machine translation of a description that the plan loads (AD-11 pilot change) is stored like any
 //    loaded text, its provenance saying `status: "machine"`; the audit counts it apart (`translations_machine`);
+//  - with the pilot setting (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, product owner 2026-10-09, read by the seed script and passed as
+//    `pilotMachineTranslations`) every current machine translation whose facts match the English is loaded, safety-critical ones included;
 //  - the run records the hash of the catalogue files it loaded in `catalogue_load`, in the same transaction, and takes the
 //    publish lock first, so a directory publish and a seed never overlap: a release is built from providers that
 //    `catalogue_load` describes;
@@ -35,9 +37,14 @@ import { PUBLISH_LOCK_KEY } from "./publishLock";
 
 const SEED_CODE = "provider_catalogue";
 
+export interface ProviderSeedOptions {
+  /** The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): load every current machine translation. */
+  pilotMachineTranslations?: boolean;
+}
+
 /** What the seed would load from the files (the dry run); nothing is written. */
-export function planProviders(input: ProviderCatalogueInput): ProviderSeedPlan {
-  return planProviderCatalogue(input, { hash: sourceHash, textId: catalogueTextId });
+export function planProviders(input: ProviderCatalogueInput, options: ProviderSeedOptions = {}): ProviderSeedPlan {
+  return planProviderCatalogue(input, { hash: sourceHash, textId: catalogueTextId, pilotMachineTranslations: options.pilotMachineTranslations === true });
 }
 
 /** The file failed its schema: nothing was written. Every failing entry is in `failures`. */
@@ -63,8 +70,13 @@ const CHUNK = 200;
  * catalogueHash() the publish job computes) and the commit the seed runs from; it is recorded in `catalogue_load`.
  * Throws ProviderSeedRefusedError, before any write, when the file fails its schema.
  */
-export async function seedProviders(db: Db, input: ProviderCatalogueInput, version: CatalogueVersion): Promise<ProviderSeedResult> {
-  const plan = planProviders(input);
+export async function seedProviders(
+  db: Db,
+  input: ProviderCatalogueInput,
+  version: CatalogueVersion,
+  options: ProviderSeedOptions = {},
+): Promise<ProviderSeedResult> {
+  const plan = planProviders(input, options);
   if (plan.failures.length > 0) {
     await recordRefusal(db, {
       action: "seed.run",
@@ -242,6 +254,7 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput, versi
           providers_safety_critical: plan.report.safetyCritical.providers,
           translations_safety_critical: translations.unavailable.filter((u) => u.reason === "safety_critical").reduce((sum, u) => sum + u.count, 0),
           translations_not_yet: notYet,
+          pilot_machine_translations: plan.report.pilot ? 1 : 0,
         },
         warnings: notLoaded,
         failures: 0,

@@ -24,11 +24,13 @@ const todayUtc = () => new Date().toISOString().slice(0, 10);
 export interface SeedOptions {
   /** Today as YYYY-MM-DD; tests inject it. */
   today?: string;
+  /** The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): load current machine translations too. */
+  pilotMachineTranslations?: boolean;
 }
 
 /** What the seed would load from the files (the dry run). */
 export function planGuidesAndNumbers(input: ContentInput, options: SeedOptions = {}): SeedPlan {
-  return planSeed(input, { hash: sourceHash, today: options.today ?? todayUtc() });
+  return planSeed(input, { hash: sourceHash, today: options.today ?? todayUtc(), pilotMachineTranslations: options.pilotMachineTranslations === true });
 }
 
 /** The launch-readiness check: 911 texts without a reviewed, current translation. Reads nothing from the database. */
@@ -196,6 +198,8 @@ export async function seedGuidesAndNumbers(db: Db, input: ContentInput, options:
           guides_removed: removed.guides,
           numbers_removed: removed.numbers,
           translations_loaded: report.translations.loaded,
+          translations_machine: report.translations.machine,
+          pilot_machine_translations: report.pilot ? 1 : 0,
           translations_not_yet: report.translations.unavailable.length - warnings,
         },
         warnings,

@@ -13,9 +13,9 @@ export const dynamicParams = true;
 export const dynamic = "force-dynamic";
 
 // The screen asks for the next page on the phone, so it gets just these parts of the language's catalog, as home does: the screen's own words (R08, R03.readAlert), and what an
-// alert card reads (the types x13, the origin and verification x02, the machine-translation notes x04, the kinds of entry and guide names R07 and hazards, the day words R29 and
+// alert card reads (the types x13, the origin and verification x02, the kinds of entry and guide names R07 and hazards, the day words R29 and
 // time, the statuses, the Hub's attribution R04.fromHub) and the 911 notice (x01).
-const NAMESPACES = ["R03", "R07", "R08", "R29", "status", "time", "hazards", "x01", "x02", "x04", "x13"] as const;
+const NAMESPACES = ["R03", "R07", "R08", "R29", "status", "time", "hazards", "x01", "x02", "x13"] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/archive">): Promise<Metadata> {
   const { lang } = await params;

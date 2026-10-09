@@ -23,7 +23,6 @@ const NAMESPACES = [
   "hazards",
   "x01",
   "x02",
-  "x04",
   "x12",
   "x13",
   "tailored",

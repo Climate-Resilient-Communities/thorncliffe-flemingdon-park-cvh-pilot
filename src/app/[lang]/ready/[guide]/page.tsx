@@ -10,7 +10,6 @@ import { isEnglishFallback } from "@/ui/text/resident-text";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
 import { guideIconClass } from "../icons";
-import { UnavailableNote } from "../unavailable-note";
 import { loadResidentContent } from "../source";
 import { GuideHashFocus } from "./guide-hash-focus";
 import { GUIDE_PARTS, headingId } from "./sections";
@@ -95,8 +94,6 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
     );
   }
 
-  const showUnavailableNote = view.anyUnavailable && lang !== "en";
-
   return (
     <Screen surface="resident" testId="guide-page">
       <UsageView evt="guide_view" lang={lang} />
@@ -118,14 +115,6 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
             {view.title.text}
           </ContentText>
           <GuideHashFocus openedDuring={t("R25.openedDuring")} />
-          {showUnavailableNote &&
-            (view.allUnavailable ? (
-              <div className="ready-note" role="note" data-testid="guide-unavailable">
-                <ResidentText as="p">{t("R25.unavailable", { lang: language.native })}</ResidentText>
-              </div>
-            ) : (
-              <UnavailableNote t={t} native={language.native} testId="guide-unavailable" />
-            ))}
         </Stack>
 
         <Stack gap="related">

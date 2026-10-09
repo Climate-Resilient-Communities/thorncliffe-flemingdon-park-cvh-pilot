@@ -6,7 +6,7 @@ window.CVH_STRINGS.bn = {
    days7: { mon: 'সোমবার', tue: 'মঙ্গলবার', wed: 'বুধবার', thu: 'বৃহস্পতিবার', fri: 'শুক্রবার', sat: 'শনিবার', sun: 'রবিবার' } },
  shell: { cvhName: 'কমিউনিটি ভার্চুয়াল হাব', prototype: 'প্রোটোটাইপ', prototypeNote: 'এটি আসল সেবা নয়। সব তথ্য AI দিয়ে তৈরি।',
    language: 'ভাষা', changeLanguage: 'ভাষা বদলান', languageTitle: 'আপনার ভাষা বেছে নিন', languageCurrent: 'এখন দেখানো হচ্ছে', languageReturn: 'আপনি যেখানে ছিলেন, স্ক্রিন সেখানেই থাকবে।',
-   choices: 'আমি CVH-কে যা জানিয়েছি', choicesShort: 'আমার পছন্দ', nav: { now: 'এখন', help: 'সাহায্য খুঁজুন', map: 'মানচিত্র', ready: 'প্রস্তুত থাকুন' }, navLabel: 'প্রধান',
+   choices: 'আমি CVH-কে যা জানিয়েছি', choicesShort: 'আমার পছন্দ', nav: { now: 'সতর্কতা', help: 'সাহায্য খুঁজুন', map: 'মানচিত্র', ready: 'প্রস্তুত থাকুন' }, navLabel: 'প্রধান',
    close: 'বন্ধ করুন', back: 'পিছনে', next: 'চালিয়ে যান', skip: 'বাদ দিন', done: 'হয়ে গেছে', cancel: 'বাতিল', more: 'আরও',
    notInPrototype: 'এই প্রোটোটাইপে নেই', notInPrototypeBody: 'এই অংশ প্রোটোটাইপে তৈরি হয়নি। কিছুই বদলায়নি।', ok: 'ঠিক আছে',
    about: 'CVH সম্পর্কে', aboutBody: 'Thorncliffe Park Community Hub থর্নক্লিফ পার্ক ও ফ্লেমিংডন পার্কের জন্য কমিউনিটি ভার্চুয়াল হাব চালায়।', builtBy: 'Sprout Climate-এর সাথে তৈরি',

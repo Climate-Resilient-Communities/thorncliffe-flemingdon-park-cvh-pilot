@@ -14,7 +14,7 @@ const SPAWN_TIMEOUT = 60_000;
 const temp: string[] = [];
 
 function run(args: string[], env: Record<string, string> = {}) {
-  const result = spawnSync("node", [SCRIPT, ...args], { cwd: ROOT, encoding: "utf8", env: { ...process.env, SEED_DATABASE_URL: "", MIGRATE_DATABASE_URL: "", ...env } });
+  const result = spawnSync("node", [SCRIPT, ...args], { cwd: ROOT, encoding: "utf8", env: { ...process.env, SEED_DATABASE_URL: "", MIGRATE_DATABASE_URL: "", CATALOGUE_PILOT_MACHINE_TRANSLATIONS: "", ...env } });
   return { code: result.status, out: result.stdout, err: result.stderr };
 }
 
@@ -43,7 +43,22 @@ describe("npm run seed:providers -- --dry-run", { timeout: SPAWN_TIMEOUT }, () =
     // The food banks (M007, M008) are not emergency services: only police, fire and shelters are.
     expect(out).toContain("Support & Emergency Services: 8");
     expect(out).toContain("Translations loaded (reviewed and current): 0");
-    expect(out).toContain("machine translation, no review recorded");
+    // The product owner's pilot decision (2026-10-09): on by default, every machine translation whose facts match loads.
+    expect(out).toContain("Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS on");
+    expect(out).toMatch(/Machine translations loaded, not reviewed: [1-9]/);
+    expect(out).not.toContain("machine translation, no review recorded");
+    expect(out).not.toContain("safety-critical description");
+  });
+
+  it("goes back to the earlier rules with CATALOGUE_PILOT_MACHINE_TRANSLATIONS=off, and refuses any other value", () => {
+    const off = run(["--dry-run"], { CATALOGUE_PILOT_MACHINE_TRANSLATIONS: "off" });
+    expect(off.code).toBe(0);
+    expect(off.out).toContain("Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS off");
+    expect(off.out).toContain("machine translation, no review recorded");
+
+    const bad = run(["--dry-run"], { CATALOGUE_PILOT_MACHINE_TRANSLATIONS: "yes" });
+    expect(bad.code).toBe(1);
+    expect(bad.err).toContain("CATALOGUE_PILOT_MACHINE_TRANSLATIONS: must be `on` or `off`");
   });
 
   it("loads nothing and lists every failing entry of a catalogue that fails its schema, exit 1", () => {

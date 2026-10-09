@@ -62,20 +62,22 @@ describe("the shared message of an alert that is not verified", () => {
 });
 
 describe("the shared message in the page's language", () => {
-  it("is the alert's translated words, the language's own marks and words, with the machine-translation label", () => {
+  it("is the alert's translated words, the language's own marks and words, with no machine-translation label (decision 2026-10-09)", () => {
     const m = message(thread({ entries: [entry()] }), "ur");
 
     expect(m.lines[0]).toBe(`لفٹ: ${URDU}`);
-    expect(m.lines[1]).toBe("مشین سے ترجمہ");
+    expect(m.lines[1]).toBe("ہب کی طرف سے کمیونٹی الرٹ");
+    expect(m.text).not.toContain("مشین سے ترجمہ");
     expect(m.text).toContain("تازہ ترین اپ ڈیٹس");
     expect(m.text).not.toMatch(/Posted|Verified|Community alert/);
   });
 
-  it("says English stands in for a translation that failed, and carries the English", () => {
+  it("carries the English standing in for a translation that failed, with no 'not available' line (decision 2026-10-09)", () => {
     const m = message(thread({ entries: [fallbackEntry()] }), "ur");
 
     expect(m.lines[0]).toBe(`لفٹ: ${ENGLISH}`);
-    expect(m.lines[1]).toBe("ابھی اس زبان میں دستیاب نہیں");
+    expect(m.lines[1]).toBe("ہب کی طرف سے کمیونٹی الرٹ");
+    expect(m.text).not.toContain("ابھی اس زبان میں دستیاب نہیں");
   });
 });
 

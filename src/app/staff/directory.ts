@@ -20,7 +20,8 @@ export function directoryDb(): Db {
  * with the app), OpenCC, and ops_event as the place a failed publish is recorded (directory may not import ops,
  * so the app wires the two). Where a Cohere key is configured (production only), the release also carries its search
  * data (S03.02): the embedding model, the threshold, the emergency categories and the monthly usage allowance come
- * from the environment (src/platform/config/env.ts). Without a key a release has none and search says "unavailable".
+ * from the environment (src/platform/config/env.ts). Without a key a release has none and search says "unavailable". Which machine translations
+ * ship follows CATALOGUE_PILOT_MACHINE_TRANSLATIONS (default on), as the seed does.
  */
 export function directoryPublishDeps(): PublishDeps {
   const env = getEnv();
@@ -35,6 +36,7 @@ export function directoryPublishDeps(): PublishDeps {
           },
         }
       : {}),
+    pilotMachineTranslations: env.pilotMachineTranslations,
     storage: directoryStorage(),
     catalogue: () => catalogueVersion(path.join(process.cwd(), "data", "catalogue"), process.env.APP_VERSION),
     neighbourhoods: async () => readProviderNeighbourhoods(path.join(process.cwd(), "data", "catalogue")),

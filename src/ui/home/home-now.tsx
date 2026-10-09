@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import type { BuildingList } from "@/contracts/buildingList";
 import type { DeviceChoices } from "@/contracts/deviceChoices";
 import type { FeedThread } from "@/contracts/feed";
-import { languageOf, type LaunchCode } from "@/i18n/languages";
+import type { LaunchCode } from "@/i18n/languages";
 import { useBuildingList, useChoices } from "../choices/use-choices";
 import { useGateBuildingList } from "../choices/building-list-context";
 import { Screen } from "../layout/screen";
@@ -15,7 +15,7 @@ import { AlertCard, alertView, type Translate as AlertTranslate } from "../alert
 import { clockOffsetMs, mayHaveEnded } from "../alert/may-have-ended";
 import { Not911 } from "../emergency";
 import { Isolated } from "../text/isolated";
-import { ResidentText, isEnglishFallback } from "../text/resident-text";
+import { ResidentText } from "../text/resident-text";
 import { agoText } from "./feed-poll";
 import { homeRows, type BuildingRow, type NeighbourhoodRow } from "./home-view";
 import { StatusMark, ThreadLinks, Unverified } from "./place-status";
@@ -77,8 +77,8 @@ function NeighbourhoodRowView({ row, name, lang }: { row: NeighbourhoodRow; name
  * words in the page language, who sent it and whether the Hub checked it (X-02) and when it was posted, the whole card the link to the alert
  * (R-07). Until a thread exists the feed has none, and the screen says so. A thread is never hidden behind "No current alerts".
  *
- * An alert text that is English standing in for a missing translation (`fallback_en`) is set left to right in English on its own element, and
- * the page says so once, in the words of x04 (content has no visible "[EN]"; only interface strings do). Every "ago" is measured against the
+ * An alert text that is English standing in for a missing translation (`fallback_en`) is set left to right in English on its own element,
+ * silently: no note (product-owner decision 2026-10-09, pilot). Every "ago" is measured against the
  * feed's own `server_now`, never this phone's clock.
  */
 function CurrentAlerts({
@@ -98,7 +98,6 @@ function CurrentAlerts({
   offline: { now: number; receivedAt: number } | null;
 }) {
   const t = useTranslations("R03");
-  const x04 = useTranslations("x04");
   const tailoredCatalog = useTranslations("tailored");
   const all = useTranslations() as unknown as AlertTranslate;
   if (threads.length === 0) {
@@ -129,20 +128,8 @@ function CurrentAlerts({
     advice: matched ? adviceFor(thread.types, chosenGroups, adviceLines) : null,
   }));
   const offsetMs = offline ? clockOffsetMs(serverNow, offline.receivedAt) : 0;
-  const views = cards.map((card) => card.view);
-  const anyEnglish = views.some((view) => view.current.text.fallback) || cards.some((card) => card.advice !== null && isEnglishFallback(card.advice));
   return (
     <Stack gap="related">
-      {anyEnglish && (
-        <div className="home-note" role="note" data-testid="home-content-fallback">
-          <Stack gap="subline">
-            <ResidentText as="p" className="home-place__name">
-              {x04("unavailable")}
-            </ResidentText>
-            <ResidentText as="p">{x04("unavailableBody", { lang: languageOf(lang).native })}</ResidentText>
-          </Stack>
-        </div>
-      )}
       <ul className="alert-card-list" data-testid="home-threads">
         {cards.map(({ view, highlighted, advice }) => (
           <AlertCard

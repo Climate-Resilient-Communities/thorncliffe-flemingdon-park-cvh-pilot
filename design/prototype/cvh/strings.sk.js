@@ -6,7 +6,7 @@ window.CVH_STRINGS.sk = {
    days7: { mon: 'pondelok', tue: 'utorok', wed: 'streda', thu: 'štvrtok', fri: 'piatok', sat: 'sobota', sun: 'nedeľa' } },
  shell: { cvhName: 'Komunitné virtuálne centrum', prototype: 'Prototyp', prototypeNote: 'Nie je to skutočná služba. Všetok obsah vytvorila umelá inteligencia.',
    language: 'Jazyk', changeLanguage: 'Zmeniť jazyk', languageTitle: 'Vyberte si jazyk', languageCurrent: 'Práve zobrazené', languageReturn: 'Obrazovka zostane tam, kde ste boli.',
-   choices: 'Čo som povedal CVH', choicesShort: 'Moje voľby', nav: { now: 'Teraz', help: 'Nájsť pomoc', map: 'Mapa', ready: 'Buďte pripravení' }, navLabel: 'Hlavné',
+   choices: 'Čo som povedal CVH', choicesShort: 'Moje voľby', nav: { now: 'Upozornenia', help: 'Nájsť pomoc', map: 'Mapa', ready: 'Buďte pripravení' }, navLabel: 'Hlavné',
    close: 'Zavrieť', back: 'Späť', next: 'Pokračovať', skip: 'Preskočiť', done: 'Hotovo', cancel: 'Zrušiť', more: 'Viac',
    notInPrototype: 'V tomto prototype nie je', notInPrototypeBody: 'Táto časť nie je v prototype vytvorená. Nič sa nezmenilo.', ok: 'OK',
    about: 'O CVH', aboutBody: 'Komunitné virtuálne centrum prevádzkuje Thorncliffe Park Community Hub pre Thorncliffe Park a Flemingdon Park.', builtBy: 'Vytvorené so Sprout Climate',

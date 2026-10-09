@@ -7,14 +7,18 @@
 // pooler (port 6543). The target host and database are printed before writing; a host other than
 // localhost needs --yes, otherwise nothing is written and the exit code is 1.
 //
-// Exit code 0: everything in the files was loaded (translations that are stale or not reviewed
-// are listed in the report, and show in English with translation.unavailable).
+// CATALOGUE_PILOT_MACHINE_TRANSLATIONS (`on` by default, the product owner's pilot decision of 2026-10-09; `off`
+// goes back to reviewed-only) also loads current machine translations whose facts match the English and that keep 911.
+//
+// Exit code 0: everything in the files was loaded (translations that are stale, not reviewed while the setting is
+// off, or whose facts changed are listed in the report, and show in English).
 // --launch-check reads only the files, never the database: exit 0 only when every launch language has a
 // reviewed, current translation of every 911 text; otherwise it lists each language x 911 key missing one.
 // Exit code 1: a guide or the numbers list was refused (the rest was loaded), or the whole run
 // was refused (a 911 rule), or the run failed.
 import path from "node:path";
 import { createDb } from "@/platform/db";
+import { pilotMachineTranslations } from "@/platform/config/pilotTranslations";
 import { announceSeedTarget } from "./target";
 import {
   checkGuidesLaunch,
@@ -31,6 +35,13 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   const dir = dirIndex >= 0 ? path.resolve(argv[dirIndex + 1] ?? "") : path.join(root, "data", "catalogue");
   const dryRun = argv.includes("--dry-run");
   const input = readContentCatalogue(dir);
+  let pilot: boolean;
+  try {
+    pilot = pilotMachineTranslations(env);
+  } catch (error) {
+    console.error((error as Error).message);
+    return 1;
+  }
 
   if (argv.includes("--launch-check")) {
     const gaps = checkGuidesLaunch(input);
@@ -39,7 +50,7 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   }
 
   if (dryRun) {
-    const plan = planGuidesAndNumbers(input);
+    const plan = planGuidesAndNumbers(input, { pilotMachineTranslations: pilot });
     for (const line of formatSeedReport(plan.report)) console.log(line);
     for (const refusal of plan.refusals) console.error(`REFUSED RUN: ${refusal}`);
     return plan.refusals.length > 0 || plan.report.guides.some((g) => !g.loaded) || !plan.report.numbers.loaded ? 1 : 0;
@@ -49,7 +60,7 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   if (!url) return 1;
   const db = createDb(url);
   try {
-    const result = await seedGuidesAndNumbers(db, input);
+    const result = await seedGuidesAndNumbers(db, input, { pilotMachineTranslations: pilot });
     for (const line of formatSeedReport(result.report)) console.log(line);
     console.log(`Rows changed: ${result.changed.guides} guides, ${result.changed.numbers} numbers`);
     console.log(`Rows removed (no longer in the files): ${result.removed.guides} guides, ${result.removed.numbers} numbers`);

@@ -6,7 +6,7 @@ window.CVH_STRINGS.ur = {
    days7: { mon: 'پیر', tue: 'منگل', wed: 'بدھ', thu: 'جمعرات', fri: 'جمعہ', sat: 'ہفتہ', sun: 'اتوار' } },
  shell: { cvhName: 'کمیونٹی ورچوئل ہب', prototype: 'پروٹوٹائپ', prototypeNote: 'یہ اصل سروس نہیں ہے۔ تمام مواد AI سے بنایا گیا ہے۔',
    language: 'زبان', changeLanguage: 'زبان بدلیں', languageTitle: 'اپنی زبان منتخب کریں', languageCurrent: 'اب دکھایا جا رہا ہے', languageReturn: 'اسکرین وہیں رہے گی جہاں آپ تھے۔',
-   choices: 'میں نے CVH کو کیا بتایا ہے', choicesShort: 'میرے انتخاب', nav: { now: 'ابھی', help: 'مدد تلاش کریں', map: 'نقشہ', ready: 'تیار رہیں' }, navLabel: 'مرکزی',
+   choices: 'میں نے CVH کو کیا بتایا ہے', choicesShort: 'میرے انتخاب', nav: { now: 'الرٹ', help: 'مدد تلاش کریں', map: 'نقشہ', ready: 'تیار رہیں' }, navLabel: 'مرکزی',
    close: 'بند کریں', back: 'واپس', next: 'جاری رکھیں', skip: 'چھوڑ دیں', done: 'ہو گیا', cancel: 'منسوخ', more: 'مزید',
    notInPrototype: 'اس پروٹوٹائپ میں نہیں', notInPrototypeBody: 'یہ حصہ پروٹوٹائپ میں نہیں بنایا گیا۔ کچھ نہیں بدلا۔', ok: 'ٹھیک ہے',
    about: 'CVH کے بارے میں', aboutBody: 'کمیونٹی ورچوئل ہب کو Thorncliffe Park Community Hub، تھارن کلف پارک اور فلیمنگڈن پارک کے لیے چلاتا ہے۔', builtBy: 'Sprout Climate کے ساتھ بنایا گیا',

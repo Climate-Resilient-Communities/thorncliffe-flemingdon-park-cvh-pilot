@@ -115,7 +115,6 @@ describe("a withdrawn entry", () => {
     const v = view([ack, update, translated], "ur");
     expect(v.entries[0].mark?.label).toBe(translatorFor("ur")("R07.withdrawn"));
     expect(v.entries[0].text).toMatchObject({ body: "یہ الرٹ واپس لے لیا گیا۔", lang: "ur", dir: "rtl", machine: true });
-    expect(v.entries[0].english).toBe(REASON);
   });
 });
 

@@ -90,6 +90,18 @@ The only alarm that still works when Vercel, Supabase or Twilio is down: the Hub
 | `main` protected (a branch protection rule or a ruleset): the `Checks` status required, pull requests required, no force pushes or deletions (SIT 2026-10-08, F2; `Checks` is the one job to require, [config](../config.md#github-environments)) | | Product owner |
 | Secret scanning and push protection on (free for a public repository), and optionally Dependabot security updates | | Product owner |
 
+## 8. After the pilot (MVP): not launch blockers
+
+The product owner decided on 2026-10-09 that residents see every translation, unlabelled, for the pilot
+(`CATALOGUE_PILOT_MACHINE_TRANSLATIONS`, default on; [config](../config.md#translations-residents-see-catalogue_pilot_machine_translations)).
+These items are what that decision deferred. They are not ticked for launch.
+
+| Item | Done | By |
+| --- | --- | --- |
+| **Native-reader review of the translations, safety-critical first.** A reader of each launch language reviews, in this order: (1) the 911 texts (`number.911.*`, every guide's `when911`; `npm run seed:guides -- --launch-check` lists those without a reviewed translation), the emergency roles ("How they can help") and the descriptions of the safety-critical providers (an emergency role, "Support & Emergency Services", or a crisis or emergency line: the provider seed's report counts them); (2) the guides and the essential numbers, and the tailored alert advice lines (`tailored.*` in `design/prototype/cvh/strings.<lang>.screens.js`: the per-group advice under an alert, machine-assisted by Claude on 2026-10-09, safety-adjacent); (3) the terms; (4) the other provider descriptions, category and subcategory names. Each review is recorded in the translation files (`scripts/review_translations.py`: reviewer and date) and loads as `reviewed` | | Hub, with a reader for each language |
+| Decide, with the reviews done, whether to set `CATALOGUE_PILOT_MACHINE_TRANSLATIONS=off` (reviewed-only again, with the "Not yet available in this language" note for the rest) or to keep unreviewed machine text and bring back a visible label, and record the decision in the spine (AD-11) | | Product owner |
+| The translations the facts check keeps out (the provider seed's "Not loaded ... facts" line, by language) fixed in the translation files, so the seed reports none | | Translation owner |
+
 ## Sign-off
 
 | | Date | Name (role) |

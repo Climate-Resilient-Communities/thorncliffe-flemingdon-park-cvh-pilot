@@ -6,7 +6,7 @@ window.CVH_STRINGS.fr = {
    days7: { mon: 'lundi', tue: 'mardi', wed: 'mercredi', thu: 'jeudi', fri: 'vendredi', sat: 'samedi', sun: 'dimanche' } },
  shell: { cvhName: 'Carrefour virtuel communautaire', prototype: 'Prototype', prototypeNote: 'Ce n\'est pas un service réel. Tout le contenu est généré par IA.',
    language: 'Langue', changeLanguage: 'Changer de langue', languageTitle: 'Choisissez votre langue', languageCurrent: 'Affiché en ce moment', languageReturn: 'L\'écran reste là où vous étiez.',
-   choices: 'Ce que j\'ai dit au CVH', choicesShort: 'Mes choix', nav: { now: 'Maintenant', help: 'Trouver de l\'aide', map: 'Carte', ready: 'Être prêt' }, navLabel: 'Principal',
+   choices: 'Ce que j\'ai dit au CVH', choicesShort: 'Mes choix', nav: { now: 'Alertes', help: 'Trouver de l\'aide', map: 'Carte', ready: 'Se préparer' }, navLabel: 'Principal',
    close: 'Fermer', back: 'Retour', next: 'Continuer', skip: 'Passer', done: 'Terminé', cancel: 'Annuler', more: 'Plus',
    notInPrototype: 'Pas dans ce prototype', notInPrototypeBody: 'Cette partie n\'est pas construite dans le prototype. Rien n\'a changé.', ok: 'OK',
    about: 'À propos du CVH', aboutBody: 'Le Carrefour virtuel communautaire est géré par le Thorncliffe Park Community Hub pour Thorncliffe Park et Flemingdon Park.', builtBy: 'Conçu avec Sprout Climate',

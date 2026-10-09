@@ -359,7 +359,119 @@ describe("report", () => {
 
     expect(lines[0]).toBe("Guides loaded: 1 of 2 (flood)");
     expect(lines).toContain("  REFUSED guide power: no owner is named");
-    expect(lines.some((l) => l.startsWith("Not translated yet (English with translation.unavailable):") && l.includes("ur 8"))).toBe(true);
+    expect(lines.some((l) => l.startsWith("Not translated yet (shown in English):") && l.includes("ur 8"))).toBe(true);
+  });
+});
+
+describe("the pilot setting on (product owner, 2026-10-09: every translation shown, no warning)", () => {
+  const pilotSeed = (i: ContentInput) => plan(i, { hash: sourceHash, today: TODAY, pilotMachineTranslations: true });
+  const machine = (english: string, text: string, change: Partial<TranslationRecord> = {}): TranslationRecord => ({
+    source: english,
+    sourceHash: sourceHash(english),
+    text,
+    model: "command-a-translate-08-2025",
+    status: "machine",
+    ...change,
+  });
+  const HUB = "Talk to someone at the Hub";
+
+  it("loads a current machine translation of a guide line, a number and a 911 text, as `machine` with no reviewer", () => {
+    const result = pilotSeed(
+      input({
+        translations: {
+          es: {
+            texts: {
+              "guide.power.title": machine("Title of power", "Título de power"),
+              "guide.power.when911": machine(WHEN_911, "Llame al 911 si alguien está en peligro."),
+              "number.911.when": machine("Call 911 right now.", "Llame al 911 ahora mismo."),
+              "number.hub.label": machine(HUB, "Hable con alguien del Hub"),
+            },
+          },
+        },
+      }),
+    );
+
+    expect(result.refusals).toEqual([]);
+    const power = result.guides.find((g) => g.id === "power")!;
+    expect(power.texts.when911).toEqual({ en: WHEN_911, es: "Llame al 911 si alguien está en peligro." });
+    expect(power.translations.when911.es).toEqual({ model: "command-a-translate-08-2025", status: "machine", sourceHash: sourceHash(WHEN_911) });
+    expect(result.numbers.find((n) => n.id === "911")!.texts.when).toEqual({ en: "Call 911 right now.", es: "Llame al 911 ahora mismo." });
+    expect(result.numbers.find((n) => n.id === "hub")!.texts.label.es).toBe("Hable con alguien del Hub");
+    expect(result.report).toMatchObject({ pilot: true, translations: { loaded: 4, machine: 4, byLang: { es: 4 } } });
+    expect(formatSeedReport(result.report)).toContain("Translations loaded: 4 (machine translations, not reviewed: 4) (es 4)");
+  });
+
+  it("loads the safety-critical texts too (the 911 texts and a non-emergency line's label), with no person's review, while their facts hold", () => {
+    const NON_EMERGENCY = "City of Toronto services and non-emergency problems";
+    const WHEN = "Call 911 if someone's life or safety is in danger right now: fire, a medical emergency, or a crime happening now.";
+    const base = input();
+    base.numbers.numbers = [
+      { id: "911", number: "911", emergency: true, label: "Emergency", when: WHEN, lastChecked: "2026-10-03" },
+      { id: "311", number: "311", label: NON_EMERGENCY, lastChecked: "2026-10-03" },
+    ];
+    base.numbers.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: numbersHash(base.numbers) };
+    base.translations = {
+      es: {
+        texts: {
+          "number.311.label": machine(NON_EMERGENCY, "Servicios de la Ciudad de Toronto y problemas que no son emergencias"),
+          "number.911.label": machine("Emergency", "Emergencia"),
+          "number.911.when": machine(WHEN, "Llame al 911 si la vida o la seguridad de alguien está en peligro ahora: un incendio, una emergencia médica o un delito."),
+          "guide.power.when911": machine(WHEN_911, "Llame al 911 si alguien está en peligro."),
+        },
+      },
+    };
+
+    const result = pilotSeed(base);
+
+    expect(result.refusals).toEqual([]);
+    expect(result.numbers.find((n) => n.id === "311")!.texts.label.es).toBe("Servicios de la Ciudad de Toronto y problemas que no son emergencias");
+    expect(result.numbers.find((n) => n.id === "911")!.texts.when.es).toMatch(/^Llame al 911/);
+    expect(result.numbers.find((n) => n.id === "911")!.texts.label.es).toBe("Emergencia");
+    expect(result.guides.find((g) => g.id === "power")!.texts.when911.es).toMatch(/911/);
+    expect(result.report.translations.unavailable.filter((u) => u.lang === "es")).toEqual(
+      expect.not.arrayContaining([expect.objectContaining({ reason: "machine" })]),
+    );
+    // Without the setting none of them loads.
+    const off = planSeed(base);
+    expect(off.numbers.find((n) => n.id === "311")!.texts.label).toEqual({ en: NON_EMERGENCY });
+    expect(off.numbers.find((n) => n.id === "911")!.texts.when).toEqual({ en: WHEN });
+  });
+
+  it("still does not load a machine translation of a 911 text that lost 911", () => {
+    const result = pilotSeed(input({ translations: { es: { texts: { "guide.power.when911": machine(WHEN_911, "Llame a emergencias si alguien está en peligro.") } } } }));
+
+    expect(result.guides[0].texts.when911).toEqual({ en: WHEN_911 });
+    expect(result.report.translations.unavailable).toContainEqual({ key: "guide.power.when911", lang: "es", reason: "lost_911" });
+  });
+
+  it("still refuses the whole run when a 911 text is blank in a language", () => {
+    const result = pilotSeed(input({ translations: { es: { texts: { "number.911.label": machine("Emergency", "") } } } }));
+
+    expect(result.refusals).toEqual(["number.911.label is blank in es: a 911 text can never be empty in any language"]);
+  });
+
+  it("still does not load a machine translation whose facts changed (the Hub's phone number in a line)", () => {
+    const line = "Call the Hub at 416-421-8997.";
+    const result = pilotSeed(
+      input({ guides: [guide("power", { before: [line] }), guide("flood")], translations: { es: { texts: { "guide.power.before.0": machine(line, "Llame al Hub al 416-421-8999.") } } } }),
+    );
+
+    expect(result.guides.find((g) => g.id === "power")!.texts["before.0"]).toEqual({ en: line });
+    expect(result.report.translations.unavailable).toContainEqual({ key: "guide.power.before.0", lang: "es", reason: "facts_changed" });
+  });
+
+  it("still does not load a stale machine translation: the English changed since it was translated", () => {
+    const result = pilotSeed(input({ translations: { es: { texts: { "number.hub.label": machine("Talk to the Hub (old)", "Hable con el Hub", { sourceHash: sourceHash("Talk to the Hub (old)") }) } } } }));
+
+    expect(result.numbers.find((n) => n.id === "hub")!.texts.label).toEqual({ en: HUB });
+    expect(result.report.translations.unavailable).toContainEqual({ key: "number.hub.label", lang: "es", reason: "stale" });
+  });
+
+  it("without the setting, a machine translation is still refused (reviewed only)", () => {
+    const result = planSeed(input({ translations: { es: { texts: { "number.hub.label": machine(HUB, "Hable con alguien del Hub") } } } }));
+
+    expect(result.numbers.find((n) => n.id === "hub")!.texts.label).toEqual({ en: HUB });
+    expect(result.report.translations.unavailable).toContainEqual({ key: "number.hub.label", lang: "es", reason: "machine" });
   });
 });
 

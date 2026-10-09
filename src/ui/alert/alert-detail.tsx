@@ -15,8 +15,8 @@ import "./alert-icons.css";
  * Alert detail (R-07, S04.08). In the order the prototype fixes (brief 3.1.1): what kind of disruption (X-13), the words of the alert, where
  * they came from and whether the Hub checked them (X-02, with the link to what "verified" means, R-28), when it was posted and how long it
  * is valid, then the 911 block (X-01), what to do (the guide that matches, opened at "During"), and every entry of the thread, newest first.
- * A machine translation carries its label and "Read it in English" (X-04); English standing in for a translation that failed says so in the
- * resident's language. The 911 block is the one catalog component (AD-16), here once, in its full form.
+ * The words are shown in the resident's language with no machine-translation label and no "Read it in English"; English standing in for a
+ * translation that failed is shown silently, marked lang="en" (product-owner decision 2026-10-09, pilot). The 911 block is the one catalog component (AD-16), here once, in its full form.
  */
 export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCode; t: Translate }) {
   const x01 = (key: "text" | "call" | "short") => t(`x01.${key}`);
@@ -48,7 +48,7 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
               <ResidentText as="p">{view.ended}</ResidentText>
             </div>
           )}
-          <EntryText view={view} entry={view.current} />
+          <EntryText entry={view.current} />
           <OriginMark origin={view.origin} href={`/${lang}/alerts/${view.slug}/verified`} />
           <Stack gap="subline">
             <ResidentText as="p" className="alert-caption" testId="alert-times">
@@ -124,7 +124,7 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
                       <ResidentText>{entry.mark.label}</ResidentText>
                     </span>
                   )}
-                  <ThreadEntryText view={view} entry={entry} latest={index === 0} />
+                  <ThreadEntryText entry={entry} />
                 </li>
               ))}
             </ol>

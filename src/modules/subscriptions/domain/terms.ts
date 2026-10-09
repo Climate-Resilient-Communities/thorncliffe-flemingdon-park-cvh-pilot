@@ -17,7 +17,11 @@
 //    publishedVersions, and a version in that ledger with a different hash is refused (bump consentVersion);
 //  - "last updated" cannot predate the date of the consent version (the day the text was settled);
 //  - a translation is loaded only when reviewed and current (stale after any English change); any other text shows
-//    in English with translation.unavailable (never blank, never machine-only);
+//    in English with translation.unavailable (never blank);
+//  - the product owner's pilot decision of 2026-10-09 (TermsPlanOptions.pilotMachineTranslations, the setting
+//    CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): a current machine translation loads too, shown with no label, as long
+//    as its facts match the English (lostFacts: numbers, phone numbers, emails, web addresses, ...) and it keeps every
+//    required token (STOP, 16, the processors, 911); a stale one never loads. The counsel gate is on the English and unchanged;
 //  - a text that is not published is never shown to residents as final (TermsPlan.published false).
 //
 // VERSIONING: a new version applies to new sign-ups only (see versionToRecord). An existing subscriber keeps the
@@ -87,6 +91,8 @@ export interface TermsPlanOptions {
   hash: Hasher;
   /** Today as YYYY-MM-DD; no date in the file may be later. */
   today: string;
+  /** The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): load current machine translations too. */
+  pilotMachineTranslations?: boolean;
 }
 
 // ---------------------------------------------------------------- rules in code
@@ -210,10 +216,12 @@ function buildDocument(
   hash: Hasher,
   report: TermsPlan["report"],
   count: boolean,
+  pilot = false,
 ): TermsDocument {
+  const options = pilot ? { allowMachine: true, allowSafetyCritical: true } : {};
   const resolve = (key: string, english: string): TermsText => {
     if (lang === "en") return { text: english, lang: "en", unavailable: false };
-    const result = evaluateTranslation(lang, key, english, translations, hash, REQUIRED_TOKENS);
+    const result = evaluateTranslation(lang, key, english, translations, hash, REQUIRED_TOKENS, options);
     if ("loaded" in result) {
       if (count) report.loaded += 1;
       return { text: result.loaded.text, lang, unavailable: false };
@@ -334,7 +342,7 @@ export function planTerms(input: TermsInput, options: TermsPlanOptions): TermsPl
   const report: TermsPlan["report"] = { loaded: 0, unavailable: [] };
   const documents = {} as Record<LangCode, TermsDocument>;
   documents.en = buildDocument(terms, "en", translations, options.hash, report, false);
-  for (const lang of TRANSLATED_LANGS) documents[lang] = buildDocument(terms, lang, translations, options.hash, report, true);
+  for (const lang of TRANSLATED_LANGS) documents[lang] = buildDocument(terms, lang, translations, options.hash, report, true, options.pilotMachineTranslations === true);
   return {
     published: reasons.length === 0,
     reasons,
@@ -360,7 +368,7 @@ export function formatTermsReport(plan: TermsPlan): string[] {
   for (const u of plan.report.unavailable) per.set(u.lang, (per.get(u.lang) ?? 0) + 1);
   if (per.size > 0) {
     lines.push(
-      `Terms texts shown in English with translation.unavailable: ${plan.report.unavailable.length} (${[...per].map(([l, n]) => `${l} ${n}`).join(", ")})`,
+      `Terms texts shown in English: ${plan.report.unavailable.length} (${[...per].map(([l, n]) => `${l} ${n}`).join(", ")})`,
     );
   }
   return lines;

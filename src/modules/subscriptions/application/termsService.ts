@@ -18,6 +18,8 @@ export interface TermsServiceDeps {
   hash: Hasher;
   /** Today as YYYY-MM-DD. */
   today: () => string;
+  /** The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): show current machine translations too. */
+  pilotMachineTranslations?: () => boolean;
 }
 
 export interface PublishedTerms {
@@ -74,7 +76,8 @@ export function signupConsentVersion(view: Pick<TermsView, "status" | "consentVe
 }
 
 export function createTermsService(deps: TermsServiceDeps) {
-  const plan = (): TermsPlan => planTerms(deps.load(), { hash: deps.hash, today: deps.today() });
+  const plan = (): TermsPlan =>
+    planTerms(deps.load(), { hash: deps.hash, today: deps.today(), pilotMachineTranslations: deps.pilotMachineTranslations?.() === true });
 
   function termsPageView(lang: LangCode): TermsView {
     const p = plan();

@@ -24,6 +24,13 @@
 //    says `status: "machine"` and never names a reviewer; the release ships it labelled "Machine-translated;
 //    not reviewed by a person". `machineChecks` on a record is carried along but is not a review and
 //    decides nothing. The emergency role, category and subcategory names stay reviewed-only;
+//  - the product owner's pilot decision of 2026-10-09 (PlanOptions.pilotMachineTranslations, the setting
+//    CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on) goes further and replaces the two rules above while it is on: every
+//    translatable text of the catalogue (category and subcategory names, descriptions, emergency roles: the texts the
+//    translation files hold; names and addresses are proper names and stay as written) loads as a current machine
+//    translation, safety-critical providers included (decision 42 is lifted for the pilot), and is shown with no label.
+//    What stays: the facts check (`facts_changed`), 911 kept where the English has it (`lost_required`), and a stale
+//    translation never loads;
 //  - `lastConfirmed` in providers.json is ignored: the Hub's Admins own that date (and whether a
 //    provider is published) in the database, so a re-run never changes either.
 //
@@ -35,6 +42,7 @@ import {
   TRANSLATED_LANGS,
   evaluateTranslation,
   present,
+  type EvaluateOptions,
   type Hasher,
   type TranslationFile,
   type TranslationRecord,
@@ -152,6 +160,8 @@ export interface PlannedCategory {
 export interface PlannedSubcategory {
   name: string;
   labels: Record<string, string>;
+  /** language -> where the translation of the name came from (a machine translation says `status: "machine"`), as for the other texts. */
+  translations: Record<string, Record<string, unknown>>;
 }
 
 export interface PlannedProvider {
@@ -185,6 +195,8 @@ export interface LoadedCount {
 }
 
 export interface ProviderSeedReport {
+  /** True when the pilot setting (CATALOGUE_PILOT_MACHINE_TRANSLATIONS) let every current machine translation load. */
+  pilot: boolean;
   providers: number;
   categories: number;
   /** Providers each category holds, in label order. */
@@ -192,13 +204,13 @@ export interface ProviderSeedReport {
   translations: {
     /** Reviewed, current translations loaded. */
     loaded: number;
-    /** Unreviewed machine translations of descriptions loaded, shown labelled (AD-11 pilot change), by language. */
+    /** Unreviewed machine translations loaded, by language: descriptions only (AD-11 pilot change), or every text under the pilot setting. */
     machine: LoadedCount[];
     unavailable: UnavailableCount[];
   };
   /**
-   * Providers whose description keeps human review (decision 42), by criterion (a provider may meet several) and in all:
-   * their descriptions show in English until reviewed (`safety_critical`).
+   * Safety-critical providers (decision 42), by criterion (a provider may meet several) and in all. Without the pilot setting their
+   * descriptions show in English until reviewed (`safety_critical`); with it they load like any other text.
    */
   safetyCritical: Record<SafetyCriterion, number> & { providers: number };
 }
@@ -215,9 +227,16 @@ export interface PlanOptions {
   hash: Hasher;
   /** The id of an English text in the translation files: the first 12 hex digits of its SHA-1 (scripts/build_catalogue.py, text_id). */
   textId: (english: string) => string;
+  /**
+   * The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on, read by the seed script): every
+   * current machine translation whose facts match the English loads, safety-critical ones included. False (or absent): AD-11 and
+   * decision 42 as before.
+   */
+  pilotMachineTranslations?: boolean;
 }
 
 const emptyReport = (): ProviderSeedReport => ({
+  pilot: false,
   providers: 0,
   categories: 0,
   perCategory: [],
@@ -270,7 +289,8 @@ interface Tallies {
 
 /**
  * Loads the reviewed, current translations of one English text, and with `allowMachine` (a provider's description, AD-11
- * pilot change) its current machine translations whose facts match the English; counts the ones it cannot load.
+ * pilot change; every text under the pilot setting) its current machine translations whose facts match the English; counts
+ * the ones it cannot load.
  */
 function translate(
   english: string,
@@ -278,14 +298,13 @@ function translate(
   options: PlanOptions,
   report: ProviderSeedReport,
   tallies: Tallies,
-  allowMachine = false,
-  safetyCritical = false,
+  evaluation: EvaluateOptions,
 ): LoadedTexts {
   const out: LoadedTexts = { labels: { en: english }, provenance: {}, withheld: {} };
   const key = options.textId(english);
   const { unavailable } = tallies;
   for (const lang of PROVIDER_LANGS) {
-    const result = evaluateTranslation(lang, key, english, translations, options.hash, ["911"], { allowMachine, safetyCritical });
+    const result = evaluateTranslation(lang, key, english, translations, options.hash, ["911"], evaluation);
     if ("loaded" in result) {
       out.labels[lang] = result.loaded.text;
       out.provenance[lang] = result.loaded.provenance;
@@ -382,8 +401,19 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
     if (adapted) translations[lang] = adapted;
   }
   const tallies: Tallies = { unavailable: new Map(), machine: new Map() };
-  const translated = (english: string, allowMachine = false, safetyCritical = false) =>
-    translate(english, translations, options, report, tallies, allowMachine, safetyCritical);
+  const pilot = options.pilotMachineTranslations === true;
+  report.pilot = pilot;
+  // Under the pilot setting every text may be a machine translation, safety-critical or not; otherwise only an ordinary
+  // description may (AD-11 pilot change), and a safety-critical one may not (decision 42).
+  const translated = (english: string, kind: "description" | "other" = "other", safetyCritical = false) =>
+    translate(
+      english,
+      translations,
+      options,
+      report,
+      tallies,
+      pilot ? { allowMachine: true, allowSafetyCritical: true } : { allowMachine: kind === "description", safetyCritical },
+    );
 
   const categories: PlannedCategory[] = Object.entries(categoryLabels).map(([name, label], sortOrder) => {
     const loaded = translated(label.en);
@@ -393,7 +423,8 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
   const subcategory = (name: string): PlannedSubcategory => {
     let planned = subcategoryCache.get(name);
     if (!planned) {
-      planned = { name, labels: translated(subcategoryLabels[name].en).labels };
+      const loaded = translated(subcategoryLabels[name].en);
+      planned = { name, labels: loaded.labels, translations: loaded.provenance };
       subcategoryCache.set(name, planned);
     }
     return planned;
@@ -405,10 +436,11 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
     const withheld: PlannedProvider["withheld"] = {};
     // The ordinary description may be an unreviewed machine translation (AD-11 pilot change); the emergency role may not.
     // ... unless the provider is safety-critical (decision 42): an emergency role, the emergency category, a crisis line.
+    // Under the pilot setting (2026-10-09) every text may, safety-critical or not; the criteria are still counted.
     const criteria = safetyCriteria({ services: entry.services.en, emergencyRole: entry.emergencyRole?.en, categoryNames: entry.categories });
     for (const criterion of criteria) report.safetyCritical[criterion] += 1;
     if (criteria.length > 0) report.safetyCritical.providers += 1;
-    const services = translated(entry.services.en, true, criteria.length > 0);
+    const services = translated(entry.services.en, "description", criteria.length > 0);
     texts.services = services.labels;
     if (Object.keys(services.provenance).length > 0) provenance.services = services.provenance;
     if (Object.keys(services.withheld).length > 0) withheld.services = services.withheld;
@@ -450,13 +482,14 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
 export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   not_translated: "not translated yet",
   stale: "stale: the English changed since it was translated",
-  machine: "machine translation, no review recorded (only descriptions may load unreviewed)",
+  machine: "machine translation, no review recorded (only descriptions may load unreviewed while CATALOGUE_PILOT_MACHINE_TRANSLATIONS is off)",
   review_incomplete: "marked reviewed without a named reviewer and review date",
   incomplete_record: "translation record is missing its text, model or source",
   zh_changed_or_not_reviewed: "converted from a zh text that has changed or is not reviewed",
   lost_required: "does not contain 911, which the English has",
   facts_changed: "machine translation that lost, changed, reordered or added a number, phone number, time, weekday, postal code, email or web address of the English",
-  safety_critical: "machine translation of a safety-critical description (emergency role, emergency category or crisis line: needs a person's review)",
+  safety_critical:
+    "machine translation of a safety-critical description (emergency role, emergency category or crisis line: needs a person's review while CATALOGUE_PILOT_MACHINE_TRANSLATIONS is off)",
 };
 
 /** The report as lines for the terminal and the CI log. */
@@ -464,14 +497,21 @@ export function formatProviderReport(report: ProviderSeedReport): string[] {
   const safety = report.safetyCritical;
   const lines = [`Providers: ${report.providers} in ${report.categories} categories`];
   for (const category of report.perCategory) lines.push(`  ${category.name}: ${category.providers}`);
+  lines.push(
+    report.pilot
+      ? "Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS on: every current machine translation whose facts match the English loads, safety-critical ones included, shown with no label"
+      : "Pilot setting CATALOGUE_PILOT_MACHINE_TRANSLATIONS off: reviewed translations, and machine translations of ordinary descriptions only",
+  );
   lines.push(`Translations loaded (reviewed and current): ${report.translations.loaded}`);
   const machine = report.translations.machine;
   lines.push(
-    `Machine translations of descriptions loaded, not reviewed, shown labelled: ${machineLoaded(report)}` +
+    (report.pilot ? "Machine translations loaded, not reviewed: " : "Machine translations of descriptions loaded, not reviewed, shown labelled: ") +
+      `${machineLoaded(report)}` +
       (machine.length > 0 ? ` (${machine.map((item) => `${item.lang} ${item.count}`).join(", ")})` : ""),
   );
   lines.push(
-    `Safety-critical providers, descriptions kept in English until reviewed: ${safety.providers} ` +
+    (report.pilot ? "Safety-critical providers (loaded under the pilot setting): " : "Safety-critical providers, descriptions kept in English until reviewed: ") +
+      `${safety.providers} ` +
       `(an emergency role ${safety.emergency_role}, in ${SAFETY_CATEGORY_NAME} ${safety.emergency_category}, naming a crisis or emergency line ${safety.crisis_text}; a provider may meet several)`,
   );
   const byReason = new Map<UnavailableReason, { total: number; langs: Map<string, number> }>();
@@ -483,7 +523,7 @@ export function formatProviderReport(report: ProviderSeedReport): string[] {
   }
   for (const [reason, group] of byReason) {
     const langs = [...group.langs].map(([lang, count]) => `${lang} ${count}`).join(", ");
-    lines.push(`Not loaded, shown in English with translation.unavailable: ${group.total} ${UNAVAILABLE_TEXT[reason]} (${langs})`);
+    lines.push(`Not loaded, shown in English: ${group.total} ${UNAVAILABLE_TEXT[reason]} (${langs})`);
   }
   return lines;
 }

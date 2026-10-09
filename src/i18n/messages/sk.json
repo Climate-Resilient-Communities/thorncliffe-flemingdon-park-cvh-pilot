@@ -56,7 +56,7 @@
     "choices": "Čo som povedal CVH",
     "choicesShort": "Moje voľby",
     "nav": {
-      "now": "Teraz",
+      "now": "Upozornenia",
       "help": "Nájsť pomoc",
       "map": "Mapa",
       "ready": "Buďte pripravení"
@@ -171,13 +171,13 @@
     "recordDecision": "Zaznamenať ako rozhodnutie"
   },
   "x07": {
-    "label": "Väčšie písmo, menej vecí",
+    "label": "Jednoduchšie zobrazenie",
     "on": "Zapnuté",
     "off": "Vypnuté",
     "setByHelper": "Zapol to niekto, kto vám pomáha",
     "remembered": "Zapamätané v tomto zariadení",
-    "turnOn": "Zapnúť",
-    "turnOff": "Vypnúť"
+    "turnOn": "Zapnúť jednoduchšie zobrazenie",
+    "turnOff": "Vypnúť jednoduchšie zobrazenie"
   },
   "x08": {
     "idle": "Vypočuť · {t}",
@@ -250,97 +250,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "Ak používate zdravotnícku pomôcku, ktorá potrebuje elektrinu, choďte hneď na miesto, kde ju môžete nabiť.",
+        "Po schodoch choďte, len ak sa na to cítite. Ambasádor vášho poschodia vám môže veci priniesť."
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "Miesta na nabíjanie nežiadajú doklad ani imigračný status.",
+        "Toronto Hydro ani mesto od vás počas výpadku nikdy nebudú po telefóne pýtať peniaze ani papiere."
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "Ak sa chladnička zohrieva, dajte umelé mlieko pre bábätká a mlieko do chladiaceho boxu s ľadom.",
+        "V blízkosti detí používajte baterky, nie sviečky."
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "Hneď presuňte lieky a dokumenty na vysokú policu.",
+        "Ak musíte odísť, požiadajte o pomoc suseda alebo ambasádora vášho poschodia."
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "Únik vody môžete nahlásiť prenajímateľovi bez toho, aby to ovplyvnilo váš imigračný status.",
+        "Bezplatná právna pomoc vám vo vašom jazyku môže vysvetliť opravy a nájomné po záplave."
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "Deti držte mimo mokrých miest a ďalej od zásuviek.",
+        "Vyhoďte hračky a jedlo, ktoré sa dotkli vody zo záplavy."
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "Ambasádor vášho poschodia môže zariadiť, aby vám potraviny alebo lieky vyniesli hore.",
+        "Kým výťah nefunguje, dá sa zariadiť odvoz na lekárske vyšetrenia."
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "Pomoc s potravinami a dopravou nežiada doklad ani pobytový status.",
+        "Máte právo opýtať sa prenajímateľa, kedy bude výťah opravený."
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "Susedia môžu pomôcť vyniesť kočíky a potraviny po schodoch.",
+        "Ak má dieťa lekárske vyšetrenie, opýtajte sa na pomoc s dopravou."
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "Pri niektorých liekoch telo horšie znáša horúčavu. Poraďte sa so svojím lekárnikom.",
+        "Choďte na miesto na ochladenie skoro popoludní, pred najhorúcejšou časťou dňa."
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "Miesta na ochladenie sú zadarmo a nežiadajú doklad ani imigračný status.",
+        "Pomoc s účtami za elektrinu je zadarmo. Opýtajte sa v Hube."
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "Bábätká a malé deti sa prehrievajú rýchlejšie ako dospelí. Často im dávajte vodu.",
+        "Nikdy nenechávajte dieťa v zaparkovanom aute, ani na minútu."
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "Ak máte astmu alebo problémy so srdcom, majte lieky pri sebe.",
+        "Miesta s filtrovaným vzduchom sú otvorené. Požiadajte suseda, aby išiel s vami."
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "Miesta s filtrovaným vzduchom sú zadarmo a nežiadajú doklad ani imigračný status.",
+        "V Hube sú rúška zadarmo, kým zásoby vystačia."
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "Deti nechajte vnútri a obmedzte behanie a hry.",
+        "Krabicový ventilátor s filtrom v detskej izbe pomáha deťom spať."
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "Ak nemôžete ísť po schodoch, zostaňte v byte so zatvorenými dverami a volajte 911.",
+        "Ambasádor vášho poschodia vie, ktorí obyvatelia môžu potrebovať pomoc pri odchode."
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "Prijímacie miesta a pomoc po požiari nežiadajú imigračný status.",
+        "Pracovníci, ktorí pomáhajú s usadením sa, vám môžu pomôcť nahradiť stratené dokumenty."
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "Precvičte si s deťmi, ako sa dostať na schodisko a kde sa stretnete vonku.",
+        "Pri dverách majte tašku s liekmi a dokumentmi detí."
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "Nabite si telefón a majte deky poruke pre prípad výpadku elektriny."
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "Miesta na zohriatie sú zadarmo a nežiadajú doklad ani pobytový status."
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "Ak prestane fungovať kúrenie, obliekajte deti doma do viacerých vrstiev."
       ]
     }
   },

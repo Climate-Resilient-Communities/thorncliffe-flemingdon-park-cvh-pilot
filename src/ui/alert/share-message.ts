@@ -38,8 +38,6 @@ export function shareMessage(view: AlertView, input: { lang: LaunchCode; serverN
   const types = view.types.map((type) => type.word).join(", ");
   const words = view.current.text.body.replace(/\s+/g, " ").trim();
   const lines: string[] = [`${types}: ${view.current.kind === "correction" ? `${t("R07.kinds.correction")}: ` : ""}${words}`];
-  if (view.current.text.fallback) lines.push(view.unavailableTitle);
-  else if (view.current.text.machine) lines.push(view.machineLabel);
   if (view.closed !== null && view.stamps.closed !== null) {
     const when = clock(view.stamps.closed);
     lines.push(view.closed.reason === "resolved" ? t("R07.endedResolved", { t: when }) : view.closed.reason === "expired" ? t("R07.endedExpired", { t: when }) : view.closed.line);

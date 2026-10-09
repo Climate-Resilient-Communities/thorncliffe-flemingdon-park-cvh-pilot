@@ -6,7 +6,7 @@ window.CVH_STRINGS.ps = {
    days7: { mon: 'دوشنبه', tue: 'سه‌شنبه', wed: 'چهارشنبه', thu: 'پنجشنبه', fri: 'جمعه', sat: 'شنبه', sun: 'یکشنبه' } },
  shell: { cvhName: 'ټولنیز مجازي مرکز', prototype: 'آزمایښتي نمونه', prototypeNote: 'دا ریښتینی خدمت نه دی. ټوله منځپانګه د مصنوعي ځیرکتیا ده.',
    language: 'ژبه', changeLanguage: 'ژبه بدله کړئ', languageTitle: 'خپله ژبه وټاکئ', languageCurrent: 'اوس ښودل کېږي', languageReturn: 'پاڼه به همغلته پاتې شي چې تاسو وئ.',
-   choices: 'ما CVH ته څه ویلي', choicesShort: 'زما انتخابونه', nav: { now: 'اوس', help: 'مرسته ومومئ', map: 'نقشه', ready: 'چمتو اوسئ' }, navLabel: 'اصلي',
+   choices: 'ما CVH ته څه ویلي', choicesShort: 'زما انتخابونه', nav: { now: 'خبرتیاوې', help: 'مرسته ومومئ', map: 'نقشه', ready: 'چمتو اوسئ' }, navLabel: 'اصلي',
    close: 'بندول', back: 'شاته', next: 'دوام', skip: 'پرېښودل', done: 'وشو', cancel: 'لغوه', more: 'نور',
    notInPrototype: 'په دې نمونه کې نشته', notInPrototypeBody: 'دا برخه په نمونه کې نه ده جوړه شوې. هیڅ بدلون نه دی راغلی.', ok: 'سمه ده',
    about: 'د CVH په اړه', aboutBody: 'ټولنیز مجازي مرکز Thorncliffe Park Community Hub د تورنکلیف پارک او فلیمینګډن پارک لپاره چلوي.', builtBy: 'د Sprout Climate سره جوړ شوی',

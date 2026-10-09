@@ -83,4 +83,19 @@ describe("safetyCriticalTerms (product owner, 2026-10-03: crisis and emergency l
     const reviewed = { ...record, status: "reviewed" as const, reviewer: "Ayesha", reviewedOn: "2026-11-02" };
     expect(evaluateTranslation("ur", "k", english, { ur: { texts: { k: reviewed } } }, hash, ["911"], { allowMachine: true })).toMatchObject({ loaded: { provenance: { status: "reviewed" } } });
   });
+
+  it("loads it under the pilot decision of 2026-10-09 (allowSafetyCritical), keeping the facts check and the 911 rule", () => {
+    const english = "Kids Help Phone 1-800-668-6868, 24 hours. In danger, call 911.";
+    const text = "Kids Help Phone 1-800-668-6868، 24 گھنٹے۔ خطرے میں 911 پر کال کریں۔";
+    const files = (t: string, change: Record<string, unknown> = {}) => ({ ur: { texts: { k: { text: t, model: "m", sourceHash: hash(english), ...change } } } });
+    const pilot = { allowMachine: true, allowSafetyCritical: true };
+
+    expect(evaluateTranslation("ur", "k", english, files(text), hash, ["911"], pilot)).toMatchObject({ loaded: { text, provenance: { status: "machine" } } });
+    expect(evaluateTranslation("ur", "k", english, files(text), hash, ["911"], { ...pilot, safetyCritical: true })).toMatchObject({ loaded: { text } });
+    expect(evaluateTranslation("ur", "k", english, files(text.replace("6868", "6886")), hash, ["911"], pilot)).toEqual({ unavailable: "facts_changed" });
+    expect(evaluateTranslation("ur", "k", english, files(text.replace("911", "")), hash, ["911"], pilot)).toEqual({ unavailable: "lost_required" });
+    expect(evaluateTranslation("ur", "k", english, files(text, { sourceHash: hash("older") }), hash, ["911"], pilot)).toEqual({ unavailable: "stale" });
+    // allowSafetyCritical alone (without allowMachine) loads nothing unreviewed.
+    expect(evaluateTranslation("ur", "k", english, files(text), hash, ["911"], { allowSafetyCritical: true })).toEqual({ unavailable: "machine" });
+  });
 });

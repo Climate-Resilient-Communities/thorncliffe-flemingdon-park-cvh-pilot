@@ -482,46 +482,33 @@ test("a call button is one unit: its number never breaks, and it stays inside a 
 });
 
 test.describe("in Urdu", () => {
-  test("machine-translated text carries the label, and Read it in English shows the English original in place", async ({ page }) => {
+  test("machine-translated text is shown in Urdu with no label and no Read it in English (decision 2026-10-09)", async ({ page }) => {
     await setUp(page);
     await openResident(page, "/ur/directory", 390);
     await waitForList(page);
 
     const food = page.getByTestId("provider-P101");
-    await expect(food.getByTestId("machine-label")).toContainText("مشین سے ترجمہ");
     await expect(food.getByTestId("provider-services")).toContainText("ہر منگل اور جمعہ کو مفت راشن");
     await expect(food.getByTestId("provider-services").locator("p")).not.toHaveAttribute("lang");
-    const toggle = food.getByTestId("show-english");
-    await expect(toggle).toHaveAttribute("aria-pressed", "false");
-
-    await toggle.click();
-
-    await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    await expect(food.getByTestId("provider-services")).toContainText("Free groceries every Tuesday and Friday, and hot meals on Saturday.");
-    await expect(food.getByTestId("provider-services").locator("p")).toHaveAttribute("lang", "en");
-    await expect(food.getByTestId("provider-services").locator("p")).toHaveAttribute("dir", "ltr");
-    await expect(food.getByTestId("emergency-role")).toHaveText("Hands out ready-to-eat food and water during a long power cut.");
-    await expect(food.getByTestId("original-shown")).toBeVisible();
-    // Only this listing changed.
-    await expect(page.getByTestId("provider-P102").getByTestId("provider-services")).toContainText("فیملی ڈاکٹر");
-
-    await toggle.click();
-    await expect(food.getByTestId("provider-services")).toContainText("ہر منگل اور جمعہ کو مفت راشن");
+    await expect(page.getByTestId("machine-label")).toHaveCount(0);
+    await expect(page.getByTestId("show-english")).toHaveCount(0);
+    await expect(page.getByTestId("original-shown")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText("مشین سے ترجمہ");
   });
 
-  test("English standing in for a missing translation shows one note for the page, and the text is marked as English", async ({ page }) => {
+  test("English standing in for a missing translation is shown silently, marked as English, with no note (decision 2026-10-09)", async ({ page }) => {
     await setUp(page);
     await openResident(page, "/ur/directory", 390);
     await waitForList(page);
 
-    await expect(page.getByTestId("directory-unavailable-note")).toHaveCount(1);
-    await expect(page.getByTestId("directory-unavailable-note")).toContainText("ابھی اس زبان میں دستیاب نہیں");
+    await expect(page.getByTestId("directory-unavailable-note")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText("ابھی اس زبان میں دستیاب نہیں");
     const services = page.getByTestId("provider-P105").getByTestId("provider-services").locator("p");
     await expect(services).toHaveText("Help for newcomers: forms, job search and language classes.");
     await expect(services).toHaveAttribute("lang", "en");
     await expect(services).toHaveAttribute("dir", "ltr");
     await expect(services).toHaveAttribute("data-translation", "unavailable");
-    // The content never carries the interface's [EN] marker: the note says it once.
+    // The content never carries the interface's [EN] marker.
     await expect(services).not.toContainText("[EN]");
   });
 
@@ -552,27 +539,14 @@ test.describe("in Urdu", () => {
     }
   });
 
-  test("the machine-translation label is a solid upright tag, told apart from the dashed italic Not known; Read it in English names its listing; the original is a status", async ({ page }) => {
+  test("Not known is the dashed italic mark, and a provider's name has its own id", async ({ page }) => {
     await setUp(page);
     await openResident(page, "/ur/directory", 390);
     await waitForList(page);
 
-    const food = page.getByTestId("provider-P101");
-    const label = await food.locator(".dir-mt__label").evaluate((element) => ({ border: getComputedStyle(element).borderTopStyle, font: getComputedStyle(element).fontStyle, ring: element.querySelector(".dir-unknown__mark") }));
     const unknown = await page.getByTestId("provider-P103").getByTestId("provider-contact").locator(".dir-unknown").evaluate((element) => ({ font: getComputedStyle(element).fontStyle, ring: getComputedStyle(element.querySelector(".dir-unknown__mark")!).borderTopStyle }));
-    expect(label).toEqual({ border: "solid", font: "normal", ring: null });
     expect(unknown).toEqual({ font: "italic", ring: "dashed" });
-
-    const toggle = food.getByTestId("show-english");
-    await expect(toggle).toHaveAttribute("aria-describedby", "provider-name-P101");
-    await expect(food.locator("#provider-name-P101")).toHaveText("Thorncliffe Park Food Bank");
-    await expect(toggle).toHaveAccessibleDescription("Thorncliffe Park Food Bank");
-    const shown = food.getByTestId("original-shown");
-    await expect(shown).toHaveAttribute("role", "status");
-    await expect(shown).toHaveText("");
-    await toggle.click();
-    await expect(shown).toHaveAttribute("role", "status");
-    await expect(shown).toHaveText(/English/);
+    await expect(page.getByTestId("provider-P101").locator("#provider-name-P101")).toHaveText("Thorncliffe Park Food Bank");
   });
 
   test("a provider's name and address are aligned to the start edge and isolated in a right-to-left page, the same for both", async ({ page }) => {

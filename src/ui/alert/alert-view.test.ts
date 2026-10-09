@@ -24,43 +24,29 @@ describe("the types of an alert (X-13)", () => {
 });
 
 describe("an alert's text", () => {
-  it("is a translation set in its own language and direction, labelled as machine text, with the English it came from", () => {
+  it("is a translation set in its own language and direction, with no label and no English to show (decision 2026-10-09)", () => {
     const { current } = view({ entries: [entry()] }, "ur");
 
     expect(current.text).toEqual({ body: URDU, lang: "ur", dir: "rtl", fallback: false, machine: true });
-    expect(current.english).toBe(ENGLISH);
+    expect(current).not.toHaveProperty("english");
   });
 
   it("is English left to right for an English reader, with no label and no English to show", () => {
     const { current } = view({ entries: [englishEntry()] });
 
     expect(current.text).toEqual({ body: ENGLISH, lang: "en", dir: "ltr", fallback: false, machine: false });
-    expect(current.english).toBeNull();
   });
 
   it("is English left to right when it stands in for a translation that failed, flagged as the fallback, with no label and nothing more to show", () => {
     const { current } = view({ entries: [fallbackEntry()] }, "ur");
 
     expect(current.text).toEqual({ body: ENGLISH, lang: "en", dir: "ltr", fallback: true, machine: false });
-    expect(current.english).toBeNull();
   });
 
-  it("says in the resident's own language, with its own name, that the text is not available in it", () => {
-    const ur = translatorFor("ur");
+  it("carries no 'not available', machine-translation or 'Read it in English' wording (decision 2026-10-09)", () => {
     const v = view({ entries: [fallbackEntry()] }, "ur");
 
-    expect(v.unavailableTitle).toBe(ur("x04.unavailable"));
-    expect(v.unavailableBody).toBe(ur("x04.unavailableBody", { lang: "اردو" }));
-    expect(en("x04.unavailable")).toBe("Not yet available in this language");
-  });
-
-  it("names English by its own name in 'Read it in English' and in the label of the original", () => {
-    const v = view({}, "ur");
-
-    expect(v.showEnglish).toBe(translatorFor("ur")("x04.showSource", { lang: "English" }));
-    expect(v.originalLabel).toBe(translatorFor("ur")("x04.original", { lang: "English" }));
-    expect(v.machineLabel).toBe(translatorFor("ur")("x04.label"));
-    expect(v.machineFrom).toBe(translatorFor("ur")("x04.from", { lang: "English" }));
+    for (const field of ["unavailableTitle", "unavailableBody", "showEnglish", "originalLabel", "machineLabel", "machineFrom"]) expect(v).not.toHaveProperty(field);
   });
 
   it("is the newest entry's: what is true now", () => {

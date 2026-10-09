@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import type { ListingProvider, ListingText } from "@/contracts/directory";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
@@ -11,7 +10,7 @@ import { Isolated } from "../text/isolated";
 import { Verified } from "../verified/verified";
 import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
-import { HowTheyHelp, ListingBlock, MachineLabel, isMachineText, isUnreviewedMachineText } from "./listing-text";
+import { HowTheyHelp, ListingBlock } from "./listing-text";
 import { neighbourhoodName } from "./neighbourhood-names";
 import "./directory.css";
 
@@ -44,12 +43,6 @@ export function subcategoryChips(topics: readonly ListingText[], subcategories: 
     seen.add(key);
     return true;
   });
-}
-
-/** Every text on the card that a model translated, for the label. */
-function machineTexts(provider: ListingProvider, categories: CategoryNames): ListingText[] {
-  const names = provider.category_ids.map((id) => categories.get(id)).filter((text): text is ListingText => text !== undefined);
-  return [provider.services, ...(provider.emergency_role ? [provider.emergency_role] : []), ...provider.subcategories, ...names].filter(isMachineText);
 }
 
 function Unknown({ children }: { children: string }) {
@@ -123,9 +116,8 @@ function Contacts({ provider }: { provider: ListingProvider }) {
  * One provider, as the list shows it (`variant="card"`) and as its own page shows it (`variant="page"`, R-12 and R-13: the
  * pilot's providers are the organisations, so a listing and its organisation are one page). The facts are the same: topics,
  * contacts, day-to-day services, emergency role ("How they can help") and, beside the verified badge, the day the Hub last checked them. A detail the
- * file does not give reads "Not known". The machine-translation label and "Read it in English" sit on the card once, and
- * switch every machine-translated text of the card between the page language and its English original; the label says
- * "not reviewed by a person" when one of them (a description, AD-11 pilot change) has had no person's review.
+ * file does not give reads "Not known". Every text is shown in the language the release carries it in, with no
+ * machine-translation label and no "Read it in English" (product-owner decision 2026-10-09, pilot).
  */
 export function ProviderView({
   provider,
@@ -142,15 +134,11 @@ export function ProviderView({
   contentLang?: LaunchCode;
 }) {
   const t = useTranslations();
-  const [english, setEnglish] = useState(false);
   const locale = languageOf(lang).bcp47;
   const addresses = addressLines(provider);
   const nbhds = provider.neighbourhood_ids;
   const nameId = `provider-name-${provider.id}`;
   const names = provider.category_ids.map((id) => categories.get(id)).filter((text): text is ListingText => text !== undefined);
-  const machineList = machineTexts(provider, categories);
-  const machine = machineList.length > 0;
-  const unreviewed = machineList.some(isUnreviewedMachineText);
   // An English fallback writes its date in English too, so the line is one language.
   const checkedIsEnglish = isEnglishFallbackMessage(t, "directory.checkedByHub");
   const checked = t("directory.checkedByHub", { date: formatDayText(provider.last_confirmed, checkedIsEnglish ? "en-CA" : locale) });
@@ -182,13 +170,13 @@ export function ProviderView({
         <ul className="dir-tags" aria-label={t("directory.topic")}>
           {names.map((name, at) => (
             <li key={`${provider.category_ids[at]}`} className="dir-tag">
-              <ListingBlock text={name} english={english} as="span" contentLang={contentLang} />
+              <ListingBlock text={name} as="span" contentLang={contentLang} />
             </li>
           ))}
           {variant === "page" &&
             subcategoryChips(names, provider.subcategories).map((sub) => (
               <li key={sub.body} className="dir-tag dir-tag--quiet">
-                <ListingBlock text={sub} english={english} as="span" contentLang={contentLang} />
+                <ListingBlock text={sub} as="span" contentLang={contentLang} />
               </li>
             ))}
           {variant === "page" &&
@@ -203,7 +191,6 @@ export function ProviderView({
             </li>
           )}
         </ul>
-        {machine && <MachineLabel english={english} onToggle={() => setEnglish((on) => !on)} describedBy={nameId} unreviewed={unreviewed} />}
       </header>
 
       {variant === "card" && phoneEntries(provider.contact.phone).filter((entry) => entry.tel).slice(0, 1).map((entry) => (
@@ -219,7 +206,7 @@ export function ProviderView({
         <div className="dir-fact">
           <ResidentText as="dt">{t("R12.services")}</ResidentText>
           <dd data-testid="provider-services">
-            <ListingBlock text={provider.services} english={english} contentLang={contentLang} />
+            <ListingBlock text={provider.services} contentLang={contentLang} />
           </dd>
         </div>
         <div className="dir-fact">
@@ -230,7 +217,7 @@ export function ProviderView({
         </div>
         <div className="dir-fact">
           <ResidentText as="dt">{t("directory.emergencyRole")}</ResidentText>
-          <dd data-testid="provider-emergency">{provider.emergency_role ? <HowTheyHelp role={provider.emergency_role} english={english} contentLang={contentLang} /> : <Unknown>{t("status.unknown")}</Unknown>}</dd>
+          <dd data-testid="provider-emergency">{provider.emergency_role ? <HowTheyHelp role={provider.emergency_role} contentLang={contentLang} /> : <Unknown>{t("status.unknown")}</Unknown>}</dd>
         </div>
       </dl>
       </details>

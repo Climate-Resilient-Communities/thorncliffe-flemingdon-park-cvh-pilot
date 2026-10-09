@@ -347,7 +347,38 @@ describe("translations", () => {
     expect(result.documents.en.title).toEqual({ text: "Terms and privacy", lang: "en", unavailable: false });
     expect(result.report.loaded).toBe(0);
     expect(result.report.unavailable).toHaveLength(Object.keys(english).length * TRANSLATED_LANGS.length);
-    expect(formatTermsReport(result).join("\n")).toContain("shown in English with translation.unavailable");
+    expect(formatTermsReport(result).join("\n")).toContain("Terms texts shown in English:");
+  });
+
+  describe("the pilot setting on (product owner, 2026-10-09: every translation shown, no warning)", () => {
+    const pilot = (translations: TermsInput["translations"], source = terms) => planTerms(input(source, translations), { ...options, pilotMachineTranslations: true });
+    const machine = { status: "machine", reviewer: null, reviewedOn: null };
+
+    it("loads a current machine translation that keeps every fact and required token", () => {
+      const result = pilot(translationsOf("es", terms, (key, en) => record(key, en, `ES ${en}`, machine)));
+
+      const all = [result.documents.es.title, ...result.documents.es.sections.flatMap((s) => [s.heading, ...s.lines])];
+      expect(all.every((t) => !t.unavailable && t.lang === "es")).toBe(true);
+      expect(result.report.unavailable.filter((u) => u.lang === "es")).toEqual([]);
+      expect(result.published).toBe(true);
+    });
+
+    it("still does not load one that lost STOP, or whose numbers changed, or that is stale", () => {
+      const lost = pilot(translationsOf("es", terms, (key, en) => record(key, en, `ES ${en.replace("STOP", "PARAR")}`, machine)));
+      expect(lost.documents.es.sections.find((s) => s.id === "stop")!.lines[0].unavailable).toBe(true);
+
+      const numbers = pilot(translationsOf("es", terms, (key, en) => record(key, en, `ES ${en.replace(/16/g, "18")}`, machine)));
+      expect(numbers.report.unavailable.some((u) => u.lang === "es" && (u.reason === "facts_changed" || u.reason === "lost_required"))).toBe(true);
+
+      const stale = pilot(translationsOf("es", terms, (key, en) => record(key, en, `ES ${en}`, { ...machine, sourceHash: sha("an older English") })));
+      expect(stale.documents.es.title).toMatchObject({ unavailable: true, lang: "en" });
+      expect(stale.report.unavailable.find((u) => u.lang === "es" && u.key === termsTitleKey)).toMatchObject({ reason: "stale" });
+    });
+
+    it("without the setting a machine translation stays English, as before", () => {
+      const result = plan(terms, translationsOf("es", terms, (key, en) => record(key, en, `ES ${en}`, machine)));
+      expect(result.documents.es.title.unavailable).toBe(true);
+    });
   });
 
   it("load a reviewed, current translation in its own language", () => {

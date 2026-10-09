@@ -61,8 +61,9 @@ function plan(
   categories = CATEGORIES,
   number = 7,
   neighbourhoods: ReleaseInput["neighbourhoods"] = Object.fromEntries(providers.map((p) => [p.id, ["TP"] as const])),
+  pilotMachineTranslations = false,
 ) {
-  const input: ReleaseInput = { number, catalogueHash: HASH, providers, categories, neighbourhoods, hash: sha256Hex, zhHant };
+  const input: ReleaseInput = { number, catalogueHash: HASH, providers, categories, neighbourhoods, hash: sha256Hex, zhHant, pilotMachineTranslations };
   const result = planRelease(input);
   const files = Object.fromEntries(result.files.map((file) => [file.lang, DirectoryListingV1.parse(JSON.parse(file.body))]));
   return { ...result, files, raw: result.files };
@@ -436,6 +437,85 @@ describe("planRelease: unreviewed machine translations of descriptions (AD-11 pi
     const p = seeded(PS, { translations: { services: { ps: provenance(SERVICES) } } });
 
     expect(plan([p]).files.ps.providers[0].services).toMatchObject({ status: "ok", review_status: "reviewed", reviewed_on: "2026-09-01" });
+  });
+});
+
+describe("planRelease: the pilot setting on (product owner, 2026-10-09: every translation shown, no warning)", () => {
+  const SERVICES = "Toronto Fire Services, 24/7 rescue. Non-emergency line: 416-338-9050.";
+  const ES = "Servicios de Bomberos de Toronto, rescate 24/7. Línea que no es de emergencia: 416-338-9050.";
+  const ROLE = "Warm room in cold alerts. Call 911 in danger.";
+  const ES_ROLE = "Sala cálida en alertas de frío. Llame al 911 si está en peligro.";
+  const machine = (english: string) => ({ model: "command-a-translate-08-2025", status: "machine", sourceHash: sha256Hex(english) });
+  const categories: SnapshotCategory[] = [
+    { id: "c-sos", sortOrder: 1, labels: { en: "Support & Emergency Services", es: "Servicios de apoyo y emergencia" }, translations: { es: machine("Support & Emergency Services") } },
+  ];
+  const seeded = (change: Partial<SnapshotProvider> = {}) =>
+    provider("M001", {
+      categoryIds: ["c-sos"],
+      subcategories: [{ name: "Fire Station", labels: { en: "Fire Station", es: "Estación de bomberos" }, translations: { es: machine("Fire Station") } }],
+      texts: { services: { en: SERVICES, es: ES }, emergency_role: { en: ROLE, es: ES_ROLE } },
+      translations: { services: { es: machine(SERVICES) }, emergency_role: { es: machine(ROLE) } },
+      ...change,
+    });
+  const pilot = (providers: SnapshotProvider[]) => plan(providers, categories, 7, undefined, true);
+
+  it("ships the machine translation of every text of a safety-critical provider: category, subcategory, description and emergency role", () => {
+    const { files, counts, report } = pilot([seeded()]);
+    const [p] = files.es.providers;
+
+    for (const text of [p.services, p.emergency_role!, p.subcategories[0], files.es.categories[0].name]) {
+      expect(text).toMatchObject({ lang: "es", status: "ok", machine: true, review_status: "none", reviewed_on: null });
+      expect(text).not.toHaveProperty("notice");
+    }
+    expect(p.services.body).toBe(ES);
+    expect(p.emergency_role!.body).toBe(ES_ROLE);
+    expect(counts.safetyCritical).toBe(0);
+    expect(counts.machine).toBeGreaterThanOrEqual(4);
+    expect(report.unavailable.filter((u) => u.lang === "es")).toEqual([]);
+  });
+
+  it("converts the machine zh of every text to zh-Hant, unreviewed too", () => {
+    const zh = "多伦多消防服务，24/7 救援。非紧急电话：416-338-9050。";
+    const p = seeded({ texts: { services: { en: SERVICES, zh } }, translations: { services: { zh: machine(SERVICES) } } });
+    const { files } = pilot([p]);
+
+    expect(files["zh-Hant"].providers[0].services).toMatchObject({ status: "script_converted", review_status: "none" });
+  });
+
+  it("still falls back to the English, silently for the resident (notice in the file only), when the facts changed", () => {
+    const { files, report } = pilot([seeded({ texts: { services: { en: SERVICES, es: ES.replace("416-338-9050", "416-338-9051") }, emergency_role: { en: ROLE, es: ES_ROLE } } })]);
+
+    expect(files.es.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES });
+    expect(report.unavailable).toContainEqual({ lang: "es", reason: "facts_changed", count: 1 });
+  });
+
+  it("still falls back when the emergency role lost 911, and when a text is stale", () => {
+    const p = seeded({
+      texts: { services: { en: SERVICES, es: ES }, emergency_role: { en: ROLE, es: "Sala cálida en alertas de frío. Llame a emergencias." } },
+      translations: { services: { es: machine("Older English, 416-338-9050.") }, emergency_role: { es: machine(ROLE) } },
+    });
+    const { files, report } = pilot([p]);
+
+    expect(files.es.providers[0].emergency_role).toMatchObject({ status: "fallback_en", body: ROLE });
+    expect(files.es.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES });
+    expect(report.unavailable).toContainEqual({ lang: "es", reason: "lost_required", count: 1 });
+    expect(report.stale).toContainEqual({ subject: "M001", name: "Provider M001", text: "services", lang: "es" });
+  });
+
+  it("with the setting off, the same snapshot ships none of them (decision 42 and AD-11 as before)", () => {
+    const { files } = plan([seeded()], categories);
+    const [p] = files.es.providers;
+
+    expect(p.services).toMatchObject({ status: "fallback_en" });
+    expect(p.emergency_role).toMatchObject({ status: "fallback_en" });
+    expect(p.subcategories[0]).toMatchObject({ status: "fallback_en" });
+    expect(files.es.categories[0].name).toMatchObject({ status: "fallback_en" });
+  });
+
+  it("ships a subcategory name seeded before the change (no provenance) as reviewed, as before", () => {
+    const { files } = pilot([seeded({ subcategories: [{ name: "Legal", labels: { en: "Legal", es: "Legal (es)" } }] })]);
+
+    expect(files.es.providers[0].subcategories[0]).toMatchObject({ status: "ok", review_status: "reviewed", body: "Legal (es)" });
   });
 });
 

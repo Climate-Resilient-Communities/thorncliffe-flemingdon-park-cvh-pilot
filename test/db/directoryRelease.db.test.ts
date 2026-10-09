@@ -311,6 +311,61 @@ describe("the directory release (S02.05)", () => {
       expect(listing(d, 2, "ur").providers[0].services).toMatchObject({ status: "ok", body: UR });
     });
 
+    it("under the pilot setting (2026-10-09) ships every machine translation of a safety-critical provider the real seed loaded, with no notice", async () => {
+      await wipe();
+      const services = "Fire rescue for the area. Non-emergency line: 416-338-9050.";
+      const role = "Warm room in cold alerts. Call 911 in danger.";
+      const ES = "Rescate de incendios para la zona. Línea que no es de emergencia: 416-338-9050.";
+      const ES_ROLE = "Sala cálida en alertas de frío. Llame al 911 si está en peligro.";
+      const machine = (english: string, text: string) => ({ source: english, text, model: "command-a-translate-08-2025" });
+      const catalogue: ProviderCatalogueInput = {
+        catalogue: {
+          labels: { categories: { "Support & Emergency Services": { id: catalogueTextId("Support & Emergency Services"), en: "Support & Emergency Services" } }, subcategories: {} },
+          providers: [
+            {
+              id: "M010",
+              name: "Toronto Fire Station 323",
+              categories: ["Support & Emergency Services"],
+              subcategories: [],
+              address: { street: "1 Overlea Blvd", city: "East York", postal: "M4H 1C6" },
+              location: { lat: 43.7, lng: -79.34 },
+              contact: { phone: [], email: [], social: [], web: [] },
+              services: { id: catalogueTextId(services), en: services },
+              emergencyRole: { id: catalogueTextId(role), en: role },
+              sourceNotes: [],
+              lastConfirmed: null,
+            },
+          ],
+        },
+        translations: {
+          es: {
+            texts: {
+              [catalogueTextId(services)]: machine(services, ES),
+              [catalogueTextId(role)]: machine(role, ES_ROLE),
+              [catalogueTextId("Support & Emergency Services")]: machine("Support & Emergency Services", "Servicios de apoyo y emergencia"),
+            },
+          },
+        },
+      };
+      await seedProviders(owner, catalogue, { hash: "b".repeat(64), gitCommit: "abc1234def" }, { pilotMachineTranslations: true });
+      await confirmProvider(app, staffId, "M010", "2026-09-30", { now: () => at(0) });
+      await publishProvider(app, staffId, "M010", { now: () => at(0) });
+
+      const on = deps({ pilotMachineTranslations: true });
+      expect(await publish(on)).toMatchObject({ ok: true, release: 1, counts: { safetyCritical: 0 } });
+      const es = listing(on, 1, "es");
+      expect(es.providers[0].services).toMatchObject({ status: "ok", body: ES, review_status: "none", machine: true });
+      expect(es.providers[0].services).not.toHaveProperty("notice");
+      expect(es.providers[0].emergency_role).toMatchObject({ status: "ok", body: ES_ROLE, review_status: "none" });
+      expect(es.categories[0].name).toMatchObject({ status: "ok", body: "Servicios de apoyo y emergencia" });
+
+      // With the setting off, the same rows publish as before (decision 42): English with translation.unavailable.
+      const off = deps();
+      expect(await publish(off)).toMatchObject({ ok: true, release: 2 });
+      expect(listing(off, 2, "es").providers[0].services).toMatchObject({ status: "fallback_en", body: services });
+      expect(listing(off, 2, "es").providers[0].emergency_role).toMatchObject({ status: "fallback_en", body: role });
+    });
+
     it("records the source version, the files' hashes and the counts, and audits directory.published with the release number and counts", async () => {
       const d = deps();
       await publish(d);

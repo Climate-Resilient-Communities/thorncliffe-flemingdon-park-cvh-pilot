@@ -12,7 +12,6 @@ import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
 import { loadBuildingContacts, loadResidentContent } from "../source";
 import { buildingContactCards } from "../view";
-import { UnavailableNote } from "../unavailable-note";
 import { ChosenContacts } from "./chosen-contacts";
 import "../ready.css";
 
@@ -79,7 +78,6 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
   const emergency = numbers.emergency;
   const cards = buildingContactCards(contacts, t, language.bcp47);
   const call911 = t("R31.call911");
-  const showUnavailableNote = numbers.anyUnavailable && lang !== "en";
 
   return (
     <Screen surface="resident" testId="numbers-page">
@@ -92,7 +90,6 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
           </Link>
           <ResidentText as="h1">{t("R31.title")}</ResidentText>
           <ResidentText as="p" className="hide-basic">{t("R31.lead")}</ResidentText>
-          {showUnavailableNote && <UnavailableNote t={t} native={language.native} testId="numbers-unavailable" />}
         </Stack>
 
         <section className="e911" aria-labelledby="numbers-911" data-testid="numbers-911">

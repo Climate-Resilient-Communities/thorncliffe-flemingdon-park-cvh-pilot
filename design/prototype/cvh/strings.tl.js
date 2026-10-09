@@ -6,7 +6,7 @@ window.CVH_STRINGS.tl = {
    days7: { mon: 'Lunes', tue: 'Martes', wed: 'Miyerkules', thu: 'Huwebes', fri: 'Biyernes', sat: 'Sabado', sun: 'Linggo' } },
  shell: { cvhName: 'Community Virtual Hub', prototype: 'Prototype', prototypeNote: 'Hindi ito totoong serbisyo. Gawa ng AI ang lahat ng nilalaman.',
    language: 'Wika', changeLanguage: 'Palitan ang wika', languageTitle: 'Piliin ang iyong wika', languageCurrent: 'Ipinapakita ngayon', languageReturn: 'Mananatili ang screen kung nasaan ka.',
-   choices: 'Ang sinabi ko sa CVH', choicesShort: 'Mga pinili ko', nav: { now: 'Ngayon', help: 'Humanap ng tulong', map: 'Mapa', ready: 'Maging handa' }, navLabel: 'Pangunahin',
+   choices: 'Ang sinabi ko sa CVH', choicesShort: 'Mga pinili ko', nav: { now: 'Mga alerto', help: 'Humanap ng tulong', map: 'Mapa', ready: 'Maging handa' }, navLabel: 'Pangunahin',
    close: 'Isara', back: 'Bumalik', next: 'Magpatuloy', skip: 'Laktawan', done: 'Tapos na', cancel: 'Kanselahin', more: 'Iba pa',
    notInPrototype: 'Wala sa prototype na ito', notInPrototypeBody: 'Hindi pa nagagawa ang bahaging ito sa prototype. Walang nagbago.', ok: 'Sige',
    about: 'Tungkol sa CVH', aboutBody: 'Pinapatakbo ng Thorncliffe Park Community Hub ang Community Virtual Hub para sa Thorncliffe Park at Flemingdon Park.', builtBy: 'Ginawa kasama ang Sprout Climate',

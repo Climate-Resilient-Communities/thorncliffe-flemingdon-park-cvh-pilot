@@ -194,7 +194,16 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
     const [{ next }] = await tx.select({ next: sql<number>`coalesce(max(${directoryRelease.number}), 0) + 1` }).from(directoryRelease);
     let plan;
     try {
-      plan = planRelease({ number: next, catalogueHash: version.hash, providers, categories, neighbourhoods: neighbourhoods.byProvider, hash: sha256Hex, zhHant });
+      plan = planRelease({
+        number: next,
+        catalogueHash: version.hash,
+        providers,
+        categories,
+        neighbourhoods: neighbourhoods.byProvider,
+        hash: sha256Hex,
+        zhHant,
+        pilotMachineTranslations: deps.pilotMachineTranslations === true,
+      });
     } catch (error) {
       if (error instanceof ReleaseDataError) throw new PublishStepError("invalid_catalogue", false, error.problems);
       throw error;

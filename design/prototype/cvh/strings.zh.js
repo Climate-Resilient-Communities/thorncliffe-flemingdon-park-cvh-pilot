@@ -6,7 +6,7 @@ window.CVH_STRINGS.zh = {
    days7: { mon: '星期一', tue: '星期二', wed: '星期三', thu: '星期四', fri: '星期五', sat: '星期六', sun: '星期日' } },
  shell: { cvhName: '社区虚拟中心', prototype: '原型', prototypeNote: '这不是正式服务。所有内容均由人工智能生成。',
    language: '语言', changeLanguage: '更改语言', languageTitle: '选择您的语言', languageCurrent: '当前显示', languageReturn: '屏幕会停留在您原来的位置。',
-   choices: '我告诉过 CVH 的信息', choicesShort: '我的选择', nav: { now: '现在', help: '寻求帮助', map: '地图', ready: '做好准备' }, navLabel: '主菜单',
+   choices: '我告诉过 CVH 的信息', choicesShort: '我的选择', nav: { now: '警报', help: '寻求帮助', map: '地图', ready: '做好准备' }, navLabel: '主菜单',
    close: '关闭', back: '返回', next: '继续', skip: '跳过', done: '完成', cancel: '取消', more: '更多',
    notInPrototype: '本原型中没有', notInPrototypeBody: '这一部分尚未在原型中制作。没有任何更改。', ok: '好的',
    about: '关于 CVH', aboutBody: '社区虚拟中心由 Thorncliffe Park Community Hub 为 Thorncliffe Park 和 Flemingdon Park 运营。', builtBy: '与 Sprout Climate 合作打造',

@@ -6,7 +6,7 @@ window.CVH_STRINGS.el = {
    days7: { mon: 'Δευτέρα', tue: 'Τρίτη', wed: 'Τετάρτη', thu: 'Πέμπτη', fri: 'Παρασκευή', sat: 'Σάββατο', sun: 'Κυριακή' } },
  shell: { cvhName: 'Κοινοτικός Εικονικός Κόμβος', prototype: 'Πρωτότυπο', prototypeNote: 'Δεν είναι πραγματική υπηρεσία. Όλο το περιεχόμενο είναι από τεχνητή νοημοσύνη.',
    language: 'Γλώσσα', changeLanguage: 'Αλλαγή γλώσσας', languageTitle: 'Επιλέξτε τη γλώσσα σας', languageCurrent: 'Εμφανίζεται τώρα', languageReturn: 'Η οθόνη μένει εκεί που ήσασταν.',
-   choices: 'Τι έχω πει στο CVH', choicesShort: 'Οι επιλογές μου', nav: { now: 'Τώρα', help: 'Βρείτε βοήθεια', map: 'Χάρτης', ready: 'Να είστε έτοιμοι' }, navLabel: 'Κύρια',
+   choices: 'Τι έχω πει στο CVH', choicesShort: 'Οι επιλογές μου', nav: { now: 'Ειδοποιήσεις', help: 'Βρείτε βοήθεια', map: 'Χάρτης', ready: 'Να είστε έτοιμοι' }, navLabel: 'Κύρια',
    close: 'Κλείσιμο', back: 'Πίσω', next: 'Συνέχεια', skip: 'Παράλειψη', done: 'Έτοιμο', cancel: 'Ακύρωση', more: 'Περισσότερα',
    notInPrototype: 'Δεν υπάρχει σε αυτό το πρωτότυπο', notInPrototypeBody: 'Αυτό το μέρος δεν έχει φτιαχτεί στο πρωτότυπο. Τίποτα δεν άλλαξε.', ok: 'Εντάξει',
    about: 'Σχετικά με το CVH', aboutBody: 'Τον Κοινοτικό Εικονικό Κόμβο τον λειτουργεί το Thorncliffe Park Community Hub για το Thorncliffe Park και το Flemingdon Park.', builtBy: 'Φτιάχτηκε με τη Sprout Climate',

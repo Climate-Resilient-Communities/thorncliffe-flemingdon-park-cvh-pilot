@@ -14,10 +14,11 @@
 // Reads data/catalogue/providers.json and translations/{lang}.json and upserts provider,
 // provider_location, category and provider_category keyed by provider id. Running it twice changes
 // nothing; a provider that left providers.json is unpublished and flagged "not in catalogue",
-// never deleted. A translation that is not reviewed and current is not loaded (the text shows in
-// English with translation.unavailable); the report counts them. A provider's description is the
-// exception (AD-11 pilot change): a current machine translation that keeps every fact of the English
-// loads unreviewed and is shown labelled; the report counts those apart, by language.
+// never deleted. CATALOGUE_PILOT_MACHINE_TRANSLATIONS (`on` by default, the product owner's pilot decision of
+// 2026-10-09; `off` goes back to the earlier rules) decides which translations load: with it on, every current
+// machine translation that keeps every fact (and every 911) of the English loads, safety-critical providers
+// included; with it off, only reviewed ones, and machine translations of ordinary descriptions (AD-11, decision 42).
+// A stale translation never loads. The report counts what loaded by language, and what did not and why.
 //
 // Exit code 0: the catalogue was loaded (or, with --dry-run, would load).
 // Exit code 1: the file failed its schema, so nothing was loaded and every failing entry is listed;
@@ -25,6 +26,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { createDb } from "@/platform/db";
+import { pilotMachineTranslations } from "@/platform/config/pilotTranslations";
 import { announceSeedTarget } from "./target";
 import {
   catalogueHash,
@@ -52,9 +54,16 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   const dirIndex = argv.indexOf("--dir");
   const dir = dirIndex >= 0 ? path.resolve(argv[dirIndex + 1] ?? "") : path.join(root, "data", "catalogue");
   const input = readProviderCatalogue(dir);
+  let pilot: boolean;
+  try {
+    pilot = pilotMachineTranslations(env);
+  } catch (error) {
+    console.error((error as Error).message);
+    return 1;
+  }
 
   if (argv.includes("--dry-run")) {
-    const plan = planProviders(input);
+    const plan = planProviders(input, { pilotMachineTranslations: pilot });
     if (plan.failures.length > 0) {
       for (const line of formatProviderFailures(plan.failures)) console.error(line);
       return 1;
@@ -67,7 +76,7 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   if (!url) return 1;
   const db = createDb(url);
   try {
-    const result = await seedProviders(db, input, { hash: await catalogueHash(dir), gitCommit: commitOf(env, root) });
+    const result = await seedProviders(db, input, { hash: await catalogueHash(dir), gitCommit: commitOf(env, root) }, { pilotMachineTranslations: pilot });
     for (const line of formatProviderReport(result.report)) console.log(line);
     const { changed, removed } = result;
     console.log(

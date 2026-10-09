@@ -24,6 +24,11 @@
 //    "none"` and `reviewed_on: null`: the listing contract is unchanged, and the client labels any translated
 //    text whose review_status is not `reviewed` "Machine-translated; not reviewed by a person", the English
 //    original one tap away. The emergency role, category and subcategory names still ship reviewed only;
+//  - the product owner's pilot decision of 2026-10-09 (ReleaseInput.pilotMachineTranslations, the setting
+//    CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on) replaces the rule above while it is on: every text the seed loaded as a
+//    current machine translation ships (category and subcategory names, descriptions and emergency roles), safety-critical
+//    providers included, as `review_status: "none"`, and the client shows it with no label. The facts check, 911 kept and the
+//    stale check stay; a subcategory name that kept its provenance is checked like any other text;
 //  - zh-Hant is never read from the catalogue: it is converted from the reviewed zh text with OpenCC
 //    (status `script_converted`), and only while that zh text is itself reviewed and current (for a
 //    description, also a current machine zh, and the conversion is then unreviewed too);
@@ -59,7 +64,8 @@ export interface ZhHantConverter {
 export interface SnapshotProvider {
   id: string;
   name: string;
-  subcategories: { name: string; labels: Record<string, string> }[];
+  /** `translations`: language -> provenance of the name; absent on rows seeded before 2026-10-09 (reviewed only then). */
+  subcategories: { name: string; labels: Record<string, string>; translations?: Record<string, Record<string, unknown>> }[];
   contact: { phone?: string[]; email?: string[]; social?: string[]; web?: string[] };
   /** text key (`services`, `emergency_role`) -> language -> text. */
   texts: Record<string, Record<string, string>>;
@@ -90,6 +96,11 @@ export interface ReleaseInput {
   neighbourhoods: Readonly<Record<string, readonly NeighbourhoodId[]>>;
   hash: Hasher;
   zhHant: ZhHantConverter;
+  /**
+   * The product owner's pilot decision of 2026-10-09 (CATALOGUE_PILOT_MACHINE_TRANSLATIONS, default on): ship every current machine
+   * translation the seed loaded whose facts match the English, safety-critical ones included. False (or absent): AD-11 and decision 42.
+   */
+  pilotMachineTranslations?: boolean;
 }
 
 // ---------------------------------------------------------------- the plan
@@ -196,6 +207,8 @@ interface TextSources {
   allowMachine?: boolean;
   /** True when the provider is safety-critical (safetyCritical.ts, decision 42): its description ships reviewed only. */
   safetyCritical?: boolean;
+  /** The pilot decision of 2026-10-09: a safety-critical machine translation ships too (allowMachine must be set). */
+  allowSafetyCritical?: boolean;
 }
 
 /**
@@ -221,7 +234,8 @@ function listingText(
 
   const key = "t";
   const provenanceOf = (code: string) => sources.provenance?.[code];
-  // Subcategory names keep no provenance: the seed loaded only reviewed, current ones, so a label present is shipped as reviewed.
+  // A subcategory name seeded before 2026-10-09 keeps no provenance: the seed then loaded only reviewed, current ones, so a label present is
+  // shipped as reviewed. Since then the seed keeps its provenance, and it is checked like any other text.
   const noProvenance = sources.provenance === null;
   const fileOf = (code: Exclude<LangCode, "en">, record: TranslationRecord | null): Partial<Record<LangCode, TranslationFile>> =>
     record ? { [code]: { texts: { [key]: record } } } : {};
@@ -247,7 +261,11 @@ function listingText(
     };
   };
   const lost = (result: ReturnType<typeof evaluateTranslation>): UnavailableReason => ("unavailable" in result ? result.unavailable : "incomplete_record");
-  const options = { allowMachine: sources.allowMachine === true, safetyCritical: sources.safetyCritical === true };
+  const options = {
+    allowMachine: sources.allowMachine === true,
+    safetyCritical: sources.safetyCritical === true,
+    allowSafetyCritical: sources.allowSafetyCritical === true,
+  };
   /** An unreviewed machine translation: published, but with no review claimed (review_status `none`). */
   const isMachine = (result: { loaded: { provenance: Record<string, unknown> } }) => result.loaded.provenance.status === "machine";
 
@@ -261,7 +279,7 @@ function listingText(
     const model = `opencc-js ${zhHant.openccVersion}`;
     const conversion = { from: "zh" as const, from_text_hash: hash(zhText), opencc_version: zhHant.openccVersion, config: zhHant.config };
     if (noProvenance) {
-      // A subcategory name keeps no provenance: the seed loaded only a reviewed, current zh, so its conversion ships as reviewed.
+      // A subcategory name with no provenance (seeded before 2026-10-09): the seed loaded only a reviewed, current zh, so its conversion ships as reviewed.
       tally.translations += 1;
       return { lang, body: zhHant.convert(zhText), machine: true, model, status: "script_converted", source_hash: sourceHash, original, review_status: "reviewed", reviewed_on: null, conversion };
     }
@@ -334,6 +352,8 @@ function listingText(
 
 // ---------------------------------------------------------------- one file
 function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems: string[]): string {
+  // Under the pilot setting every loaded machine translation may ship, safety-critical or not (2026-10-09).
+  const pilot = input.pilotMachineTranslations === true ? { allowMachine: true, allowSafetyCritical: true } : {};
   const categoriesUsed = new Set(input.providers.flatMap((p) => p.categoryIds));
   const categories = input.categories
     .filter((c) => categoriesUsed.has(c.id))
@@ -347,7 +367,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       return {
         id: c.id,
         sort_order: c.sortOrder,
-        name: listingText(lang, english, { labels: c.labels, provenance: c.translations }, `category:${c.id}`, english, "name", input, tally),
+        name: listingText(lang, english, { labels: c.labels, provenance: c.translations, ...pilot }, `category:${c.id}`, english, "name", input, tally),
       };
     })
     .filter((c): c is NonNullable<typeof c> => c !== null);
@@ -372,7 +392,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       listingText(
         lang,
         english,
-        { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null, allowMachine: key === "services", safetyCritical },
+        { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null, allowMachine: key === "services", safetyCritical, ...pilot },
         p.id,
         p.name,
         key,
@@ -384,7 +404,9 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       name: p.name,
       category_ids: p.categoryIds,
       neighbourhood_ids: [...neighbourhoods],
-      subcategories: p.subcategories.map((s) => listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: null }, `subcategory:${s.name}`, s.name, "name", input, tally)),
+      subcategories: p.subcategories.map((s) =>
+        listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: s.translations ?? null, ...pilot }, `subcategory:${s.name}`, s.name, "name", input, tally),
+      ),
       locations: p.locations.map((l) => ({ street: l.street, city: l.city, postal: l.postal, lat: l.lat, lng: l.lng })),
       contact: { phone: p.contact.phone ?? [], email: p.contact.email ?? [], social: p.contact.social ?? [], web: p.contact.web ?? [] },
       services: text("services", services),

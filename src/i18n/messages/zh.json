@@ -56,7 +56,7 @@
     "choices": "我告诉过 CVH 的信息",
     "choicesShort": "我的选择",
     "nav": {
-      "now": "现在",
+      "now": "警报",
       "help": "寻求帮助",
       "map": "地图",
       "ready": "做好准备"
@@ -171,13 +171,13 @@
     "recordDecision": "记录为决定"
   },
   "x07": {
-    "label": "字体更大，内容更少",
+    "label": "简化视图",
     "on": "开",
     "off": "关",
     "setByHelper": "由帮助您的人开启",
     "remembered": "已在此设备上记住",
-    "turnOn": "开启",
-    "turnOff": "关闭"
+    "turnOn": "开启简化视图",
+    "turnOff": "关闭简化视图"
   },
   "x08": {
     "idle": "收听 · {t}",
@@ -250,97 +250,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "如果您使用需要用电的医疗设备，请现在就去可以充电的地方。",
+        "只有在您觉得自己能走的时候才走楼梯。您的楼层联络员可以把东西送到您那里。"
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "充电空间不要求身份证件或移民身份。",
+        "停电期间，Toronto Hydro 和多伦多市政府绝不会通过电话向您索要钱财或证件。"
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "如果冰箱变暖，请把婴儿配方奶和牛奶放进加了冰的冷藏箱里。",
+        "在孩子身边请使用手电筒，不要用蜡烛。"
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "请现在就把药品和文件移到高处的架子上。",
+        "如果您需要离开，请向邻居或您的楼层联络员求助。"
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "您可以向房东报告漏水，这不会影响您的移民身份。",
+        "免费法律帮助可以用您的语言，为您解释水浸后的维修和租金问题。"
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "让孩子远离潮湿的地方和电源插座。",
+        "扔掉接触过洪水的玩具和食物。"
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "您的楼层联络员可以安排把食品杂货或药品送上楼。",
+        "电梯停用期间，可以安排车辆接送您去医疗预约。"
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "食品杂货和交通方面的帮助不要求身份证件或身份证明。",
+        "您有权询问房东电梯什么时候修好。"
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "邻居可以帮忙把婴儿车和食品杂货搬上楼梯。",
+        "如果孩子有医疗预约，请询问交通方面的帮助。"
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "有些药物会让身体更难承受高温。请向您的药剂师咨询。",
+        "请在下午早些时候、一天中最热的时段之前，去降温空间。"
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "降温空间免费，不要求身份证件或移民身份。",
+        "电费方面的帮助是免费的。请到中心询问。"
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "婴儿和幼儿比成年人热得更快。请经常给他们喝水。",
+        "绝对不要把孩子留在停着的车里，哪怕一分钟也不行。"
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "如果您有哮喘或心脏病，请把药放在身边。",
+        "有过滤空气的空间已经开放。请邀一位邻居陪您一起去。"
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "有过滤空气的空间免费，不要求身份证件或移民身份。",
+        "中心免费提供口罩，送完即止。"
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "让孩子待在室内，减少奔跑和玩耍。",
+        "在孩子房间里使用装了过滤网的箱式风扇，有助于他们入睡。"
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "如果您无法走楼梯，请关上门留在您的单元内，并拨打 911。",
+        "您的楼层联络员知道哪些居民可能需要帮助才能离开。"
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "火灾后的接待点和支持服务不会询问移民身份。",
+        "移民安置工作人员可以帮助补办遗失的证件。"
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "和孩子一起练习：怎样走到楼梯间，以及在外面哪里集合。",
+        "在门边放一个包，装好孩子的药品和文件。"
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "给手机充好电，把毯子放在身边，以防停电。"
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "取暖空间免费，不要求身份证件或身份证明。"
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "如果暖气停了，在室内也要给孩子多穿几层衣服。"
       ]
     }
   },

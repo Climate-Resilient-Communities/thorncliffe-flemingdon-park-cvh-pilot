@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { DirectoryListingV1, ListingText, NeighbourhoodId } from "@/contracts/directory";
+import type { NeighbourhoodId } from "@/contracts/directory";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { useBuildingList, useChoices } from "../choices/use-choices";
@@ -16,21 +16,12 @@ import { CallHub } from "./call-hub";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "./filter-store";
 import { activeKeys, filterKeyId, filterProviders, isActive, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "./filters";
 import { formatMoment } from "./format";
-import { Inline911, isFallbackText, ListingBlock, UnavailableNote } from "./listing-text";
+import { Inline911, ListingBlock } from "./listing-text";
 import { isNeighbourhoodId, NEIGHBOURHOODS, neighbourhoodName } from "./neighbourhood-names";
 import { NumbersLink } from "./numbers-link";
 import { ProviderView, type CategoryNames } from "./provider-view";
 import { useDirectory } from "./use-directory";
 import "./directory.css";
-
-/** True when any text the directory shows in this language is English standing in for a missing translation. */
-export function hasFallbackText(listing: DirectoryListingV1): boolean {
-  const texts: ListingText[] = [
-    ...listing.categories.map((c) => c.name),
-    ...listing.providers.flatMap((p) => [p.services, ...(p.emergency_role ? [p.emergency_role] : []), ...p.subcategories]),
-  ];
-  return texts.some(isFallbackText);
-}
 
 /** The neighbourhoods of the buildings this resident chose, once the building list has told which they are; null while that is not known. */
 function useChosenNeighbourhoods(): NeighbourhoodId[] | null {
@@ -161,7 +152,6 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
               {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallbackMessage(t, "directory.lastUpdated") ? "en-CA" : locale) })}
             </ResidentText>
           )}
-          {listing && lang !== "en" && hasFallbackText(listing) && <UnavailableNote lang={lang} />}
         </Stack>
 
         {directory.status === "loading" && (

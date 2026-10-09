@@ -56,10 +56,10 @@
     "choices": "Ce que j'ai dit au CVH",
     "choicesShort": "Mes choix",
     "nav": {
-      "now": "Maintenant",
+      "now": "Alertes",
       "help": "Trouver de l'aide",
       "map": "Carte",
-      "ready": "Être prêt"
+      "ready": "Se préparer"
     },
     "navLabel": "Principal",
     "close": "Fermer",
@@ -171,13 +171,13 @@
     "recordDecision": "Noter comme décision"
   },
   "x07": {
-    "label": "Texte plus grand, moins d'éléments",
+    "label": "Affichage simplifié",
     "on": "Activé",
     "off": "Désactivé",
     "setByHelper": "Activé par une personne qui vous aide",
     "remembered": "Mémorisé sur cet appareil",
-    "turnOn": "Activer",
-    "turnOff": "Désactiver"
+    "turnOn": "Activer l'affichage simplifié",
+    "turnOff": "Désactiver l'affichage simplifié"
   },
   "x08": {
     "idle": "Écouter · {t}",
@@ -250,97 +250,97 @@
   "tailored": {
     "power": {
       "seniors": [
-        "[EN] If you use a medical device that needs power, go to a place with charging now.",
-        "[EN] Take the stairs only if you feel able. Your floor ambassador can bring things to you."
+        "Si vous utilisez un appareil médical qui a besoin d'électricité, allez dès maintenant dans un lieu où vous pouvez le recharger.",
+        "Prenez l'escalier seulement si vous vous en sentez capable. L'ambassadeur de votre étage peut vous apporter des choses."
       ],
       "newcomers": [
-        "[EN] Charging spaces do not ask for ID or immigration status.",
-        "[EN] Toronto Hydro and the City will never ask you for money or papers by phone during an outage."
+        "Les lieux de recharge ne demandent pas de pièce d'identité ni de statut d'immigration.",
+        "Pendant une panne, Toronto Hydro et la Ville ne vous demanderont jamais d'argent ni de papiers par téléphone."
       ],
       "families": [
-        "[EN] Keep baby formula and milk in a cooler with ice if the fridge is warm.",
-        "[EN] Use flashlights, not candles, around children."
+        "Si le réfrigérateur se réchauffe, gardez la préparation pour nourrissons et le lait dans une glacière avec de la glace.",
+        "Près des enfants, utilisez des lampes de poche, pas des bougies."
       ]
     },
     "flood": {
       "seniors": [
-        "[EN] Move medicines and papers to a high shelf now.",
-        "[EN] Ask a neighbour or your floor ambassador for help if you need to leave."
+        "Mettez dès maintenant vos médicaments et vos papiers sur une étagère en hauteur.",
+        "Si vous devez partir, demandez de l'aide à un voisin ou à l'ambassadeur de votre étage."
       ],
       "newcomers": [
-        "[EN] You can report a leak to your landlord without it affecting your immigration status.",
-        "[EN] Free legal help can explain repairs and rent after a flood, in your language."
+        "Vous pouvez signaler une fuite à votre propriétaire sans que cela touche votre statut d'immigration.",
+        "Une aide juridique gratuite peut vous expliquer, dans votre langue, les réparations et le loyer après une inondation."
       ],
       "families": [
-        "[EN] Keep children out of wet areas and away from outlets.",
-        "[EN] Throw away toys and food that touched flood water."
+        "Gardez les enfants loin des endroits mouillés et des prises électriques.",
+        "Jetez les jouets et la nourriture qui ont touché l'eau de l'inondation."
       ]
     },
     "elevator": {
       "seniors": [
-        "[EN] Your floor ambassador can arrange for groceries or medicines to be brought up.",
-        "[EN] Rides to medical appointments can be arranged while the elevator is out."
+        "L'ambassadeur de votre étage peut s'organiser pour qu'on vous monte l'épicerie ou les médicaments.",
+        "Pendant que l'ascenseur est en panne, on peut organiser des transports vers vos rendez-vous médicaux."
       ],
       "newcomers": [
-        "[EN] Help with groceries and transport does not ask for ID or status.",
-        "[EN] You have the right to ask your landlord when the elevator will be fixed."
+        "L'aide pour l'épicerie et le transport ne demande pas de pièce d'identité ni de statut.",
+        "Vous avez le droit de demander à votre propriétaire quand l'ascenseur sera réparé."
       ],
       "families": [
-        "[EN] Neighbours can help carry strollers and groceries up the stairs.",
-        "[EN] If a child has a medical appointment, ask about transport help."
+        "Les voisins peuvent aider à monter les poussettes et l'épicerie par l'escalier.",
+        "Si un enfant a un rendez-vous médical, renseignez-vous sur l'aide au transport."
       ]
     },
     "heat": {
       "seniors": [
-        "[EN] Some medicines make heat harder on the body. Check with your pharmacist.",
-        "[EN] Go to a cooling space in the early afternoon, before the hottest part of the day."
+        "Certains médicaments rendent la chaleur plus difficile à supporter pour le corps. Demandez à votre pharmacien.",
+        "Allez dans un lieu de rafraîchissement en début d'après-midi, avant le moment le plus chaud de la journée."
       ],
       "newcomers": [
-        "[EN] Cooling spaces are free and do not ask for ID or immigration status.",
-        "[EN] Help with electricity bills is free. Ask at the Hub."
+        "Les lieux de rafraîchissement sont gratuits et ne demandent pas de pièce d'identité ni de statut d'immigration.",
+        "L'aide pour les factures d'électricité est gratuite. Renseignez-vous au Hub."
       ],
       "families": [
-        "[EN] Babies and small children get hot faster than adults. Give them water often.",
-        "[EN] Never leave a child in a parked car, even for a minute."
+        "Les bébés et les jeunes enfants ont chaud plus vite que les adultes. Donnez-leur souvent de l'eau.",
+        "Ne laissez jamais un enfant dans une voiture stationnée, même pas une minute."
       ]
     },
     "smoke": {
       "seniors": [
-        "[EN] If you have asthma or a heart condition, keep your medicines close.",
-        "[EN] Spaces with filtered air are open. Ask a neighbour to go with you."
+        "Si vous avez de l'asthme ou un problème cardiaque, gardez vos médicaments près de vous.",
+        "Des lieux à air filtré sont ouverts. Demandez à un voisin de vous accompagner."
       ],
       "newcomers": [
-        "[EN] Spaces with filtered air are free and do not ask for ID or immigration status.",
-        "[EN] Masks are free at the Hub while supplies last."
+        "Les lieux à air filtré sont gratuits et ne demandent pas de pièce d'identité ni de statut d'immigration.",
+        "Des masques sont offerts gratuitement au Hub, jusqu'à épuisement des stocks."
       ],
       "families": [
-        "[EN] Keep children indoors and limit running and play.",
-        "[EN] A box-fan filter in the children's room helps them sleep."
+        "Gardez les enfants à l'intérieur et limitez la course et les jeux.",
+        "Un ventilateur-boîte muni d'un filtre, dans la chambre des enfants, les aide à dormir."
       ]
     },
     "fire": {
       "seniors": [
-        "[EN] If you cannot use the stairs, stay in your unit with the door closed and call 911.",
-        "[EN] Your floor ambassador knows which residents may need help leaving."
+        "Si vous ne pouvez pas prendre l'escalier, restez dans votre logement, porte fermée, et appelez le 911.",
+        "L'ambassadeur de votre étage sait quels résidents pourraient avoir besoin d'aide pour sortir."
       ],
       "newcomers": [
-        "[EN] Reception points and support after a fire do not ask for immigration status.",
-        "[EN] Settlement workers can help replace lost documents."
+        "Les points d'accueil et l'aide après un incendie ne demandent pas de statut d'immigration.",
+        "Les intervenants en établissement peuvent vous aider à remplacer les documents perdus."
       ],
       "families": [
-        "[EN] Practise with your children: how to get to the stairwell, and where to meet outside.",
-        "[EN] Keep a bag with children's medicines and papers by the door."
+        "Exercez-vous avec vos enfants : comment aller jusqu'à la cage d'escalier, et où se retrouver dehors.",
+        "Gardez près de la porte un sac avec les médicaments et les papiers des enfants."
       ]
     },
     "winter": {
       "seniors": [
-        "[EN] Charge your phone and keep blankets close in case the power goes out."
+        "Rechargez votre téléphone et gardez des couvertures près de vous en cas de panne de courant."
       ],
       "newcomers": [
-        "[EN] Warming spaces are free and do not ask for ID or status."
+        "Les lieux pour se réchauffer sont gratuits et ne demandent pas de pièce d'identité ni de statut."
       ],
       "families": [
-        "[EN] Dress children in layers indoors if the heating goes off."
+        "Si le chauffage s'arrête, habillez les enfants en plusieurs couches à l'intérieur."
       ]
     }
   },
@@ -530,7 +530,7 @@
     "everyday": "Tous les jours",
     "findHelp": "Trouver de l'aide",
     "map": "Carte",
-    "beReady": "Être prêt",
+    "beReady": "Se préparer",
     "findHelpLine": "Services et soutien près de chez vous",
     "mapLine": "Lieux près de chez vous, et ce qui est ouvert maintenant",
     "beReadyLine": "Guides, numéros et prises de nouvelles",
@@ -1142,7 +1142,7 @@
     }
   },
   "R24": {
-    "title": "Être prêt",
+    "title": "Se préparer",
     "lead": "Quoi faire avant, pendant et après les six types de perturbations qui arrivent ici.",
     "numbers": "Numéros dont je pourrais avoir besoin",
     "headsUp": "Un avertissement avant chaque saison",

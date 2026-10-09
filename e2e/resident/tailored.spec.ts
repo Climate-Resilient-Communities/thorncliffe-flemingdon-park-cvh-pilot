@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import en from "../../src/i18n/messages/en.json";
+import ur from "../../src/i18n/messages/ur.json";
 import { seedChoices, stubBuildingList } from "./choices-fixture";
 import { stubFeed } from "./home-fixture";
 import { expectBaseline, openResident } from "./helpers";
@@ -83,15 +84,14 @@ test("a phone with a group and no building is tailored to nothing: the feed's or
   await expect(page.locator('[data-testid^="alert-advice-"]')).toHaveCount(0);
 });
 
-test("an advice line with no translation is shown in English, left to right, and the page says once that part of it is in English", async ({ page }) => {
+test("the advice line is in the resident's language, with no note or label (decision 2026-10-09)", async ({ page }) => {
   await openHome(page, SAVED, "/ur");
 
   const line = page.getByTestId(`alert-advice-${THREADS.MINE}-line`);
-  await expect(line).toHaveText(en.tailored.elevator.seniors[0]);
-  await expect(line).toHaveAttribute("lang", "en");
-  await expect(line).toHaveAttribute("dir", "ltr");
-  await expect(line).toHaveAttribute("data-translation", "unavailable");
-  await expect(page.getByTestId("home-content-fallback")).toHaveCount(1);
+  await expect(line).toHaveText(ur.tailored.elevator.seniors[0]);
+  await expect(line).not.toHaveAttribute("lang", "en");
+  await expect(line).not.toHaveAttribute("data-translation", "unavailable");
+  await expect(page.getByTestId("home-content-fallback")).toHaveCount(0);
   expect(await page.getByTestId(`alert-advice-${THREADS.MINE}`).innerText()).not.toContain("[EN]");
 });
 

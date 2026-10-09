@@ -1,14 +1,14 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { ContentText } from "../text/content-text";
 import { FALLBACK_MARKER, ResidentText, isEnglishFallback } from "../text/resident-text";
-import type { AlertView, EntryView, OriginView, TextView, TypeView } from "./alert-view";
+import type { EntryView, OriginView, TextView, TypeView } from "./alert-view";
 import "./alert-icons.css";
 import "./alert.css";
 
-// The marks the alert screens share (S04.08), each drawn once: X-13 the disruption types, X-02 the origin and verification, X-04 the machine
-// translation label and the note for a text that is not available in the language, and the text itself. Components with no state and no
-// hook, so a page renders them on the server and home on the phone alike.
+// The marks the alert screens share (S04.08), each drawn once: X-13 the disruption types, X-02 the origin and verification, and the text itself.
+// Product-owner decision 2026-10-09 (pilot): an alert shows its translation with no machine-translation label (X-04), no "Read it in English" and
+// no note when it is English for want of a translation; that English is shown silently, marked lang="en" dir="ltr" for the browser and a screen
+// reader. Components with no state and no hook, so a page renders them on the server and home on the phone alike.
 
 /** X-13: each type is its icon and its words, so no type is carried by its icon alone. As the page's heading (`heading`) or as a line of a card. */
 export function DisruptionTypes({ types, size = "md", heading = false }: { types: readonly TypeView[]; size?: "md" | "lg"; heading?: boolean }) {
@@ -77,38 +77,6 @@ export function OriginMark({ origin, href }: { origin: OriginView; href?: string
   );
 }
 
-/** X-04: "Translated by machine, from English". The label of a text a model wrote. */
-export function MachineMark({ view, testId = "alert-mt" }: { view: AlertView; testId?: string }) {
-  return (
-    <div className="alert-mt" data-testid={testId}>
-      <span className="alert-mt__label">
-        <span className="alert-ico alert-ico--language alert-ico--sm" aria-hidden="true" />
-        <ResidentText>{view.machineLabel}</ResidentText>
-      </span>
-      <span>
-        <ResidentText>{view.machineFrom}</ResidentText>
-      </span>
-    </div>
-  );
-}
-
-/** X-04, "Translation not available": the text below is English because it could not be translated into the resident's language. */
-export function UnavailableNote({ title, body, testId = "alert-unavailable" }: { title: string; body: string; testId?: string }) {
-  return (
-    <div className="alert-unavailable" role="note" data-testid={testId}>
-      <span className="alert-ico alert-ico--language" aria-hidden="true" />
-      <div className="alert-unavailable__body">
-        <ResidentText as="p" className="alert-strong">
-          {title}
-        </ResidentText>
-        <ResidentText as="p" className="alert-caption">
-          {body}
-        </ResidentText>
-      </div>
-    </div>
-  );
-}
-
 /** The alert's words, in the language they are in: English standing in for a translation is set left to right in English on its own element. */
 export function AlertText({ text, testId = "alert-text", className = "alert-text" }: { text: TextView; testId?: string; className?: string }) {
   return (
@@ -118,60 +86,14 @@ export function AlertText({ text, testId = "alert-text", className = "alert-text
   );
 }
 
-/** "Read it in English": the English the machine translation was made from, a native disclosure so it works with no script. */
-export function ShowEnglish({ english, summary, label, testId = "alert-english" }: { english: string; summary: string; label: string; testId?: string }): ReactNode {
-  return (
-    <details className="alert-english hide-basic" data-testid={testId}>
-      <summary className="tap" data-testid={`${testId}-toggle`}>
-        <ResidentText>{summary}</ResidentText>
-      </summary>
-      <div className="alert-english__body">
-        <ResidentText as="p" className="alert-caption">
-          {label}
-        </ResidentText>
-        <p className="alert-text" lang="en" dir="ltr" data-testid={`${testId}-body`}>
-          {english}
-        </p>
-      </div>
-    </details>
-  );
+/** One entry's text: its words in the resident's language, or the English standing in for them, with no label or note (decision 2026-10-09). */
+export function EntryText({ entry, testId }: { entry: EntryView; testId?: string }) {
+  return <AlertText text={entry.text} testId={testId} />;
 }
 
-/**
- * One entry's text with what goes with it: the note when it is English for want of a translation, the label and "Read it in English" when a
- * machine wrote it. `testId` names the entry's own parts when the page draws more than one entry (the thread), so each is found on its own.
- */
-export function EntryText({ view, entry, testId }: { view: AlertView; entry: EntryView; testId?: string }) {
-  const own = (part: string) => (testId === undefined ? undefined : `${testId}-${part}`);
-  return (
-    <>
-      {entry.text.fallback && <UnavailableNote title={view.unavailableTitle} body={view.unavailableBody} testId={own("unavailable")} />}
-      <AlertText text={entry.text} testId={testId} />
-      {entry.text.machine && <MachineMark view={view} testId={own("mt")} />}
-      {entry.english !== null && <ShowEnglish english={entry.english} summary={view.showEnglish} label={view.originalLabel} testId={own("english")} />}
-    </>
-  );
-}
-
-/**
- * An older entry of the thread, below the alert that already shows the newest one with its note, label and English: the same words and the same
- * ways to read the English, in the compact form of a list (the unavailable note is one line, not the note with its explanation).
- */
-export function ThreadEntryText({ view, entry, latest }: { view: AlertView; entry: EntryView; latest: boolean }) {
-  const testId = `alert-entry-text-${entry.id}`;
-  if (latest) return <AlertText text={entry.text} testId={testId} />;
-  return (
-    <>
-      <AlertText text={entry.text} testId={testId} />
-      {entry.text.fallback && (
-        <ResidentText as="p" className="alert-caption" testId={`${testId}-unavailable`}>
-          {view.unavailableTitle}
-        </ResidentText>
-      )}
-      {entry.text.machine && <MachineMark view={view} testId={`${testId}-mt`} />}
-      {entry.english !== null && <ShowEnglish english={entry.english} summary={view.showEnglish} label={view.originalLabel} testId={`${testId}-english`} />}
-    </>
-  );
+/** An older entry of the thread, below the alert that already shows the newest one: the same words, in the compact form of a list. */
+export function ThreadEntryText({ entry }: { entry: EntryView }) {
+  return <AlertText text={entry.text} testId={`alert-entry-text-${entry.id}`} />;
 }
 
 /**

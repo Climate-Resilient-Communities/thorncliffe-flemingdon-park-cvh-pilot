@@ -11,7 +11,7 @@ import { UsageView } from "../usage/usage";
 import { isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { CallHub } from "./call-hub";
 import { formatMoment } from "./format";
-import { Inline911, isFallbackText, UnavailableNote } from "./listing-text";
+import { Inline911 } from "./listing-text";
 import { NumbersLink } from "./numbers-link";
 import { ProviderSide } from "./provider-side";
 import { ProviderView, type CategoryNames } from "./provider-view";
@@ -73,7 +73,6 @@ export function ProviderPage({ lang, id, tiles = null }: { lang: LaunchCode; id:
           // phone the wrappers are stacks with the screen's gap and the panel is not displayed, so the page is the one column it was.
           <div className="provider-cols" data-layout="columns" data-testid="provider-columns">
             <div className="provider-main" data-testid="provider-main">
-              {lang !== "en" && [provider.services, ...(provider.emergency_role ? [provider.emergency_role] : []), ...provider.subcategories].some(isFallbackText) && <UnavailableNote lang={lang} />}
               <ProviderView provider={provider} categories={categories} lang={lang} variant="page" />
               <Inline911 />
             </div>
