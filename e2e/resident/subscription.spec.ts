@@ -180,7 +180,9 @@ test.describe("the form", () => {
     await openEdit(page);
     await expect(page.getByTestId("subscription-form")).toBeVisible();
     await page.evaluate(() => window.dispatchEvent(new Event("appinstalled")));
-    await page.waitForTimeout(300);
+    // No fixed sleep: wait for a full task after the event, then for the network to go quiet, so a send it caused would be seen.
+    await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => setTimeout(done, 0))));
+    await page.waitForLoadState("networkidle");
     expect(metrics).toEqual([]);
   });
 });
