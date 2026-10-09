@@ -2551,6 +2551,8 @@
   m(en, {
     R08: { withdrawn: 'Withdrawn {t}', more: 'Show older alerts', moreFailed: 'We could not load older alerts. Check that you have signal and try again.' },
     R07: { mayHaveEnded: 'This alert may have ended. Check again when you have signal' } });
+  /* The resident footer's two links (production UAT, 2026-10-08: they were written into the shell, in English and French only). */
+  m(en, { shell: { staffSignIn: 'Staff sign in', termsLink: 'Terms and privacy' } });
   /* Text sign-up (S07.03): staff help a resident sign up for texts at an event or the Hub desk. Not a prototype screen: the Hub's form pages in the
      drill roster page's words. The staff screens are in English; what the resident reads (the terms, the age statement, what happens next) is shown in
      the resident's language from the terms and the R-05 strings that are already translated. A number is never shown back, and no Hub screen lists

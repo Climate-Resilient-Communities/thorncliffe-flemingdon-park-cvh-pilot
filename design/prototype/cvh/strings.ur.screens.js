@@ -3,6 +3,17 @@
 (function () {
   var t = window.CVH_STRINGS.ur;
   function m(t, s) { for (var k in s) { if (!Object.prototype.hasOwnProperty.call(s, k) || k === "__proto__" || k === "constructor" || k === "prototype") continue; if (s[k] && typeof s[k] === "object" && !Array.isArray(s[k]) && t[k] && typeof t[k] === "object" && !Array.isArray(t[k])) m(t[k], s[k]); else t[k] = s[k]; } }
+  /* Production UAT (2026-10-08): the display settings (Aa), the alert-state words (an alert or entry the Hub withdrew, the note on
+     an alert read from a kept copy whose time has passed, the archive's older alerts), the share screen's copy and WhatsApp words, and
+     the footer's two links. AI-generated (Claude), not yet checked by native readers. The alert-state words (R07, R08) tell a resident
+     not to act on an alert: they wait for native review on the launch checklist (Launch Readiness). */
+  m(t, {
+    "display": {"title": "ڈسپلے کی ترتیبات", "close": "ہو گیا", "textSize": "متن کا سائز", "standard": "عام", "large": "بڑا", "simpler": "آسان منظر", "help": "کم تفصیلات دکھائیں اور نقشے کی جگہ فہرستیں استعمال کریں۔ متن کا سائز وہی رہتا ہے۔", "saved": "اس فون پر محفوظ ہو گیا۔", "sessionOnly": "آپ کا براؤزر یہ ترتیب محفوظ نہیں کر سکتا۔ یہ صرف اسی بار کے لیے رہے گی۔"},
+    "R07": {"withdrawn": "واپس لے لیا گیا", "mayHaveEnded": "ہو سکتا ہے یہ الرٹ ختم ہو گیا ہو۔ سگنل ملنے پر دوبارہ دیکھیں"},
+    "R08": {"withdrawn": "{t} واپس لے لیا گیا", "more": "پرانے الرٹ دکھائیں", "moreFailed": "ہم پرانے الرٹ لوڈ نہیں کر سکے۔ دیکھیں کہ آپ کے پاس سگنل ہے، پھر دوبارہ کوشش کریں۔"},
+    "R29": {"copy": "پیغام کاپی کریں", "copied": "کاپی ہو گیا۔ آپ اسے کسی بھی ایپ میں پیسٹ کر سکتے ہیں۔", "copyFailed": "آپ کے فون نے اسے کاپی نہیں کیا۔ کاپی کرنے کے لیے اوپر والے پیغام کو دبا کر رکھیں۔", "whatsapp": "WhatsApp پر بھیجیں", "noSheet": "آپ کا فون یہاں شیئر کرنے کے اختیارات نہیں دیتا۔ پیغام کاپی کریں، یا اسے WhatsApp پر بھیجیں۔"},
+    "shell": {"staffSignIn": "عملے کا سائن ان", "termsLink": "شرائط اور رازداری"}
+  });
   m(t, {
   "terms": {
    "version": "ورژن",
@@ -311,7 +322,7 @@
    "notYetKnown": "ابھی معلوم نہیں",
    "where": "کہاں",
    "whatToDo": "کیا کریں",
-   "validUntil": "{until} تک لاگو",
+   "validUntil": "{until} لاگو",
    "untilResolved": "حل ہونے تک",
    "posted": "{t} پوسٹ ہوا",
    "updated": "{t} اپ ڈیٹ ہوا",
@@ -366,7 +377,7 @@
    "endedResolved": "یہ الرٹ ختم ہو گیا ہے۔ یہ {t} حل ہوا۔",
    "endedWithdrawn": "ہب نے یہ الرٹ واپس لے لیا۔ {reason}",
    "endedExpired": "یہ الرٹ ختم ہو گیا ہے۔ یہ {t} آخری اپ ڈیٹ کے بغیر ختم ہوا۔",
-   "validLine": "{until} تک لاگو",
+   "validLine": "{until} لاگو",
    "timeLine": "{posted} پوسٹ ہوا · {updated} اپ ڈیٹ ہوا",
    "timeLineOne": "{posted} پوسٹ ہوا",
    "basicMore": "پچھلی اپ ڈیٹس: {n}"

@@ -81,7 +81,9 @@
     "ambassador": "سفیر",
     "offline": "تاسو آفلاین یاست. هغه څه ښودل کېږي چې {t} پورته شوي وو.",
     "aiLabel": "د نمونې لپاره د مصنوعي ځیرکتیا جوړ شوی",
-    "illustrative": "بېلګه"
+    "illustrative": "بېلګه",
+    "staffSignIn": "د کارکوونکو ننوتل",
+    "termsLink": "شرایط او محرمیت"
   },
   "x01": {
     "text": "CVH بیړني خدمت نه دی.",
@@ -716,13 +718,13 @@
     "amberBody": "Amber Alerts د ورک شوي ماشوم په اړه رسمي خبرتیاوې دي. اصلي متن تل له Alert Ready څخه راځي.",
     "endedResolved": "دا خبرتیا پای ته رسېدلې. {t} حل شوه.",
     "endedWithdrawn": "مرکز دا خبرتیا بېرته واخیسته. {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "بېرته واخیستل شوه",
     "endedExpired": "دا خبرتیا پای ته رسېدلې. وخت یې {t} تېر شو او وروستی خبر یې ورنه کړ.",
     "validLine": "اعتبار {until}",
     "timeLine": "خپور شو {posted} · بدلون {updated}",
     "timeLineOne": "خپور شو {posted}",
     "basicMore": "پخواني خبرونه: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "کېدای شي دا خبرتیا پای ته رسېدلې وي. کله چې سیګنال ولرئ بیا یې وګورئ"
   },
   "R08": {
     "title": "هغه خبرتیاوې چې پای ته رسېدلې",
@@ -733,9 +735,9 @@
     "lead": "هره خبرتیا له پای ته رسېدو وروسته دلته د لوستلو لپاره پاتې کېږي.",
     "endedOn": "خپور شو {posted}",
     "backHome": "بېرته «اوس» ته",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "بېرته واخیستل شوه {t}",
+    "more": "زړې خبرتیاوې وښایاست",
+    "moreFailed": "موږ زړې خبرتیاوې پورته نه کړای شوې. وګورئ چې سیګنال لرئ، بیا هڅه وکړئ."
   },
   "R09": {
     "title": "مرسته ومومئ",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} په {time}",
     "linkLine": "تر ټولو نوي خبرونه او هر سمون: {url}",
     "sendLine": "ستاسو تلیفون به وپوښتي چې په کوم اپلیکېشن یې ولېږئ.",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "پیغام کاپي کړئ",
+    "copied": "کاپي شو. تاسو یې په هر اپ کې ایښودلی شئ.",
+    "copyFailed": "ستاسو تلیفون دا کاپي نه کړ. د کاپي کولو لپاره پورته پیغام ټینګ ونیسئ.",
+    "whatsapp": "په WhatsApp یې ولېږئ",
+    "noSheet": "ستاسو تلیفون دلته د شریکولو انتخابونه نه لري. پیغام کاپي کړئ، یا یې په WhatsApp ولېږئ.",
     "placeMore": "او {n} نور"
   },
   "R30": {
@@ -6474,14 +6476,14 @@
     "digits": "۰۱۲۳۴۵۶۷۸۹"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "د ښودنې تنظیمات",
+    "close": "وشو",
+    "textSize": "د متن اندازه",
+    "standard": "عادي",
+    "large": "لوی",
+    "simpler": "ساده بڼه",
+    "help": "لږ جزئیات وښایاست او د نقشې پر ځای لیستونه وکاروئ. د متن اندازه همداسې پاتې کېږي.",
+    "saved": "په دې تلیفون کې خوندي شو.",
+    "sessionOnly": "ستاسو براوزر دا تنظیم نشي خوندي کولی. دا به یوازې د همدې ځل لپاره پاتې وي."
   }
 }

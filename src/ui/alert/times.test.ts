@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { clockPhrase, torontoDay, torontoDaysBetween, validUntilLine, type Translate } from "./times";
 
@@ -103,5 +105,23 @@ describe("a clock time for a message (S05.08)", () => {
 
   it("is written in the language's own way", () => {
     expect(phrase("2026-10-01T14:40:00Z", "2026-10-01T15:00:00Z", "fr")).toBe("today at 10:40");
+  });
+});
+
+// Production UAT, 2026-10-08: the Urdu alert page read "… تک تک لاگو" because R07.validLine said "until" again around time.until.
+describe("the valid-until line in every language's own words", () => {
+  const dir = path.join(__dirname, "..", "..", "i18n", "messages");
+  const catalogs = Object.fromEntries(readdirSync(dir).filter((file) => file.endsWith(".json")).map((file) => [file, JSON.parse(readFileSync(path.join(dir, file), "utf8")) as Record<string, unknown>]));
+  const lookup = (catalog: Record<string, unknown>, key: string) => key.split(".").reduce<unknown>((at, part) => (at as Record<string, unknown> | undefined)?.[part], catalog);
+
+  it.each(Object.entries(catalogs).map(([file, catalog]) => [file.replace(/\.json$/, ""), catalog] as const))("%s never says a word twice in a row", (lang, catalog) => {
+    const words: Translate = (key, values = {}) => String(lookup(catalog, key)).replace(/\{(\w+)\}/g, (_, name: string) => String(values[name]));
+    const tag = lang === "prs" ? "fa-AF" : lang === "pa" ? "pa-Guru" : lang === "zh" ? "zh-Hans" : lang;
+    for (const until of ["2026-10-01T19:00:00Z", "2026-10-02T13:00:00Z", "2026-10-04T13:00:00Z"]) {
+      const text = validUntilLine(new Date(until), new Date("2026-10-01T15:00:00Z"), tag, words)!;
+      const tokens = text.split(/[\s ]+/u).filter((token) => /\p{L}/u.test(token));
+      const doubled = tokens.filter((token, at) => at > 0 && token === tokens[at - 1]);
+      expect(doubled, `${lang}: ${text}`).toEqual([]);
+    }
   });
 });

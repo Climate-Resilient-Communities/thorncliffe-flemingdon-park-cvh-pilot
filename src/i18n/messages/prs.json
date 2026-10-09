@@ -81,7 +81,9 @@
     "ambassador": "سفیر",
     "offline": "شما آفلاین هستید. آنچه {t} بارگذاری شد نشان داده می‌شود.",
     "aiLabel": "ساخته شده با هوش مصنوعی برای نمونه",
-    "illustrative": "نمونه‌ای"
+    "illustrative": "نمونه‌ای",
+    "staffSignIn": "ورود کارمندان",
+    "termsLink": "شرایط و حریم خصوصی"
   },
   "x01": {
     "text": "CVH خدمات اضطراری نیست.",
@@ -716,13 +718,13 @@
     "amberBody": "هشدارهای Amber هشدارهای رسمی در مورد یک طفل گم‌شده هستند. متن اصلی همیشه از Alert Ready می‌آید.",
     "endedResolved": "این هشدار تمام شده است. {t} حل شد.",
     "endedWithdrawn": "مرکز این هشدار را پس گرفت. {reason}",
-    "withdrawn": "[EN] Withdrawn",
+    "withdrawn": "پس گرفته شد",
     "endedExpired": "این هشدار تمام شده است. {t} بدون خبر نهایی ختم شد.",
     "validLine": "معتبر {until}",
     "timeLine": "نشر شد {posted} · تازه شد {updated}",
     "timeLineOne": "نشر شد {posted}",
     "basicMore": "خبرهای قبلی: {n}",
-    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "شاید این هشدار ختم شده باشد. وقتی سیگنال داشتید دوباره ببینید"
   },
   "R08": {
     "title": "هشدارهایی که تمام شده‌اند",
@@ -733,9 +735,9 @@
     "lead": "هر هشدار پس از تمام شدن، اینجا قابل خواندن می‌ماند.",
     "endedOn": "نشر شد {posted}",
     "backHome": "برگشت به «اکنون»",
-    "withdrawn": "[EN] Withdrawn {t}",
-    "more": "[EN] Show older alerts",
-    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
+    "withdrawn": "{t} پس گرفته شد",
+    "more": "نمایش هشدارهای قدیمی‌تر",
+    "moreFailed": "نتوانستیم هشدارهای قدیمی‌تر را باز کنیم. ببینید که سیگنال دارید و دوباره کوشش کنید."
   },
   "R09": {
     "title": "یافتن کمک",
@@ -1243,11 +1245,11 @@
     "dayAt": "{day} ساعت {time}",
     "linkLine": "تازه‌ترین خبرها و هر اصلاحی: {url}",
     "sendLine": "تلفون شما می‌پرسد که با کدام اپلیکیشن آن را بفرستید.",
-    "copy": "[EN] Copy the message",
-    "copied": "[EN] Copied. You can paste it into any app.",
-    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
-    "whatsapp": "[EN] Send on WhatsApp",
-    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "copy": "پیام را کاپی کنید",
+    "copied": "کاپی شد. می‌توانید آن را در هر اپلیکیشن بچسپانید.",
+    "copyFailed": "تلفون شما آن را کاپی نکرد. برای کاپی کردن، پیام بالا را فشار داده نگه دارید.",
+    "whatsapp": "در WhatsApp بفرستید",
+    "noSheet": "تلفون شما اینجا گزینه‌های شریک‌سازی ندارد. پیام را کاپی کنید، یا آن را در WhatsApp بفرستید.",
     "placeMore": "و {n} دیگر"
   },
   "R30": {
@@ -6474,14 +6476,14 @@
     "digits": "۰۱۲۳۴۵۶۷۸۹"
   },
   "display": {
-    "title": "[EN] Display settings",
-    "close": "[EN] Done",
-    "textSize": "[EN] Text size",
-    "standard": "[EN] Standard",
-    "large": "[EN] Large",
-    "simpler": "[EN] Simpler view",
-    "help": "[EN] Show fewer details and use lists instead of the map. Text size stays the same.",
-    "saved": "[EN] Saved on this device.",
-    "sessionOnly": "[EN] Your browser cannot save this setting. It will last for this session only."
+    "title": "تنظیمات نمایش",
+    "close": "انجام شد",
+    "textSize": "اندازهٔ متن",
+    "standard": "عادی",
+    "large": "بزرگ",
+    "simpler": "نمای ساده‌تر",
+    "help": "جزئیات کمتر نشان دهید و به جای نقشه از فهرست‌ها استفاده کنید. اندازهٔ متن تغییر نمی‌کند.",
+    "saved": "در این تلفون ذخیره شد.",
+    "sessionOnly": "مرورگر شما نمی‌تواند این تنظیم را ذخیره کند. فقط برای همین بار باقی می‌ماند."
   }
 }
