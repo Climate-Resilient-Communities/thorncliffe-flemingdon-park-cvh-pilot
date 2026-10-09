@@ -39,7 +39,7 @@ const noCookie = (response: { headersArray(): { name: string }[] }) => response.
 
 /** Grows the viewport to the whole page, so the baseline shows the whole alert, not the first screen. */
 async function showWholePage(page: Page, width: number) {
-  const needed = await wholePageHeight(page);
+  const needed = await wholePageHeight(page, width);
   await page.setViewportSize({ width, height: needed });
 }
 

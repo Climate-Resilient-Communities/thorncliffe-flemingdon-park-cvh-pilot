@@ -722,7 +722,7 @@ for (const language of ["en", "ur"] as const) {
       await page.waitForLoadState("networkidle");
       await expect(page.getByTestId("home-every-day")).toBeVisible();
 
-      const needed = await wholePageHeight(page);
+      const needed = await wholePageHeight(page, width);
       await page.setViewportSize({ width, height: needed });
 
       const overflow = await page.evaluate(() => ({

@@ -101,10 +101,13 @@ export async function openResident(page: Page, path: string, width: number, heig
 }
 
 /**
- * The viewport height that shows the whole page. On a phone the shell's main is what scrolls, so it is the main's content plus the
- * frame around it; from the desktop breakpoint the page scrolls as a whole (src/ui/desktop.css), so it is the document's height.
+ * The viewport height that shows the whole page at `width`. On a phone the shell's main is what scrolls, so it is the main's content
+ * plus the frame around it; from the desktop breakpoint the page scrolls as a whole (src/ui/desktop.css), so it is the document's
+ * height. The page is measured at `width` (the viewport keeps its height), because the two layouts are not the same height.
  */
-export async function wholePageHeight(page: Page): Promise<number> {
+export async function wholePageHeight(page: Page, width: number): Promise<number> {
+  const viewport = page.viewportSize();
+  if (viewport && viewport.width !== width) await page.setViewportSize({ width, height: viewport.height });
   return page.evaluate(() => {
     const main = document.querySelector("main")!;
     const root = document.documentElement;

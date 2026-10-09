@@ -20,7 +20,7 @@ async function chooseBuildings(page: Page, choices = CHOICES) {
 
 /** Grows the viewport to the whole page, so the baseline shows everything, not the first screen. */
 async function showWholePage(page: Page, width: number) {
-  const needed = await wholePageHeight(page);
+  const needed = await wholePageHeight(page, width);
   await page.setViewportSize({ width, height: needed });
 }
 

@@ -57,7 +57,7 @@ const ready = async (page: Page) => {
 /** Grows the viewport to the whole page and compares it with the baseline. */
 async function shot(page: Page, width: number, name: string) {
   await waitForFonts(page);
-  const needed = await wholePageHeight(page);
+  const needed = await wholePageHeight(page, width);
   await page.setViewportSize({ width, height: needed });
   await expectBaseline(page, name);
 }
