@@ -109,7 +109,7 @@ jobs:
   browser:
     name: Browser
     runs-on: ubuntu-24.04 # Pinned, not ubuntu-latest: that label moves to Ubuntu 26 from 2026-10-19, mid-pilot. Revisit after the pilot.
-    timeout-minutes: 25
+    timeout-minutes: 45
     # The staff suite signs in against a disposable database (scripts/staff-docker.sh migrates it and runs with the
     # container on the host's network), the same image as the Database job's and as gone when the job ends.
     services:
