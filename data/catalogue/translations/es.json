@@ -2,7 +2,7 @@
  "failed": {},
  "language": "es",
  "models": {
-  "command-a-translate-08-2025": 91
+  "command-a-translate-08-2025": 81
  },
  "texts": {
   "06c76a46e432": {
@@ -21,9 +21,14 @@
    "text": "La página del centro tiene un enlace que dice \"¿Está en crisis? Haga clic aquí\" y enumera los servicios locales de apoyo en situaciones de crisis: Kids Help Phone (línea de ayuda para niños y jóvenes) 1-800-668-6868, Talk Suicide Canada (línea de prevención del suicidio) 1-833-456-4566, Distress Centres of Greater Toronto (centros de apoyo en situaciones de crisis) 416-408-4357, Gerstein Crisis Centre (centro de crisis de salud mental) 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service (servicio de atención a crisis de salud mental) 1-855-242-3310, Naseeha Mental Health Hotline (línea de ayuda de salud mental) 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team (equipo de crisis y apoyo móvil) 416-363-9990, Scarborough Health Network Community Crisis Line (línea comunitaria de crisis) 416-495-2891, Assaulted Women's Helpline (línea de ayuda para mujeres víctimas de agresión) 416-863-0511, Toronto Rape Crisis Centre (centro de crisis para víctimas de violación) 416-597-8808 y Michael Garron Hospital Emergency Department (servicio de urgencias del hospital) (825 Coxwell Ave.). Lugar designado para refrescarse: ofrece un espacio interior con aire acondicionado para aliviar el calor durante las advertencias o alertas de calor extremo."
   },
   "0aa48c71179d": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Iglesia pentecostal en 5 Grenoble Drive que ofrece servicios de culto y escuela dominical, con capilla, sala de estar y oficinas para la vida congregacional. Recientemente celebró su 50º aniversario (septiembre de 2025)."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'escuela dominical' did not name Sunday; now 'escuela de los domingos'",
    "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
-   "text": "Iglesia pentecostal en 5 Grenoble Drive que ofrece servicios de culto y escuela dominical, con capilla, sala de estar y oficinas para la vida congregacional. Recientemente celebró su 50º aniversario (septiembre de 2025)."
+   "text": "Iglesia pentecostal en 5 Grenoble Drive que ofrece servicios de culto y escuela de los domingos, con capilla, sala de reunión y oficinas para la vida de la congregación. Hace poco celebró su 50.º aniversario (septiembre de 2025)."
   },
   "0b810534f69d": {
    "correctedFrom": {
@@ -110,10 +115,10 @@
     "model": "command-a-translate-08-2025",
     "text": "Finca comunitaria en Flemingdon Park donde se cultivan alimentos saludables para los residentes. Ofrece cultivo comunitario de alimentos, un mercado agrícola semanal en verano en 150 Grenoble Drive (jueves de 15:00 a 18:00 horas, desde finales de junio hasta principios de octubre) y un programa de agricultores comunitarios que ofrece a los residentes oportunidades empresariales para gestionar negocios de microgranjas."
    },
-   "model": "claude-correction",
-   "note": "Kept Community Farmer program name; 'finca' -> 'granja'.",
+   "model": "claude-opus-5.5",
+   "note": "facts check: '3-6pm' kept as 3 to 6 p.m. (no added 3:00)",
    "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
-   "text": "Granja comunitaria en Flemingdon Park que cultiva alimentos saludables para los residentes. Ofrece cultivo comunitario de alimentos, un mercado de agricultores semanal en verano en 150 Grenoble Drive (jueves de 3:00 a 6:00 p. m., desde finales de junio hasta principios de octubre) y el programa Community Farmer (agricultores comunitarios), que da a los residentes oportunidades de emprender con pequeñas granjas."
+   "text": "Granja creada por la comunidad en Flemingdon Park que cultiva alimentos saludables para los residentes. Ofrece cultivo comunitario de alimentos, un mercado de agricultores semanal en verano en 150 Grenoble Drive (los jueves de 3 a 6 p. m., de finales de junio a principios de octubre) y el programa Community Farmer (agricultores comunitarios), que da a los residentes la oportunidad de tener su propio pequeño negocio agrícola."
   },
   "16b01b9ea5a7": {
    "model": "command-a-translate-08-2025",
@@ -291,9 +296,14 @@
    "text": "Clínicas de salud"
   },
   "411f70e150dd": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Parroquia ortodoxa griega en 30 Thorncliffe Park Drive (capacidad para más de 600 fieles sentados, amplio estacionamiento), dirigida por el párroco Padre Apostolos Gkolias (apostolosgkolias@yahoo.com; teléfono de la iglesia +1 (416) 425-2485, info@togreekcom.org). Servicios dominicales y festivos: Orthros-Matins de 8:30 a 10:00 a. m. y Divina Liturgia de 10:00 a. m. a 12:00 p. m.; organiza la inscripción a la escuela dominical y otros programas de la iglesia."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: times as in English (8:30 and 12:00 noon without a.m./p.m.); both Sundays named",
    "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
-   "text": "Parroquia ortodoxa griega en 30 Thorncliffe Park Drive (capacidad para más de 600 fieles sentados, amplio estacionamiento), dirigida por el párroco Padre Apostolos Gkolias (apostolosgkolias@yahoo.com; teléfono de la iglesia +1 (416) 425-2485, info@togreekcom.org). Servicios dominicales y festivos: Orthros-Matins de 8:30 a 10:00 a. m. y Divina Liturgia de 10:00 a. m. a 12:00 p. m.; organiza la inscripción a la escuela dominical y otros programas de la iglesia."
+   "text": "Parroquia ortodoxa griega en 30 Thorncliffe Park Drive (capacidad para más de 600 fieles sentados, amplio estacionamiento), dirigida por el párroco, el padre Apostolos Gkolias (apostolosgkolias@yahoo.com; teléfono de la iglesia +1 (416) 425-2485, info@togreekcom.org). Servicios los domingos y días de fiesta: Orthros-Matins (maitines) de 8:30 a 10:00 a. m. y Divina Liturgia de 10:00 a. m. a 12:00 del mediodía; organiza la inscripción a la escuela de los domingos y otros programas de la iglesia."
   },
   "4341d8807857": {
    "model": "command-a-translate-08-2025",
@@ -360,10 +370,10 @@
     "model": "command-a-translate-08-2025",
     "text": "Servicio de Policía de Toronto, División 55 (101 Coxwell Ave, 416-808-5500) — la división que presta servicio en el este de la ciudad, incluida la zona de Thorncliffe/Flemingdon; ofrece servicios de policía comunitaria, informes no urgentes y apoyo a las víctimas. Nota: Se prevé que las divisiones 54 y 55 se fusionen en una nueva estación consolidada en 1627 Danforth Ave (antiguo garaje de TTC Danforth)."
    },
-   "model": "claude-correction",
-   "note": "'informes no urgentes' -> 'denuncias'; kept Toronto Police Service / 55 Division names.",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 55 appeared twice (gloss 'División 55' removed)",
    "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
-   "text": "Toronto Police Service (policía de Toronto), 55 Division (División 55) (101 Coxwell Ave, 416-808-5500): la división que atiende el este de la ciudad, incluida la zona de Thorncliffe/Flemingdon; ofrece policía comunitaria, denuncias que no son emergencias y apoyo a las víctimas. Nota: está previsto que las divisiones 54 y 55 se fusionen en una nueva estación en 1627 Danforth Ave (antiguo garaje Danforth de la TTC)."
+   "text": "Toronto Police Service (policía de Toronto), 55 Division (101 Coxwell Ave, 416-808-5500): la división que atiende el este de la ciudad, incluida la zona de Thorncliffe/Flemingdon; ofrece policía comunitaria, denuncias que no son emergencias y apoyo a las víctimas. Nota: está previsto que las divisiones 54 y 55 se fusionen en una nueva estación en 1627 Danforth Ave (antiguo garaje Danforth de la TTC)."
   },
   "5d959a5ff47c": {
    "model": "command-a-translate-08-2025",
@@ -386,9 +396,14 @@
    "text": "Valley Park Middle School es una escuela intermedia (middle school) del TDSB para los grados 6 a 8, con aproximadamente 1,100 alumnos de las comunidades de Thorncliffe Park y Flemingdon Park, ubicada en 130 Overlea Blvd, East York. Su objetivo es un entorno de aprendizaje seguro y de apoyo, basado en el respeto, la responsabilidad y la seguridad; en el texto de la página principal no se mencionaron programas de inmersión en francés, ESL ni educación especial."
   },
   "62d55110cf7b": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "El centro gratuito para niños y familias EarlyON, gestionado por TCDSB, ubicado en 175 Grenoble Dr, ofrece programas de juego y aprendizaje sin inscripción previa para niños de 0 a 6 años junto con sus padres o cuidadores (se requiere la participación de los padres, no es necesaria la inscripción). Según el horario de TCDSB, St. John XXIII funciona de lunes a jueves de 8:45 a 12:45 y los viernes de 8:45 a 12:45."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: times kept with a.m./p.m. as in English; repeated 'no registration' removed",
    "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
-   "text": "El centro gratuito para niños y familias EarlyON, gestionado por TCDSB, ubicado en 175 Grenoble Dr, ofrece programas de juego y aprendizaje sin inscripción previa para niños de 0 a 6 años junto con sus padres o cuidadores (se requiere la participación de los padres, no es necesaria la inscripción). Según el horario de TCDSB, St. John XXIII funciona de lunes a jueves de 8:45 a 12:45 y los viernes de 8:45 a 12:45."
+   "text": "EarlyON Child and Family Centre gratuito, gestionado por el TCDSB, en 175 Grenoble Dr, con programas de juego y aprendizaje sin cita para niños de 0 a 6 años con sus padres o cuidadores (los padres deben participar; no hace falta inscribirse). Según los horarios del TCDSB, St. John XXIII abre de lunes a jueves de 8:45 a. m. a 12:45 p. m. y los viernes de 8:45 a. m. a 12:45 p. m."
   },
   "63c710ddedbb": {
    "correctedFrom": {
@@ -401,9 +416,14 @@
    "text": "Enfermeras disponibles las 24 horas, los 7 días de la semana, para necesidades de atención domiciliaria; no se indica ningún servicio de emergencia específico (no es un servicio de emergencias 911 ni de atención urgente)."
   },
   "67d4ed5dfe5d": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Masjid Darus Salaam, en 20 Overlea Blvd, presta servicio a la comunidad musulmana de Thorncliffe Park, Flemingdon Park y otras zonas desde 1995. Ofrece cinco oraciones diarias y Jummah, programas a tiempo completo de Hifz y Alim/Alima, clases nocturnas del Corán (Madrasah), escuela dominical, estudios de Tafseer y fundamentos islámicos, programas para jóvenes, servicios de Nikah y eventos comunitarios."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'escuela dominical' did not name Sunday; now 'escuela de los domingos'",
    "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
-   "text": "Masjid Darus Salaam, en 20 Overlea Blvd, presta servicio a la comunidad musulmana de Thorncliffe Park, Flemingdon Park y otras zonas desde 1995. Ofrece cinco oraciones diarias y Jummah, programas a tiempo completo de Hifz y Alim/Alima, clases nocturnas del Corán (Madrasah), escuela dominical, estudios de Tafseer y fundamentos islámicos, programas para jóvenes, servicios de Nikah y eventos comunitarios."
+   "text": "Masjid Darus Salaam, en 20 Overlea Blvd, sirve a la comunidad musulmana de Thorncliffe Park, Flemingdon Park y otras zonas desde 1995. Ofrece las cinco oraciones diarias y el Jummah, programas a tiempo completo de Hifz y Alim/Alima, clases de Corán por la tarde (Madrasah), escuela de los domingos, estudios de Tafseer y de fundamentos islámicos, programas para jóvenes, servicios de Nikah y eventos comunitarios."
   },
   "68c635426ffe": {
    "model": "command-a-translate-08-2025",
@@ -466,12 +486,14 @@
    "text": "Espacios públicos"
   },
   "79db95729d8c": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Escuela primaria del TDSB en 9 Grenoble Drive que atiende a más de 960 estudiantes desde el jardín de infancia hasta el sexto grado (aproximadamente el 93 % de las familias han emigrado a Canadá; se hablan más de 73 idiomas). En la página web de la escuela no se mencionan programas especiales como la inmersión en francés."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: grade 6 kept as a number",
    "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
-   "text": "Escuela primaria del TDSB en 9 Grenoble Drive que atiende a más de 960 estudiantes desde el jardín de infancia hasta el sexto grado (aproximadamente el 93 % de las familias han emigrado a Canadá; se hablan más de 73 idiomas). En la página web de la escuela no se mencionan programas especiales como la inmersión en francés.",
-   "warnings": [
-    "numbers missing from translation: 6"
-   ]
+   "text": "Escuela primaria del TDSB en 9 Grenoble Drive con más de 960 estudiantes, desde kínder hasta el grado 6 (cerca del 93 % de las familias han inmigrado a Canadá; se hablan más de 73 idiomas). La página web de la escuela no menciona programas especiales como French Immersion (inmersión en francés)."
   },
   "7bd551d09cd0": {
    "correctedFrom": {
@@ -489,12 +511,14 @@
    "text": "Centro infantil y familiar gratuito EarlyON para los residentes de la ciudad de Toronto con niños de 0 a 6 años y sus padres/cuidadores: programas de apoyo al desarrollo infantil, servicios de apoyo a los padres, programas de preparación para la escuela, apoyo para retrasos en el lenguaje y servicios para necesidades especiales con gestión de casos individuales. Ubicación principal: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (de lunes a viernes de 9 a.m. a 5 p.m.); los viernes hay tiempo de juego en el gimnasio del Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
   },
   "7d47cf9e0e64": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Escuela primaria (desde jardín de infancia hasta octavo grado) del Toronto Catholic District School Board en 175 Grenoble Drive, Flemingdon Park, que ofrece apoyo en ESL, educación especial y Empower Reading, además de equipos deportivos. El edificio también alberga la guardería Red Apple (cuidado antes y después de la escuela), un centro gratuito EarlyON para niños y familias (programas para niños desde el nacimiento hasta los 6 años y para padres) y una oficina de trabajadores de asentamiento que presta apoyo a los recién llegados."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: grade 8 kept as a number",
    "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
-   "text": "Escuela primaria (desde jardín de infancia hasta octavo grado) del Toronto Catholic District School Board en 175 Grenoble Drive, Flemingdon Park, que ofrece apoyo en ESL, educación especial y Empower Reading, además de equipos deportivos. El edificio también alberga la guardería Red Apple (cuidado antes y después de la escuela), un centro gratuito EarlyON para niños y familias (programas para niños desde el nacimiento hasta los 6 años y para padres) y una oficina de trabajadores de asentamiento que presta apoyo a los recién llegados.",
-   "warnings": [
-    "numbers missing from translation: 8"
-   ]
+   "text": "Escuela primaria del Toronto Catholic District School Board (de prekínder [JK] al grado 8) en 175 Grenoble Drive, Flemingdon Park, que ofrece apoyo de ESL (inglés como segunda lengua), educación especial y Empower Reading, además de equipos deportivos. El edificio también tiene la guardería Red Apple Daycare (cuidado antes y después de la escuela), un EarlyON Child and Family Centre gratuito (programas para niños desde el nacimiento hasta los 6 años y sus padres) y una oficina de trabajadores de asentamiento que apoya a los recién llegados."
   },
   "7d8fe058aabe": {
    "model": "command-a-translate-08-2025",
@@ -737,12 +761,14 @@
    "text": "El parque Leaside (cerca de Millwood Road y Overlea Boulevard) ofrece agua potable pública con 1 fuente de agua potable y 2 estaciones de llenado de botellas. El parque, de 3,4 hectáreas, también cuenta con un campo de béisbol iluminado, seis canchas de tenis iluminadas, un campo deportivo polivalente, un parque infantil, un jardín comunitario, baños y la piscina al aire libre Leaside Outdoor Pool."
   },
   "c0b5b18276a1": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Banco de alimentos comunitario en 10 Gateway Blvd (sótano), North York, que ofrece alimentos y recursos gratuitos a familias necesitadas; ahora es una organización benéfica registrada. El sitio web muestra horarios inconsistentes (lunes y miércoles de 11:00 a 15:30 en un lugar, de lunes a jueves de 13:30 a 15:30 en otro) - llame al 416-422-4322 para confirmarlo antes de visitar."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: times kept as written in English (a.m./p.m.; 1:30 without a.m./p.m.)",
    "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
-   "text": "Banco de alimentos comunitario en 10 Gateway Blvd (sótano), North York, que ofrece alimentos y recursos gratuitos a familias necesitadas; ahora es una organización benéfica registrada. El sitio web muestra horarios inconsistentes (lunes y miércoles de 11:00 a 15:30 en un lugar, de lunes a jueves de 13:30 a 15:30 en otro) - llame al 416-422-4322 para confirmarlo antes de visitar.",
-   "warnings": [
-    "numbers missing from translation: 1, 3"
-   ]
+   "text": "Banco de alimentos comunitario en 10 Gateway Blvd (sótano), North York, que ofrece alimentos y recursos gratuitos a familias necesitadas; ahora es una organización benéfica registrada. El sitio web muestra horarios distintos (los lunes y miércoles de 11:00 a. m. a 3:30 p. m. en un lugar, de lunes a jueves de 1:30 a 3:30 p. m. en otro); llame al 416-422-4322 para confirmarlo antes de ir."
   },
   "c6efc2c01c02": {
    "model": "command-a-translate-08-2025",
@@ -820,12 +846,14 @@
    "text": "Centro comunitario y sala de oración ismailí (Jamatkhana) en 80 Overlea Boulevard, en Thorncliffe Park. Organiza oraciones congregacionales diarias y reuniones comunitarias para los musulmanes ismailíes; el edificio incluye un gimnasio, una biblioteca, espacios para la enseñanza, oficinas y una zona de entrega de alimentos."
   },
   "de5580650854": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "El Fraser Mustard EarlyON Child and Family Centre (en Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) es un programa gratuito de asistencia sin cita previa para padres y cuidadores con niños desde bebés hasta 6 años, que funciona de lunes a jueves de 8:45 a 13:45 horas. Los niños pueden jugar, explorar, aprender y disfrutar de un refrigerio nutritivo mientras los padres se relacionan con otras familias y obtienen información sobre programas y servicios comunitarios, con el apoyo de un profesional cualificado en educación infantil; no es necesario registrarse previamente."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: times kept with a.m./p.m. as in English",
    "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
-   "text": "El Fraser Mustard EarlyON Child and Family Centre (en Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) es un programa gratuito de asistencia sin cita previa para padres y cuidadores con niños desde bebés hasta 6 años, que funciona de lunes a jueves de 8:45 a 13:45 horas. Los niños pueden jugar, explorar, aprender y disfrutar de un refrigerio nutritivo mientras los padres se relacionan con otras familias y obtienen información sobre programas y servicios comunitarios, con el apoyo de un profesional cualificado en educación infantil; no es necesario registrarse previamente.",
-   "warnings": [
-    "numbers missing from translation: 1"
-   ]
+   "text": "El Fraser Mustard EarlyON Child and Family Centre (en Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) es un programa gratuito, sin cita, para padres y cuidadores con niños desde bebés hasta 6 años, que funciona de lunes a jueves de 8:45 a. m. a 1:45 p. m. Los niños pueden jugar, explorar, aprender y comer un refrigerio nutritivo mientras los padres conocen a otras familias y reciben información sobre programas y servicios de la comunidad, con el apoyo de un profesional calificado en la primera infancia; no hace falta inscribirse antes."
   },
   "e04d44a05f5d": {
    "model": "command-a-translate-08-2025",
@@ -903,9 +931,14 @@
    "text": "Solicitudes de mantenimiento de emergencia (noches, fines de semana y días festivos): 416-207-8253. Los contactos de seguridad del edificio también están enumerados anteriormente para problemas urgentes relacionados con el edificio."
   },
   "ef9e53e990a8": {
-   "model": "command-a-translate-08-2025",
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Congregación local de la Iglesia de Jesucristo de los Santos de los Últimos Días en 24 Ferrand Drive, North York. El culto dominical incluye una reunión sacramental y clases por grupos de edad para todos a partir de los 18 meses; todos son bienvenidos a asistir."
+   },
+   "model": "claude-opus-5.5",
+   "note": "facts check: 'dominical' did not name Sunday; now 'de los domingos'",
    "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
-   "text": "Congregación local de la Iglesia de Jesucristo de los Santos de los Últimos Días en 24 Ferrand Drive, North York. El culto dominical incluye una reunión sacramental y clases por grupos de edad para todos a partir de los 18 meses; todos son bienvenidos a asistir."
+   "text": "Congregación local de La Iglesia de Jesucristo de los Santos de los Últimos Días en 24 Ferrand Drive, North York. El culto de los domingos incluye una reunión sacramental y clases por grupos de edad para todos a partir de los 18 meses; todos son bienvenidos."
   },
   "f0173151ade9": {
    "model": "command-a-translate-08-2025",
@@ -927,10 +960,10 @@
     "model": "command-a-translate-08-2025",
     "text": "Llama al 911 en caso de emergencia. Puedes contactar con la División 55 en el 416-808-5500."
    },
-   "model": "claude-correction",
-   "note": "tú -> usted; kept 55 Division name.",
+   "model": "claude-opus-5.5",
+   "note": "facts check: 55 appeared twice (gloss 'División 55' removed)",
    "source": "Call 911 for emergencies. 55 Division can be reached at 416-808-5500.",
-   "text": "Llame al 911 en caso de emergencia. Puede comunicarse con la 55 Division (División 55) al 416-808-5500."
+   "text": "Llame al 911 en caso de emergencia. Puede comunicarse con la 55 Division (división de policía) al 416-808-5500."
   },
   "f630f0f0b145": {
    "correctedFrom": {
@@ -968,5 +1001,5 @@
    "text": "Cuidado de niños y EarlyON"
   }
  },
- "updated": "2026-10-01T04:36:47+00:00"
+ "updated": "2026-10-09T04:00:01+00:00"
 }
