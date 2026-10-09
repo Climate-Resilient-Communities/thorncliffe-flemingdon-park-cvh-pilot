@@ -4,7 +4,7 @@
 // (S08.06) the requesters an approval's round is looked for among.
 import type { DbExecutor } from "../../../platform/db";
 import type { RequestStore } from "../../checkins";
-import { subscriberStore, type SubscriberStore } from "../adapters/subscriberStore";
+import { subscriberStore, type SubscriberContact, type SubscriberStore } from "../adapters/subscriberStore";
 
 export function checkinRequestStore(store: SubscriberStore = subscriberStore): RequestStore {
   return {
@@ -36,19 +36,22 @@ export function checkinAskersAmong(executor: DbExecutor, subscriberIds: readonly
   return store.checkinAskersAmong(executor, subscriberIds);
 }
 
+export type { SubscriberContact };
+
 /**
- * S08.07: the phone numbers of the requesters in a round, by subscriber id, for "My round" (A-04): the app composes each request the person may see from
- * its round row and this number, keeps the id to itself and sends the round no-store. Only subscribers who still ask and receive texts.
+ * S08.07: the phone numbers of the requesters in a round, with the language each chose (UAT note 9), by subscriber id, for "My round" (A-04): the app composes
+ * each request the person may see from its round row and this contact, keeps the id to itself and sends the round no-store. Only subscribers who still ask and
+ * receive texts.
  */
-export function checkinContactsOf(executor: DbExecutor, subscriberIds: readonly string[], store: SubscriberStore = subscriberStore): Promise<Map<string, string>> {
+export function checkinContactsOf(executor: DbExecutor, subscriberIds: readonly string[], store: SubscriberStore = subscriberStore): Promise<Map<string, SubscriberContact>> {
   return store.checkinContactsOf(executor, subscriberIds);
 }
 
 /**
- * S08.08: the phone number of the subscriber an escalation's row still names, for the Admin following it up (E08 "Escalation": the Hub keeps the number
- * until the escalation is handled, or 24 hours after the alert ends). Whatever the request is now: a resident who withdrew it after the round still gets
- * the Hub's call. Null when there is no such subscriber. The app shows it to an Admin at aal2 only, no-store.
+ * S08.08: the phone number of the subscriber an escalation's row still names, and the language they chose (UAT note 9), for the Admin following it up (E08
+ * "Escalation": the Hub keeps the number until the escalation is handled, or 24 hours after the alert ends). Whatever the request is now: a resident who
+ * withdrew it after the round still gets the Hub's call. Null when there is no such subscriber. The app shows it to an Admin at aal2 only, no-store.
  */
-export function escalationNumberOf(executor: DbExecutor, subscriberId: string, store: SubscriberStore = subscriberStore): Promise<string | null> {
-  return store.escalationNumberOf(executor, subscriberId);
+export function escalationContactOf(executor: DbExecutor, subscriberId: string, store: SubscriberStore = subscriberStore): Promise<SubscriberContact | null> {
+  return store.escalationContactOf(executor, subscriberId);
 }

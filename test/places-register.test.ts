@@ -11,30 +11,25 @@ describe("the City register: the real extract", () => {
   const merges = readMergeFile(path.join(ROOT, "data", "seed", "building-merge.csv"));
   const plan = planBuildingImport(features, merges.entries);
 
-  it("has 103 rows and exactly 43 pilot buildings: 32 in M4H and 11 in M3C", () => {
+  it("has 103 rows and 43 pilot rows (32 in M4H and 11 in M3C), which are 42 buildings: the merge file folds one into another", () => {
     expect(features).toHaveLength(103);
-    expect(plan.counts).toMatchObject({ features: 103, pilotRows: 43, outsidePilot: 60, merged: 0, pilotRowsByFsa: { M4H: 32, M3C: 11 } });
-    expect(plan.buildings).toHaveLength(43);
-    expect(plan.buildings.filter((b) => b.fsa === "M4H")).toHaveLength(32);
+    expect(plan.counts).toMatchObject({ features: 103, pilotRows: 43, outsidePilot: 60, merged: 1, pilotRowsByFsa: { M4H: 32, M3C: 11 } });
+    expect(plan.buildings).toHaveLength(42);
+    expect(plan.buildings.filter((b) => b.fsa === "M4H")).toHaveLength(31);
     expect(plan.buildings.filter((b) => b.fsa === "M3C")).toHaveLength(11);
-    expect(plan.buildings.filter((b) => b.neighbourhoodId === "TP")).toHaveLength(32);
+    expect(plan.buildings.filter((b) => b.neighbourhoodId === "TP")).toHaveLength(31);
     expect(plan.buildings.filter((b) => b.neighbourhoodId === "FP")).toHaveLength(11);
-    expect(new Set(plan.buildings.map((b) => b.rsn)).size).toBe(43);
+    expect(new Set(plan.buildings.map((b) => b.rsn)).size).toBe(42);
   });
 
-  it("is valid: no failing row, and the merge file is empty", () => {
-    expect(merges).toEqual({ entries: [], failures: [] });
+  it("is valid: no failing row, and the merge file maps the register's second 85-95 Thorncliffe Park Dr to the first", () => {
+    expect(merges).toEqual({ entries: [{ line: 5, rsn: "4237447", primaryRsn: "4154159" }], failures: [] });
     expect(plan.failures).toEqual([]);
   });
 
-  it("warns once about 85-95 Thorncliffe Park Dr, registered twice, and keeps both", () => {
-    const duplicates = plan.warnings.filter((w) => w.message.includes("share this address"));
-    expect(duplicates).toHaveLength(1);
-    expect(duplicates[0].address).toBe("85-95 Thorncliffe Park Dr");
-    expect(duplicates[0].message).toContain("rsn 4154159, 4237447");
-    expect(duplicates[0].message).toContain("data/seed/building-merge.csv");
-    expect(plan.buildings.filter((b) => b.address === "85-95 Thorncliffe Park Dr").map((b) => b.rsn).sort()).toEqual(["4154159", "4237447"]);
-    expect(plan.warnings).toHaveLength(1);
+  it("loads 85-95 Thorncliffe Park Dr once, as rsn 4154159, with no warning left (UAT F-5)", () => {
+    expect(plan.buildings.filter((b) => b.address === "85-95 Thorncliffe Park Dr")).toEqual([expect.objectContaining({ rsn: "4154159", storeys: 43, mergedRsns: ["4237447"] })]);
+    expect(plan.warnings).toEqual([]);
   });
 
   it("takes the address, coordinates and the six facts of a building from the register's fields", () => {
@@ -56,10 +51,10 @@ describe("the City register: the real extract", () => {
     expect(plan.buildings.find((b) => b.rsn === "4154144")?.airConditioning).toBe("Individual units");
   });
 
-  it("leaves out the rows of other postal areas, and the one with no postal code", () => {
+  it("leaves out the rows of other postal areas, the one with no postal code, and the one the merge file folds into another", () => {
     const rsns = new Set(plan.buildings.map((b) => b.rsn));
     for (const feature of features as { properties: { PCODE: string | null; RSN: number } }[]) {
-      const inPilot = feature.properties.PCODE === "M4H" || feature.properties.PCODE === "M3C";
+      const inPilot = (feature.properties.PCODE === "M4H" || feature.properties.PCODE === "M3C") && feature.properties.RSN !== 4237447;
       expect(rsns.has(String(feature.properties.RSN)), `${feature.properties.PCODE} ${feature.properties.RSN}`).toBe(inPilot);
     }
   });
@@ -67,7 +62,8 @@ describe("the City register: the real extract", () => {
   it("reports the plan in words", () => {
     const lines = formatImportReport(plan);
     expect(lines[0]).toBe("Register: 103 rows; 43 in the pilot's postal areas (M4H 32, M3C 11); 60 elsewhere, not loaded.");
-    expect(lines).toContain("Would load: 43 buildings.");
+    expect(lines).toContain("Merge file: 1 registration folded into another building.");
+    expect(lines).toContain("Would load: 42 buildings.");
   });
 });
 

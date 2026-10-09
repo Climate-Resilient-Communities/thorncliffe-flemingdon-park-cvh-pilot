@@ -128,17 +128,20 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
   const bar =
     screen.status !== "review" ? undefined : mode === null ? (
       <Inline gap="target" wrap>
-        <button
-          className="hub-button hub-button--primary"
-          type="submit"
-          form={APPROVE_FORM}
-          disabled={busy || (changed !== null && !confirmed)}
-          data-testid="approve-button"
-        >
-          {changed ? screen.actions.approveConfirmed : screen.actions.approve}
-        </button>
+        {/* A correction or a withdrawal whose entry was corrected or withdrawn since can never be approved (UAT F-3): only Discard is offered, and the screen says why. */}
+        {screen.approveBlocked === null && (
+          <button
+            className="hub-button hub-button--primary"
+            type="submit"
+            form={APPROVE_FORM}
+            disabled={busy || (changed !== null && !confirmed)}
+            data-testid="approve-button"
+          >
+            {changed ? screen.actions.approveConfirmed : screen.actions.approve}
+          </button>
+        )}
         {/* A post residents already read never returns to draft (S08.03): it can only be approved or discarded (withdrawn). */}
-        {screen.live === null && (
+        {screen.live === null && screen.approveBlocked === null && (
           <button className="hub-button hub-button--secondary" type="button" disabled={busy} onClick={() => setMode("return")} data-testid="return-button">
             {screen.actions.returnToAuthor}
           </button>
@@ -194,6 +197,11 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           </p>
         )}
       </Stack>
+      {screen.approveBlocked && (
+        <p role="alert" className="hub-error hub-wrap" data-testid="approve-blocked">
+          {screen.approveBlocked}
+        </p>
+      )}
       {screen.locked && (
         <section data-testid="locked">
           <Stack gap="related">
@@ -348,48 +356,50 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           </p>
         </Stack>
       </section>
-      <section aria-label={facts.title} data-testid="facts">
-        <Stack gap="related">
-          <p className="hub-wrap" data-testid="fact-audience">
-            <strong>{facts.audience.label}</strong> <span data-testid="audience-sentence">{facts.audience.sentence}</span>{" "}
-            <span data-testid="audience-groups">{facts.audience.groups}</span>
-          </p>
-          {/* An update that changes who it is for says so right under who it is for: what it newly reaches, and what it no longer reaches (S05.01). */}
-          {facts.audience.change && (
-            <Stack gap="subline" testId="audience-change">
-              {facts.audience.change.alsoFor && (
-                <p role="note" className="hub-flag hub-wrap" data-testid="audience-also-for">
-                  {facts.audience.change.alsoFor}
-                </p>
-              )}
-              {facts.audience.change.noLongerFor && (
-                <p role="note" className="hub-flag hub-wrap" data-testid="audience-no-longer-for">
-                  {facts.audience.change.noLongerFor}
-                </p>
-              )}
-            </Stack>
-          )}
-          <p className="hub-wrap" data-testid="fact-channels">
-            <strong>{facts.channels.label}</strong> {facts.channels.items.join(" ")}
-          </p>
-          <p className="hub-wrap" data-testid="fact-recipients">
-            <strong>{facts.recipients.label}</strong> <span data-testid="recipient-count">{facts.recipients.count}</span>
-            {facts.recipients.notOpen && (
-              <>
-                {" · "}
-                <span data-testid="sms-not-open">{facts.recipients.notOpen}</span>
-              </>
+      {!screen.awaitingAuthor && (
+        <section aria-label={facts.title} data-testid="facts">
+          <Stack gap="related">
+            <p className="hub-wrap" data-testid="fact-audience">
+              <strong>{facts.audience.label}</strong> <span data-testid="audience-sentence">{facts.audience.sentence}</span>{" "}
+              <span data-testid="audience-groups">{facts.audience.groups}</span>
+            </p>
+            {/* An update that changes who it is for says so right under who it is for: what it newly reaches, and what it no longer reaches (S05.01). */}
+            {facts.audience.change && (
+              <Stack gap="subline" testId="audience-change">
+                {facts.audience.change.alsoFor && (
+                  <p role="note" className="hub-flag hub-wrap" data-testid="audience-also-for">
+                    {facts.audience.change.alsoFor}
+                  </p>
+                )}
+                {facts.audience.change.noLongerFor && (
+                  <p role="note" className="hub-flag hub-wrap" data-testid="audience-no-longer-for">
+                    {facts.audience.change.noLongerFor}
+                  </p>
+                )}
+              </Stack>
             )}
-          </p>
-          <p className="hub-wrap" data-testid="fact-cost">
-            <strong>{facts.cost.label}</strong> <span data-testid="estimated-cost">{facts.cost.value}</span>
-          </p>
-          <p className="hub-wrap" data-testid="fact-valid-until">
-            <strong>{facts.validUntil.label}</strong> {facts.validUntil.value}
-          </p>
-        </Stack>
-      </section>
-      {screen.fallback && (
+            <p className="hub-wrap" data-testid="fact-channels">
+              <strong>{facts.channels.label}</strong> {facts.channels.items.join(" ")}
+            </p>
+            <p className="hub-wrap" data-testid="fact-recipients">
+              <strong>{facts.recipients.label}</strong> <span data-testid="recipient-count">{facts.recipients.count}</span>
+              {facts.recipients.notOpen && (
+                <>
+                  {" · "}
+                  <span data-testid="sms-not-open">{facts.recipients.notOpen}</span>
+                </>
+              )}
+            </p>
+            <p className="hub-wrap" data-testid="fact-cost">
+              <strong>{facts.cost.label}</strong> <span data-testid="estimated-cost">{facts.cost.value}</span>
+            </p>
+            <p className="hub-wrap" data-testid="fact-valid-until">
+              <strong>{facts.validUntil.label}</strong> {facts.validUntil.value}
+            </p>
+          </Stack>
+        </section>
+      )}
+      {screen.fallback && !screen.awaitingAuthor && (
         <section data-testid="fallback">
           <Stack gap="related">
             <p role="note" className="hub-flag" data-testid="fallback-summary">
@@ -402,14 +412,14 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
       {/* Below the fold: the rest of what the approver should know, and why they cannot change anything here. */}
       <Stack gap="related">
         {screen.status === "review" && <p className="hub-wrap">{screen.lead}</p>}
-        {facts.recipients.byLanguage && (
+        {facts.recipients.byLanguage && !screen.awaitingAuthor && (
           <p className="hub-wrap" data-testid="recipients-by-language">
             {facts.recipients.byLanguage.label} {facts.recipients.byLanguage.items.join(", ")}
           </p>
         )}
-        <p className="hub-wrap">{facts.cost.note}</p>
-        {facts.audience.floorNote && <p className="hub-wrap">{facts.audience.floorNote}</p>}
-        {screen.allTranslated && <p data-testid="all-translated">{screen.allTranslated}</p>}
+        {!screen.awaitingAuthor && <p className="hub-wrap">{facts.cost.note}</p>}
+        {facts.audience.floorNote && !screen.awaitingAuthor && <p className="hub-wrap">{facts.audience.floorNote}</p>}
+        {screen.allTranslated && !screen.awaitingAuthor && <p data-testid="all-translated">{screen.allTranslated}</p>}
         {screen.duplicate && (
           <section data-testid="duplicate">
             <Stack gap="related">
@@ -448,7 +458,10 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
     </aside>
   );
 
-  const columns = (
+  // A draft (UAT F-4) has no texts in other languages to read: its main column is the whole screen.
+  const columns = screen.awaitingAuthor ? (
+    main
+  ) : (
     <Grid twoColumn="aside">
       {main}
       {aside}

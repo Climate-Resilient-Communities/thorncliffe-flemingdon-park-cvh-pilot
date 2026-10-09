@@ -31,6 +31,7 @@ describe("what waits for a person (the Hub home)", () => {
         title: "Elevator, Power · Acknowledgement",
         state: "Waiting for a second person",
         since: expect.stringMatching(/^Submitted .*10:00/),
+        place: null,
         waited: "Waiting 12 minutes",
         note: null,
         drill: false,
@@ -77,9 +78,10 @@ describe("what waits for a person (the Hub home)", () => {
     ]);
   });
 
-  it("lists drills in a section of their own, tagged, and never among the real alerts", () => {
+  it("lists drills in a section of their own, tagged, and a drill waiting for approval in the queue too, titled as a drill (UAT F-6)", () => {
     const view = incidentsView({ waiting: [row({ isDrill: true })], mine: [row({ isDrill: true, entryId: OTHER_ENTRY }), row({ entryId: "01900000-0000-7000-8000-00000000e179" })] }, "admin");
-    expect(view.waiting?.items).toHaveLength(0);
+    expect(view.waiting?.items.map((item) => [item.title, item.drill, item.link?.href])).toEqual([["Drill · Elevator, Power · Acknowledgement", true, `/staff/alerts/approve?alert=${ALERT}&entry=${ENTRY}`]]);
+    expect(renderToStaticMarkup(<IncidentsList view={view} />)).toContain("Drill · Elevator, Power · Acknowledgement");
     expect(view.mine.items).toHaveLength(1);
     expect(view.drills?.items.map((item) => item.drill)).toEqual([true, true]);
     expect(view.drills?.title).toBe("Drills");
@@ -146,5 +148,37 @@ describe("the incidents list as it is drawn", () => {
   it("is only the person's own alerts for an Ambassador, and a Director has nothing to approve", () => {
     expect(html(none, "director")).not.toContain('data-testid="incidents-waiting"');
     expect(html({ waiting: [], mine: [row({ status: "draft", submittedAt: null })] }, "ambassador")).toContain("Your alerts");
+  });
+});
+
+describe("what each card says it is about (UAT notes 4 and 5)", () => {
+  const PLANS = [
+    { rsn: "4154146", address: "4 Milepost Pl", neighbourhoodId: "TP", neighbourhoodName: "Thorncliffe Park", floors: [] },
+    { rsn: "4154159", address: "85-95 Thorncliffe Park Dr", neighbourhoodId: "TP", neighbourhoodName: "Thorncliffe Park", floors: [] },
+    { rsn: "4154200", address: "1 Deauville Lane", neighbourhoodId: "FP", neighbourhoodName: "Flemingdon Park", floors: [] },
+  ];
+  const inBuildings = (...rsns: string[]) => ({ scope: "buildings" as const, buildings: rsns.map((rsn) => ({ rsn, floors: null })), groups: [], types: ["power"] });
+
+  it("names the buildings or the neighbourhoods an entry waiting, or the person's own, is for, so two alerts of one type are told apart", () => {
+    const view = incidentsView(
+      {
+        waiting: [row({ audience: inBuildings("4154146") }), row({ entryId: OTHER_ENTRY, audience: inBuildings("4154146", "4154159", "4154999") })],
+        mine: [row({ entryId: "01900000-0000-7000-8000-00000000e179", audience: { scope: "neighbourhood", neighbourhood_ids: ["TP", "FP"], groups: [], types: ["heat"] } })],
+      },
+      "admin",
+      undefined,
+      [],
+      NOW,
+      [],
+      PLANS,
+    );
+    expect(view.waiting?.items.map((item) => item.place)).toEqual(["4 Milepost Pl", "4 Milepost Pl, 85-95 Thorncliffe Park Dr and 4154999"]);
+    expect(view.mine.items.map((item) => item.place)).toEqual(["Thorncliffe Park and Flemingdon Park"]);
+    expect(renderToStaticMarkup(<IncidentsList view={view} />)).toContain('<p class="hub-wrap" data-testid="item-place">4 Milepost Pl</p>');
+  });
+
+  it("calls a thread's first entry written on the alert composer a new alert, and an update to a running alert an update", () => {
+    const view = incidentsView({ waiting: [row({ kind: "update", followUp: false }), row({ entryId: OTHER_ENTRY, kind: "update", followUp: true })], mine: [] }, "admin", undefined, [], NOW);
+    expect(view.waiting?.items.map((item) => item.title)).toEqual(["Elevator, Power · New alert", "Elevator, Power · Update"]);
   });
 });

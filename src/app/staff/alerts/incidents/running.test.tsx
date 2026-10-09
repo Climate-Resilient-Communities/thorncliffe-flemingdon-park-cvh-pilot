@@ -30,6 +30,7 @@ describe("what is running, on the Hub home", () => {
       {
         key: `running-${ALERT}`,
         title: "Elevator, Power",
+        place: null,
         state: expect.stringMatching(/^Update, Work is under way\. Valid until .*10:00 a\.m\. EDT$/),
         since: expect.stringMatching(/^Last published .*11:00 a\.m\. EDT$/),
         waited: null,
@@ -158,5 +159,13 @@ describe("the list of running alerts as it is drawn", () => {
     // The routine tasks are a section of their own beside it, not inside the Drills aside.
     expect(out.indexOf('data-testid="incidents-routine"')).toBeLessThan(out.indexOf("<aside"));
     expect(html([])).not.toContain('id="incidents-drills-title"');
+  });
+});
+
+describe("where a running alert is (UAT note 4)", () => {
+  it("names the building it is for, so two power alerts are told apart", () => {
+    const plans = [{ rsn: "4154146", address: "4 Milepost Pl", neighbourhoodId: "TP", neighbourhoodName: "Thorncliffe Park", floors: [] }];
+    const view = incidentsView(none, "coordinator", undefined, [thread({ audience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: null }], groups: [], types: ["power"] } })], new Date(), [], plans);
+    expect(view.running?.items.map((item) => item.place)).toEqual(["4 Milepost Pl"]);
   });
 });

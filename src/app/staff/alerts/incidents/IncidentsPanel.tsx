@@ -2,6 +2,7 @@
 // read or write them (S05.01; a Director only reads), the person's own alerts, and the drills apart (S04.10). Server only.
 import type { StaffRole } from "@/contracts/staffRoles";
 import { alerting } from "../../alerts";
+import { buildings } from "../../places";
 import { IncidentsList } from "./IncidentsList";
 import { CLOSED_DAYS, incidentsView } from "./view";
 
@@ -11,10 +12,12 @@ export async function IncidentsPanel({ staffId, role }: { staffId: string; role:
   const now = new Date();
   // What closed lately stays on the home for a week, so a closed alert is not simply gone from it (S05.03).
   const since = new Date(now.getTime() - CLOSED_DAYS * 24 * 60 * 60 * 1000);
-  const [incidents, running, closed] = await Promise.all([
+  // The plans name each alert's place (UAT note 4), with the merged buildings an alert written before a merge may still name (UAT F-5).
+  const [incidents, running, closed, plans] = await Promise.all([
     alerting().incidents({ staffId }),
     threads ? alerting().runningThreads() : Promise.resolve([]),
     threads ? alerting().closedThreads(since) : Promise.resolve([]),
+    buildings().listFloorPlans({ includeMerged: true }),
   ]);
-  return <IncidentsList view={incidentsView(incidents, role, undefined, running, now, closed)} />;
+  return <IncidentsList view={incidentsView(incidents, role, undefined, running, now, closed, plans)} />;
 }

@@ -15,6 +15,7 @@ import type { RoundCounts, RoundFloor, RoundResponse, RowStatus } from "@/contra
 import type { StaffRole } from "@/contracts/staffRoles";
 import type { LiveRoundRow } from "@/modules/checkins";
 import { can, type PolicyAssignment } from "@/modules/identity";
+import { staffLanguageName } from "../../languageName";
 
 /** The person the round is composed for: their role, and their assignments now (none for anyone but an active Ambassador). */
 export interface RoundViewer {
@@ -34,8 +35,8 @@ export interface RoundSources {
   /** The open threads residents read, with the words that cover each (alerting's `openHeadlines`). */
   headlines: ReadonlyMap<string, string>;
   plans: readonly RoundPlan[];
-  /** The numbers of these subscribers that still ask and receive texts (subscriptions' `checkinContactsOf`). */
-  contactsOf: (subscriberIds: readonly string[]) => Promise<ReadonlyMap<string, string>>;
+  /** The numbers of these subscribers that still ask and receive texts, with the language each chose (subscriptions' `checkinContactsOf`). */
+  contactsOf: (subscriberIds: readonly string[]) => Promise<ReadonlyMap<string, { phone: string; lang: string }>>;
 }
 
 /** How a person sees a row: with its number, as a count, or not at all. */
@@ -63,7 +64,7 @@ export async function composeRound(viewer: RoundViewer, sources: RoundSources): 
     .map((row) => ({ row, sight: sightOf(viewer, { rsn: row.rsn, floorId: listedFloor(plans, row) }) }))
     .filter((item) => item.sight !== "none");
   const contactIds = [...new Set(seen.filter((item) => item.sight === "contact").map((item) => item.row.subscriberId))];
-  const contacts = contactIds.length === 0 ? new Map<string, string>() : await sources.contactsOf(contactIds);
+  const contacts = contactIds.length === 0 ? new Map<string, { phone: string; lang: string }>() : await sources.contactsOf(contactIds);
   const buildingOrder = new Map(sources.plans.map((plan, index) => [plan.rsn, index]));
   // A floor removed from its building since (no label any more) comes after the building's own floors.
   const floorOrder = (rsn: string, floorId: string) => {
@@ -74,8 +75,8 @@ export async function composeRound(viewer: RoundViewer, sources: RoundSources): 
   // Thread, then building, then floor; each floor is the person's requests on it, or its counts.
   const threads = new Map<string, Map<string, Map<string, { contacts: RoundFloor & { kind: "contacts" }; counts: RoundCounts; sight: RowSight }>>>();
   for (const { row, sight } of seen) {
-    const phone = sight === "contact" ? contacts.get(row.subscriberId) : undefined;
-    if (sight === "contact" && phone === undefined) continue;
+    const contact = sight === "contact" ? contacts.get(row.subscriberId) : undefined;
+    if (sight === "contact" && contact === undefined) continue;
     const buildings = threads.get(row.alertId) ?? new Map();
     threads.set(row.alertId, buildings);
     const floors = buildings.get(row.rsn) ?? new Map();
@@ -83,7 +84,8 @@ export async function composeRound(viewer: RoundViewer, sources: RoundSources): 
     const label = plans.get(row.rsn)?.floors.find((floor) => floor.id === row.floorId)?.label ?? "";
     const floor = floors.get(row.floorId) ?? { contacts: { kind: "contacts" as const, label, requests: [] }, counts: emptyCounts(), sight };
     floors.set(row.floorId, floor);
-    if (phone !== undefined) floor.contacts.requests.push({ round_ref: row.roundRef, phone, method: row.method, status: row.status });
+    // UAT note 9: the resident's language beside their number, so they are called or texted in it.
+    if (contact !== undefined) floor.contacts.requests.push({ round_ref: row.roundRef, phone: contact.phone, method: row.method, status: row.status, language: staffLanguageName(contact.lang) });
     else floor.counts[row.status as RowStatus] += 1;
   }
 

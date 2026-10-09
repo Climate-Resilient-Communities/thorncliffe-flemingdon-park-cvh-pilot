@@ -1,5 +1,5 @@
 rsn,primary_rsn
 # One line per registration that is the same building as another: "rsn" is dropped, "primary_rsn" is loaded.
-# Empty on purpose: the register lists 85-95 Thorncliffe Park Dr twice (rsn 4154159 and 4237447) and the
-# import keeps both as two buildings and warns, until the Hub decides. To make them one building, add:
-# 4237447,4154159
+# The register lists 85-95 Thorncliffe Park Dr twice (rsn 4154159 and 4237447, the same address and point), so every building picker showed it twice
+# (staff UAT F-5, 2026-10-08). The Hub's decision: one building, 4154159. A database that already has 4237447 keeps it, marked merged and left out of every list.
+4237447,4154159,85-95 Thorncliffe Park Dr registered twice

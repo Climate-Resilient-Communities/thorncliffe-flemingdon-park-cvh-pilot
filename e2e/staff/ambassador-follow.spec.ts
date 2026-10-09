@@ -216,7 +216,7 @@ test("a post the Hub sent back reads 'Returned to you' with its note, and one th
   await hub.page.getByTestId("return-button").click();
   await hub.page.getByTestId("return-note").fill("Say which building and which floors.");
   await hub.page.getByTestId("send-back-button").click();
-  await expect(hub.page.getByTestId("locked-note")).toContainText("sent back to its author", { timeout: 30_000 });
+  await expect(hub.page.getByTestId("locked-note")).toContainText("Returned to the author, waiting for their changes", { timeout: 30_000 });
 
   await page.reload();
   await expect(page.getByTestId("status-state").getByRole("heading")).toHaveText("Returned to you");

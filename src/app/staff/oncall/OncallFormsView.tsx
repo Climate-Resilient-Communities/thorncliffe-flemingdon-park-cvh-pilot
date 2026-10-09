@@ -46,6 +46,21 @@ export interface OncallRow {
   onDuty?: boolean;
 }
 
+/**
+ * What the forms show of the latest answer (UAT F-1): a refusal stays until the person changes a field of the add form, then it goes, so a number typed again
+ * is never shown beside the refusal of the one before. `dismissed` is the time of the answer the person typed after (null for none).
+ */
+export function shownAnswer(answer: OncallState, dismissed: number | null): OncallState {
+  return answer.status === "refused" && answer.at === dismissed ? { status: "idle" } : answer;
+}
+
+/**
+ * The add form's fields after an answer (UAT F-1): emptied once a number was added; as typed after a refusal or any other press.
+ */
+export function fieldsAfter(answer: OncallState, fields: { label: string; number: string }): { label: string; number: string } {
+  return answer.status === "done" ? { label: "", number: "" } : fields;
+}
+
 /** The latest of the forms' answers: each keeps its own state, and a stale answer of another must not be shown. */
 export function latestAnswer(...answers: OncallState[]): OncallState {
   let latest: OncallState = { status: "idle" };
@@ -54,6 +69,16 @@ export function latestAnswer(...answers: OncallState[]): OncallState {
     if (latest.status === "idle" || answer.at > latest.at) latest = answer;
   }
   return latest;
+}
+
+/**
+ * The add form's two fields as the person typed them (UAT F-1): kept as typed after a refusal, so only what was wrong is retyped, and emptied once a number was added.
+ * Held in the page's memory only (OncallForms.tsx); the server never sends a number back. Left out, the fields hold what is typed themselves.
+ */
+export interface AddFields {
+  label: string;
+  number: string;
+  onChange: (field: "label" | "number", value: string) => void;
 }
 
 const LABEL_HINT_ID = "oncall-label-hint";
@@ -159,6 +184,7 @@ export function OncallFormsView({
   clearing = false,
   setOnDutyAction,
   clearOnDutyAction,
+  addFields,
 }: {
   rows: readonly OncallRow[];
   labels: OncallLabels;
@@ -173,7 +199,10 @@ export function OncallFormsView({
   clearing?: boolean;
   setOnDutyAction?: (formData: FormData) => void;
   clearOnDutyAction?: (formData: FormData) => void;
+  addFields?: AddFields;
 }) {
+  // Controlled only when the page keeps the fields; the tests and the screenshots draw them as typed into.
+  const field = (name: "label" | "number") => (addFields ? { value: addFields[name], onChange: (event: { target: { value: string } }) => addFields.onChange(name, event.target.value) } : {});
   return (
     <Stack gap="section-hub" testId="oncall-controls">
       <div aria-live="polite" data-testid="oncall-answer">
@@ -236,7 +265,7 @@ export function OncallFormsView({
           <h2>{labels.addHeading}</h2>
           <Stack gap="label">
             <label htmlFor="oncall-label">{labels.label}</label>
-            <input className="hub-input" id="oncall-label" name="label" type="text" autoComplete="off" required maxLength={40} aria-describedby={LABEL_HINT_ID} />
+            <input className="hub-input" id="oncall-label" name="label" type="text" autoComplete="off" required maxLength={40} aria-describedby={LABEL_HINT_ID} {...field("label")} />
             <small id={LABEL_HINT_ID}>{labels.labelHint}</small>
           </Stack>
           <Stack gap="label">
@@ -250,6 +279,7 @@ export function OncallFormsView({
               autoComplete="off"
               required
               aria-describedby={answer.status === "refused" ? `${NUMBER_HINT_ID} ${ERROR_ID}` : NUMBER_HINT_ID}
+              {...field("number")}
             />
             <small id={NUMBER_HINT_ID}>{labels.numberHint}</small>
           </Stack>

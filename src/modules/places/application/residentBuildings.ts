@@ -1,9 +1,10 @@
 // What a resident's phone needs of the places module (S02.03): the pilot buildings with their neighbourhood and
 // floors, to choose from on R-35 and to check saved choices against. The same list for every visitor; nothing
 // here knows who is asking, and nothing about the register's facts or an Admin's confirmation is exposed.
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, isNull } from "drizzle-orm";
 import type { Db } from "../../../platform/db";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
+import { byNeighbourhoodAndAddress } from "./floors";
 
 export interface ResidentFloor {
   id: string;
@@ -31,7 +32,7 @@ export function createResidentBuildings(deps: { db: Db }) {
      */
     async placeIds(): Promise<{ buildings: string[]; neighbourhoods: string[]; neighbourhoodOf: Record<string, string> }> {
       const [buildings, neighbourhoods] = await Promise.all([
-        db.select({ rsn: building.rsn, neighbourhoodId: building.neighbourhoodId }).from(building).orderBy(asc(building.rsn)),
+        db.select({ rsn: building.rsn, neighbourhoodId: building.neighbourhoodId }).from(building).where(isNull(building.mergedInto)).orderBy(asc(building.rsn)),
         db.select({ id: neighbourhood.id }).from(neighbourhood).orderBy(asc(neighbourhood.id)),
       ]);
       return {
@@ -43,15 +44,18 @@ export function createResidentBuildings(deps: { db: Db }) {
     },
 
     /**
-     * Every building by neighbourhood and address, each with its floors. A building flagged `not_in_register_since` is
-     * still listed: S02.08 still opens its page, so a resident's saved choice for it stays valid.
+     * Every building by neighbourhood and address (street, then number: UAT F-7), each with its floors. A building flagged `not_in_register_since` is
+     * still listed: S02.08 still opens its page, so a resident's saved choice for it stays valid. A building merged into another by the buildings
+     * seed (UAT F-5) is not: it is the same building as the one listed.
      */
     async list(): Promise<ResidentBuilding[]> {
-      const rows = await db
-        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name, lat: building.latitude, lng: building.longitude })
-        .from(building)
-        .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
-        .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));
+      const rows = (
+        await db
+          .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name, lat: building.latitude, lng: building.longitude })
+          .from(building)
+          .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
+          .where(isNull(building.mergedInto))
+      ).sort((a, b) => byNeighbourhoodAndAddress({ ...a, neighbourhoodName: a.neighbourhood }, { ...b, neighbourhoodName: b.neighbourhood }));
       const floors = await db
         .select({ id: buildingFloor.id, rsn: buildingFloor.rsn, label: buildingFloor.label })
         .from(buildingFloor)

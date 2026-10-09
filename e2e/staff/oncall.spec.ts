@@ -110,14 +110,20 @@ test("an Admin adds on-call numbers, sees only their last four digits, and remov
   await expect(page.getByTestId("oncall-error")).toHaveText("That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.");
   expect(await roster()).toEqual([]);
 
-  await page.getByLabel("Name or role").fill("IT lead");
+  // UAT F-1: the refusal leaves both fields as typed, so only the number is typed again, and the refusal goes as soon as it changes.
+  await expect(page.getByLabel("Name or role")).toHaveValue("IT lead");
+  await expect(page.getByLabel("Mobile number")).toHaveValue("020 7946 0958");
   await page.getByLabel("Mobile number").fill("(416) 555-0123");
+  await expect(page.getByTestId("oncall-error")).toHaveCount(0);
   await page.getByRole("button", { name: "Add number" }).click();
   await expect(page.getByTestId("oncall-answer")).toContainText("IT lead was added. The list now has 1 number.");
   await expect(page.getByTestId("oncall-count")).toHaveText("1 on-call number");
   await expect(page.getByTestId("oncall-row")).toHaveCount(1);
   await expect(page.getByTestId("oncall-list")).toContainText("IT lead");
   await expect(page.getByTestId("oncall-list")).toContainText("+1 ••• ••• 0123");
+  // A number added empties the form.
+  await expect(page.getByLabel("Name or role")).toHaveValue("");
+  await expect(page.getByLabel("Mobile number")).toHaveValue("");
   // The same number again, written another way, is refused.
   await page.getByLabel("Name or role").fill("Again");
   await page.getByLabel("Mobile number").fill("1-416-555-0123");

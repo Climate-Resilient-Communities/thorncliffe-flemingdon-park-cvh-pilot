@@ -16,6 +16,11 @@ function Drill({ drill }: { drill: DrillView }) {
         <p className="hub-wrap" data-testid="drill-entries">
           {drill.entries}
         </p>
+        {drill.review.map((link) => (
+          <a key={link.href} className="tap hub-link" href={link.href} data-testid="drill-review">
+            {link.label}
+          </a>
+        ))}
         <section aria-label={drill.results.title} data-testid="drill-results">
           <Stack gap="related">
             <h4>{drill.results.title}</h4>

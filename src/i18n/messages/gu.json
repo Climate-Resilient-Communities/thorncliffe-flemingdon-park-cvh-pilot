@@ -5106,8 +5106,8 @@
       "locked": {
         "approved": "[EN] This alert was approved and is published.",
         "discarded": "[EN] This alert was discarded.",
-        "returned": "[EN] This alert was sent back to its author with a note, and is waiting for the author to submit it again.",
-        "draft": "[EN] Its author pulled it back to a draft, so it is not waiting for approval.",
+        "returned": "[EN] Returned to the author, waiting for their changes. Nothing goes out until they submit it again.",
+        "draft": "[EN] Its author pulled it back to a draft, so it is not waiting for approval. Nothing goes out until they submit it again.",
         "own": "[EN] You wrote or changed this alert, so a second person has to approve it.",
         "closed": "[EN] This alert is closed.",
         "other": "[EN] This alert is not waiting for approval."
@@ -5211,7 +5211,8 @@
         "update": "[EN] Update",
         "correction": "[EN] Correction",
         "withdrawal": "[EN] Withdrawal",
-        "final": "[EN] Final"
+        "final": "[EN] Final",
+        "newAlert": "[EN] New alert"
       },
       "state": {
         "draft": "[EN] Draft",
@@ -5874,6 +5875,7 @@
         "superseded": "[EN] replaced",
         "discarded": "[EN] discarded"
       },
+      "review": "[EN] Review the drill {kind}",
       "results": {
         "title": "[EN] What happened to the texts",
         "none": "[EN] No text has been written for this drill yet.",
@@ -6117,6 +6119,7 @@
       "notSent": "[EN] Not sent yet.",
       "call": "[EN] Call {phone}",
       "text": "[EN] Text {phone}",
+      "language": "[EN] Language: {language}",
       "marked": "[EN] Marked: {mark}",
       "marksFor": "[EN] What happened with {phone}",
       "hubTold": "[EN] The Hub has been told; call the Hub if you can",
@@ -6190,6 +6193,7 @@
         "residentHeading": "[EN] The resident",
         "phone": "[EN] Phone",
         "call": "[EN] Call {phone}",
+        "language": "[EN] Language",
         "floor": "[EN] Floor",
         "method": "[EN] Asked to be checked on by",
         "methods": {

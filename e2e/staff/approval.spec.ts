@@ -265,7 +265,10 @@ test("an approver returns an entry with a note the author reads, and discards an
     await phone.getByTestId("return-note").fill("Say which floors, and when the elevator will be back.");
     await expect(phone.getByTestId("return-note-count")).toContainText("53 of 500");
     await phone.getByTestId("send-back-button").click();
-    await expect(phone.getByTestId("locked-note")).toContainText("sent back to its author", { timeout: 30_000 });
+    await expect(phone.getByTestId("locked-note")).toContainText("Returned to the author, waiting for their changes", { timeout: 30_000 });
+    // UAT F-4: nothing on it reads as a texting or translation outage while it waits for its author.
+    for (const gone of ["facts", "sms-not-open", "estimated-cost", "approval-aside"]) await expect(phone.getByTestId(gone), gone).toHaveCount(0);
+    await expect(phone.getByTestId("english-body")).toBeVisible();
 
     const row = await entryRow(returned.entryId);
     expect(row).toMatchObject({ status: "draft", returned_for: "return", returned_note: "Say which floors, and when the elevator will be back.", approved_by: null, web_published_at: null });

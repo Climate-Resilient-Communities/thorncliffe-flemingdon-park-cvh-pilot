@@ -1,6 +1,6 @@
 // The one-segment fixture of the menus and prompts (S07.05, AR-19, AD-21): every menu and prompt text in every launch language renders to
 // exactly one segment with messaging's real encoder (GSM-7 or UCS-2, the body sent byte for byte with SmartEncoded=false), or this fails
-// naming the text and the language. The pages are the real ones: the 43 pilot buildings of the committed City register by street, each
+// naming the text and the language. The pages are the real ones: the 42 pilot buildings of the committed City register and merge file by street, each
 // building's floors as the seed makes them (1 to its storeys, unconfirmed), floors with the longest labels an Admin may give, and the 15
 // languages; every page of every list is walked with the menus' own moves (a page that cannot fit one option fails naming its catalog
 // strings and the language). The fixed texts are filled with their longest values, and each page's own strings (its title, the reserved
@@ -153,8 +153,8 @@ describe("the menus' one-segment fixture (every menu and prompt text, every lang
     }
   });
 
-  it("renders every page of menu 1 for the 43 pilot buildings, with the seeded floors and the longest labels, to one segment of 1 to 7 options", () => {
-    expect(BUILDINGS).toHaveLength(43);
+  it("renders every page of menu 1 for the 42 pilot buildings, with the seeded floors and the longest labels, to one segment of 1 to 7 options", () => {
+    expect(BUILDINGS).toHaveLength(42);
     for (const lang of LAUNCH_CODES) {
       for (const floors of [SEEDED, LONGEST]) {
         const world: MenuWorld = { lang, buildings: BUILDINGS, floors, fits: fitsOneText };
@@ -181,7 +181,7 @@ describe("the menus' one-segment fixture (every menu and prompt text, every lang
           }
         }
         // Every building is reached by exactly one street and one number.
-        expect(buildingsSeen, lang).toBe(43);
+        expect(buildingsSeen, lang).toBe(42);
       }
     }
   });

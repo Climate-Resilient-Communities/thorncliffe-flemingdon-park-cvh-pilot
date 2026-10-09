@@ -56,6 +56,8 @@ export const building = pgTable(
     contactOwner: text("contact_owner"),
     contactUpdatedAt: timestamp("contact_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** UAT F-5: the building data/seed/building-merge.csv folded this one into (set by the buildings seed); null for every other. A merged building is in no list. */
+    mergedInto: text("merged_into"),
   },
   (t) => [
     check("building_rsn_format", sql`${t.rsn} ~ '^[0-9]{1,9}$'`),
@@ -71,9 +73,12 @@ export const building = pgTable(
       "building_contact_complete",
       sql`(${t.contactRole} is null and ${t.contactPhone} is null and ${t.contactOwner} is null and ${t.contactUpdatedAt} is null) or (${t.contactRole} is not null and ${t.contactPhone} is not null and ${t.contactOwner} is not null and ${t.contactUpdatedAt} is not null)`,
     ),
+    check("building_merged_into_other", sql`${t.mergedInto} is null or ${t.mergedInto} <> ${t.rsn}`),
     foreignKey({ name: "building_floors_confirmed_by_fkey", columns: [t.floorsConfirmedBy], foreignColumns: [staffAccountKey.id] }),
+    foreignKey({ name: "building_merged_into_fkey", columns: [t.mergedInto], foreignColumns: [t.rsn] }),
     index("building_neighbourhood_id_idx").on(t.neighbourhoodId),
     index("building_floors_confirmed_by_idx").on(t.floorsConfirmedBy),
+    index("building_merged_into_idx").on(t.mergedInto),
     pgPolicy("building_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("building_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],

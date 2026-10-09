@@ -15,7 +15,7 @@ export { NO_ASSIGNMENTS, type AssignedAmbassador, type FloorAssignments, type Pl
 export { CONTACT_OWNER, CONTACT_ROLES, CONTACT_ROLE_LABEL_KEYS, checkContact, displayPhone, isContactRole, normalizePhone, telHref, type ContactCheck, type ContactError, type ContactRole } from "./domain/buildingContact";
 export { FLOOR_LABEL_MAX_LENGTH, checkFloorLabel, floorLabelKey, trimFloorLabel, type FloorLabelCheck, type FloorLabelError } from "./domain/floorLabel";
 export { formatImportReport } from "./domain/importReport";
-export { streetOf, type StreetAddress } from "./domain/street";
+export { compareAddresses, streetOf, type StreetAddress } from "./domain/street";
 export {
   PILOT_AREAS,
   formatProblem,

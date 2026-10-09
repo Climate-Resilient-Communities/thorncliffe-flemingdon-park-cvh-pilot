@@ -173,7 +173,7 @@ describe("an entry that is not waiting for this person", () => {
   it.each([
     ["approved", { status: "approved" as const }, "This alert was approved and is published."],
     ["discarded", { status: "discarded" as const }, "This alert was discarded."],
-    ["a draft its author pulled back", { status: "draft" as const, contentHash: null, submittedAt: null }, "Its author pulled it back to a draft, so it is not waiting for approval."],
+    ["a draft its author pulled back", { status: "draft" as const, contentHash: null, submittedAt: null }, "Its author pulled it back to a draft, so it is not waiting for approval. Nothing goes out until they submit it again."],
     ["superseded", { status: "superseded" as const }, "This alert is not waiting for approval."],
   ])("says what became of %s, and offers no action", (_name, entry, message) => {
     const screen = screenOf({ entry });
@@ -187,9 +187,12 @@ describe("an entry that is not waiting for this person", () => {
     expect(edited.status).toBe("locked");
   });
 
-  it("shows the note an approver sent back with, on the draft it returned", () => {
+  it("shows the note an approver sent back with, on the draft it returned, and says it waits for its author (UAT F-4)", () => {
     const returned = screenOf({ entry: { status: "draft", contentHash: null, submittedAt: null, returnedFor: "return", returnedNote: "Say which floors." } });
-    expect(returned.locked).toEqual({ message: "This alert was sent back to its author with a note, and is waiting for the author to submit it again.", note: "The note sent: Say which floors." });
+    expect(returned.locked).toEqual({ message: "Returned to the author, waiting for their changes. Nothing goes out until they submit it again.", note: "The note sent: Say which floors." });
+    expect(returned.awaitingAuthor).toBe(true);
+    expect(screenOf().awaitingAuthor).toBe(false);
+    expect(screenOf({ entry: { status: "approved" } }).awaitingAuthor).toBe(false);
   });
 
   it("says a closed thread's pending entry is closed", () => {

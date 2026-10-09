@@ -42,7 +42,8 @@ const HANDLED: DescribedEscalation = {
 };
 const ADMIN: EscalationViewer = { followUp: true, aal2: true };
 const COORDINATOR: EscalationViewer = { followUp: false, aal2: false };
-const LINKED: ResidentFacts = { kind: "linked", phone: PHONE, method: "call" };
+// UAT note 9: the resident chose Urdu, which the page says beside the number.
+const LINKED: ResidentFacts = { kind: "linked", phone: PHONE, method: "call", lang: "ur" };
 const e = (key: string) => englishText(`staff.rounds.escalation.${key}`);
 const formLabels = { heading: e("markHeading"), note: e("note"), noteHint: e("noteHint"), mark: e("mark"), marking: e("marking"), noteMax: 300 };
 
@@ -147,6 +148,8 @@ for (const state of Object.keys(PAGES) as (keyof typeof PAGES)[]) {
       if (state === "admin") {
         await expect(page.getByTestId("escalation-phone")).toHaveAttribute("href", `tel:${PHONE}`);
         await expect(page.getByTestId("escalation-resident")).toContainText("a call");
+        await expect(page.getByTestId("escalation-phone")).toHaveText("(416) 555-0181");
+        await expect(page.getByTestId("escalation-language")).toHaveText("LanguageUrdu");
         const mark = page.getByRole("button", { name: "Mark handled" });
         await expect(mark).toBeVisible();
         expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
