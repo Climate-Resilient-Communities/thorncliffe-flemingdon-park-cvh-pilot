@@ -31,7 +31,7 @@ describe("alert detail (R-07)", () => {
     const html = render({ entries: [englishEntry()] });
 
     expect(html).toContain('data-testid="alert-attribution"');
-    expect(html).toContain("Community alert from the Hub");
+    expect(html).toContain("Thorncliffe Park Community Hub alert");
     expect(html).toContain("Verified by the Hub");
     expect(html).toMatch(/<a class="alert-verify alert-verify--verified tap"[^>]*data-testid="alert-whatmeans"[^>]*href="\/en\/alerts\/kbcdfghj\/verified"/);
     expect(html).toContain("What this means");
@@ -252,7 +252,7 @@ describe("the alert card on home", () => {
     expect(html).toMatch(/<a class="alert-card tap"[^>]*data-testid="alert-card-kbcdfghj"[^>]*href="\/en\/alerts\/kbcdfghj"/);
     expect(html).toContain(">Elevator<");
     expect(html).toContain(ENGLISH);
-    expect(html).toContain("Community alert from the Hub");
+    expect(html).toContain("Thorncliffe Park Community Hub alert");
     expect(html).toContain("Verified by the Hub");
     expect(html).toContain("Posted 20 minutes ago");
     expect(html).toContain("Read the alert");

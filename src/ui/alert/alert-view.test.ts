@@ -61,7 +61,7 @@ describe("the origin and verification of an alert (X-02)", () => {
   it("is the Hub's whole sentence and 'Verified by the Hub': never the Hub joined to a preposition", () => {
     const origin = view().origin;
 
-    expect(origin).toEqual({ attribution: "Community alert from the Hub", verified: true, verification: "Verified by the Hub", whatMeans: "What this means" });
+    expect(origin).toEqual({ attribution: "Thorncliffe Park Community Hub alert", verified: true, verification: "Verified by the Hub", whatMeans: "What this means" });
   });
 
   it("is 'Not yet verified' for an entry the Hub has not checked", () => {

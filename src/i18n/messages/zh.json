@@ -562,8 +562,8 @@
     "lockScreen": "锁屏",
     "now": "现在",
     "levelOfficial": "来自{source}的官方警报。",
-    "levelCommunity": "来自中心的社区警报。已由中心核实。",
-    "fromHub": "来自中心的社区警报",
+    "levelCommunity": "Thorncliffe Park Community Hub 警报。已由中心核实。",
+    "fromHub": "Thorncliffe Park Community Hub 警报",
     "levelAmbassador": "来自楼宇联络员的社区警报。尚未核实。",
     "stop": "如要停止接收中心的所有短信，请回复 STOP。",
     "verifiedKeyword": "如想了解“已核实”的意思，请回复 INFO。",
@@ -6337,6 +6337,9 @@
     }
   },
   "signup": {
+    "textsAgree": "是的，请将 Thorncliffe Park Community Hub 的 CVH 短信警报发送到此号码。",
+    "optional": "短信警报是可选的。不注册也可以使用本应用的所有功能。",
+    "missingTexts": "您同意接收短信警报",
     "termsAgree": "我已阅读条款和隐私页面，并且同意。",
     "termsLink": "阅读条款和隐私页面",
     "termsVersion": "条款版本 {version}",
@@ -6354,6 +6357,7 @@
       "invalid_request": "表格中的某些内容无法读取。请重新加载页面后再试。",
       "phone_not_canadian": "请使用 10 位数字的加拿大电话号码，例如 416 555 0123。",
       "neighbourhood_missing": "请选择您的社区。",
+      "texts_not_agreed": "如需注册，请勾选接收短信警报的方框。",
       "terms_not_agreed": "如要登记，请同意条款。",
       "age_not_confirmed": "如要登记，请确认年龄声明。",
       "terms_changed": "在此页面打开期间，条款已更改。请重新阅读，然后同意。",

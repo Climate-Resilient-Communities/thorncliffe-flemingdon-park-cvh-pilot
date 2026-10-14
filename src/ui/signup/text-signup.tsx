@@ -53,7 +53,7 @@ export interface TextSignupProps {
   endpoint?: string;
 }
 
-type Field = "phone" | "nbhd" | "terms" | "age";
+type Field = "phone" | "nbhd" | "texts" | "terms" | "age";
 
 interface Draft {
   phone: string;
@@ -99,6 +99,8 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
 
   // What the resident changed; everything else comes from the phone's choices, read once they are known (undefined until then).
   const [edits, setEdits] = useState<Partial<Draft>>({});
+  // Agreeing to texts is its own unticked box, apart from the terms (carriers' toll-free rule: getting texts is optional).
+  const [textsAgreed, setTextsAgreed] = useState(false);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [query, setQuery] = useState("");
@@ -164,10 +166,11 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
   const problems: Field[] = [];
   if (phone === null) problems.push("phone");
   if (draft.nbhd === null) problems.push("nbhd");
+  if (!textsAgreed) problems.push("texts");
   if (!termsAgreed) problems.push("terms");
   if (!ageConfirmed) problems.push("age");
   const shows = (field: Field) => submitted && problems.includes(field);
-  const missingWords: Record<Field, string> = { phone: r05("missingPhone"), nbhd: r05("missingNbhd"), terms: t("missingTerms"), age: t("missingAge") };
+  const missingWords: Record<Field, string> = { phone: r05("missingPhone"), nbhd: r05("missingNbhd"), texts: t("missingTexts"), terms: t("missingTerms"), age: t("missingAge") };
 
   // The "where I live" choices: the buildings and floors the form will send (known once the building list has loaded).
   const options = list ? whereOptions(placesOf(draft, list), list.buildings) : [];
@@ -520,6 +523,18 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
 
           <div className="signup-field" data-testid="signup-terms">
             <Stack gap="target">
+              <ResidentText as="p" className="choice-hint" testId="signup-optional">
+                {t("optional")}
+              </ResidentText>
+              <ChoiceOption kind="checkbox" name="texts" value="agreed" checked={textsAgreed} onChange={() => setTextsAgreed(!textsAgreed)} label={t("textsAgree")} testId="signup-texts-agree" />
+              <ResidentText as="p" className="choice-hint" testId="signup-sms-terms">
+                {t("smsTerms")}
+              </ResidentText>
+              {shows("texts") && (
+                <p className="signup-error" data-testid="signup-error-texts">
+                  <ResidentText>{t("error.texts_not_agreed")}</ResidentText>
+                </p>
+              )}
               {termsDraft && (
                 <p className="signup-draft" role="note" data-testid="signup-terms-draft">
                   <ResidentText>{terms("draftTitle")}</ResidentText>
@@ -552,9 +567,6 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
             </ResidentText>
             <ResidentText as="p" className="choice-hint">
               {r05("whatYouGet")}
-            </ResidentText>
-            <ResidentText as="p" className="choice-hint" testId="signup-sms-terms">
-              {t("smsTerms")}
             </ResidentText>
           </Stack>
 

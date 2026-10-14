@@ -332,7 +332,7 @@ describe("share an alert (R-29, S05.08)", () => {
 
     expect(page).toContain('data-testid="share-message"');
     expect(page).toContain(ENGLISH);
-    expect(page).toContain("<p class=\"share-box__line\" dir=\"auto\">Community alert from the Hub</p><p class=\"share-box__line\" dir=\"auto\">Verified by the Hub</p><p class=\"share-box__line\" dir=\"auto\">4 Milepost Pl</p><p class=\"share-box__line\" dir=\"auto\">Posted today at 10:40 AM</p>");
+    expect(page).toContain("<p class=\"share-box__line\" dir=\"auto\">Thorncliffe Park Community Hub alert</p><p class=\"share-box__line\" dir=\"auto\">Verified by the Hub</p><p class=\"share-box__line\" dir=\"auto\">4 Milepost Pl</p><p class=\"share-box__line\" dir=\"auto\">Posted today at 10:40 AM</p>");
     expect(page).toContain("Not an emergency service. In danger? Call 911.");
     expect(page).toContain("Newest updates and any corrections: https://cvh.example.org/a/kbcdfghj?l=en");
     expect(page).toContain('data-testid="share-send"');

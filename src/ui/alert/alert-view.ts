@@ -40,7 +40,7 @@ export interface TextView {
 }
 
 export interface OriginView {
-  /** "Community alert from the Hub": the Hub's whole sentence. */
+  /** "Thorncliffe Park Community Hub alert": the Hub's whole sentence. */
   attribution: string;
   verified: boolean;
   /** "Verified by the Hub" or "Not yet verified": the same words on every surface (FR-A5). */

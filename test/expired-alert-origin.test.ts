@@ -36,7 +36,7 @@ describe("an expired alert, as residents read it (UAT F-2)", () => {
     const thread = assembleClosedThread([row({}), EXPIRY], "en", "expired")!;
     expect(FeedThreadSchema.safeParse(thread).success).toBe(true);
     const view = alertView(thread, { lang: "en", serverNow: new Date("2026-10-08T22:10:00Z"), t: translatorFor("en") });
-    expect(view.origin).toMatchObject({ attribution: "Community alert from the Hub", verified: true, verification: "Verified by the Hub" });
+    expect(view.origin).toMatchObject({ attribution: "Thorncliffe Park Community Hub alert", verified: true, verification: "Verified by the Hub" });
     expect(view.closed).toMatchObject({ reason: "expired", icon: "clock" });
   });
 
@@ -44,6 +44,6 @@ describe("an expired alert, as residents read it (UAT F-2)", () => {
     const thread = assembleClosedThread([row({ verified: false, attributedRsn: "4154146" }), EXPIRY], "en", "expired")!;
     const view = alertView(thread, { lang: "en", serverNow: new Date("2026-10-08T22:10:00Z"), t: translatorFor("en") });
     expect(view.origin).toMatchObject({ verified: false, verification: "Not yet verified" });
-    expect(view.origin.attribution).not.toBe("Community alert from the Hub");
+    expect(view.origin.attribution).not.toBe("Thorncliffe Park Community Hub alert");
   });
 });

@@ -2214,6 +2214,9 @@
   /* S07.02: the web sign-up for text alerts (R-05, R-06 as built) and the confirmation text. The keywords residents text (YES, STOP,
      START) and "CVH" stay in English in every language. */
   m(en, { signup: {
+    textsAgree: 'Yes, text me CVH alerts from the Thorncliffe Park Community Hub at this number.',
+    optional: 'Text alerts are optional. You can use every part of this app without signing up.',
+    missingTexts: 'your agreement to get text alerts',
     termsAgree: 'I have read the terms and privacy page, and I agree.',
     termsLink: 'Read the terms and privacy page',
     termsVersion: 'Terms version {version}',
@@ -2231,6 +2234,7 @@
       invalid_request: 'Something in the form could not be read. Reload the page and try again.',
       phone_not_canadian: 'Use a Canadian phone number with 10 digits, like 416 555 0123.',
       neighbourhood_missing: 'Choose your neighbourhood.',
+      texts_not_agreed: 'To sign up, tick the box to get text alerts.',
       terms_not_agreed: 'To sign up, agree to the terms.',
       age_not_confirmed: 'To sign up, confirm the age statement.',
       terms_changed: 'The terms changed while this page was open. Read them again, then agree.',

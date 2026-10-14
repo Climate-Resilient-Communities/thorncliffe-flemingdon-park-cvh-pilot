@@ -26,7 +26,7 @@ describe("the shared message of a verified alert", () => {
   it("is, in the prototype's order: what, who sent it, whether the Hub checked it, where, when, the 911 line and the link", () => {
     expect(m.lines.map(plain)).toEqual([
       `Elevator: ${ENGLISH}`,
-      "Community alert from the Hub",
+      "Thorncliffe Park Community Hub alert",
       "Verified by the Hub",
       "Thorncliffe Park",
       "Posted today at 10:40 AM",
@@ -66,7 +66,7 @@ describe("the shared message in the page's language", () => {
     const m = message(thread({ entries: [entry()] }), "ur");
 
     expect(m.lines[0]).toBe(`لفٹ: ${URDU}`);
-    expect(m.lines[1]).toBe("ہب کی طرف سے کمیونٹی الرٹ");
+    expect(m.lines[1]).toBe("Thorncliffe Park Community Hub کا الرٹ");
     expect(m.text).not.toContain("مشین سے ترجمہ");
     expect(m.text).toContain("تازہ ترین اپ ڈیٹس");
     expect(m.text).not.toMatch(/Posted|Verified|Community alert/);
@@ -76,7 +76,7 @@ describe("the shared message in the page's language", () => {
     const m = message(thread({ entries: [fallbackEntry()] }), "ur");
 
     expect(m.lines[0]).toBe(`لفٹ: ${ENGLISH}`);
-    expect(m.lines[1]).toBe("ہب کی طرف سے کمیونٹی الرٹ");
+    expect(m.lines[1]).toBe("Thorncliffe Park Community Hub کا الرٹ");
     expect(m.text).not.toContain("ابھی اس زبان میں دستیاب نہیں");
   });
 });

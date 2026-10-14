@@ -562,8 +562,8 @@
     "lockScreen": "Pantalla de bloqueo",
     "now": "ahora",
     "levelOfficial": "Alerta oficial de {source}.",
-    "levelCommunity": "Alerta comunitaria del Hub. Verificada por el Hub.",
-    "fromHub": "Alerta comunitaria del Hub",
+    "levelCommunity": "Alerta del Thorncliffe Park Community Hub. Verificada por el Hub.",
+    "fromHub": "Alerta del Thorncliffe Park Community Hub",
     "levelAmbassador": "Alerta comunitaria de un embajador del edificio. Aún no verificada.",
     "stop": "Para dejar de recibir todos los mensajes del Hub, responda STOP.",
     "verifiedKeyword": "Para saber qué significa verificado, responda INFO.",
@@ -6337,6 +6337,9 @@
     }
   },
   "signup": {
+    "textsAgree": "Sí, envíenme alertas CVH por texto del Thorncliffe Park Community Hub a este número.",
+    "optional": "Las alertas por texto son opcionales. Puede usar toda la aplicación sin inscribirse.",
+    "missingTexts": "su aceptación para recibir alertas por texto",
     "termsAgree": "He leído la página de términos y privacidad, y estoy de acuerdo.",
     "termsLink": "Leer la página de términos y privacidad",
     "termsVersion": "Versión de los términos {version}",
@@ -6354,6 +6357,7 @@
       "invalid_request": "No se pudo leer algo del formulario. Vuelva a cargar la página e inténtelo de nuevo.",
       "phone_not_canadian": "Use un número de teléfono canadiense de 10 dígitos, como 416 555 0123.",
       "neighbourhood_missing": "Elija su barrio.",
+      "texts_not_agreed": "Para inscribirse, marque la casilla para recibir alertas por texto.",
       "terms_not_agreed": "Para inscribirse, acepte los términos.",
       "age_not_confirmed": "Para inscribirse, confirme la declaración de edad.",
       "terms_changed": "Los términos cambiaron mientras esta página estaba abierta. Vuelva a leerlos y luego acéptelos.",
