@@ -102,7 +102,7 @@ test.describe("home", () => {
     const first = page.getByTestId(`alert-card-${T1}`);
     await expect(first.getByTestId("alert-types")).toContainText("Elevator");
     await expect(first.getByTestId(`alert-card-text-${T1}`)).toHaveText(UPDATE);
-    await expect(first.getByTestId("alert-attribution")).toHaveText("Community alert from the Hub");
+    await expect(first.getByTestId("alert-attribution")).toHaveText("Thorncliffe Park Community Hub alert");
     await expect(first.getByTestId("alert-verification")).toHaveText("Verified by the Hub");
     await expect(first).toContainText("Updated 20 minutes ago");
     await expect(first).toHaveAttribute("href", `/en/alerts/${T1}`);
@@ -155,7 +155,7 @@ test.describe("alert detail (R-07)", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Elevator");
     await expect(page.getByTestId("alert-type-elevator").locator(".alert-ico")).toBeVisible();
     await expect(page.getByTestId("alert-text")).toHaveText(UPDATE);
-    await expect(page.getByTestId("alert-attribution")).toHaveText("Community alert from the Hub");
+    await expect(page.getByTestId("alert-attribution")).toHaveText("Thorncliffe Park Community Hub alert");
     await expect(page.getByTestId("alert-whatmeans")).toContainText("Verified by the Hub");
     await expect(page.getByTestId("alert-whatmeans")).toContainText("What this means");
     await expect(page.getByTestId("alert-whatmeans")).toHaveAttribute("href", `/en/alerts/${T1}/verified`);
@@ -553,7 +553,7 @@ test.describe("share an alert (R-29, S05.08)", () => {
     const lines = (await previewedLines(page)).map((line) => line.replace(/[  ]/g, " "));
     expect(lines).toEqual([
       `Elevator: ${UPDATE}`,
-      "Community alert from the Hub",
+      "Thorncliffe Park Community Hub alert",
       "Verified by the Hub",
       "4 Milepost Pl",
       "Posted today at 10:00 AM",

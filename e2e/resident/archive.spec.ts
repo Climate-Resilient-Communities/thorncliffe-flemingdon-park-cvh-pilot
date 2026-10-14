@@ -123,7 +123,7 @@ test.describe("the archive screen (R-08)", () => {
     await expect(page.getByTestId(`archive-end-${RESOLVED}`).locator(".alert-ico--check")).toBeVisible();
     await expect(page.getByTestId(`archive-text-${RESOLVED}`)).toHaveText(FINAL);
     await expect(resolved.getByTestId("alert-types")).toContainText("Power");
-    await expect(resolved.getByTestId("alert-attribution")).toHaveText("Community alert from the Hub");
+    await expect(resolved.getByTestId("alert-attribution")).toHaveText("Thorncliffe Park Community Hub alert");
     await expect(resolved.getByTestId("alert-verification")).toHaveText("Verified by the Hub");
     await expect(page.getByTestId(`archive-posted-${RESOLVED}`)).toHaveText("Posted 4 hours ago");
     await expect(page.getByTestId(`archive-end-${EXPIRED}`)).toHaveText("Expired 7 hours ago");

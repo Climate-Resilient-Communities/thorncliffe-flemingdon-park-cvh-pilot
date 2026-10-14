@@ -29,6 +29,7 @@ const choices = (value: Record<string, unknown>) => JSON.stringify({ v: 1, welco
 
 async function fillValid(page: Page) {
   await page.getByTestId("signup-phone").fill("(416) 555-0123");
+  await page.getByTestId("signup-texts-agree").click();
   await page.getByTestId("signup-terms-agree").click();
   await page.getByTestId("signup-age").click();
 }
@@ -59,6 +60,7 @@ test.describe("the form", () => {
     // What carriers ask an opt-in to say: the program, how often, that rates may apply, and HELP and STOP.
     const disclosure = page.getByTestId("signup-sms-terms");
     for (const words of ["Thorncliffe Park Community Hub", "Message frequency varies", "Msg & data rates may apply", "HELP", "STOP"]) await expect(disclosure).toContainText(words);
+    await expect(page.getByTestId("signup-texts-agree").locator("input")).not.toBeChecked();
     await expect(page.getByTestId("signup-terms-agree").locator("input")).not.toBeChecked();
     await expect(page.getByTestId("signup-age").locator("input")).not.toBeChecked();
   });
@@ -88,6 +90,7 @@ test.describe("the form", () => {
     await expect(page.getByTestId("signup-errorbox")).toContainText(catalogText("en", "R05.missingNbhd"));
     await expect(page.getByTestId("signup-error-phone")).toHaveText(catalogText("en", "signup.error.phone_not_canadian"));
     await expect(page.getByTestId("signup-error-nbhd")).toBeVisible();
+    await expect(page.getByTestId("signup-error-texts")).toHaveText(catalogText("en", "signup.error.texts_not_agreed"));
     await expect(page.getByTestId("signup-error-terms")).toHaveText(catalogText("en", "signup.error.terms_not_agreed"));
     await expect(page.getByTestId("signup-error-age")).toHaveText(catalogText("en", "signup.error.age_not_confirmed"));
     await expect(page.getByTestId("signup-phone")).toHaveAttribute("aria-invalid", "true");
@@ -161,6 +164,7 @@ test.describe("the form", () => {
     await openResident(page, "/en/text-alerts", 390);
 
     await page.getByTestId("signup-phone").fill("۴۱۶ ۵۵۵ ۰۱۲۳");
+    await page.getByTestId("signup-texts-agree").click();
     await page.getByTestId("signup-terms-agree").click();
     await page.getByTestId("signup-age").click();
     await page.getByTestId("signup-nbhd-TP").click();
@@ -246,6 +250,7 @@ for (const language of LANGUAGES) {
     await expect(page.locator("html")).toHaveAttribute("dir", language.dir);
     await expect(page.getByTestId("shell-nav")).toBeVisible();
     await expect(page.locator("main h1")).toHaveText(catalogText(language.code, "R05.title"));
+    await expect(page.getByTestId("signup-texts-agree")).toContainText(catalogText(language.code, "signup.textsAgree"));
     await expect(page.getByTestId("signup-terms-agree")).toContainText(catalogText(language.code, "signup.termsAgree"));
     await expect(page.getByTestId("signup-age")).toContainText(catalogText(language.code, "signup.age"));
     await expect(page.getByTestId("signup-nbhd-TP")).toContainText(catalogText(language.code, "neighbourhoods.TP"));
@@ -271,6 +276,7 @@ for (const language of LANGUAGES) {
 
       await page.getByTestId("signup-phone").fill("416 555 0123");
       await page.getByTestId("signup-nbhd-TP").click();
+      await page.getByTestId("signup-texts-agree").click();
       await page.getByTestId("signup-terms-agree").click();
       await page.getByTestId("signup-age").click();
       await page.getByTestId("signup-send").click();

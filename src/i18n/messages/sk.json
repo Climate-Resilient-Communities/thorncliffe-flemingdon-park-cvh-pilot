@@ -562,8 +562,8 @@
     "lockScreen": "Uzamknutá obrazovka",
     "now": "teraz",
     "levelOfficial": "Oficiálne upozornenie od {source}.",
-    "levelCommunity": "Komunitné upozornenie od Hubu. Overil ho Hub.",
-    "fromHub": "Komunitné upozornenie od Hubu",
+    "levelCommunity": "Upozornenie od Thorncliffe Park Community Hub. Overil ho Hub.",
+    "fromHub": "Upozornenie od Thorncliffe Park Community Hub",
     "levelAmbassador": "Komunitné upozornenie od ambasádora budovy. Zatiaľ neoverené.",
     "stop": "Ak už nechcete dostávať žiadne správy od Hubu, odpovedzte STOP.",
     "verifiedKeyword": "Ak chcete vedieť, čo znamená „overené“, odpovedzte INFO.",
@@ -6337,6 +6337,9 @@
     }
   },
   "signup": {
+    "textsAgree": "Áno, posielajte mi textové upozornenia CVH od Thorncliffe Park Community Hub na toto číslo.",
+    "optional": "Textové upozornenia sú dobrovoľné. Celú aplikáciu môžete používať aj bez prihlásenia.",
+    "missingTexts": "váš súhlas s textovými upozorneniami",
     "termsAgree": "Prečítal(a) som si stránku s podmienkami a ochranou súkromia a súhlasím.",
     "termsLink": "Prečítajte si stránku s podmienkami a ochranou súkromia",
     "termsVersion": "Verzia podmienok {version}",
@@ -6354,6 +6357,7 @@
       "invalid_request": "Niečo vo formulári sa nedalo prečítať. Načítajte stránku znova a skúste to znova.",
       "phone_not_canadian": "Použite kanadské telefónne číslo s 10 číslicami, napríklad 416 555 0123.",
       "neighbourhood_missing": "Vyberte svoju štvrť.",
+      "texts_not_agreed": "Ak sa chcete prihlásiť, začiarknite políčko pre textové upozornenia.",
       "terms_not_agreed": "Ak sa chcete prihlásiť, súhlaste s podmienkami.",
       "age_not_confirmed": "Ak sa chcete prihlásiť, potvrďte vyhlásenie o veku.",
       "terms_changed": "Podmienky sa zmenili, kým bola táto stránka otvorená. Prečítajte si ich znova a potom súhlaste.",

@@ -80,6 +80,7 @@ async function openSignupWithCheckin(page: Page, lang: string, json: unknown = {
   await seedChoices(page, choices({ lang, buildings: [MILEPOST], floors: [FLOOR.milepost1, FLOOR.milepost2] }));
   await openResident(page, `/${lang}/text-alerts`, 390);
   await page.getByTestId("signup-phone").fill("(416) 555-0123");
+  await page.getByTestId("signup-texts-agree").click();
   await page.getByTestId("signup-terms-agree").click();
   await page.getByTestId("signup-age").click();
   await page.getByTestId("signup-checkin-ask").click();
@@ -116,6 +117,7 @@ test.describe("the request on the sign-up form", () => {
     await seedChoices(page, choices({ buildings: [MILEPOST], floors: [FLOOR.milepost1] }));
     await openResident(page, "/en/text-alerts", 390);
     await page.getByTestId("signup-phone").fill("(416) 555-0123");
+    await page.getByTestId("signup-texts-agree").click();
     await page.getByTestId("signup-terms-agree").click();
     await page.getByTestId("signup-age").click();
     await page.getByTestId("signup-send").click();

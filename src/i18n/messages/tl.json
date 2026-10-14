@@ -562,8 +562,8 @@
     "lockScreen": "Naka-lock na screen",
     "now": "ngayon",
     "levelOfficial": "Opisyal na alerto mula sa {source}.",
-    "levelCommunity": "Alerto ng komunidad mula sa Hub. Beripikado ng Hub.",
-    "fromHub": "Alerto ng komunidad mula sa Hub",
+    "levelCommunity": "Alerto mula sa Thorncliffe Park Community Hub. Beripikado ng Hub.",
+    "fromHub": "Alerto mula sa Thorncliffe Park Community Hub",
     "levelAmbassador": "Alerto ng komunidad mula sa isang ambassador ng gusali. Hindi pa beripikado.",
     "stop": "Para itigil ang lahat ng mensahe mula sa Hub, sumagot ng STOP.",
     "verifiedKeyword": "Para malaman ang ibig sabihin ng beripikado, sumagot ng INFO.",
@@ -6337,6 +6337,9 @@
     }
   },
   "signup": {
+    "textsAgree": "Oo, padalhan ako ng mga CVH text alert mula sa Thorncliffe Park Community Hub sa numerong ito.",
+    "optional": "Opsyonal ang mga text alert. Magagamit mo ang buong app kahit hindi ka mag-sign up.",
+    "missingTexts": "ang pagpayag mong tumanggap ng mga text alert",
     "termsAgree": "Nabasa ko ang pahina ng mga tuntunin at privacy, at pumapayag ako.",
     "termsLink": "Basahin ang pahina ng mga tuntunin at privacy",
     "termsVersion": "Bersyon ng mga tuntunin {version}",
@@ -6354,6 +6357,7 @@
       "invalid_request": "May bahagi ng form na hindi mabasa. I-reload ang pahina at subukan ulit.",
       "phone_not_canadian": "Gumamit ng numero ng telepono sa Canada na may 10 digit, tulad ng 416 555 0123.",
       "neighbourhood_missing": "Piliin ang inyong kapitbahayan.",
+      "texts_not_agreed": "Para mag-sign up, lagyan ng tsek ang kahon para tumanggap ng mga text alert.",
       "terms_not_agreed": "Para mag-sign up, pumayag sa mga tuntunin.",
       "age_not_confirmed": "Para mag-sign up, kumpirmahin ang pahayag tungkol sa edad.",
       "terms_changed": "Nagbago ang mga tuntunin habang bukas ang pahinang ito. Basahin ulit ang mga ito, pagkatapos ay pumayag.",

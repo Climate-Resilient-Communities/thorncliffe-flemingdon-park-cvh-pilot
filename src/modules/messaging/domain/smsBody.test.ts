@@ -25,7 +25,7 @@ const lines = (body: string) => body.split("\n");
 
 const FOOTER = ["More: https://cvh.example/a/k3x9a2", "To stop all messages from the Hub, reply STOP."];
 const NINE_ONE_ONE = "The Hub is not an emergency service. If someone is in danger, call 911.";
-const VERIFIED = ["Verified by the Hub", "Community alert from the Hub"];
+const VERIFIED = ["Verified by the Hub", "Thorncliffe Park Community Hub alert"];
 const TEXT = ENGLISH;
 
 describe("render: the English body, part by part", () => {
@@ -72,7 +72,7 @@ describe("render: the English body, part by part", () => {
         "Correction",
         "The Hub is not an emergency service. If someone is in danger, call 911.",
         "Verified by the Hub",
-        "Community alert from the Hub",
+        "Thorncliffe Park Community Hub alert",
         "Power is out on floors 4 to 6. Toronto Hydro is on site.",
         "More: https://cvh.example/a/k3x9a2",
         "To stop all messages from the Hub, reply STOP.",
@@ -83,7 +83,7 @@ describe("render: the English body, part by part", () => {
         "Exercise. Practice only.",
         "Correction",
         "Verified by the Hub",
-        "Community alert from the Hub",
+        "Thorncliffe Park Community Hub alert",
         "Power is out on floors 4 to 6. Toronto Hydro is on site.",
         "The Hub is not an emergency service. If someone is in danger, call 911.",
         "More: https://cvh.example/a/k3x9a2",
@@ -99,16 +99,16 @@ describe("render: the English body, part by part", () => {
   });
 
   it("says 'Not yet verified' when it is not verified and 'Verified by the Hub' when it is", () => {
-    expect(lines(render(entry({ verified: false }), "en", false, SLUG, BASE).body).slice(0, 2)).toEqual(["Not yet verified", "Community alert from the Hub"]);
+    expect(lines(render(entry({ verified: false }), "en", false, SLUG, BASE).body).slice(0, 2)).toEqual(["Not yet verified", "Thorncliffe Park Community Hub alert"]);
     expect(lines(render(entry({ verified: true }), "en", false, SLUG, BASE).body)[0]).toBe("Verified by the Hub");
   });
 
   // A Hub post's attribution is the catalog's own whole sentence, never "community alert from {author}" with the
   // Hub's name dropped in: that joined a preposition to an article ("de le Hub", "de el Hub", "od Hub").
   it.each([
-    ["fr", "Alerte communautaire du Hub", "de le Hub"],
-    ["es", "Alerta comunitaria del Hub", "de el Hub"],
-    ["sk", "Komunitné upozornenie od Hubu", "od Hub"],
+    ["fr", "Alerte du Thorncliffe Park Community Hub", "de le Hub"],
+    ["es", "Alerta del Thorncliffe Park Community Hub", "de el Hub"],
+    ["sk", "Upozornenie od Thorncliffe Park Community Hub", "od Hub"],
   ] as const)("%s: a Hub post says %j, not a preposition joined to an article", (lang, expected, wrong) => {
     const attribution = lines(render(entry(), lang, false, SLUG, BASE).body)[1];
 
@@ -318,20 +318,20 @@ const SAMPLE: Record<LaunchCode, string> = {
 // [encoding, segments of the translated body, segments of the fallback body] at BASE and SLUG, a power alert from the Hub.
 const COUNTS: Record<LaunchCode, ["gsm7" | "ucs2", number, number]> = {
   ur: ["ucs2", 5, 5],
-  ps: ["ucs2", 5, 5],
+  ps: ["ucs2", 6, 5],
   tl: ["gsm7", 3, 3],
   prs: ["ucs2", 5, 5],
-  gu: ["ucs2", 5, 4],
+  gu: ["ucs2", 5, 5],
   ta: ["ucs2", 6, 5],
   el: ["ucs2", 6, 6],
   sk: ["ucs2", 6, 5],
   bn: ["ucs2", 5, 4],
-  hi: ["ucs2", 5, 5],
+  hi: ["ucs2", 6, 5],
   pa: ["ucs2", 6, 5],
   zh: ["ucs2", 3, 3],
-  es: ["ucs2", 6, 5],
-  fr: ["ucs2", 6, 5],
-  en: ["gsm7", 2, 2],
+  es: ["ucs2", 7, 5],
+  fr: ["ucs2", 7, 5],
+  en: ["gsm7", 3, 2],
 };
 
 describe("render: fixtures per language (encoding and segments of the frozen body)", () => {

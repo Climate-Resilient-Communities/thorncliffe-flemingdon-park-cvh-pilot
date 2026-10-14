@@ -39,7 +39,7 @@ export const SMS_STRING_KEYS = {
   /** Part 5, a building ambassador's post: "Building ambassador, {building}". */
   ambassador: "x02.ambassador",
   /**
-   * Part 5, a Hub post: "Community alert from the Hub". The prototype's own text-message wording (the first sentence
+   * Part 5, a Hub post: "Thorncliffe Park Community Hub alert". The prototype's own text-message wording (the first sentence
    * of R04.levelCommunity), whole: joining a preposition to "the Hub" word by word gives "de le Hub" in French,
    * "de el Hub" in Spanish and "od Hub" in Slovak, so no language's Hub attribution is put together from parts.
    */
