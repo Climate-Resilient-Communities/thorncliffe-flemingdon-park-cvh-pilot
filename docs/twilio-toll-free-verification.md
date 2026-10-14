@@ -1,6 +1,6 @@
 # Twilio toll-free verification
 
-The toll-free number +1 833 226 9225 sends nothing until Twilio approves its verification (every text fails with 30032 until then).
+The toll-free number (TWILIO_FROM_NUMBER) sends nothing until Twilio approves its verification (every text fails with 30032 until then).
 
 ## History
 
@@ -35,4 +35,4 @@ The toll-free number +1 833 226 9225 sends nothing until Twilio approves its ver
   ```
 - **Estimated monthly volume:** 1,000
 
-STOP, START and HELP are answered by Twilio's Advanced Opt-Out (see messaging-service-change.md). Set its HELP reply to name the Thorncliffe Park Community Hub and give a contact.
+STOP, START and HELP are answered by Twilio's Advanced Opt-Out (see procedures/messaging-service-change.md). Set its HELP reply to name the Thorncliffe Park Community Hub and give a contact.
