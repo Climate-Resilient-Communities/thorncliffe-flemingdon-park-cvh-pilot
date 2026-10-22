@@ -1396,7 +1396,7 @@
     "buildings": "अपार्टमेंट इमारतें",
     "buildingsCount": "{n} इमारतें",
     "buildingsCountOne": "1 इमारत",
-    "filtered": "केवल वही जगहें दिखाई जा रही हैं जो डायरेक्टरी में आपके चुने हुए फ़िल्टर से मेल खाती हैं।"
+    "filtered": "केवल वही जगहें दिखाई जा रही हैं जो आपके फ़िल्टर से मेल खाती हैं।"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

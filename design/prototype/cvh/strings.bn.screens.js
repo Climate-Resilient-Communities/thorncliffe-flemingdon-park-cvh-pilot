@@ -1385,7 +1385,7 @@
     "buildings": "অ্যাপার্টমেন্ট ভবন",
     "buildingsCount": "{n}টি ভবন",
     "buildingsCountOne": "1টি ভবন",
-    "filtered": "ডিরেক্টরিতে আপনার বেছে নেওয়া ফিল্টারের সঙ্গে মেলে এমন জায়গাগুলোই শুধু দেখানো হচ্ছে।"
+    "filtered": "আপনার ফিল্টারের সঙ্গে মেলে এমন জায়গাগুলোই শুধু দেখানো হচ্ছে।"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

@@ -1385,7 +1385,7 @@
     "buildings": "د اپارتمانونو ودانۍ",
     "buildingsCount": "{n} ودانۍ",
     "buildingsCountOne": "1 ودانۍ",
-    "filtered": "یوازې هغه ځایونه ښودل کېږي چې په لارښود کې ستاسو له ټاکل شویو فلټرونو سره سمون لري."
+    "filtered": "یوازې هغه ځایونه ښودل کېږي چې ستاسو له فلټرونو سره سمون لري."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

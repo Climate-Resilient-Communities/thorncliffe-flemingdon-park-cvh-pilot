@@ -1385,7 +1385,7 @@
     "buildings": "ساختمان‌های آپارتمانی",
     "buildingsCount": "{n} ساختمان",
     "buildingsCountOne": "1 ساختمان",
-    "filtered": "فقط جاهایی نشان داده می‌شوند که با فیلترهای انتخاب‌شده شما در رهنما مطابقت دارند."
+    "filtered": "فقط جاهایی نشان داده می‌شوند که با فیلترهای شما مطابقت دارند."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

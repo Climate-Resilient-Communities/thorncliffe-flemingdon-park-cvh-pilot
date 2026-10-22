@@ -1396,7 +1396,7 @@
     "buildings": "Bytové domy",
     "buildingsCount": "Počet domov: {n}",
     "buildingsCountOne": "1 dom",
-    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

@@ -29,10 +29,12 @@ export function readFilters(storage: FilterStorage | null): FilterState {
   try {
     const raw = storage.getItem(FILTERS_KEY);
     if (!raw) return NO_FILTERS;
-    const value = JSON.parse(raw) as { v?: unknown; categories?: unknown; neighbourhoods?: unknown; emergency?: unknown } | null;
+    const value = JSON.parse(raw) as { v?: unknown; categories?: unknown; subcategories?: unknown; neighbourhoods?: unknown; emergency?: unknown } | null;
     if (!value || value.v !== 1) return NO_FILTERS;
     return {
       categories: [...new Set(strings(value.categories))],
+      // Filters kept before subcategories existed lack the field: none were on.
+      subcategories: [...new Set(strings(value.subcategories))],
       neighbourhoods: [...new Set(strings(value.neighbourhoods).filter(isNeighbourhoodId))],
       emergency: value.emergency === true,
     };
@@ -45,15 +47,16 @@ export function readFilters(storage: FilterStorage | null): FilterState {
 export function saveFilters(storage: FilterStorage | null, state: FilterState): void {
   if (!storage) return;
   try {
-    if (state.categories.length === 0 && state.neighbourhoods.length === 0 && !state.emergency) storage.removeItem(FILTERS_KEY);
-    else storage.setItem(FILTERS_KEY, JSON.stringify({ v: 1, categories: state.categories, neighbourhoods: state.neighbourhoods, emergency: state.emergency }));
+    if (state.categories.length === 0 && state.subcategories.length === 0 && state.neighbourhoods.length === 0 && !state.emergency) storage.removeItem(FILTERS_KEY);
+    else storage.setItem(FILTERS_KEY, JSON.stringify({ v: 1, categories: state.categories, subcategories: state.subcategories, neighbourhoods: state.neighbourhoods, emergency: state.emergency }));
   } catch {
     // The filters just do not survive the next page.
   }
 }
 
-/** The filters without the topics the release no longer has (a kept filter outlives a release that dropped its topic). */
-export function withoutUnknownTopics(state: FilterState, topicIds: readonly string[]): FilterState {
-  const known = state.categories.filter((id) => topicIds.includes(id));
-  return known.length === state.categories.length ? state : { ...state, categories: known };
+/** The filters without the topics and subcategories the release no longer has (a kept filter outlives a release that dropped its topic). */
+export function withoutUnknownTopics(state: FilterState, topicIds: readonly string[], subcategoryIds: readonly string[]): FilterState {
+  const topics = state.categories.filter((id) => topicIds.includes(id));
+  const subs = state.subcategories.filter((id) => subcategoryIds.includes(id));
+  return topics.length === state.categories.length && subs.length === state.subcategories.length ? state : { ...state, categories: topics, subcategories: subs };
 }

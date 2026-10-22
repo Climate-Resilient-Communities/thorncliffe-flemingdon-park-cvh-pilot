@@ -6309,7 +6309,7 @@
     "buildings": "Bytové domy",
     "buildingsCount": "Počet domov: {n}",
     "buildingsCountOne": "1 dom",
-    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom."
   },
   "guides": {
     "reviewed": "Skontroloval Hub, naposledy aktualizované {date}"

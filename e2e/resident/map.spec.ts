@@ -147,6 +147,76 @@ test.describe("the map (R-14)", () => {
     await expectBaseline(page, "map-list-en-390.png");
   });
 
+  test("filters on the map narrow the pins and the list by topic and kind of place (R-27), applied on the phone", async ({ page }) => {
+    await openMap(page);
+    const toggle = page.getByTestId("map-filters-toggle");
+    await expect(toggle).toHaveText("Filters");
+    await expect(page.getByTestId("map-filter-panel")).toBeHidden();
+
+    // The panel holds the two groups, fieldsets with a legend as in the directory.
+    await toggle.click();
+    await expect(page.getByTestId("map-filter-panel")).toBeVisible();
+    await expect(page.locator("[data-testid=map-filter-panel] fieldset > legend")).toHaveText(["Topic", "What kind of place?"]);
+    await expect(page.getByRole("group", { name: "What kind of place?" }).getByRole("checkbox")).toHaveCount(3);
+
+    // A kind of place: only its pins stay, with the buildings; the list shows the same.
+    await page.getByTestId("map-filter-subcategory-cooling spaces").check();
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling")).toHaveCount(1);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--water")).toHaveCount(0);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--washroom")).toHaveCount(0);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--service")).toHaveCount(0);
+    await expect(page.locator(".map-cluster")).toHaveCount(0);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--building")).toHaveCount(MAP_BUILDINGS.length);
+    await expect(toggle).toHaveText("Filters (1)");
+    await expect(page.getByTestId("map-filtered")).toContainText("Showing only the places that match your filters.");
+    await expect(page.getByTestId("map-filters-apply")).toHaveText("Show 1 result");
+
+    // Show n results closes the panel and hands focus back to the Filters button.
+    await page.getByTestId("map-filters-apply").click();
+    await expect(page.getByTestId("map-filter-panel")).toBeHidden();
+    await expect(toggle).toBeFocused();
+    await page.getByTestId("map-view-list").click();
+    expect(await listed(page)).toEqual({ providers: ["M101"], buildings: MAP_BUILDINGS.map((b) => b.rsn).sort() });
+
+    // Remove all filters: every pin is back.
+    await page.getByTestId("map-view-map").click();
+    await page.getByTestId("map-clear-filters").click();
+    await expect(page.getByTestId("map-filtered")).toHaveCount(0);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--water")).toHaveCount(1);
+    await expect(toggle).toHaveText("Filters");
+    await expect(toggle).toBeFocused();
+
+    // A topic: only its providers stay, and the kinds offered narrow to theirs (the food bank has none, so the group goes).
+    await toggle.click();
+    await page.getByTestId("map-filter-category-food").check();
+    await expect(page.locator(".leaflet-marker-icon.map-pin--service")).toHaveCount(1);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling")).toHaveCount(0);
+    await expect(page.locator(".map-cluster")).toHaveCount(0);
+    await expect(page.getByTestId("map-legend-kind")).toHaveCount(0);
+    await page.getByTestId("map-view-list").click();
+    expect((await listed(page)).providers).toEqual(["M104"]);
+  });
+
+  test("the map and the directory narrow by one state: a filter chosen here is the directory's, and clearing there frees the map", async ({ page }) => {
+    await openMap(page);
+    await page.getByTestId("map-filters-toggle").click();
+    await page.getByTestId("map-filter-subcategory-cooling spaces").check();
+    await expect(page.locator(".leaflet-marker-icon.map-pin--water")).toHaveCount(0);
+
+    // The directory opens narrowed by the same filter, shown among its applied filters.
+    await page.goto("/en/directory");
+    await expect(page.getByTestId("directory-list")).toBeVisible();
+    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("Cooling Spaces");
+    await expect(page.locator("[data-testid=directory-list] > li")).toHaveCount(1);
+
+    // Clear all in the directory: the map is whole again.
+    await page.getByTestId("clear-all").click();
+    await page.goto("/en/map");
+    await expect(page.getByTestId("map-canvas")).toHaveAttribute("data-status", "ready");
+    await expect(page.getByTestId("map-filtered")).toHaveCount(0);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--water")).toHaveCount(1);
+  });
+
   test("the map has a name and the list is reachable without the map", async ({ page }) => {
     await openMap(page);
     await expect(page.getByRole("region", { name: "Map of Thorncliffe Park and Flemingdon Park" })).toBeVisible();

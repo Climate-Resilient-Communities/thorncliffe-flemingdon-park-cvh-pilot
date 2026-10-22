@@ -1396,7 +1396,7 @@
     "buildings": "அடுக்குமாடிக் கட்டடங்கள்",
     "buildingsCount": "{n} கட்டடங்கள்",
     "buildingsCountOne": "1 கட்டடம்",
-    "filtered": "அடைவில் நீங்கள் தேர்ந்தெடுத்த வடிகட்டிகளுக்குப் பொருந்தும் இடங்கள் மட்டுமே காட்டப்படுகின்றன."
+    "filtered": "உங்கள் வடிகட்டிகளுக்குப் பொருந்தும் இடங்கள் மட்டுமே காட்டப்படுகின்றன."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

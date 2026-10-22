@@ -1372,7 +1372,7 @@
     "buildings": "اپارٹمنٹ عمارتیں",
     "buildingsCount": "{n} عمارتیں",
     "buildingsCountOne": "1 عمارت",
-    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو ڈائریکٹری میں آپ کے چنے ہوئے فلٹرز سے ملتی ہیں۔"
+    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو آپ کے فلٹرز سے ملتی ہیں۔"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

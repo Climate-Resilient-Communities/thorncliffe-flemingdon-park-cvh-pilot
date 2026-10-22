@@ -1396,7 +1396,7 @@
     "buildings": "એપાર્ટમેન્ટ ઇમારતો",
     "buildingsCount": "{n} ઇમારતો",
     "buildingsCountOne": "1 ઇમારત",
-    "filtered": "ડિરેક્ટરીમાં તમે પસંદ કરેલા ફિલ્ટર સાથે મેળ ખાતી જગ્યાઓ જ બતાવવામાં આવી રહી છે."
+    "filtered": "તમારા ફિલ્ટર સાથે મેળ ખાતી જગ્યાઓ જ બતાવવામાં આવી રહી છે."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

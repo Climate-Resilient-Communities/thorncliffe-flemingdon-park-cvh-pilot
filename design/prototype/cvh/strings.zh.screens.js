@@ -1396,7 +1396,7 @@
     "buildings": "公寓楼",
     "buildingsCount": "{n} 栋楼",
     "buildingsCountOne": "1 栋楼",
-    "filtered": "只显示与您在目录中所选筛选条件相符的地点。"
+    "filtered": "只显示与您所选筛选条件相符的地点。"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

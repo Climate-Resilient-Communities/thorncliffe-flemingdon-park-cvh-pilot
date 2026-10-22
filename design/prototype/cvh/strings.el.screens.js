@@ -1372,7 +1372,7 @@
     "buildings": "Πολυκατοικίες",
     "buildingsCount": "{n} κτίρια",
     "buildingsCountOne": "1 κτίριο",
-    "filtered": "Εμφανίζονται μόνο τα μέρη που ταιριάζουν με τα φίλτρα που επιλέξατε στον κατάλογο."
+    "filtered": "Εμφανίζονται μόνο τα μέρη που ταιριάζουν με τα φίλτρα σας."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

@@ -34,6 +34,8 @@ type Sample = {
   id: string;
   name: string;
   categories: string[];
+  /** The provider's subcategories (the filters' "What kind of place?"), named by their English as in the catalogue. */
+  subcats: [en: string, ur: string | null][];
   postal: string | null;
   /** The neighbourhoods the Hub's reviewed list gives this provider (the listing file carries them; the phone never works them out). */
   neighbourhoods: ("TP" | "FP")[];
@@ -53,6 +55,7 @@ const SAMPLES: Sample[] = [
     id: "P101",
     name: "Thorncliffe Park Food Bank",
     categories: ["food"],
+    subcats: [["Food Collaboratives", "خوراک کی اشتراکی تنظیمیں"]],
     postal: "M4H 1K2",
     neighbourhoods: ["TP"],
     street: "45 Overlea Blvd",
@@ -69,6 +72,7 @@ const SAMPLES: Sample[] = [
     id: "P102",
     name: "Flemingdon Community Health Centre",
     categories: ["health"],
+    subcats: [["Health Clinics", "صحت کے کلینک"]],
     postal: "M3C 1H9",
     neighbourhoods: ["FP"],
     street: "10 Gateway Blvd",
@@ -85,6 +89,7 @@ const SAMPLES: Sample[] = [
     id: "P103",
     name: "East York Legal Clinic",
     categories: ["legal"],
+    subcats: [["Legal Services", "قانونی خدمات"]],
     postal: "M4C 2L3",
     neighbourhoods: [],
     street: "1 Main St",
@@ -101,6 +106,10 @@ const SAMPLES: Sample[] = [
     id: "P104",
     name: "Overlea Cooling Room",
     categories: ["community"],
+    subcats: [
+      ["Libraries", "لائبریریاں"],
+      ["Cooling Spaces", "ٹھنڈک کی جگہیں"],
+    ],
     postal: "M4H 1M5",
     neighbourhoods: ["TP"],
     street: "7 Overlea Blvd",
@@ -117,6 +126,7 @@ const SAMPLES: Sample[] = [
     id: "P105",
     name: "Don Mills Settlement Services",
     categories: ["legal", "community"],
+    subcats: [["Newcomer Supports", "نئے آنے والوں کی معاونت"]],
     postal: "M3C 3N2",
     neighbourhoods: ["FP"],
     street: "20 Gateway Blvd",
@@ -138,7 +148,7 @@ export function buildListing(lang: Lang, release: number, change: { drop?: strin
     id: s.id,
     name: s.name,
     category_ids: s.categories,
-    subcategories: [],
+    subcategories: s.subcats.map(([en, ur]) => text(lang, en, ur)),
     neighbourhood_ids: s.neighbourhoods,
     locations: [{ street: s.street, city: s.city, postal: s.postal, lat: 43.705, lng: -79.34 }],
     contact: { phone: s.phone, email: s.email, social: s.social, web: s.web },

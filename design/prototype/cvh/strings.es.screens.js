@@ -1396,7 +1396,7 @@
     "buildings": "Edificios de apartamentos",
     "buildingsCount": "{n} edificios",
     "buildingsCountOne": "1 edificio",
-    "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
+    "filtered": "Solo se muestran los lugares que coinciden con sus filtros."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

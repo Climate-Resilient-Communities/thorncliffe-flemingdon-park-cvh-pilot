@@ -6309,7 +6309,7 @@
     "buildings": "公寓楼",
     "buildingsCount": "{n} 栋楼",
     "buildingsCountOne": "1 栋楼",
-    "filtered": "只显示与您在目录中所选筛选条件相符的地点。"
+    "filtered": "只显示与您所选筛选条件相符的地点。"
   },
   "guides": {
     "reviewed": "已由中心审核，最后更新于{date}"

@@ -14,7 +14,7 @@ import { UsageView } from "../usage/usage";
 import { isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { CallHub } from "./call-hub";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "./filter-store";
-import { activeKeys, filterKeyId, filterProviders, isActive, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "./filters";
+import { activeKeys, filterKeyId, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "./filters";
 import { formatMoment } from "./format";
 import { Inline911, ListingBlock } from "./listing-text";
 import { isNeighbourhoodId, NEIGHBOURHOODS, neighbourhoodName } from "./neighbourhood-names";
@@ -51,7 +51,8 @@ type FocusTarget = { chip: string } | "clear-all" | "toggle";
 
 /**
  * The directory (R-10 as the pilot has it, UX-DR10): every published provider of the current release in the page
- * language, each once, narrowed on the phone by topic, neighbourhood and "Helps in an emergency" (R-27), with the applied
+ * language, each once, narrowed on the phone by topic, kind of place (its subcategories), neighbourhood and "Helps in an
+ * emergency" (R-27), with the applied
  * filters above the list (X-11) and, when nothing matches, a way to reach a person at the Hub (R-11). The list comes from
  * the downloaded release file (use-directory.ts). The filters are kept for the visit in sessionStorage, so opening a
  * provider and going back keeps them (filter-store.ts); they are never in the address and never sent. The neighbourhood of
@@ -71,12 +72,22 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   const focusAfter = useRef<FocusTarget | null>(null);
 
   const listing = directory.status === "ready" ? directory.listing : null;
-  // A kept filter whose topic the release no longer has does not count.
-  const filters = useMemo(() => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id)) : applied), [applied, listing]);
+  // Every subcategory of the release, for the applied filters' words whatever topics are chosen.
+  const subcategoryNames = useMemo(() => new Map(listingSubcategories(listing?.providers ?? [], languageOf(lang).bcp47).map((sub) => [sub.id, sub.name])), [listing, lang]);
+  // A kept filter whose topic or subcategory the release no longer has does not count.
+  const filters = useMemo(
+    () => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id), [...subcategoryNames.keys()]) : applied),
+    [applied, listing, subcategoryNames],
+  );
   const categories: CategoryNames = useMemo(() => new Map((listing?.categories ?? []).map((c) => [c.id, c.name])), [listing]);
   const ordered = useMemo(() => (listing ? listProviders(listing.providers, languageOf(lang).bcp47) : []), [listing, lang]);
   const visible = useMemo(() => filterProviders(ordered, filters), [ordered, filters]);
   const topics = useMemo(() => [...(listing?.categories ?? [])].sort((a, b) => a.sort_order - b.sort_order), [listing]);
+  // The subcategory choices narrow to the chosen topics; one already chosen stays listed, so it can be taken back.
+  const kinds = useMemo(
+    () => (listing ? listingSubcategories(listing.providers, languageOf(lang).bcp47, filters.categories, filters.subcategories) : []),
+    [listing, lang, filters.categories, filters.subcategories],
+  );
 
   // The filters survive the next page of the visit.
   useEffect(() => {
@@ -118,6 +129,10 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
         const name = categories.get(key.id);
         return name ? <ListingBlock text={name} as="span" /> : key.id;
       }
+      case "subcategory": {
+        const name = subcategoryNames.get(key.id);
+        return name ? <ListingBlock text={name} as="span" /> : key.id;
+      }
       case "neighbourhood":
         return <Isolated>{neighbourhoodName(key.id)}</Isolated>;
       case "emergency":
@@ -129,6 +144,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
     switch (key.kind) {
       case "category":
         return categories.get(key.id)?.body ?? key.id;
+      case "subcategory":
+        return subcategoryNames.get(key.id)?.body ?? key.id;
       case "neighbourhood":
         return neighbourhoodName(key.id);
       case "emergency":
@@ -228,6 +245,25 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                           ))}
                         </Stack>
                       </fieldset>
+                      {kinds.length > 0 && (
+                        <fieldset className="dir-fieldset">
+                          <ResidentText as="legend" className="dir-legend" testId="legend-kind">
+                            {t("R14.subLabel")}
+                          </ResidentText>
+                          <Stack gap="label">
+                            {kinds.map((kind) => (
+                              <FilterOption
+                                key={kind.id}
+                                id={`subcategory-${kind.id}`}
+                                checked={isActive(filters, { kind: "subcategory", id: kind.id })}
+                                onChange={(on) => toggle({ kind: "subcategory", id: kind.id }, on)}
+                              >
+                                <ListingBlock text={kind.name} as="span" />
+                              </FilterOption>
+                            ))}
+                          </Stack>
+                        </fieldset>
+                      )}
                       <fieldset className="dir-fieldset">
                         <ResidentText as="legend" className="dir-legend" testId="legend-neighbourhood">
                           {t("filters.nbhd")}

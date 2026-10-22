@@ -6309,7 +6309,7 @@
     "buildings": "Mga gusali ng apartment",
     "buildingsCount": "{n} gusali",
     "buildingsCountOne": "1 gusali",
-    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter na pinili mo sa direktoryo."
+    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter mo."
   },
   "guides": {
     "reviewed": "Sinuri ng Hub, huling na-update {date}"

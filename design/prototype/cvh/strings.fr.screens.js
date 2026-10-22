@@ -1396,7 +1396,7 @@
     "buildings": "Immeubles d'habitation",
     "buildingsCount": "{n} immeubles",
     "buildingsCountOne": "1 immeuble",
-    "filtered": "Seuls les lieux qui correspondent aux filtres choisis dans le répertoire sont affichés."
+    "filtered": "Seuls les lieux qui correspondent à vos filtres sont affichés."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

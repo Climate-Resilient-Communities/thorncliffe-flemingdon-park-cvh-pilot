@@ -4,13 +4,13 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { basicAttributeSet, useBasic } from "../basic";
 import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
-import { activeKeys, filterProviders, NO_FILTERS, type FilterState } from "../directory/filters";
+import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
 import { isFallbackText, ListingBlock } from "../directory/listing-text";
 import { useDirectory } from "../directory/use-directory";
@@ -78,14 +78,25 @@ function PinMark({ pin }: { pin: MapPin }) {
   );
 }
 
+/** One choice of the map's filter panel: the same checkbox option as the directory's (R-27), in the map's own clothes. */
+function FilterChoice({ id, checked, onChange, children }: { id: string; checked: boolean; onChange: (on: boolean) => void; children: ReactNode }) {
+  return (
+    <label className="map-option tap" data-testid={`map-filter-${id}`}>
+      <input className="map-option__input" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      <span className="map-option__text">{children}</span>
+    </label>
+  );
+}
+
 /**
  * The map (R-14) with its list (R-15) and pin preview (R-16), S02.07. Every published provider of the directory's release
- * file, narrowed by the filters the resident applied in the directory, and the pilot buildings, on the configured tile
- * provider's base map. A pin opens the preview card, which leads to the same listing (R-12) or building page as the
- * directory. The list shows the same places as the part of the map on screen: it is how a screen reader reaches every
- * place, so the map is never the only way. Nothing here is sent anywhere: the filters, the selected pin and the part of
- * the map viewed stay on the phone (AD-3); the tile provider sees only the tiles drawn, and the map always opens on the
- * same whole-area view.
+ * file, narrowed by the filters (R-27 as the pilot has it): by topic and kind of place behind the Filters button here,
+ * and whatever the resident applied in the directory, one state between the two screens; and the pilot buildings, on the
+ * configured tile provider's base map. A pin opens the preview card, which leads to the same listing (R-12) or building
+ * page as the directory. The list shows the same places as the part of the map on screen: it is how a screen reader
+ * reaches every place, so the map is never the only way. Nothing here is sent anywhere: the filters, the selected pin and
+ * the part of the map viewed stay on the phone (AD-3); the tile provider sees only the tiles drawn, and the map always
+ * opens on the same whole-area view.
  */
 export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }) {
   const t = useTranslations();
@@ -103,8 +114,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const selected = basic ? null : pinSelected;
   const [missingTiles, setMissingTiles] = useState(0);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
-  // The filters applied in the directory this visit (kept in the tab, never sent).
+  // The filters this visit: the ones applied here or in the directory, one state (kept in the tab, never sent).
   const [applied, setApplied] = useState<FilterState>(() => readFilters(tabStorage()));
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersButton = useRef<HTMLButtonElement>(null);
   // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the map opened, if it names one place.
   const [viewed] = useState(() => singleNeighbourhood(applied.neighbourhoods));
   const element = useRef<HTMLDivElement>(null);
@@ -121,8 +134,20 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   const listing = directory.status === "ready" ? directory.listing : null;
 
-  const filters = useMemo(() => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id)) : applied), [applied, listing]);
-  const filtered = activeKeys(filters).length > 0;
+  // Every subcategory of the release once, for the panel's choices and for dropping a kept filter the release no longer has.
+  const allKinds = useMemo(() => listingSubcategories(listing?.providers ?? [], locale), [listing, locale]);
+  const filters = useMemo(
+    () => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id), allKinds.map((kind) => kind.id)) : applied),
+    [applied, listing, allKinds],
+  );
+  const keys = activeKeys(filters);
+  const filtered = keys.length > 0;
+  const topics = useMemo(() => [...(listing?.categories ?? [])].sort((a, b) => a.sort_order - b.sort_order), [listing]);
+  // The subcategory choices narrow to the chosen topics; one already chosen stays listed, so it can be taken back.
+  const kinds = useMemo(
+    () => (listing ? listingSubcategories(listing.providers, locale, filters.categories, filters.subcategories) : []),
+    [listing, locale, filters.categories, filters.subcategories],
+  );
 
   const pins = useMemo<MapPin[]>(
     () => [...providerPins(listing ? filterProviders(listing.providers, filters) : []), ...buildingPins(buildings)],
@@ -209,11 +234,25 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     if (chosen) card.current?.focus();
   }, [chosen]);
 
+  // The filters chosen here survive the next page of the visit, the same way the directory keeps them.
+  useEffect(() => {
+    saveFilters(tabStorage(), filters);
+  }, [filters]);
+
   const notice = mapNotice({ cacheable: tiles.cacheable && tiles.cacheLimit > 0, online, missingTiles });
-  const clearFilters = () => {
-    saveFilters(tabStorage(), NO_FILTERS);
-    setApplied(NO_FILTERS);
+  const toggleFilter = (key: FilterKey, on: boolean) => setApplied((current) => setFilter(current, key, on));
+  const closeFilters = () => {
+    setFiltersOpen(false);
+    filtersButton.current?.focus();
   };
+  const clearFilters = () => {
+    setApplied(NO_FILTERS);
+    // The note and its button go when the filters do: focus moves to the Filters button that stays.
+    filtersButton.current?.focus();
+  };
+  // How many providers the filters leave, for Show n results: each provider once, as the directory counts them.
+  const matching = useMemo(() => (listing ? filterProviders(listProviders(listing.providers, locale), filters).length : 0), [listing, locale, filters]);
+  const applyLabel = matching === 0 ? t("R27.applyNone") : matching === 1 ? t("R27.applyOne") : t("R27.apply", { n: matching });
   const showList = () => {
     setSelected(null);
     setView("list");
@@ -253,6 +292,76 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <ResidentText>{t("R14.list")}</ResidentText>
           </button>
         </div>
+        {/* The filters (R-27 as the pilot has it, here by topic and kind of place): the same state the directory narrows by,
+            applied on the phone. On every width they sit behind the Filters button, so the map keeps the screen. */}
+        {listing && (
+          <section className="map-filters" aria-label={plain(t("R27.title"))} data-testid="map-filters">
+            <Stack gap="related">
+              <button
+                ref={filtersButton}
+                type="button"
+                className="map-btn map-btn--secondary tap"
+                aria-expanded={filtersOpen}
+                aria-controls="map-filter-panel"
+                onClick={() => setFiltersOpen((open) => !open)}
+                data-testid="map-filters-toggle"
+              >
+                <ResidentText>{keys.length > 0 ? t("R10.filtersCount", { n: keys.length }) : t("R10.filters")}</ResidentText>
+              </button>
+              <div id="map-filter-panel" className="map-filter-panel" data-open={filtersOpen} data-testid="map-filter-panel">
+                <Stack gap="stack">
+                  <ResidentText as="p" className="map-hint">
+                    {t("R27.private")}
+                  </ResidentText>
+                  <fieldset className="map-fieldset">
+                    <ResidentText as="legend" className="map-legend" testId="map-legend-topic">
+                      {t("directory.topic")}
+                    </ResidentText>
+                    <Stack gap="label">
+                      {topics.map((category) => (
+                        <FilterChoice
+                          key={category.id}
+                          id={`category-${category.id}`}
+                          checked={isActive(filters, { kind: "category", id: category.id })}
+                          onChange={(on) => toggleFilter({ kind: "category", id: category.id }, on)}
+                        >
+                          <ListingBlock text={category.name} as="span" />
+                        </FilterChoice>
+                      ))}
+                    </Stack>
+                  </fieldset>
+                  {kinds.length > 0 && (
+                    <fieldset className="map-fieldset">
+                      <ResidentText as="legend" className="map-legend" testId="map-legend-kind">
+                        {t("R14.subLabel")}
+                      </ResidentText>
+                      <Stack gap="label">
+                        {kinds.map((kind) => (
+                          <FilterChoice
+                            key={kind.id}
+                            id={`subcategory-${kind.id}`}
+                            checked={isActive(filters, { kind: "subcategory", id: kind.id })}
+                            onChange={(on) => toggleFilter({ kind: "subcategory", id: kind.id }, on)}
+                          >
+                            <ListingBlock text={kind.name} as="span" />
+                          </FilterChoice>
+                        ))}
+                      </Stack>
+                    </fieldset>
+                  )}
+                  <div className="map-filter-actions">
+                    <button type="button" className="map-btn map-btn--primary tap" onClick={closeFilters} data-testid="map-filters-apply">
+                      <ResidentText>{applyLabel}</ResidentText>
+                    </button>
+                    <button type="button" className="map-btn map-btn--secondary tap" onClick={() => setApplied(NO_FILTERS)} data-testid="map-filters-clear">
+                      <ResidentText>{t("R27.clear")}</ResidentText>
+                    </button>
+                  </div>
+                </Stack>
+              </div>
+            </Stack>
+          </section>
+        )}
         {filtered && (
           <div className="map-filtered" role="note" data-testid="map-filtered">
             <ResidentText as="p">{t("map.filtered")}</ResidentText>

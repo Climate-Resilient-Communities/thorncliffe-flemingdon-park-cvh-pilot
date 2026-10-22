@@ -173,6 +173,31 @@ test("topics are alternatives and filters together all have to hold", async ({ p
   await expect(page.getByTestId("filters-apply")).toHaveText("Show 1 result");
 });
 
+test("What kind of place narrows the list, its choices narrow to the chosen topics, and a chosen kind stays until removed", async ({ page }) => {
+  await setUp(page);
+  await openResident(page, "/en/directory", 390);
+  await waitForList(page);
+
+  await openFilters(page);
+  await page.getByTestId("filter-subcategory-legal services").check();
+  expect(await listed(page)).toEqual(["P103"]);
+  await expect(page.getByTestId("chip-subcategory:legal services")).toContainText("Legal Services");
+
+  // A topic narrows the kinds offered to its providers'; the kind already chosen stays, so it can be taken back.
+  await page.getByTestId("filter-category-community").check();
+  await expect(page.getByTestId("filter-subcategory-health clinics")).toHaveCount(0);
+  await expect(page.getByTestId("filter-subcategory-libraries")).toBeVisible();
+  await expect(page.getByTestId("filter-subcategory-newcomer supports")).toBeVisible();
+  await expect(page.getByTestId("filter-subcategory-legal services")).toBeVisible();
+  // No provider is in Public spaces and of the kind Legal services: the no-results screen says so.
+  await expect(page.getByTestId("directory-empty")).toBeVisible();
+
+  await page.getByTestId("remove-subcategory:legal services").click();
+  expect(await listed(page)).toEqual(["P105", "P104"]);
+  await page.getByTestId("clear-all").click();
+  expect(await listed(page)).toHaveLength(5);
+});
+
 test("a combination with no results shows the Hub's number, and Clear all brings the list back", async ({ page }) => {
   await setUp(page);
   await openResident(page, "/en/directory", 390);
@@ -238,7 +263,8 @@ test("a provider page lists every number, link and address of the provider, and 
   await expect(page.locator(".dir-card__address")).toHaveText("10 Gateway Blvd, North York, M3C 1H9");
   // The postal code is one piece: its space is a non-breaking space.
   expect(await page.locator(".dir-card__address").textContent()).toBe("10 Gateway Blvd, North York, M3C\u00a01H9");
-  await expect(page.locator(".dir-tag--quiet")).toHaveText("Flemingdon Park");
+  // The quiet tags: the provider's kind of place, then its neighbourhood.
+  await expect(page.locator(".dir-tag--quiet")).toHaveText(["Health Clinics", "Flemingdon Park"]);
   await expect(page.getByTestId("provider-emergency")).toHaveText("Not known");
 
   await page.getByTestId("back-to-directory").click();
@@ -298,7 +324,7 @@ test("the filters survive opening a provider and going back, are kept in the tab
 
   // Kept for the tab only: in sessionStorage, not in localStorage, not in the address.
   expect(page.url()).not.toContain("?");
-  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, categories: ["food", "health"], neighbourhoods: [], emergency: true });
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, categories: ["food", "health"], subcategories: [], neighbourhoods: [], emergency: true });
   expect(await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes("filters")))).toEqual([]);
 
   // Another tab of the same phone starts with no filters.
@@ -335,10 +361,12 @@ test.describe("the filter panel and the applied filters, by keyboard and screen 
     await waitForList(page);
     await openFilters(page);
 
-    await expect(page.locator("[data-testid=filter-panel] fieldset > legend")).toHaveText(["Topic", "Which neighbourhood?"]);
+    await expect(page.locator("[data-testid=filter-panel] fieldset > legend")).toHaveText(["Topic", "What kind of place?", "Which neighbourhood?"]);
     await expect(page.getByRole("group", { name: "Topic" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "What kind of place?" })).toBeVisible();
     await expect(page.getByRole("group", { name: "Which neighbourhood?" })).toBeVisible();
     await expect(page.getByRole("group", { name: "Topic" }).getByRole("checkbox")).toHaveCount(4);
+    await expect(page.getByRole("group", { name: "What kind of place?" }).getByRole("checkbox")).toHaveCount(6);
     await expect(page.getByRole("group", { name: "Which neighbourhood?" }).getByRole("checkbox")).toHaveCount(2);
   });
 
@@ -577,6 +605,13 @@ test.describe("in Urdu", () => {
     await page.getByTestId("filter-category-food").check();
     expect(await listed(page)).toEqual(["P101"]);
     await expect(page.getByTestId("chip-category:food")).toContainText("خوراک");
+
+    // The kinds of place carry the Urdu names too, while the filter still reads the English they stand for.
+    await page.getByTestId("filter-category-food").uncheck();
+    await expect(page.getByTestId("filter-subcategory-cooling spaces")).toContainText("ٹھنڈک کی جگہیں");
+    await page.getByTestId("filter-subcategory-cooling spaces").check();
+    expect(await listed(page)).toEqual(["P104"]);
+    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("ٹھنڈک کی جگہیں");
   });
 });
 

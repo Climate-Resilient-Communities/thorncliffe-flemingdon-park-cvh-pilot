@@ -1396,7 +1396,7 @@
     "buildings": "ਅਪਾਰਟਮੈਂਟ ਇਮਾਰਤਾਂ",
     "buildingsCount": "{n} ਇਮਾਰਤਾਂ",
     "buildingsCountOne": "1 ਇਮਾਰਤ",
-    "filtered": "ਸਿਰਫ਼ ਉਹ ਥਾਵਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ ਜੋ ਡਾਇਰੈਕਟਰੀ ਵਿੱਚ ਤੁਹਾਡੇ ਚੁਣੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।"
+    "filtered": "ਸਿਰਫ਼ ਉਹ ਥਾਵਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ ਜੋ ਤੁਹਾਡੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */

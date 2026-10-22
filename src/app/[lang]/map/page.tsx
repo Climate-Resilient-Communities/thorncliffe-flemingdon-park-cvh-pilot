@@ -11,8 +11,8 @@ import { pageMapTiles } from "./tiles";
 // shell, prerendered for each launch language, with the tile provider's settings (MAP_TILE_*, read at build). The phone
 // downloads the directory's release file and the building list and draws them itself (AD-11, AD-3).
 
-/** The catalog parts the map's client components read: the map screens, its own wording and the directory's few it shares. */
-const MAP_NAMESPACES = ["R14", "R15", "R16", "map", "directory"] as const;
+/** The catalog parts the map's client components read: the map screens, its own wording, the filters (R10, R27) and the directory's few it shares. */
+const MAP_NAMESPACES = ["R10", "R14", "R15", "R16", "R27", "map", "directory"] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/map">): Promise<Metadata> {
   const { lang } = await params;

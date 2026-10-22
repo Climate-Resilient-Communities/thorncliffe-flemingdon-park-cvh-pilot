@@ -6309,7 +6309,7 @@
     "buildings": "Edificios de apartamentos",
     "buildingsCount": "{n} edificios",
     "buildingsCountOne": "1 edificio",
-    "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
+    "filtered": "Solo se muestran los lugares que coinciden con sus filtros."
   },
   "guides": {
     "reviewed": "Revisado por el Hub, última actualización el {date}"

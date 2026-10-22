@@ -1385,7 +1385,7 @@
     "buildings": "Mga gusali ng apartment",
     "buildingsCount": "{n} gusali",
     "buildingsCountOne": "1 gusali",
-    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter na pinili mo sa direktoryo."
+    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter mo."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
