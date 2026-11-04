@@ -111,7 +111,10 @@ for (const state of Object.keys(LISTS) as (keyof typeof LISTS)[]) {
       await noSidewaysScroll(page);
       if (state === "list") {
         await expect(page.getByTestId("escalations-open").getByTestId("escalation-item")).toHaveCount(2);
-        await expect(page.getByTestId("escalations-open")).toContainText("Needs help: 85-95 Thorncliffe Park Dr, floor 12");
+        // Each escalation is a card (UAT 2026-11-04): its status as a pill of words, then where.
+        const needsHelp = page.getByTestId("escalations-open").locator('[data-testid="escalation-item"][data-status="needs_help"]');
+        await expect(needsHelp.locator(".hub-pill")).toHaveText("Needs help");
+        await expect(needsHelp).toContainText("85-95 Thorncliffe Park Dr, floor 12");
         await expect(page.getByTestId("escalation-late")).toContainText("call the ambassador");
         await expect(page.getByTestId("escalations-handled")).toContainText("Handled by Priya Sharma");
         const open = page.getByTestId("escalation-open").first();
