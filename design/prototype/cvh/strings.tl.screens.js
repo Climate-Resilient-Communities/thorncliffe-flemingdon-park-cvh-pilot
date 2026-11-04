@@ -1554,4 +1554,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "Oo, padalhan ako ng mga CVH text alert mula sa Thorncliffe Park Community Hub sa numerong ito.", "optional": "Opsyonal ang mga text alert. Magagamit mo ang buong app kahit hindi ka mag-sign up.", "missingTexts": "ang pagpayag mong tumanggap ng mga text alert", "error": {"texts_not_agreed": "Para mag-sign up, lagyan ng tsek ang kahon para tumanggap ng mga text alert."}}, "R04": {"levelCommunity": "Alerto mula sa Thorncliffe Park Community Hub. Beripikado ng Hub.", "fromHub": "Alerto mula sa Thorncliffe Park Community Hub"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "Kailangan ng tulong? Tumawag sa 211."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "Mga alerto para sa mga gusali rito:"}});
 })();

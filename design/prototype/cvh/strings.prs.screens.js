@@ -1554,4 +1554,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "بلی، هشدارهای پیامکی CVH از Thorncliffe Park Community Hub را به این شماره بفرستید.", "optional": "هشدارهای پیامکی اختیاری است. بدون ثبت‌نام هم می‌توانید از همه بخش‌های این اپ استفاده کنید.", "missingTexts": "موافقت شما برای دریافت هشدارهای پیامکی", "error": {"texts_not_agreed": "برای ثبت‌نام، خانهٔ دریافت هشدارهای پیامکی را علامت بزنید."}}, "R04": {"levelCommunity": "هشدار از Thorncliffe Park Community Hub. تأیید شده توسط مرکز.", "fromHub": "هشدار از Thorncliffe Park Community Hub"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "کمک لازم دارید؟ به 211 زنگ بزنید."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "هشدارها برای ساختمان‌های اینجا:"}});
 })();

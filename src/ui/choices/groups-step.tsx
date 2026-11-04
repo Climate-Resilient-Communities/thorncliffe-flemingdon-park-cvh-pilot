@@ -14,7 +14,8 @@ import { useChoices } from "./use-choices";
 
 /**
  * R-26: which groups the resident belongs to. Any number, none is fine, and nothing is asked about why. The choice
- * is saved on the phone only. In the first run it can be skipped; opened from R-34 it saves or cancels.
+ * is saved on the phone only. In the first run it can be skipped; opened from R-34 it saves or cancels. Asking for a
+ * check-in leads on to R-33 (after R-35 in the first run).
  */
 export function GroupsStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) {
   const t = useTranslations("R26");
@@ -27,9 +28,13 @@ export function GroupsStep({ lang, mode }: { lang: LaunchCode; mode: StepMode })
 
   const toggle = (group: Group) => setDraft(picked.includes(group) ? picked.filter((g) => g !== group) : GROUPS.filter((g) => g === group || picked.includes(g)));
 
+  const wantsCheckin = picked.includes("checkin");
   const done = (save: boolean) => {
+    // A check-in newly asked for from R-34 goes on to how to ask for one (R-33), as the prototype's R-26 does; in the first run
+    // that comes after where they live (R-35), which reads the saved group.
+    const newCheckin = save && wantsCheckin && !(choices?.groups ?? []).includes("checkin");
     if (save) choicesStore.update((current) => ({ ...baseChoices(current), groups: [...picked] }));
-    router.push(mode === "first-run" ? `/${lang}/welcome/place` : `/${lang}/choices`);
+    router.push(mode === "first-run" ? `/${lang}/welcome/place` : newCheckin ? `/${lang}/ready/check-in` : `/${lang}/choices`);
   };
 
   return (
@@ -65,6 +70,11 @@ export function GroupsStep({ lang, mode }: { lang: LaunchCode; mode: StepMode })
             ))}
           </Stack>
         </fieldset>
+        {mode === "first-run" && wantsCheckin && (
+          <p className="choice-hint" data-testid="groups-checkin-next">
+            <ResidentText>{t("checkinNext")}</ResidentText>
+          </p>
+        )}
         {mode === "first-run" ? (
           <Stack gap="label">
             <StepActions>

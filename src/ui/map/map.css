@@ -125,6 +125,55 @@
     color: var(--text-on-warm);
   }
 
+  /* "What the shapes mean": a disclosure under the map's controls, each kind of pin beside its words. */
+  .map-legend-box {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .map-legend-box__summary {
+    display: flex;
+    align-items: center;
+    padding-inline: var(--gap-stack);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .map-legend-box__summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .map-legend-box__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    margin: 0;
+    padding-block-end: var(--gap-stack);
+    padding-inline: var(--gap-stack);
+    list-style: none;
+  }
+
+  .map-legend-box__row {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-stack);
+  }
+
+  .map-legend-box__pill {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    padding-inline: var(--gap-stack);
+    min-block-size: var(--tap-current);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-header);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
   /* The filters (R-27 as the pilot has it): the directory's checkbox groups in the map's own clothes. On every width
      they collapse behind the Filters button, so the map keeps the screen (the directory opens them as a column on a
      desktop; the map has no column to give). */
@@ -443,13 +492,16 @@
     outline-offset: 2px;
   }
 
+  /* The prototype's group pill (cvh.css .cvh-cluster): "{n} places" in words on a white pill with an ink border, never a bare number. */
   .map-cluster {
     border: 2px solid var(--ink);
-    border-radius: var(--radius-disc);
+    border-radius: var(--radius-header);
     background-color: var(--surface-raised);
     color: var(--ink);
     font-family: var(--type-family-sans);
+    font-size: var(--type-caption-size);
     font-weight: 700;
+    white-space: nowrap;
   }
 
   .map-cluster__body {

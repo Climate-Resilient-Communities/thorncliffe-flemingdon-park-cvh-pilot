@@ -91,7 +91,8 @@
     "short": "জরুরি সেবা নয়। বিপদে? 911-এ কল করুন।",
     "sms": "হাব জরুরি সেবা নয়। কেউ বিপদে থাকলে 911-এ কল করুন।",
     "partner": "এই জায়গা কারও জন্য 911-এ কল করে না। কেউ বিপদে থাকলে নিজে 911-এ কল করুন। অন্য কোনো প্রতিষ্ঠান কল করেছে বলে ধরে নেবেন না।",
-    "print": "এটি জরুরি সেবা নয়। কেউ বিপদে থাকলে 911-এ কল করুন।"
+    "print": "এটি জরুরি সেবা নয়। কেউ বিপদে থাকলে 911-এ কল করুন।",
+    "need211": "সাহায্য দরকার? 211-এ কল করুন।"
   },
   "x02": {
     "official": "{source}-এর অফিসিয়াল সতর্কতা",
@@ -553,7 +554,8 @@
     "myBuildings": "আপনার বিল্ডিংগুলো",
     "checking": "সতর্কতা যাচাই করা হচ্ছে",
     "feedFailed": "এই মুহূর্তে আমরা সতর্কতা যাচাই করতে পারিনি। যে জায়গায় \"জানা নেই\" লেখা আছে, সেখানে তবুও সতর্কতা থাকতে পারে। আমরা আবার চেষ্টা করব।",
-    "feedFailedOld": "আমরা নতুন সতর্কতা যাচাই করতে পারিনি। সর্বশেষ {t} যা লোড হয়েছিল তা দেখানো হচ্ছে।"
+    "feedFailedOld": "আমরা নতুন সতর্কতা যাচাই করতে পারিনি। সর্বশেষ {t} যা লোড হয়েছিল তা দেখানো হচ্ছে।",
+    "inBuildings": "এখানকার ভবনের জন্য সতর্কবার্তা:"
   },
   "R04": {
     "deviceLabel": "সাধারণ ফোনে টেক্সট মেসেজ",
@@ -5032,6 +5034,13 @@
         "closes": "[EN] The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "[EN] Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "[EN] Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "[EN] Composing an alert",
+        "what": "[EN] What and where",
+        "message": "[EN] The message",
+        "audience": "[EN] Who gets it",
+        "approval": "[EN] A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
-        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "[EN] Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "[EN] Languages in their own words",
         "webOff": "[EN] Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "[EN] This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "[EN] Round for: {headline}",
         "floor": "[EN] Floor {floor}",
+        "floorColumn": "[EN] Floor",
         "floorGone": "[EN] A floor removed since",
         "total": "[EN] In all",
         "count": "{label}: {n}",

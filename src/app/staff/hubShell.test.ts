@@ -36,7 +36,7 @@ describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
-    expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Check-in rounds", "Text sign-up"]);
+    expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Post a building update", "My round", "Text sign-up"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend", "Measures"]);
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
@@ -163,10 +163,14 @@ describe("hubNavigation", () => {
       if (item.href === null) continue;
       expect(existsSync(path.join(app, item.href, "page.tsx")), `${item.label}: ${item.href}`).toBe(true);
     }
-    // S08.08 built "Check-in rounds" (O-17) for the Hub's roles; an Ambassador's round is their own page, reached from their home.
+    // S08.08 built "Check-in rounds" (O-17) for the Hub's roles; an Ambassador has their own post and round pages instead (UAT 2026-11-04), each a page that exists.
     expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual([]);
     for (const role of ["coordinator", "director", "admin"] as const) expect(items(role).find((item) => item.id === "rounds")?.href).toBe("/staff/rounds");
-    expect(items("ambassador").find((item) => item.id === "rounds")?.href).toBeNull();
+    expect(items("ambassador").find((item) => item.id === "rounds")).toBeUndefined();
+    for (const item of items("ambassador")) {
+      expect(item.href, item.id).not.toBeNull();
+      expect(existsSync(path.join(app, item.href!, "page.tsx")) || item.href === "/staff", `${item.label}: ${item.href}`).toBe(true);
+    }
   });
 
   it("uses each id once and the English catalog's labels", () => {

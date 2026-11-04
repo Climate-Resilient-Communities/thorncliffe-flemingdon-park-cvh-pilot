@@ -1,4 +1,5 @@
 "use client";
+import { ComposeProgress, type ComposeProgressView } from "../ComposeProgress";
 import { orderedByLanguage } from "@/ui/shell/language-order";
 
 
@@ -269,8 +270,11 @@ export function ComposerBody({
   initial,
   api = defaultApi,
   reload = () => window.location.assign(screen.here),
+  steps,
 }: {
   screen: ComposerScreen;
+  /** Where the author is in composing an alert (O-02's step bar): only for an alert, not an acknowledgement or a correction. */
+  steps?: ComposeProgressView;
   actions: ComposerActions;
   initial?: ComposerInitial;
   api?: SubmitApi;
@@ -391,6 +395,7 @@ export function ComposerBody({
   const header = (
     <Stack gap="related">
       {screen.exercise ? <ExerciseMarker words={screen.exercise} /> : null}
+      {steps && <ComposeProgress view={steps} />}
       <h1>{screen.title}</h1>
       <p>{screen.lead}</p>
       <ProcedureLink link={screen.procedure} />

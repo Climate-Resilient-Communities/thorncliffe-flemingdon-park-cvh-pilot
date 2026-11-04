@@ -1,4 +1,5 @@
 import type { ListingProvider, ListingText, NeighbourhoodId } from "@/contracts/directory";
+import { inTopic } from "./topics";
 
 // The directory's filters (R-27 as the pilot has it): category, subcategory (the directory's and the map's "What kind
 // of place?"), neighbourhood and "Helps in an emergency". Within one filter the chosen values are alternatives (food or
@@ -6,6 +7,8 @@ import type { ListingProvider, ListingText, NeighbourhoodId } from "@/contracts/
 // downloaded. A provider's neighbourhoods are the ones the release file lists for it.
 
 export type FilterState = {
+  /** Find help's topics (R-09, topics.ts), by id: needs in the residents' words, each over the catalogue's providers. */
+  topics: readonly string[];
   /** Category ids of the listing. */
   categories: readonly string[];
   /** Subcategories, by the English each stands for (subcategoryId): the release gives a subcategory no id of its own. */
@@ -15,9 +18,9 @@ export type FilterState = {
   emergency: boolean;
 };
 
-export const NO_FILTERS: FilterState = { categories: [], subcategories: [], neighbourhoods: [], emergency: false };
+export const NO_FILTERS: FilterState = { topics: [], categories: [], subcategories: [], neighbourhoods: [], emergency: false };
 
-export type FilterKey = { kind: "category"; id: string } | { kind: "subcategory"; id: string } | { kind: "neighbourhood"; id: NeighbourhoodId } | { kind: "emergency" };
+export type FilterKey = { kind: "topic"; id: string } | { kind: "category"; id: string } | { kind: "subcategory"; id: string } | { kind: "neighbourhood"; id: NeighbourhoodId } | { kind: "emergency" };
 
 /** What names a subcategory across languages and releases: the English it stands for, compared without case (as the listing's chips do). */
 export const subcategoryId = (text: ListingText): string => text.original.body.trim().toLocaleLowerCase("en");
@@ -49,6 +52,8 @@ export const filterKeyId = (key: FilterKey): string => (key.kind === "emergency"
 
 export function isActive(state: FilterState, key: FilterKey): boolean {
   switch (key.kind) {
+    case "topic":
+      return state.topics.includes(key.id);
     case "category":
       return state.categories.includes(key.id);
     case "subcategory":
@@ -60,9 +65,10 @@ export function isActive(state: FilterState, key: FilterKey): boolean {
   }
 }
 
-/** The filters that are on, in a fixed order: topics, then subcategories, then neighbourhoods, then "Helps in an emergency". */
+/** The filters that are on, in a fixed order: Find help's topics, the listing's topics, subcategories, neighbourhoods, then "Helps in an emergency". */
 export function activeKeys(state: FilterState): FilterKey[] {
   return [
+    ...state.topics.map((id): FilterKey => ({ kind: "topic", id })),
     ...state.categories.map((id): FilterKey => ({ kind: "category", id })),
     ...state.subcategories.map((id): FilterKey => ({ kind: "subcategory", id })),
     ...state.neighbourhoods.map((id): FilterKey => ({ kind: "neighbourhood", id })),
@@ -72,6 +78,8 @@ export function activeKeys(state: FilterState): FilterKey[] {
 
 export function setFilter(state: FilterState, key: FilterKey, on: boolean): FilterState {
   switch (key.kind) {
+    case "topic":
+      return { ...state, topics: on ? [...new Set([...state.topics, key.id])] : state.topics.filter((id) => id !== key.id) };
     case "category":
       return { ...state, categories: on ? [...new Set([...state.categories, key.id])] : state.categories.filter((id) => id !== key.id) };
     case "subcategory":
@@ -88,6 +96,7 @@ export const removeFilter = (state: FilterState, key: FilterKey): FilterState =>
 /** The providers that pass every filter that is on. A new array; the input is not changed. */
 export function filterProviders(providers: readonly ListingProvider[], state: FilterState): ListingProvider[] {
   return providers.filter((provider) => {
+    if (state.topics.length > 0 && !state.topics.some((id) => inTopic(id, provider))) return false;
     if (state.categories.length > 0 && !provider.category_ids.some((id) => state.categories.includes(id))) return false;
     if (state.subcategories.length > 0 && !provider.subcategories.some((sub) => state.subcategories.includes(subcategoryId(sub)))) return false;
     if (state.neighbourhoods.length > 0 && !provider.neighbourhood_ids.some((id) => state.neighbourhoods.includes(id))) return false;

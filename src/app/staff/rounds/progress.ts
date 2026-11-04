@@ -72,6 +72,8 @@ export interface ProgressSources {
 export interface ProgressCount {
   status: string;
   n: number;
+  /** The count's name alone ("Done"), for a tile that shows the number large and the name under it. */
+  label: string;
   text: string;
 }
 
@@ -107,7 +109,7 @@ export interface ProgressScreen {
 export const unreadableProgress = (): ProgressScreen => ({ open: [], closed: [], closedCut: null, unreadable: true });
 
 const liveLabel = (status: LiveCount) => t(`live.${status}`);
-const countOf = (status: string, label: string, n: number): ProgressCount => ({ status, n, text: t("count", { label, n }) });
+const countOf = (status: string, label: string, n: number): ProgressCount => ({ status, n, label, text: t("count", { label, n }) });
 const liveCounts = (counts: Record<LiveCount, number>) => LIVE_COUNTS.map((status) => countOf(status, liveLabel(status), counts[status]));
 const tallyCounts = (counts: PlaceCounts) => TALLY_COUNTS.map((status) => countOf(status, t(`tally.${status}`), counts[status]));
 

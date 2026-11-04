@@ -91,7 +91,8 @@
     "short": "Not an emergency service. In danger? Call 911.",
     "sms": "The Hub is not an emergency service. If someone is in danger, call 911.",
     "partner": "This space does not call 911 for anyone. If someone is in danger, call 911 yourself. Do not assume another organisation has.",
-    "print": "This is not an emergency service. If someone is in danger, call 911."
+    "print": "This is not an emergency service. If someone is in danger, call 911.",
+    "need211": "Need help? Call 211."
   },
   "x02": {
     "official": "Official alert from {source}",
@@ -553,7 +554,8 @@
     "myBuildings": "Your buildings",
     "checking": "Checking for alerts",
     "feedFailed": "We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
-    "feedFailedOld": "We could not check for new alerts. Showing what was last loaded {t}."
+    "feedFailedOld": "We could not check for new alerts. Showing what was last loaded {t}.",
+    "inBuildings": "Alerts for buildings here:"
   },
   "R04": {
     "deviceLabel": "Text message on a basic phone",
@@ -5032,6 +5034,13 @@
         "closes": "The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "Composing an alert",
+        "what": "What and where",
+        "message": "The message",
+        "audience": "Who gets it",
+        "approval": "A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "What went where",
         "webLabel": "App and web",
-        "webValue": "Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "Languages in their own words",
         "webOff": "Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "Round for: {headline}",
         "floor": "Floor {floor}",
+        "floorColumn": "Floor",
         "floorGone": "A floor removed since",
         "total": "In all",
         "count": "{label}: {n}",

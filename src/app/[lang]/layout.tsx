@@ -91,6 +91,7 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
         <ResidentShell
           header={{
             logoAlt: shell("hubLogoAlt"),
+            choicesLabel: shell("choicesShort"),
             display: { title: display("title"), close: display("close"), textSize: display("textSize"), standard: display("standard"), large: display("large"), simpler: display("simpler"), help: display("help"), saved: display("saved"), sessionOnly: display("sessionOnly") },
             current: lang,
             languages: LAUNCH_LANGUAGES,

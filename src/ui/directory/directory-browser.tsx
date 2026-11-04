@@ -125,6 +125,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   const suggestions = (chosen ?? []).filter((id) => !filters.neighbourhoods.includes(id));
   const labelOf = (key: FilterKey): ReactNode => {
     switch (key.kind) {
+      case "topic":
+        return <ResidentText>{t(`categories.${key.id}`)}</ResidentText>;
       case "category": {
         const name = categories.get(key.id);
         return name ? <ListingBlock text={name} as="span" /> : key.id;
@@ -142,6 +144,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   /** The same chip as a plain string, for the remove button's name. */
   const nameOf = (key: FilterKey): string => {
     switch (key.kind) {
+      case "topic":
+        return t(`categories.${key.id}`);
       case "category":
         return categories.get(key.id)?.body ?? key.id;
       case "subcategory":

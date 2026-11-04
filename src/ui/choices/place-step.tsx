@@ -30,6 +30,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
   const [query, setQuery] = useState("");
   const [draftBuildings, setDraftBuildings] = useState<readonly string[] | null>(null);
   const [draftFloors, setDraftFloors] = useState<readonly string[] | null>(null);
+  const wantsCheckin = (choices?.groups ?? []).includes("checkin");
   const buildings = draftBuildings ?? choices?.buildings ?? [];
   const floors = draftFloors ?? choices?.floors ?? [];
 
@@ -66,7 +67,8 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
         return next;
       });
     }
-    router.push(mode === "first-run" ? `/${lang}` : `/${lang}/choices`);
+    // The first run ends on its finished step (R-35 "You chose"), by way of R-33 when the resident asked for a check-in on R-26.
+    router.push(mode === "first-run" ? `/${lang}/welcome/${wantsCheckin ? "check-in" : "done"}` : `/${lang}/choices`);
   };
 
   return (
@@ -178,6 +180,11 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
           </Stack>
         )}
 
+        {mode === "first-run" && wantsCheckin && (
+          <p className="choice-hint" data-testid="place-checkin-next">
+            <ResidentText>{t("nextCheckin")}</ResidentText>
+          </p>
+        )}
         {mode === "first-run" ? (
           <Stack gap="label">
             <StepActions>

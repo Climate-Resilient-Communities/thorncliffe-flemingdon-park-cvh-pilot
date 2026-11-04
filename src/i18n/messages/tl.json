@@ -91,7 +91,8 @@
     "short": "Hindi pang-emergency. May panganib? Tumawag sa 911.",
     "sms": "Hindi pang-emergency na serbisyo ang Hub. Kung may nasa panganib, tumawag sa 911.",
     "partner": "Hindi tumatawag sa 911 ang espasyong ito para kaninuman. Kung may nasa panganib, ikaw mismo ang tumawag sa 911. Huwag ipagpalagay na may ibang organisasyong tumawag na.",
-    "print": "Hindi ito pang-emergency na serbisyo. Kung may nasa panganib, tumawag sa 911."
+    "print": "Hindi ito pang-emergency na serbisyo. Kung may nasa panganib, tumawag sa 911.",
+    "need211": "Kailangan ng tulong? Tumawag sa 211."
   },
   "x02": {
     "official": "Opisyal na alerto mula sa {source}",
@@ -553,7 +554,8 @@
     "myBuildings": "Ang iyong mga gusali",
     "checking": "Tinitingnan kung may alerto",
     "feedFailed": "Hindi namin matingnan ang mga alerto ngayon. Ang lugar na may nakasulat na \"Hindi alam\" ay maaaring may alerto pa rin. Susubukan naming muli.",
-    "feedFailedOld": "Hindi namin matingnan ang mga bagong alerto. Ipinapakita ang huling na-load {t}."
+    "feedFailedOld": "Hindi namin matingnan ang mga bagong alerto. Ipinapakita ang huling na-load {t}.",
+    "inBuildings": "Mga alerto para sa mga gusali rito:"
   },
   "R04": {
     "deviceLabel": "Text message sa simpleng telepono",
@@ -5032,6 +5034,13 @@
         "closes": "[EN] The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "[EN] Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "[EN] Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "[EN] Composing an alert",
+        "what": "[EN] What and where",
+        "message": "[EN] The message",
+        "audience": "[EN] Who gets it",
+        "approval": "[EN] A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
-        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "[EN] Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "[EN] Languages in their own words",
         "webOff": "[EN] Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "[EN] This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "[EN] Round for: {headline}",
         "floor": "[EN] Floor {floor}",
+        "floorColumn": "[EN] Floor",
         "floorGone": "[EN] A floor removed since",
         "total": "[EN] In all",
         "count": "{label}: {n}",

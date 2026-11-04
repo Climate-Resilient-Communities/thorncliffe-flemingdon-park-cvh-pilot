@@ -10,16 +10,18 @@ import type { EscalationItemView, RoundsScreen } from "./view";
 
 const t = (key: string) => englishText(`staff.rounds.${key}`);
 
-function Item({ item }: { item: EscalationItemView }) {
+function Item({ item, handled = false }: { item: EscalationItemView; handled?: boolean }) {
+  // A card per escalation (the prototype's O-17): what the ambassador found as a pill with the time at the end, then where, who marked it and
+  // the late note; the danger bar for needs help, the accent bar for not reached, a plain one once it is handled. Words, never colour alone.
+  const tone = handled ? "handled" : item.status;
   return (
-    <li className="hub-list-item" data-testid="escalation-item" data-status={item.status}>
+    <li className={`hub-esc hub-esc--${tone}`} data-testid="escalation-item" data-status={item.status}>
       <Stack gap="subline">
-        <p className="hub-wrap">
-          <strong>{item.statusLabel}</strong>
-          {": "}
-          {item.where}
-        </p>
-        <p className="hub-wrap">{item.marked}</p>
+        <div className="hub-esc__head">
+          <span className={`hub-pill hub-pill--${item.status}`}>{item.statusLabel}</span>
+          <span className="hub-esc__time hub-wrap">{item.marked}</span>
+        </div>
+        <p className="hub-esc__where hub-wrap">{item.where}</p>
         <p className="hub-wrap">{item.from}</p>
         {item.late && (
           <p className="hub-flag hub-wrap" data-testid="escalation-late">
@@ -27,7 +29,7 @@ function Item({ item }: { item: EscalationItemView }) {
           </p>
         )}
         {item.handled && <p className="hub-wrap">{item.handled}</p>}
-        <a className="tap hub-link" href={item.href} aria-label={item.openLabel} data-testid="escalation-open">
+        <a className="tap hub-button hub-button--secondary hub-esc__open" href={item.href} aria-label={item.openLabel} data-testid="escalation-open">
           {t("open")}
         </a>
       </Stack>
@@ -80,7 +82,7 @@ export function RoundsBody({ screen, progress }: { screen: RoundsScreen; progres
               ) : (
                 <Stack as="ul" gap="related">
                   {screen.handled.map((item) => (
-                    <Item key={item.id} item={item} />
+                    <Item key={item.id} item={item} handled />
                   ))}
                 </Stack>
               )}

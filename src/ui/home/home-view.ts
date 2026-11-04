@@ -39,6 +39,12 @@ export interface NeighbourhoodRow {
   id: string;
   shown: Shown;
   behind: ThreadBehind[];
+  /**
+   * The open threads aimed at buildings of this neighbourhood, not at the whole of it (UAT 2026-11-04: an alert for 10 St. Dennis Dr
+   * left Flemingdon Park reading "Nothing active", and was read as no alert). They do not change the neighbourhood's status, which is
+   * the server's (one building's problem is not the neighbourhood's, AD-19); they are named beside it.
+   */
+  inBuildings: ThreadBehind[];
 }
 
 export interface HomeRows {
@@ -97,6 +103,15 @@ export function threadsBehind(place: BehindPlace, status: PlaceStatus, threads: 
     .map((thread) => ({ slug: thread.slug, types: thread.types }));
 }
 
+/** The open threads whose audience names buildings of the neighbourhood `id` (by the building list), each once, in the feed's order. */
+export function buildingThreadsIn(id: string, threads: readonly FeedThread[], list: BuildingList | null): ThreadBehind[] {
+  if (!list) return [];
+  const here = list.buildings.filter((building) => building.neighbourhoodId === id);
+  return threads
+    .filter((thread) => thread.state === "open" && thread.audience.scope === "buildings" && here.some((building) => audienceCoversBuilding(thread.audience, { rsn: building.rsn, neighbourhoodId: id })))
+    .map((thread) => ({ slug: thread.slug, types: thread.types }));
+}
+
 export function behindOf(shown: Shown, feed: FeedV1 | null, place: BehindPlace, closed: ClosedThreads | null = null): ThreadBehind[] {
   if (!feed || shown.kind !== "status") return [];
   return shown.status === "resolved" ? resolvedBehind(place, closed) : threadsBehind(place, shown.status, feed.threads);
@@ -127,7 +142,7 @@ export function homeRows(input: { chosen: readonly string[]; list: BuildingList 
     buildings,
     neighbourhoods: ids.map((id) => {
       const shown = shownOf(view.feed?.places.neighbourhoods.find((place) => place.id === id), view);
-      return { id, shown, behind: behindOf(shown, view.feed, { kind: "neighbourhood", id }, closed) };
+      return { id, shown, behind: behindOf(shown, view.feed, { kind: "neighbourhood", id }, closed), inBuildings: view.feed ? buildingThreadsIn(id, view.feed.threads, list) : [] };
     }),
   };
 }

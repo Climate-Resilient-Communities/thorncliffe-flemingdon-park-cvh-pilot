@@ -44,9 +44,14 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
               { id: "compose", label: englishText("hub.nav.compose"), href: COMPOSE_PAGE, icon: "pencil" as const },
             ]
           : []),
-        // "Check-in rounds" (O-17, S08.08: the escalations to follow up) is `checkins.escalations`: a Coordinator, a Director read-only and an Admin. An
-        // Ambassador's round is their own page, reached from their home (S08.07), so their item stays without a link.
-        { id: "rounds", label: englishText("hub.nav.rounds"), href: can(role, "checkins.escalations") ? ROUNDS_PAGE : null, icon: "person" },
+        // An Ambassador's two other screens (A-02, A-04: UAT 2026-11-04, they were reached only from their home): posting an update and their own round.
+        // "Check-in rounds" (O-17, S08.08: the escalations to follow up) is `checkins.escalations`: a Coordinator, a Director read-only and an Admin.
+        ...(role === "ambassador"
+          ? [
+              { id: "ambassador-post", label: englishText("A01.post"), href: "/staff/ambassador/post", icon: "pencil" as const },
+              { id: "ambassador-round", label: englishText("A01.myRound"), href: "/staff/ambassador/round", icon: "person" as const },
+            ]
+          : [{ id: "rounds", label: englishText("hub.nav.rounds"), href: can(role, "checkins.escalations") ? ROUNDS_PAGE : null, icon: "person" as const }]),
       ],
     },
   ];

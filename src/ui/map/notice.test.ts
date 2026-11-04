@@ -17,7 +17,7 @@ describe("mapNotice", () => {
 });
 
 describe("kept buildings", () => {
-  it("keeps the pins of the building list, and only what the map draws", () => {
+  it("keeps the pins of the building list, and only what the map draws and filters by", () => {
     const data = new Map<string, string>();
     const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) };
     expect(readKeptBuildings(storage)).toBeNull();
@@ -25,12 +25,12 @@ describe("kept buildings", () => {
       v: 1 as const,
       generated_at: new Date().toISOString(),
       buildings: [
-        { rsn: "1", address: "1 A St", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, floors: [{ id: "x", label: "1" }] },
+        { rsn: "1", address: "1 A St", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, coolingRoom: true, floors: [{ id: "x", label: "1" }] },
         { rsn: "2", address: "2 A St", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", floors: [] },
       ],
     };
     keepBuildings(storage, list);
-    expect(readKeptBuildings(storage)).toEqual([{ rsn: "1", address: "1 A St", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34 }]);
+    expect(readKeptBuildings(storage)).toEqual([{ rsn: "1", address: "1 A St", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, coolingRoom: true, airConditioning: null }]);
     expect(data.get(KEPT_BUILDINGS_KEY)).not.toContain("floors");
   });
 });

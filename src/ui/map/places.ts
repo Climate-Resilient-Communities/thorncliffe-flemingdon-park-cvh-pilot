@@ -80,11 +80,20 @@ export function providerPins(providers: readonly ListingProvider[]): ProviderPin
   return pins;
 }
 
-/** One pin per pilot building that has a place. */
-export function buildingPins(buildings: readonly Pick<ListedBuilding, "rsn" | "address" | "neighbourhood" | "lat" | "lng">[]): BuildingPin[] {
+/** The building facts the map's filters can ask for (UAT 2026-11-04); a fact asked for keeps only the buildings the register says have it. */
+export type BuildingFacts = { coolingRoom: boolean; airConditioning: boolean };
+
+export const NO_BUILDING_FACTS: BuildingFacts = { coolingRoom: false, airConditioning: false };
+
+/** One pin per pilot building that has a place and every fact asked for (a building whose register does not say is left out then). */
+export function buildingPins(
+  buildings: readonly Pick<ListedBuilding, "rsn" | "address" | "neighbourhood" | "lat" | "lng" | "coolingRoom" | "airConditioning">[],
+  facts: BuildingFacts = NO_BUILDING_FACTS,
+): BuildingPin[] {
   const pins: BuildingPin[] = [];
   for (const b of buildings) {
     if (b.lat === undefined || b.lng === undefined || !inToronto(b.lat, b.lng)) continue;
+    if ((facts.coolingRoom && b.coolingRoom !== true) || (facts.airConditioning && b.airConditioning !== true)) continue;
     pins.push({ kind: "building", key: `building:${b.rsn}`, rsn: b.rsn, address: b.address, neighbourhood: b.neighbourhood, lat: b.lat, lng: b.lng, marker: "building" });
   }
   return pins;

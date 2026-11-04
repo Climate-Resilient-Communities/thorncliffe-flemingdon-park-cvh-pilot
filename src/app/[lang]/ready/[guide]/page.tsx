@@ -11,6 +11,8 @@ import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
 import { guideIconClass } from "../icons";
 import { loadResidentContent } from "../source";
+import { GROUPS } from "@/contracts/groups";
+import { GuideForYou } from "./guide-for-you";
 import { GuideHashFocus } from "./guide-hash-focus";
 import { GUIDE_PARTS, headingId } from "./sections";
 import "../ready.css";
@@ -58,6 +60,13 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
 
   const t = (await getTranslations({ locale: lang })) as unknown as Translate;
   const x01 = (key: "text" | "call" | "short") => t(`x01.${key}`);
+  // "For you first": every group's lines for this hazard (the catalog's `tailored`), for the phone to pick its own (guide-for-you.tsx).
+  const tailoredText = await getTranslations({ locale: lang, namespace: "tailored" });
+  const tailored = (view !== "unavailable" && tailoredText.has(view.id) ? tailoredText.raw(view.id) : {}) as Record<string, unknown>;
+  const forYouLines = GROUPS.filter((group) => group !== "checkin").map((group) => {
+    const lines = tailored[group];
+    return { group, lines: Array.isArray(lines) ? lines.filter((line): line is string => typeof line === "string") : [] };
+  });
   const language = languageOf(lang);
 
   if (view === "unavailable") {
@@ -131,6 +140,8 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
             <span className="shell-ico shell-ico--chevron shell-ico--mirror shell-ico--sm" aria-hidden="true" />
           </Link>
         </Stack>
+
+        <GuideForYou lang={lang} lines={forYouLines} labels={{ forYou: t("R25.forYou"), tailoredLink: t("R25.tailoredLink") }} />
 
         {/* From the desktop breakpoint (desktop.css) "Jump to" is a column beside the guide that stays on screen while it scrolls. On a
             phone the wrappers are stacks with the screen's section gap, so the page is drawn as before, in the same order. */}

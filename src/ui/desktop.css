@@ -50,6 +50,14 @@
     max-inline-size: 14em;
   }
 
+  .shell-header__tools .shell-choices-tool__label {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
   /* The four destinations in the header row: icon and label side by side, the current one in the accent colour and underlined at
      the header's edge. A long translation or large text wraps the label, then the row, never past the window. */
   .shell-topnav {
@@ -153,11 +161,6 @@
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
     gap: var(--gap-stack);
     align-items: start;
-  }
-
-  /* Home: the side column holds Every day (with the way to text alerts), the 911 note and "What I have told the CVH". */
-  .shell .home-list--dest > li.home-dest--wide {
-    display: flex;
   }
 
   /* Find help: a large question box with its button beside it; the topics as one list in the side column. */

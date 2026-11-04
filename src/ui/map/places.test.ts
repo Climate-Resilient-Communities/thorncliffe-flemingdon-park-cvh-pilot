@@ -75,6 +75,20 @@ describe("pins", () => {
     expect(pins.map((p) => p.rsn)).toEqual(["1"]);
   });
 
+  it("keeps only the buildings the register says have every fact asked for (UAT 2026-11-04)", () => {
+    const list = [
+      { rsn: "1", address: "1 A St", neighbourhood: "TP", lat: IN[0], lng: IN[1], coolingRoom: true, airConditioning: false },
+      { rsn: "2", address: "2 A St", neighbourhood: "TP", lat: IN[0], lng: IN[1], coolingRoom: false, airConditioning: true },
+      { rsn: "3", address: "3 A St", neighbourhood: "TP", lat: IN[0], lng: IN[1], coolingRoom: true, airConditioning: true },
+      { rsn: "4", address: "4 A St", neighbourhood: "TP", lat: IN[0], lng: IN[1], coolingRoom: null, airConditioning: null },
+      { rsn: "5", address: "5 A St", neighbourhood: "TP", lat: IN[0], lng: IN[1] },
+    ];
+    expect(buildingPins(list).map((p) => p.rsn)).toEqual(["1", "2", "3", "4", "5"]);
+    expect(buildingPins(list, { coolingRoom: true, airConditioning: false }).map((p) => p.rsn)).toEqual(["1", "3"]);
+    expect(buildingPins(list, { coolingRoom: false, airConditioning: true }).map((p) => p.rsn)).toEqual(["2", "3"]);
+    expect(buildingPins(list, { coolingRoom: true, airConditioning: true }).map((p) => p.rsn)).toEqual(["3"]);
+  });
+
   it("leads to the same pages as the directory", () => {
     const [p] = providerPins([provider("P101", "A", [], [IN])]);
     const [b] = buildingPins([{ rsn: "4154146", address: "4 Milepost Pl", neighbourhood: "TP", lat: IN[0], lng: IN[1] }]);

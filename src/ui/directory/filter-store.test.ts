@@ -7,7 +7,7 @@ function memory(): FilterStorage & { data: Map<string, string> } {
   return { data, getItem: (key) => data.get(key) ?? null, setItem: (key, value) => void data.set(key, value), removeItem: (key) => void data.delete(key) };
 }
 
-const applied: FilterState = { categories: ["food", "health"], subcategories: ["cooling spaces"], neighbourhoods: ["FP"], emergency: true };
+const applied: FilterState = { topics: [], categories: ["food", "health"], subcategories: ["cooling spaces"], neighbourhoods: ["FP"], emergency: true };
 
 describe("the filters kept for the visit", () => {
   it("come back as they were saved, so opening a provider and going back keeps them", () => {
@@ -50,16 +50,16 @@ describe("the filters kept for the visit", () => {
 
   it("drop what is not a topic id, a subcategory name or a pilot neighbourhood, and keep each once", () => {
     const tab = memory();
-    tab.data.set(FILTERS_KEY, JSON.stringify({ v: 1, categories: ["food", "food", 7, ""], subcategories: ["cooling spaces", 3, "cooling spaces", ""], neighbourhoods: ["TP", "XX", "TP"], emergency: "yes" }));
+    tab.data.set(FILTERS_KEY, JSON.stringify({ v: 1, topics: ["housing", "nope", "housing"], categories: ["food", "food", 7, ""], subcategories: ["cooling spaces", 3, "cooling spaces", ""], neighbourhoods: ["TP", "XX", "TP"], emergency: "yes" }));
 
-    expect(readFilters(tab)).toEqual({ categories: ["food"], subcategories: ["cooling spaces"], neighbourhoods: ["TP"], emergency: false });
+    expect(readFilters(tab)).toEqual({ topics: ["housing"], categories: ["food"], subcategories: ["cooling spaces"], neighbourhoods: ["TP"], emergency: false });
   });
 
   it("read filters kept before subcategories existed with none on", () => {
     const tab = memory();
     tab.data.set(FILTERS_KEY, JSON.stringify({ v: 1, categories: ["food"], neighbourhoods: ["FP"], emergency: true }));
 
-    expect(readFilters(tab)).toEqual({ categories: ["food"], subcategories: [], neighbourhoods: ["FP"], emergency: true });
+    expect(readFilters(tab)).toEqual({ topics: [], categories: ["food"], subcategories: [], neighbourhoods: ["FP"], emergency: true });
   });
 
   it("are none, and saving does not throw, when the tab's storage is blocked or full", () => {
@@ -83,8 +83,8 @@ describe("the filters kept for the visit", () => {
   });
 
   it("lose a topic or a subcategory the release no longer has, and keep the rest, without making a new state when all are known", () => {
-    expect(withoutUnknownTopics(applied, ["food"], ["cooling spaces"])).toEqual({ categories: ["food"], subcategories: ["cooling spaces"], neighbourhoods: ["FP"], emergency: true });
-    expect(withoutUnknownTopics(applied, ["food", "health"], [])).toEqual({ categories: ["food", "health"], subcategories: [], neighbourhoods: ["FP"], emergency: true });
+    expect(withoutUnknownTopics(applied, ["food"], ["cooling spaces"])).toEqual({ topics: [], categories: ["food"], subcategories: ["cooling spaces"], neighbourhoods: ["FP"], emergency: true });
+    expect(withoutUnknownTopics(applied, ["food", "health"], [])).toEqual({ topics: [], categories: ["food", "health"], subcategories: [], neighbourhoods: ["FP"], emergency: true });
     expect(withoutUnknownTopics(applied, ["food", "health", "legal"], ["cooling spaces", "legal services"])).toBe(applied);
   });
 });

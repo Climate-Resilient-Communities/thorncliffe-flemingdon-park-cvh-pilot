@@ -319,7 +319,7 @@ describe("the published confirmation of an approved entry (O-06)", () => {
     expect(published.whereTitle).toBe("What went where");
     expect(rowIds(published)).toEqual(["web", "texts", "valid"]);
     const [web, texts, valid] = published.rows;
-    expect(web).toMatchObject({ label: "App and web", value: "Live now for residents who follow this place, in 16 languages, each in their own words." });
+    expect(web).toMatchObject({ label: "App and web", value: "Live now on the app for every resident, first for those who follow this place, in 16 languages, each in their own words." });
     expect(web.languages?.items.map((language) => language.lang)).toEqual(["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr", "zh-Hant"]);
     // Every language is named in its own script and direction.
     expect(web.languages?.items.find((language) => language.lang === "ur")).toMatchObject({ bcp47: "ur", dir: "rtl" });
@@ -335,7 +335,7 @@ describe("the published confirmation of an approved entry (O-06)", () => {
     const published = approved({ fallback: ["ur", "ps", "prs"] })!;
     expect(rowIds(published)).toEqual(["web", "fallback", "texts", "valid"]);
     const [web, fallback] = published.rows;
-    expect(web.value).toBe("Live now for residents who follow this place, in 13 languages, each in their own words.");
+    expect(web.value).toBe("Live now on the app for every resident, first for those who follow this place, in 13 languages, each in their own words.");
     expect(web.languages?.items.map((language) => language.lang)).not.toContain("ur");
     expect(fallback.value).toBe('Residents reading in Urdu, Pashto and Dari see the English text with "Translation not available" in their language.');
     expect(fallback.languages?.items.map((language) => language.lang)).toEqual(["ur", "ps", "prs"]);

@@ -66,6 +66,35 @@
     text-overflow: ellipsis;
   }
 
+  /* "My choices" (R-34): the person mark on a phone, its name read and not shown, as the Aa button is; the name is shown from
+     the desktop breakpoint (desktop.css). It keeps the full tap size and never shrinks below it. */
+  .shell-choices-tool {
+    flex: none;
+    justify-content: center;
+    min-inline-size: var(--tap-current);
+    max-inline-size: none;
+    text-decoration: none;
+  }
+
+  .shell-choices-tool[aria-current="page"] {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
+  .shell-choices-tool__label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .shell-choices-tool:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
   /*
    * Navigation: four equal columns (the prototype's .cvh-rnav: bold, line height 1.15), with at least 8px between two labels. Each item is a centred
    * column, its icon above its label, and the items share two rows through subgrid: every icon sits on one line and

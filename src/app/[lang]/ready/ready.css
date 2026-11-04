@@ -297,4 +297,28 @@
   .num__row .ready-btn {
     margin-inline-start: auto;
   }
+
+  /* R-25 "For you first": the lines for the groups the resident chose, on the warm surface, each after an arrow. */
+  .guide-for-you {
+    padding: var(--inset-card-compact);
+    border: 1px solid var(--surface-warm);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .guide-for-you__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .guide-for-you__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-label);
+  }
 }

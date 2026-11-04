@@ -1,5 +1,6 @@
 import { NO_FILTERS, type FilterState } from "./filters";
 import { isNeighbourhoodId } from "./neighbourhood-names";
+import { isTopicId } from "./topics";
 
 // The filters a resident applied, kept for the visit (S02.06): opening a provider and going back brings the directory
 // back with the same filters. They are kept in sessionStorage, which lasts for the tab and is gone when it closes, and
@@ -29,9 +30,11 @@ export function readFilters(storage: FilterStorage | null): FilterState {
   try {
     const raw = storage.getItem(FILTERS_KEY);
     if (!raw) return NO_FILTERS;
-    const value = JSON.parse(raw) as { v?: unknown; categories?: unknown; subcategories?: unknown; neighbourhoods?: unknown; emergency?: unknown } | null;
+    const value = JSON.parse(raw) as { v?: unknown; topics?: unknown; categories?: unknown; subcategories?: unknown; neighbourhoods?: unknown; emergency?: unknown } | null;
     if (!value || value.v !== 1) return NO_FILTERS;
     return {
+      // Filters kept before Find help's topics existed lack the field: none were on.
+      topics: [...new Set(strings(value.topics).filter(isTopicId))],
       categories: [...new Set(strings(value.categories))],
       // Filters kept before subcategories existed lack the field: none were on.
       subcategories: [...new Set(strings(value.subcategories))],
@@ -47,8 +50,8 @@ export function readFilters(storage: FilterStorage | null): FilterState {
 export function saveFilters(storage: FilterStorage | null, state: FilterState): void {
   if (!storage) return;
   try {
-    if (state.categories.length === 0 && state.subcategories.length === 0 && state.neighbourhoods.length === 0 && !state.emergency) storage.removeItem(FILTERS_KEY);
-    else storage.setItem(FILTERS_KEY, JSON.stringify({ v: 1, categories: state.categories, subcategories: state.subcategories, neighbourhoods: state.neighbourhoods, emergency: state.emergency }));
+    if (state.topics.length === 0 && state.categories.length === 0 && state.subcategories.length === 0 && state.neighbourhoods.length === 0 && !state.emergency) storage.removeItem(FILTERS_KEY);
+    else storage.setItem(FILTERS_KEY, JSON.stringify({ v: 1, topics: state.topics, categories: state.categories, subcategories: state.subcategories, neighbourhoods: state.neighbourhoods, emergency: state.emergency }));
   } catch {
     // The filters just do not survive the next page.
   }

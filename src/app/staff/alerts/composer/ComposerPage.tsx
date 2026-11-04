@@ -7,6 +7,7 @@ import { LogBody } from "../log/LogBody";
 import { logScreen } from "../log/view";
 import { buildings } from "../../places";
 import { pullBackAction, saveDraftAction } from "./actions";
+import { composeProgress } from "../ComposeProgress";
 import { ComposerBody } from "./ComposerBody";
 import { loadComposer, type ComposerQuery } from "./loadComposer";
 import type { ComposerMode } from "./view";
@@ -28,7 +29,7 @@ export async function ComposerPage({ mode, query }: { mode: ComposerMode; query:
     const screen = logScreen(await buildings().listFloorPlans(), new Date(), { kind: "update" });
     return (
       <Screen surface="staff" width="log">
-        <LogBody screen={screen} action={logDisruptionAction} />
+        <LogBody screen={screen} action={logDisruptionAction} progress={composeProgress("what", englishText)} />
       </Screen>
     );
   }
@@ -45,5 +46,5 @@ export async function ComposerPage({ mode, query }: { mode: ComposerMode; query:
       </Screen>
     );
   }
-  return <ComposerBody screen={screen} actions={actions} />;
+  return <ComposerBody screen={screen} actions={actions} steps={mode === "alert" ? composeProgress("message", englishText) : undefined} />;
 }

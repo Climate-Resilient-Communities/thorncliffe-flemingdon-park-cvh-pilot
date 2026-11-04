@@ -1565,4 +1565,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "હા, Thorncliffe Park Community Hub તરફથી CVH ટેક્સ્ટ ચેતવણીઓ આ નંબર પર મોકલો.", "optional": "ટેક્સ્ટ ચેતવણીઓ વૈકલ્પિક છે. સાઇન અપ કર્યા વિના પણ તમે આ એપનો દરેક ભાગ વાપરી શકો છો.", "missingTexts": "ટેક્સ્ટ ચેતવણીઓ મેળવવા માટે તમારી સંમતિ", "error": {"texts_not_agreed": "સાઇન અપ કરવા માટે, ટેક્સ્ટ ચેતવણીઓ મેળવવાના બોક્સ પર ટિક કરો."}}, "R04": {"levelCommunity": "Thorncliffe Park Community Hub તરફથી ચેતવણી. હબે ચકાસી છે.", "fromHub": "Thorncliffe Park Community Hub તરફથી ચેતવણી"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "મદદ જોઈએ છે? 211 પર કૉલ કરો."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "અહીંની ઇમારતો માટે ચેતવણીઓ:"}});
 })();

@@ -9,8 +9,8 @@ import { MAX_QUESTION_LENGTH } from "@/contracts/searchTestSet";
 import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { CallHub } from "../directory/call-hub";
 import { NO_FILTERS } from "../directory/filters";
+import { topicsOf } from "../directory/topics";
 import { saveFilters, tabStorage } from "../directory/filter-store";
-import { ListingBlock } from "../directory/listing-text";
 import { loadDirectory, type DirectoryState, type KeptStorage } from "../directory/load-directory";
 import { ProviderView, type CategoryNames } from "../directory/provider-view";
 import { Not911 } from "../emergency";
@@ -102,7 +102,8 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
   }, [lang]);
 
   const listing = directory.status === "ready" ? directory.listing : null;
-  const topics = useMemo(() => [...(listing?.categories ?? [])].sort((a, b) => a.sort_order - b.sort_order), [listing]);
+  // The prototype's topics (UAT 2026-11-04), each offered when the release has a provider in it (topics.ts).
+  const topics = useMemo(() => (listing ? topicsOf(listing.providers) : []), [listing]);
   const searchAvailable = !searchOff && (manifest === undefined ? false : manifest === null || manifest.search.status === "available");
   const heldRelease = listing?.release_v;
   const searching = phase.kind === "searching";
@@ -198,7 +199,7 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
 
   /** A topic button: the directory with that topic applied. The filter is kept for the visit in the tab's storage, never in the address. */
   const openTopic = (id: string) => {
-    saveFilters(tabStorage(), { ...NO_FILTERS, categories: [id] });
+    saveFilters(tabStorage(), { ...NO_FILTERS, topics: [id] });
     router.push(`/${lang}/directory`);
   };
 
@@ -215,6 +216,20 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
           On a phone both wrappers are stacks with the screen's gap, so the screen is one stack, in the same order. */}
       <div className="ask-cols" data-layout="columns" data-testid="ask-columns">
       <div className="ask-main" data-testid="ask-main">
+        {/* UAT 2026-11-04: the inline 911 note (prototype X01_Not911, inline) and the ways to dial 911 and 211 open the screen, before the question. */}
+        <Stack gap="related">
+          <Not911 variant="inline" t={x01} />
+          <p className="ask-911">
+            <a className="dir-link tap" href="tel:911" data-testid="ask-911-link">
+              <ResidentText>{t("x01.call")}</ResidentText>
+            </a>
+          </p>
+          <p className="ask-911">
+            <a className="dir-link tap" href="tel:211" data-testid="ask-211-link">
+              <ResidentText>{t("x01.need211")}</ResidentText>
+            </a>
+          </p>
+        </Stack>
         <Stack gap="related">
           <ResidentText as="h1">{t("R09.title")}</ResidentText>
           {searchAvailable && <ResidentText as="p" className="hide-basic">{t("R09.lead")}</ResidentText>}
@@ -379,7 +394,7 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
                 {topics.map((topic) => (
                   <li key={topic.id}>
                     <button type="button" className="ask-topic tap" onClick={() => openTopic(topic.id)} data-testid={`ask-topic-${topic.id}`}>
-                      <ListingBlock text={topic.name} as="span" />
+                      <ResidentText>{t(`categories.${topic.id}`)}</ResidentText>
                     </button>
                   </li>
                 ))}
@@ -393,15 +408,6 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
           </Stack>
         </section>
 
-        {/* R-09 and R-11 end with the shared inline 911 note (prototype X01_Not911, inline) and the way to dial it. */}
-        <Stack gap="related">
-          <Not911 variant="inline" t={x01} />
-          <p className="ask-911">
-            <a className="dir-link tap" href="tel:911" data-testid="ask-911-link">
-              <ResidentText>{t("x01.call")}</ResidentText>
-            </a>
-          </p>
-        </Stack>
       </div>
       </div>
     </Screen>

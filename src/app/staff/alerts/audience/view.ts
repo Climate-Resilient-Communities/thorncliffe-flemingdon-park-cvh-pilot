@@ -6,6 +6,7 @@ import type { Audience } from "@/contracts/audience";
 import { GROUPS } from "@/contracts/groups";
 import { englishText } from "@/i18n/text";
 import type { BuildingFloorPlan } from "@/modules/places";
+import { composeProgress, type ComposeProgressView } from "../ComposeProgress";
 import { composerHref, type ComposerFrom } from "../pages";
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "./editAudience";
 
@@ -58,6 +59,8 @@ export interface PlaceScreen {
   notice?: string;
   /** Set when the page was opened from a composer. */
   back?: BackLink;
+  /** Set when the page was opened from the alert composer (O-02): where the author is in composing the alert. */
+  progress?: ComposeProgressView;
   ref: DraftRef;
   steps: StepsView;
   scope: { title: string; neighbourhood: { label: string; line: string; checked: boolean }; buildings: { label: string; line: string; checked: boolean } };
@@ -74,6 +77,7 @@ export interface GroupsScreen {
   lead: string;
   notice?: string;
   back?: BackLink;
+  progress?: ComposeProgressView;
   ref: DraftRef;
   steps: StepsView;
   legend: string;
@@ -227,6 +231,7 @@ export function placeScreen(plans: readonly BuildingFloorPlan[], audience: Audie
     lead: t("placeLead"),
     ...(options.notice ? { notice: options.notice } : {}),
     ...backOf(ref, from, t),
+    ...(from === "compose" ? { progress: composeProgress("audience", englishText) } : {}),
     ref,
     steps: stepsOf(ref, "place", t, from),
     ...placeFieldsOf(plans, audience, t),
@@ -244,6 +249,7 @@ export function groupsScreen(plans: readonly BuildingFloorPlan[], audience: Audi
     lead: t("groupsLead"),
     ...(options.notice ? { notice: options.notice } : {}),
     ...backOf(ref, from, t),
+    ...(from === "compose" ? { progress: composeProgress("audience", englishText) } : {}),
     ref,
     steps: stepsOf(ref, "groups", t, from),
     legend: t("groupsFieldset"),
