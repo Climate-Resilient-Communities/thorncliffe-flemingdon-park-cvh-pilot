@@ -274,8 +274,8 @@ test.describe("focus order", () => {
             const lastBeforeFooter = footer.length > 0 ? Math.min(...footer) - 1 : count - 1;
             return { footer, footerIsLast: footer.every((index, i) => index === count - footer.length + i), lastBeforeFooterInNav: !!at(lastBeforeFooter)?.closest("[data-testid=shell-nav]") };
           }, order.count);
-          // The header's language button and then its display settings (Aa) button come first.
-          expect([first, second]).toEqual(["shell-lang-button", "display-settings-button"]);
+          // The header's My choices, then its language button come first (then its display settings, Aa).
+          expect([first, second]).toEqual(["shell-choices", "shell-lang-button"]);
           expect(tail.footer.length, "the footer's two links").toBe(2);
           expect(tail.footerIsLast, "the footer's links are the last controls").toBe(true);
           expect(tail.lastBeforeFooterInNav, "the bottom navigation comes right before the footer").toBe(true);

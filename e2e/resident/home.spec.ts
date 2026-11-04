@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
-import { FEED_URL, feedOf, stubFeed } from "./home-fixture";
+import { closedThread, FEED_URL, feedOf, stubFeed } from "./home-fixture";
 import { catalogText, expectBaseline, isFallback, openResident, wholePageHeight } from "./helpers";
 
 // S02.11: home (R-03) shows the resident's buildings first, each with its status in words, icon and colour and a link
@@ -19,6 +19,27 @@ test.beforeEach(async ({ page }) => {
   await stubBuildingList(page);
 });
 
+// UAT 2026-11-04: an alert for one building (10 St. Dennis Dr) left its neighbourhood's row reading "Nothing active", and was taken for no alert.
+// A building's alert does not change its neighbourhood's status (AD-19); the row names it beside the status.
+test("a neighbourhood names the open alerts for its buildings beside its status, for a resident who chose no building", async ({ page }) => {
+  const thread = { ...closedThread("stdennis", MILEPOST), state: "open", valid_until: "2026-10-02T12:00:00.000Z" } as Record<string, unknown>;
+  delete thread.closed_at;
+  delete thread.close_reason;
+  await stubFeed(page, [{ ...feedOf(3, { buildings: { [MILEPOST]: { status: "active" } } }), threads: [thread] }]);
+  await choose(page);
+
+  await openResident(page, "/en", 390);
+  await ready(page);
+
+  await expect(statusOf(page, "home-neighbourhood-TP")).toHaveText("Nothing active");
+  const named = page.getByTestId("home-neighbourhood-buildings-TP");
+  await expect(named).toContainText("Alerts for buildings here:");
+  await expect(named.getByRole("link")).toHaveAttribute("href", "/en/alerts/stdennis");
+  await expect(page.getByTestId("home-neighbourhood-buildings-FP")).toHaveCount(0);
+  // And the alert itself is the first thing under "Alerts now".
+  await expect(page.getByTestId("home-alerts")).toBeVisible();
+});
+
 test.describe("a resident with chosen buildings", () => {
   test("sees each chosen building first, in the order chosen, with its status in words, icon and colour, and a link to its page", async ({ page }) => {
     await stubFeed(page, [feedOf(5, { buildings: { [MILEPOST]: { status: "active", verified: false }, [OVERLEA]: { status: "none" } } })]);
@@ -32,9 +53,9 @@ test.describe("a resident with chosen buildings", () => {
     await expect(rows).toHaveCount(2);
     await expect(rows.nth(0)).toContainText("10 Overlea Blvd");
     await expect(rows.nth(1)).toContainText("4 Milepost Pl");
-    // The buildings come before the neighbourhood and the alerts.
+    // The current alerts come first under "Alerts now" (UAT 2026-11-04, as the prototype's cards), then the buildings and the neighbourhood.
     const order = await page.evaluate(() => [...document.querySelectorAll('[data-testid="home-buildings"], [data-testid="home-neighbourhoods"], [data-testid="home-alerts"]')].map((element) => element.getAttribute("data-testid")));
-    expect(order).toEqual(["home-buildings", "home-neighbourhoods", "home-alerts"]);
+    expect(order).toEqual(["home-alerts", "home-buildings", "home-neighbourhoods"]);
 
     // Text: the words. Never colour alone.
     await expect(statusOf(page, `home-building-${OVERLEA}`)).toHaveText("Nothing active");
@@ -437,9 +458,9 @@ test.describe("the feed is fetched again every 60 seconds", () => {
   });
 });
 
-// Owner decisions 36 and 37: home ends with the "Every day" destinations (find help, map, be ready, as in the prototype's
-// R-03), then the short 911 notice (the shared inline block, the catalog's x01.short) directly under them, then the link
-// to what the resident has told the CVH, in every state of the screen.
+// UAT 2026-11-04 (replacing owner decisions 36 and 37): home opens with the short 911 notice (the shared inline block, the catalog's
+// x01.short) and the way to text alerts, and ends with the "Every day" destinations (find help, map, be ready, as in the prototype's
+// R-03), then the link to what the resident has told the CVH, in every state of the screen.
 // `toContainText("911")` would prove nothing: the badge is aria-hidden decoration that always says 911, so the sentence is
 // what is asserted.
 test.describe("the Every day destinations and the short 911 notice on home", () => {
@@ -451,10 +472,19 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await expect(notice).toHaveAttribute("data-variant", "inline");
     await expect(notice.locator("p")).toHaveText(SHORT);
 
+    // The notice opens the screen, then the way to text alerts, before the heading.
+    const top = await page.evaluate(() => {
+      const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
+      const first = document.querySelector('[data-testid="home-top"]')!;
+      const heading = document.querySelector('[data-testid="home"] h1')!;
+      return { children: [...first.children].map(describe), beforeHeading: !!(first.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING) };
+    });
+    expect(top).toEqual({ children: ["not-911", "home-get-text-alerts"], beforeHeading: true });
+    await expect(page.getByTestId("home-get-text-alerts")).toHaveAttribute("href", "/en/text-alerts");
+    await expect(page.getByTestId("home-get-text-alerts")).toBeVisible();
+
     await expect(page.getByTestId("home-every-day-title")).toHaveText("Every day");
-    // Three on a phone; the fourth, the way to text alerts, is drawn only from the desktop breakpoint (src/ui/desktop.css).
     await expect(page.getByTestId("home-every-day").locator("li:visible")).toHaveCount(3);
-    await expect(page.getByTestId("home-dest-getTextAlerts")).toBeHidden();
     await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help");
     await expect(page.getByTestId("home-dest-findHelp")).toHaveAttribute("href", "/en/directory");
     await expect(page.getByTestId("home-dest-map")).toContainText("Map");
@@ -462,8 +492,8 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await expect(page.getByTestId("home-dest-beReady")).toContainText("Be ready");
     await expect(page.getByTestId("home-dest-beReady")).toHaveAttribute("href", "/en/ready");
 
-    // The end of the home content (its side column on a desktop), in order: the "Every day" section, the notice (nothing sits
-    // between them), and the link to what the resident has told the CVH, which ends the screen.
+    // The end of the home content (its side column on a desktop), in order: the "Every day" section and the link to what the resident
+    // has told the CVH, which ends the screen.
     const order = await page.evaluate(() => {
       const content = document.querySelector('[data-testid="home-now"]')!.firstElementChild!;
       const side = document.querySelector('[data-testid="home-side"]')!;
@@ -471,10 +501,10 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
       const last = (element: Element): Element => (element.lastElementChild ? last(element.lastElementChild) : element);
       return { side: [...side.children].map(describe), endsTheScreen: last(content) === last(side) };
     });
-    expect(order).toEqual({ side: ["home-every-day", "not-911", "choices-link"], endsTheScreen: true });
+    expect(order).toEqual({ side: ["home-every-day", "choices-link"], endsTheScreen: true });
   };
 
-  test("come after the buildings, the neighbourhood and the alerts, with chosen buildings and a feed that answered", async ({ page }) => {
+  test("Every day comes after the alerts, the buildings and the neighbourhood, with chosen buildings and a feed that answered", async ({ page }) => {
     await stubFeed(page, [feedOf(1, { buildings: { [MILEPOST]: { status: "active" } } })]);
     await choose(page, MILEPOST);
 
@@ -485,7 +515,7 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     const order = await page.evaluate(() =>
       [...document.querySelectorAll('[data-testid="home-buildings"], [data-testid="home-neighbourhoods"], [data-testid="home-alerts"], [data-testid="home-every-day"]')].map((element) => element.getAttribute("data-testid")),
     );
-    expect(order).toEqual(["home-buildings", "home-neighbourhoods", "home-alerts", "home-every-day"]);
+    expect(order).toEqual(["home-alerts", "home-buildings", "home-neighbourhoods", "home-every-day"]);
   });
 
   test("are there with no chosen building", async ({ page }) => {
@@ -548,12 +578,12 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
   });
 
   // The destinations are the same for every resident and need nothing from the phone, so the page as the server sent it
-  // (no script has run) already has them, with the notice directly under them and the link to the choices last.
+  // (no script has run) already has them, the notice at the top and the link to the choices last.
   test.describe("as the server sent the page, before any script has run", () => {
     test.use({ javaScriptEnabled: false });
 
     for (const language of ["en", "ur"] as const) {
-      test(`${language}: Every day with its three links, then the notice, then the link to what the resident has told the CVH`, async ({ page }) => {
+      test(`${language}: the notice first, then Every day with its three links, then the link to what the resident has told the CVH`, async ({ page }) => {
         await openResident(page, `/${language}`, 390);
 
         await expect(page.getByTestId("home-every-day").locator("a:visible")).toHaveCount(3);
@@ -567,7 +597,8 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
           const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
           return { side: [...side.children].map(describe), last: content.lastElementChild?.lastElementChild === side };
         });
-        expect(order).toEqual({ side: ["home-every-day", "not-911", "choices-link"], last: true });
+        expect(order).toEqual({ side: ["home-every-day", "choices-link"], last: true });
+        await expect(page.getByTestId("home-top").locator('[data-component="not-911"]')).toHaveCount(1);
       });
     }
   });
@@ -581,8 +612,7 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await ready(page);
 
     const heights = () => page.getByTestId("home-every-day").locator("a:visible").evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().height)));
-    // The three of a phone (the way to text alerts is drawn only from the desktop breakpoint).
-    const lines = page.getByTestId("home-every-day").locator("li:not(.home-dest--wide) .home-dest__line");
+    const lines = page.getByTestId("home-every-day").locator(".home-dest__line");
     await expect(lines).toHaveCount(3);
     for (const line of await lines.all()) await expect(line).toBeVisible();
     await expect(page.getByTestId("home-dest-findHelp")).toContainText(catalogText("en", "R03.findHelpLine"));

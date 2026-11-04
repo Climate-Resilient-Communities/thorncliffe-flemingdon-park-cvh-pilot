@@ -55,6 +55,8 @@
 .shell-header__tools .shell-langbtn { min-inline-size: 0; max-inline-size: 100%; }
 /* The rule above lets the language button shrink; the Aa button keeps the full tap size (56 px in basic mode). */
 .shell-header__tools .shell-display-button { flex: none; min-inline-size: var(--tap-current); justify-content: center; }
+/* "My choices" keeps the full tap size too: the language button is the one that gives way when the header is narrow. */
+.shell-header__tools .shell-choices-tool { flex: none; min-inline-size: var(--tap-current); max-inline-size: none; justify-content: center; }
 .display-size { border: 0; padding: 0; margin: 0; }
 .display-size legend { font-weight: 700; }
 .display-size__choices { display: flex; flex-wrap: wrap; gap: var(--gap-stack); }

@@ -124,9 +124,11 @@ test("a topic button opens the directory with that topic applied, and nothing ab
   await setUp(page);
   await openResident(page, "/en/search", 390);
   await ready(page);
+  // The prototype's topics (UAT 2026-11-04), offered when the release has a provider in them: the sample has food, health, settlement and legal help.
+  await expect(page.locator("[data-testid=ask-topics] button")).toHaveText(["Food", "Health", "Immigration and settlement", "Legal help"]);
   await page.getByTestId("ask-topic-health").click();
   await expect(page).toHaveURL(/\/en\/directory$/);
-  await expect(page.getByTestId("chip-category:health")).toBeVisible();
+  await expect(page.getByTestId("chip-topic:health")).toContainText("Health");
   await expect(page.getByTestId("directory-list").locator("article")).toHaveCount(1);
 });
 

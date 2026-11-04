@@ -324,7 +324,7 @@ test("the filters survive opening a provider and going back, are kept in the tab
 
   // Kept for the tab only: in sessionStorage, not in localStorage, not in the address.
   expect(page.url()).not.toContain("?");
-  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, categories: ["food", "health"], subcategories: [], neighbourhoods: [], emergency: true });
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, topics: [], categories: ["food", "health"], subcategories: [], neighbourhoods: [], emergency: true });
   expect(await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes("filters")))).toEqual([]);
 
   // Another tab of the same phone starts with no filters.

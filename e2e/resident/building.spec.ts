@@ -207,6 +207,8 @@ test("a main that scrolls with nothing focusable in it is a tab stop, and only t
     element.append(tall);
   });
   await expect(main).toHaveAttribute("tabindex", "0");
+  // The header's three tools (My choices, the language, Aa), then the main.
+  await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");

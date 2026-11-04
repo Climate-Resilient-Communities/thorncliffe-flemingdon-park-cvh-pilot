@@ -101,11 +101,11 @@ for (const lang of ["en", "ur"] as const) {
         await waitForFonts(page);
         await expectHeaderNavigation(page, lang);
         await expectSideBySide(page.getByTestId("home-main"), page.getByTestId("home-side"), dir);
-        // The side column: Every day (with the way to text alerts), then the 911 note.
+        // The top of the screen: the 911 note, then the way to text alerts (UAT 2026-11-04); the side column: Every day.
+        await expect(page.getByTestId("home-top").locator('[data-component="not-911"]')).toBeVisible();
+        await expect(page.getByTestId("home-get-text-alerts")).toBeVisible();
         const side = page.getByTestId("home-side");
         await expect(side.getByTestId("home-every-day")).toBeVisible();
-        await expect(side.getByTestId("home-dest-getTextAlerts")).toBeVisible();
-        await expect(side.locator('[data-component="not-911"]')).toBeVisible();
         // The main column: the buildings, the neighbourhood, the current alerts and the alerts that have ended.
         const main = page.getByTestId("home-main");
         for (const id of ["home-buildings", "home-neighbourhoods", "home-alerts", "home-archive"]) await expect(main.getByTestId(id)).toBeVisible();
