@@ -125,10 +125,11 @@
     color: var(--text-on-warm);
   }
 
-  /* "What the shapes mean": a disclosure in the map's frame under the credit, each kind of pin beside its words. */
+  /* "What the shapes mean": a disclosure under the map and its list, each kind of pin beside its words. */
   .map-legend-box {
-    flex: none;
-    border-block-start: 1.5px solid var(--control-border);
+    margin-block-start: var(--gap-related);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-card);
     background-color: var(--surface-raised);
   }
 

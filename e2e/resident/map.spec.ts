@@ -156,7 +156,7 @@ test.describe("the map (R-14)", () => {
     // The panel holds the two groups, fieldsets with a legend as in the directory.
     await toggle.click();
     await expect(page.getByTestId("map-filter-panel")).toBeVisible();
-    await expect(page.locator("[data-testid=map-filter-panel] fieldset > legend")).toHaveText(["Topic", "What kind of place?"]);
+    await expect(page.locator("[data-testid=map-filter-panel] fieldset > legend")).toHaveText(["Topic", "What kind of place?", "Apartment buildings"]);
     await expect(page.getByRole("group", { name: "What kind of place?" }).getByRole("checkbox")).toHaveCount(3);
 
     // A kind of place: only its pins stay, with the buildings; the list shows the same.

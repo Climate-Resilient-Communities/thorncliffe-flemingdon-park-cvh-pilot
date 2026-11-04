@@ -427,31 +427,6 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             tiles.attribution
           )}
         </p>
-        {/* "What the shapes mean" (the prototype's R-14 legend), under the map: each kind of pin with its words, and the group pill. Not in
-            basic mode, which has no map. */}
-        <details className="map-legend-box hide-basic" data-testid="map-legend">
-          <summary className="map-legend-box__summary tap">
-            <ResidentText>{t("R14.legendTitle")}</ResidentText>
-          </summary>
-          <ul className="map-legend-box__list">
-            {LEGEND.map((row) => (
-              <li key={row.marker} className="map-legend-box__row" data-testid={`map-legend-${row.marker}`}>
-                <span className={`map-pin map-pin--${row.marker} map-pin--inline`} aria-hidden="true">
-                  <span className="map-pin__mark">
-                    <span className={`map-ico map-ico--${row.marker}`} />
-                  </span>
-                </span>
-                <ResidentText>{t(row.key)}</ResidentText>
-              </li>
-            ))}
-            <li className="map-legend-box__row" data-testid="map-legend-cluster">
-              <span className="map-legend-box__pill" aria-hidden="true">
-                <ResidentText>{t("R14.places", { n: 3 })}</ResidentText>
-              </span>
-              <ResidentText>{t("R14.legendCluster")}</ResidentText>
-            </li>
-          </ul>
-        </details>
         {mapStatus === "loading" && (
           <div className="map-msg" role="status">
             <ResidentText as="p" className="map-strong">
@@ -605,6 +580,31 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
           </Stack>
         </section>
       </div>
+    {/* "What the shapes mean" (the prototype's R-14 legend), under the map and its list: each kind of pin with its words, and the group pill.
+        Not in basic mode, which has no map. */}
+      <details className="map-legend-box hide-basic" data-testid="map-legend">
+        <summary className="map-legend-box__summary tap">
+          <ResidentText>{t("R14.legendTitle")}</ResidentText>
+        </summary>
+        <ul className="map-legend-box__list">
+          {LEGEND.map((row) => (
+            <li key={row.marker} className="map-legend-box__row" data-testid={`map-legend-${row.marker}`}>
+              <span className={`map-pin map-pin--${row.marker} map-pin--inline`} aria-hidden="true">
+                <span className="map-pin__mark">
+                  <span className={`map-ico map-ico--${row.marker}`} />
+                </span>
+              </span>
+              <ResidentText>{t(row.key)}</ResidentText>
+            </li>
+          ))}
+          <li className="map-legend-box__row" data-testid="map-legend-cluster">
+            <span className="map-legend-box__pill" aria-hidden="true">
+              <ResidentText>{t("R14.places", { n: 3 })}</ResidentText>
+            </span>
+            <ResidentText>{t("R14.legendCluster")}</ResidentText>
+          </li>
+        </ul>
+      </details>
     </Screen>
   );
 }
