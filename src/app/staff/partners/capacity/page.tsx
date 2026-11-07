@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listOrgs, listSpaces, spaceTotals } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -19,7 +19,7 @@ const TONE = { available: "covered", stretched: "waiting", at_capacity: "gap" } 
  * capacity, or not set), self-declared and never calculated, beside the people in its open spaces against their limits.
  */
 export default partnerPage(PARTNER_PAGES.capacity, () => englishText("hub.nav.capacity"), async () => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const [orgs, spaces] = await Promise.all([listOrgs(db), listSpaces(db)]);
   return (

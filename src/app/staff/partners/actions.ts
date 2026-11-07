@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { RESIDENT_SPACES_TAG } from "@/contracts/openSpaces";
 import { changeSpace, isSpaceStatus, withStatus, type SpaceChangeInput, type SpaceChangeResult, type SpaceState } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "./db";
 import { englishText } from "@/i18n/text";
 import { staffAction, type ActionRefusal } from "../guard";
 import type { StaffSession } from "../session";
@@ -43,12 +43,11 @@ function finish(form: FormData, spaceId: string, result: SpaceChangeResult): nev
 export type SpaceFormState = { status: "idle" } | { status: "refused"; message: string };
 
 /**
- * A refusal by the guard: someone at a setup gate is answered in the state (they never reach these pages); a role the policy refuses (a
- * Director, an Ambassador) goes back to the page with "Only a Coordinator or an Admin can change a space", nothing changed.
+ * A refusal by the guard, answered in the state as every staff action answers it (test/db/permissions.db.test.ts): someone at a setup gate, or
+ * a role the policy refuses (a Director, an Ambassador), whose pages never show these forms; nothing changed, and the guard audited it.
  */
-function refused(error: ActionRefusal, _previous: SpaceFormState, form: FormData): SpaceFormState {
-  if (error === "setup_incomplete") return { status: "refused", message: englishText("staff.setup.incomplete") };
-  redirect(withNotice(backTo(field(form, "back")), field(form, "spaceId"), { error: "forbidden" }));
+function refused(error: ActionRefusal): SpaceFormState {
+  return { status: "refused", message: error === "setup_incomplete" ? englishText("staff.setup.incomplete") : pw("errors.forbidden") };
 }
 
 /** P-01's "Open this space" and P-06's "Save and confirm": the status, purpose and capacities as the form sent them. */
@@ -57,9 +56,9 @@ export const changeSpaceAction = staffAction(
   async (session, _previous: SpaceFormState, form: FormData): Promise<SpaceFormState> => {
     const spaceId = field(form, "spaceId");
     const input: SpaceChangeInput = { status: field(form, "status"), purpose: field(form, "purpose"), capacityMax: field(form, "capacityMax"), capacityNow: field(form, "capacityNow") };
-    finish(form, spaceId, await changeSpace(getDb(), actorOf(session), spaceId, input));
+    finish(form, spaceId, await changeSpace(partnersDb(), actorOf(session), spaceId, input));
   },
-  refused,
+  (error) => refused(error),
 );
 
 /**
@@ -73,7 +72,7 @@ export const setSpaceStatusAction = staffAction(
     const status = field(form, "status");
     // An unknown status is passed on as it came, and the space's rule refuses it (status_unknown), audited like any refusal.
     const input = (current: SpaceState): SpaceChangeInput => withStatus(current, status === "confirm" ? current.status : isSpaceStatus(status) ? status : (status as SpaceState["status"]));
-    finish(form, spaceId, await changeSpace(getDb(), actorOf(session), spaceId, input));
+    finish(form, spaceId, await changeSpace(partnersDb(), actorOf(session), spaceId, input));
   },
-  refused,
+  (error) => refused(error),
 );

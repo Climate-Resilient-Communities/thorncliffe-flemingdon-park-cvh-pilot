@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { COVERAGE_GROUPS, coverageCounts, coverageOf, listCommitments, listOrgs, listSpaces, openSharedSpace, spaceTotals, statementsOf, type CoverageItem } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: englishText("P02.links.coverage") };
  * totals. Nobody edits this view: it changes when someone posts, takes something on or confirms.
  */
 export default partnerPage(PARTNER_PAGES.coverage, () => englishText("P02.links.coverage"), async () => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const [shared, orgs, commitments, spaces] = await Promise.all([openSharedSpace(db), listOrgs(db), listCommitments(db), listSpaces(db)]);
   const statements = shared ? await statementsOf(db, shared.id) : [];

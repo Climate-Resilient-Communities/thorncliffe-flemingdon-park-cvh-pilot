@@ -135,7 +135,52 @@ const SIGNUP_HELPERS = { ambassador: "allowed", coordinator: "allowed", director
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
 
+/**
+ * The partner space (2026-11-07): its pages are `space.view` (a Coordinator, a Director read-only, an Admin; never an Ambassador), its two
+ * actions `space.update` (a Coordinator and an Admin). Called as an allowed caller, the actions name a space that is not there, so the use case
+ * refuses it (audited) and goes back to the page with the notice, changing nothing.
+ */
+const SPACE_VIEWERS = COVERAGE_VIEWERS;
+const SPACE_UPDATERS = WIDE_AUTHORS;
+const PARTNER_ACTIONS = "src/app/staff/partners/actions.ts";
+const PARTNER_PAGES = [
+  ["/staff/partners", "src/app/staff/partners/page.tsx"],
+  ["/staff/partners/open", "src/app/staff/partners/open/page.tsx"],
+  ["/staff/partners/our-spaces", "src/app/staff/partners/our-spaces/page.tsx"],
+  ["/staff/partners/coverage", "src/app/staff/partners/coverage/page.tsx"],
+  ["/staff/partners/capacity", "src/app/staff/partners/capacity/page.tsx"],
+  ["/staff/partners/supplies", "src/app/staff/partners/supplies/page.tsx"],
+  ["/staff/partners/decisions", "src/app/staff/partners/decisions/page.tsx"],
+  ["/staff/partners/handover", "src/app/staff/partners/handover/page.tsx"],
+  ["/staff/partners/spaces/[id]", "src/app/staff/partners/spaces/[id]/page.tsx"],
+  ["/staff/readiness", "src/app/staff/readiness/page.tsx"],
+  ["/staff/readiness/playbooks", "src/app/staff/readiness/playbooks/page.tsx"],
+  ["/staff/readiness/teams", "src/app/staff/readiness/teams/page.tsx"],
+  ["/staff/readiness/exercises", "src/app/staff/readiness/exercises/page.tsx"],
+  ["/staff/readiness/indicators", "src/app/staff/readiness/indicators/page.tsx"],
+  ["/staff/readiness/look-back", "src/app/staff/readiness/look-back/page.tsx"],
+] as const;
+
 export const STAFF_ENDPOINTS: StaffEndpoint[] = [
+  // ---- the partner space (2026-11-07) ----
+  ...PARTNER_PAGES.map(
+    ([route, file]): StaffEndpoint => ({ id: `page ${route}`, kind: "page", file, export: "default", route, action: "space.view", writes: "none", gate: "hub", expected: SPACE_VIEWERS }),
+  ),
+  ...(["changeSpaceAction", "setSpaceStatusAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${PARTNER_ACTIONS}#${name}`,
+      kind: "action",
+      file: PARTNER_ACTIONS,
+      export: name,
+      route: "/staff/partners",
+      action: "space.update",
+      writes: "business",
+      gate: "hub",
+      form: { spaceId: "SP99", back: "/staff/partners", status: "open", purpose: "warming", capacityMax: "40", capacityNow: "" },
+      forbiddenMessage: /^Only a Coordinator or an Admin can change a space\./,
+      expected: SPACE_UPDATERS,
+    }),
+  ),
   // ---- pages ----
   { id: "page /staff", kind: "page", file: "src/app/staff/page.tsx", export: "default", route: "/staff", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },

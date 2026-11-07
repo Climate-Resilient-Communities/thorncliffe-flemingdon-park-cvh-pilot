@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { readLookBack } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../../partners/db";
 import { Screen, Stack } from "@/ui";
 import { readinessLinks } from "../../partners/area";
 import { partnerPage } from "../../partners/guarded";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: englishText("hub.nav.lookBack") };
  * the past records with their lessons, and the actions made from them with an owner role and a due date, open ones first.
  */
 export default partnerPage(PARTNER_PAGES.lookBack, () => englishText("hub.nav.lookBack"), async () => {
-  const { records, actions } = await readLookBack(getDb());
+  const { records, actions } = await readLookBack(partnersDb());
   const recurring = recurringLessons(records);
   const open = actions.filter((a) => a.status === "open").length;
   return (

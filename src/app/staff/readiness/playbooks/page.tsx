@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listOrgs, listPlaybooks } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../../partners/db";
 import { Screen, Stack } from "@/ui";
 import { readinessLinks } from "../../partners/area";
 import { partnerPage } from "../../partners/guarded";
@@ -22,7 +22,7 @@ const STATE_TONE = { agreed: "covered", proposed: "waiting", placeholder: "gap" 
  * asked of each partner), its day-one checklist (the steps a shared space loads) and its version history.
  */
 export default partnerPage<{ searchParams?: Promise<{ hazard?: string | string[] }> }>(PARTNER_PAGES.playbooks, () => englishText("hub.nav.playbooks"), async (_session, { searchParams }) => {
-  const db = getDb();
+  const db = partnersDb();
   const [playbooks, orgs] = await Promise.all([listPlaybooks(db), listOrgs(db)]);
   const asked = (await searchParams)?.hazard;
   const chosen = playbooks.find((p) => p.hazard === asked) ?? playbooks.find((p) => p.state === "agreed") ?? playbooks[0];

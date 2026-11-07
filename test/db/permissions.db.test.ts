@@ -81,6 +81,8 @@ vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}
 // The providers screen (S02.04) reads and writes through the app's database connection.
 // "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
 vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));
+// The partner space (2026-11-07): its pages read, and its actions write, the test's database.
+vi.mock("../../src/app/staff/partners/db", () => ({ partnersDb: () => wired.db }));
 // The buildings page and its actions (S01.13), and the coverage page's round types and their action (S08.06), read and write through the places module on the app's own connection.
 vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places, roundTypes: () => wired.roundTypes, logPlacesError: () => {} }));
 // The coverage page and its actions (S01.14) read and write through identity's assignments on the app's own connection.
@@ -510,6 +512,8 @@ describe.each(STAFF_ENDPOINTS.map((endpoint) => [endpoint.id, endpoint] as const
       if (endpoint.kind === "page") expect(answer).toEqual({ rendered: true });
       else if (endpoint.kind === "route" && endpoint.allowedStatus !== undefined) expect((answer as { status: number }).status).toBe(endpoint.allowedStatus);
       else if (endpoint.kind === "route") expect([401, 403]).not.toContain((answer as { status: number }).status);
+      // An allowed action answers in its state, or goes back to its own page (the partner space's forms, 2026-11-07), never to sign-in.
+      else if ("redirect" in answer) expect(answer.redirect).not.toBe(SIGN_IN_PAGE);
       else expect(GUARD_MESSAGES).not.toContain((answer as { state: { message?: string } }).state.message);
       return;
     }

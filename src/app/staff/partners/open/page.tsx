@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import { isResidentStatus, listSpaces } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -22,7 +22,7 @@ type Query = { space?: string | string[]; done?: string | string[]; error?: stri
  */
 export default partnerPage<{ searchParams?: Promise<Query> }>(PARTNER_PAGES.open, () => pw("open.title"), async (session, { searchParams }) => {
   const now = new Date();
-  const spaces = await listSpaces(getDb());
+  const spaces = await listSpaces(partnersDb());
   const notice = changeNotice((await searchParams) ?? {}, spaces, now);
   const closed = spaces.filter((space) => !isResidentStatus(space.status));
   const canUpdate = can(session.role, "space.update");

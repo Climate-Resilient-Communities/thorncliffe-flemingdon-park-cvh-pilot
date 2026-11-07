@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listCommitments, listOrgs, type CommitmentRow } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../partners/db";
 import { Screen, Stack } from "@/ui";
 import { readinessLinks } from "../partners/area";
 import { partnerPage } from "../partners/guarded";
@@ -39,7 +39,7 @@ function Commitment({ c, org, today }: { c: CommitmentRow; org: string; today: s
  * disruption type nobody committed to is a gap, a decision for the partners and not an error.
  */
 export default partnerPage(PARTNER_PAGES.commitments, () => englishText("hub.nav.commitments"), async () => {
-  const db = getDb();
+  const db = partnersDb();
   const today = torontoToday(new Date());
   const [commitments, orgs] = await Promise.all([listCommitments(db), listOrgs(db)]);
   const orgName = new Map(orgs.map((org) => [org.id, org.shortName]));

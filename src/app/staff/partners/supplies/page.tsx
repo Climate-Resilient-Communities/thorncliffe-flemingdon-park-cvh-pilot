@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listOrgs, listSupplies } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -20,7 +20,7 @@ const QTY_TONE = { few: "waiting", some: "working", plenty: "covered" } as const
  * updated, one table per organisation. Partners only: residents never see this list.
  */
 export default partnerPage(PARTNER_PAGES.supplies, () => englishText("hub.nav.supplies"), async () => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const [orgs, supplies] = await Promise.all([listOrgs(db), listSupplies(db)]);
   const holding = orgs.filter((org) => supplies.some((s) => s.orgId === org.id));

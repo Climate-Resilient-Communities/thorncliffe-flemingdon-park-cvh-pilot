@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listExercises, type ExerciseRow } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../../partners/db";
 import { Screen, Stack } from "@/ui";
 import { readinessLinks } from "../../partners/area";
 import { partnerPage } from "../../partners/guarded";
@@ -36,7 +36,7 @@ function Exercise({ exercise }: { exercise: ExerciseRow }) {
  * look back. Running an exercise (a practice disruption that reaches no resident) is not in this release.
  */
 export default partnerPage(PARTNER_PAGES.exercise, () => englishText("hub.nav.exercise"), async () => {
-  const exercises = await listExercises(getDb());
+  const exercises = await listExercises(partnersDb());
   const scheduled = exercises.filter((e) => e.kind === "scheduled");
   const past = exercises.filter((e) => e.kind === "past").reverse();
   return (

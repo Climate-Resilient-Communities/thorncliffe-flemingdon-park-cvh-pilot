@@ -24,7 +24,7 @@ vi.mock("../../src/app/staff/identity", () => ({
   identity: () => ({}),
 }));
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => [] }));
-vi.mock("../../src/platform/db", async (importOriginal) => ({ ...(await importOriginal<typeof import("../../src/platform/db")>()), getDb: () => wired.db }));
+vi.mock("../../src/app/staff/partners/db", () => ({ partnersDb: () => wired.db }));
 // Outside a Next request there is no cache to revalidate; what the action asks to revalidate is recorded.
 const revalidated = vi.hoisted(() => ({ tags: [] as string[] }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined, revalidateTag: (tag: string) => void revalidated.tags.push(tag) }));
@@ -178,12 +178,10 @@ describe("the Hub and partner space's pages (2026-11-07)", () => {
     expect((await post("setSpaceStatusAction", { spaceId: "SP02", back: "https://example.org/x", status: "confirm" })).redirect).toBe("/staff/partners?space=SP02&done=saved#space-SP02");
   });
 
-  it("refuses a Director's change, changes nothing and says why on the page", async () => {
+  it("refuses a Director's change and changes nothing", async () => {
     as("director");
     const result = await post("changeSpaceAction", { spaceId: "SP03", back: "/staff/partners", status: "closed", purpose: "warming", capacityMax: "60", capacityNow: "" });
-    expect(result.redirect).toBe("/staff/partners?space=SP03&error=forbidden#space-SP03");
+    expect(result.state).toEqual({ status: "refused", message: "Only a Coordinator or an Admin can change a space. Nothing was changed." });
     expect((await readSpace(app, "SP03"))?.space.status).toBe("open");
-    const { html } = await open("partners/page", { searchParams: Promise.resolve({ space: "SP03", error: "forbidden" }) });
-    expect(html).toContain("Only a Coordinator or an Admin can change a space. Nothing was changed.");
   });
 });

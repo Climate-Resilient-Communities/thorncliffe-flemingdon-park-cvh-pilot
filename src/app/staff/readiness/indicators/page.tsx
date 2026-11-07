@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listIndicators } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../../partners/db";
 import { Screen, Stack } from "@/ui";
 import { readinessLinks } from "../../partners/area";
 import { partnerPage } from "../../partners/guarded";
@@ -19,7 +19,7 @@ const NAMED = new Set(["reach", "unreachable", "timeToAck", "stale", "directory"
  * disruptions, exercises and everyday use in columns that are never added together, and every figure under 5 shown as "Fewer than 5".
  */
 export default partnerPage(PARTNER_PAGES.indicators, () => englishText("hub.nav.indicators"), async () => {
-  const indicators = await listIndicators(getDb());
+  const indicators = await listIndicators(partnersDb());
   const cell = (value: string | null) => value ?? englishText("P15.na");
   return (
     <Screen surface="staff">

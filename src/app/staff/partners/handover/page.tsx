@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { handoversOf, listOrgs, openSharedSpace, statementsOf } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: englishText("staff.partners.handover.
  * Writing a handover is not in this release: it is done in the shared space's conversation for now.
  */
 export default partnerPage(PARTNER_PAGES.handover, () => pw("handover.title"), async () => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const [shared, orgs] = await Promise.all([openSharedSpace(db), listOrgs(db)]);
   const [handovers, statements] = shared ? await Promise.all([handoversOf(db, shared.id), statementsOf(db, shared.id)]) : [[], []];

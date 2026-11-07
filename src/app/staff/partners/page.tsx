@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import { listCommitments, listOrgs, listSpaces, handoversOf, openSharedSpace, spaceTotals, statementsOf } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "./db";
 import { Screen, Stack } from "@/ui";
 import { disruptionActions, disruptionLinks } from "./area";
 import { partnerPage } from "./guarded";
@@ -14,6 +14,9 @@ export const metadata: Metadata = { title: englishText("hub.nav.space") };
 
 type Query = { space?: string | string[]; done?: string | string[]; error?: string | string[] };
 
+/** The tone of a standing commitment's answer for this disruption: confirmed is covered, declined a gap, no answer yet waiting. */
+const COMMITMENT_TONE = { confirmed: "covered", declined: "gap", pending: "waiting" } as const;
+
 /**
  * "Shared space" (P-02, the partner space of 2026-11-07): the open disruption and what its space is for, the status board of every space (open,
  * full, closed or not activated, how full, and who confirmed it when), the standing commitments for the disruption with each organisation's
@@ -21,7 +24,7 @@ type Query = { space?: string | string[]; done?: string | string[]; error?: stri
  * or opens one (P-01); a Director reads. Read for each request (no-store).
  */
 export default partnerPage<{ searchParams?: Promise<Query> }>(PARTNER_PAGES.space, () => englishText("hub.nav.space"), async (session, { searchParams }) => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const [spaces, shared, orgs, commitments] = await Promise.all([listSpaces(db), openSharedSpace(db), listOrgs(db), listCommitments(db)]);
   const [statements, handovers] = shared ? await Promise.all([statementsOf(db, shared.id), handoversOf(db, shared.id)]) : [[], []];
@@ -117,7 +120,7 @@ export default partnerPage<{ searchParams?: Promise<Query> }>(PARTNER_PAGES.spac
                 <Stack as="ul" gap="related">
                   {forHazard.map((c) => {
                     const answer = c.forDisruption ?? "pending";
-                    const tone = answer === "confirmed" ? "covered" : answer === "declined" ? "gap" : "waiting";
+                    const tone = COMMITMENT_TONE[answer];
                     return (
                       <li key={c.id} className={`hub-card hub-card--${tone}`} data-testid={`commitment-${c.id}`}>
                         <Stack gap="subline">

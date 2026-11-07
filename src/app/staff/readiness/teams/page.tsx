@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { listTeams } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../../partners/db";
 import { Screen, Stack } from "@/ui";
 import { readinessLinks } from "../../partners/area";
 import { partnerPage } from "../../partners/guarded";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: englishText("hub.nav.teams") };
  * reached and the event that starts it, each team a role and never a person. A level with no team is a gap to decide, shown as one.
  */
 export default partnerPage(PARTNER_PAGES.teams, () => englishText("hub.nav.teams"), async () => {
-  const teams = await listTeams(getDb());
+  const teams = await listTeams(partnersDb());
   const hazards = [...new Set(teams.map((t) => t.hazard))];
   return (
     <Screen surface="staff">

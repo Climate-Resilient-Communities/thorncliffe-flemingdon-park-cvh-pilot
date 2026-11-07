@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import { listOrgs, listSpaces } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -20,7 +20,7 @@ type Query = { org?: string | string[]; space?: string | string[]; done?: string
  * for that organisation; the space is then "confirmed by" that Hub account. The change reaches the resident map and listing at the same moment.
  */
 export default partnerPage<{ searchParams?: Promise<Query> }>(PARTNER_PAGES.ourSpaces, () => englishText("hub.nav.ourSpaces"), async (session, { searchParams }) => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const query = (await searchParams) ?? {};
   const [orgs, spaces] = await Promise.all([listOrgs(db), listSpaces(db)]);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { decisionsOf, listOrgs, openSharedSpace } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../area";
 import { partnerPage } from "../guarded";
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: englishText("hub.nav.decisions") };
  * who decided, when and why, separate from the conversation. It stays with the disruption's record when the shared space closes.
  */
 export default partnerPage(PARTNER_PAGES.decisions, () => englishText("hub.nav.decisions"), async () => {
-  const db = getDb();
+  const db = partnersDb();
   const now = new Date();
   const [shared, orgs] = await Promise.all([openSharedSpace(db), listOrgs(db)]);
   const decisions = shared ? await decisionsOf(db, shared.id) : [];

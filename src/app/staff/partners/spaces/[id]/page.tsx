@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import { readSpace } from "@/modules/partners";
-import { getDb } from "@/platform/db";
+import { partnersDb } from "../../db";
 import { Screen, Stack } from "@/ui";
 import { disruptionLinks } from "../../area";
 import { partnerPage } from "../../guarded";
@@ -12,7 +12,7 @@ import { ago, clock, pw } from "../../words";
 
 export const metadata: Metadata = { title: englishText("staff.partners.activation.title") };
 
-type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ space?: string | string[]; done?: string | string[]; error?: string | string[] }> };
+type Props = { params?: Promise<{ id: string }>; searchParams?: Promise<{ space?: string | string[]; done?: string | string[]; error?: string | string[] }> };
 
 /**
  * A space's activation (P-06 as the product owner scoped it on 2026-11-07: set a space's status, purpose and capacity, audited). The space as
@@ -20,9 +20,10 @@ type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ space?:
  * account), the one-tap buttons of P-07, and its changes, newest first. A Director reads it all without the forms.
  */
 export default partnerPage<Props>("/staff/partners/spaces/[id]", () => pw("activation.title"), async (session, { params, searchParams }) => {
-  const { id } = await params;
+  // A page called without its segment (a test calling it directly) reads as a space that is not there.
+  const { id } = (await params) ?? { id: "" };
   const now = new Date();
-  const read = /^SP[0-9]{2,4}$/.test(id) ? await readSpace(getDb(), id) : null;
+  const read = /^SP[0-9]{2,4}$/.test(id) ? await readSpace(partnersDb(), id) : null;
   if (!read) {
     return (
       <Screen surface="staff">
