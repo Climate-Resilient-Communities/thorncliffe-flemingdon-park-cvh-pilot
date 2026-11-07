@@ -2,6 +2,7 @@
 // hand to match db/migrations; test/db/drift.db.test.ts compares them with the migrated database.
 // Grants (select to cvh_app, none to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";
+import type { CorrectionChanges, CostAnswer, DeclineReason, SubmissionStatus, WhereRecord, YesNoAnswer } from "@/contracts/placeSubmission";
 import { bigint, boolean, check, date, doublePrecision, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
@@ -269,5 +270,87 @@ export const usageCount = pgTable(
     pgPolicy("usage_count_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("usage_count_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("usage_count_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+// ---------------------------------------------------------------- place_submission (PRD §6.3, D9/E4: residents' suggestions)
+/**
+ * A resident's suggestion of a missing place or a correction of a listed one, and the Hub's decision (R-17 to R-23, O-08 to O-10). Matches
+ * 20261107100000_place_submissions.sql. No column names the person who sent it (AD-3).
+ */
+export const placeSubmission = pgTable(
+  "place_submission",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    ref: text().notNull().unique(),
+    kind: text().$type<"add" | "correct">().notNull(),
+    lang: text().notNull(),
+    type: text().$type<"official" | "offer">(),
+    name: text().notNull(),
+    what: text(),
+    location: jsonb().$type<WhereRecord>(),
+    category: text(),
+    phone: text(),
+    web: text(),
+    cost: text().$type<CostAnswer>(),
+    idRequired: text("id_required").$type<YesNoAnswer>(),
+    stepFree: text("step_free").$type<YesNoAnswer>(),
+    languages: text().array(),
+    providerId: text("provider_id"),
+    changes: jsonb().$type<CorrectionChanges>(),
+    status: text().$type<SubmissionStatus>().notNull().default("pending"),
+    declineReason: text("decline_reason").$type<DeclineReason>(),
+    declineNote: text("decline_note"),
+    decidedBy: uuid("decided_by"),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    appliedBy: uuid("applied_by"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("place_submission_pending_idx").on(t.createdAt).where(sql`${t.status} = 'pending'`),
+    index("place_submission_to_apply_idx").on(t.decidedAt).where(sql`${t.status} = 'accepted' and ${t.appliedAt} is null`),
+    index("place_submission_decided_idx").on(t.decidedAt),
+    check("place_submission_ref_format", sql`${t.ref} ~ '^[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$'`),
+    check("place_submission_kind", sql`${t.kind} in ('add', 'correct')`),
+    check("place_submission_lang_format", sql`${t.lang} ~ '^[a-z]{2,3}(-[A-Za-z]{2,8})?$'`),
+    check("place_submission_type", sql`${t.type} is null or ${t.type} in ('official', 'offer')`),
+    check("place_submission_name_length", sql`char_length(${t.name}) between 1 and 200`),
+    check("place_submission_what_length", sql`${t.what} is null or char_length(${t.what}) between 1 and 140`),
+    check("place_submission_location_object", sql`${t.location} is null or jsonb_typeof(${t.location}) = 'object'`),
+    check("place_submission_category_length", sql`${t.category} is null or char_length(${t.category}) <= 100`),
+    check("place_submission_phone_length", sql`${t.phone} is null or char_length(${t.phone}) <= 40`),
+    check("place_submission_web_length", sql`${t.web} is null or char_length(${t.web}) <= 200`),
+    check("place_submission_cost", sql`${t.cost} is null or ${t.cost} in ('free', 'low', 'fee', 'notSure')`),
+    check("place_submission_id_required", sql`${t.idRequired} is null or ${t.idRequired} in ('yes', 'no', 'notSure')`),
+    check("place_submission_step_free", sql`${t.stepFree} is null or ${t.stepFree} in ('yes', 'no', 'notSure')`),
+    check("place_submission_provider_id_format", sql`${t.providerId} is null or ${t.providerId} ~ '^[A-Z][0-9]{3,6}$'`),
+    check("place_submission_changes_object", sql`${t.changes} is null or jsonb_typeof(${t.changes}) = 'object'`),
+    check(
+      "place_submission_add_shape",
+      sql`${t.kind} <> 'add' or (${t.type} is not null and ${t.what} is not null and ${t.location} is not null and ${t.providerId} is null and ${t.changes} is null)`,
+    ),
+    check(
+      "place_submission_correct_shape",
+      sql`${t.kind} <> 'correct' or (${t.providerId} is not null and ${t.changes} is not null and ${t.type} is null and ${t.location} is null)`,
+    ),
+    check("place_submission_status", sql`${t.status} in ('pending', 'accepted', 'declined')`),
+    check(
+      "place_submission_decided_when_not_pending",
+      sql`(${t.status} = 'pending') = (${t.decidedAt} is null) and (${t.decidedAt} is null) = (${t.decidedBy} is null)`,
+    ),
+    check("place_submission_reason_when_declined", sql`(${t.status} = 'declined') = (${t.declineReason} is not null)`),
+    check(
+      "place_submission_decline_reason",
+      sql`${t.declineReason} is null or ${t.declineReason} in ('advert', 'noLocation', 'duplicate', 'unclear', 'outOfArea', 'notCommunity')`,
+    ),
+    check("place_submission_note_when_declined", sql`${t.declineNote} is null or (${t.status} = 'declined' and char_length(${t.declineNote}) between 1 and 300)`),
+    check(
+      "place_submission_applied_when_accepted",
+      sql`(${t.appliedAt} is null) = (${t.appliedBy} is null) and (${t.appliedAt} is null or ${t.status} = 'accepted')`,
+    ),
+    pgPolicy("place_submission_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("place_submission_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("place_submission_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

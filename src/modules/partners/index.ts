@@ -1,0 +1,67 @@
+// The partners module's public interface (AD-2): the Hub and partner space, PRD §6.3's F1–F13, built ahead of the MVP by the product owner's
+// decision of 2026-11-07. The spaces partners open for residents (their status board, one space's change, what residents are shown), the
+// coordination records of a disruption and the readiness area, read by the Hub's screens under /staff/partners, and the seed of the dummy data.
+export {
+  changeSpace,
+  listSpaces,
+  readSpace,
+  residentSpaces,
+  type ResidentSpace,
+  type SpaceActor,
+  type SpaceChangeResult,
+  type SpaceChangeRow,
+  type SpaceOptions,
+  type SpaceRow,
+} from "./application/spaces";
+export {
+  decisionsOf,
+  handoversOf,
+  listCommitments,
+  listExercises,
+  listIndicators,
+  listOrgs,
+  listPlaybooks,
+  listSupplies,
+  listTeams,
+  openSharedSpace,
+  readLookBack,
+  statementsOf,
+  type ActionRow,
+  type CommitmentRow,
+  type DecisionRow,
+  type ExerciseRow,
+  type HandoverRow,
+  type IndicatorRow,
+  type LookBackRow,
+  type PartnerOrgRow,
+  type PlaybookRow,
+  type SharedSpaceRow,
+  type StatementRow,
+  type SupplyRow,
+  type TeamRow,
+} from "./application/coordination";
+export { seedPartners, type PartnerSeedOptions, type PartnerSeedResult } from "./application/seedPartners";
+export {
+  MAX_CAPACITY,
+  RESIDENT_STATUSES,
+  SPACE_CHANGE_ERRORS,
+  SPACE_PURPOSES,
+  SPACE_STATUSES,
+  UNCONFIRMED_AFTER_MINUTES,
+  decideSpaceChange,
+  isResidentStatus,
+  isSpacePurpose,
+  isSpaceStatus,
+  isUnconfirmed,
+  spaceTotals,
+  withStatus,
+  type ResidentSpaceStatus,
+  type SpaceChangeError,
+  type SpaceChangeInput,
+  type SpacePurpose,
+  type SpaceState,
+  type SpaceStatus,
+  type SpaceTotals,
+} from "./domain/space";
+export { COVERAGE_GROUPS, STATEMENT_KINDS, coverageCounts, coverageOf, type CoverageGroup, type CoverageItem, type CoverageReason, type StatementKind } from "./domain/coverage";
+export { HAZARDS, ORG_CAPACITIES, PartnerSeedSchema, parsePartnerSeed, type Hazard, type OrgCapacity, type PartnerSeed } from "./domain/seedData";

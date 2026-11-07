@@ -1,0 +1,140 @@
+/*
+ * Adding or correcting a place (PRD §6.3; prototype R-17 to R-23 and the .cvh-rules, .cvh-pinmap, .cvh-fieldrow and .cvh-strike rules of cvh.css).
+ * Built on the choices' and sign-up's classes (choices.css, signup.css) and, for R-20's map, the map's frame (map.css); this file adds only what
+ * they lack. Spacing from the semantic tokens, direction from logical properties only, so the screens mirror in Urdu, Pashto and Dari without a
+ * [dir] rule. Colours are existing tokens.
+ */
+@layer components {
+  /* "Step 1 of 2: the rules": a quiet line over the heading. */
+  .places-steps {
+    color: var(--text-muted);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  /* A card: the rules (X-03), the lane and how long (R-21), the reason (R-23), "What you wrote". */
+  .places-card {
+    overflow-wrap: anywhere;
+    padding: var(--inset-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  /* The card the screen is about (R-21's lane, R-23's reason): a heavier outline, as the prototype's 2px ink border. */
+  .places-card--key {
+    border: 2px solid var(--ink);
+  }
+
+  .places-rules {
+    margin: 0;
+    padding-inline-start: var(--gap-stack);
+  }
+
+  /* X-03's marketplace line: set apart on the warm surface, never colour alone (it is a sentence of its own). */
+  .places-market {
+    padding: var(--inset-card-compact);
+    border-inline-start: var(--offset-align-icon) solid var(--accent-text);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+    font-weight: 700;
+  }
+
+  /* The reference code: large, letters spaced, read left to right in every language (it is letters and digits, not words). */
+  .places-ref {
+    font-size: var(--type-h2-size);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+
+  /* R-19's optional answers: the choices side by side where they fit, each still the whole row's target. */
+  .places-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-label);
+  }
+
+  /* R-20's pin: drawn in the middle of the map's box (the map moves under it), above the tiles, never catching a tap. */
+  .places-pinmap {
+    position: relative;
+  }
+
+  .places-pinmap__pin {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    z-index: 500;
+    inline-size: var(--tap);
+    block-size: var(--tap);
+    translate: -50% -100%;
+    pointer-events: none;
+  }
+
+  .places-pinmap__pin::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 50%;
+    inline-size: 60%;
+    block-size: 60%;
+    translate: -50% 0;
+    border: 3px solid var(--surface-raised);
+    border-radius: 50%;
+    border-end-start-radius: 0;
+    background-color: var(--danger);
+    rotate: -45deg;
+  }
+
+  /* R-22: a row of the listed place, its value with the Change or Undo button beside it. */
+  .places-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--gap-label);
+    padding-block: var(--gap-label);
+    border-block-end: 1px solid var(--border);
+  }
+
+  .places-row__value {
+    display: flex;
+    flex: 1 1 12rem;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .places-label {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .places-was {
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  .places-tag {
+    align-self: flex-start;
+    padding-inline: var(--gap-label);
+    border: 1px solid var(--accent-text);
+    border-radius: var(--radius-card);
+    color: var(--accent-text);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  /* The honeypot field: out of sight and out of the tab order (it is also aria-hidden). A person never fills it in. */
+  .places-honeypot {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

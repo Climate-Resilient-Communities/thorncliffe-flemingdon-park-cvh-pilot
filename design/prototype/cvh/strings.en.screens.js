@@ -2894,4 +2894,167 @@ m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: '
   m(en, {"R03": {"inBuildings": "Alerts for buildings here:"}});
   /* UAT 2026-11-04: where an author is in composing an alert (the prototype's O-02 step bar). Staff wording, English only. */
   m(en, { staff: { compose: { progress: { label: 'Composing an alert', what: 'What and where', message: 'The message', audience: 'Who gets it', approval: 'A second person approves' } } } });
+  /* UAT 2026-11-04: O-02's resident preview beside the form, as a resident reading English sees the alert on home. Staff wording, English only. */
+  m(en, { staff: { compose: { residentPreview: { title: 'How residents will see it', lead: 'The alert on home, in English, as you type. Residents who chose another language read the approved translation.', origin: 'Thorncliffe Park Community Hub alert. Checked by the Hub.', posted: 'Posted when a second person approves it', untilResolved: 'Until resolved', until: 'Until {date} {time}', empty: 'Your text shows here.', note: 'Only the people the alert is for see it on home. Anyone can open it from the alerts list.' } } } });
+  /* PRD §6.3 (D9/E4), built by the product owner's decision of 2026-11-07: what the resident screens R-17 to R-23 need beyond the prototype's
+     own strings. The CVH keeps no account, so the resident is given a reference code to come back with (R-21, R-23); the place's own phone and
+     website are optional on R-19 and R-22; the location picker (R-20) says when its map cannot load. English source; the other languages are
+     AI-generated (Claude) and await native review. */
+  m(en, { places: {
+    sentLine: 'Someone at the Hub reads it within about a week. The CVH does not know who sent it, so keep your reference to see what the Hub decides.',
+    ref: 'Your reference',
+    refHint: 'Write it down or take a screenshot. It is the only way to find this again.',
+    checkStatus: 'See what the Hub decided',
+    pendingTitle: 'Waiting for the Hub',
+    pendingLine: 'Someone at the Hub reads it within about a week. Come back with your reference to see what they decided.',
+    acceptedTitle: 'The Hub accepted it',
+    acceptedLine: 'It goes on the map and in search with the Hub\'s next update of the places.',
+    notFoundTitle: 'We could not find this reference',
+    correctionOf: 'Your correction of {name}',
+    phone: 'Phone number of the place',
+    phoneHint: 'Only the place\'s own number, never a person\'s.',
+    web: 'Website of the place',
+    pin: 'A pin on the map',
+    sending: 'Sending',
+    mapFailed: 'The map could not load. Choose a building or type the address instead.',
+    honeypot: 'Leave this empty',
+    errors: {
+      invalid_request: 'Something in the form could not be read. Check it and send again.',
+      rate_limited: 'Too many suggestions from this connection. Try again in an hour.',
+      not_found: 'Check the letters and numbers, then try again.',
+      submissions_unavailable: 'This was not sent. Check your signal and try again.'
+    }
+  } });
+  /* PRD §6.3 (D9/E4): the Hub's moderation queue and review (O-08, O-09, O-10) and the Providers page's list of accepted suggestions. Staff
+     wording, English only. Accepting changes no listing: an Admin adds the place to the catalogue (AD-11), so these say so where O09's own
+     prototype lines ("It goes on the map and in search") would not be true. */
+  m(en, { staff: { moderation: {
+    title: 'Moderation',
+    lead: 'Places residents suggested, and corrections to places already listed. Read each one, then accept it or decline it with a reason.',
+    forbidden: 'Only Coordinators, Directors and Admins can see the moderation queue.',
+    readOnly: 'You can read the queue. Only a Coordinator or an Admin can accept or decline.',
+    unreadable: 'The queue could not be read. Reload the page.',
+    waitingTitle: 'Waiting, oldest first',
+    decidedTitle: 'Decided in the last 14 days',
+    noneDecided: 'Nothing was decided in the last 14 days.',
+    refLine: 'Reference {ref}',
+    status: { pending: 'Waiting', accepted: 'Accepted', declined: 'Declined' },
+    building: 'Building {address}',
+    buildingUnknown: 'A building that is no longer listed (register number {rsn})',
+    pinAt: 'Pin at {lat}, {lng}',
+    openMap: 'Open the pin on OpenStreetMap',
+    phone: 'Phone',
+    web: 'Website',
+    notFound: 'This suggestion could not be found.',
+    providerGone: 'This place is no longer in the directory.',
+    unpublished: 'Not published to residents now.',
+    acceptLine: {
+      add: 'Accepting does not publish it. An Admin adds it to the catalogue from the Providers page, and residents see it after the next directory release.',
+      correct: 'Accepting does not change the listing. An Admin applies the change in the catalogue from the Providers page.'
+    },
+    accepting: 'Accepting',
+    acceptedTitle: 'Accepted',
+    acceptedLine: {
+      add: '“{name}” now waits on the Providers page for an Admin to add it to the catalogue.',
+      correct: 'The correction of “{name}” now waits on the Providers page for an Admin to apply it.'
+    },
+    declineLink: 'Decline with a reason',
+    note: 'Note for the Hub (optional)',
+    noteHint: 'Kept with the decision for the Hub\'s own record. Not shown to the person who sent it. Do not write names or phone numbers.',
+    declining: 'Declining',
+    declinedLine: '“{name}” was declined: {reason}. The person who sent it reads the reason in their language with their reference.',
+    decidedOn: '{decision} on {date}',
+    errors: {
+      not_found: 'This suggestion could not be found.',
+      already_decided: 'Someone already decided this one. Reload the page to see the decision.',
+      forbidden: 'Only a Coordinator or an Admin can accept or decline a suggestion.',
+      reason: 'Choose a reason first.',
+      failed: 'That did not save. Try again.'
+    },
+    toApply: {
+      title: 'From residents, to add or apply',
+      lead: 'Suggestions the Hub accepted. Add a new place to the catalogue, or apply a correction there, load it with the catalogue script, then mark it done. Residents see the change after the next directory release.',
+      none: 'Nothing from residents is waiting.',
+      add: 'New place',
+      correct: 'Correction of {id}',
+      done: 'Mark as done',
+      doneOf: 'Mark “{name}” as done',
+      doneLine: '“{name}” is marked done.',
+      errors: {
+        not_found: 'That suggestion is not in the list.',
+        not_accepted: 'That suggestion was not accepted.',
+        already_applied: 'That suggestion is already marked done.'
+      }
+    }
+  } } });
+  /* 2026-11-07: the Hub and partner space (P-01 to P-16), built ahead of the MVP on dummy data by the product owner's decision. The screens use
+     the prototype's own P01 to P16 strings wherever they fit; these are the words the prototype had no key for. Staff wording, English only. */
+  m(en, { staff: { partners: {
+    status: { open: 'Open', full: 'Full', closed: 'Closed', not_activated: 'Not activated' },
+    purpose: { cooling: 'Cooling', warming: 'Warming', clean_air: 'Clean air', charging: 'Device charging' },
+    hazard: { power: 'Power outage', elevator: 'Elevator failure', heat: 'Extreme heat', smoke: 'Wildfire smoke', flood: 'Flood or plumbing failure',
+      fire: 'Fire and evacuation', water: 'Water outage', winter: 'Extreme cold', other: 'Other disruption' },
+    statement: { doing: 'Doing', can_take: 'Can take on', cannot_cover: 'Cannot cover', need: 'Need' },
+    head: { opened: 'Space opened by {by}, {t}' },
+    board: {
+      countsLabel: 'Spaces by status',
+      peopleOf: 'people in open spaces, of {max} places',
+      takesUpTo: 'Takes up to {max} people',
+      confirmed: 'Confirmed {t} by {by}',
+      neverConfirmed: 'Never confirmed',
+      ever: 'ever',
+      none: 'No spaces are set up yet. The Hub adds them with the partner seed.',
+      change: 'Change {name}',
+      setTo: 'Set to {status}',
+      byHub: '{name}, the Hub',
+      dummy: 'Sample statements and organisations for the pilot: dummy data, not real agreements.' },
+    open: {
+      title: 'Open a space',
+      lead: 'Every space partners can open that is not open now. Say what it is for and how many people it takes. Opening confirms it as you, and residents see it on the map and the listing at once.',
+      none: 'Every space is open or full already.',
+      submit: 'Open this space' },
+    activation: {
+      title: 'Space status',
+      lead: 'Set whether this space is open, full or closed, what it is for and how many people it takes. Saving confirms it as it stands, as you.',
+      changeTitle: 'Change it',
+      historyTitle: 'Changes, newest first',
+      noHistory: 'No changes yet.',
+      when: 'When',
+      by: 'By',
+      notShown: 'Not shown to residents: it is not open or full.',
+      noPlace: 'Not on the resident map: this space is not linked to a place in the directory.' },
+    form: {
+      purpose: 'What it is for',
+      capacityMax: 'Most people it takes',
+      capacityNowHint: 'Leave it empty if nobody has counted.',
+      submit: 'Save and confirm' },
+    done: {
+      shown: '{name} is {status}. Confirmed at {time}. Residents see it on the map and the listing now.',
+      hidden: '{name} is {status}. Residents no longer see it as a space.' },
+    errors: {
+      status_unknown: 'Choose open, full, closed or not activated.',
+      purpose_unknown: 'Choose what the space is for.',
+      capacity_max_invalid: 'Most people it takes must be a whole number from 1 to 2000.',
+      capacity_now_invalid: 'People here now must be a whole number, or empty if nobody has counted.',
+      capacity_over: 'More people are counted than the space takes. Set it to Full, or raise the number it takes.',
+      not_found: 'That space is not there. Go back to the shared space.',
+      forbidden: 'Only a Coordinator or an Admin can change a space. Nothing was changed.',
+      forbiddenView: 'Only a Coordinator, a Director or an Admin can see the partner space.',
+      readOnly: 'You can read this. Only a Coordinator or an Admin can change a space.' },
+    ourSpaces: {
+      whose: 'Whose spaces',
+      actingFor: 'Partner staff do not have their own accounts yet. Choose the organisation you are acting for; the change is recorded as your Hub account.' },
+    coverage: {
+      confirmedBy: 'Confirmed for this disruption by {org}',
+      spaces: '{open} open and {full} full, with {people} people of {max} places counted.' },
+    capacity: { org: 'Organisation', said: 'Capacity', when: 'Set', inSpaces: 'In its open spaces', noSpace: 'No open space' },
+    supplies: { updated: 'Updated' },
+    handover: {
+      title: 'Handover notes',
+      notInRelease: 'Writing a handover from this page is not in this release. Post it in the shared space for now.' },
+    playbooks: { version: 'Version', date: 'Date', by: 'By', change: 'What changed' },
+    exercises: {
+      noneScheduled: 'No exercise is scheduled.',
+      pastLine: '{date}. Level {level}. {n} took part.' },
+    readiness: { dummy: 'Sample commitments, figures and records for the pilot: dummy data, not real agreements or results.' } } } });
 })();

@@ -1,0 +1,106 @@
+name: Load demo data
+
+# The made-up data for the demo (the product owner's decision of 2026-11-07): the partner space's organisations, spaces and records
+# (data/partners/seed.json, every person fictional, every number a 555 number, every address at example.org) and five made-up place
+# suggestions for the moderation queue. Kept apart from "Seed production", which offers the real seeds only (seed:* in package.json):
+# demo data reaches production only through this workflow, run on purpose by the owner. Manual only; it runs from main, never from a branch.
+on:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: Which demo data to load
+        type: choice
+        required: true
+        options:
+          - partners
+          - submissions
+          - both
+      mode:
+        description: "dry-run checks the partner file and writes nothing; apply writes to production"
+        type: choice
+        required: true
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+
+permissions:
+  contents: read
+
+# Shares the seed workflow's group: a demo load and a seed never run at the same time, and neither is cancelled half way.
+concurrency:
+  group: seed-production
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  demo:
+    name: Load demo data
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04 # Pinned, as the seed workflow is.
+    timeout-minutes: 20
+    # The production environment holds PRODUCTION_DATABASE_URL and accepts runs from main only (repository settings > Environments).
+    environment: production
+    env:
+      DATA: ${{ inputs.data }}
+      MODE: ${{ inputs.mode }}
+    steps:
+      - name: Check the inputs
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error title=Demo data not loaded::Demo data loads from main only."
+            exit 1
+          fi
+          case "$DATA" in partners | submissions | both) ;; *) echo "::error title=Demo data not loaded::Unknown data."; exit 1 ;; esac
+          case "$MODE" in dry-run | apply) ;; *) echo "::error title=Demo data not loaded::Unknown mode."; exit 1 ;; esac
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+      - name: Check this commit is still the head of main
+        run: |
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::error title=Demo data not loaded::$GITHUB_SHA is no longer the head of main ($head); run the workflow again."
+            exit 1
+          fi
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Load the demo data
+        env:
+          SEED_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          set -o pipefail
+          report="$RUNNER_TEMP/demo-report.txt"
+          : > "$report"
+          if [ "$DATA" = partners ] || [ "$DATA" = both ]; then
+            if [ "$MODE" = apply ]; then npm run dummy:partners -- --yes 2>&1 | tee -a "$report"; else npm run dummy:partners -- --dry-run 2>&1 | tee -a "$report"; fi
+          fi
+          if [ "$DATA" = submissions ] || [ "$DATA" = both ]; then
+            # The suggestions have no file to check: a dry run only says what apply would insert.
+            if [ "$MODE" = apply ]; then npm run demo:submissions -- --yes 2>&1 | tee -a "$report"; else echo "Dry run: apply inserts five made-up suggestions (each once)." | tee -a "$report"; fi
+          fi
+      # The report (counts) goes to the job summary, after removing connection strings, the "Seeding host" line and anything shaped like a phone number.
+      - name: Write the report to the job summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "## Demo data $DATA ($MODE) at $GITHUB_SHA"
+            echo
+            echo '```text'
+            if [ -f "$RUNNER_TEMP/demo-report.txt" ]; then
+              sed -E \
+                -e '/^Seeding host /d' \
+                -e 's#[A-Za-z][A-Za-z0-9+.-]*://[^[:space:]]+#[url removed]#g' \
+                -e 's#\+?[0-9][0-9 ().-]{8,}[0-9]#[number removed]#g' \
+                "$RUNNER_TEMP/demo-report.txt"
+            else
+              echo "The run produced no report."
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

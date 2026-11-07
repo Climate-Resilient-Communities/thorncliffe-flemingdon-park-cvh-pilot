@@ -34,13 +34,19 @@ describe("hubShellUser", () => {
 
 describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
+  // The pilot's own sections, without the partner space's two (2026-11-07), which have their own test.
+  const PARTNER_SECTIONS = ["this-disruption", "between"];
+  const pilotItems = (role: (typeof STAFF_ROLES)[number]) =>
+    hubNavigation(role)
+      .filter((section) => !PARTNER_SECTIONS.includes(section.id))
+      .flatMap((section) => section.items);
 
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
-    expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Post a building update", "My round", "Text sign-up"]);
+    expect(pilotItems("ambassador").map((item) => item.label)).toEqual(["My building", "Post a building update", "My round", "Text sign-up"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend", "Measures"]);
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "End of pilot"]);
+    expect(pilotItems("director").map((item) => item.label)).toEqual(["Incidents", "Moderation", "Check-in rounds", "Coverage", "Spend", "Measures"]);
+    expect(pilotItems("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Moderation", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
+    expect(pilotItems("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Moderation", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "End of pilot"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -77,13 +83,51 @@ describe("hubNavigation", () => {
     expect(items("ambassador").find((item) => item.id === "text-signup")).toEqual({ id: "text-signup", label: "Text sign-up", href: "/staff/text-signup", icon: "phone" });
   });
 
-  it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {
-    const everything = JSON.stringify(STAFF_ROLES.map((role) => hubNavigation(role)));
-
-    for (const mvp of ["Moderation", "moderation", "Partner space", "This disruption", "Between disruptions", "Readiness", "Playbooks"]) {
-      expect(everything, mvp).not.toContain(mvp);
+  it("adds Moderation and the partner space's two sections (the product owner's decision of 2026-11-07) for the roles that may open them, never named \"partner\"", () => {
+    for (const role of STAFF_ROLES) expect(items(role).some((item) => item.id === "moderation"), role).toBe(can(role, "moderation.view"));
+    const labels = STAFF_ROLES.flatMap((role) => hubNavigation(role).flatMap((section) => [section.label, ...section.items.map((item) => item.label)]));
+    for (const label of labels) expect(label.toLowerCase(), label).not.toContain("partner");
+    for (const role of STAFF_ROLES) {
+      const expected = [...["disruption"], ...(can(role, "space.view") ? ["this-disruption", "between"] : []), ...(role === "admin" ? ["admin"] : [])];
+      expect(hubNavigation(role).map((section) => section.id), role).toEqual(expected);
     }
-    for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
+  });
+
+  it("adds This disruption and Between disruptions (P-02 to P-16) for exactly the roles whose policy allows space.view: never an Ambassador", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/partners"), role).toBe(can(role, "space.view"));
+      expect(items(role).some((item) => item.href === "/staff/readiness"), role).toBe(can(role, "space.view"));
+    }
+    expect(items("ambassador").some((item) => item.href?.startsWith("/staff/partners") || item.href?.startsWith("/staff/readiness"))).toBe(false);
+    const sections = hubNavigation("director").filter((section) => section.id === "this-disruption" || section.id === "between");
+    expect(sections.map((section) => section.label)).toEqual(["This disruption", "Between disruptions"]);
+    expect(sections[0].items.map((item) => [item.label, item.href])).toEqual([
+      ["Shared space", "/staff/partners"],
+      ["Coverage and gaps", "/staff/partners/coverage"],
+      ["Our spaces", "/staff/partners/our-spaces"],
+      ["Supplies", "/staff/partners/supplies"],
+      ["Decision log", "/staff/partners/decisions"],
+      ["Our capacity", "/staff/partners/capacity"],
+    ]);
+    expect(sections[1].items.map((item) => [item.label, item.href])).toEqual([
+      ["Standing commitments", "/staff/readiness"],
+      ["Playbooks", "/staff/readiness/playbooks"],
+      ["Teams and triggers", "/staff/readiness/teams"],
+      ["Exercises", "/staff/readiness/exercises"],
+      ["Indicators", "/staff/readiness/indicators"],
+      ["Look back", "/staff/readiness/look-back"],
+    ]);
+    // No partner item takes an icon another item keeps for itself.
+    for (const item of sections.flatMap((section) => section.items)) expect(["ready", "flag", "pause"], item.id).not.toContain(item.icon);
+  });
+
+  // PRD §6.3 (D9/E4) was MVP scope in the signed pilot; the product owner decided on 2026-11-07 to build it, so Moderation is now an item.
+  it("adds Moderation (O-08) after the alert screens for exactly the roles whose policy allows moderation.view: not an Ambassador", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/moderation"), role).toBe(can(role, "moderation.view"));
+    }
+    expect(items("ambassador").some((item) => item.id === "moderation")).toBe(false);
+    expect(items("director").find((item) => item.id === "moderation")).toEqual({ id: "moderation", label: "Moderation", href: "/staff/moderation", icon: "inbox" });
   });
 
   it("shows Spend (S07.08) beside Coverage to the roles whose policy has spend.view: an Admin, and a Director read-only", () => {
@@ -177,7 +221,7 @@ describe("hubNavigation", () => {
     const all = items("admin");
 
     expect(new Set(all.map((item) => item.id)).size).toBe(all.length);
-    expect(hubNavigation("admin").map((section) => section.label)).toEqual(["In a disruption", "Administration"]);
+    expect(hubNavigation("admin").map((section) => section.label)).toEqual(["In a disruption", "This disruption", "Between disruptions", "Administration"]);
   });
 });
 

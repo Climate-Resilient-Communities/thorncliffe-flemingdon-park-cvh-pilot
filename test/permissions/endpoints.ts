@@ -116,6 +116,9 @@ const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 /** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
 const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
+const MODERATION_ACTIONS = "src/app/staff/moderation/review/actions.ts";
+/** A resident's suggestion that does not exist: an allowed call passes the guard and is refused by the use case (PRD §6.3). */
+const NO_SUCH_SUBMISSION = "01900000-0000-7000-8000-00000000c0de";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
@@ -135,7 +138,52 @@ const SIGNUP_HELPERS = { ambassador: "allowed", coordinator: "allowed", director
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
 
+/**
+ * The partner space (2026-11-07): its pages are `space.view` (a Coordinator, a Director read-only, an Admin; never an Ambassador), its two
+ * actions `space.update` (a Coordinator and an Admin). Called as an allowed caller, the actions name a space that is not there, so the use case
+ * refuses it (audited) and goes back to the page with the notice, changing nothing.
+ */
+const SPACE_VIEWERS = COVERAGE_VIEWERS;
+const SPACE_UPDATERS = WIDE_AUTHORS;
+const PARTNER_ACTIONS = "src/app/staff/partners/actions.ts";
+const PARTNER_PAGES = [
+  ["/staff/partners", "src/app/staff/partners/page.tsx"],
+  ["/staff/partners/open", "src/app/staff/partners/open/page.tsx"],
+  ["/staff/partners/our-spaces", "src/app/staff/partners/our-spaces/page.tsx"],
+  ["/staff/partners/coverage", "src/app/staff/partners/coverage/page.tsx"],
+  ["/staff/partners/capacity", "src/app/staff/partners/capacity/page.tsx"],
+  ["/staff/partners/supplies", "src/app/staff/partners/supplies/page.tsx"],
+  ["/staff/partners/decisions", "src/app/staff/partners/decisions/page.tsx"],
+  ["/staff/partners/handover", "src/app/staff/partners/handover/page.tsx"],
+  ["/staff/partners/spaces/[id]", "src/app/staff/partners/spaces/[id]/page.tsx"],
+  ["/staff/readiness", "src/app/staff/readiness/page.tsx"],
+  ["/staff/readiness/playbooks", "src/app/staff/readiness/playbooks/page.tsx"],
+  ["/staff/readiness/teams", "src/app/staff/readiness/teams/page.tsx"],
+  ["/staff/readiness/exercises", "src/app/staff/readiness/exercises/page.tsx"],
+  ["/staff/readiness/indicators", "src/app/staff/readiness/indicators/page.tsx"],
+  ["/staff/readiness/look-back", "src/app/staff/readiness/look-back/page.tsx"],
+] as const;
+
 export const STAFF_ENDPOINTS: StaffEndpoint[] = [
+  // ---- the partner space (2026-11-07) ----
+  ...PARTNER_PAGES.map(
+    ([route, file]): StaffEndpoint => ({ id: `page ${route}`, kind: "page", file, export: "default", route, action: "space.view", writes: "none", gate: "hub", expected: SPACE_VIEWERS }),
+  ),
+  ...(["changeSpaceAction", "setSpaceStatusAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${PARTNER_ACTIONS}#${name}`,
+      kind: "action",
+      file: PARTNER_ACTIONS,
+      export: name,
+      route: "/staff/partners",
+      action: "space.update",
+      writes: "business",
+      gate: "hub",
+      form: { spaceId: "SP99", back: "/staff/partners", status: "open", purpose: "warming", capacityMax: "40", capacityNow: "" },
+      forbiddenMessage: /^Only a Coordinator or an Admin can change a space\./,
+      expected: SPACE_UPDATERS,
+    }),
+  ),
   // ---- pages ----
   { id: "page /staff", kind: "page", file: "src/app/staff/page.tsx", export: "default", route: "/staff", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
@@ -201,6 +249,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     export: "default",
     route: "/staff/rounds/escalation",
     action: "checkins.escalations",
+    writes: "none",
+    gate: "hub",
+    expected: COVERAGE_VIEWERS,
+  },
+  // PRD §6.3 (D9/E4): the moderation queue (O-08) and a suggestion's review (O-09, O-10) are `moderation.view`: a Coordinator, a Director read-only and
+  // an Admin. They name no suggestion here, so a role let through gets the queue, or the review page's own "could not be found".
+  { id: "page /staff/moderation", kind: "page", file: "src/app/staff/moderation/page.tsx", export: "default", route: "/staff/moderation", action: "moderation.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
+  {
+    id: "page /staff/moderation/review",
+    kind: "page",
+    file: "src/app/staff/moderation/review/page.tsx",
+    export: "default",
+    route: "/staff/moderation/review",
+    action: "moderation.view",
     writes: "none",
     gate: "hub",
     expected: COVERAGE_VIEWERS,
@@ -646,7 +708,37 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: WIDE_AUTHORS,
     }),
   ),
-  // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
+  // PRD §6.3: "Accept" (O-09) and "Send the reason and decline" (O-10), policy action `moderation.review` (a Coordinator or an Admin; not privileged). Called
+  // as an allowed role, both name a suggestion that is not there, so the use case refuses them as `not_found` (audited as a refusal) and nothing changes.
+  ...(["acceptSubmissionAction", "declineSubmissionAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${MODERATION_ACTIONS}#${name}`,
+      kind: "action",
+      file: MODERATION_ACTIONS,
+      export: name,
+      route: "/staff/moderation/review",
+      action: "moderation.review",
+      writes: "business",
+      gate: "hub",
+      form: { id: NO_SUCH_SUBMISSION, reason: "advert", note: "Sells phone cases." },
+      forbiddenMessage: /^Only a Coordinator or an Admin can accept or decline/,
+      expected: WIDE_AUTHORS,
+    }),
+  ),
+  // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2). PRD §6.3: "Mark as done" on a suggestion from
+  // residents is on the same page with the same action; called as an Admin it names a suggestion that is not there, refused by the use case.
+  {
+    id: `action ${PROVIDER_ACTIONS}#applySubmissionAction`,
+    kind: "action",
+    file: PROVIDER_ACTIONS,
+    export: "applySubmissionAction",
+    route: "/staff/providers",
+    action: "provider.manage",
+    writes: "business",
+    gate: "hub",
+    form: { id: NO_SUCH_SUBMISSION },
+    expected: ADMIN_ONLY,
+  },
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({
       id: `action ${PROVIDER_ACTIONS}#${name}`,

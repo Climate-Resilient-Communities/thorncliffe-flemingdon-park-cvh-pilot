@@ -122,7 +122,9 @@ test("reads only the published release files, and filtering makes no request at 
   await page.getByTestId("back-to-directory").click();
   await page.waitForLoadState("networkidle");
   expect(server.requests.filter((r) => r.includes(".json"))).toEqual(["GET /api/directory/7/en.json"]);
-  expect(others).toEqual([]);
+  // The provider's page asks which places are open as a space now (GET /api/spaces, the partner space, 2026-11-07): one public list, the same
+  // for every visitor, so it says nothing about the resident. Nothing else.
+  expect(others.filter((request) => request !== "GET /api/spaces")).toEqual([]);
   expect(usage.map((body) => JSON.parse(body))).toEqual([
     { evt: "directory_view", lang: "en" },
     { evt: "listing_view", lang: "en", nbhd: "FP" },

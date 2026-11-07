@@ -1,6 +1,6 @@
 import type { Coords, DivIcon, Leaflet, LeafletMap, Marker, TileEvent } from "leaflet";
 import type { Bounds, MapPin, MarkerKind } from "./places";
-import { NEIGHBOURHOODS_VIEW } from "./places";
+import { NEIGHBOURHOODS_VIEW, isOpenSpacePin } from "./places";
 import { cacheStorageStore, clearKeptTiles, createTileLoader, pruneStore, TileIndex, type IndexStorage } from "./tile-cache";
 
 // The map itself (R-14): Leaflet with clustered pins (Leaflet.markercluster), drawn into an element React gives it. Only
@@ -70,7 +70,8 @@ function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
       `<span class="map-pin__word" aria-hidden="true"><span dir="auto"${word.lang ? ` lang="${escape(word.lang)}"` : ""}>${escape(word.text)}</span></span>`
     : "";
   return L.divIcon({
-    className: `map-pin map-pin--${pin.marker}`,
+    // A place open as a space now (the partner space, 2026-11-07) takes the prototype's filled "space" look on top of its own shape.
+    className: `map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""}`,
     // Leaflet's own stylesheet (not in a layer) makes the icon element a block, so the layout is on an inner body.
     html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span></span>`,
     iconSize: [44, 44],
@@ -178,6 +179,9 @@ function addTiles(L: Leaflet, map: LeafletMap, tiles: TileSettings, onMissing: (
 /** A cluster's pill is a tap target's height. */
 const CLUSTER_HEIGHT = 44;
 
+/** How close places are grouped, in pixels: about the width of a group's pill, so two pills never overlap. */
+export const CLUSTER_RADIUS = 80;
+
 /**
  * The width of a cluster's pill for its words, in pixels: Leaflet needs the icon's size to centre it on the place, before the
  * words are laid out. A wide character (Chinese) counts about twice a narrow one; the pill is never narrower than it is tall.
@@ -203,7 +207,9 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
 
   const clusters = L.markerClusterGroup!({
     showCoverageOnHover: false,
-    maxClusterRadius: 48,
+    // Places this close (in pixels) are one group. A group is a pill of words ("12 places", about 100 px wide), not the 48 px disc it was,
+    // so two groups are kept about a pill apart: at the old 48 their pills overlapped and covered each other's words.
+    maxClusterRadius: CLUSTER_RADIUS,
     spiderfyOnMaxZoom: true,
     iconCreateFunction: (cluster) => {
       const n = cluster.getChildCount();
@@ -275,5 +281,36 @@ export async function createMiniMap(element: HTMLElement, tiles: TileSettings, p
   });
   L.marker([place.lat, place.lng], { icon, keyboard: false, interactive: false }).addTo(map);
   map.fitBounds(HOME, { animate: false });
+  return { destroy: () => void map.remove() };
+}
+
+/**
+ * R-20 "Drop a pin on the map" (PRD §6.3): a map the resident moves until the pin, drawn by the page in the middle of the map's box, sits on
+ * the place ("Move the map until the pin sits on the place"). The map reports its centre after each move, and once at the start. Dragging,
+ * zooming and the arrow keys (Leaflet's keyboard handler, once the map has focus) all move it; its zoom buttons go into `controls`, outside the
+ * map's area, as on R-14. It stays inside the area R-14 shows.
+ */
+export async function createPinPicker(
+  element: HTMLElement,
+  tiles: TileSettings,
+  start: { lat: number; lng: number },
+  words: { zoomIn: string; zoomOut: string },
+  onCentre: (at: { lat: number; lng: number }) => void,
+  controls?: HTMLElement,
+): Promise<{ destroy(): void }> {
+  const L = await loadLeaflet();
+  const map = L.map(element, { zoomControl: false, attributionControl: false, minZoom: MIN_ZOOM, maxZoom: tiles.maxZoom, maxBounds: MAX_BOUNDS, maxBoundsViscosity: 0.8 });
+  const zoom = L.control.zoom({ position: "topright", zoomInTitle: words.zoomIn, zoomOutTitle: words.zoomOut });
+  zoom.addTo(map);
+  const zoomButtons = zoom.getContainer();
+  if (controls && zoomButtons) controls.replaceChildren(zoomButtons);
+  addTiles(L, map, tiles, () => undefined);
+  map.setView([start.lat, start.lng], 16, { animate: false });
+  const report = () => {
+    const centre = map.getCenter();
+    onCentre({ lat: centre.lat, lng: centre.lng });
+  };
+  map.on("moveend", report);
+  report();
   return { destroy: () => void map.remove() };
 }

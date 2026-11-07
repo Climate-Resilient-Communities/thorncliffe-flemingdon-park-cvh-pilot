@@ -310,7 +310,8 @@ describe("module dependency diagram", () => {
       .map((entry) => entry.name)
       .sort();
 
-    expect(folders).toHaveLength(11);
+    // Twelve since the partner space (2026-11-07) added `partners`.
+    expect(folders).toHaveLength(12);
     expect(folders).toEqual(readModuleGraph().modules);
   });
 

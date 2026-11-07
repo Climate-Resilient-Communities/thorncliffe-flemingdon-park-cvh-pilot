@@ -75,6 +75,10 @@ export function ProviderPage({ lang, id, tiles = null }: { lang: LaunchCode; id:
             <div className="provider-main" data-testid="provider-main">
               <ProviderView provider={provider} categories={categories} lang={lang} variant="page" />
               <Inline911 />
+              {/* PRD §6.3 (R-12 "Something wrong? Correct it", R-22): after the 911 note, which stays right under the listing. */}
+              <Link className="dir-back tap" href={`/${lang}/places/correct/${provider.id}`} prefetch={false} data-testid="provider-correct">
+                <ResidentText>{t("R12.correct")}</ResidentText>
+              </Link>
             </div>
             <ProviderSide provider={provider} lang={lang} tiles={tiles} />
           </div>

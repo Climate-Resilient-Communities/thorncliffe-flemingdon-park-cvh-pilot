@@ -1,5 +1,6 @@
 import type { ListedBuilding } from "@/contracts/buildingList";
 import type { ListingProvider, ListingText } from "@/contracts/directory";
+import { UNCONFIRMED_AFTER_MS, type OpenSpace } from "@/contracts/openSpaces";
 import { inToronto } from "@/contracts/torontoBounds";
 
 // What the map shows (S02.07, R-14, R-15): every published provider of the listing file the directory reads, one pin per
@@ -32,7 +33,12 @@ export type ProviderPin = {
   marker: Exclude<MarkerKind, "building">;
   /** The words beside a special marker (the subcategory's name in the page language); null for a service pin. */
   label: ListingText | null;
+  /** The partner space (2026-11-07): the place is open or full as a space right now (GET /api/spaces); absent otherwise. */
+  space?: PinSpace;
 };
+
+/** A place's status as a space, as its pin shows it: open (the filled "space" look), full, or not confirmed for 4 hours. */
+export type PinSpace = { status: "open" | "full"; purpose: OpenSpace["purpose"]; unconfirmed: boolean };
 
 export type BuildingPin = {
   kind: "building";
@@ -79,6 +85,20 @@ export function providerPins(providers: readonly ListingProvider[]): ProviderPin
   }
   return pins;
 }
+
+/**
+ * The provider pins with their status as a space (the partner space, 2026-11-07): each place partners have open or full right now carries it,
+ * the others are as they were. Matched on the phone, by the place's id, against the list every visitor gets alike (AD-3).
+ */
+export function withSpaces(pins: readonly ProviderPin[], spaces: ReadonlyMap<string, Pick<OpenSpace, "status" | "purpose" | "updated_at">>, now: number): ProviderPin[] {
+  return pins.map((pin) => {
+    const space = spaces.get(pin.id);
+    return space ? { ...pin, space: { status: space.status, purpose: space.purpose, unconfirmed: now - Date.parse(space.updated_at) > UNCONFIRMED_AFTER_MS } } : pin;
+  });
+}
+
+/** True for a pin shown with the filled "space" look: open as a space and confirmed lately (the prototype's cvh-pin--space is open only). */
+export const isOpenSpacePin = (pin: MapPin): boolean => pin.kind === "provider" && pin.space?.status === "open" && !pin.space.unconfirmed;
 
 /** The building facts the map's filters can ask for (UAT 2026-11-04); a fact asked for keeps only the buildings the register says have it. */
 export type BuildingFacts = { coolingRoom: boolean; airConditioning: boolean };

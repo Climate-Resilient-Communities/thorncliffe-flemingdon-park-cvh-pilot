@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "note": "DUMMY DATA for the Hub and partner space (product owner's decision of 2026-11-07). Adapted from the prototype's sample data (design/prototype/cvh/data.js, partner). The organisations' commitments, supplies and statements are illustrative, not agreements; every person is fictional, every number is a 555 number and every address is at example.org. Times are minutes before the seed runs, so the data stays current whenever it is loaded.",
+    "practice": "Toronto opens warming centres when Environment Canada forecasts -15 C or a wind chill of -20, and cooling at libraries and community centres in a heat warning; during a power outage partners open charging rooms. The open disruption below is a November power outage, so its spaces are warming and charging."
+  },
+  "orgs": [
+    { "id": "HUB", "name": "Thorncliffe Park Community Hub", "shortName": "the Hub", "kind": "hub", "contactRole": "Duty manager", "contactPhone": "(416) 555-0101", "contactEmail": "duty@hub.example.org", "capacity": "stretched", "capacityMinsAgo": 40 },
+    { "id": "TNO", "name": "The Neighbourhood Organization", "shortName": "TNO", "kind": "settlement", "contactRole": "Emergency coordinator", "contactPhone": "(416) 555-0102", "contactEmail": "emergency@tno.example.org", "capacity": "available", "capacityMinsAgo": 75 },
+    { "id": "FHC", "name": "Flemingdon Health Centre", "shortName": "the health centre", "kind": "health", "contactRole": "Community health worker lead", "contactPhone": "(416) 555-0103", "contactEmail": "chw@fhc.example.org", "capacity": "available", "capacityMinsAgo": 130 },
+    { "id": "TPL", "name": "Toronto Public Library, Thorncliffe and Flemingdon Park branches", "shortName": "the library", "kind": "library", "contactRole": "Branch head", "contactPhone": "(416) 555-0104", "contactEmail": "branches@tpl.example.org", "capacity": null },
+    { "id": "FAITH", "name": "Thorncliffe faith communities network", "shortName": "the faith network", "kind": "faith", "contactRole": "Network volunteer lead", "contactPhone": "(416) 555-0105", "contactEmail": "volunteers@faith.example.org", "capacity": "available", "capacityMinsAgo": 95 },
+    { "id": "OTA", "name": "Overlea Tenants' Association", "shortName": "the tenants' association", "kind": "tenants", "contactRole": "Floor captain coordinator", "contactPhone": "(416) 555-0106", "contactEmail": "captains@ota.example.org", "capacity": "stretched", "capacityMinsAgo": 60 },
+    { "id": "CITY", "name": "City of Toronto, Parks and Recreation and Emergency Management", "shortName": "the City", "kind": "city", "contactRole": "Emergency management officer", "contactPhone": "(416) 555-0107", "contactEmail": "oem@city.example.org", "capacity": null },
+    { "id": "CRC", "name": "Canadian Red Cross, community response", "shortName": "Red Cross", "kind": "relief", "contactRole": "Community response coordinator", "contactPhone": "(416) 555-0108", "contactEmail": "response@crc.example.org", "capacity": "available", "capacityMinsAgo": 120 }
+  ],
+  "spaces": [
+    { "id": "SP01", "org": "HUB", "providerId": "M056", "name": "Thorncliffe Park Community Hub", "room": "Ground floor program room", "street": "45 Overlea Boulevard", "purpose": "charging", "status": "open", "capacityMax": 40, "capacityNow": 18, "opensAt": "09:00", "closesAt": "20:00", "confirmedMinsAgo": 20, "confirmedBy": "Priya S., the Hub" },
+    { "id": "SP02", "org": "TNO", "providerId": "M049", "name": "The Neighbourhood Organization", "room": "Community room", "street": "10 Gateway Boulevard", "purpose": "charging", "status": "open", "capacityMax": 25, "capacityNow": 9, "opensAt": "10:00", "closesAt": "21:00", "confirmedMinsAgo": 35, "confirmedBy": "Daniel R., TNO" },
+    { "id": "SP03", "org": "CITY", "providerId": "M052", "name": "Jenner Jean-Marie Community Centre", "room": null, "street": "48 Thorncliffe Park Drive", "purpose": "warming", "status": "open", "capacityMax": 60, "capacityNow": 31, "opensAt": "09:00", "closesAt": "23:00", "confirmedMinsAgo": 50, "confirmedBy": "Kwame O., the City" },
+    { "id": "SP04", "org": "CITY", "providerId": "M053", "name": "Dennis R. Timbrell Resource and Community Centre", "room": "Gymnasium", "street": "29 St. Dennis Drive", "purpose": "warming", "status": "full", "capacityMax": 50, "capacityNow": 50, "opensAt": "09:00", "closesAt": "21:00", "confirmedMinsAgo": 15, "confirmedBy": "Kwame O., the City" },
+    { "id": "SP05", "org": "CITY", "providerId": "M054", "name": "Flemingdon Community Centre", "room": null, "street": "150 Grenoble Drive", "purpose": "warming", "status": "open", "capacityMax": 45, "capacityNow": null, "opensAt": "09:00", "closesAt": "21:00", "confirmedMinsAgo": 410, "confirmedBy": "Kwame O., the City" },
+    { "id": "SP06", "org": "TPL", "providerId": "M060", "name": "Thorncliffe Library", "room": null, "street": "48 Thorncliffe Park Drive", "purpose": "clean_air", "status": "closed", "capacityMax": 35, "capacityNow": null, "opensAt": null, "closesAt": null, "confirmedMinsAgo": 300, "confirmedBy": "Amira K., the library" },
+    { "id": "SP07", "org": "TPL", "providerId": "M061", "name": "Flemingdon Park Library", "room": null, "street": "29 St. Dennis Drive", "purpose": "charging", "status": "open", "capacityMax": 40, "capacityNow": 22, "opensAt": "09:00", "closesAt": "20:30", "confirmedMinsAgo": 65, "confirmedBy": "Amira K., the library" },
+    { "id": "SP08", "org": "CITY", "providerId": "M055", "name": "Angela James Arena", "room": "Lobby", "street": "165 Grenoble Drive", "purpose": "cooling", "status": "not_activated", "capacityMax": 80, "capacityNow": null, "opensAt": null, "closesAt": null, "confirmedMinsAgo": null, "confirmedBy": null },
+    { "id": "SP09", "org": "FHC", "providerId": "M045", "name": "Flemingdon Health Centre", "room": "Waiting room", "street": "10 Gateway Boulevard", "purpose": "charging", "status": "not_activated", "capacityMax": 15, "capacityNow": null, "opensAt": null, "closesAt": null, "confirmedMinsAgo": null, "confirmedBy": null }
+  ],
+  "sharedSpaces": [
+    { "id": "SH01", "hazard": "power", "level": 2, "location": "Sample Towers A, B and C", "purpose": "coordinate", "openedMinsAgo": 190, "openedBy": "Leila M., the Hub", "closedMinsAgo": null }
+  ],
+  "statements": [
+    { "id": "ST01", "space": "SH01", "org": "HUB", "person": "Priya S.", "kind": "doing", "body": "Acknowledgement sent to all three towers, every language.", "minsAgo": 185 },
+    { "id": "ST02", "space": "SH01", "org": "TNO", "person": "Daniel R.", "kind": "doing", "body": "Community room at 10 Gateway open for charging until 9 pm.", "minsAgo": 150 },
+    { "id": "ST03", "space": "SH01", "org": "TNO", "person": "Daniel R.", "kind": "need", "body": "Power banks for residents who cannot come down to charge.", "minsAgo": 140, "claimedBy": "CRC" },
+    { "id": "ST04", "space": "SH01", "org": "CRC", "person": "Marisol T.", "kind": "can_take", "body": "We can bring 40 power banks from our depot.", "minsAgo": 120, "answers": "ST03" },
+    { "id": "ST05", "space": "SH01", "org": "HUB", "person": "Leila M.", "kind": "doing", "body": "Check-in rounds running on floors 1 to 6 of Sample Tower A.", "minsAgo": 110 },
+    { "id": "ST06", "space": "SH01", "org": "HUB", "person": "Leila M.", "kind": "cannot_cover", "body": "No ambassador on floors 15 to 24 of Sample Tower A for check-ins.", "minsAgo": 100 },
+    { "id": "ST07", "space": "SH01", "org": "CITY", "person": "Kwame O.", "kind": "need", "body": "A Pashto interpreter for the reception desk at Jenner Jean-Marie.", "minsAgo": 90 },
+    { "id": "ST08", "space": "SH01", "org": "CITY", "person": "Kwame O.", "kind": "doing", "body": "Toronto Hydro contacted; crew on site.", "minsAgo": 85 },
+    { "id": "ST09", "space": "SH01", "org": "FAITH", "person": "Yusuf A.", "kind": "can_take", "body": "We can call Dari- and Urdu-speaking seniors on our volunteer list.", "minsAgo": 70 },
+    { "id": "ST10", "space": "SH01", "org": "CRC", "person": "Marisol T.", "kind": "cannot_cover", "body": "We cannot provide overnight shelter tonight.", "minsAgo": 60 },
+    { "id": "ST11", "space": "SH01", "org": "OTA", "person": "Grace L.", "kind": "doing", "body": "Floor captains knocking on doors in Sample Tower C, floors 1 to 10.", "minsAgo": 50 },
+    { "id": "ST12", "space": "SH01", "org": "HUB", "person": "Priya S.", "kind": "need", "body": "Someone to carry water to floors 5 to 8 of Sample Tower B.", "minsAgo": 30 },
+    { "id": "ST13", "space": "SH01", "org": "FHC", "person": "Nadia H.", "kind": "can_take", "body": "A nurse can check on residents who rely on powered medical devices.", "minsAgo": 25 },
+    { "id": "ST14", "space": "SH01", "org": "TNO", "person": "Daniel R.", "kind": "doing", "body": "Community room still open; 9 people charging now.", "minsAgo": 10 }
+  ],
+  "commitments": [
+    { "id": "COM01", "org": "HUB", "hazard": "power", "mode": "during", "body": "Send the acknowledgement and alerts; open the Hub as a charging space.", "role": "Duty manager", "agreement": "Hub operations procedure v3", "reviewDue": "2027-03-01", "forDisruption": "confirmed" },
+    { "id": "COM02", "org": "TNO", "hazard": "power", "mode": "during", "body": "Open the 10 Gateway community room for charging.", "role": "Emergency coordinator", "agreement": "TNO and Hub memorandum of understanding", "reviewDue": "2026-08-15", "forDisruption": "confirmed" },
+    { "id": "COM03", "org": "CRC", "hazard": "power", "mode": "during", "body": "Supply power banks and blankets from the local depot.", "role": "Community response coordinator", "agreement": "Red Cross community partnership terms", "reviewDue": "2027-01-10", "forDisruption": null },
+    { "id": "COM04", "org": "OTA", "hazard": "power", "mode": "during", "body": "Floor captains knock on doors on floors without an ambassador.", "role": "Floor captain coordinator", "agreement": null, "reviewDue": "2026-10-01", "forDisruption": null },
+    { "id": "COM05", "org": "FHC", "hazard": "power", "mode": "during", "body": "Check on residents who rely on powered medical devices.", "role": "Community health worker lead", "agreement": "Health centre and Hub referral protocol", "reviewDue": "2027-02-01", "forDisruption": "declined" },
+    { "id": "COM06", "org": "CITY", "hazard": "winter", "mode": "during", "body": "Open community centres as warming spaces during an extreme cold weather alert.", "role": "Emergency management officer", "agreement": "City cold weather response plan", "reviewDue": "2027-04-30", "forDisruption": null },
+    { "id": "COM07", "org": "TPL", "hazard": "heat", "mode": "during", "body": "Keep both branches open as cooling spaces in a heat warning, during opening hours.", "role": "Branch head", "agreement": "City heat relief strategy", "reviewDue": "2027-04-30", "forDisruption": null },
+    { "id": "COM08", "org": "CITY", "hazard": "heat", "mode": "during", "body": "Open community centres as cooling spaces during heat warnings.", "role": "Emergency management officer", "agreement": "City heat relief strategy", "reviewDue": "2027-04-30", "forDisruption": null },
+    { "id": "COM09", "org": "HUB", "hazard": "heat", "mode": "everyday", "body": "Run the heat-season heads-up and box-fan lending.", "role": "Programs lead", "agreement": null, "reviewDue": "2027-05-01", "forDisruption": null },
+    { "id": "COM10", "org": "FAITH", "hazard": "heat", "mode": "during", "body": "Wellness calls to seniors on the volunteer list, in Urdu, Dari and Pashto.", "role": "Network volunteer lead", "agreement": null, "reviewDue": "2026-07-01", "forDisruption": null },
+    { "id": "COM11", "org": "CRC", "hazard": "fire", "mode": "during", "body": "Emergency lodging and personal services for displaced households.", "role": "Community response coordinator", "agreement": "Red Cross community partnership terms", "reviewDue": "2027-01-10", "forDisruption": null },
+    { "id": "COM12", "org": "CITY", "hazard": "fire", "mode": "during", "body": "Open a reception point and coordinate emergency social services.", "role": "Emergency management officer", "agreement": "City emergency plan", "reviewDue": "2027-02-15", "forDisruption": null },
+    { "id": "COM13", "org": "TNO", "hazard": "fire", "mode": "recovery", "body": "Settlement and housing case support for displaced households.", "role": "Settlement services lead", "agreement": "TNO and Hub memorandum of understanding", "reviewDue": "2026-12-01", "forDisruption": null },
+    { "id": "COM14", "org": "HUB", "hazard": "flood", "mode": "during", "body": "Alerts to affected floors and a referral desk at the Hub.", "role": "Duty manager", "agreement": "Hub operations procedure v3", "reviewDue": "2027-03-01", "forDisruption": null },
+    { "id": "COM15", "org": "TPL", "hazard": "smoke", "mode": "during", "body": "Both branches open as clean air spaces with filtered air.", "role": "Branch head", "agreement": "City air quality response", "reviewDue": "2027-05-15", "forDisruption": null },
+    { "id": "COM16", "org": "HUB", "hazard": "smoke", "mode": "everyday", "body": "Run the box-fan filter workshop before wildfire season.", "role": "Programs lead", "agreement": null, "reviewDue": "2027-05-01", "forDisruption": null },
+    { "id": "COM17", "org": "FAITH", "hazard": "winter", "mode": "during", "body": "Hot meals at the network's halls during an extreme cold weather alert.", "role": "Network volunteer lead", "agreement": null, "reviewDue": "2026-11-01", "forDisruption": null }
+  ],
+  "supplies": [
+    { "id": "SUP01", "org": "HUB", "item": "water", "qty": "plenty", "qtyNum": 120, "unit": "litres", "location": "Hub storage room", "minsAgo": 35 },
+    { "id": "SUP02", "org": "HUB", "item": "masks", "qty": "some", "qtyNum": 300, "unit": "masks", "location": "Hub front desk", "minsAgo": 1440 },
+    { "id": "SUP03", "org": "CRC", "item": "power_banks", "qty": "some", "qtyNum": 40, "unit": "power banks", "location": "Red Cross depot", "minsAgo": 45 },
+    { "id": "SUP04", "org": "CRC", "item": "cots", "qty": "few", "qtyNum": 12, "unit": "cots", "location": "Red Cross depot", "minsAgo": 2880 },
+    { "id": "SUP05", "org": "CRC", "item": "blankets", "qty": "plenty", "qtyNum": 150, "unit": "blankets", "location": "Red Cross depot", "minsAgo": 2880 },
+    { "id": "SUP06", "org": "TNO", "item": "interpreters", "qty": "few", "qtyNum": 3, "unit": "on call (Urdu, Dari, Tamil)", "location": "By phone", "minsAgo": 70 },
+    { "id": "SUP07", "org": "TNO", "item": "power_banks", "qty": "few", "qtyNum": 6, "unit": "power banks", "location": "10 Gateway community room", "minsAgo": 15 },
+    { "id": "SUP08", "org": "TNO", "item": "water", "qty": "some", "qtyNum": 48, "unit": "bottles", "location": "10 Gateway community room", "minsAgo": 15 },
+    { "id": "SUP09", "org": "HUB", "item": "box_fans", "qty": "few", "qtyNum": 8, "unit": "fans", "location": "Hub storage room", "minsAgo": 4320 },
+    { "id": "SUP10", "org": "HUB", "item": "flashlights", "qty": "some", "qtyNum": 25, "unit": "flashlights", "location": "Hub storage room", "minsAgo": 4320 },
+    { "id": "SUP11", "org": "FAITH", "item": "blankets", "qty": "some", "qtyNum": 60, "unit": "blankets", "location": "Network hall on Thorncliffe Park Drive", "minsAgo": 600 },
+    { "id": "SUP12", "org": "OTA", "item": "flashlights", "qty": "few", "qtyNum": 10, "unit": "flashlights", "location": "Association office, Sample Tower C", "minsAgo": 240 }
+  ],
+  "decisions": [
+    { "id": "DEC01", "space": "SH01", "org": "HUB", "person": "Priya S.", "minsAgo": 128, "body": "Use the TNO community room as the charging point rather than opening the Hub lobby.", "why": "It is closer to the three towers and already staffed." },
+    { "id": "DEC02", "space": "SH01", "org": "HUB", "person": "Leila M.", "minsAgo": 55, "body": "Ask the City to keep Jenner Jean-Marie open late as a warming backup.", "why": "The community room closes at 9 and power may not be back before 11." },
+    { "id": "DEC03", "space": "SH01", "org": "CITY", "person": "Kwame O.", "minsAgo": 14, "body": "Mark Dennis R. Timbrell full and send new arrivals to Jenner Jean-Marie.", "why": "The gym reached its 50-person limit at 7 pm." }
+  ],
+  "handovers": [
+    { "id": "HO01", "space": "SH01", "org": "HUB", "from": "Leila M.", "to": null, "minsAgo": 15, "note": "Charging room closes at 9. Jenner Jean-Marie agreed as warming backup until 11. Power banks due 8:30 pm. Water carry for Sample Tower B floors 5 to 8 still has nobody.", "open": ["ST12", "ST07"] },
+    { "id": "HO02", "space": "SH01", "org": "TNO", "from": "Hanna B.", "to": "Daniel R.", "minsAgo": 160, "note": "Seniors list printed and at the community room desk. Two volunteers until 9.", "open": [] }
+  ],
+  "playbooks": [
+    { "hazard": "power", "state": "agreed", "version": "1.3", "agreedOn": "2026-06-12", "staleAfterMins": 60, "ambassadorPosting": "direct",
+      "activated": ["Hub duty manager (level 1)", "TNO emergency coordinator and Red Cross community response (level 2)"],
+      "spaces": ["TNO community room, 10 Gateway Boulevard (charging)", "Thorncliffe Park Community Hub (charging)", "Jenner Jean-Marie Community Centre (warming backup, late hours)"],
+      "templates": ["TPL-ACK-POWER"],
+      "asks": { "HUB": "Alerts, check-in rounds, coverage view", "TNO": "Open the community room; calls to seniors", "CRC": "Power banks and blankets", "CITY": "Liaise with Toronto Hydro; backup warming space", "OTA": "Floor captains on floors without an ambassador" },
+      "steps": ["Acknowledgement sent to affected floors", "Charging space open and on the map", "Check-in rounds started on covered floors", "Uncovered floors named in the shared space", "Power banks requested for residents who cannot come down", "Warming backup agreed if the outage runs past dark"],
+      "history": [
+        { "version": "1.3", "date": "2026-06-12", "by": "Hub duty manager", "change": "Added the backup space after the February outage." },
+        { "version": "1.2", "date": "2026-03-04", "by": "TNO emergency coordinator", "change": "Staleness period changed from 2 hours to 1 hour." },
+        { "version": "1.0", "date": "2025-11-20", "by": "Hub duty manager", "change": "First agreed version." }
+      ] },
+    { "hazard": "winter", "state": "agreed", "version": "1.0", "agreedOn": "2026-10-20", "staleAfterMins": 240, "ambassadorPosting": "hub",
+      "activated": ["Hub programs lead (level 1)", "City emergency management and the faith network (level 2)"],
+      "spaces": ["Jenner Jean-Marie Community Centre (warming)", "Dennis R. Timbrell Community Centre (warming)", "Flemingdon Community Centre (warming)"],
+      "templates": [],
+      "asks": { "HUB": "Heads-up and alerts in every language", "CITY": "Open warming spaces when an extreme cold weather alert is issued", "FAITH": "Hot meals and wellness calls", "OTA": "Check on neighbours without heat" },
+      "steps": ["Heads-up sent when the alert is forecast", "Warming spaces open and on the map", "Wellness calls to seniors started", "Buildings reporting no heat named in the shared space"],
+      "history": [{ "version": "1.0", "date": "2026-10-20", "by": "Hub programs lead", "change": "First agreed version, before the winter season." }] },
+    { "hazard": "elevator", "state": "proposed", "version": "0.9", "agreedOn": null, "staleAfterMins": 10080, "ambassadorPosting": "direct",
+      "activated": ["Hub duty manager (level 1)"],
+      "spaces": ["No space opens for an elevator outage. Help comes to the door."],
+      "templates": ["TPL-ACK-ELEVATOR"],
+      "asks": { "HUB": "Weekly alert updates, check-in rounds on high floors", "TNO": "Grocery delivery and wellness calls", "CRC": "Stair-climbing chairs if available", "CITY": "Accessible rides to appointments" },
+      "steps": ["Acknowledgement sent to the whole building", "Weekly update with a support offer", "High floors checked on each week", "Grocery delivery days posted in the alert", "Handover note written each week"],
+      "history": [{ "version": "0.9", "date": "2026-09-02", "by": "Hub duty manager", "change": "Proposed during the Sample Tower B repairs. Not yet agreed by partners." }] },
+    { "hazard": "heat", "state": "agreed", "version": "2.0", "agreedOn": "2026-05-14", "staleAfterMins": 180, "ambassadorPosting": "hub",
+      "activated": ["Hub programs lead (level 1)", "City emergency management and the faith network (level 2)"],
+      "spaces": ["Both library branches (cooling)", "City community centres (cooling)", "Angela James Arena lobby (overflow)"],
+      "templates": [],
+      "asks": { "HUB": "Heads-up, alerts, box-fan lending", "CITY": "Open cooling spaces in a heat warning", "TPL": "Branches open as cooling spaces", "FAITH": "Wellness calls to seniors" },
+      "steps": ["Heads-up sent when the warning is forecast", "Cooling spaces open and on the map", "Wellness calls to seniors started", "Cooling space capacity checked every 2 hours"],
+      "history": [{ "version": "2.0", "date": "2026-05-14", "by": "Hub programs lead", "change": "Added the library branches and the arena overflow after the 2025 season." }] },
+    { "hazard": "smoke", "state": "placeholder", "version": null, "agreedOn": null, "staleAfterMins": 240, "ambassadorPosting": "none", "activated": [], "spaces": [], "templates": [], "asks": {}, "steps": [], "history": [] },
+    { "hazard": "flood", "state": "placeholder", "version": null, "agreedOn": null, "staleAfterMins": 60, "ambassadorPosting": "direct", "activated": [], "spaces": [], "templates": ["TPL-ACK-FLOOD"], "asks": {}, "steps": [], "history": [] },
+    { "hazard": "fire", "state": "placeholder", "version": null, "agreedOn": null, "staleAfterMins": 30, "ambassadorPosting": "hub", "activated": [], "spaces": [], "templates": [], "asks": {}, "steps": [], "history": [] }
+  ],
+  "teams": [
+    { "hazard": "power", "level": 1, "team": "Hub duty manager", "channels": ["text", "email"], "trigger": "Ambassador or resident report" },
+    { "hazard": "power", "level": 2, "team": "TNO emergency coordinator; Red Cross community response", "channels": ["text", "email"], "trigger": "Outage longer than 3 hours" },
+    { "hazard": "winter", "level": 1, "team": "Hub programs lead", "channels": ["email"], "trigger": "Extreme cold weather alert forecast" },
+    { "hazard": "winter", "level": 2, "team": "City emergency management; faith network volunteer lead", "channels": ["text", "email"], "trigger": "Extreme cold weather alert issued (-15 C or wind chill -20)" },
+    { "hazard": "elevator", "level": 1, "team": "Hub duty manager", "channels": ["text"], "trigger": "Ambassador report" },
+    { "hazard": "elevator", "level": 2, "team": null, "channels": [], "trigger": null },
+    { "hazard": "heat", "level": 1, "team": "Hub programs lead", "channels": ["email"], "trigger": "Environment Canada heat warning forecast" },
+    { "hazard": "heat", "level": 2, "team": "City emergency management; library branch heads", "channels": ["text", "email"], "trigger": "Environment Canada heat warning issued" },
+    { "hazard": "smoke", "level": 1, "team": "Hub programs lead", "channels": ["email"], "trigger": "Air Quality Health Index 7 or higher" },
+    { "hazard": "smoke", "level": 2, "team": "City emergency management", "channels": ["text", "email"], "trigger": "Special air quality statement" },
+    { "hazard": "flood", "level": 1, "team": "Hub duty manager", "channels": ["text", "email"], "trigger": "Ambassador or resident report" },
+    { "hazard": "flood", "level": 2, "team": "City emergency management; Red Cross community response", "channels": ["text", "email"], "trigger": "Rainfall warning plus a building report" },
+    { "hazard": "fire", "level": 1, "team": "Hub duty manager", "channels": ["text", "email"], "trigger": "Fire alarm report with evacuation" },
+    { "hazard": "fire", "level": 2, "team": "City emergency management; Red Cross; TNO settlement", "channels": ["text", "email"], "trigger": "Residents displaced overnight" }
+  ],
+  "exercises": [
+    { "id": "EX01", "hazard": "power", "level": 2, "title": "Power outage drill, Sample Tower A", "kind": "past", "onDate": "2026-05-21", "repeats": "none", "tookPart": 14 },
+    { "id": "EX02", "hazard": "winter", "level": 2, "title": "Extreme cold tabletop with the City and the faith network", "kind": "scheduled", "onDate": "2026-11-26", "repeats": "y", "tookPart": null },
+    { "id": "EX03", "hazard": "elevator", "level": 1, "title": "Elevator outage check-in round practice", "kind": "scheduled", "onDate": "2027-01-14", "repeats": "q", "tookPart": null }
+  ],
+  "indicators": [
+    { "id": "reach", "real": "78% of subscribed households", "exercise": "92% of enrolled staff", "everyday": null },
+    { "id": "unreachable", "real": "41 households, 36 followed up", "exercise": "6 households, 6 followed up", "everyday": null },
+    { "id": "timeToAck", "real": "Median 6 minutes", "exercise": "Median 3 minutes", "everyday": null },
+    { "id": "stale", "real": "2 alerts went stale", "exercise": "0", "everyday": null },
+    { "id": "directory", "real": null, "exercise": null, "everyday": "68% of listings confirmed in the last 6 months; 9 reports resolved" },
+    { "id": "rounds", "real": "5 of 6 rounds completed", "exercise": "1 of 1", "everyday": null },
+    { "id": "everydayUse", "real": null, "exercise": null, "everyday": "1,240 visits between disruptions this quarter" },
+    { "id": "smallNumber", "real": "Fewer than 5", "exercise": null, "everyday": null },
+    { "id": "trust", "real": "7 in 10 residents asked said they trust CVH alerts", "exercise": null, "everyday": null }
+  ],
+  "records": [
+    { "id": "REC1", "kind": "real", "hazard": "power", "place": "Sample Tower B", "period": "2026-02", "title": "Winter power outage, Sample Tower B", "lessons": ["Floors above 10 had no ambassador for check-ins.", "No Pashto interpreter was available at the reception desk."] },
+    { "id": "REC2", "kind": "real", "hazard": "heat", "place": "Both neighbourhoods", "period": "2026-07", "title": "Five-day heat wave, both neighbourhoods", "lessons": ["Flemingdon Community Centre filled by 2 pm on three days.", "No Pashto interpreter was available for wellness calls."] },
+    { "id": "REC3", "kind": "real", "hazard": "flood", "place": "Sample Tower C", "period": "2026-08", "title": "Flash flood, Sample Tower C lower level", "lessons": ["The acknowledgement took 14 minutes because the area had to be typed."] },
+    { "id": "REC4", "kind": "exercise", "hazard": "power", "place": "Sample Tower A", "period": "2026-05", "title": "Power outage drill, Sample Tower A", "lessons": ["Two partner staff learned of the activation from a manager first.", "Floors above 10 had no ambassador for check-ins."] }
+  ],
+  "actions": [
+    { "id": "ACT1", "lesson": "No Pashto interpreter available", "body": "Add a Pashto interpreter to TNO's on-call list.", "ownerRole": "TNO settlement services lead", "due": "2026-11-15", "status": "open", "changed": null },
+    { "id": "ACT2", "lesson": "Staff learned of activation from a manager", "body": "Send activation directly to designated staff.", "ownerRole": "Hub duty manager", "due": "2026-06-30", "status": "done", "changed": "Trigger for power outage, level 2" },
+    { "id": "ACT3", "lesson": "Acknowledgement took 14 minutes", "body": "Default the flood template to the building's whole-building audience.", "ownerRole": "Hub content lead", "due": "2026-09-30", "status": "done", "changed": "Template TPL-ACK-FLOOD" },
+    { "id": "ACT4", "lesson": "Floors with no ambassador for check-ins", "body": "Ask the tenants' association's floor captains to cover floors 11 and up until ambassadors are recruited.", "ownerRole": "Hub ambassador coordinator", "due": "2026-12-10", "status": "open", "changed": null }
+  ]
+}

@@ -152,6 +152,13 @@ const CASES: { actions: readonly string[]; situation: string; context: PolicyCon
   { actions: ["coverage.view"], situation: "any context", context: {}, expected: roles(false, true, true, true) },
   // See spend: no | no | yes (read-only) | yes.
   { actions: ["spend.view"], situation: "any context", context: {}, expected: roles(false, false, true, true) },
+  // See residents' place suggestions (PRD §6.3): no | yes | yes (read-only) | yes.
+  { actions: ["moderation.view"], situation: "any context", context: {}, expected: roles(false, true, true, true) },
+  // Accept or decline a resident's place suggestion: no | yes | no | yes.
+  { actions: ["moderation.review"], situation: "any context", context: { assignments: [ASSIGNED], target: { rsn: "7001" } }, expected: roles(false, true, false, true) },
+  // The partner space (2026-11-07): a Coordinator, a Director read-only and an Admin see it; only a Coordinator and an Admin change a space.
+  { actions: ["space.view"], situation: "any context", context: {}, expected: roles(false, true, true, true) },
+  { actions: ["space.update"], situation: "any context", context: {}, expected: roles(false, true, false, true) },
   // Every staff member, for themselves (not matrix rows).
   { actions: ["hub.open", "account.own_setup", "session.read_own"], situation: "any context", context: {}, expected: roles(true, true, true, true) },
   // Anything else is refused.

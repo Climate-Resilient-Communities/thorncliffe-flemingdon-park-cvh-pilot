@@ -5041,6 +5041,16 @@
         "message": "[EN] The message",
         "audience": "[EN] Who gets it",
         "approval": "[EN] A second person approves"
+      },
+      "residentPreview": {
+        "title": "[EN] How residents will see it",
+        "lead": "[EN] The alert on home, in English, as you type. Residents who chose another language read the approved translation.",
+        "origin": "[EN] Thorncliffe Park Community Hub alert. Checked by the Hub.",
+        "posted": "[EN] Posted when a second person approves it",
+        "untilResolved": "[EN] Until resolved",
+        "until": "[EN] Until {date} {time}",
+        "empty": "[EN] Your text shows here.",
+        "note": "[EN] Only the people the alert is for see it on home. Anyone can open it from the alerts list."
       }
     },
     "approve": {
@@ -6260,6 +6270,189 @@
       "measuresDetail": "[EN] Review subscriber counts and how far alerts reached.",
       "providers": "[EN] Keep the directory current",
       "providersDetail": "[EN] Confirm provider details, then publish a directory release for residents."
+    },
+    "moderation": {
+      "title": "[EN] Moderation",
+      "lead": "[EN] Places residents suggested, and corrections to places already listed. Read each one, then accept it or decline it with a reason.",
+      "forbidden": "[EN] Only Coordinators, Directors and Admins can see the moderation queue.",
+      "readOnly": "[EN] You can read the queue. Only a Coordinator or an Admin can accept or decline.",
+      "unreadable": "[EN] The queue could not be read. Reload the page.",
+      "waitingTitle": "[EN] Waiting, oldest first",
+      "decidedTitle": "[EN] Decided in the last 14 days",
+      "noneDecided": "[EN] Nothing was decided in the last 14 days.",
+      "refLine": "[EN] Reference {ref}",
+      "status": {
+        "pending": "[EN] Waiting",
+        "accepted": "[EN] Accepted",
+        "declined": "[EN] Declined"
+      },
+      "building": "[EN] Building {address}",
+      "buildingUnknown": "[EN] A building that is no longer listed (register number {rsn})",
+      "pinAt": "[EN] Pin at {lat}, {lng}",
+      "openMap": "[EN] Open the pin on OpenStreetMap",
+      "phone": "[EN] Phone",
+      "web": "[EN] Website",
+      "notFound": "[EN] This suggestion could not be found.",
+      "providerGone": "[EN] This place is no longer in the directory.",
+      "unpublished": "[EN] Not published to residents now.",
+      "acceptLine": {
+        "add": "[EN] Accepting does not publish it. An Admin adds it to the catalogue from the Providers page, and residents see it after the next directory release.",
+        "correct": "[EN] Accepting does not change the listing. An Admin applies the change in the catalogue from the Providers page."
+      },
+      "accepting": "[EN] Accepting",
+      "acceptedTitle": "[EN] Accepted",
+      "acceptedLine": {
+        "add": "[EN] “{name}” now waits on the Providers page for an Admin to add it to the catalogue.",
+        "correct": "[EN] The correction of “{name}” now waits on the Providers page for an Admin to apply it."
+      },
+      "declineLink": "[EN] Decline with a reason",
+      "note": "[EN] Note for the Hub (optional)",
+      "noteHint": "[EN] Kept with the decision for the Hub's own record. Not shown to the person who sent it. Do not write names or phone numbers.",
+      "declining": "[EN] Declining",
+      "declinedLine": "[EN] “{name}” was declined: {reason}. The person who sent it reads the reason in their language with their reference.",
+      "decidedOn": "[EN] {decision} on {date}",
+      "errors": {
+        "not_found": "[EN] This suggestion could not be found.",
+        "already_decided": "[EN] Someone already decided this one. Reload the page to see the decision.",
+        "forbidden": "[EN] Only a Coordinator or an Admin can accept or decline a suggestion.",
+        "reason": "[EN] Choose a reason first.",
+        "failed": "[EN] That did not save. Try again."
+      },
+      "toApply": {
+        "title": "[EN] From residents, to add or apply",
+        "lead": "[EN] Suggestions the Hub accepted. Add a new place to the catalogue, or apply a correction there, load it with the catalogue script, then mark it done. Residents see the change after the next directory release.",
+        "none": "[EN] Nothing from residents is waiting.",
+        "add": "[EN] New place",
+        "correct": "[EN] Correction of {id}",
+        "done": "[EN] Mark as done",
+        "doneOf": "[EN] Mark “{name}” as done",
+        "doneLine": "[EN] “{name}” is marked done.",
+        "errors": {
+          "not_found": "[EN] That suggestion is not in the list.",
+          "not_accepted": "[EN] That suggestion was not accepted.",
+          "already_applied": "[EN] That suggestion is already marked done."
+        }
+      }
+    },
+    "partners": {
+      "status": {
+        "open": "[EN] Open",
+        "full": "[EN] Full",
+        "closed": "[EN] Closed",
+        "not_activated": "[EN] Not activated"
+      },
+      "purpose": {
+        "cooling": "[EN] Cooling",
+        "warming": "[EN] Warming",
+        "clean_air": "[EN] Clean air",
+        "charging": "[EN] Device charging"
+      },
+      "hazard": {
+        "power": "[EN] Power outage",
+        "elevator": "[EN] Elevator failure",
+        "heat": "[EN] Extreme heat",
+        "smoke": "[EN] Wildfire smoke",
+        "flood": "[EN] Flood or plumbing failure",
+        "fire": "[EN] Fire and evacuation",
+        "water": "[EN] Water outage",
+        "winter": "[EN] Extreme cold",
+        "other": "[EN] Other disruption"
+      },
+      "statement": {
+        "doing": "[EN] Doing",
+        "can_take": "[EN] Can take on",
+        "cannot_cover": "[EN] Cannot cover",
+        "need": "[EN] Need"
+      },
+      "head": {
+        "opened": "[EN] Space opened by {by}, {t}"
+      },
+      "board": {
+        "countsLabel": "[EN] Spaces by status",
+        "peopleOf": "[EN] people in open spaces, of {max} places",
+        "takesUpTo": "[EN] Takes up to {max} people",
+        "confirmed": "[EN] Confirmed {t} by {by}",
+        "neverConfirmed": "[EN] Never confirmed",
+        "ever": "[EN] ever",
+        "none": "[EN] No spaces are set up yet. The Hub adds them with the partner seed.",
+        "change": "[EN] Change {name}",
+        "setTo": "[EN] Set to {status}",
+        "byHub": "[EN] {name}, the Hub",
+        "dummy": "[EN] Sample statements and organisations for the pilot: dummy data, not real agreements."
+      },
+      "open": {
+        "title": "[EN] Open a space",
+        "lead": "[EN] Every space partners can open that is not open now. Say what it is for and how many people it takes. Opening confirms it as you, and residents see it on the map and the listing at once.",
+        "none": "[EN] Every space is open or full already.",
+        "submit": "[EN] Open this space"
+      },
+      "activation": {
+        "title": "[EN] Space status",
+        "lead": "[EN] Set whether this space is open, full or closed, what it is for and how many people it takes. Saving confirms it as it stands, as you.",
+        "changeTitle": "[EN] Change it",
+        "historyTitle": "[EN] Changes, newest first",
+        "noHistory": "[EN] No changes yet.",
+        "when": "[EN] When",
+        "by": "[EN] By",
+        "notShown": "[EN] Not shown to residents: it is not open or full.",
+        "noPlace": "[EN] Not on the resident map: this space is not linked to a place in the directory."
+      },
+      "form": {
+        "purpose": "[EN] What it is for",
+        "capacityMax": "[EN] Most people it takes",
+        "capacityNowHint": "[EN] Leave it empty if nobody has counted.",
+        "submit": "[EN] Save and confirm"
+      },
+      "done": {
+        "shown": "[EN] {name} is {status}. Confirmed at {time}. Residents see it on the map and the listing now.",
+        "hidden": "[EN] {name} is {status}. Residents no longer see it as a space."
+      },
+      "errors": {
+        "status_unknown": "[EN] Choose open, full, closed or not activated.",
+        "purpose_unknown": "[EN] Choose what the space is for.",
+        "capacity_max_invalid": "[EN] Most people it takes must be a whole number from 1 to 2000.",
+        "capacity_now_invalid": "[EN] People here now must be a whole number, or empty if nobody has counted.",
+        "capacity_over": "[EN] More people are counted than the space takes. Set it to Full, or raise the number it takes.",
+        "not_found": "[EN] That space is not there. Go back to the shared space.",
+        "forbidden": "[EN] Only a Coordinator or an Admin can change a space. Nothing was changed.",
+        "forbiddenView": "[EN] Only a Coordinator, a Director or an Admin can see the partner space.",
+        "readOnly": "[EN] You can read this. Only a Coordinator or an Admin can change a space."
+      },
+      "ourSpaces": {
+        "whose": "[EN] Whose spaces",
+        "actingFor": "[EN] Partner staff do not have their own accounts yet. Choose the organisation you are acting for; the change is recorded as your Hub account."
+      },
+      "coverage": {
+        "confirmedBy": "[EN] Confirmed for this disruption by {org}",
+        "spaces": "[EN] {open} open and {full} full, with {people} people of {max} places counted."
+      },
+      "capacity": {
+        "org": "[EN] Organisation",
+        "said": "[EN] Capacity",
+        "when": "[EN] Set",
+        "inSpaces": "[EN] In its open spaces",
+        "noSpace": "[EN] No open space"
+      },
+      "supplies": {
+        "updated": "[EN] Updated"
+      },
+      "handover": {
+        "title": "[EN] Handover notes",
+        "notInRelease": "[EN] Writing a handover from this page is not in this release. Post it in the shared space for now."
+      },
+      "playbooks": {
+        "version": "[EN] Version",
+        "date": "[EN] Date",
+        "by": "[EN] By",
+        "change": "[EN] What changed"
+      },
+      "exercises": {
+        "noneScheduled": "[EN] No exercise is scheduled.",
+        "pastLine": "[EN] {date}. Level {level}. {n} took part."
+      },
+      "readiness": {
+        "dummy": "[EN] Sample commitments, figures and records for the pilot: dummy data, not real agreements or results."
+      }
     }
   },
   "building": {
@@ -6503,5 +6696,30 @@
     "help": "显示更少的细节，用列表代替地图。文字大小不变。",
     "saved": "已保存在这台设备上。",
     "sessionOnly": "您的浏览器无法保存这项设置。它只在这次访问中有效。"
+  },
+  "places": {
+    "sentLine": "中心的工作人员会在大约一周内阅读。CVH 不知道是谁发送的，请保存您的参考编号，以便查看中心的决定。",
+    "ref": "您的参考编号",
+    "refHint": "请记下来或截屏保存。这是再次找到它的唯一方法。",
+    "checkStatus": "查看中心的决定",
+    "pendingTitle": "正在等待中心处理",
+    "pendingLine": "中心的工作人员会在大约一周内阅读。请凭参考编号回来查看他们的决定。",
+    "acceptedTitle": "中心已接受",
+    "acceptedLine": "中心下次更新地点时，它会出现在地图和搜索中。",
+    "notFoundTitle": "我们找不到这个参考编号",
+    "correctionOf": "您对 {name} 的更正",
+    "phone": "该地点的电话号码",
+    "phoneHint": "只填该地点自己的号码，不要填任何个人的号码。",
+    "web": "该地点的网站",
+    "pin": "地图上的标记",
+    "sending": "正在发送",
+    "mapFailed": "地图无法加载。请改为选择一栋楼，或输入地址。",
+    "honeypot": "请留空",
+    "errors": {
+      "invalid_request": "表格中有内容无法读取。请检查后重新发送。",
+      "rate_limited": "这个网络连接发送的建议太多了。请一小时后再试。",
+      "not_found": "请检查字母和数字，然后再试一次。",
+      "submissions_unavailable": "没有发送成功。请检查信号后再试。"
+    }
   }
 }

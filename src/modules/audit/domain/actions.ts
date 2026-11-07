@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isIsoDate } from "@/contracts/contentReview";
+import { DECLINE_REASONS, SUBMISSION_KINDS } from "../../../contracts/placeSubmission";
 import { SIGNUP_ERROR_CODES } from "../../../contracts/signup";
 import { STAFF_ROLES } from "../../../contracts/staffRoles";
 
@@ -38,6 +39,9 @@ export const FACTOR_RESET_REASONS = ["lost_device", "device_broken", "all_admins
  */
 export const ACCESS_REQUEST_KINDS = ["access", "correction", "deletion"] as const;
 export const ACCESS_REQUEST_OUTCOMES = ["answered", "deleted", "not_verified", "withdrawn"] as const;
+
+/** The statuses of a space (the partners module's SPACE_STATUSES, repeated: audit may not import partners, AD-2). */
+const SPACE_STATUSES = ["open", "full", "closed", "not_activated"] as const;
 
 /** Why an action was refused or failed: a code, never a message or an input. */
 export const REFUSAL_REASONS = [
@@ -378,6 +382,26 @@ export const AUDIT_META = {
   // what the resident asked for and `outcome` how it ended. The weekly review (S09.04's `weekly_review`) flags a request open for more than 25 days.
   "access_request.received": meta({ request: z.enum(ACCESS_REQUEST_KINDS).optional() }),
   "access_request.closed": meta({ outcome: z.enum(ACCESS_REQUEST_OUTCOMES).optional() }),
+
+  // Residents' place suggestions (PRD §6.3, D9/E4; O-09, O-10): a Coordinator or an Admin accepts or declines one, and an Admin marks an accepted
+  // one done once it is in the catalogue (the Providers page). The subject is the suggestion (type `place_submission`, its uuid); `kind` is `add`
+  // or `correct`. A decline names its pre-written reason (`decline_reason`, O-10's list) and whether the Hub member kept a note (`with_note`): the
+  // note is free text and stays on the row. What the resident wrote is never in meta.
+  "submission.accepted": meta({ kind: z.enum(SUBMISSION_KINDS).optional() }),
+  "submission.declined": meta({ kind: z.enum(SUBMISSION_KINDS).optional(), decline_reason: z.enum(DECLINE_REASONS).optional(), with_note: z.literal(true).optional() }),
+  "submission.applied": meta({ kind: z.enum(SUBMISSION_KINDS).optional() }),
+  // A space partners open for residents (the partner space, 2026-11-07): a Coordinator or an Admin sets its status, purpose and capacity
+  // (P-01, P-06, P-07). The subject is the space (type `space`, its id such as `SP03`); the record holds what it became and the status it was,
+  // as codes and counts, never a name or a note. `status` and `purpose` are required on an ok record; a refusal holds its reason and the form's
+  // error code (`validation`; `not_found` for a space that is not there).
+  "space.status_set": meta({
+    status: z.enum(SPACE_STATUSES).optional(),
+    previous: z.enum(SPACE_STATUSES).optional(),
+    purpose: z.enum(["cooling", "warming", "clean_air", "charging"]).optional(),
+    capacity_max: count.optional(),
+    capacity_now: count.nullable().optional(),
+    code: code.optional(),
+  }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type AuditAction = keyof typeof AUDIT_META;
@@ -420,6 +444,10 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "drill_roster.removed": ["roster_size"],
   "access_request.received": ["request"],
   "access_request.closed": ["outcome"],
+  "submission.accepted": ["kind"],
+  "submission.declined": ["kind", "decline_reason"],
+  "submission.applied": ["kind"],
+  "space.status_set": ["status", "purpose"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];
@@ -530,6 +558,8 @@ const SUBJECT_ID = /^(?:[0-9]{1,9}|[a-z][a-z0-9_]{0,39}|(?:SM|MM)[0-9a-f]{32})$/
  */
 const SUBJECT_ID_BY_TYPE: Readonly<Record<string, RegExp>> = {
   provider: /^[A-Z][0-9]{3,6}$/,
+  // A space partners open for residents (2026-11-07): "SP" and 2 to 4 digits, the seed's ids (SP03).
+  space: /^SP[0-9]{2,4}$/,
 };
 
 function isSubjectId(subjectType: string, subjectId: string): boolean {

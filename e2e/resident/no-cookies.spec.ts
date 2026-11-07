@@ -120,6 +120,13 @@ test("the building list sets no cookie", async ({ request }) => {
   expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
 });
 
+// The partner space (2026-11-07): the spaces open now (public, the same for everyone, read by the map and a listing) set no cookie, answered or not.
+test("the open spaces list sets no cookie", async ({ request }) => {
+  const response = await request.get("/api/spaces", { maxRedirects: 0 });
+
+  expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});
+
 // S03.04: a question is personal. /api/search sets no cookie, whether it answers or refuses, and is never cacheable.
 test("the search endpoint sets no cookie and is not cacheable, for a question and for a refused one", async ({ request }) => {
   for (const data of [{ q: "", lang: "en" }, { q: "a question", lang: "xx" }, { q: "a question", lang: "en" }]) {

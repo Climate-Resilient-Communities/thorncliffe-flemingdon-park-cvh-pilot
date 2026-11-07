@@ -1569,4 +1569,7 @@
   m(t, {"x01": {"need211": "需要帮助？请拨打 211。"}});
   /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R03": {"inBuildings": "这里楼宇的警报："}});
+  /* PRD §6.3 (D9/E4, the product owner's decision of 2026-11-07): the reference code a resident keeps (R-21, R-23), the place's own phone and
+     website (R-19, R-22), the location picker's fallback (R-20) and the form's answers. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"places":{"sentLine":"中心的工作人员会在大约一周内阅读。CVH 不知道是谁发送的，请保存您的参考编号，以便查看中心的决定。","ref":"您的参考编号","refHint":"请记下来或截屏保存。这是再次找到它的唯一方法。","checkStatus":"查看中心的决定","pendingTitle":"正在等待中心处理","pendingLine":"中心的工作人员会在大约一周内阅读。请凭参考编号回来查看他们的决定。","acceptedTitle":"中心已接受","acceptedLine":"中心下次更新地点时，它会出现在地图和搜索中。","notFoundTitle":"我们找不到这个参考编号","correctionOf":"您对 {name} 的更正","phone":"该地点的电话号码","phoneHint":"只填该地点自己的号码，不要填任何个人的号码。","web":"该地点的网站","pin":"地图上的标记","sending":"正在发送","mapFailed":"地图无法加载。请改为选择一栋楼，或输入地址。","honeypot":"请留空","errors":{"invalid_request":"表格中有内容无法读取。请检查后重新发送。","rate_limited":"这个网络连接发送的建议太多了。请一小时后再试。","not_found":"请检查字母和数字，然后再试一次。","submissions_unavailable":"没有发送成功。请检查信号后再试。"}}});
 })();

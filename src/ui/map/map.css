@@ -464,6 +464,17 @@
     color: var(--on-deep);
   }
 
+  /*
+   * A place open as a space now (the partner space, 2026-11-07; the prototype's cvh-pin--space): its mark filled with the space green and the
+   * icon in the light ink, over whatever shape its kind gives it. Never the only sign: the list, the preview and, with "Open as a space now"
+   * chosen, the pin's own word say it.
+   */
+  .map-pin--space .map-pin__mark {
+    border-color: var(--sprout-green);
+    background-color: var(--sprout-green);
+    color: var(--on-deep);
+  }
+
   /* The words beside a cooling space, water fountain or public washroom. */
   .map-pin__word {
     position: absolute;

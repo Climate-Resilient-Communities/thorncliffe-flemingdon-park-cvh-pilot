@@ -111,6 +111,38 @@ export const AUTHORITY_MATRIX = [
     actions: ["spend.view"],
     rules: { ambassador: "no", coordinator: "no", director: "read_only", admin: "yes" },
   },
+  {
+    // PRD §6.3 (D9/E4, built after the signed pilot scope by the product owner's decision of 2026-11-07): the moderation queue (O-08) and a
+    // suggestion's review page (O-09). The roles that read the Hub's work see it, a Director read-only; an Ambassador's own suggestions go
+    // through the resident app like anyone's.
+    row: "See residents' place suggestions (the moderation queue)",
+    actions: ["moderation.view"],
+    rules: { ambassador: "no", coordinator: "yes", director: "read_only", admin: "yes" },
+  },
+  {
+    // O-09 "Accept" and O-10 "Decline with a reason". Not privileged (no aal2 step-up): a decision changes no listing (an accepted place reaches
+    // residents only after an Admin adds it to the catalogue and publishes a release, both `provider.manage` / `guide.publish` at aal2).
+    row: "Accept or decline a resident's place suggestion",
+    actions: ["moderation.review"],
+    rules: { ambassador: "no", coordinator: "yes", director: "no", admin: "yes" },
+  },
+  {
+    // The partner space (PRD §6.3's F1–F13, built ahead of the MVP by the product owner's decision of 2026-11-07): the status board of every space,
+    // the coordination screens of a disruption (P-01 to P-10) and the readiness area between disruptions (P-11 to P-16). Partner staff have no role
+    // of their own yet: they act through Hub accounts, so the roles that coordinate the response see it, and a Director, who oversees, reads it.
+    // An Ambassador works one building and never sees partner coordination (the prototype's "Residents and ambassadors cannot").
+    row: "See the spaces and the partner coordination area",
+    actions: ["space.view"],
+    rules: { ambassador: "no", coordinator: "yes", director: "read_only", admin: "yes" },
+  },
+  {
+    // Opening, filling or closing a space, and its purpose and capacity (P-01, P-06, P-07): what residents see on the map and the listing, so it is
+    // the roles that run the response, as authoring an alert is. Not privileged (no aal2 step of its own): a Coordinator and an Admin sign in at
+    // aal2 anyway (AD-4), and a space's status must change in seconds when a room fills up.
+    row: "Set a space's status, purpose and capacity",
+    actions: ["space.update"],
+    rules: { ambassador: "no", coordinator: "yes", director: "no", admin: "yes" },
+  },
 ] as const satisfies readonly MatrixRow[];
 
 /**

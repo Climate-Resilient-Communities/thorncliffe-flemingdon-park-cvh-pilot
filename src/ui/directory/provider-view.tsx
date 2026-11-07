@@ -7,6 +7,7 @@ import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { isEnglishFallback, isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { Isolated } from "../text/isolated";
+import { SpaceStatus } from "../spaces/space-status";
 import { Verified } from "../verified/verified";
 import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
@@ -192,6 +193,9 @@ export function ProviderView({
           )}
         </ul>
       </header>
+      {/* The partner space (2026-11-07): on the listing's page, whether partners have this place open as a space right now (GET /api/spaces, the
+          same request for everyone). Not on the cards of a list, so a list of results makes no request of its own for it. */}
+      {variant === "page" && <SpaceStatus providerId={provider.id} />}
 
       {variant === "card" && phoneEntries(provider.contact.phone).filter((entry) => entry.tel).slice(0, 1).map((entry) => (
         // The card's first number as a call button up front (the full contacts are in the details below), drawn as Contacts draws a call.

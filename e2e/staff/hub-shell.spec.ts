@@ -73,7 +73,8 @@ test.describe("signed in at the Hub gate", () => {
     }
 
     // The navigation is in the menu: the current page is announced, People is for
-    // Admins, and the pilot's menu has no Moderation (MVP) and no "partner space" wording.
+    // Admins, Moderation is for the roles that read the Hub's work (`moderation.view`); an Ambassador never sees the partner space (This disruption, Between disruptions:
+    // `space.view`, built 2026-11-07, for a Coordinator, a Director and an Admin), so nothing on their screen says "partner space".
     await page.getByRole("button", { name: "Menu" }).click();
     const menu = page.getByRole("dialog", { name: "Menu" });
     await expect(menu.getByRole("navigation", { name: "Hub", exact: true })).toBeVisible();
@@ -88,6 +89,8 @@ test.describe("signed in at the Hub gate", () => {
     await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
     await expect(menu.getByText("Moderation")).toHaveCount(0);
     await expect(page.getByText(/partner space/i)).toHaveCount(0);
+    await expect(menu.getByText("This disruption")).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Shared space" })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
   });
