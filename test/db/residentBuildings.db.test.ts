@@ -60,21 +60,24 @@ describe("the resident building list", () => {
     const list = await createResidentBuildings({ db: app }).list();
 
     expect(list).toEqual([
-      { rsn: "300", address: "5 Gamma Ave", neighbourhoodId: "FP", neighbourhood: "Flemingdon Park", lat: 43.7, lng: -79.34, floors: [{ id: ground, label: "G" }] },
-      { rsn: "100", address: "1 Alpha Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, floors: [{ id: first, label: "1" }, { id: second, label: "2" }] },
-      { rsn: "200", address: "9 Beta Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, floors: [] },
+      { rsn: "300", address: "5 Gamma Ave", neighbourhoodId: "FP", neighbourhood: "Flemingdon Park", lat: 43.7, lng: -79.34, coolingRoom: null, airConditioning: null, floors: [{ id: ground, label: "G" }] },
+      { rsn: "100", address: "1 Alpha Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, coolingRoom: null, airConditioning: null, floors: [{ id: first, label: "1" }, { id: second, label: "2" }] },
+      { rsn: "200", address: "9 Beta Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, coolingRoom: null, airConditioning: null, floors: [] },
     ]);
     expect(BuildingListSchema.safeParse({ v: 1, generated_at: new Date().toISOString(), buildings: list }).success).toBe(true);
   });
 
-  it("exposes nothing but what a resident needs: no facts, no confirmation, no register state", async () => {
+  it("exposes nothing but what a resident needs: the two facts the map filters by (UAT 2026-11-04), no other fact, no confirmation, no register state", async () => {
     await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H')`;
     await building("100", "TP", "1 Alpha Rd");
-    await owner`update building set elevators = 3, emergency_power = true, not_in_register_since = now() where rsn = '100'`;
+    await owner`update building set elevators = 3, emergency_power = true, cooling_room = true, air_conditioning = 'Individual units', not_in_register_since = now() where rsn = '100'`;
 
     const [listed] = await createResidentBuildings({ db: app }).list();
 
-    expect(Object.keys(listed).sort()).toEqual(["address", "floors", "lat", "lng", "neighbourhood", "neighbourhoodId", "rsn"]);
+    expect(Object.keys(listed).sort()).toEqual(["address", "airConditioning", "coolingRoom", "floors", "lat", "lng", "neighbourhood", "neighbourhoodId", "rsn"]);
+    expect({ coolingRoom: listed.coolingRoom, airConditioning: listed.airConditioning }).toEqual({ coolingRoom: true, airConditioning: true });
+    await owner`update building set air_conditioning = 'None' where rsn = '100'`;
+    expect((await createResidentBuildings({ db: app }).list())[0].airConditioning).toBe(false);
   });
 
   it("is empty before the buildings are loaded", async () => {
