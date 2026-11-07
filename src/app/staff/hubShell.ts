@@ -3,8 +3,9 @@
 import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
-import type { HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
+import type { HubNavIcon, HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
 import { COMPOSE_PAGE, LOG_PAGE } from "./alerts/pages";
+import { disruptionLinks, readinessLinks } from "./partners/area";
 import { ROUNDS_PAGE } from "./rounds/view";
 import type { StaffSession } from "./session";
 
@@ -22,12 +23,29 @@ export function hubShellUser(session: StaffSession | null): HubShellUser | null 
  * The Hub's destinations for a role (HubApp's C_HubSide, the pilot's share of it). "In a disruption" lists the screens
  * the pilot builds: incidents, logging a disruption and composing an alert (S04.05) and check-in rounds. A screen whose
  * story has not been built has no page yet, so its item has no link (href null) and the story that builds the page sets
- * it. Moderation, the partner space ("This disruption") and the readiness area ("Between disruptions") are MVP scope,
- * not in the pilot. "Administration" is for Admins, as the pages in it are.
+ * it. Moderation is MVP scope, not in the pilot. The partner space ("This disruption") and the readiness area ("Between disruptions") were MVP
+ * scope too, until the product owner decided on 2026-11-07 to build them on dummy data: they are the prototype's two sections, for the roles
+ * that may open them (`space.view`). "Administration" is for Admins, as the pages in it are.
  * Which roles may open what is enforced by the server (S01.12). Each story that gives an item its href also filters
  * that item by the roles that may open its page: "Log a disruption" and "Compose an alert" are `alert.author_wide`, a
  * Coordinator and an Admin (S04.05).
  */
+/** The icons of the partner space's items: the shell's own, none of the ones an item elsewhere keeps for itself (ready, flag, pause). */
+const PARTNER_ICONS: Record<string, HubNavIcon> = {
+  space: "building",
+  "space-coverage": "layers",
+  "our-spaces": "building",
+  supplies: "inbox",
+  decisions: "pencil",
+  capacity: "person",
+  commitments: "inbox",
+  playbooks: "layers",
+  teams: "person",
+  exercise: "phone",
+  indicators: "layers",
+  "look-back": "pencil",
+};
+
 export function hubNavigation(role: StaffRole): HubNavSection[] {
   const sections: HubNavSection[] = [
     {
@@ -79,6 +97,12 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   // The Drills page (S06.05, start a drill, the drill roster, what became of each drill's texts) is `drill.run`, Admin only.
   if (can(role, "drill.run")) admin.push({ id: "drills", label: englishText("hub.nav.drills"), href: "/staff/drills", icon: "phone" });
   if (can(role, "campaign.run")) admin.push({ id: "campaign", label: englishText("staff.journey.campaign"), href: "/staff/campaign", icon: "phone" });
+  // The partner space and the readiness area (2026-11-07) are `space.view`: a Coordinator, a Director read-only and an Admin; an Ambassador never
+  // sees partner coordination. The prototype's two sections (C_HubSide), in its order, with the words and pages each area's own links use.
+  if (can(role, "space.view")) {
+    sections.push({ id: "this-disruption", label: englishText("hub.sections.thisDisruption"), items: disruptionLinks().map((link) => ({ ...link, icon: PARTNER_ICONS[link.id] })) });
+    sections.push({ id: "between", label: englishText("hub.sections.between"), items: readinessLinks().map((link) => ({ ...link, icon: PARTNER_ICONS[link.id] })) });
+  }
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }

@@ -186,6 +186,95 @@
     border-color: var(--accent-bar);
   }
 
+  /*
+   * The partner space (2026-11-07): a space's status and a coverage group are pills of words, the bar or border only adding to them. Open and
+   * covered take the green of "covered" (hub-cover), full and waiting the accent bar, a gap the danger colour; closed, not activated and done
+   * keep the plain hairline.
+   */
+  .hub-pill--open,
+  .hub-pill--covered,
+  .hub-pill--confirmed {
+    border-color: var(--sprout-green);
+  }
+
+  .hub-pill--full,
+  .hub-pill--waiting,
+  .hub-pill--working,
+  .hub-pill--pending {
+    border-color: var(--accent-bar);
+  }
+
+  .hub-pill--gap,
+  .hub-pill--declined {
+    border-color: var(--danger);
+  }
+
+  .hub-pill--closed,
+  .hub-pill--not_activated {
+    color: var(--text-muted);
+  }
+
+  /* A card of the partner space (a space, a statement, a commitment, a decision): the escalation card's shape, with the same bars by tone. */
+  .hub-card {
+    padding: var(--gap-related);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-inline-start: var(--offset-align-icon) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .hub-card--open,
+  .hub-card--covered {
+    border-inline-start-color: var(--sprout-green);
+  }
+
+  .hub-card--full,
+  .hub-card--waiting,
+  .hub-card--working {
+    border-inline-start-color: var(--accent-bar);
+  }
+
+  .hub-card--gap {
+    border-inline-start-color: var(--danger);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .hub-card--closed,
+  .hub-card--not_activated {
+    background-color: transparent;
+  }
+
+  .hub-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-label);
+  }
+
+  .hub-card__title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .hub-card__meta {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  /* A row of links or buttons that wraps (the area's own pages, P-07's status buttons). */
+  .hub-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
   /* A round: a card holding its counts in all as tiles and each building's floors as a table. A closed round is the same, quieter. */
   .hub-round {
     padding: var(--gap-related);

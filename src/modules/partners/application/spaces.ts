@@ -14,6 +14,7 @@ import {
   type ResidentSpaceStatus,
   type SpaceChangeError,
   type SpaceChangeInput,
+  type SpaceState,
   type SpacePurpose,
   type SpaceStatus,
 } from "../domain/space";
@@ -133,14 +134,26 @@ export interface SpaceOptions {
 
 /**
  * Sets a space's status, purpose and capacity, and confirms it as it stands (P-01 opens a space, P-06 changes any of it, P-07's buttons). The
- * row is locked, so two people pressing at once write one after the other and each change is recorded.
+ * row is locked, so two people pressing at once write one after the other and each change is recorded. `input` is the form's fields, or a
+ * function of the space as it is under the lock (P-07's Open / Full / Closed and "Still correct", which keep what the button does not name:
+ * a purpose or count someone changed a moment before is not put back by a page loaded earlier).
  */
-export async function changeSpace(db: Db, actor: SpaceActor, spaceId: string, input: SpaceChangeInput, options: SpaceOptions = {}): Promise<SpaceChangeResult> {
+export async function changeSpace(
+  db: Db,
+  actor: SpaceActor,
+  spaceId: string,
+  input: SpaceChangeInput | ((current: SpaceState) => SpaceChangeInput),
+  options: SpaceOptions = {},
+): Promise<SpaceChangeResult> {
   const now = (options.now ?? (() => new Date()))();
-  const decision = decideSpaceChange(input);
   const outcome = await db.transaction(async (tx): Promise<SpaceChangeResult> => {
-    const [current] = await tx.select({ status: space.status }).from(space).where(eq(space.id, spaceId)).for("update");
+    const [current] = await tx
+      .select({ status: space.status, purpose: space.purpose, capacityMax: space.capacityMax, capacityNow: space.capacityNow })
+      .from(space)
+      .where(eq(space.id, spaceId))
+      .for("update");
     if (!current) return { ok: false, error: "not_found" };
+    const decision = decideSpaceChange(typeof input === "function" ? input(current as SpaceState) : input);
     if (!decision.ok) return decision;
     const next = decision.next;
     await tx
