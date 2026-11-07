@@ -73,7 +73,7 @@ test.describe("signed in at the Hub gate", () => {
     }
 
     // The navigation is in the menu: the current page is announced, People is for
-    // Admins, and the pilot's menu has no Moderation (MVP); an Ambassador never sees the partner space (This disruption, Between disruptions:
+    // Admins, Moderation is for the roles that read the Hub's work (`moderation.view`); an Ambassador never sees the partner space (This disruption, Between disruptions:
     // `space.view`, built 2026-11-07, for a Coordinator, a Director and an Admin), so nothing on their screen says "partner space".
     await page.getByRole("button", { name: "Menu" }).click();
     const menu = page.getByRole("dialog", { name: "Menu" });

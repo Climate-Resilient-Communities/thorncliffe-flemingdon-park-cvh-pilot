@@ -167,8 +167,8 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: twenty-eight pages that exist (Incidents, Log a disruption, Compose an alert, Check-in rounds (S08.08), Coverage, Spend, Measures, Text sign-up; the partner space's This disruption and Between disruptions, six each, built on 2026-11-07; People, Providers, Directory, Buildings, Pause texts, On-call numbers, Drills, and End of pilot), none listed but not built yet.
-      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(28);
+      // The menu is the real one for an Admin: twenty-nine pages that exist (Incidents, Log a disruption, Compose an alert, Moderation (built on 2026-11-07), Check-in rounds (S08.08), Coverage, Spend, Measures, Text sign-up; the partner space's This disruption and Between disruptions, six each, built on 2026-11-07; People, Providers, Directory, Buildings, Pause texts, On-call numbers, Drills, and End of pilot), none listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(29);
       await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(0);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
