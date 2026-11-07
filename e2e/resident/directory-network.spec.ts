@@ -70,7 +70,8 @@ test("no request carries the saved selection, the filters applied or the provide
   for (const request of usage) expectUsageRequest(request);
   const data = own.filter((request) => new URL(request.url).pathname.startsWith("/api/") && !isUsageRequest(request.url));
   expect(data.length).toBeGreaterThan(0);
-  const allowed = [/^\/api\/directory\/manifest$/, /^\/api\/directory\/7\/(?:en|ur)\.json$/, /^\/api\/buildings$/];
+  // A provider's page also asks for the spaces open now (the partner space, 2026-11-07): the same request for everyone, like the building list.
+  const allowed = [/^\/api\/directory\/manifest$/, /^\/api\/directory\/7\/(?:en|ur)\.json$/, /^\/api\/buildings$/, /^\/api\/spaces$/];
   for (const request of data) {
     expect(request.method).toBe("GET");
     expect(allowed.some((pattern) => pattern.test(new URL(request.url).pathname)), request.url).toBe(true);

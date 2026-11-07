@@ -22,7 +22,9 @@ import { FALLBACK_MARKER, isEnglishFallback, isEnglishFallbackMessage, ResidentT
 import { keepBuildings, readKeptBuildings, type KeptBuilding } from "./kept-buildings";
 import { createMap, type MapHandle, type PinWords, type TileSettings } from "./leaflet-map";
 import { mapNotice } from "./notice";
-import { buildingPins, listInView, NEIGHBOURHOODS_VIEW, NO_BUILDING_FACTS, pinHref, providerPins, type BuildingFacts, type Bounds, type MapPin } from "./places";
+import { buildingPins, isOpenSpacePin, listInView, NEIGHBOURHOODS_VIEW, NO_BUILDING_FACTS, pinHref, providerPins, withSpaces, type BuildingFacts, type Bounds, type MapPin } from "./places";
+import { useOpenSpaces } from "../spaces/open-spaces";
+import { spaceForWords } from "../spaces/space-status";
 import "./map.css";
 
 /** The tile provider's settings as the page passes them (from MAP_TILE_*, src/platform/config/mapTiles.ts). */
@@ -70,7 +72,7 @@ const useOnline = (): boolean => useSyncExternalStore(subscribeOnline, () => nav
 
 function PinMark({ pin }: { pin: MapPin }) {
   return (
-    <span className={`map-pin map-pin--${pin.marker} map-pin--inline`} aria-hidden="true">
+    <span className={`map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""} map-pin--inline`} aria-hidden="true">
       <span className="map-pin__mark">
         <span className={`map-ico map-ico--${pin.marker}`} />
       </span>
@@ -128,6 +130,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const [filtersOpen, setFiltersOpen] = useState(false);
   // The building facts asked for (UAT 2026-11-04): the map's own, for this screen only; the directory has no buildings.
   const [facts, setFacts] = useState<BuildingFacts>(NO_BUILDING_FACTS);
+  // "Open as a space now" (the partner space, 2026-11-07): the map's own choice, for this screen only. The spaces come from GET /api/spaces,
+  // the same list for every visitor, matched here by place, so nothing about this choice leaves the phone (AD-3).
+  const [spacesOnly, setSpacesOnly] = useState(false);
+  const openSpaces = useOpenSpaces();
   const filtersButton = useRef<HTMLButtonElement>(null);
   // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the map opened, if it names one place.
   const [viewed] = useState(() => singleNeighbourhood(applied.neighbourhoods));
@@ -153,7 +159,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   );
   const keys = activeKeys(filters);
   const factCount = (facts.coolingRoom ? 1 : 0) + (facts.airConditioning ? 1 : 0);
-  const filterCount = keys.length + factCount;
+  const filterCount = keys.length + factCount + (spacesOnly ? 1 : 0);
   const filtered = filterCount > 0;
   const topics = useMemo(() => [...(listing?.categories ?? [])].sort((a, b) => a.sort_order - b.sort_order), [listing]);
   // The subcategory choices narrow to the chosen topics; one already chosen stays listed, so it can be taken back.
@@ -162,10 +168,11 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     [listing, locale, filters.categories, filters.subcategories],
   );
 
-  const pins = useMemo<MapPin[]>(
-    () => [...providerPins(listing ? filterProviders(listing.providers, filters) : []), ...buildingPins(buildings, facts)],
-    [listing, filters, buildings, facts],
-  );
+  // With "Open as a space now" the map shows only the places open or full as a space, and the buildings only when a building fact is asked for too.
+  const pins = useMemo<MapPin[]>(() => {
+    const places = withSpaces(providerPins(listing ? filterProviders(listing.providers, filters) : []), openSpaces.spaces, openSpaces.at);
+    return [...(spacesOnly ? places.filter((pin) => pin.space) : places), ...(spacesOnly && factCount === 0 ? [] : buildingPins(buildings, facts))];
+  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount]);
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
   const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
   const providersLeft = inView.providers.length - providersShown.length;
@@ -184,8 +191,14 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   // The words the map draws are read through a ref, so the map is made once and still speaks the page's language.
   const words = useRef<PinWords | null>(null);
+  // With "Open as a space now" chosen, a space's pin says its status (Open, Full, or Not confirmed after 4 hours) instead of its kind.
+  const spaceWord = (pin: MapPin): { text: string; lang?: string } | null => {
+    if (!spacesOnly || pin.kind !== "provider" || !pin.space) return null;
+    const words = t(pin.space.unconfirmed ? "x09.unconfirmed" : pin.space.status === "full" ? "x09.full" : "x09.open");
+    return { text: plain(words), lang: isEnglishFallback(words) ? "en" : undefined };
+  };
   const current: PinWords = {
-    word: (pin) => (pin.kind === "provider" && pin.label ? { text: pin.label.body, lang: isFallbackText(pin.label) ? "en" : undefined } : null),
+    word: (pin) => spaceWord(pin) ?? (pin.kind === "provider" && pin.label ? { text: pin.label.body, lang: isFallbackText(pin.label) ? "en" : undefined } : null),
     name: (pin) => plain(t("map.pinName", { name: nameOf(pin), kind: kindOf(pin) })),
     cluster: (n) => plain(t("R14.here", { n })),
     clusterLabel: (n) => plain(n === 1 ? t("R14.place") : t("R14.places", { n })),
@@ -263,6 +276,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const clearAll = () => {
     setApplied(NO_FILTERS);
     setFacts(NO_BUILDING_FACTS);
+    setSpacesOnly(false);
   };
   const clearFilters = () => {
     clearAll();
@@ -270,7 +284,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     filtersButton.current?.focus();
   };
   // How many providers the filters leave, for Show n results: each provider once, as the directory counts them.
-  const matching = useMemo(() => (listing ? filterProviders(listProviders(listing.providers, locale), filters).length : 0), [listing, locale, filters]);
+  const matching = useMemo(
+    () => (listing ? filterProviders(listProviders(listing.providers, locale), filters).filter((provider) => !spacesOnly || openSpaces.spaces.has(provider.id)).length : 0),
+    [listing, locale, filters, spacesOnly, openSpaces],
+  );
   const applyLabel = matching === 0 ? t("R27.applyNone") : matching === 1 ? t("R27.applyOne") : t("R27.apply", { n: matching });
   const showList = () => {
     setSelected(null);
@@ -372,6 +389,11 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                       </Stack>
                     </fieldset>
                   )}
+                  {/* "Open as a space now" (the partner space, 2026-11-07; the prototype's R-14 filter): the places partners have open or full as a
+                      space right now, each pin saying which. */}
+                  <FilterChoice id="space" checked={spacesOnly} onChange={setSpacesOnly}>
+                    <ResidentText>{t("utilities.space")}</ResidentText>
+                  </FilterChoice>
                   {/* "Helps in an emergency": the directory's filter, here too (R-14's "What do you need?"). */}
                   <FilterChoice id="emergency" checked={filters.emergency} onChange={(on) => toggleFilter({ kind: "emergency" }, on)}>
                     <ResidentText>{t("directory.emergency")}</ResidentText>
@@ -481,6 +503,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <h2 id="map-preview-name" className="map-preview__name">
               {nameOf(chosen)}
             </h2>
+            {chosen.kind === "provider" && chosen.space && (
+              <p className="map-strong" data-testid="map-preview-space">
+                <ResidentText>{t(chosen.space.unconfirmed ? "x09.unconfirmed" : chosen.space.status === "full" ? "x09.full" : "x09.open")}</ResidentText>{" "}
+                <ResidentText>{spaceForWords(t, chosen.space)}</ResidentText>
+              </p>
+            )}
             {chosen.kind === "provider" ? (
               <p className="map-hint">{chosen.street}</p>
             ) : (
@@ -601,6 +629,15 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
           <ResidentText>{t("R14.legendTitle")}</ResidentText>
         </summary>
         <ul className="map-legend-box__list">
+          {/* A place open as a space now: the prototype's filled "space" look (R14.legendSpace). */}
+          <li className="map-legend-box__row" data-testid="map-legend-space">
+            <span className="map-pin map-pin--cooling map-pin--space map-pin--inline" aria-hidden="true">
+              <span className="map-pin__mark">
+                <span className="map-ico map-ico--cooling" />
+              </span>
+            </span>
+            <ResidentText>{t("R14.legendSpace")}</ResidentText>
+          </li>
           {LEGEND.map((row) => (
             <li key={row.marker} className="map-legend-box__row" data-testid={`map-legend-${row.marker}`}>
               <span className={`map-pin map-pin--${row.marker} map-pin--inline`} aria-hidden="true">

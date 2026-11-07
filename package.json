@@ -28,6 +28,7 @@
     "seed:buildings": "node scripts/seed/buildings.mjs",
     "seed:providers": "node scripts/seed/providers.mjs",
     "demo:submissions": "node scripts/seed/submissions.mjs",
+    "dummy:partners": "node scripts/seed/partners.mjs",
     "derive:neighbourhoods": "node scripts/catalogue/provider-neighbourhoods.mjs",
     "search-test-set": "node scripts/search-test-set/index.mjs",
     "gen:tokens": "node scripts/gen-tokens.mjs",

@@ -6333,6 +6333,126 @@
           "already_applied": "[EN] That suggestion is already marked done."
         }
       }
+    },
+    "partners": {
+      "status": {
+        "open": "[EN] Open",
+        "full": "[EN] Full",
+        "closed": "[EN] Closed",
+        "not_activated": "[EN] Not activated"
+      },
+      "purpose": {
+        "cooling": "[EN] Cooling",
+        "warming": "[EN] Warming",
+        "clean_air": "[EN] Clean air",
+        "charging": "[EN] Device charging"
+      },
+      "hazard": {
+        "power": "[EN] Power outage",
+        "elevator": "[EN] Elevator failure",
+        "heat": "[EN] Extreme heat",
+        "smoke": "[EN] Wildfire smoke",
+        "flood": "[EN] Flood or plumbing failure",
+        "fire": "[EN] Fire and evacuation",
+        "water": "[EN] Water outage",
+        "winter": "[EN] Extreme cold",
+        "other": "[EN] Other disruption"
+      },
+      "statement": {
+        "doing": "[EN] Doing",
+        "can_take": "[EN] Can take on",
+        "cannot_cover": "[EN] Cannot cover",
+        "need": "[EN] Need"
+      },
+      "head": {
+        "opened": "[EN] Space opened by {by}, {t}"
+      },
+      "board": {
+        "countsLabel": "[EN] Spaces by status",
+        "peopleOf": "[EN] people in open spaces, of {max} places",
+        "takesUpTo": "[EN] Takes up to {max} people",
+        "confirmed": "[EN] Confirmed {t} by {by}",
+        "neverConfirmed": "[EN] Never confirmed",
+        "ever": "[EN] ever",
+        "none": "[EN] No spaces are set up yet. The Hub adds them with the partner seed.",
+        "change": "[EN] Change {name}",
+        "setTo": "[EN] Set to {status}",
+        "byHub": "[EN] {name}, the Hub",
+        "dummy": "[EN] Sample statements and organisations for the pilot: dummy data, not real agreements."
+      },
+      "open": {
+        "title": "[EN] Open a space",
+        "lead": "[EN] Every space partners can open that is not open now. Say what it is for and how many people it takes. Opening confirms it as you, and residents see it on the map and the listing at once.",
+        "none": "[EN] Every space is open or full already.",
+        "submit": "[EN] Open this space"
+      },
+      "activation": {
+        "title": "[EN] Space status",
+        "lead": "[EN] Set whether this space is open, full or closed, what it is for and how many people it takes. Saving confirms it as it stands, as you.",
+        "changeTitle": "[EN] Change it",
+        "historyTitle": "[EN] Changes, newest first",
+        "noHistory": "[EN] No changes yet.",
+        "when": "[EN] When",
+        "by": "[EN] By",
+        "notShown": "[EN] Not shown to residents: it is not open or full.",
+        "noPlace": "[EN] Not on the resident map: this space is not linked to a place in the directory."
+      },
+      "form": {
+        "purpose": "[EN] What it is for",
+        "capacityMax": "[EN] Most people it takes",
+        "capacityNowHint": "[EN] Leave it empty if nobody has counted.",
+        "submit": "[EN] Save and confirm"
+      },
+      "done": {
+        "shown": "[EN] {name} is {status}. Confirmed at {time}. Residents see it on the map and the listing now.",
+        "hidden": "[EN] {name} is {status}. Residents no longer see it as a space."
+      },
+      "errors": {
+        "status_unknown": "[EN] Choose open, full, closed or not activated.",
+        "purpose_unknown": "[EN] Choose what the space is for.",
+        "capacity_max_invalid": "[EN] Most people it takes must be a whole number from 1 to 2000.",
+        "capacity_now_invalid": "[EN] People here now must be a whole number, or empty if nobody has counted.",
+        "capacity_over": "[EN] More people are counted than the space takes. Set it to Full, or raise the number it takes.",
+        "not_found": "[EN] That space is not there. Go back to the shared space.",
+        "forbidden": "[EN] Only a Coordinator or an Admin can change a space. Nothing was changed.",
+        "forbiddenView": "[EN] Only a Coordinator, a Director or an Admin can see the partner space.",
+        "readOnly": "[EN] You can read this. Only a Coordinator or an Admin can change a space."
+      },
+      "ourSpaces": {
+        "whose": "[EN] Whose spaces",
+        "actingFor": "[EN] Partner staff do not have their own accounts yet. Choose the organisation you are acting for; the change is recorded as your Hub account."
+      },
+      "coverage": {
+        "confirmedBy": "[EN] Confirmed for this disruption by {org}",
+        "spaces": "[EN] {open} open and {full} full, with {people} people of {max} places counted."
+      },
+      "capacity": {
+        "org": "[EN] Organisation",
+        "said": "[EN] Capacity",
+        "when": "[EN] Set",
+        "inSpaces": "[EN] In its open spaces",
+        "noSpace": "[EN] No open space"
+      },
+      "supplies": {
+        "updated": "[EN] Updated"
+      },
+      "handover": {
+        "title": "[EN] Handover notes",
+        "notInRelease": "[EN] Writing a handover from this page is not in this release. Post it in the shared space for now."
+      },
+      "playbooks": {
+        "version": "[EN] Version",
+        "date": "[EN] Date",
+        "by": "[EN] By",
+        "change": "[EN] What changed"
+      },
+      "exercises": {
+        "noneScheduled": "[EN] No exercise is scheduled.",
+        "pastLine": "[EN] {date}. Level {level}. {n} took part."
+      },
+      "readiness": {
+        "dummy": "[EN] Sample commitments, figures and records for the pilot: dummy data, not real agreements or results."
+      }
     }
   },
   "building": {
