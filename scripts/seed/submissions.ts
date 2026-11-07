@@ -7,7 +7,8 @@
 // --yes (scripts/seed/target.ts). Running it again inserts nothing (each demo code, SEED-xxxx, is inserted once). The correction names the
 // first provider the database holds, so run the provider seed first to have one.
 //
-// Not a `seed:` script on purpose: .github/workflows/seed-production.yml offers every seed: script to production, and demo rows never go there.
+// Not a `seed:` script on purpose: .github/workflows/seed-production.yml offers every seed: script to production. Demo rows reach production only
+// through .github/workflows/demo-data-production.yml, run on purpose by the owner (the product owner's decision of 2026-11-07).
 //
 // Exit code 0: seeded (or already seeded). Exit code 1: no target, or the run failed.
 import { createDb } from "@/platform/db";

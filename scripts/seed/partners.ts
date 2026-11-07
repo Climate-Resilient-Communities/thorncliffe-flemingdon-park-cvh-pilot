@@ -3,7 +3,8 @@
 //   SEED_DATABASE_URL=postgres://... npm run dummy:partners -- [--file <seed.json>] [--reset] [--dry-run] [--yes]
 //
 // Not a `seed:*` script on purpose: the production seed workflow (.github/workflows, test/seed-production-workflow.test.ts) offers every
-// `seed:*` script, and dummy data must never reach production by that route. Loading it anywhere is a deliberate, local step.
+// `seed:*` script, and dummy data must never reach production by that route. It reaches production only through
+// .github/workflows/demo-data-production.yml, run on purpose by the owner (the product owner's decision of 2026-11-07).
 //
 // Reads data/partners/seed.json (every person fictional, every number a 555 number, every address at example.org) and loads it in one
 // transaction (src/modules/partners/application/seedPartners.ts). A space already in the database keeps the status, purpose, capacities and
