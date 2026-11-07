@@ -8,6 +8,9 @@ import { filterProviders, providerCounts, readProviderQuery } from "./filters";
 import { ProviderFilters } from "./ProviderFilters";
 import { ProviderList, type ProviderRowData } from "./ProviderList";
 import { providerFiltersLabels, providerListLabels } from "./labels";
+import { ApplyForm } from "./ApplyForm";
+import { FromResidents } from "./FromResidents";
+import { loadFromResidents } from "./residents";
 
 type Props = { searchParams?: Promise<{ filter?: string | string[]; q?: string | string[] }> };
 
@@ -59,10 +62,18 @@ export default staffPage<Props>(
       lastConfirmed: p.lastConfirmed,
     }));
     const shown = filterProviders(rows, query);
+    // PRD §6.3: what residents suggested and the Hub accepted, waiting for an Admin to put it into the catalogue (left out if it cannot be read).
+    const fromResidents = await loadFromResidents(directoryDb());
     return (
       <Screen surface="staff">
         <Stack gap="section-hub">
           <ProvidersHeading />
+          {fromResidents && (
+            <FromResidents
+              items={fromResidents}
+              apply={(item) => <ApplyForm id={item.id} label={englishText("staff.moderation.toApply.done")} ariaLabel={item.doneLabel} />}
+            />
+          )}
           {rows.length === 0 ? (
             <p>{englishText("staff.providers.empty")}</p>
           ) : (

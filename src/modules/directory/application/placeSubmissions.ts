@@ -192,7 +192,7 @@ export interface ListedProvider {
 export async function readSubmission(
   db: Db,
   id: string,
-): Promise<{ submission: SubmissionRecord; provider: ListedProvider | null; waitingCount: number; position: number | null; nextId: string | null } | null> {
+): Promise<{ submission: SubmissionRecord; provider: ListedProvider | null; waitingCount: number; position: number | null; next: { id: string; name: string } | null } | null> {
   if (!UUID.safeParse(id).success) return null;
   const [submission] = await db.select(COLUMNS).from(placeSubmission).where(eq(placeSubmission.id, id)).limit(1);
   if (!submission) return null;
@@ -206,10 +206,10 @@ export async function readSubmission(
       .limit(1);
     if (row) listed = { id: row.id, name: row.name, street: row.street, phone: row.contact.phone?.[0] ?? null, web: row.contact.web?.[0] ?? null, published: row.published };
   }
-  const waiting = await db.select({ id: placeSubmission.id }).from(placeSubmission).where(eq(placeSubmission.status, "pending")).orderBy(asc(placeSubmission.createdAt), asc(placeSubmission.ref));
+  const waiting = await db.select({ id: placeSubmission.id, name: placeSubmission.name }).from(placeSubmission).where(eq(placeSubmission.status, "pending")).orderBy(asc(placeSubmission.createdAt), asc(placeSubmission.ref));
   const index = waiting.findIndex((row) => row.id === id);
   const next = waiting.find((row, at) => row.id !== id && (index < 0 || at > index)) ?? waiting.find((row) => row.id !== id) ?? null;
-  return { submission, provider: listed, waitingCount: waiting.length, position: index < 0 ? null : index + 1, nextId: next?.id ?? null };
+  return { submission, provider: listed, waitingCount: waiting.length, position: index < 0 ? null : index + 1, next };
 }
 
 export type ReviewResult = { ok: true; name: string; kind: SubmissionKind } | { ok: false; error: ReviewError };

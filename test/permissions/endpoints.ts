@@ -116,6 +116,9 @@ const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 /** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
 const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
+const MODERATION_ACTIONS = "src/app/staff/moderation/review/actions.ts";
+/** A resident's suggestion that does not exist: an allowed call passes the guard and is refused by the use case (PRD §6.3). */
+const NO_SUCH_SUBMISSION = "01900000-0000-7000-8000-00000000c0de";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
@@ -201,6 +204,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     export: "default",
     route: "/staff/rounds/escalation",
     action: "checkins.escalations",
+    writes: "none",
+    gate: "hub",
+    expected: COVERAGE_VIEWERS,
+  },
+  // PRD §6.3 (D9/E4): the moderation queue (O-08) and a suggestion's review (O-09, O-10) are `moderation.view`: a Coordinator, a Director read-only and
+  // an Admin. They name no suggestion here, so a role let through gets the queue, or the review page's own "could not be found".
+  { id: "page /staff/moderation", kind: "page", file: "src/app/staff/moderation/page.tsx", export: "default", route: "/staff/moderation", action: "moderation.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
+  {
+    id: "page /staff/moderation/review",
+    kind: "page",
+    file: "src/app/staff/moderation/review/page.tsx",
+    export: "default",
+    route: "/staff/moderation/review",
+    action: "moderation.view",
     writes: "none",
     gate: "hub",
     expected: COVERAGE_VIEWERS,
@@ -646,7 +663,37 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: WIDE_AUTHORS,
     }),
   ),
-  // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
+  // PRD §6.3: "Accept" (O-09) and "Send the reason and decline" (O-10), policy action `moderation.review` (a Coordinator or an Admin; not privileged). Called
+  // as an allowed role, both name a suggestion that is not there, so the use case refuses them as `not_found` (audited as a refusal) and nothing changes.
+  ...(["acceptSubmissionAction", "declineSubmissionAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${MODERATION_ACTIONS}#${name}`,
+      kind: "action",
+      file: MODERATION_ACTIONS,
+      export: name,
+      route: "/staff/moderation/review",
+      action: "moderation.review",
+      writes: "business",
+      gate: "hub",
+      form: { id: NO_SUCH_SUBMISSION, reason: "advert", note: "Sells phone cases." },
+      forbiddenMessage: /^Only a Coordinator or an Admin can accept or decline/,
+      expected: WIDE_AUTHORS,
+    }),
+  ),
+  // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2). PRD §6.3: "Mark as done" on a suggestion from
+  // residents is on the same page with the same action; called as an Admin it names a suggestion that is not there, refused by the use case.
+  {
+    id: `action ${PROVIDER_ACTIONS}#applySubmissionAction`,
+    kind: "action",
+    file: PROVIDER_ACTIONS,
+    export: "applySubmissionAction",
+    route: "/staff/providers",
+    action: "provider.manage",
+    writes: "business",
+    gate: "hub",
+    form: { id: NO_SUCH_SUBMISSION },
+    expected: ADMIN_ONLY,
+  },
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({
       id: `action ${PROVIDER_ACTIONS}#${name}`,

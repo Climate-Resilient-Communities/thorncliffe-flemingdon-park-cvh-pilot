@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import type { HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
 import { COMPOSE_PAGE, LOG_PAGE } from "./alerts/pages";
+import { MODERATION_PAGE } from "./moderation/pages";
 import { ROUNDS_PAGE } from "./rounds/view";
 import type { StaffSession } from "./session";
 
@@ -22,8 +23,9 @@ export function hubShellUser(session: StaffSession | null): HubShellUser | null 
  * The Hub's destinations for a role (HubApp's C_HubSide, the pilot's share of it). "In a disruption" lists the screens
  * the pilot builds: incidents, logging a disruption and composing an alert (S04.05) and check-in rounds. A screen whose
  * story has not been built has no page yet, so its item has no link (href null) and the story that builds the page sets
- * it. Moderation, the partner space ("This disruption") and the readiness area ("Between disruptions") are MVP scope,
- * not in the pilot. "Administration" is for Admins, as the pages in it are.
+ * it. The partner space ("This disruption") and the readiness area ("Between disruptions") are MVP scope, not in the
+ * pilot; Moderation was too, until the product owner decided to build it (2026-11-07). "Administration" is for Admins, as
+ * the pages in it are.
  * Which roles may open what is enforced by the server (S01.12). Each story that gives an item its href also filters
  * that item by the roles that may open its page: "Log a disruption" and "Compose an alert" are `alert.author_wide`, a
  * Coordinator and an Admin (S04.05).
@@ -44,6 +46,9 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
               { id: "compose", label: englishText("hub.nav.compose"), href: COMPOSE_PAGE, icon: "pencil" as const },
             ]
           : []),
+        // Moderation (O-08, PRD §6.3: built after the pilot's signed scope by the product owner's decision of 2026-11-07) sits after Compose, as
+        // in the prototype's C_HubSide: `moderation.view`, a Coordinator, a Director read-only and an Admin.
+        ...(can(role, "moderation.view") ? [{ id: "moderation", label: englishText("hub.nav.moderation"), href: MODERATION_PAGE, icon: "inbox" as const }] : []),
         // An Ambassador's two other screens (A-02, A-04: UAT 2026-11-04, they were reached only from their home): posting an update and their own round.
         // "Check-in rounds" (O-17, S08.08: the escalations to follow up) is `checkins.escalations`: a Coordinator, a Director read-only and an Admin.
         ...(role === "ambassador"

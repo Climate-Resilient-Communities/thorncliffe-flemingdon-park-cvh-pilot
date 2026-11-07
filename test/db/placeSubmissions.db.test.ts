@@ -130,10 +130,10 @@ describe("place suggestions (PRD §6.3)", () => {
     expect(queue.waiting.map((s) => s.ref)).toEqual(["2222-2222", "3333-3333"]);
     expect(queue.decided).toEqual([]);
     const first = await readSubmission(app, await idOf("2222-2222"));
-    expect(first).toMatchObject({ waitingCount: 2, position: 1, nextId: await idOf("3333-3333"), provider: null });
+    expect(first).toMatchObject({ waitingCount: 2, position: 1, next: { id: await idOf("3333-3333"), name: "Overlea Clinic" }, provider: null });
     // Z9001 is not a provider the database holds: the correction is still readable, with no provider beside it.
     const second = await readSubmission(app, await idOf("3333-3333"));
-    expect(second).toMatchObject({ position: 2, nextId: await idOf("2222-2222"), provider: null, submission: { kind: "correct", providerId: "Z9001", changes: { where: "Second floor", cost: "free" } } });
+    expect(second).toMatchObject({ position: 2, next: { id: await idOf("2222-2222"), name: "Thursday food bank" }, provider: null, submission: { kind: "correct", providerId: "Z9001", changes: { where: "Second floor", cost: "free" } } });
     expect(await readSubmission(app, "not-a-uuid")).toBeNull();
     expect(await readSubmission(app, randomUUID())).toBeNull();
   });
