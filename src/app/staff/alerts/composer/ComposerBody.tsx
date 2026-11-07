@@ -161,6 +161,14 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           {fill(form.text.counter, { n: text.length })}
         </p>
       </Stack>
+      {form.residentPreview && (
+        <ResidentPreview
+          words={form.residentPreview}
+          text={text}
+          types={form.types ? [...form.types.building, ...form.types.neighbourhood].filter((item) => ticked.has(item.id)).map((item) => item.label) : form.typesSummary ? [form.typesSummary] : []}
+          until={form.validFixed ? null : validMode === "resolved" ? form.residentPreview.untilResolved : date && time ? fill(form.residentPreview.until, { date, time }) : null}
+        />
+      )}
       {!form.validFixed && (
       <fieldset aria-labelledby="composer-valid-legend" aria-describedby={describedBy}>
         <Stack gap="target">
@@ -225,6 +233,44 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
       </fieldset>
       )}
     </Stack>
+  );
+}
+
+/**
+ * O-02: the alert as a resident who reads English sees it on home, beside the form and live as the author types: its types, the text, who
+ * sent it, and until when. A Hub-side copy of the resident card's parts (the resident card needs the resident catalogue and routing); the
+ * author's own words, before translation, so it carries no language label.
+ */
+function ResidentPreview({ words, text, types, until }: { words: NonNullable<DraftFormView["residentPreview"]>; text: string; types: string[]; until: string | null }) {
+  return (
+    <section aria-labelledby="resident-preview-title" data-testid="resident-preview">
+      <Stack gap="related">
+        <h3 id="resident-preview-title">{words.title}</h3>
+        <p>{words.lead}</p>
+        <div className="hub-resident-preview" aria-live="polite">
+          <Stack gap="subline">
+            {types.length > 0 && (
+              <Inline gap="label" wrap>
+                {types.map((type) => (
+                  <span key={type} className="hub-pill" data-testid="resident-preview-type">
+                    {type}
+                  </span>
+                ))}
+              </Inline>
+            )}
+            <p className="hub-wrap hub-resident-preview__text" data-testid="resident-preview-text">
+              {text.trim() === "" ? <span className="hub-resident-preview__empty">{words.empty}</span> : text}
+            </p>
+            <p className="hub-resident-preview__meta">{words.origin}</p>
+            <p className="hub-resident-preview__meta">
+              {words.posted}
+              {until ? ` · ${until}` : ""}
+            </p>
+          </Stack>
+        </div>
+        <p>{words.note}</p>
+      </Stack>
+    </section>
   );
 }
 

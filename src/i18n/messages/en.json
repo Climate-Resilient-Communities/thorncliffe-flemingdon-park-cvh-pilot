@@ -5041,6 +5041,16 @@
         "message": "The message",
         "audience": "Who gets it",
         "approval": "A second person approves"
+      },
+      "residentPreview": {
+        "title": "How residents will see it",
+        "lead": "The alert on home, in English, as you type. Residents who chose another language read the approved translation.",
+        "origin": "Thorncliffe Park Community Hub alert. Checked by the Hub.",
+        "posted": "Posted when a second person approves it",
+        "untilResolved": "Until resolved",
+        "until": "Until {date} {time}",
+        "empty": "Your text shows here.",
+        "note": "Only the people the alert is for see it on home. Anyone can open it from the alerts list."
       }
     },
     "approve": {

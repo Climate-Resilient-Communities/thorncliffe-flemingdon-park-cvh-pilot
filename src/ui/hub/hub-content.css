@@ -186,6 +186,24 @@
     border-color: var(--accent-bar);
   }
 
+  /* O-02: the alert as residents will see it on home, beside the composer: a card like the resident one, with an accent start edge. */
+  .hub-resident-preview {
+    padding: var(--gap-related);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-inline-start: var(--gap-subline) solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .hub-resident-preview__text {
+    white-space: pre-line;
+  }
+
+  .hub-resident-preview__empty,
+  .hub-resident-preview__meta {
+    color: var(--text-muted);
+  }
+
   /* A round: a card holding its counts in all as tiles and each building's floors as a table. A closed round is the same, quieter. */
   .hub-round {
     padding: var(--gap-related);

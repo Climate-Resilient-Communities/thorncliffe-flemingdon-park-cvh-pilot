@@ -106,6 +106,15 @@ describe("the acknowledgement composer, a draft (O-12)", () => {
     expect(out).toContain("45 Thorncliffe Park Dr");
   });
 
+  it("shows the alert as residents will see it (O-02): the types, the text, who sent it and until when", () => {
+    expect(out).toContain('data-testid="resident-preview"');
+    expect(out).toContain("How residents will see it");
+    expect(out).toMatch(/data-testid="resident-preview-text">The elevator is out\.</);
+    expect(out).toContain('data-testid="resident-preview-type"');
+    expect(out).toContain("Thorncliffe Park Community Hub alert. Checked by the Hub.");
+    expect(out).toMatch(/Posted when a second person approves it · Until 2026-10-05 10:00/);
+  });
+
   it("uses the Hub's two columns, the main content first and the aside after it", () => {
     expect(out).toContain('class="layout-grid" data-two-column="aside"');
     expect(out.indexOf('data-testid="languages"')).toBeLessThan(out.indexOf('data-testid="composer-aside"'));

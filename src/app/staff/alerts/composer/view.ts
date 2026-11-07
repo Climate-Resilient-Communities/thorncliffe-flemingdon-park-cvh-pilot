@@ -89,6 +89,8 @@ export interface DraftFormView {
   };
   /** True on a withdrawal: its valid-until is not the author's (a withdrawal notice is never read as the thread's), so the form does not ask for it. */
   validFixed?: true;
+  /** O-02: the words of the resident preview beside the form (the alert as it reads on home); the form fills in the live text, types and valid-until. */
+  residentPreview?: { title: string; lead: string; origin: string; posted: string; untilResolved: string; until: string; empty: string; note: string };
   /** The reason of a withdrawal, chosen from the catalog (O-15, S05.02); only on the start of a withdrawal. */
   reasons?: { legend: string; hint: string; items: ChoiceView[] };
 }
@@ -459,6 +461,16 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
         fields: valid,
       },
       ...(replacing || resolving ? { validFixed: true as const } : {}),
+      residentPreview: {
+        title: t("residentPreview.title"),
+        lead: t("residentPreview.lead"),
+        origin: t("residentPreview.origin"),
+        posted: t("residentPreview.posted"),
+        untilResolved: t("residentPreview.untilResolved"),
+        until: t("residentPreview.until", { date: "{date}", time: "{time}" }),
+        empty: t("residentPreview.empty"),
+        note: t("residentPreview.note"),
+      },
     };
   } else if (status === "pending") {
     const n = fallbackLangs.length;

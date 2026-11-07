@@ -2894,4 +2894,6 @@ m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: '
   m(en, {"R03": {"inBuildings": "Alerts for buildings here:"}});
   /* UAT 2026-11-04: where an author is in composing an alert (the prototype's O-02 step bar). Staff wording, English only. */
   m(en, { staff: { compose: { progress: { label: 'Composing an alert', what: 'What and where', message: 'The message', audience: 'Who gets it', approval: 'A second person approves' } } } });
+  /* UAT 2026-11-04: O-02's resident preview beside the form, as a resident reading English sees the alert on home. Staff wording, English only. */
+  m(en, { staff: { compose: { residentPreview: { title: 'How residents will see it', lead: 'The alert on home, in English, as you type. Residents who chose another language read the approved translation.', origin: 'Thorncliffe Park Community Hub alert. Checked by the Hub.', posted: 'Posted when a second person approves it', untilResolved: 'Until resolved', until: 'Until {date} {time}', empty: 'Your text shows here.', note: 'Only the people the alert is for see it on home. Anyone can open it from the alerts list.' } } } });
 })();

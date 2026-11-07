@@ -178,6 +178,9 @@ function addTiles(L: Leaflet, map: LeafletMap, tiles: TileSettings, onMissing: (
 /** A cluster's pill is a tap target's height. */
 const CLUSTER_HEIGHT = 44;
 
+/** How close places are grouped, in pixels: about the width of a group's pill, so two pills never overlap. */
+export const CLUSTER_RADIUS = 80;
+
 /**
  * The width of a cluster's pill for its words, in pixels: Leaflet needs the icon's size to centre it on the place, before the
  * words are laid out. A wide character (Chinese) counts about twice a narrow one; the pill is never narrower than it is tall.
@@ -203,7 +206,9 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
 
   const clusters = L.markerClusterGroup!({
     showCoverageOnHover: false,
-    maxClusterRadius: 48,
+    // Places this close (in pixels) are one group. A group is a pill of words ("12 places", about 100 px wide), not the 48 px disc it was,
+    // so two groups are kept about a pill apart: at the old 48 their pills overlapped and covered each other's words.
+    maxClusterRadius: CLUSTER_RADIUS,
     spiderfyOnMaxZoom: true,
     iconCreateFunction: (cluster) => {
       const n = cluster.getChildCount();
