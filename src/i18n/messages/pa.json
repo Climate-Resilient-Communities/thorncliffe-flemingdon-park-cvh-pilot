@@ -6260,6 +6260,69 @@
       "measuresDetail": "[EN] Review subscriber counts and how far alerts reached.",
       "providers": "[EN] Keep the directory current",
       "providersDetail": "[EN] Confirm provider details, then publish a directory release for residents."
+    },
+    "moderation": {
+      "title": "[EN] Moderation",
+      "lead": "[EN] Places residents suggested, and corrections to places already listed. Read each one, then accept it or decline it with a reason.",
+      "forbidden": "[EN] Only Coordinators, Directors and Admins can see the moderation queue.",
+      "readOnly": "[EN] You can read the queue. Only a Coordinator or an Admin can accept or decline.",
+      "unreadable": "[EN] The queue could not be read. Reload the page.",
+      "waitingTitle": "[EN] Waiting, oldest first",
+      "decidedTitle": "[EN] Decided in the last 14 days",
+      "noneDecided": "[EN] Nothing was decided in the last 14 days.",
+      "refLine": "[EN] Reference {ref}",
+      "status": {
+        "pending": "[EN] Waiting",
+        "accepted": "[EN] Accepted",
+        "declined": "[EN] Declined"
+      },
+      "building": "[EN] Building {address}",
+      "buildingUnknown": "[EN] A building that is no longer listed (register number {rsn})",
+      "pinAt": "[EN] Pin at {lat}, {lng}",
+      "openMap": "[EN] Open the pin on OpenStreetMap",
+      "phone": "[EN] Phone",
+      "web": "[EN] Website",
+      "notFound": "[EN] This suggestion could not be found.",
+      "providerGone": "[EN] This place is no longer in the directory.",
+      "unpublished": "[EN] Not published to residents now.",
+      "acceptLine": {
+        "add": "[EN] Accepting does not publish it. An Admin adds it to the catalogue from the Providers page, and residents see it after the next directory release.",
+        "correct": "[EN] Accepting does not change the listing. An Admin applies the change in the catalogue from the Providers page."
+      },
+      "accepting": "[EN] Accepting",
+      "acceptedTitle": "[EN] Accepted",
+      "acceptedLine": {
+        "add": "[EN] “{name}” now waits on the Providers page for an Admin to add it to the catalogue.",
+        "correct": "[EN] The correction of “{name}” now waits on the Providers page for an Admin to apply it."
+      },
+      "declineLink": "[EN] Decline with a reason",
+      "note": "[EN] Note for the Hub (optional)",
+      "noteHint": "[EN] Kept with the decision for the Hub's own record. Not shown to the person who sent it. Do not write names or phone numbers.",
+      "declining": "[EN] Declining",
+      "declinedLine": "[EN] “{name}” was declined: {reason}. The person who sent it reads the reason in their language with their reference.",
+      "decidedOn": "[EN] {decision} on {date}",
+      "errors": {
+        "not_found": "[EN] This suggestion could not be found.",
+        "already_decided": "[EN] Someone already decided this one. Reload the page to see the decision.",
+        "forbidden": "[EN] Only a Coordinator or an Admin can accept or decline a suggestion.",
+        "reason": "[EN] Choose a reason first.",
+        "failed": "[EN] That did not save. Try again."
+      },
+      "toApply": {
+        "title": "[EN] From residents, to add or apply",
+        "lead": "[EN] Suggestions the Hub accepted. Add a new place to the catalogue, or apply a correction there, load it with the catalogue script, then mark it done. Residents see the change after the next directory release.",
+        "none": "[EN] Nothing from residents is waiting.",
+        "add": "[EN] New place",
+        "correct": "[EN] Correction of {id}",
+        "done": "[EN] Mark as done",
+        "doneOf": "[EN] Mark “{name}” as done",
+        "doneLine": "[EN] “{name}” is marked done.",
+        "errors": {
+          "not_found": "[EN] That suggestion is not in the list.",
+          "not_accepted": "[EN] That suggestion was not accepted.",
+          "already_applied": "[EN] That suggestion is already marked done."
+        }
+      }
     }
   },
   "building": {
@@ -6503,5 +6566,30 @@
     "help": "ਘੱਟ ਵੇਰਵੇ ਦਿਖਾਉਂਦਾ ਹੈ ਅਤੇ ਨਕਸ਼ੇ ਦੀ ਥਾਂ ਸੂਚੀਆਂ ਵਰਤਦਾ ਹੈ। ਲਿਖਤ ਦਾ ਆਕਾਰ ਉਹੀ ਰਹਿੰਦਾ ਹੈ।",
     "saved": "ਇਸ ਫ਼ੋਨ ਤੇ ਸੰਭਾਲਿਆ ਗਿਆ।",
     "sessionOnly": "ਤੁਹਾਡਾ ਬ੍ਰਾਊਜ਼ਰ ਇਹ ਸੈਟਿੰਗ ਸੰਭਾਲ ਨਹੀਂ ਸਕਦਾ। ਇਹ ਸਿਰਫ਼ ਇਸ ਵਾਰ ਲਈ ਰਹੇਗੀ।"
+  },
+  "places": {
+    "sentLine": "ਹੱਬ ਦਾ ਕੋਈ ਵਿਅਕਤੀ ਲਗਭਗ ਇੱਕ ਹਫ਼ਤੇ ਵਿੱਚ ਇਸ ਨੂੰ ਪੜ੍ਹੇਗਾ। CVH ਨਹੀਂ ਜਾਣਦਾ ਕਿ ਇਹ ਕਿਸ ਨੇ ਭੇਜਿਆ, ਇਸ ਲਈ ਹੱਬ ਦਾ ਫ਼ੈਸਲਾ ਵੇਖਣ ਲਈ ਆਪਣਾ ਹਵਾਲਾ ਨੰਬਰ ਸੰਭਾਲ ਕੇ ਰੱਖੋ।",
+    "ref": "ਤੁਹਾਡਾ ਹਵਾਲਾ ਨੰਬਰ",
+    "refHint": "ਇਸ ਨੂੰ ਲਿਖ ਲਓ ਜਾਂ ਸਕ੍ਰੀਨਸ਼ਾਟ ਲੈ ਲਓ। ਇਸ ਨੂੰ ਦੁਬਾਰਾ ਲੱਭਣ ਦਾ ਇਹੀ ਇੱਕ ਤਰੀਕਾ ਹੈ।",
+    "checkStatus": "ਵੇਖੋ ਕਿ ਹੱਬ ਨੇ ਕੀ ਫ਼ੈਸਲਾ ਕੀਤਾ",
+    "pendingTitle": "ਹੱਬ ਦੀ ਉਡੀਕ ਹੈ",
+    "pendingLine": "ਹੱਬ ਦਾ ਕੋਈ ਵਿਅਕਤੀ ਲਗਭਗ ਇੱਕ ਹਫ਼ਤੇ ਵਿੱਚ ਇਸ ਨੂੰ ਪੜ੍ਹੇਗਾ। ਉਨ੍ਹਾਂ ਦਾ ਫ਼ੈਸਲਾ ਵੇਖਣ ਲਈ ਆਪਣੇ ਹਵਾਲਾ ਨੰਬਰ ਨਾਲ ਵਾਪਸ ਆਓ।",
+    "acceptedTitle": "ਹੱਬ ਨੇ ਇਸ ਨੂੰ ਮਨਜ਼ੂਰ ਕਰ ਲਿਆ",
+    "acceptedLine": "ਹੱਬ ਜਦੋਂ ਅਗਲੀ ਵਾਰ ਥਾਵਾਂ ਨੂੰ ਅੱਪਡੇਟ ਕਰੇਗਾ, ਇਹ ਨਕਸ਼ੇ ਤੇ ਅਤੇ ਖੋਜ ਵਿੱਚ ਆ ਜਾਵੇਗਾ।",
+    "notFoundTitle": "ਸਾਨੂੰ ਇਹ ਹਵਾਲਾ ਨੰਬਰ ਨਹੀਂ ਮਿਲਿਆ",
+    "correctionOf": "{name} ਲਈ ਤੁਹਾਡੀ ਸੋਧ",
+    "phone": "ਥਾਂ ਦਾ ਫ਼ੋਨ ਨੰਬਰ",
+    "phoneHint": "ਸਿਰਫ਼ ਥਾਂ ਦਾ ਆਪਣਾ ਨੰਬਰ, ਕਦੇ ਵੀ ਕਿਸੇ ਵਿਅਕਤੀ ਦਾ ਨਹੀਂ।",
+    "web": "ਥਾਂ ਦੀ ਵੈੱਬਸਾਈਟ",
+    "pin": "ਨਕਸ਼ੇ ਤੇ ਇੱਕ ਪਿੰਨ",
+    "sending": "ਭੇਜਿਆ ਜਾ ਰਿਹਾ ਹੈ",
+    "mapFailed": "ਨਕਸ਼ਾ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕਿਆ। ਇਸ ਦੀ ਥਾਂ ਕੋਈ ਇਮਾਰਤ ਚੁਣੋ ਜਾਂ ਪਤਾ ਲਿਖੋ।",
+    "honeypot": "ਇਸ ਨੂੰ ਖਾਲੀ ਛੱਡੋ",
+    "errors": {
+      "invalid_request": "ਫ਼ਾਰਮ ਦਾ ਕੁਝ ਹਿੱਸਾ ਪੜ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਇਸ ਨੂੰ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਭੇਜੋ।",
+      "rate_limited": "ਇਸ ਕਨੈਕਸ਼ਨ ਤੋਂ ਬਹੁਤ ਜ਼ਿਆਦਾ ਸੁਝਾਅ ਆਏ ਹਨ। ਇੱਕ ਘੰਟੇ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+      "not_found": "ਅੱਖਰ ਅਤੇ ਅੰਕ ਜਾਂਚੋ, ਫਿਰ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+      "submissions_unavailable": "ਇਹ ਨਹੀਂ ਭੇਜਿਆ ਗਿਆ। ਆਪਣਾ ਸਿਗਨਲ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+    }
   }
 }

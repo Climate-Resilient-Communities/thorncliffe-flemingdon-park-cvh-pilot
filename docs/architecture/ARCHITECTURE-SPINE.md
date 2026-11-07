@@ -120,6 +120,8 @@ flowchart TD
 | Follow up an escalation: the resident's number, floor and method, and mark it handled | no | no | no | yes |
 | See counts and coverage | no | yes | yes (read-only) | yes |
 | See spend | no | no | yes (read-only) | yes |
+| See residents' place suggestions (the moderation queue) | no | yes | yes (read-only) | yes |
+| Accept or decline a resident's place suggestion | no | yes | no | yes |
 
   Every table has RLS enabled with no anon or authenticated policies; the app reaches Postgres only server-side through Drizzle. `supabase-js` is used for Auth and Storage only.
 
@@ -476,7 +478,7 @@ scripts/                   # seed loaders, string and token generators, search t
 | messaging | `delivery`, `messaging_control` (pause), `dispatcher_lease`, `correction_reach_kept`, `sms_test_send` (S01.15's first-text spike ledger: no code uses it since S06.09; a later migration with a contract note drops it) |
 | checkins | `checkin`, `checkin_tally`, `checkin_escalation` |
 | translation | `translation_cache`, `translation_route` |
-| directory | `provider`, `provider_location`, `category`, `provider_category`, `guide`, `essential_number`, `directory_release`, `catalogue_load`, `search_log`, `usage_count` |
+| directory | `provider`, `provider_location`, `category`, `provider_category`, `guide`, `essential_number`, `directory_release`, `catalogue_load`, `search_log`, `usage_count`, `place_submission` |
 | audit | `audit_event` |
 | spend | `spend_cap`, `spend_event`, `sms_reconciliation`, `sms_actual`, `sms_estimate_retirement` |
 | ops | `ops_event`, `oncall_roster`, `health_condition`, `health_heartbeat` |
