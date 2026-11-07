@@ -74,6 +74,10 @@ export function ProviderPage({ lang, id, tiles = null }: { lang: LaunchCode; id:
           <div className="provider-cols" data-layout="columns" data-testid="provider-columns">
             <div className="provider-main" data-testid="provider-main">
               <ProviderView provider={provider} categories={categories} lang={lang} variant="page" />
+              {/* PRD §6.3 (R-12 "Something wrong? Correct it", R-22). */}
+              <Link className="dir-back tap" href={`/${lang}/places/correct/${provider.id}`} prefetch={false} data-testid="provider-correct">
+                <ResidentText>{t("R12.correct")}</ResidentText>
+              </Link>
               <Inline911 />
             </div>
             <ProviderSide provider={provider} lang={lang} tiles={tiles} />
