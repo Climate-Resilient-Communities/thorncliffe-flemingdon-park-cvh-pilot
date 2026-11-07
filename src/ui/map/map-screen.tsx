@@ -311,6 +311,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <ResidentText>{t("R14.list")}</ResidentText>
           </button>
         </div>
+        {/* PRD §6.3 (R-14's "Add a place", R-17): suggest a place that is missing, or correct one. Shown in simpler view too. */}
+        <Link href={`/${lang}/places/add`} prefetch={false} className="map-btn map-btn--secondary tap" data-testid="map-add-place">
+          <ResidentText>{t("R14.add")}</ResidentText>
+        </Link>
         {/* The filters (R-27 as the pilot has it, here by topic and kind of place): the same state the directory narrows by,
             applied on the phone. On every width they sit behind the Filters button, so the map keeps the screen. */}
         {listing && (
@@ -485,6 +489,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <Link href={pinHref(chosen, lang)} prefetch={false} className="map-btn map-btn--primary tap" data-testid="map-preview-open">
               <ResidentText>{t("R16.open")}</ResidentText>
             </Link>
+            {chosen.kind === "provider" && (
+              // PRD §6.3 (R-16 to R-22): correct this place.
+              <Link href={`/${lang}/places/correct/${chosen.id}`} prefetch={false} className="map-btn map-btn--quiet tap" data-testid="map-preview-wrong">
+                <ResidentText>{t("R16.wrong")}</ResidentText>
+              </Link>
+            )}
           </section>
         )}
       </section>
@@ -577,6 +587,10 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                 )}
               </>
             )}
+            {/* PRD §6.3 (R-15's "Something missing or wrong here?", R-17). */}
+            <Link href={`/${lang}/places/add`} prefetch={false} className="map-btn map-btn--quiet tap" data-testid="map-list-missing">
+              <ResidentText>{t("R15.missing")}</ResidentText>
+            </Link>
           </Stack>
         </section>
       </div>

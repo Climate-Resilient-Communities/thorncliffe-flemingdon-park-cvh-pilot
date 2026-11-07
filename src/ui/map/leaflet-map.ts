@@ -282,3 +282,34 @@ export async function createMiniMap(element: HTMLElement, tiles: TileSettings, p
   map.fitBounds(HOME, { animate: false });
   return { destroy: () => void map.remove() };
 }
+
+/**
+ * R-20 "Drop a pin on the map" (PRD §6.3): a map the resident moves until the pin, drawn by the page in the middle of the map's box, sits on
+ * the place ("Move the map until the pin sits on the place"). The map reports its centre after each move, and once at the start. Dragging,
+ * zooming and the arrow keys (Leaflet's keyboard handler, once the map has focus) all move it; its zoom buttons go into `controls`, outside the
+ * map's area, as on R-14. It stays inside the area R-14 shows.
+ */
+export async function createPinPicker(
+  element: HTMLElement,
+  tiles: TileSettings,
+  start: { lat: number; lng: number },
+  words: { zoomIn: string; zoomOut: string },
+  onCentre: (at: { lat: number; lng: number }) => void,
+  controls?: HTMLElement,
+): Promise<{ destroy(): void }> {
+  const L = await loadLeaflet();
+  const map = L.map(element, { zoomControl: false, attributionControl: false, minZoom: MIN_ZOOM, maxZoom: tiles.maxZoom, maxBounds: MAX_BOUNDS, maxBoundsViscosity: 0.8 });
+  const zoom = L.control.zoom({ position: "topright", zoomInTitle: words.zoomIn, zoomOutTitle: words.zoomOut });
+  zoom.addTo(map);
+  const zoomButtons = zoom.getContainer();
+  if (controls && zoomButtons) controls.replaceChildren(zoomButtons);
+  addTiles(L, map, tiles, () => undefined);
+  map.setView([start.lat, start.lng], 16, { animate: false });
+  const report = () => {
+    const centre = map.getCenter();
+    onCentre({ lat: centre.lat, lng: centre.lng });
+  };
+  map.on("moveend", report);
+  report();
+  return { destroy: () => void map.remove() };
+}

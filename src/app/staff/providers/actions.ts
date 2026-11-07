@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import { staffAction, type ActionRefusal } from "../guard";
 import { directoryDb } from "../directory";
 import { confirmFromForm, providerIdOf, publishFromForm, unpublishFromForm, type ProviderActionState } from "./changeProvider";
+import { applyFromForm, type ApplyState } from "./residents";
 
 // Every provider change is the policy action `provider.manage` (AD-4: Admins only, "publish directory"),
 // which is also privileged (S01.10): the guard refuses any other role, then a session below aal2,
@@ -52,4 +53,21 @@ export const confirmProviderAction = staffAction(
   { route: ROUTE, access: "hub", action: "provider.manage" },
   async (session, _previous: ProviderActionState, form: FormData): Promise<ProviderActionState> => changed(await confirmFromForm(deps, session, form)),
   refused,
+);
+
+/**
+ * "Mark as done" on a suggestion from residents (PRD §6.3): the Admin has added the place to the catalogue, or applied the correction there.
+ * The same `provider.manage` as the rest of the page (Admins at aal2): it records that the catalogue was changed, which only an Admin does.
+ */
+export const applySubmissionAction = staffAction(
+  { route: ROUTE, access: "hub", action: "provider.manage" },
+  async (session, _previous: ApplyState, form: FormData): Promise<ApplyState> => {
+    const state = await applyFromForm(deps, session, form);
+    if (state.status === "done") revalidatePath(ROUTE);
+    return state;
+  },
+  (error: ActionRefusal, _previous: ApplyState, form: FormData): ApplyState => {
+    const id = form.get("id");
+    return { status: "refused", id: typeof id === "string" ? id : "", message: englishText(REFUSAL_KEYS[error]) };
+  },
 );

@@ -34,6 +34,7 @@ declare module "leaflet" {
   export interface LeafletMap extends Evented {
     getBounds(): LatLngBounds;
     getZoom(): number;
+    getCenter(): { lat: number; lng: number };
     fitBounds(bounds: [LatLngTuple, LatLngTuple], options?: { animate?: boolean }): this;
     setView(center: LatLngTuple, zoom: number, options?: { animate?: boolean }): this;
     panTo(center: LatLngTuple, options?: { animate?: boolean }): this;

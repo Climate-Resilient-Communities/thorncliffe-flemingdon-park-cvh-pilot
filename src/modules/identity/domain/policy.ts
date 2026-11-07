@@ -111,6 +111,21 @@ export const AUTHORITY_MATRIX = [
     actions: ["spend.view"],
     rules: { ambassador: "no", coordinator: "no", director: "read_only", admin: "yes" },
   },
+  {
+    // PRD §6.3 (D9/E4, built after the signed pilot scope by the product owner's decision of 2026-11-07): the moderation queue (O-08) and a
+    // suggestion's review page (O-09). The roles that read the Hub's work see it, a Director read-only; an Ambassador's own suggestions go
+    // through the resident app like anyone's.
+    row: "See residents' place suggestions (the moderation queue)",
+    actions: ["moderation.view"],
+    rules: { ambassador: "no", coordinator: "yes", director: "read_only", admin: "yes" },
+  },
+  {
+    // O-09 "Accept" and O-10 "Decline with a reason". Not privileged (no aal2 step-up): a decision changes no listing (an accepted place reaches
+    // residents only after an Admin adds it to the catalogue and publishes a release, both `provider.manage` / `guide.publish` at aal2).
+    row: "Accept or decline a resident's place suggestion",
+    actions: ["moderation.review"],
+    rules: { ambassador: "no", coordinator: "yes", director: "no", admin: "yes" },
+  },
 ] as const satisfies readonly MatrixRow[];
 
 /**

@@ -38,9 +38,9 @@ describe("hubNavigation", () => {
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
     expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Post a building update", "My round", "Text sign-up"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage", "Spend", "Measures"]);
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "End of pilot"]);
+    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Moderation", "Check-in rounds", "Coverage", "Spend", "Measures"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Moderation", "Check-in rounds", "Coverage", "Measures", "Text sign-up"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Moderation", "Check-in rounds", "Coverage", "Spend", "Measures", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "End of pilot"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -77,13 +77,22 @@ describe("hubNavigation", () => {
     expect(items("ambassador").find((item) => item.id === "text-signup")).toEqual({ id: "text-signup", label: "Text sign-up", href: "/staff/text-signup", icon: "phone" });
   });
 
-  it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {
+  it("has no MVP destination: no partner space or readiness item or section", () => {
     const everything = JSON.stringify(STAFF_ROLES.map((role) => hubNavigation(role)));
 
-    for (const mvp of ["Moderation", "moderation", "Partner space", "This disruption", "Between disruptions", "Readiness", "Playbooks"]) {
+    for (const mvp of ["Partner space", "This disruption", "Between disruptions", "Readiness", "Playbooks"]) {
       expect(everything, mvp).not.toContain(mvp);
     }
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
+  });
+
+  // PRD §6.3 (D9/E4) was MVP scope in the signed pilot; the product owner decided on 2026-11-07 to build it, so Moderation is now an item.
+  it("adds Moderation (O-08) after the alert screens for exactly the roles whose policy allows moderation.view: not an Ambassador", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/moderation"), role).toBe(can(role, "moderation.view"));
+    }
+    expect(items("ambassador").some((item) => item.id === "moderation")).toBe(false);
+    expect(items("director").find((item) => item.id === "moderation")).toEqual({ id: "moderation", label: "Moderation", href: "/staff/moderation", icon: "inbox" });
   });
 
   it("shows Spend (S07.08) beside Coverage to the roles whose policy has spend.view: an Admin, and a Director read-only", () => {
