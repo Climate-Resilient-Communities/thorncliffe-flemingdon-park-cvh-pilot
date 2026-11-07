@@ -91,7 +91,8 @@
     "short": "不是紧急服务。遇到危险？请拨打 911。",
     "sms": "本中心不是紧急服务。如有人身处危险，请拨打 911。",
     "partner": "本空间不会替任何人拨打 911。如有人身处危险，请您自己拨打 911。不要以为其他机构已经打过。",
-    "print": "这不是紧急服务。如有人身处危险，请拨打 911。"
+    "print": "这不是紧急服务。如有人身处危险，请拨打 911。",
+    "need211": "需要帮助？请拨打 211。"
   },
   "x02": {
     "official": "来自{source}的官方警报",
@@ -553,7 +554,8 @@
     "myBuildings": "您的楼宇",
     "checking": "正在检查警报",
     "feedFailed": "我们暂时无法检查警报。显示“不详”的地点可能仍有警报。我们会再试一次。",
-    "feedFailedOld": "我们无法检查新警报。显示的是{t}最后加载的内容。"
+    "feedFailedOld": "我们无法检查新警报。显示的是{t}最后加载的内容。",
+    "inBuildings": "这里楼宇的警报："
   },
   "R04": {
     "deviceLabel": "普通手机上的短信",
@@ -5032,6 +5034,13 @@
         "closes": "[EN] The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "[EN] Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "[EN] Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "[EN] Composing an alert",
+        "what": "[EN] What and where",
+        "message": "[EN] The message",
+        "audience": "[EN] Who gets it",
+        "approval": "[EN] A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
-        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "[EN] Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "[EN] Languages in their own words",
         "webOff": "[EN] Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "[EN] This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "[EN] Round for: {headline}",
         "floor": "[EN] Floor {floor}",
+        "floorColumn": "[EN] Floor",
         "floorGone": "[EN] A floor removed since",
         "total": "[EN] In all",
         "count": "{label}: {n}",
@@ -6309,7 +6319,7 @@
     "buildings": "公寓楼",
     "buildingsCount": "{n} 栋楼",
     "buildingsCountOne": "1 栋楼",
-    "filtered": "只显示与您在目录中所选筛选条件相符的地点。"
+    "filtered": "只显示与您所选筛选条件相符的地点。"
   },
   "guides": {
     "reviewed": "已由中心审核，最后更新于{date}"

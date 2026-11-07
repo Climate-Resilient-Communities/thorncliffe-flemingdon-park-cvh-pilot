@@ -69,6 +69,47 @@ const CONCEPTS: readonly Concept[] = [
       "g",
     ),
   },
+  {
+    // Being made to leave a home (UAT 2026-11-04: "my landlord wants me to move out", the ask screen's own example, and "房东要我搬走"
+    // through its English translation, found nothing): the residents' landlord and "kick me out" against the listings' eviction
+    // prevention, illegal lockouts and tenant rights, and the Landlord and Tenant Board's notice forms (N4, N5, N12, N13).
+    token: "concept:eviction",
+    phrases: new RegExp(
+      [
+        "\\bevict(?:ion|ions|ed|ing|s)?\\b",
+        "\\brenovict(?:ion|ions|ed|ing)?\\b",
+        "\\blandlords?\\b",
+        "\\b(?:kick(?:ed|ing|s)?|throw(?:n|ing|s)?|threw|put(?:ting)?|force(?:d|s)?|forcing|push(?:ed|ing)?)\\s+(?:me|us|him|her|them|my\\s+\\w+)\\s+out\\b",
+        "\\b(?:make|makes|making|made|want(?:s|ed)?|tell(?:s|ing)?|told|ask(?:s|ed|ing)?)\\s+(?:me|us|him|her|them)\\s+(?:to\\s+)?(?:move|get|leave)\\s+out\\b",
+        "\\b(?:lock(?:ed)?\\s+(?:me|us)\\s+out|illegal\\s+lockouts?)\\b",
+        "\\btenant(?:'s|s'|s)?\\s+rights\\b",
+        "\\bn(?:4|5|12|13)\\b",
+      ].join("|"),
+      "g",
+    ),
+  },
+  {
+    // Mental health and a mental health crisis (UAT 2026-11-04: "my son has a mental breakdown" found nothing): the residents'
+    // breakdown, depression, anxiety or someone to talk to against the listings' mental health and counselling services. Not
+    // occupational therapy. The 911 block for a crisis is the crisis phrases' (crisisPhrases.ts), not this.
+    token: "concept:mental-health",
+    phrases: new RegExp(
+      [
+        "\\bmental(?:ly)?\\s+(?:health|illness|breakdown|crisis|wellness|unwell)\\b",
+        "\\b(?:nervous|emotional)\\s+breakdown\\b",
+        "\\bbreak(?:ing)?\\s*down\\b",
+        "\\bbreakdown\\b",
+        "\\bdepress(?:ed|ion|ing)\\b",
+        "\\banxi(?:ety|ous)\\b",
+        "\\bpanic\\s+attacks?\\b",
+        "\\bcounsell?(?:ing|or|ors)\\b",
+        "\\bsomeone\\s+to\\s+talk\\s+to\\b",
+        "\\bpsych(?:iatr\\w*|olog\\w*|otherap\\w*|osis|otic)\\b",
+        "(?<!\\boccupational\\s)\\btherap(?:y|ist|ists)\\b",
+      ].join("|"),
+      "g",
+    ),
+  },
 ];
 
 // A clause that says the thing is not there: "no French immersion, ESL, or special education programs were listed".

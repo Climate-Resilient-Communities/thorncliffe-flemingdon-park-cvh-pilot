@@ -122,4 +122,190 @@
   .hub-cover__label {
     font-weight: 700;
   }
+
+  /*
+   * Check-in rounds (O-17), UAT 2026-11-04. An escalation is a card: the danger bar on the warm surface for "needs help", the accent bar
+   * for "not reached", the plain hairline once handled; its status is a pill of words, never colour alone.
+   */
+  .hub-esc {
+    padding: var(--gap-related);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-inline-start: var(--offset-align-icon) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .hub-esc--needs_help {
+    border-inline-start-color: var(--danger);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .hub-esc--not_reached {
+    border-inline-start-color: var(--accent-bar);
+  }
+
+  .hub-esc__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-label);
+  }
+
+  .hub-esc__time {
+    color: var(--text-muted);
+  }
+
+  .hub-esc__where {
+    font-weight: 700;
+  }
+
+  .hub-esc__open {
+    align-self: flex-start;
+  }
+
+  .hub-pill {
+    display: inline-flex;
+    align-items: center;
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-radius: var(--radius-header);
+    background-color: var(--surface-raised);
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .hub-pill--needs_help {
+    border-color: var(--danger);
+  }
+
+  .hub-pill--not_reached {
+    border-color: var(--accent-bar);
+  }
+
+  /* A round: a card holding its counts in all as tiles and each building's floors as a table. A closed round is the same, quieter. */
+  .hub-round {
+    padding: var(--gap-related);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .hub-round--closed {
+    background-color: transparent;
+  }
+
+  .hub-round__building {
+    font-weight: 700;
+  }
+
+  .hub-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr));
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hub-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-label);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .hub-stat--alert {
+    border-inline-start: var(--offset-align-icon) solid var(--accent-bar);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .hub-stat__n {
+    font-size: var(--type-h2-size);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .hub-stat__label {
+    overflow-wrap: anywhere;
+  }
+
+  /* A table of counts: hairline rows, the numbers end-aligned in tabular figures. Its box scrolls by itself, never the page. */
+  .hub-table-box {
+    max-inline-size: 100%;
+    overflow-x: auto;
+  }
+
+  .hub-table-box:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .hub-table {
+    inline-size: 100%;
+    border-collapse: collapse;
+  }
+
+  .hub-table :is(th, td) {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border-block-end: var(--offset-align-hairline) solid var(--border);
+    text-align: start;
+  }
+
+  .hub-table thead th {
+    font-weight: 700;
+    vertical-align: bottom;
+  }
+
+  .hub-table .hub-table__n {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Where an author is in composing an alert (O-02's step bar): numbered steps in a row that wraps, the current one bold with the accent bar. */
+  .hub-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hub-progress__step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-subline);
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-radius: var(--radius-header);
+    color: var(--text-muted);
+  }
+
+  .hub-progress__step--done {
+    color: var(--text);
+  }
+
+  .hub-progress__step--current {
+    border-color: var(--accent-bar);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+    font-weight: 700;
+  }
+
+  .hub-progress__n {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
 }

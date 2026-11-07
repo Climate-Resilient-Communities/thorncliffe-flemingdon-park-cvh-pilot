@@ -183,6 +183,18 @@
     background-color: var(--surface-raised);
   }
 
+  /* R-35 finished: what was chosen, one line each, bold, as R-34's values. */
+  .choice-done-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
   .choice-told__key {
     font-size: var(--type-caption-size);
     font-weight: 700;

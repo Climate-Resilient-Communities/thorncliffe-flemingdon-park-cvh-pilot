@@ -72,7 +72,7 @@ test.describe("signed in at the Hub gate", () => {
       expect(right).toBeLessThanOrEqual(390);
     }
 
-    // The navigation is in the menu: the current page is announced, an unbuilt page is a disabled link, People is for
+    // The navigation is in the menu: the current page is announced, People is for
     // Admins, and the pilot's menu has no Moderation (MVP) and no "partner space" wording.
     await page.getByRole("button", { name: "Menu" }).click();
     const menu = page.getByRole("dialog", { name: "Menu" });
@@ -81,7 +81,10 @@ test.describe("signed in at the Hub gate", () => {
     // The alert screens are for the roles that write alerts (S04.05): an Ambassador's menu has neither.
     await expect(menu.getByRole("link", { name: "Compose an alert" })).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Log a disruption" })).toHaveCount(0);
-    await expect(menu.getByRole("link", { name: "Check-in rounds", disabled: true })).toHaveCount(1);
+    // An Ambassador's own two screens are in the menu (UAT 2026-11-04), and the Hub's "Check-in rounds" is not.
+    await expect(menu.getByRole("link", { name: "Post a building update" })).toHaveAttribute("href", "/staff/ambassador/post");
+    await expect(menu.getByRole("link", { name: "My round" })).toHaveAttribute("href", "/staff/ambassador/round");
+    await expect(menu.getByRole("link", { name: "Check-in rounds" })).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
     await expect(menu.getByText("Moderation")).toHaveCount(0);
     await expect(page.getByText(/partner space/i)).toHaveCount(0);

@@ -242,6 +242,19 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
           </div>
         </Told>
 
+        {/* R-34's check-ins: the request itself is made with the text alerts (R-33 explains how), so the phone only knows whether the
+            resident said they would like one (the check-in group). */}
+        <Told id="told-checkin" title={t("checkin")}>
+          <ResidentText as="p" className="choice-told__value" testId="told-checkin-value">
+            {groups.includes("checkin") ? groupText("checkin.label") : t("checkinNone")}
+          </ResidentText>
+          <div className="choice-told__acts">
+            <Link className="choice-btn choice-btn--secondary tap" href={`/${lang}/ready/check-in`} prefetch={false} data-testid="told-checkin-ask">
+              <ResidentText>{t("checkinAsk")}</ResidentText>
+            </Link>
+          </div>
+        </Told>
+
         {/* S07.02: the way to text alerts (R-34's invite). Nothing here says whether this phone's number is signed up: the server keeps that, not the phone. */}
         <section className="choice-told" aria-labelledby="told-texts" data-testid="text-invite">
           <p className="choice-told__key" id="told-texts">

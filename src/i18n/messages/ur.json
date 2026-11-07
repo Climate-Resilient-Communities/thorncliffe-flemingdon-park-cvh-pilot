@@ -91,7 +91,8 @@
     "short": "ہنگامی سروس نہیں۔ خطرہ ہو تو 911 پر کال کریں۔",
     "sms": "ہب ہنگامی سروس نہیں ہے۔ اگر کسی کو خطرہ ہو تو 911 پر کال کریں۔",
     "partner": "یہ جگہ کسی کے لیے 911 پر کال نہیں کرتی۔ اگر کسی کو خطرہ ہو تو خود 911 پر کال کریں۔ یہ نہ سمجھیں کہ کسی اور تنظیم نے کر دی ہے۔",
-    "print": "یہ ہنگامی سروس نہیں ہے۔ اگر کسی کو خطرہ ہو تو 911 پر کال کریں۔"
+    "print": "یہ ہنگامی سروس نہیں ہے۔ اگر کسی کو خطرہ ہو تو 911 پر کال کریں۔",
+    "need211": "مدد چاہیے؟ 211 پر کال کریں۔"
   },
   "x02": {
     "official": "{source} کی طرف سے سرکاری الرٹ",
@@ -553,7 +554,8 @@
     "myBuildings": "آپ کی عمارتیں",
     "checking": "الرٹ کی جانچ ہو رہی ہے",
     "feedFailed": "ہم ابھی الرٹ چیک نہیں کر سکے۔ جس جگہ کے ساتھ \"معلوم نہیں\" لکھا ہو وہاں اب بھی کوئی الرٹ ہو سکتا ہے۔ ہم دوبارہ کوشش کریں گے۔",
-    "feedFailedOld": "ہم نئے الرٹ چیک نہیں کر سکے۔ وہ دکھایا جا رہا ہے جو آخری بار {t} لوڈ ہوا تھا۔"
+    "feedFailedOld": "ہم نئے الرٹ چیک نہیں کر سکے۔ وہ دکھایا جا رہا ہے جو آخری بار {t} لوڈ ہوا تھا۔",
+    "inBuildings": "یہاں کی عمارتوں کے لیے الرٹس:"
   },
   "R04": {
     "deviceLabel": "سادہ فون پر ٹیکسٹ میسج",
@@ -5032,6 +5034,13 @@
         "closes": "[EN] The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "[EN] Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "[EN] Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "[EN] Composing an alert",
+        "what": "[EN] What and where",
+        "message": "[EN] The message",
+        "audience": "[EN] Who gets it",
+        "approval": "[EN] A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
-        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "[EN] Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "[EN] Languages in their own words",
         "webOff": "[EN] Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "[EN] This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "[EN] Round for: {headline}",
         "floor": "[EN] Floor {floor}",
+        "floorColumn": "[EN] Floor",
         "floorGone": "[EN] A floor removed since",
         "total": "[EN] In all",
         "count": "{label}: {n}",
@@ -6309,7 +6319,7 @@
     "buildings": "اپارٹمنٹ عمارتیں",
     "buildingsCount": "{n} عمارتیں",
     "buildingsCountOne": "1 عمارت",
-    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو ڈائریکٹری میں آپ کے چنے ہوئے فلٹرز سے ملتی ہیں۔"
+    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو آپ کے فلٹرز سے ملتی ہیں۔"
   },
   "guides": {
     "reviewed": "ہب نے جانچا، آخری اپ ڈیٹ {date}"

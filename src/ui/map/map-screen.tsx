@@ -4,13 +4,13 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { basicAttributeSet, useBasic } from "../basic";
 import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
-import { activeKeys, filterProviders, NO_FILTERS, type FilterState } from "../directory/filters";
+import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
 import { isFallbackText, ListingBlock } from "../directory/listing-text";
 import { useDirectory } from "../directory/use-directory";
@@ -22,7 +22,7 @@ import { FALLBACK_MARKER, isEnglishFallback, isEnglishFallbackMessage, ResidentT
 import { keepBuildings, readKeptBuildings, type KeptBuilding } from "./kept-buildings";
 import { createMap, type MapHandle, type PinWords, type TileSettings } from "./leaflet-map";
 import { mapNotice } from "./notice";
-import { buildingPins, listInView, NEIGHBOURHOODS_VIEW, pinHref, providerPins, type Bounds, type MapPin } from "./places";
+import { buildingPins, listInView, NEIGHBOURHOODS_VIEW, NO_BUILDING_FACTS, pinHref, providerPins, type BuildingFacts, type Bounds, type MapPin } from "./places";
 import "./map.css";
 
 /** The tile provider's settings as the page passes them (from MAP_TILE_*, src/platform/config/mapTiles.ts). */
@@ -78,14 +78,34 @@ function PinMark({ pin }: { pin: MapPin }) {
   );
 }
 
+/** The legend's rows: each kind of pin (places.ts) and the catalog's words for it. */
+const LEGEND = [
+  { marker: "cooling", key: "subcats.Cooling Spaces" },
+  { marker: "water", key: "subcats.Water Fountains" },
+  { marker: "washroom", key: "subcats.Public Washrooms" },
+  { marker: "service", key: "map.service" },
+  { marker: "building", key: "map.building" },
+] as const;
+
+/** One choice of the map's filter panel: the same checkbox option as the directory's (R-27), in the map's own clothes. */
+function FilterChoice({ id, checked, onChange, children }: { id: string; checked: boolean; onChange: (on: boolean) => void; children: ReactNode }) {
+  return (
+    <label className="map-option tap" data-testid={`map-filter-${id}`}>
+      <input className="map-option__input" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      <span className="map-option__text">{children}</span>
+    </label>
+  );
+}
+
 /**
  * The map (R-14) with its list (R-15) and pin preview (R-16), S02.07. Every published provider of the directory's release
- * file, narrowed by the filters the resident applied in the directory, and the pilot buildings, on the configured tile
- * provider's base map. A pin opens the preview card, which leads to the same listing (R-12) or building page as the
- * directory. The list shows the same places as the part of the map on screen: it is how a screen reader reaches every
- * place, so the map is never the only way. Nothing here is sent anywhere: the filters, the selected pin and the part of
- * the map viewed stay on the phone (AD-3); the tile provider sees only the tiles drawn, and the map always opens on the
- * same whole-area view.
+ * file, narrowed by the filters (R-27 as the pilot has it): by topic and kind of place behind the Filters button here,
+ * and whatever the resident applied in the directory, one state between the two screens; and the pilot buildings, on the
+ * configured tile provider's base map. A pin opens the preview card, which leads to the same listing (R-12) or building
+ * page as the directory. The list shows the same places as the part of the map on screen: it is how a screen reader
+ * reaches every place, so the map is never the only way. Nothing here is sent anywhere: the filters, the selected pin and
+ * the part of the map viewed stay on the phone (AD-3); the tile provider sees only the tiles drawn, and the map always
+ * opens on the same whole-area view.
  */
 export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }) {
   const t = useTranslations();
@@ -103,8 +123,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const selected = basic ? null : pinSelected;
   const [missingTiles, setMissingTiles] = useState(0);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
-  // The filters applied in the directory this visit (kept in the tab, never sent).
+  // The filters this visit: the ones applied here or in the directory, one state (kept in the tab, never sent).
   const [applied, setApplied] = useState<FilterState>(() => readFilters(tabStorage()));
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  // The building facts asked for (UAT 2026-11-04): the map's own, for this screen only; the directory has no buildings.
+  const [facts, setFacts] = useState<BuildingFacts>(NO_BUILDING_FACTS);
+  const filtersButton = useRef<HTMLButtonElement>(null);
   // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the map opened, if it names one place.
   const [viewed] = useState(() => singleNeighbourhood(applied.neighbourhoods));
   const element = useRef<HTMLDivElement>(null);
@@ -121,12 +145,26 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   const listing = directory.status === "ready" ? directory.listing : null;
 
-  const filters = useMemo(() => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id)) : applied), [applied, listing]);
-  const filtered = activeKeys(filters).length > 0;
+  // Every subcategory of the release once, for the panel's choices and for dropping a kept filter the release no longer has.
+  const allKinds = useMemo(() => listingSubcategories(listing?.providers ?? [], locale), [listing, locale]);
+  const filters = useMemo(
+    () => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id), allKinds.map((kind) => kind.id)) : applied),
+    [applied, listing, allKinds],
+  );
+  const keys = activeKeys(filters);
+  const factCount = (facts.coolingRoom ? 1 : 0) + (facts.airConditioning ? 1 : 0);
+  const filterCount = keys.length + factCount;
+  const filtered = filterCount > 0;
+  const topics = useMemo(() => [...(listing?.categories ?? [])].sort((a, b) => a.sort_order - b.sort_order), [listing]);
+  // The subcategory choices narrow to the chosen topics; one already chosen stays listed, so it can be taken back.
+  const kinds = useMemo(
+    () => (listing ? listingSubcategories(listing.providers, locale, filters.categories, filters.subcategories) : []),
+    [listing, locale, filters.categories, filters.subcategories],
+  );
 
   const pins = useMemo<MapPin[]>(
-    () => [...providerPins(listing ? filterProviders(listing.providers, filters) : []), ...buildingPins(buildings)],
-    [listing, filters, buildings],
+    () => [...providerPins(listing ? filterProviders(listing.providers, filters) : []), ...buildingPins(buildings, facts)],
+    [listing, filters, buildings, facts],
   );
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
   const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
@@ -150,6 +188,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     word: (pin) => (pin.kind === "provider" && pin.label ? { text: pin.label.body, lang: isFallbackText(pin.label) ? "en" : undefined } : null),
     name: (pin) => plain(t("map.pinName", { name: nameOf(pin), kind: kindOf(pin) })),
     cluster: (n) => plain(t("R14.here", { n })),
+    clusterLabel: (n) => plain(n === 1 ? t("R14.place") : t("R14.places", { n })),
     zoomIn: plain(t("R14.zoomIn")),
     zoomOut: plain(t("R14.zoomOut")),
   };
@@ -166,6 +205,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
       word: (pin) => words.current!.word(pin),
       name: (pin) => words.current!.name(pin),
       cluster: (n) => words.current!.cluster(n),
+      clusterLabel: (n) => words.current!.clusterLabel(n),
       get zoomIn() {
         return words.current!.zoomIn;
       },
@@ -209,11 +249,29 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     if (chosen) card.current?.focus();
   }, [chosen]);
 
+  // The filters chosen here survive the next page of the visit, the same way the directory keeps them.
+  useEffect(() => {
+    saveFilters(tabStorage(), filters);
+  }, [filters]);
+
   const notice = mapNotice({ cacheable: tiles.cacheable && tiles.cacheLimit > 0, online, missingTiles });
-  const clearFilters = () => {
-    saveFilters(tabStorage(), NO_FILTERS);
-    setApplied(NO_FILTERS);
+  const toggleFilter = (key: FilterKey, on: boolean) => setApplied((current) => setFilter(current, key, on));
+  const closeFilters = () => {
+    setFiltersOpen(false);
+    filtersButton.current?.focus();
   };
+  const clearAll = () => {
+    setApplied(NO_FILTERS);
+    setFacts(NO_BUILDING_FACTS);
+  };
+  const clearFilters = () => {
+    clearAll();
+    // The note and its button go when the filters do: focus moves to the Filters button that stays.
+    filtersButton.current?.focus();
+  };
+  // How many providers the filters leave, for Show n results: each provider once, as the directory counts them.
+  const matching = useMemo(() => (listing ? filterProviders(listProviders(listing.providers, locale), filters).length : 0), [listing, locale, filters]);
+  const applyLabel = matching === 0 ? t("R27.applyNone") : matching === 1 ? t("R27.applyOne") : t("R27.apply", { n: matching });
   const showList = () => {
     setSelected(null);
     setView("list");
@@ -253,6 +311,95 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <ResidentText>{t("R14.list")}</ResidentText>
           </button>
         </div>
+        {/* The filters (R-27 as the pilot has it, here by topic and kind of place): the same state the directory narrows by,
+            applied on the phone. On every width they sit behind the Filters button, so the map keeps the screen. */}
+        {listing && (
+          <section className="map-filters" aria-label={plain(t("R27.title"))} data-testid="map-filters">
+            <Stack gap="related">
+              <button
+                ref={filtersButton}
+                type="button"
+                className="map-btn map-btn--secondary tap"
+                aria-expanded={filtersOpen}
+                aria-controls="map-filter-panel"
+                onClick={() => setFiltersOpen((open) => !open)}
+                data-testid="map-filters-toggle"
+              >
+                <ResidentText>{filterCount > 0 ? t("R10.filtersCount", { n: filterCount }) : t("R10.filters")}</ResidentText>
+              </button>
+              <div id="map-filter-panel" className="map-filter-panel" data-open={filtersOpen} data-testid="map-filter-panel">
+                <Stack gap="stack">
+                  <ResidentText as="p" className="map-hint">
+                    {t("R27.private")}
+                  </ResidentText>
+                  <fieldset className="map-fieldset">
+                    <ResidentText as="legend" className="map-legend" testId="map-legend-topic">
+                      {t("directory.topic")}
+                    </ResidentText>
+                    <Stack gap="label">
+                      {topics.map((category) => (
+                        <FilterChoice
+                          key={category.id}
+                          id={`category-${category.id}`}
+                          checked={isActive(filters, { kind: "category", id: category.id })}
+                          onChange={(on) => toggleFilter({ kind: "category", id: category.id }, on)}
+                        >
+                          <ListingBlock text={category.name} as="span" />
+                        </FilterChoice>
+                      ))}
+                    </Stack>
+                  </fieldset>
+                  {kinds.length > 0 && (
+                    <fieldset className="map-fieldset">
+                      <ResidentText as="legend" className="map-legend" testId="map-legend-kind">
+                        {t("R14.subLabel")}
+                      </ResidentText>
+                      <Stack gap="label">
+                        {kinds.map((kind) => (
+                          <FilterChoice
+                            key={kind.id}
+                            id={`subcategory-${kind.id}`}
+                            checked={isActive(filters, { kind: "subcategory", id: kind.id })}
+                            onChange={(on) => toggleFilter({ kind: "subcategory", id: kind.id }, on)}
+                          >
+                            <ListingBlock text={kind.name} as="span" />
+                          </FilterChoice>
+                        ))}
+                      </Stack>
+                    </fieldset>
+                  )}
+                  {/* "Helps in an emergency": the directory's filter, here too (R-14's "What do you need?"). */}
+                  <FilterChoice id="emergency" checked={filters.emergency} onChange={(on) => toggleFilter({ kind: "emergency" }, on)}>
+                    <ResidentText>{t("directory.emergency")}</ResidentText>
+                  </FilterChoice>
+                  {/* The pilot buildings by two facts of the City register (the building page's words). A building's cooling room is for its own
+                      residents: these find buildings, not places to go. */}
+                  <fieldset className="map-fieldset">
+                    <ResidentText as="legend" className="map-legend" testId="map-legend-buildings">
+                      {t("map.buildings")}
+                    </ResidentText>
+                    <Stack gap="label">
+                      <FilterChoice id="building-cooling-room" checked={facts.coolingRoom} onChange={(on) => setFacts((current) => ({ ...current, coolingRoom: on }))}>
+                        <ResidentText>{t("building.facts.coolingRoom")}</ResidentText>
+                      </FilterChoice>
+                      <FilterChoice id="building-air-conditioning" checked={facts.airConditioning} onChange={(on) => setFacts((current) => ({ ...current, airConditioning: on }))}>
+                        <ResidentText>{t("building.facts.airConditioning")}</ResidentText>
+                      </FilterChoice>
+                    </Stack>
+                  </fieldset>
+                  <div className="map-filter-actions">
+                    <button type="button" className="map-btn map-btn--primary tap" onClick={closeFilters} data-testid="map-filters-apply">
+                      <ResidentText>{applyLabel}</ResidentText>
+                    </button>
+                    <button type="button" className="map-btn map-btn--secondary tap" onClick={clearAll} data-testid="map-filters-clear">
+                      <ResidentText>{t("R27.clear")}</ResidentText>
+                    </button>
+                  </div>
+                </Stack>
+              </div>
+            </Stack>
+          </section>
+        )}
         {filtered && (
           <div className="map-filtered" role="note" data-testid="map-filtered">
             <ResidentText as="p">{t("map.filtered")}</ResidentText>
@@ -433,6 +580,31 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
           </Stack>
         </section>
       </div>
+    {/* "What the shapes mean" (the prototype's R-14 legend), under the map and its list: each kind of pin with its words, and the group pill.
+        Not in basic mode, which has no map. */}
+      <details className="map-legend-box hide-basic" data-testid="map-legend">
+        <summary className="map-legend-box__summary tap">
+          <ResidentText>{t("R14.legendTitle")}</ResidentText>
+        </summary>
+        <ul className="map-legend-box__list">
+          {LEGEND.map((row) => (
+            <li key={row.marker} className="map-legend-box__row" data-testid={`map-legend-${row.marker}`}>
+              <span className={`map-pin map-pin--${row.marker} map-pin--inline`} aria-hidden="true">
+                <span className="map-pin__mark">
+                  <span className={`map-ico map-ico--${row.marker}`} />
+                </span>
+              </span>
+              <ResidentText>{t(row.key)}</ResidentText>
+            </li>
+          ))}
+          <li className="map-legend-box__row" data-testid="map-legend-cluster">
+            <span className="map-legend-box__pill" aria-hidden="true">
+              <ResidentText>{t("R14.places", { n: 3 })}</ResidentText>
+            </span>
+            <ResidentText>{t("R14.legendCluster")}</ResidentText>
+          </li>
+        </ul>
+      </details>
     </Screen>
   );
 }

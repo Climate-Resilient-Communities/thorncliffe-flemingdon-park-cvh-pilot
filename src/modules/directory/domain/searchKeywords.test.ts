@@ -38,6 +38,39 @@ describe("keywordTokens", () => {
     }
   });
 
+  it("adds the eviction concept for a landlord, being put out and the listings' eviction and tenant rights (UAT 2026-11-04)", () => {
+    const concept = "concept:eviction";
+    for (const text of [
+      "my landlord wants me to move out",
+      "My landlord wants me to move out.",
+      "my landlord wants to kick me out what do i do",
+      "they want us to leave out by Friday",
+      "I got an N12",
+      "Legal advice: eviction prevention, illegal lockouts, tenant rights",
+    ]) {
+      expect(keywordTokens(text), text).toContain(concept);
+    }
+    for (const text of ["where can I get food", "move furniture out of the unit", "after-school programs"]) {
+      expect(keywordTokens(text), text).not.toContain(concept);
+    }
+  });
+
+  it("adds the mental-health concept for a breakdown, depression or someone to talk to, and the listings' counselling, not occupational therapy (UAT 2026-11-04)", () => {
+    const concept = "concept:mental-health";
+    for (const text of [
+      "my son has a mental breakdown",
+      "I feel depressed and need someone to talk to",
+      "panic attacks",
+      "family doctors, nurses and mental health counselling",
+      "I need a therapist",
+    ]) {
+      expect(keywordTokens(text), text).toContain(concept);
+    }
+    for (const text of ["physiotherapy, occupational therapy, speech-language pathology", "where can I get food"]) {
+      expect(keywordTokens(text), text).not.toContain(concept);
+    }
+  });
+
   it("reads no word of another script", () => {
     expect(keywordTokens("کھانا کہاں ملے گا")).toEqual([]);
     expect(keywordTokens("食物银行")).toEqual([]);

@@ -6,7 +6,8 @@ export { TILE_URL };
 
 // The map's sample data (S02.07): a directory release whose providers are spread over Thorncliffe Park and Flemingdon
 // Park, with a cooling space, a water fountain and a public washroom, two providers at one spot (they always cluster)
-// and one far outside the area the map opens on; two pilot buildings that the resident server's sample buildings file
+// and one far outside the area the map opens on, in two topics (the food bank is Food, the rest Public spaces, for the
+// filters); two pilot buildings that the resident server's sample buildings file
 // also has (so their pages open); and the tile provider, answered here with a plain grey tile. The resident server has
 // no database and no Internet in these tests.
 
@@ -21,15 +22,15 @@ function text(lang: Lang, en: string, ur: string) {
   return { lang, body: ur, machine: true, model: "north-small-translate-09-2026", status: "ok", source_hash: sha(en), original, review_status: "reviewed", reviewed_on: "2026-09-20" };
 }
 
-type Sample = { id: string; name: string; sub: [en: string, ur: string] | null; at: [number, number] };
+type Sample = { id: string; name: string; cat: "community" | "food"; sub: [en: string, ur: string] | null; at: [number, number] };
 
 export const MAP_PROVIDERS: Sample[] = [
-  { id: "M101", name: "Overlea Cooling Centre", sub: ["Cooling Spaces", "ٹھنڈک کی جگہیں"], at: [43.699, -79.35] },
-  { id: "M102", name: "Gateway Park Fountain", sub: ["Water Fountains", "پانی کے فوارے"], at: [43.724, -79.33] },
-  { id: "M103", name: "Leaside Park Washrooms", sub: ["Public Washrooms", "عوامی بیت الخلا"], at: [43.699, -79.328] },
-  { id: "M104", name: "Thorncliffe Food Bank", sub: null, at: [43.7105, -79.338] },
-  { id: "M105", name: "Thorncliffe Family Clinic", sub: null, at: [43.7105, -79.338] },
-  { id: "M106", name: "Far East Library", sub: null, at: [43.77, -79.23] },
+  { id: "M101", name: "Overlea Cooling Centre", cat: "community", sub: ["Cooling Spaces", "ٹھنڈک کی جگہیں"], at: [43.699, -79.35] },
+  { id: "M102", name: "Gateway Park Fountain", cat: "community", sub: ["Water Fountains", "پانی کے فوارے"], at: [43.724, -79.33] },
+  { id: "M103", name: "Leaside Park Washrooms", cat: "community", sub: ["Public Washrooms", "عوامی بیت الخلا"], at: [43.699, -79.328] },
+  { id: "M104", name: "Thorncliffe Food Bank", cat: "food", sub: null, at: [43.7105, -79.338] },
+  { id: "M105", name: "Thorncliffe Family Clinic", cat: "community", sub: null, at: [43.7105, -79.338] },
+  { id: "M106", name: "Far East Library", cat: "community", sub: null, at: [43.77, -79.23] },
 ];
 
 /** The ids on screen when the map opens (everything but the far one), and after zooming in twice on the middle. */
@@ -47,11 +48,14 @@ export function mapListing(lang: Lang) {
     release_v: MAP_RELEASE,
     lang,
     catalogue_hash: CATALOGUE_HASH,
-    categories: [{ id: "community", sort_order: 1, name: text(lang, "Public spaces", "عوامی مقامات") }],
+    categories: [
+      { id: "community", sort_order: 1, name: text(lang, "Public spaces", "عوامی مقامات") },
+      { id: "food", sort_order: 2, name: text(lang, "Food", "خوراک") },
+    ],
     providers: MAP_PROVIDERS.map((s) => ({
       id: s.id,
       name: s.name,
-      category_ids: ["community"],
+      category_ids: [s.cat],
       neighbourhood_ids: ["TP"],
       subcategories: s.sub ? [text(lang, s.sub[0], s.sub[1])] : [],
       locations: [{ street: `${s.id.slice(1)} Overlea Blvd`, city: "Toronto", postal: null, lat: s.at[0], lng: s.at[1] }],

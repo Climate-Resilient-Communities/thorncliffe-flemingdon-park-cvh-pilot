@@ -11,6 +11,15 @@ const MILEPOST = BUILDINGS[0].rsn;
 const DRIVE = BUILDINGS[1].rsn;
 const OVERLEA = BUILDINGS[3].rsn;
 
+/** The first run ends on R-35's finished step ("You chose", UAT 2026-11-04); "Not now" goes on to home. */
+async function throughFinished(page: Page) {
+  await page.waitForURL("**/en/welcome/done");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("You chose");
+  await expect(page.getByTestId("welcome-done-texts-yes")).toHaveAttribute("href", "/en/text-alerts");
+  await page.getByTestId("welcome-done-not-now").click();
+  await page.waitForURL("**/en");
+}
+
 const errorsOf = (page: Page) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -18,7 +27,7 @@ const errorsOf = (page: Page) => {
 };
 
 test.describe("first visit", () => {
-  test("shows R-01, then R-26 and R-35, each skippable, then home", async ({ page }) => {
+  test("shows R-01, then R-26 and R-35, each skippable, then R-35's finished step and home", async ({ page }) => {
     await stubBuildingList(page);
     const errors = errorsOf(page);
 
@@ -37,7 +46,7 @@ test.describe("first visit", () => {
     await expect(page.getByTestId("step-skip")).toBeVisible();
 
     await page.getByTestId("step-skip").click();
-    await page.waitForURL("**/en");
+    await throughFinished(page);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Alerts now");
 
     // Skipping everything saves nothing but the language and that the steps were gone through.
@@ -106,6 +115,10 @@ test.describe("R-35 where I live", () => {
     await expect(page.locator('input[type="text"], input[type="search"], input:not([type]), textarea')).toHaveCount(1);
 
     await page.getByTestId("step-continue").click();
+    await page.waitForURL("**/en/welcome/done");
+    // The finished step names what was chosen.
+    await expect(page.getByTestId("welcome-done-summary").locator("li")).toHaveCount(3);
+    await page.getByTestId("welcome-done-not-now").click();
     await page.waitForURL("**/en");
 
     expect(await savedChoices(page)).toEqual({
@@ -150,7 +163,28 @@ test.describe("R-35 where I live", () => {
     await openResident(second, "/en/welcome/place", 390);
     await expect(second.getByTestId("list-failed")).toBeVisible();
     await second.getByTestId("step-skip").click();
-    await second.waitForURL("**/en");
+    await throughFinished(second);
+  });
+});
+
+test.describe("asking for a check-in in the first run (UAT 2026-11-04)", () => {
+  test("R-26 with a check-in leads through R-35 to R-33, then R-35's finished step", async ({ page }) => {
+    await stubBuildingList(page);
+    await openResident(page, "/en/welcome/groups", 390);
+    await page.getByTestId("group-checkin").check();
+    await expect(page.getByTestId("groups-checkin-next")).toHaveText("Next you choose your building and floor, then how you would like to be checked on.");
+    await page.getByTestId("step-continue").click();
+    await page.waitForURL("**/en/welcome/place");
+    await expect(page.getByTestId("place-checkin-next")).toHaveText("Next: how you would like to be checked on.");
+    await page.getByTestId("step-skip").click();
+    await page.waitForURL("**/en/welcome/check-in");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ask for a check-in");
+    await expect(page.getByTestId("checkin-page-back")).toHaveCount(0);
+    // The first-run steps have no "My choices" in the header: they are the choices.
+    await expect(page.getByTestId("shell-choices")).toHaveCount(0);
+    await page.getByTestId("checkin-page-continue").click();
+    await page.waitForURL("**/en/welcome/done");
+    await expect(page.getByTestId("welcome-done-checkin")).toHaveText("I would like a check-in during heat and outages");
   });
 });
 

@@ -2,14 +2,25 @@ import { z } from "zod";
 import type { BuildingList } from "@/contracts/buildingList";
 
 // The buildings' pins as the phone last saw them (S02.07): the building list is the same for every visitor, so the map
-// keeps the part of it it draws (number, address, neighbourhood, place) and still shows the buildings without signal.
+// keeps the part of it it draws (number, address, neighbourhood, place, and the two facts its filters read) and still shows
+// the buildings without signal.
 // Nothing about the resident is in it.
 
 export const KEPT_BUILDINGS_KEY = "cvh.map.buildings";
 
 const KeptSchema = z.object({
   v: z.literal(1),
-  buildings: z.array(z.object({ rsn: z.string(), address: z.string(), neighbourhood: z.string(), lat: z.number(), lng: z.number() })),
+  buildings: z.array(
+    z.object({
+      rsn: z.string(),
+      address: z.string(),
+      neighbourhood: z.string(),
+      lat: z.number(),
+      lng: z.number(),
+      coolingRoom: z.boolean().nullable().optional(),
+      airConditioning: z.boolean().nullable().optional(),
+    }),
+  ),
 });
 
 export type KeptBuilding = z.infer<typeof KeptSchema>["buildings"][number];
@@ -29,7 +40,7 @@ export function readKeptBuildings(storage: Storage | null): KeptBuilding[] | nul
 export function keepBuildings(storage: Storage | null, list: BuildingList): KeptBuilding[] {
   const buildings: KeptBuilding[] = [];
   for (const b of list.buildings) {
-    if (b.lat !== undefined && b.lng !== undefined) buildings.push({ rsn: b.rsn, address: b.address, neighbourhood: b.neighbourhood, lat: b.lat, lng: b.lng });
+    if (b.lat !== undefined && b.lng !== undefined) buildings.push({ rsn: b.rsn, address: b.address, neighbourhood: b.neighbourhood, lat: b.lat, lng: b.lng, coolingRoom: b.coolingRoom ?? null, airConditioning: b.airConditioning ?? null });
   }
   try {
     storage?.setItem(KEPT_BUILDINGS_KEY, JSON.stringify({ v: 1, buildings }));

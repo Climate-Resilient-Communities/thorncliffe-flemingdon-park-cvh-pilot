@@ -62,7 +62,7 @@ const PAGES: { name: string; render: Render }[] = [
   })),
   { name: "essential numbers", render: async (lang) => (await NumbersPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
   { name: "Be ready", render: async (lang) => (await ReadyPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
-  // Home (R-03, owner decisions 36 and 37): the short notice, directly under Every day, drawn on the server render before the phone's choices are read.
+  // Home (R-03): the short notice first (UAT 2026-11-04), drawn on the server render before the phone's choices are read.
   { name: "home", render: async (lang) => (await HomePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
   // An alert (R-07, S04.08): the full block, once. What "verified" means (R-28) has the short form, as in the prototype.
   { name: "alert detail", render: async (lang) => (await AlertPage({ params: Promise.resolve({ lang, slug: "kbcdfghj" }) } as never)) as ReactElement },
@@ -89,30 +89,28 @@ describe("the 911 block", () => {
     }
   });
 
-  it("is directly under Every day on the server render of home, above the link to what the resident has told the CVH, which ends the screen (owner decisions 36 and 37)", async () => {
+  it("opens the server render of home, before the way to text alerts and the heading; Every day follows, and the link to what the resident has told the CVH ends the screen (UAT 2026-11-04)", async () => {
     const home = PAGES.find((candidate) => candidate.name === "home")!;
     for (const lang of ["en", "ur"]) {
       const html = renderToStaticMarkup(await home.render(lang));
-      const everyDay = html.indexOf('data-testid="home-every-day"');
       const marker = html.indexOf('data-component="not-911"');
+      const texts = html.indexOf('data-testid="home-get-text-alerts"');
+      const heading = html.indexOf("<h1");
+      const everyDay = html.indexOf('data-testid="home-every-day"');
       const link = html.indexOf('data-testid="choices-link"');
-      expect(everyDay, `${lang}: Every day`).toBeGreaterThan(-1);
-      expect(marker, `${lang}: the notice`).toBeGreaterThan(everyDay);
-      expect(link, `${lang}: the link`).toBeGreaterThan(marker);
+      expect(marker, `${lang}: the notice`).toBeGreaterThan(-1);
+      expect(texts, `${lang}: text alerts`).toBeGreaterThan(marker);
+      expect(heading, `${lang}: the heading`).toBeGreaterThan(texts);
+      expect(everyDay, `${lang}: Every day`).toBeGreaterThan(heading);
+      expect(link, `${lang}: the link`).toBeGreaterThan(everyDay);
+      // Nothing of the screen comes before the notice.
+      expect(html.indexOf('data-testid="home"'), lang).toBeLessThan(marker);
 
       // Every day is in the server render too, with its three destinations in the prototype's order: nothing about them depends on the phone.
-      // The fourth, the way to text alerts, is marked to be drawn only from the desktop breakpoint (src/ui/desktop.css).
       const section = html.slice(everyDay, html.indexOf("</section>", everyDay));
       const hrefs = [...section.matchAll(/href="([^"]+)"/g)].map((match) => match[1]);
-      expect(hrefs, lang).toEqual([`/${lang}/directory`, `/${lang}/map`, `/${lang}/ready`, `/${lang}/text-alerts`]);
-      expect(section.match(/<li class="home-dest--wide">/g), lang).toHaveLength(1);
-      expect(section.indexOf('<li class="home-dest--wide">'), lang).toBeGreaterThan(section.indexOf(`href="/${lang}/ready"`));
-
-      // Nothing sits between the end of Every day and the notice, nor between the notice and the link.
-      const sectionEnd = html.indexOf("</section>", everyDay) + "</section>".length;
-      expect(html.slice(sectionEnd, html.lastIndexOf("<", marker)), `${lang}: between Every day and the notice`).toBe("");
-      const noticeEnd = html.indexOf("</div>", marker) + "</div>".length;
-      expect(html.slice(noticeEnd, html.lastIndexOf("<", link)), `${lang}: between the notice and the link`).toBe("");
+      expect(hrefs, lang).toEqual([`/${lang}/directory`, `/${lang}/map`, `/${lang}/ready`]);
+      expect(html.slice(texts, html.indexOf(">", texts)), lang).toContain(`/${lang}/text-alerts`);
 
       // After the link's own closing tag only closing tags remain: nothing follows it on the screen.
       const after = html.slice(html.indexOf("</a>", link) + "</a>".length);

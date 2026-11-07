@@ -1396,7 +1396,7 @@
     "buildings": "Bytové domy",
     "buildingsCount": "Počet domov: {n}",
     "buildingsCountOne": "1 dom",
-    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
@@ -1565,4 +1565,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "Áno, posielajte mi textové upozornenia CVH od Thorncliffe Park Community Hub na toto číslo.", "optional": "Textové upozornenia sú dobrovoľné. Celú aplikáciu môžete používať aj bez prihlásenia.", "missingTexts": "váš súhlas s textovými upozorneniami", "error": {"texts_not_agreed": "Ak sa chcete prihlásiť, začiarknite políčko pre textové upozornenia."}}, "R04": {"levelCommunity": "Upozornenie od Thorncliffe Park Community Hub. Overil ho Hub.", "fromHub": "Upozornenie od Thorncliffe Park Community Hub"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "Potrebujete pomoc? Zavolajte na 211."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "Upozornenia pre budovy tu:"}});
 })();

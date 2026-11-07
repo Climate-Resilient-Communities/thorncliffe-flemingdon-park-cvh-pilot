@@ -5,7 +5,7 @@
 //
 // What it is: curated phrases for clear emergencies (someone not breathing, unconscious or collapsed; a heart attack, a stroke,
 // choking, drowning, severe bleeding, a stabbing or shooting, an overdose or poisoning; suicide or self-harm intent; fire or smoke in
-// a home; a gas leak, carbon monoxide; a flood or water pouring in; a car accident, someone hit by a car; an assault, someone with a
+// a home; a mental health crisis (a breakdown, a psychotic episode); a gas leak, carbon monoxide; a flood or water pouring in; a car accident, someone hit by a car; an assault, someone with a
 // weapon or a threat, a break-in in progress; a missing child; asking for an ambulance, the police or 911 now), in English (applied
 // to the question and to its English translation when the translated leg made one) and in every launch language as residents type
 // it: es, fr, sk, gu, hi (Hinglish and romanized Urdu, Punjabi and Gujarati included), and the native scripts of the languages that
@@ -97,6 +97,11 @@ const ENGLISH: CrisisPhraseList = {
     "(don'?t|do not|doesn'?t|does not) want to (live|be alive)",
     "(hurt|hurting|harm|harming|cut|cutting) (myself|himself|herself|themselves)",
     "self harm*",
+    // A mental health crisis (UAT 2026-11-04: "my son has a mental breakdown" got neither the 911 block nor a service).
+    "(mental|nervous|psychotic) (breakdown|crisis|emergency|episode|break)",
+    "mental health (crisis|emergency)",
+    // Not "a breakdown" alone: a car or a machine has one too.
+    "(having|had|has had|is having|going through) a psychotic episode",
     // Fire, smoke.
     "(on|catch|catching|caught) fire",
     "(there'?s|there is|we have|i see) (a )?fire",
@@ -822,6 +827,12 @@ const CHINESE: CrisisPhraseList = {
   group: "zh",
   review: "machine_assisted",
   phrases: [
+    // A mental health crisis (UAT 2026-11-04). Not 崩溃 alone: it is also an ordinary "fed up" or a crashed computer.
+    "精神崩溃",
+    "精神崩潰",
+    "精神失常",
+    "心理危机",
+    "心理危機",
     "着火",
     "著火",
     "失火",

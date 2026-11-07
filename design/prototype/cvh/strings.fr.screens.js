@@ -1396,7 +1396,7 @@
     "buildings": "Immeubles d'habitation",
     "buildingsCount": "{n} immeubles",
     "buildingsCountOne": "1 immeuble",
-    "filtered": "Seuls les lieux qui correspondent aux filtres choisis dans le répertoire sont affichés."
+    "filtered": "Seuls les lieux qui correspondent à vos filtres sont affichés."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
@@ -1565,4 +1565,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "Oui, envoyez-moi les alertes CVH par texto du Thorncliffe Park Community Hub à ce numéro.", "optional": "Les alertes par texto sont facultatives. Vous pouvez utiliser toute l'application sans vous inscrire.", "missingTexts": "votre accord pour recevoir les alertes par texto", "error": {"texts_not_agreed": "Pour vous inscrire, cochez la case pour recevoir les alertes par texto."}}, "R04": {"levelCommunity": "Alerte du Thorncliffe Park Community Hub. Vérifiée par le Hub.", "fromHub": "Alerte du Thorncliffe Park Community Hub"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "Besoin d'aide? Appelez le 211."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "Alertes pour des immeubles d'ici :"}});
 })();

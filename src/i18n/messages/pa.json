@@ -91,7 +91,8 @@
     "short": "ਐਮਰਜੈਂਸੀ ਸੇਵਾ ਨਹੀਂ। ਖ਼ਤਰਾ? 911 ਤੇ ਕਾਲ ਕਰੋ।",
     "sms": "ਹੱਬ ਐਮਰਜੈਂਸੀ ਸੇਵਾ ਨਹੀਂ ਹੈ। ਜੇ ਕੋਈ ਖ਼ਤਰੇ ਵਿੱਚ ਹੈ, ਤਾਂ 911 ਤੇ ਕਾਲ ਕਰੋ।",
     "partner": "ਇਹ ਥਾਂ ਕਿਸੇ ਲਈ ਵੀ 911 ਤੇ ਕਾਲ ਨਹੀਂ ਕਰਦੀ। ਜੇ ਕੋਈ ਖ਼ਤਰੇ ਵਿੱਚ ਹੈ, ਤਾਂ ਤੁਸੀਂ ਆਪ 911 ਤੇ ਕਾਲ ਕਰੋ। ਇਹ ਨਾ ਸੋਚੋ ਕਿ ਕਿਸੇ ਹੋਰ ਸੰਸਥਾ ਨੇ ਕਾਲ ਕਰ ਦਿੱਤੀ ਹੈ।",
-    "print": "ਇਹ ਐਮਰਜੈਂਸੀ ਸੇਵਾ ਨਹੀਂ ਹੈ। ਜੇ ਕੋਈ ਖ਼ਤਰੇ ਵਿੱਚ ਹੈ, ਤਾਂ 911 ਤੇ ਕਾਲ ਕਰੋ।"
+    "print": "ਇਹ ਐਮਰਜੈਂਸੀ ਸੇਵਾ ਨਹੀਂ ਹੈ। ਜੇ ਕੋਈ ਖ਼ਤਰੇ ਵਿੱਚ ਹੈ, ਤਾਂ 911 ਤੇ ਕਾਲ ਕਰੋ।",
+    "need211": "ਮਦਦ ਚਾਹੀਦੀ ਹੈ? 211 'ਤੇ ਕਾਲ ਕਰੋ।"
   },
   "x02": {
     "official": "{source} ਵੱਲੋਂ ਅਧਿਕਾਰਤ ਚੇਤਾਵਨੀ",
@@ -553,7 +554,8 @@
     "myBuildings": "ਤੁਹਾਡੀਆਂ ਬਿਲਡਿੰਗਾਂ",
     "checking": "ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਹੋ ਰਹੀ ਹੈ",
     "feedFailed": "ਅਸੀਂ ਹੁਣੇ ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕਰ ਸਕੇ। ਜਿਸ ਥਾਂ ਉੱਤੇ \"ਪਤਾ ਨਹੀਂ\" ਲਿਖਿਆ ਹੈ, ਉੱਥੇ ਫਿਰ ਵੀ ਕੋਈ ਚੇਤਾਵਨੀ ਹੋ ਸਕਦੀ ਹੈ। ਅਸੀਂ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰਾਂਗੇ।",
-    "feedFailedOld": "ਅਸੀਂ ਨਵੀਆਂ ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕਰ ਸਕੇ। ਆਖ਼ਰੀ ਵਾਰ {t} ਲੋਡ ਹੋਈ ਜਾਣਕਾਰੀ ਦਿਖਾਈ ਜਾ ਰਹੀ ਹੈ।"
+    "feedFailedOld": "ਅਸੀਂ ਨਵੀਆਂ ਚੇਤਾਵਨੀਆਂ ਦੀ ਜਾਂਚ ਨਹੀਂ ਕਰ ਸਕੇ। ਆਖ਼ਰੀ ਵਾਰ {t} ਲੋਡ ਹੋਈ ਜਾਣਕਾਰੀ ਦਿਖਾਈ ਜਾ ਰਹੀ ਹੈ।",
+    "inBuildings": "ਇੱਥੋਂ ਦੀਆਂ ਇਮਾਰਤਾਂ ਲਈ ਚੇਤਾਵਨੀਆਂ:"
   },
   "R04": {
     "deviceLabel": "ਸਾਦੇ ਫ਼ੋਨ ਤੇ ਟੈਕਸਟ ਮੈਸੇਜ",
@@ -5032,6 +5034,13 @@
         "closes": "[EN] The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "[EN] Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "[EN] Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "[EN] Composing an alert",
+        "what": "[EN] What and where",
+        "message": "[EN] The message",
+        "audience": "[EN] Who gets it",
+        "approval": "[EN] A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
-        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "[EN] Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "[EN] Languages in their own words",
         "webOff": "[EN] Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "[EN] This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "[EN] Round for: {headline}",
         "floor": "[EN] Floor {floor}",
+        "floorColumn": "[EN] Floor",
         "floorGone": "[EN] A floor removed since",
         "total": "[EN] In all",
         "count": "{label}: {n}",
@@ -6309,7 +6319,7 @@
     "buildings": "ਅਪਾਰਟਮੈਂਟ ਇਮਾਰਤਾਂ",
     "buildingsCount": "{n} ਇਮਾਰਤਾਂ",
     "buildingsCountOne": "1 ਇਮਾਰਤ",
-    "filtered": "ਸਿਰਫ਼ ਉਹ ਥਾਵਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ ਜੋ ਡਾਇਰੈਕਟਰੀ ਵਿੱਚ ਤੁਹਾਡੇ ਚੁਣੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।"
+    "filtered": "ਸਿਰਫ਼ ਉਹ ਥਾਵਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ ਜੋ ਤੁਹਾਡੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।"
   },
   "guides": {
     "reviewed": "ਹੱਬ ਨੇ ਜਾਂਚਿਆ, ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ"

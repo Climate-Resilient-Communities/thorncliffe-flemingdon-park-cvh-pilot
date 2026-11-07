@@ -69,6 +69,12 @@
   }
 
   /* The threads behind a place's status (S05.06): one link each, named by its types, at least a finger tall. */
+  /* Under a neighbourhood: the words before the alerts for some of its buildings. */
+  .home-place__sub {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
   .home-threads {
     display: flex;
     flex-direction: column;
@@ -314,13 +320,21 @@
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='4.5' y='3.5' width='15' height='18' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 3.5h6v3H9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m8.5 12.5 2 2 4-4'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8.5 17.5h7'/%3E%3C/svg%3E");
   }
 
-  /* Text alerts (R-05): a speech bubble. Its destination is drawn only from the desktop breakpoint (desktop.css). */
+  /* Text alerts (R-05): a speech bubble, on the button at the top of home. */
   .home-ico--text {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6.5 3.5h11a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4h.5A2.5 2.5 0 0 1 4 14V6a2.5 2.5 0 0 1 2.5-2.5z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 8.5h8M8 12h5'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6.5 3.5h11a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4h.5A2.5 2.5 0 0 1 4 14V6a2.5 2.5 0 0 1 2.5-2.5z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 8.5h8M8 12h5'/%3E%3C/svg%3E");
   }
 
-  .home-list--dest > li.home-dest--wide {
-    display: none;
+  /* The top of home: the 911 notice, then the button to text alerts, the prototype's .cvh-topbtn (a destination of full weight, 68 px floor). */
+  .home-top {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-stack);
+  }
+
+  .home-dest--top {
+    flex: none;
+    min-block-size: 68px;
   }
 }

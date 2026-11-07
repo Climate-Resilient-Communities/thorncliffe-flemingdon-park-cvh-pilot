@@ -478,8 +478,8 @@ describe("the command line", () => {
     const after = read("questions.jsonl");
     expect(after.startsWith(before)).toBe(true);
     const added = after.slice(before.length).trim().split("\n").map((l) => JSON.parse(l) as TestQuestion);
-    // The set holds en-01 to en-32 (en-11 to en-32: the interim tuning's English questions, 2026-10-07) and ur-01 to ur-14.
-    expect(added.map((q) => q.id)).toEqual(["en-33", "en-34", "en-35", "en-36", "en-37", "ur-15", "ur-16", "ur-17", "ur-18", "ur-19"]);
+    // The set holds en-01 to en-34 (en-11 to en-32: the interim tuning's English questions, 2026-10-07; en-33 and en-34: UAT 2026-11-04) and ur-01 to ur-14.
+    expect(added.map((q) => q.id)).toEqual(["en-35", "en-36", "en-37", "en-38", "en-39", "ur-15", "ur-16", "ur-17", "ur-18", "ur-19"]);
     const subsets = SubsetsFileSchema.parse(JSON.parse(read("subsets.json")));
     expect(added.filter((q) => q.split === "evaluation").map((q) => q.id).sort()).toEqual(subsets.evaluation.filter((id) => added.some((q) => q.id === id)));
     expect(added.filter((q) => q.lang === "en" && q.split === "evaluation").length).toBeGreaterThanOrEqual(3); // en had 1

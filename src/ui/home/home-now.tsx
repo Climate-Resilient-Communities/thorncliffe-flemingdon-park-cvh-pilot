@@ -26,14 +26,12 @@ import "../choices/choices.css";
 import "./home.css";
 
 // The Every day destinations of the prototype's R-03, in its order: find help (the directory, R-09), the map (R-14) and
-// be ready (R-24). Each one's words are the catalog's R03 key of the same name and `${key}Line`.
-// `wide` marks the one destination drawn only from the desktop breakpoint: on a desktop the side column has room for the way to
-// text alerts (R-05, the words of R03.getTextAlerts); on a phone it stays in "What I have told the CVH", as approved, so the phone is unchanged.
+// be ready (R-24). Each one's words are the catalog's R03 key of the same name and `${key}Line`. The way to text alerts
+// (R-05) is not one of them: it is the button at the top of the screen (HomeTop).
 const DESTINATIONS = [
-  { key: "findHelp", icon: "search", path: "/directory", wide: false },
-  { key: "map", icon: "map", path: "/map", wide: false },
-  { key: "beReady", icon: "ready", path: "/ready", wide: false },
-  { key: "getTextAlerts", icon: "text", path: "/text-alerts", wide: true },
+  { key: "findHelp", icon: "search", path: "/directory" },
+  { key: "map", icon: "map", path: "/map" },
+  { key: "beReady", icon: "ready", path: "/ready" },
 ] as const;
 
 type Translator = ReturnType<typeof useTranslations>;
@@ -58,6 +56,7 @@ function BuildingRowView({ row, lang }: { row: BuildingRow; lang: LaunchCode }) 
 }
 
 function NeighbourhoodRowView({ row, name, lang }: { row: NeighbourhoodRow; name: (id: string) => string; lang: LaunchCode }) {
+  const t = useTranslations("R03");
   return (
     <li className="home-place" data-testid={`home-neighbourhood-${row.id}`}>
       <div className="home-place__text">
@@ -67,6 +66,14 @@ function NeighbourhoodRowView({ row, name, lang }: { row: NeighbourhoodRow; name
         <StatusMark shown={row.shown} />
         <Unverified shown={row.shown} />
         <ThreadLinks behind={row.behind} lang={lang} testId={`home-neighbourhood-threads-${row.id}`} />
+        {row.inBuildings.length > 0 && (
+          <div data-testid={`home-neighbourhood-buildings-${row.id}`}>
+            <ResidentText as="p" className="home-place__sub">
+              {t("inBuildings")}
+            </ResidentText>
+            <ThreadLinks behind={row.inBuildings} lang={lang} testId={`home-neighbourhood-building-threads-${row.id}`} />
+          </div>
+        )}
       </div>
     </li>
   );
@@ -166,7 +173,7 @@ function EveryDay({ lang }: { lang: LaunchCode }) {
         </ResidentText>
         <ul className="home-list home-list--dest">
           {DESTINATIONS.map((d) => (
-            <li key={d.key} className={d.wide ? "home-dest--wide" : undefined}>
+            <li key={d.key}>
               {/* prefetch off, as the shell's navigation links to the same pages: Next would otherwise fetch each page as soon as its link is on screen. */}
               <Link className="home-dest tap" href={`/${lang}${d.path}`} prefetch={false} data-testid={`home-dest-${d.key}`}>
                 <span className={`home-ico home-ico--${d.icon}`} aria-hidden="true" />
@@ -187,14 +194,35 @@ function EveryDay({ lang }: { lang: LaunchCode }) {
 }
 
 /**
- * The end of home: "Every day", the short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline) directly under
- * it, then `children` (the link to "What I have told the CVH"). From the desktop breakpoint it is the side column.
+ * The top of home, in every state of the screen: the short 911 notice first (UAT 2026-11-04, replacing owner decisions 36 and 37,
+ * which had it under "Every day"), then the prototype's R-03 top button to text alerts (R-05). The phone does not know whether
+ * this resident has signed up (the subscription is on the server, and home asks it nothing about the resident), so the button
+ * is always there.
  */
-function HomeSide({ lang, x01, children }: { lang: LaunchCode; x01: Parameters<typeof Not911>[0]["t"]; children?: ReactNode }) {
+function HomeTop({ lang, x01 }: { lang: LaunchCode; x01: Parameters<typeof Not911>[0]["t"] }) {
+  const t = useTranslations("R03");
+  return (
+    <div className="home-top" data-testid="home-top">
+      <Not911 variant="inline" t={x01} />
+      <Link className="home-dest home-dest--top tap" href={`/${lang}/text-alerts`} prefetch={false} data-testid="home-get-text-alerts">
+        <span className="home-ico home-ico--text" aria-hidden="true" />
+        <span className="home-dest__text">
+          <ResidentText as="span">{t("getTextAlerts")}</ResidentText>
+          <ResidentText as="span" className="home-dest__line">
+            {t("getTextAlertsLine")}
+          </ResidentText>
+        </span>
+        <span className="home-ico home-ico--chevron" aria-hidden="true" />
+      </Link>
+    </div>
+  );
+}
+
+/** The end of home: "Every day", then `children` (the link to "What I have told the CVH"). From the desktop breakpoint it is the side column. */
+function HomeSide({ lang, children }: { lang: LaunchCode; children?: ReactNode }) {
   return (
     <div className="home-side" data-testid="home-side">
       <EveryDay lang={lang} />
-      <Not911 variant="inline" t={x01} />
       {children}
     </div>
   );
@@ -230,9 +258,10 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
     return (
       <Screen surface="resident" testId="home">
         <Stack gap="section-resident">
+          <HomeTop lang={lang} x01={x01} />
           {heading}
           <div className="home-cols" data-layout="columns" data-testid="home-columns">
-            <HomeSide lang={lang} x01={x01}>
+            <HomeSide lang={lang}>
               {children}
             </HomeSide>
           </div>
@@ -253,6 +282,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
     <Screen surface="resident" testId="home">
       <div className="home" data-testid="home-now" data-feed={feedState}>
         <Stack gap="section-resident">
+          <HomeTop lang={lang} x01={x01} />
           {heading}
 
           {/* One live region, always mounted, so a screen reader hears the note when it is put into it. Its text does not
@@ -275,6 +305,17 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
               wrappers are stacks with the screen's own gap, so the screen is drawn as before; the order is the same everywhere. */}
           <div className="home-cols" data-layout="columns" data-testid="home-columns">
           <div className="home-main" data-testid="home-main">
+          {/* The current alerts first, under "Alerts now", as the prototype's R-03 has its cards (UAT 2026-11-04: an alert further
+              down, under places that read "Nothing active", was taken for no alert). */}
+          {feed.feed && (
+            <section data-testid="home-alerts">
+              <Stack gap="related">
+                <ResidentText as="h2">{t("currentAlerts")}</ResidentText>
+                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} choices={choices} list={list} offline={feed.failed && feed.at !== null ? { now: feed.now, receivedAt: feed.at } : null} />
+              </Stack>
+            </section>
+          )}
+
           {rows.buildings.length > 0 ? (
             <section data-testid="home-buildings">
               <Stack gap="related">
@@ -312,15 +353,6 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             </Stack>
           </section>
 
-          {feed.feed && (
-            <section data-testid="home-alerts">
-              <Stack gap="related">
-                <ResidentText as="h2">{t("currentAlerts")}</ResidentText>
-                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} choices={choices} list={list} offline={feed.failed && feed.at !== null ? { now: feed.now, receivedAt: feed.at } : null} />
-              </Stack>
-            </section>
-          )}
-
           {/* The prototype's archive link (R-03, S05.07): the alerts that have ended stay readable (R-08). It is there whatever the feed says. */}
           <Link className="home-archive tap" href={`/${lang}/archive`} prefetch={false} data-testid="home-archive">
             <span className="alert-ico alert-ico--clock alert-ico--sm" aria-hidden="true" />
@@ -328,7 +360,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
           </Link>
           </div>
 
-          <HomeSide lang={lang} x01={x01}>
+          <HomeSide lang={lang}>
             {children}
           </HomeSide>
           </div>

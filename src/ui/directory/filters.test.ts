@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildListing } from "../../../e2e/resident/directory-fixture";
 import { DirectoryListingV1, type ListingProvider } from "@/contracts/directory";
-import { activeKeys, filterKeyId, filterProviders, isActive, listProviders, NO_FILTERS, removeFilter, setFilter } from "./filters";
+import { activeKeys, filterKeyId, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, removeFilter, setFilter, subcategoryId } from "./filters";
 
 const providers: ListingProvider[] = DirectoryListingV1.parse(buildListing("en", 7)).providers;
 const ids = (list: ListingProvider[]) => list.map((p) => p.id).sort();
@@ -57,6 +57,22 @@ describe("filterProviders", () => {
     expect(ids(filterProviders(providers, setFilter(NO_FILTERS, { kind: "emergency" }, true)))).toEqual(["P101", "P104"]);
   });
 
+  it("takes the chosen subcategories as alternatives, matched on the English each stands for without case", () => {
+    const legal = setFilter(NO_FILTERS, { kind: "subcategory", id: "legal services" }, true);
+    expect(ids(filterProviders(providers, legal))).toEqual(["P103"]);
+    expect(ids(filterProviders(providers, setFilter(legal, { kind: "subcategory", id: "health clinics" }, true)))).toEqual(["P102", "P103"]);
+    // The match reads the English original, so it holds on the Urdu listing too.
+    const urdu = DirectoryListingV1.parse(buildListing("ur", 7)).providers;
+    expect(ids(filterProviders(urdu, setFilter(NO_FILTERS, { kind: "subcategory", id: "cooling spaces" }, true)))).toEqual(["P104"]);
+  });
+
+  it("a subcategory and a topic together all have to hold", () => {
+    let state = setFilter(NO_FILTERS, { kind: "category", id: "community" }, true);
+    state = setFilter(state, { kind: "subcategory", id: "newcomer supports" }, true);
+    expect(ids(filterProviders(providers, state))).toEqual(["P105"]);
+    expect(ids(filterProviders(providers, setFilter(state, { kind: "subcategory", id: "libraries" }, true)))).toEqual(["P104", "P105"]);
+  });
+
   it("requires every filter that is on, and finds nothing for a combination no provider fits", () => {
     let state = setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true);
     state = setFilter(state, { kind: "emergency" }, true);
@@ -76,16 +92,46 @@ describe("filter state", () => {
   it("lists the filters that are on in a fixed order, each removable, and Clear all is the empty state", () => {
     let state = setFilter(NO_FILTERS, { kind: "emergency" }, true);
     state = setFilter(state, { kind: "neighbourhood", id: "FP" }, true);
+    state = setFilter(state, { kind: "subcategory", id: "cooling spaces" }, true);
     state = setFilter(state, { kind: "category", id: "food" }, true);
-    expect(activeKeys(state).map(filterKeyId)).toEqual(["category:food", "neighbourhood:FP", "emergency"]);
+    expect(activeKeys(state).map(filterKeyId)).toEqual(["category:food", "subcategory:cooling spaces", "neighbourhood:FP", "emergency"]);
     expect(isActive(state, { kind: "emergency" })).toBe(true);
-    expect(activeKeys(removeFilter(state, { kind: "category", id: "food" })).map(filterKeyId)).toEqual(["neighbourhood:FP", "emergency"]);
+    expect(isActive(state, { kind: "subcategory", id: "cooling spaces" })).toBe(true);
+    expect(activeKeys(removeFilter(state, { kind: "subcategory", id: "cooling spaces" })).map(filterKeyId)).toEqual(["category:food", "neighbourhood:FP", "emergency"]);
     expect(activeKeys(NO_FILTERS)).toEqual([]);
   });
 
   it("turning a filter on twice keeps it once", () => {
     const twice = setFilter(setFilter(NO_FILTERS, { kind: "category", id: "food" }, true), { kind: "category", id: "food" }, true);
     expect(twice.categories).toEqual(["food"]);
+  });
+});
+
+describe("listingSubcategories", () => {
+  it("lists each subcategory of the release once, named across languages by the English it stands for, by name in the order of the language", () => {
+    const listed = listingSubcategories(providers, "en");
+    expect(listed.map((sub) => sub.id)).toEqual(["cooling spaces", "food collaboratives", "health clinics", "legal services", "libraries", "newcomer supports"]);
+    expect(listed.map((sub) => sub.name.body)).toEqual(["Cooling Spaces", "Food Collaboratives", "Health Clinics", "Legal Services", "Libraries", "Newcomer Supports"]);
+    const doubled = listingSubcategories([...providers, ...providers], "en");
+    expect(doubled.map((sub) => sub.id)).toEqual(listed.map((sub) => sub.id));
+  });
+
+  it("carries the words of the page language, while the id stays the English", () => {
+    const urdu = DirectoryListingV1.parse(buildListing("ur", 7)).providers;
+    const cooling = listingSubcategories(urdu, "ur").find((sub) => sub.id === "cooling spaces")!;
+    expect(cooling.name.body).toBe("ٹھنڈک کی جگہیں");
+  });
+
+  it("narrows the choices to the chosen topics, keeping a chosen subcategory listed so it can be taken back", () => {
+    expect(listingSubcategories(providers, "en", ["food"]).map((sub) => sub.id)).toEqual(["food collaboratives"]);
+    expect(listingSubcategories(providers, "en", ["food"], ["legal services"]).map((sub) => sub.id)).toEqual(["food collaboratives", "legal services"]);
+    expect(listingSubcategories(providers, "en", [], ["legal services"]).map((sub) => sub.id)).toEqual(listingSubcategories(providers, "en").map((sub) => sub.id));
+  });
+
+  it("subcategoryId is the trimmed English without case, so a renamed translation keeps its filter", () => {
+    const sub = providers.find((p) => p.id === "P104")!.subcategories[1];
+    expect(subcategoryId(sub)).toBe("cooling spaces");
+    expect(subcategoryId({ ...sub, original: { lang: "en", body: "  Cooling Spaces " } })).toBe("cooling spaces");
   });
 });
 

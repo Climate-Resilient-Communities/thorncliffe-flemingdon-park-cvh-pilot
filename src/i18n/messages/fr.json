@@ -91,7 +91,8 @@
     "short": "Pas un service d'urgence. En danger? Appelez le 911.",
     "sms": "Le Hub n'est pas un service d'urgence. Si quelqu'un est en danger, appelez le 911.",
     "partner": "Cet espace n'appelle le 911 pour personne. Si quelqu'un est en danger, appelez vous-même le 911. Ne supposez pas qu'un autre organisme l'a fait.",
-    "print": "Ceci n'est pas un service d'urgence. Si quelqu'un est en danger, appelez le 911."
+    "print": "Ceci n'est pas un service d'urgence. Si quelqu'un est en danger, appelez le 911.",
+    "need211": "Besoin d'aide? Appelez le 211."
   },
   "x02": {
     "official": "Alerte officielle de {source}",
@@ -553,7 +554,8 @@
     "myBuildings": "Vos immeubles",
     "checking": "Vérification des alertes",
     "feedFailed": "Nous n'avons pas pu vérifier les alertes pour le moment. Un lieu marqué « Inconnu » peut tout de même avoir une alerte. Nous allons réessayer.",
-    "feedFailedOld": "Nous n'avons pas pu vérifier s'il y a de nouvelles alertes. Affichage de ce qui a été chargé pour la dernière fois {t}."
+    "feedFailedOld": "Nous n'avons pas pu vérifier s'il y a de nouvelles alertes. Affichage de ce qui a été chargé pour la dernière fois {t}.",
+    "inBuildings": "Alertes pour des immeubles d'ici :"
   },
   "R04": {
     "deviceLabel": "Texto sur un téléphone de base",
@@ -5032,6 +5034,13 @@
         "closes": "[EN] The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
         "reach": "[EN] Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
         "stops": "[EN] Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      },
+      "progress": {
+        "label": "[EN] Composing an alert",
+        "what": "[EN] What and where",
+        "message": "[EN] The message",
+        "audience": "[EN] Who gets it",
+        "approval": "[EN] A second person approves"
       }
     },
     "approve": {
@@ -5155,7 +5164,7 @@
         "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
-        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webValue": "[EN] Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.",
         "webLanguages": "[EN] Languages in their own words",
         "webOff": "[EN] Published in the Hub. Residents do not see alerts until alerts are switched on.",
         "webEnded": "[EN] This alert is no longer live. It was published in {n} languages, each in their own words.",
@@ -6160,6 +6169,7 @@
         "none": "[EN] No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.",
         "forAlert": "[EN] Round for: {headline}",
         "floor": "[EN] Floor {floor}",
+        "floorColumn": "[EN] Floor",
         "floorGone": "[EN] A floor removed since",
         "total": "[EN] In all",
         "count": "{label}: {n}",
@@ -6309,7 +6319,7 @@
     "buildings": "Immeubles d'habitation",
     "buildingsCount": "{n} immeubles",
     "buildingsCountOne": "1 immeuble",
-    "filtered": "Seuls les lieux qui correspondent aux filtres choisis dans le répertoire sont affichés."
+    "filtered": "Seuls les lieux qui correspondent à vos filtres sont affichés."
   },
   "guides": {
     "reviewed": "Vérifié par le Hub, dernière mise à jour le {date}"

@@ -1396,7 +1396,7 @@
     "buildings": "அடுக்குமாடிக் கட்டடங்கள்",
     "buildingsCount": "{n} கட்டடங்கள்",
     "buildingsCountOne": "1 கட்டடம்",
-    "filtered": "அடைவில் நீங்கள் தேர்ந்தெடுத்த வடிகட்டிகளுக்குப் பொருந்தும் இடங்கள் மட்டுமே காட்டப்படுகின்றன."
+    "filtered": "உங்கள் வடிகட்டிகளுக்குப் பொருந்தும் இடங்கள் மட்டுமே காட்டப்படுகின்றன."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
@@ -1565,4 +1565,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "ஆம், Thorncliffe Park Community Hub இன் CVH குறுஞ்செய்தி எச்சரிக்கைகளை இந்த எண்ணுக்கு அனுப்பவும்.", "optional": "குறுஞ்செய்தி எச்சரிக்கைகள் விருப்பத்தேர்வு. பதிவு செய்யாமலேயே இந்த செயலியின் எல்லா பகுதிகளையும் பயன்படுத்தலாம்.", "missingTexts": "குறுஞ்செய்தி எச்சரிக்கைகளைப் பெற உங்கள் ஒப்புதல்", "error": {"texts_not_agreed": "பதிவு செய்ய, குறுஞ்செய்தி எச்சரிக்கைகளைப் பெறும் பெட்டியில் டிக் செய்யவும்."}}, "R04": {"levelCommunity": "Thorncliffe Park Community Hub எச்சரிக்கை. மையம் சரிபார்த்தது.", "fromHub": "Thorncliffe Park Community Hub எச்சரிக்கை"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "உதவி தேவையா? 211-ஐ அழைக்கவும்."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "இங்குள்ள கட்டடங்களுக்கான எச்சரிக்கைகள்:"}});
 })();

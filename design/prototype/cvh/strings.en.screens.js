@@ -1654,7 +1654,7 @@
     wholeArea: 'Show the whole area',
     buildings: 'Apartment buildings',
     buildingsCount: '{n} buildings', buildingsCountOne: '1 building',
-    filtered: 'Showing only the places that match the filters you chose in the directory.' } });
+    filtered: 'Showing only the places that match your filters.' } });
   /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
   m(en, {
     R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },
@@ -2025,7 +2025,7 @@
     leadDrill: 'This is a drill. Its texts went only to the people on the drill roster.',
     whereTitle: 'What went where',
     webLabel: 'App and web',
-    webValue: 'Live now for residents who follow this place, in {n} languages, each in their own words.',
+    webValue: 'Live now on the app for every resident, first for those who follow this place, in {n} languages, each in their own words.',
     webLanguages: 'Languages in their own words',
     webOff: 'Published in the Hub. Residents do not see alerts until alerts are switched on.',
     webEnded: 'This alert is no longer live. It was published in {n} languages, each in their own words.',
@@ -2793,6 +2793,7 @@
       none: 'No check-in round is running now. A round starts when a heat or power alert is approved for buildings with floor ambassadors.',
       forAlert: 'Round for: {headline}',
       floor: 'Floor {floor}',
+      floorColumn: 'Floor',
       floorGone: 'A floor removed since',
       total: 'In all',
       count: '{label}: {n}',
@@ -2887,4 +2888,10 @@ providers: 'Keep the directory current', providersDetail: 'Confirm provider deta
 } } });
 m(en, { display: { title: 'Display settings', close: 'Done', textSize: 'Text size', standard: 'Standard', large: 'Large', simpler: 'Simpler view', help: 'Show fewer details and use lists instead of the map. Text size stays the same.', saved: 'Saved on this device.', sessionOnly: 'Your browser cannot save this setting. It will last for this session only.' } });
 m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: 'Turn off simpler view' } });
+  /* UAT 2026-11-04: the way to 211 beside the 911 note at the top of Find help (R-09). */
+  m(en, {"x01": {"need211": "Need help? Call 211."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood, named beside its status. */
+  m(en, {"R03": {"inBuildings": "Alerts for buildings here:"}});
+  /* UAT 2026-11-04: where an author is in composing an alert (the prototype's O-02 step bar). Staff wording, English only. */
+  m(en, { staff: { compose: { progress: { label: 'Composing an alert', what: 'What and where', message: 'The message', audience: 'Who gets it', approval: 'A second person approves' } } } });
 })();

@@ -1372,7 +1372,7 @@
     "buildings": "Πολυκατοικίες",
     "buildingsCount": "{n} κτίρια",
     "buildingsCountOne": "1 κτίριο",
-    "filtered": "Εμφανίζονται μόνο τα μέρη που ταιριάζουν με τα φίλτρα που επιλέξατε στον κατάλογο."
+    "filtered": "Εμφανίζονται μόνο τα μέρη που ταιριάζουν με τα φίλτρα σας."
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
@@ -1541,4 +1541,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "Ναι, στείλτε μου ειδοποιήσεις CVH με μήνυμα από το Thorncliffe Park Community Hub σε αυτόν τον αριθμό.", "optional": "Οι ειδοποιήσεις με μήνυμα είναι προαιρετικές. Μπορείτε να χρησιμοποιήσετε όλη την εφαρμογή χωρίς εγγραφή.", "missingTexts": "τη συγκατάθεσή σας για ειδοποιήσεις με μήνυμα", "error": {"texts_not_agreed": "Για να εγγραφείτε, επιλέξτε το κουτί για τις ειδοποιήσεις με μήνυμα."}}, "R04": {"levelCommunity": "Ειδοποίηση από το Thorncliffe Park Community Hub. Επαληθεύτηκε από το Hub.", "fromHub": "Ειδοποίηση από το Thorncliffe Park Community Hub"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "Χρειάζεστε βοήθεια; Καλέστε το 211."}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "Ειδοποιήσεις για κτίρια εδώ:"}});
 })();

@@ -1,4 +1,5 @@
 import { Grid, Stack } from "@/ui";
+import { ComposeProgress } from "../ComposeProgress";
 import { GroupsForm, PlaceForm, type AudienceAction } from "./AudienceForms";
 import type { AudienceState } from "./editAudience";
 import type { AsideView, AudienceScreen, StepsView } from "./view";
@@ -97,6 +98,7 @@ export function AudienceBody({ screen, actions, initial }: { screen: AudienceScr
     <Grid twoColumn="aside">
       <Stack gap="section-hub-main">
         <Stack gap="related">
+          {screen.progress && <ComposeProgress view={screen.progress} />}
           <h1>{screen.title}</h1>
           <p>{screen.lead}</p>
           <Notice text={screen.notice} />

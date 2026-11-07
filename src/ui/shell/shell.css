@@ -8,6 +8,9 @@
 @layer components {
   .shell {
     display: grid;
+    /* One column no wider than the window: without it, the header's widest words (a long language name in Chinese at 320 px, beside
+       "My choices") set the column's width and the page scrolls sideways. */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto;
     block-size: 100dvh;
     background-color: var(--surface);
@@ -64,6 +67,35 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+
+  /* "My choices" (R-34): the person mark on a phone, its name read and not shown, as the Aa button is; the name is shown from
+     the desktop breakpoint (desktop.css). It keeps the full tap size and never shrinks below it. */
+  .shell-choices-tool {
+    flex: none;
+    justify-content: center;
+    min-inline-size: var(--tap-current);
+    max-inline-size: none;
+    text-decoration: none;
+  }
+
+  .shell-choices-tool[aria-current="page"] {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
+  .shell-choices-tool__label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .shell-choices-tool:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   /*

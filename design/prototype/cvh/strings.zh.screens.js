@@ -1396,7 +1396,7 @@
     "buildings": "公寓楼",
     "buildingsCount": "{n} 栋楼",
     "buildingsCountOne": "1 栋楼",
-    "filtered": "只显示与您在目录中所选筛选条件相符的地点。"
+    "filtered": "只显示与您所选筛选条件相符的地点。"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
@@ -1565,4 +1565,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "是的，请将 Thorncliffe Park Community Hub 的 CVH 短信警报发送到此号码。", "optional": "短信警报是可选的。不注册也可以使用本应用的所有功能。", "missingTexts": "您同意接收短信警报", "error": {"texts_not_agreed": "如需注册，请勾选接收短信警报的方框。"}}, "R04": {"levelCommunity": "Thorncliffe Park Community Hub 警报。已由中心核实。", "fromHub": "Thorncliffe Park Community Hub 警报"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "需要帮助？请拨打 211。"}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "这里楼宇的警报："}});
 })();

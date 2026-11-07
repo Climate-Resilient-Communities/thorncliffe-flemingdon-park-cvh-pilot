@@ -4,7 +4,7 @@ import { FloorIdSchema, RsnSchema } from "./places";
 /**
  * The building list a resident's phone keeps (`GET /api/buildings`): the pilot buildings and their floors, the same for
  * every visitor. Residents pick from it on R-35 and the phone checks its saved choices against it (S02.03). It carries
- * only what a resident needs: no facts, no confirmation state, nothing about who chose what.
+ * only what a resident needs: two facts for the map's filters, no confirmation state, nothing about who chose what.
  */
 export const BuildingListSchema = z.object({
   v: z.literal(1),
@@ -22,6 +22,12 @@ export const BuildingListSchema = z.object({
        */
       lat: z.number().optional(),
       lng: z.number().optional(),
+      /**
+       * Two register facts the map filters building pins by (UAT 2026-11-04): a cooling room, and air conditioning of any kind. Null
+       * when the register does not say; optional so that a list without them (an older server, a kept list) still loads.
+       */
+      coolingRoom: z.boolean().nullable().optional(),
+      airConditioning: z.boolean().nullable().optional(),
       /** Lowest first. */
       floors: z.array(z.object({ id: FloorIdSchema, label: z.string() })),
     }),

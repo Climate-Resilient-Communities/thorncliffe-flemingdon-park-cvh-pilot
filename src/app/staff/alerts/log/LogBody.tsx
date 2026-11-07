@@ -1,5 +1,6 @@
 "use client";
 
+import { ComposeProgress, type ComposeProgressView } from "../ComposeProgress";
 import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import { ExerciseMarker } from "../../ExerciseMarker";
@@ -38,7 +39,7 @@ function TypeGroup({ id, label, items, ticked, onToggle, describedBy }: { id: st
  * one Continue button. Every field is controlled, so a refusal that resets the form (React 19 resets a form after its action) leaves
  * what was typed. A time in the repeated hour of the clock change is asked about here, with the two readings, before anything is made.
  */
-export function LogBody({ screen, action, initialState = IDLE }: { screen: LogScreen; action: LogAction; initialState?: LogState }) {
+export function LogBody({ screen, action, initialState = IDLE, progress }: { screen: LogScreen; action: LogAction; initialState?: LogState; progress?: ComposeProgressView }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set([...screen.types.building.items, ...screen.types.neighbourhood.items].filter((item) => item.checked).map((item) => item.id)));
   const [date, setDate] = useState(screen.when.fields.date);
@@ -58,6 +59,8 @@ export function LogBody({ screen, action, initialState = IDLE }: { screen: LogSc
     <div className="hub-wrap">
       <Stack gap="section-hub-main">
         {screen.exercise ? <ExerciseMarker words={screen.exercise} /> : null}
+        {/* Opened as the first step of composing an alert (ComposerPage): where the author is in it. */}
+        {progress && <ComposeProgress view={progress} />}
         <Stack gap="related">
           <h1>{screen.title}</h1>
           <p>{screen.lead}</p>

@@ -26,8 +26,10 @@ export type PinWords = {
   word(pin: MapPin): { text: string; lang?: string } | null;
   /** The pin's name as a screen reader says it: its name and its kind. */
   name(pin: MapPin): string;
-  /** "{n} places here", for a cluster. */
+  /** "{n} places here", for a cluster, as a screen reader says it. */
   cluster(n: number): string;
+  /** "{n} places", the words a cluster shows (the prototype's R-14 group pill; UAT 2026-11-04: a bare number confused residents). */
+  clusterLabel(n: number): string;
   zoomIn: string;
   zoomOut: string;
 };
@@ -173,6 +175,19 @@ function addTiles(L: Leaflet, map: LeafletMap, tiles: TileSettings, onMissing: (
   }
 }
 
+/** A cluster's pill is a tap target's height. */
+const CLUSTER_HEIGHT = 44;
+
+/**
+ * The width of a cluster's pill for its words, in pixels: Leaflet needs the icon's size to centre it on the place, before the
+ * words are laid out. A wide character (Chinese) counts about twice a narrow one; the pill is never narrower than it is tall.
+ */
+export function clusterWidth(label: string): number {
+  let width = 28;
+  for (const char of label) width += char.codePointAt(0)! >= 0x2e80 ? 15 : 8.5;
+  return Math.max(CLUSTER_HEIGHT, Math.round(width));
+}
+
 /**
  * The map, drawn into `element`. Its zoom buttons are moved into `controls`, a bar outside the map's own area, so that no
  * control is drawn over a pin (production UAT, 2026-10-08: at 390 px a pin under the zoom buttons left a 44 by 13 px target).
@@ -192,10 +207,11 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
     spiderfyOnMaxZoom: true,
     iconCreateFunction: (cluster) => {
       const n = cluster.getChildCount();
+      const label = words.clusterLabel(n);
       return L.divIcon({
         className: "map-cluster",
-        html: `<span class="map-cluster__body"><span aria-hidden="true">${n}</span><span class="map-sr">${escape(words.cluster(n))}</span></span>`,
-        iconSize: [48, 48],
+        html: `<span class="map-cluster__body"><span aria-hidden="true">${escape(label)}</span><span class="map-sr">${escape(words.cluster(n))}</span></span>`,
+        iconSize: [clusterWidth(label), CLUSTER_HEIGHT],
       });
     },
   }).addTo(map);

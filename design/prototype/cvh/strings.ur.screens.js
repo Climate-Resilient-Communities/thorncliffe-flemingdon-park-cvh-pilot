@@ -1372,7 +1372,7 @@
     "buildings": "اپارٹمنٹ عمارتیں",
     "buildingsCount": "{n} عمارتیں",
     "buildingsCountOne": "1 عمارت",
-    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو ڈائریکٹری میں آپ کے چنے ہوئے فلٹرز سے ملتی ہیں۔"
+    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو آپ کے فلٹرز سے ملتی ہیں۔"
    }
   });
   /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
@@ -1541,4 +1541,8 @@
   /* Twilio toll-free verification (2026-10-13): a separate, unticked box to agree to text alerts, the line saying text alerts are
      optional, and the Hub's full name on alerts (R04.fromHub). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"textsAgree": "جی ہاں، Thorncliffe Park Community Hub کے CVH ٹیکسٹ الرٹ اس نمبر پر بھیجیں۔", "optional": "ٹیکسٹ الرٹ اختیاری ہیں۔ آپ سائن اپ کیے بغیر اس ایپ کا ہر حصہ استعمال کر سکتے ہیں۔", "missingTexts": "ٹیکسٹ الرٹ لینے کی آپ کی رضامندی", "error": {"texts_not_agreed": "سائن اپ کرنے کے لیے ٹیکسٹ الرٹ لینے والے خانے پر نشان لگائیں۔"}}, "R04": {"levelCommunity": "Thorncliffe Park Community Hub کا الرٹ۔ ہب نے تصدیق کی۔", "fromHub": "Thorncliffe Park Community Hub کا الرٹ"}});
+  /* UAT 2026-11-04: the way to 211 at the top of Find help (R-09). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"x01": {"need211": "مدد چاہیے؟ 211 پر کال کریں۔"}});
+  /* UAT 2026-11-04: on home, the alerts for buildings of a neighbourhood. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R03": {"inBuildings": "یہاں کی عمارتوں کے لیے الرٹس:"}});
 })();
