@@ -519,7 +519,8 @@ describe("the round progress view as each person (the page /staff/rounds, direct
       expect(html, role).toContain('data-count="needs_help" data-n="1"');
       expect(html.match(/data-testid="progress-floor"/g), role).toHaveLength(4);
       // The escalation is listed, with no number either.
-      expect(html, role).toContain("<strong>Needs help</strong>: 1 Count Street, floor 2");
+      expect(html, role).toContain('<span class="hub-pill hub-pill--needs_help">Needs help</span>');
+      expect(html, role).toContain("1 Count Street, floor 2");
       for (const subscriber of people) {
         expect(html, role).not.toContain(subscriber.phone);
         expect(html, role).not.toContain(subscriber.phone.slice(2));
