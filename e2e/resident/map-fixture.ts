@@ -86,6 +86,10 @@ export async function stubMap(page: Page): Promise<MapServer> {
   await context.route("**/api/buildings", (route: Route) =>
     route.fulfill({ json: { v: 1, generated_at: new Date().toISOString(), buildings: MAP_BUILDINGS }, headers: { "Cache-Control": "no-store" } }),
   );
+  // The spaces open now (the partner space, 2026-11-07): none, so the map's pins and screenshots are the directory's alone.
+  await context.route("**/api/spaces", (route: Route) =>
+    route.fulfill({ json: { v: 1, generated_at: new Date().toISOString(), spaces: [] }, headers: { "Cache-Control": "no-store" } }),
+  );
   await context.route(TILE_URL, (route: Route) => {
     server.tileRequests.push(route.request().url());
     if (server.tilesDown) return route.abort("internetdisconnected");

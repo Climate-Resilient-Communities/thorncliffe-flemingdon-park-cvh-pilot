@@ -314,7 +314,8 @@ test("map tiles are the only cross-origin request, and they carry nothing about 
   expect(usage.length).toBeGreaterThan(0);
   for (const request of usage) expectUsageRequest(await seenRequest(request));
   const data = seen.filter((request) => new URL(request.url()).origin === origin && new URL(request.url()).pathname.startsWith("/api/") && !isUsageRequest(request.url()));
-  for (const request of data) expect(new URL(request.url()).pathname, request.url()).toMatch(/^\/api\/(?:directory\/manifest|directory\/\d+\/en\.json|buildings)$/);
+  // The spaces open now (the partner space, 2026-11-07) are one more list every visitor gets alike.
+  for (const request of data) expect(new URL(request.url()).pathname, request.url()).toMatch(/^\/api\/(?:directory\/manifest|directory\/\d+\/en\.json|buildings|spaces)$/);
 
   const crossOrigin = seen.filter((request) => !request.url().startsWith("data:") && !request.url().startsWith("blob:") && new URL(request.url()).origin !== origin);
   expect(crossOrigin.length).toBeGreaterThan(0);
