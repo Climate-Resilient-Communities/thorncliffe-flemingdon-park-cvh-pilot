@@ -43,6 +43,7 @@ flowchart TD
   app --> audit
   app --> spend
   app --> ops
+  app --> partners
   alerting --> messaging
   alerting --> translation
   alerting --> places
@@ -76,6 +77,7 @@ flowchart TD
   translation --> spend
   spend --> audit
   identity --> audit
+  partners --> audit
 ```
 
 ## Invariants & Rules
@@ -98,7 +100,7 @@ flowchart TD
 
 - **Binds:** P3, P4, P5, P10, A1, A12, A13, N3
 - **Prevents:** the server learning a non-subscriber's building, floor or groups.
-- **Rule:** resident choices (language, buildings, floors, groups, muted topics, basic mode) live only in `localStorage`. Resident routes set no cookies: next-intl runs with `localeCookie: false`, Supabase middleware matches only `/staff/**` and `/api/staff/**`, and an end-to-end test asserts no `Set-Cookie` on `/[lang]/**`, `/api/feed`, `/api/buildings`, `/api/search`, `/api/directory/**`, `/api/metrics`, `/api/twilio/status` (S06.04) and `/a/**`. Resident requests never carry building, floor or groups, except the SMS sign-up and edit-link POSTs. The server serves whole-neighbourhood data; the device orders and highlights with the same matcher as SMS targeting (AD-7). Language is a URL segment. Usage counts come only from `/api/metrics`, which accepts `{evt, lang, nbhd?}`, stores daily counts and nothing else (no IP, no identifier).
+- **Rule:** resident choices (language, buildings, floors, groups, muted topics, basic mode) live only in `localStorage`. Resident routes set no cookies: next-intl runs with `localeCookie: false`, Supabase middleware matches only `/staff/**` and `/api/staff/**`, and an end-to-end test asserts no `Set-Cookie` on `/[lang]/**`, `/api/feed`, `/api/buildings`, `/api/spaces`, `/api/search`, `/api/directory/**`, `/api/metrics`, `/api/twilio/status` (S06.04) and `/a/**`. Resident requests never carry building, floor or groups, except the SMS sign-up and edit-link POSTs. The server serves whole-neighbourhood data; the device orders and highlights with the same matcher as SMS targeting (AD-7). Language is a URL segment. Usage counts come only from `/api/metrics`, which accepts `{evt, lang, nbhd?}`, stores daily counts and nothing else (no IP, no identifier).
 
 ### AD-4 — Staff identity, roles and authority
 
@@ -120,6 +122,10 @@ flowchart TD
 | Follow up an escalation: the resident's number, floor and method, and mark it handled | no | no | no | yes |
 | See counts and coverage | no | yes | yes (read-only) | yes |
 | See spend | no | no | yes (read-only) | yes |
+| See the spaces and the partner coordination area | no | yes | yes (read-only) | yes |
+| Set a space's status, purpose and capacity | no | yes | no | yes |
+
+- **As built (partner space, 2026-11-07, product owner's decision to build PRD §6.3's F1–F13 ahead of the MVP on dummy data):** the `partners` module owns the spaces partners open for residents (cooling, warming, clean air, charging) with their live status, and the coordination records of the Hub and partner screens P-01 to P-16 (organisations, the shared space of the disruption, statements, standing commitments, supplies, decisions, handovers, playbooks, teams and triggers, exercises, indicators, look back). Migration `20261107110000_partner_space.sql`; dummy data in `data/partners/seed.json`, loaded by `npm run seed:partners`. Partner staff act through Hub accounts for now: no new `staff_role`; `space.view` (Coordinator, Director read-only, Admin) opens the screens and `space.update` (Coordinator, Admin) changes a space, audited as `space.status_set` with a row in `space_change`. Residents read the open and full spaces from `GET /api/spaces` (public, cookie-free, the same for everyone, cached for 60 s and revalidated on every change).
 
   Every table has RLS enabled with no anon or authenticated policies; the app reaches Postgres only server-side through Drizzle. `supabase-js` is used for Auth and Storage only.
 
@@ -480,6 +486,7 @@ scripts/                   # seed loaders, string and token generators, search t
 | audit | `audit_event` |
 | spend | `spend_cap`, `spend_event`, `sms_reconciliation`, `sms_actual`, `sms_estimate_retirement` |
 | ops | `ops_event`, `oncall_roster`, `health_condition`, `health_heartbeat` |
+| partners | `partner_org`, `space`, `space_change`, `shared_space`, `partner_statement`, `partner_commitment`, `partner_supply`, `partner_decision`, `partner_handover`, `playbook`, `partner_team`, `partner_exercise`, `partner_indicator`, `look_back_record`, `look_back_action` |
 
 Partial entity view (relationships only):
 
