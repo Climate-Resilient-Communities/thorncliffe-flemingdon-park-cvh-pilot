@@ -1,0 +1,59 @@
+/*
+ * A place's status as a space on its listing (the partner space, 2026-11-07; the prototype's x09): a card with the status as a word on a pill,
+ * what the space is for, and when it was confirmed. Open is the space's filled green (the map's "Open as a space now" pin), full the accent
+ * bar, not confirmed the warm surface with the danger bar: the words always say it, the colour only adds. Tokens and logical properties only.
+ */
+@layer components {
+  .space-status {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding: var(--gap-related);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-inline-start: var(--offset-align-icon) solid var(--sprout-green);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .space-status--full {
+    border-inline-start-color: var(--accent-bar);
+  }
+
+  .space-status--unconfirmed {
+    border-inline-start-color: var(--danger);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .space-status__head {
+    font-weight: 700;
+  }
+
+  .space-status__pill {
+    display: inline-flex;
+    align-items: center;
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border: var(--offset-align-hairline) solid var(--sprout-green);
+    border-radius: var(--radius-header);
+    background-color: var(--sprout-green);
+    color: var(--on-deep);
+  }
+
+  .space-status__pill--full {
+    border-color: var(--ink);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  .space-status__pill--unconfirmed {
+    border-color: var(--danger);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .space-status__note {
+    font-size: var(--type-caption-size);
+  }
+}

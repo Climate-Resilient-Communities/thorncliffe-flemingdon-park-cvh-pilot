@@ -1,6 +1,6 @@
 import type { Coords, DivIcon, Leaflet, LeafletMap, Marker, TileEvent } from "leaflet";
 import type { Bounds, MapPin, MarkerKind } from "./places";
-import { NEIGHBOURHOODS_VIEW } from "./places";
+import { NEIGHBOURHOODS_VIEW, isOpenSpacePin } from "./places";
 import { cacheStorageStore, clearKeptTiles, createTileLoader, pruneStore, TileIndex, type IndexStorage } from "./tile-cache";
 
 // The map itself (R-14): Leaflet with clustered pins (Leaflet.markercluster), drawn into an element React gives it. Only
@@ -70,7 +70,8 @@ function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
       `<span class="map-pin__word" aria-hidden="true"><span dir="auto"${word.lang ? ` lang="${escape(word.lang)}"` : ""}>${escape(word.text)}</span></span>`
     : "";
   return L.divIcon({
-    className: `map-pin map-pin--${pin.marker}`,
+    // A place open as a space now (the partner space, 2026-11-07) takes the prototype's filled "space" look on top of its own shape.
+    className: `map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""}`,
     // Leaflet's own stylesheet (not in a layer) makes the icon element a block, so the layout is on an inner body.
     html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span></span>`,
     iconSize: [44, 44],
