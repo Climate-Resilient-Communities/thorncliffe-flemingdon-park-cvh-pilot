@@ -373,10 +373,10 @@ test.describe("what a screen reader reads", () => {
       await open(page, { texts: REAL_TEXTS, current: path });
 
       const links = page.getByTestId("hub-side").locator("a[href]");
-      await expect(links).toHaveCount(16);
+      await expect(links).toHaveCount(29); // the twenty-nine pages of the drawer test above
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
-      await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");
+      await expect(page.getByTestId("hub-side").getByRole("link", { name: current, exact: true })).toHaveAttribute("aria-current", "page");
     }
     // The home is current only for its own path, not for every page below /staff.
     await open(page, { texts: REAL_TEXTS, current: "/staff/people" });
@@ -406,7 +406,7 @@ test.describe("what a screen reader reads", () => {
       await expect(sideNav(page).getByRole("link", { name, disabled: true })).toHaveCount(1);
       await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(0);
     }
-    for (const name of ["Incidents", "Log a disruption", "Compose an alert", "Coverage", "Spend", "Measures", "People", "Directory", "Buildings"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
+    for (const name of ["Incidents", "Log a disruption", "Compose an alert", "Coverage", "Spend", "Measures", "People", "Directory", "Buildings"]) await expect(sideNav(page).getByRole("link", { name, exact: true, disabled: false })).toHaveCount(1);
 
     // Tab visits the pages and passes over the unbuilt ones.
     await sideNav(page).getByTestId("hub-nav-incidents").focus();
@@ -415,6 +415,8 @@ test.describe("what a screen reader reads", () => {
     await page.keyboard.press("Tab");
     await expect(sideNav(page).getByTestId("hub-nav-compose")).toBeFocused();
     await page.keyboard.press("Tab");
+    await expect(sideNav(page).getByTestId("hub-nav-moderation")).toBeFocused();
+    await page.keyboard.press("Tab");
     await expect(sideNav(page).getByTestId("hub-nav-coverage")).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(sideNav(page).getByTestId("hub-nav-spend")).toBeFocused();
@@ -422,8 +424,9 @@ test.describe("what a screen reader reads", () => {
     await expect(sideNav(page).getByTestId("hub-nav-measures")).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(sideNav(page).getByTestId("hub-nav-text-signup")).toBeFocused();
+    // Then the partner space's first page (This disruption, built 2026-11-07), before Administration.
     await page.keyboard.press("Tab");
-    await expect(sideNav(page).getByTestId("hub-nav-people")).toBeFocused();
+    await expect(sideNav(page).getByTestId("hub-nav-space")).toBeFocused();
     await sideNav(page).getByTestId("hub-nav-rounds").focus();
     await expect(sideNav(page).getByTestId("hub-nav-rounds")).not.toBeFocused();
   });

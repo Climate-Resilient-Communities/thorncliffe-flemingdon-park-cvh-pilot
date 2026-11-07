@@ -91,7 +91,7 @@ const floorState = (page: Page, label: string) => page.locator("li[data-testid^=
 test("an Ambassador has no Coverage item and sees a refusal on the page", async ({ page }) => {
   await signIn(page, "ambassador");
   await page.setViewportSize({ width: 1280, height: 800 });
-  await expect(page.getByTestId("hub-side").getByRole("link", { name: "Coverage" })).toHaveCount(0);
+  await expect(page.getByTestId("hub-side").getByRole("link", { name: "Coverage", exact: true })).toHaveCount(0);
 
   await page.goto("/staff/coverage");
   await expect(page.locator(`p[role="alert"]`)).toHaveText("Only an Admin, a Coordinator or a Director can see coverage.");
@@ -110,7 +110,7 @@ for (const role of ["coordinator", "director"] as const) {
     await signIn(page, role);
 
     await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Coverage" }).click();
+    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Coverage", exact: true }).click();
     await expect(page).toHaveURL(/\/staff\/coverage$/);
     await expect(page.getByRole("heading", { level: 1, name: "Ambassador coverage" })).toBeVisible();
     const item = page.getByTestId(`coverage-${RSN}`);
@@ -138,7 +138,7 @@ test("an Admin assigns an ambassador to all floors and to chosen floors, is refu
   const since = (await sql`select coalesce(max(id), 0)::int as max from audit_event`)[0].max as number;
 
   await page.getByRole("button", { name: "Menu" }).click();
-  await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Coverage" }).click();
+  await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "Coverage", exact: true }).click();
   await expect(page).toHaveURL(/\/staff\/coverage$/);
   await page.getByTestId(`coverage-${RSN}`).getByRole("link", { name: `Coverage of ${ADDRESS}` }).click();
   await expect(page).toHaveURL(new RegExp(`/staff/coverage\\?building=${RSN}$`));
