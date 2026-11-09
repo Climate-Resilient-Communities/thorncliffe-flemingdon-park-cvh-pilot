@@ -159,14 +159,14 @@ test.describe("the map (R-14)", () => {
     await expect(page.locator("[data-testid=map-filter-panel] fieldset > legend")).toHaveText(["Topic", "What kind of place?", "Apartment buildings"]);
     await expect(page.getByRole("group", { name: "What kind of place?" }).getByRole("checkbox")).toHaveCount(3);
 
-    // A kind of place: only its pins stay, with the buildings; the list shows the same.
+    // A kind of place: only its pins stay, and no building (UAT 2026-11-09); the list shows the same.
     await page.getByTestId("map-filter-subcategory-cooling spaces").check();
     await expect(page.locator(".leaflet-marker-icon.map-pin--cooling")).toHaveCount(1);
     await expect(page.locator(".leaflet-marker-icon.map-pin--water")).toHaveCount(0);
     await expect(page.locator(".leaflet-marker-icon.map-pin--washroom")).toHaveCount(0);
     await expect(page.locator(".leaflet-marker-icon.map-pin--service")).toHaveCount(0);
     await expect(page.locator(".map-cluster")).toHaveCount(0);
-    await expect(page.locator(".leaflet-marker-icon.map-pin--building")).toHaveCount(MAP_BUILDINGS.length);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--building")).toHaveCount(0);
     await expect(toggle).toHaveText("Filters (1)");
     await expect(page.getByTestId("map-filtered")).toContainText("Showing only the places that match your filters.");
     await expect(page.getByTestId("map-filters-apply")).toHaveText("Show 1 result");
@@ -176,7 +176,7 @@ test.describe("the map (R-14)", () => {
     await expect(page.getByTestId("map-filter-panel")).toBeHidden();
     await expect(toggle).toBeFocused();
     await page.getByTestId("map-view-list").click();
-    expect(await listed(page)).toEqual({ providers: ["M101"], buildings: MAP_BUILDINGS.map((b) => b.rsn).sort() });
+    expect(await listed(page)).toEqual({ providers: ["M101"], buildings: [] });
 
     // Remove all filters: every pin is back.
     await page.getByTestId("map-view-map").click();
