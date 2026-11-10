@@ -168,11 +168,13 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     [listing, locale, filters.categories, filters.subcategories],
   );
 
-  // With "Open as a space now" the map shows only the places open or full as a space, and the buildings only when a building fact is asked for too.
+  // A topic, a kind of place or "Open as a space now" shows only the places that match (UAT 2026-11-09: Museums showed the two
+  // museums and every apartment building); the buildings come back only when a building fact is asked for too.
+  const placeFilterCount = keys.length + (spacesOnly ? 1 : 0);
   const pins = useMemo<MapPin[]>(() => {
     const places = withSpaces(providerPins(listing ? filterProviders(listing.providers, filters) : []), openSpaces.spaces, openSpaces.at);
-    return [...(spacesOnly ? places.filter((pin) => pin.space) : places), ...(spacesOnly && factCount === 0 ? [] : buildingPins(buildings, facts))];
-  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount]);
+    return [...(spacesOnly ? places.filter((pin) => pin.space) : places), ...(placeFilterCount > 0 && factCount === 0 ? [] : buildingPins(buildings, facts))];
+  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount, placeFilterCount]);
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
   const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
   const providersLeft = inView.providers.length - providersShown.length;

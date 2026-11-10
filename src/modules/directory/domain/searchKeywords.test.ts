@@ -71,6 +71,26 @@ describe("keywordTokens", () => {
     }
   });
 
+  it("adds the seniors concept for the elderly, older people and grandparents, and the listings' seniors and long-term care (UAT 2026-11-09)", () => {
+    const concept = "concept:seniors";
+    for (const text of [
+      "services for the elderly",
+      "Services for older people",
+      "help for my old parents",
+      "my grandmother needs help at home",
+      "nursing home",
+      "seniors programs (Integrated Services for Seniors, personal support services)",
+      "low-income seniors 65+",
+      "seniors' club",
+      "Nurses are available 24/7 for short- or long-term care needs",
+    ]) {
+      expect(keywordTokens(text), text).toContain(concept);
+    }
+    for (const text of ["junior and senior kindergarten", "senior high school credits", "older children and youth", "where can I get food", "60 minutes"]) {
+      expect(keywordTokens(text), text).not.toContain(concept);
+    }
+  });
+
   it("reads no word of another script", () => {
     expect(keywordTokens("کھانا کہاں ملے گا")).toEqual([]);
     expect(keywordTokens("食物银行")).toEqual([]);

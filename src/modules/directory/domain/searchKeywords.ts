@@ -110,6 +110,27 @@ const CONCEPTS: readonly Concept[] = [
       "g",
     ),
   },
+  {
+    // Services for older people (UAT 2026-11-09: "老年人的服务", translated to "services for the elderly", showed an EarlyON centre
+    // and youth services and none of the seniors' programs): the residents' elderly, older people, grandparents or a nursing home
+    // against the listings' "seniors", "seniors 65+" and long-term care. Not a senior kindergarten or a senior high school.
+    token: "concept:seniors",
+    phrases: new RegExp(
+      [
+        "\\bseniors\\b(?!\\s+(?:kindergarten|high|public|school|staff))",
+        "\\bsenior(?:'s|s')?\\s+(?:citizens?|centres?|centers?|club|programs?|services?|homes?|housing|care|day)\\b",
+        "\\belders\\b",
+        "\\belderly\\b",
+        "\\b(?:older|aging|ageing|aged|old)\\s+(?:adults?|people|persons?|residents?|parents?|folks?|relatives?|mother|father|mom|dad|man|woman|men|women)\\b",
+        "\\bold\\s+age\\b",
+        "\\bgrand(?:mother|father|parent|ma|pa)s?\\b",
+        "\\b(?:55|60|65)\\s*(?:\\+|plus\\b|and\\s+(?:over|older)\\b)",
+        "\\blong[-\\s]term\\s+care\\b",
+        "\\b(?:nursing|retirement)\\s+(?:homes?|residences?)\\b",
+      ].join("|"),
+      "g",
+    ),
+  },
 ];
 
 // A clause that says the thing is not there: "no French immersion, ESL, or special education programs were listed".
