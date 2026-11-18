@@ -111,6 +111,33 @@ const CONCEPTS: readonly Concept[] = [
     ),
   },
   {
+    // Too hot (resident testing, session 2, 2026-11-18, #6: "it's too hot" and "I'm feeling hot" found nothing; only "cooling centres"
+    // did): the residents' heat, feeling hot, no air conditioning or wanting to cool down against the listings' "Cooling Spaces". A
+    // question in another language reaches it through its English translation. Not hot food, hot water or a hotline. The 911 block
+    // for heat stroke is the crisis phrases' (crisisPhrases.ts), not this.
+    token: "concept:cooling",
+    phrases: new RegExp(
+      [
+        "\\bcool(?:ing)?\\s+(?:spaces?|centres?|centers?|places?|spots?|rooms?)\\b",
+        "\\b(?:too|so|very|really|extremely|unbearably|super)\\s+(?:hot|warm)\\b",
+        "\\b(?:feel(?:s|ing)?|felt|getting|get|am|i'm|im)\\s+(?:so\\s+|very\\s+|too\\s+)?(?:hot|overheated)\\b",
+        "\\b(?:it's|it\\s+is|its)\\s+(?:so\\s+|very\\s+|too\\s+)?hot\\b",
+        "\\b(?:apartment|unit|room|home|house|place|flat|building)\\s+(?:is\\s+|gets\\s+|feels\\s+)?(?:so\\s+|very\\s+|too\\s+)?hot\\b",
+        "\\bhot\\s+(?:in|inside)\\s+(?:my|the|our)\\s+(?:apartment|unit|room|home|house|place|flat|building)\\b",
+        "\\bheat\\s*wave\\b",
+        "\\b(?:extreme|the)\\s+heat\\b",
+        "\\boverheat(?:ed|ing)?\\b",
+        "\\bcool\\s+(?:down|off)\\b",
+        "\\b(?:no|without|broken|need|want|with)\\s+(?:an?\\s+)?(?:ac|a/c|air[-\\s]?condition(?:ing|er|ed)?)\\b",
+        "\\b(?:don't|dont|doesn't|doesnt|do\\s+not|does\\s+not)\\s+have\\s+(?:an?\\s+)?(?:ac|a/c|air[-\\s]?condition(?:ing|er)?)\\b",
+        "\\bair[-\\s]?condition(?:ing|er|ed)\\b",
+        // The test card's own words: "a place near you with free AC that is open now".
+        "\\b(?:ac|a/c)\\b",
+      ].join("|"),
+      "g",
+    ),
+  },
+  {
     // Services for older people (UAT 2026-11-09: "老年人的服务", translated to "services for the elderly", showed an EarlyON centre
     // and youth services and none of the seniors' programs): the residents' elderly, older people, grandparents or a nursing home
     // against the listings' "seniors", "seniors 65+" and long-term care. Not a senior kindergarten or a senior high school.
