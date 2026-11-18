@@ -454,7 +454,9 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                   {/* Resident testing, session 2 (#8): "Open as a space now" left this list (it is the toggle above the map) and "Helps in an
                       emergency" is not offered on the map: neither reads as a kind of place. An "emergency" filter kept from the directory still
                       applies here and shows in the filter bar, where it can be removed. */}
-                  {/* Who runs it (session 2, #4 and #11): the directory's filter, here too, each choice with the mark its pins carry. */}
+                  {/* Who runs it (session 2, #4 and #11): the directory's filter, here too, each choice with the mark its pins carry; only for a
+                      release that says who runs its providers. */}
+                  {listing?.providers.some((provider) => provider.run_by !== null) && (
                   <fieldset className="map-fieldset">
                     <ResidentText as="legend" className="map-legend" testId="map-legend-run-by">
                       {t("directory.runByLegend")}
@@ -470,6 +472,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                       ))}
                     </Stack>
                   </fieldset>
+                  )}
                   {/* The pilot buildings by two facts of the City register (the building page's words). A building's cooling room is for its own
                       residents: these find buildings, not places to go. */}
                   <fieldset className="map-fieldset">

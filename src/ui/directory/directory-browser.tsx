@@ -323,7 +323,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                           ))}
                         </Stack>
                       </fieldset>
-                      <RunByFilter filters={filters} toggle={toggle} />
+                      {/* Only for a release that says who runs its providers (one published before provider-run-by.json has none). */}
+                      {listing?.providers.some((provider) => provider.run_by !== null) && <RunByFilter filters={filters} toggle={toggle} />}
                       <FilterOption id="emergency" checked={filters.emergency} onChange={(on) => toggle({ kind: "emergency" }, on)}>
                         <ResidentText>{t("directory.emergency")}</ResidentText>
                       </FilterOption>
