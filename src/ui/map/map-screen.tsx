@@ -84,6 +84,13 @@ function PinMark({ pin }: { pin: MapPin }) {
 }
 
 /** The legend's rows: each kind of pin (places.ts) and the catalog's words for it. */
+/** The provider a "See on the map" link opened the map on (`?place=M052`, session 2, #7); null on the server and for any other address. */
+function placeInAddress(): string | null {
+  const id = new URLSearchParams(window.location.search).get("place");
+  return id && /^[A-Z][0-9]{3,6}$/.test(id) ? id : null;
+}
+const noSubscription = () => () => undefined;
+
 const LEGEND = [
   { marker: "cooling", key: "subcats.Cooling Spaces" },
   { marker: "water", key: "subcats.Water Fountains" },
@@ -127,12 +134,8 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const bounds = basic ? NEIGHBOURHOODS_VIEW : areaInView;
   const selected = basic ? null : pinSelected;
   // "See on the map" (session 2, #7): the provider the map was opened on (`?place=M052`), read once after load (the page is prerendered).
-  const [placeTarget, setPlaceTarget] = useState<string | null>(null);
+  const placeTarget = useSyncExternalStore(noSubscription, placeInAddress, () => null);
   const focused = useRef(false);
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("place");
-    if (id && /^[A-Z][0-9]{3,6}$/.test(id)) setPlaceTarget(id);
-  }, []);
   const [missingTiles, setMissingTiles] = useState(0);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
   // The filters this visit: the ones applied here or in the directory, one state (kept in the tab, never sent).
@@ -345,19 +348,22 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         {/* Opened on one place from a result or the list (session 2, #7): back to where the resident came from (the directory when the page
             was opened on its own). */}
         {placeTarget && (
-          <button
-            type="button"
+          <Link
+            href={`/${lang}/directory`}
+            prefetch={false}
             className="map-btn map-btn--quiet map-back tap"
-            onClick={() => {
+            onClick={(event) => {
               const fromHere = document.referrer !== "" && new URL(document.referrer).origin === window.location.origin;
-              if (fromHere && window.history.length > 1) window.history.back();
-              else window.location.assign(`/${lang}/directory`);
+              if (fromHere && window.history.length > 1) {
+                event.preventDefault();
+                window.history.back();
+              }
             }}
             data-testid="map-back"
           >
             <span aria-hidden="true">{"\u2039"}</span>
             <ResidentText>{t("shell.back")}</ResidentText>
-          </button>
+          </Link>
         )}
         <div className="map-segment hide-basic" role="group" aria-label={plain(t("R14.title"))}>
           <button type="button" className="map-segment__btn tap" aria-pressed={view === "map"} onClick={() => setView("map")} data-testid="map-view-map">

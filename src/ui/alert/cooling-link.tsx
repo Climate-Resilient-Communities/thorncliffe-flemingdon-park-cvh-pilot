@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { readFilters, saveFilters, tabStorage } from "../directory/filter-store";
 import { setFilter } from "../directory/filters";
 import { COOLING_SPACES } from "../directory/quick-cooling";
@@ -13,15 +14,15 @@ import { ResidentText } from "../text/resident-text";
 export function CoolingLink({ lang, label }: { lang: string; label: string }) {
   const href = `/${lang}/map`;
   return (
-    <a
+    <Link
       className="alert-dest tap"
       href={href}
+      prefetch={false}
       data-testid="alert-cooling"
-      onClick={(event) => {
-        event.preventDefault();
+      onClick={() => {
+        // Saved before the link navigates, so the map opens with it on.
         const storage = tabStorage();
         saveFilters(storage, setFilter(readFilters(storage), { kind: "subcategory", id: COOLING_SPACES }, true));
-        window.location.assign(href);
       }}
     >
       <span className="alert-cooling__ico" aria-hidden="true" />
@@ -29,6 +30,6 @@ export function CoolingLink({ lang, label }: { lang: string; label: string }) {
         <ResidentText>{label}</ResidentText>
       </span>
       <span className="shell-ico shell-ico--chevron shell-ico--mirror" aria-hidden="true" />
-    </a>
+    </Link>
   );
 }
