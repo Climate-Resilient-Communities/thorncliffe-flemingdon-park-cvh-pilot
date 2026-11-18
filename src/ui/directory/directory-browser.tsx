@@ -325,9 +325,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                       </fieldset>
                       {/* Only for a release that says who runs its providers (one published before provider-run-by.json has none). */}
                       {listing?.providers.some((provider) => provider.run_by !== null) && <RunByFilter filters={filters} toggle={toggle} />}
-                      <FilterOption id="emergency" checked={filters.emergency} onChange={(on) => toggle({ kind: "emergency" }, on)}>
-                        <ResidentText>{t("directory.emergency")}</ResidentText>
-                      </FilterOption>
+                      {/* "Helps in an emergency" is no longer offered as a filter (resident testing, session 2, #8: it read as a category). Each
+                          card still says when a place helps in an emergency, and a filter kept from before shows in the bar until removed. */}
                       <div className="dir-actions">
                         <button type="button" className="dir-btn dir-btn--primary tap" onClick={closePanel} data-testid="filters-apply">
                           <ResidentText>{applyLabel}</ResidentText>

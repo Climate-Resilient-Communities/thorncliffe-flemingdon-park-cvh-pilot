@@ -45,7 +45,7 @@ test("no request carries the saved selection, the filters applied or the provide
   await page.getByTestId("filters-toggle").click();
   await page.getByTestId("filter-category-food").check();
   await page.getByTestId("filter-neighbourhood-TP").check();
-  await page.getByTestId("filter-emergency").check();
+  await page.getByTestId("filter-neighbourhood-FP").check();
   await page.getByTestId("provider-link").first().click();
   await page.getByTestId("back-to-directory").click();
   await page.getByTestId("clear-all").click();
