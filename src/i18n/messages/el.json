@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "Η σελίδα με τα τηλέφωνα έχει τους άλλους αριθμούς που μπορεί να χρειαστείτε.",
     "numbersLink": "Δείτε τα βασικά τηλέφωνα",
     "backToList": "Όλες οι υπηρεσίες και οι οργανισμοί",
-    "suggestApply": "Εμφάνιση μόνο: {place}"
+    "suggestApply": "Εμφάνιση μόνο: {place}",
+    "runByLegend": "Ποιος το λειτουργεί",
+    "runByFormal": "Καθιερωμένη υπηρεσία",
+    "runByGrassroots": "Κοινοτική ομάδα",
+    "runByFormalMany": "Καθιερωμένες υπηρεσίες",
+    "runByGrassrootsMany": "Κοινοτικές ομάδες",
+    "runByFormalLine": "Λειτουργεί από δημόσιο φορέα, οργανισμό ή ίδρυμα.",
+    "runByGrassrootsLine": "Λειτουργεί από κατοίκους ή εθελοντές."
   },
   "map": {
     "lead": "Υπηρεσίες, οργανισμοί και πολυκατοικίες στο Thorncliffe Park και στο Flemingdon Park. Πατήστε μια καρφίτσα για να δείτε τι είναι.",

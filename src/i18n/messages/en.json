@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "The numbers page lists the other numbers you may need.",
     "numbersLink": "See the essential numbers",
     "backToList": "All services and organisations",
-    "suggestApply": "Show only {place}"
+    "suggestApply": "Show only {place}",
+    "runByLegend": "Who runs it",
+    "runByFormal": "Established service",
+    "runByGrassroots": "Community group",
+    "runByFormalMany": "Established services",
+    "runByGrassrootsMany": "Community groups",
+    "runByFormalLine": "Run by a public body, an agency or an institution.",
+    "runByGrassrootsLine": "Run by residents or volunteers."
   },
   "map": {
     "lead": "Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.",

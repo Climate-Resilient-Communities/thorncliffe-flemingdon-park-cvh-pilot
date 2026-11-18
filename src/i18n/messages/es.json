@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "La página de números tiene los otros números que podría necesitar.",
     "numbersLink": "Ver los números esenciales",
     "backToList": "Todos los servicios y organizaciones",
-    "suggestApply": "Mostrar solo {place}"
+    "suggestApply": "Mostrar solo {place}",
+    "runByLegend": "Quién lo gestiona",
+    "runByFormal": "Servicio establecido",
+    "runByGrassroots": "Grupo comunitario",
+    "runByFormalMany": "Servicios establecidos",
+    "runByGrassrootsMany": "Grupos comunitarios",
+    "runByFormalLine": "Gestionado por un organismo público, una agencia o una institución.",
+    "runByGrassrootsLine": "Gestionado por residentes o voluntarios."
   },
   "map": {
     "lead": "Servicios, organizaciones y edificios de apartamentos en Thorncliffe Park y Flemingdon Park. Toque un marcador para ver qué es.",

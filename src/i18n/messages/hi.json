@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "नंबरों वाले पेज पर वे दूसरे नंबर हैं जिनकी आपको ज़रूरत पड़ सकती है।",
     "numbersLink": "ज़रूरी नंबर देखें",
     "backToList": "सभी सेवाएँ और संगठन",
-    "suggestApply": "सिर्फ़ {place} दिखाएँ"
+    "suggestApply": "सिर्फ़ {place} दिखाएँ",
+    "runByLegend": "इसे कौन चलाता है",
+    "runByFormal": "स्थापित सेवा",
+    "runByGrassroots": "सामुदायिक समूह",
+    "runByFormalMany": "स्थापित सेवाएँ",
+    "runByGrassrootsMany": "सामुदायिक समूह",
+    "runByFormalLine": "किसी सरकारी संस्था, एजेंसी या संस्थान द्वारा चलाई जाती है।",
+    "runByGrassrootsLine": "निवासियों या स्वयंसेवकों द्वारा चलाया जाता है।"
   },
   "map": {
     "lead": "Thorncliffe Park और Flemingdon Park में सेवाएँ, संगठन और अपार्टमेंट इमारतें। कोई पिन क्या है, यह देखने के लिए उस पर टैप करें।",

@@ -1,4 +1,4 @@
-import type { ListingProvider, ListingText, NeighbourhoodId } from "@/contracts/directory";
+import type { ListingProvider, ListingText, NeighbourhoodId, RunBy } from "@/contracts/directory";
 import { inTopic } from "./topics";
 
 // The directory's filters (R-27 as the pilot has it): category, subcategory (the directory's and the map's "What kind
@@ -14,13 +14,15 @@ export type FilterState = {
   /** Subcategories, by the English each stands for (subcategoryId): the release gives a subcategory no id of its own. */
   subcategories: readonly string[];
   neighbourhoods: readonly NeighbourhoodId[];
+  /** Who runs it (session 2, #4): established services, community groups, or (none chosen) both. */
+  runBy: readonly RunBy[];
   /** True: only providers with an emergency role. */
   emergency: boolean;
 };
 
-export const NO_FILTERS: FilterState = { topics: [], categories: [], subcategories: [], neighbourhoods: [], emergency: false };
+export const NO_FILTERS: FilterState = { topics: [], categories: [], subcategories: [], neighbourhoods: [], runBy: [], emergency: false };
 
-export type FilterKey = { kind: "topic"; id: string } | { kind: "category"; id: string } | { kind: "subcategory"; id: string } | { kind: "neighbourhood"; id: NeighbourhoodId } | { kind: "emergency" };
+export type FilterKey = { kind: "topic"; id: string } | { kind: "category"; id: string } | { kind: "subcategory"; id: string } | { kind: "neighbourhood"; id: NeighbourhoodId } | { kind: "runBy"; id: RunBy } | { kind: "emergency" };
 
 /** What names a subcategory across languages and releases: the English it stands for, compared without case (as the listing's chips do). */
 export const subcategoryId = (text: ListingText): string => text.original.body.trim().toLocaleLowerCase("en");
@@ -60,6 +62,8 @@ export function isActive(state: FilterState, key: FilterKey): boolean {
       return state.subcategories.includes(key.id);
     case "neighbourhood":
       return state.neighbourhoods.includes(key.id);
+    case "runBy":
+      return state.runBy.includes(key.id);
     case "emergency":
       return state.emergency;
   }
@@ -72,6 +76,7 @@ export function activeKeys(state: FilterState): FilterKey[] {
     ...state.categories.map((id): FilterKey => ({ kind: "category", id })),
     ...state.subcategories.map((id): FilterKey => ({ kind: "subcategory", id })),
     ...state.neighbourhoods.map((id): FilterKey => ({ kind: "neighbourhood", id })),
+    ...state.runBy.map((id): FilterKey => ({ kind: "runBy", id })),
     ...(state.emergency ? [{ kind: "emergency" } as const] : []),
   ];
 }
@@ -86,6 +91,8 @@ export function setFilter(state: FilterState, key: FilterKey, on: boolean): Filt
       return { ...state, subcategories: on ? [...new Set([...state.subcategories, key.id])] : state.subcategories.filter((id) => id !== key.id) };
     case "neighbourhood":
       return { ...state, neighbourhoods: on ? [...new Set([...state.neighbourhoods, key.id])] : state.neighbourhoods.filter((id) => id !== key.id) };
+    case "runBy":
+      return { ...state, runBy: on ? [...new Set([...state.runBy, key.id])] : state.runBy.filter((id) => id !== key.id) };
     case "emergency":
       return { ...state, emergency: on };
   }
@@ -100,6 +107,7 @@ export function filterProviders(providers: readonly ListingProvider[], state: Fi
     if (state.categories.length > 0 && !provider.category_ids.some((id) => state.categories.includes(id))) return false;
     if (state.subcategories.length > 0 && !provider.subcategories.some((sub) => state.subcategories.includes(subcategoryId(sub)))) return false;
     if (state.neighbourhoods.length > 0 && !provider.neighbourhood_ids.some((id) => state.neighbourhoods.includes(id))) return false;
+    if (state.runBy.length > 0 && (provider.run_by === null || !state.runBy.includes(provider.run_by))) return false;
     if (state.emergency && provider.emergency_role === null) return false;
     return true;
   });

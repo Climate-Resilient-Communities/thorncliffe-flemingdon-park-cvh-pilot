@@ -68,6 +68,15 @@ export const NEIGHBOURHOOD_IDS = ["TP", "FP"] as const;
 export const NeighbourhoodIdSchema = z.enum(NEIGHBOURHOOD_IDS);
 export type NeighbourhoodId = z.infer<typeof NeighbourhoodIdSchema>;
 
+/**
+ * Who runs a provider (resident testing, session 2, #4 and #11): `formal`, an established service (a public body, an agency with staff,
+ * an institution or business), or `grassroots`, a community group run by residents or volunteers. From the Hub's list,
+ * data/catalogue/provider-run-by.json.
+ */
+export const RUN_BY = ["formal", "grassroots"] as const;
+export const RunBySchema = z.enum(RUN_BY);
+export type RunBy = z.infer<typeof RunBySchema>;
+
 export const ListingProviderSchema = z.strictObject({
   id: z.string().regex(/^[A-Z][0-9]{3,6}$/),
   name: z.string().min(1),
@@ -79,6 +88,11 @@ export const ListingProviderSchema = z.strictObject({
    * before this field existed lack it: they are read with `[]` (the publish job always writes it).
    */
   neighbourhood_ids: z.array(NeighbourhoodIdSchema).default([]),
+  /**
+   * Who runs it (provider-run-by.json): an established service or a community group. Null when the list does not say, and for release
+   * files written before this field existed (read with null).
+   */
+  run_by: RunBySchema.nullable().default(null),
   subcategories: z.array(ListingTextSchema),
   locations: z.array(
     z.strictObject({

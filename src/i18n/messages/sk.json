@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "Na stránke s číslami sú ďalšie čísla, ktoré môžete potrebovať.",
     "numbersLink": "Zobraziť dôležité čísla",
     "backToList": "Všetky služby a organizácie",
-    "suggestApply": "Zobraziť len {place}"
+    "suggestApply": "Zobraziť len {place}",
+    "runByLegend": "Kto to prevádzkuje",
+    "runByFormal": "Zavedená služba",
+    "runByGrassroots": "Komunitná skupina",
+    "runByFormalMany": "Zavedené služby",
+    "runByGrassrootsMany": "Komunitné skupiny",
+    "runByFormalLine": "Prevádzkuje ju verejný orgán, agentúra alebo inštitúcia.",
+    "runByGrassrootsLine": "Prevádzkujú ju obyvatelia alebo dobrovoľníci."
   },
   "map": {
     "lead": "Služby, organizácie a bytové domy v Thorncliffe Parku a Flemingdon Parku. Ťuknite na špendlík a uvidíte, čo to je.",

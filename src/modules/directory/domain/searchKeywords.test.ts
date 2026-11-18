@@ -180,6 +180,7 @@ describe("keywordDocumentsOf (the release's English listing)", () => {
           name: "Flemingdon Food Bank",
           category_ids: ["c1"],
           neighbourhood_ids: [],
+          run_by: null,
           subcategories: [text("Food Collaboratives")],
           locations: [{ street: "10 Gateway Blvd", city: "Toronto", postal: null, lat: 0, lng: 0 }],
           contact: { phone: ["416-555-0100"], email: [], social: [], web: [] },

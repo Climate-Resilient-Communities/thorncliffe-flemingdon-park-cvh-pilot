@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { NeighbourhoodId } from "@/contracts/directory";
+import { RUN_BY, type NeighbourhoodId } from "@/contracts/directory";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { useBuildingList, useChoices } from "../choices/use-choices";
@@ -58,6 +58,36 @@ type FocusTarget = { chip: string } | "clear-all" | "toggle";
  * provider and going back keeps them (filter-store.ts); they are never in the address and never sent. The neighbourhood of
  * the buildings the resident chose is only suggested, as a chip they tap to apply.
  */
+/**
+ * "Who runs it" (resident testing, session 2, #4): established services, community groups, or both when neither is ticked. Each choice
+ * carries the same mark as the list (RunByMark) and a line saying what it means.
+ */
+function RunByFilter({ filters, toggle }: { filters: FilterState; toggle: (key: FilterKey, on: boolean) => void }) {
+  const t = useTranslations();
+  return (
+    <fieldset className="dir-fieldset">
+      <ResidentText as="legend" className="dir-legend" testId="legend-run-by">
+        {t("directory.runByLegend")}
+      </ResidentText>
+      <Stack gap="label">
+        {RUN_BY.map((id) => (
+          <FilterOption key={id} id={`run-by-${id}`} checked={isActive(filters, { kind: "runBy", id })} onChange={(on) => toggle({ kind: "runBy", id }, on)}>
+            <span className="run-by-option">
+              <span className={`run-by__ico run-by__ico--${id}`} aria-hidden="true" />
+              <span className="run-by-option__text">
+                <ResidentText>{t(id === "formal" ? "directory.runByFormalMany" : "directory.runByGrassrootsMany")}</ResidentText>
+                <ResidentText as="span" className="run-by-option__line">
+                  {t(id === "formal" ? "directory.runByFormalLine" : "directory.runByGrassrootsLine")}
+                </ResidentText>
+              </span>
+            </span>
+          </FilterOption>
+        ))}
+      </Stack>
+    </fieldset>
+  );
+}
+
 export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   const t = useTranslations();
   const directory = useDirectory(lang);
@@ -137,6 +167,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
       }
       case "neighbourhood":
         return <Isolated>{neighbourhoodName(key.id)}</Isolated>;
+      case "runBy":
+        return <ResidentText>{t(key.id === "formal" ? "directory.runByFormalMany" : "directory.runByGrassrootsMany")}</ResidentText>;
       case "emergency":
         return <ResidentText>{t("directory.emergency")}</ResidentText>;
     }
@@ -152,6 +184,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
         return subcategoryNames.get(key.id)?.body ?? key.id;
       case "neighbourhood":
         return neighbourhoodName(key.id);
+      case "runBy":
+        return t(key.id === "formal" ? "directory.runByFormalMany" : "directory.runByGrassrootsMany");
       case "emergency":
         return t("directory.emergency");
     }
@@ -280,6 +314,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                           ))}
                         </Stack>
                       </fieldset>
+                      <RunByFilter filters={filters} toggle={toggle} />
                       <FilterOption id="emergency" checked={filters.emergency} onChange={(on) => toggle({ kind: "emergency" }, on)}>
                         <ResidentText>{t("directory.emergency")}</ResidentText>
                       </FilterOption>

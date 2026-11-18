@@ -10,6 +10,8 @@ import { languageOf } from "@/i18n/languages";
 import { basicAttributeSet, useBasic } from "../basic";
 import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
+import { RUN_BY } from "@/contracts/directory";
+import { RunByMark } from "../directory/run-by";
 import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
 import { isFallbackText, ListingBlock } from "../directory/listing-text";
@@ -187,8 +189,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   }, [pages]);
   const chosen = pins.find((pin) => pin.key === selected) ?? null;
 
-  const kindOf = (pin: MapPin): string =>
-    pin.kind === "building" ? plain(t("map.building")) : pin.label ? pin.label.body : plain(t("map.service"));
+  const kindOf = (pin: MapPin): string => {
+    if (pin.kind === "building") return plain(t("map.building"));
+    const kind = pin.label ? pin.label.body : plain(t("map.service"));
+    // Who runs it is in the pin's name too (session 2, #11), so the outline and badge are never the only sign.
+    return pin.runBy === "grassroots" ? `${kind}, ${plain(t("directory.runByGrassroots"))}` : pin.runBy === "formal" ? `${kind}, ${plain(t("directory.runByFormal"))}` : kind;
+  };
   const nameOf = (pin: MapPin): string => (pin.kind === "building" ? pin.address : pin.name);
 
   // The words the map draws are read through a ref, so the map is made once and still speaks the page's language.
@@ -400,6 +406,22 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                   <FilterChoice id="emergency" checked={filters.emergency} onChange={(on) => toggleFilter({ kind: "emergency" }, on)}>
                     <ResidentText>{t("directory.emergency")}</ResidentText>
                   </FilterChoice>
+                  {/* Who runs it (session 2, #4 and #11): the directory's filter, here too, each choice with the mark its pins carry. */}
+                  <fieldset className="map-fieldset">
+                    <ResidentText as="legend" className="map-legend" testId="map-legend-run-by">
+                      {t("directory.runByLegend")}
+                    </ResidentText>
+                    <Stack gap="label">
+                      {RUN_BY.map((id) => (
+                        <FilterChoice key={id} id={`run-by-${id}`} checked={isActive(filters, { kind: "runBy", id })} onChange={(on) => toggleFilter({ kind: "runBy", id }, on)}>
+                          <span className="run-by-option">
+                            <span className={`run-by__ico run-by__ico--${id}`} aria-hidden="true" />
+                            <ResidentText>{t(id === "formal" ? "directory.runByFormalMany" : "directory.runByGrassrootsMany")}</ResidentText>
+                          </span>
+                        </FilterChoice>
+                      ))}
+                    </Stack>
+                  </fieldset>
                   {/* The pilot buildings by two facts of the City register (the building page's words). A building's cooling room is for its own
                       residents: these find buildings, not places to go. */}
                   <fieldset className="map-fieldset">
@@ -505,6 +527,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <h2 id="map-preview-name" className="map-preview__name">
               {nameOf(chosen)}
             </h2>
+            {chosen.kind === "provider" && <RunByMark runBy={chosen.runBy} testId="map-preview-run-by" />}
             {chosen.kind === "provider" && chosen.space && (
               <p className="map-strong" data-testid="map-preview-space">
                 <ResidentText>{t(chosen.space.unconfirmed ? "x09.unconfirmed" : chosen.space.status === "full" ? "x09.full" : "x09.open")}</ResidentText>{" "}
@@ -650,6 +673,16 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
               <ResidentText>{t(row.key)}</ResidentText>
             </li>
           ))}
+          {/* Who runs it (session 2, #11): a community group's pin has a dashed outline and a two-people badge. */}
+          <li className="map-legend-box__row" data-testid="map-legend-grassroots">
+            <span className="map-pin map-pin--service map-pin--grassroots map-pin--inline" aria-hidden="true">
+              <span className="map-pin__mark">
+                <span className="map-ico map-ico--service" />
+              </span>
+              <span className="map-pin__group" />
+            </span>
+            <ResidentText>{`${t("directory.runByGrassroots")}: ${t("directory.runByGrassrootsLine")}`}</ResidentText>
+          </li>
           <li className="map-legend-box__row" data-testid="map-legend-cluster">
             <span className="map-legend-box__pill" aria-hidden="true">
               <ResidentText>{t("R14.places", { n: 3 })}</ResidentText>

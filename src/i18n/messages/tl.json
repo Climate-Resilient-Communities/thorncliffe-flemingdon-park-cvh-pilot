@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "Nasa pahina ng mga numero ang iba pang numerong maaaring kailanganin mo.",
     "numbersLink": "Tingnan ang mahahalagang numero",
     "backToList": "Lahat ng serbisyo at organisasyon",
-    "suggestApply": "Ipakita lang ang {place}"
+    "suggestApply": "Ipakita lang ang {place}",
+    "runByLegend": "Sino ang nagpapatakbo",
+    "runByFormal": "Itinatag na serbisyo",
+    "runByGrassroots": "Grupo ng komunidad",
+    "runByFormalMany": "Mga itinatag na serbisyo",
+    "runByGrassrootsMany": "Mga grupo ng komunidad",
+    "runByFormalLine": "Pinapatakbo ng pampublikong ahensya, organisasyon o institusyon.",
+    "runByGrassrootsLine": "Pinapatakbo ng mga residente o boluntaryo."
   },
   "map": {
     "lead": "Mga serbisyo, organisasyon at gusali ng apartment sa Thorncliffe Park at Flemingdon Park. I-tap ang isang pin para makita kung ano ito.",

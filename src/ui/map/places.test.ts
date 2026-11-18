@@ -19,6 +19,7 @@ function provider(id: string, name: string, subcategories: ListingText[], locati
     name,
     category_ids: ["c"],
     neighbourhood_ids: ["TP"],
+    run_by: null,
     subcategories,
     locations: locations.map(([lat, lng]) => ({ street: `${id} St`, city: "Toronto", postal: null, lat, lng })),
     contact: { phone: [], email: [], social: [], web: [] },

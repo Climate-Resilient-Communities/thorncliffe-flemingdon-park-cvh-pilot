@@ -473,4 +473,80 @@
     border-radius: var(--radius-card);
     background-color: var(--surface-raised);
   }
+
+  /*
+   * Who runs it (resident testing, session 2, #4 and #11): an established service (a pillared building, the accent colour) or a community
+   * group (two people, the Hub's orange; green already means a place open as a space), always a mark and words, never colour alone. The same marks are on the map's pins and in its legend.
+   */
+  .run-by {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    inline-size: fit-content;
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border: 1.5px solid currentcolor;
+    border-radius: var(--radius-card);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  .run-by--formal {
+    color: var(--accent-text);
+  }
+
+  .run-by--grassroots {
+    color: var(--tpch-orange);
+  }
+
+  .run-by > :last-child {
+    color: var(--ink);
+  }
+
+  .run-by__ico {
+    display: inline-block;
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    background-color: currentcolor;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+  }
+
+  .run-by__ico--formal {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 9.5 12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 9.5 12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18'/%3E%3C/svg%3E");
+  }
+
+  .run-by__ico--grassroots {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' cx='8.5' cy='8' r='3'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' cx='16.5' cy='9' r='2.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' d='M3 19.5c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5M14.5 14.2c.6-.2 1.3-.2 2-.2 2.6 0 4.5 1.9 4.5 4.8'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' cx='8.5' cy='8' r='3'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' cx='16.5' cy='9' r='2.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' d='M3 19.5c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5M14.5 14.2c.6-.2 1.3-.2 2-.2 2.6 0 4.5 1.9 4.5 4.8'/%3E%3C/svg%3E");
+  }
+
+  .run-by-option {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: var(--gap-label);
+  }
+
+  .run-by-option .run-by__ico--formal {
+    color: var(--accent-text);
+  }
+
+  .run-by-option .run-by__ico--grassroots {
+    color: var(--tpch-orange);
+  }
+
+  .run-by-option__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+  }
+
+  .run-by-option__line {
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+  }
 }

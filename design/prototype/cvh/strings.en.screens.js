@@ -3059,4 +3059,6 @@ m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: '
     readiness: { dummy: 'Sample commitments, figures and records for the pilot: dummy data, not real agreements or results.' } } } });
   /* Resident testing, session 2 (2026-11-18, #13): on home, a visible way to bigger text and the simpler view, which residents could not find behind the Aa button. */
   m(en, { R03: { displayTitle: 'Bigger text or a simpler view', displayLine: 'Make the words larger, or show fewer details.' } });
+  /* Resident testing, session 2 (2026-11-18, #4 and #11): who runs a provider, an established service or a community group, on the list, the provider page, the map and as a filter. */
+  m(en, { directory: { runByLegend: 'Who runs it', runByFormal: 'Established service', runByGrassroots: 'Community group', runByFormalMany: 'Established services', runByGrassrootsMany: 'Community groups', runByFormalLine: 'Run by a public body, an agency or an institution.', runByGrassrootsLine: 'Run by residents or volunteers.' } });
 })();

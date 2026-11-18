@@ -13,6 +13,7 @@ import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
 import { HowTheyHelp, ListingBlock } from "./listing-text";
 import { neighbourhoodName } from "./neighbourhood-names";
+import { RunByMark } from "./run-by";
 import "./directory.css";
 
 export type CategoryNames = ReadonlyMap<string, ListingText>;
@@ -157,6 +158,7 @@ export function ProviderView({
             <Isolated>{provider.name}</Isolated>
           )}
         </Heading>
+        <RunByMark runBy={provider.run_by} />
         {addresses.length > 0 ? (
           addresses.map((line) => (
             <p className="dir-card__address" key={line}>

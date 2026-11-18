@@ -144,6 +144,11 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
   const neighbourhoods = await deps.neighbourhoods().catch(() => {
     throw new PublishStepError("catalogue_unreadable", false);
   });
+  const runBy = deps.runBy
+    ? await deps.runBy().catch(() => {
+        throw new PublishStepError("catalogue_unreadable", false);
+      })
+    : null;
   const zhHant = await deps.zhHant();
   return db.transaction(async (tx): Promise<ClaimResult> => {
     await tx.execute(sql`select pg_advisory_xact_lock(${PUBLISH_LOCK_KEY})`);
@@ -200,6 +205,7 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
         providers,
         categories,
         neighbourhoods: neighbourhoods.byProvider,
+        ...(runBy ? { runBy: runBy.byProvider } : {}),
         hash: sha256Hex,
         zhHant,
         pilotMachineTranslations: deps.pilotMachineTranslations === true,

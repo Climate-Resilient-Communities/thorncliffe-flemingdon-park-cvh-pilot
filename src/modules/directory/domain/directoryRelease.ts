@@ -38,7 +38,7 @@
 //    and never from its address; a published provider that list does not name stops the release;
 //  - the files are deterministic: the same snapshot gives the same bytes.
 import { z } from "zod";
-import { TRANSLATION_UNAVAILABLE, DirectoryListingV1, type ListingText, type ListingProvider, type NeighbourhoodId } from "@/contracts/directory";
+import { TRANSLATION_UNAVAILABLE, DirectoryListingV1, type ListingText, type ListingProvider, type NeighbourhoodId, type RunBy } from "@/contracts/directory";
 import {
   evaluateTranslation,
   present,
@@ -94,6 +94,8 @@ export interface ReleaseInput {
   categories: SnapshotCategory[];
   /** provider id -> the neighbourhoods the Hub's list (data/catalogue/provider-neighbourhoods.json) puts it in. */
   neighbourhoods: Readonly<Record<string, readonly NeighbourhoodId[]>>;
+  /** provider id -> who runs it (data/catalogue/provider-run-by.json, session 2). Absent, or a provider it does not name: `run_by` is null. */
+  runBy?: Readonly<Record<string, RunBy>>;
   hash: Hasher;
   zhHant: ZhHantConverter;
   /**
@@ -404,6 +406,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       name: p.name,
       category_ids: p.categoryIds,
       neighbourhood_ids: [...neighbourhoods],
+      run_by: input.runBy?.[p.id] ?? null,
       subcategories: p.subcategories.map((s) =>
         listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: s.translations ?? null, ...pilot }, `subcategory:${s.name}`, s.name, "name", input, tally),
       ),

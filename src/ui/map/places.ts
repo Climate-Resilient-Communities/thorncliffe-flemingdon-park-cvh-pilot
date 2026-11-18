@@ -1,5 +1,5 @@
 import type { ListedBuilding } from "@/contracts/buildingList";
-import type { ListingProvider, ListingText } from "@/contracts/directory";
+import type { ListingProvider, ListingText, RunBy } from "@/contracts/directory";
 import { UNCONFIRMED_AFTER_MS, type OpenSpace } from "@/contracts/openSpaces";
 import { inToronto } from "@/contracts/torontoBounds";
 
@@ -33,6 +33,8 @@ export type ProviderPin = {
   marker: Exclude<MarkerKind, "building">;
   /** The words beside a special marker (the subcategory's name in the page language); null for a service pin. */
   label: ListingText | null;
+  /** Who runs it (session 2, #11): a community group's pin has its own outline and a two-people badge. Null when the list does not say. */
+  runBy: RunBy | null;
   /** The partner space (2026-11-07): the place is open or full as a space right now (GET /api/spaces); absent otherwise. */
   space?: PinSpace;
 };
@@ -80,7 +82,7 @@ export function providerPins(providers: readonly ListingProvider[]): ProviderPin
     const { marker, label } = markerOf(provider);
     provider.locations.forEach((location, at) => {
       if (!inToronto(location.lat, location.lng)) return;
-      pins.push({ kind: "provider", key: `${provider.id}:${at}`, id: provider.id, name: provider.name, street: location.street, lat: location.lat, lng: location.lng, marker, label });
+      pins.push({ kind: "provider", key: `${provider.id}:${at}`, id: provider.id, name: provider.name, street: location.street, lat: location.lat, lng: location.lng, marker, label, runBy: provider.run_by ?? null });
     });
   }
   return pins;

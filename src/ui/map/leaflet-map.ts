@@ -69,11 +69,13 @@ function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
     ? // The label is placed in the map's left-to-right frame; only its words take their own direction.
       `<span class="map-pin__word" aria-hidden="true"><span dir="auto"${word.lang ? ` lang="${escape(word.lang)}"` : ""}>${escape(word.text)}</span></span>`
     : "";
+  // A community group (session 2, #11): its own outline and a two-people badge; the pin's name says it too (PinWords.name).
+  const grassroots = pin.kind === "provider" && pin.runBy === "grassroots";
   return L.divIcon({
     // A place open as a space now (the partner space, 2026-11-07) takes the prototype's filled "space" look on top of its own shape.
-    className: `map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""}`,
+    className: `map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""}${grassroots ? " map-pin--grassroots" : ""}`,
     // Leaflet's own stylesheet (not in a layer) makes the icon element a block, so the layout is on an inner body.
-    html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span></span>`,
+    html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${grassroots ? '<span class="map-pin__group" aria-hidden="true"></span>' : ""}${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span></span>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
   });

@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "La page des numéros donne les autres numéros dont vous pourriez avoir besoin.",
     "numbersLink": "Voir les numéros essentiels",
     "backToList": "Tous les services et organismes",
-    "suggestApply": "Afficher seulement {place}"
+    "suggestApply": "Afficher seulement {place}",
+    "runByLegend": "Qui s'en occupe",
+    "runByFormal": "Service établi",
+    "runByGrassroots": "Groupe communautaire",
+    "runByFormalMany": "Services établis",
+    "runByGrassrootsMany": "Groupes communautaires",
+    "runByFormalLine": "Géré par un organisme public, une agence ou une institution.",
+    "runByGrassrootsLine": "Géré par des résidents ou des bénévoles."
   },
   "map": {
     "lead": "Services, organismes et immeubles d'habitation à Thorncliffe Park et Flemingdon Park. Touchez une épingle pour voir de quoi il s'agit.",

@@ -6496,7 +6496,14 @@
     "couldNotLoadNumbers": "号码页面列出了您可能需要的其他号码。",
     "numbersLink": "查看重要电话号码",
     "backToList": "所有服务和机构",
-    "suggestApply": "只显示{place}"
+    "suggestApply": "只显示{place}",
+    "runByLegend": "由谁运营",
+    "runByFormal": "正式机构服务",
+    "runByGrassroots": "社区团体",
+    "runByFormalMany": "正式机构服务",
+    "runByGrassrootsMany": "社区团体",
+    "runByFormalLine": "由政府部门、机构或单位运营。",
+    "runByGrassrootsLine": "由居民或志愿者运营。"
   },
   "map": {
     "lead": "Thorncliffe Park 和 Flemingdon Park 的服务、机构和公寓楼。点击标记，查看它是什么。",
