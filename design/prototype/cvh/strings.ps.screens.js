@@ -1567,4 +1567,6 @@
   m(t, {"directory": {"runByLegend": "څوک یې چلوي", "runByFormal": "رسمي خدمت", "runByGrassroots": "ټولنیزه ډله", "runByFormalMany": "رسمي خدمتونه", "runByGrassrootsMany": "ټولنیزې ډلې", "runByFormalLine": "د یوه دولتي اداره، ادارې یا مؤسسې له خوا چلېږي.", "runByGrassrootsLine": "د اوسېدونکو یا رضاکارانو له خوا چلېږي."}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "عامه سړې ځایونه", "quickCoolingLine": "په ګرمۍ کې د ټولو لپاره خلاص."}, "map": {"coolingRoomResidents": "سړه کوټه لري (یوازې د خپلو اوسېدونکو لپاره)"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "کله 911 ته زنګ ووهئ", "helpNearby": "هغه ځایونه چې مرسته کولی شي"}});
 })();

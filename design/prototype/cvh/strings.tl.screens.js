@@ -1567,4 +1567,6 @@
   m(t, {"directory": {"runByLegend": "Sino ang nagpapatakbo", "runByFormal": "Itinatag na serbisyo", "runByGrassroots": "Grupo ng komunidad", "runByFormalMany": "Mga itinatag na serbisyo", "runByGrassrootsMany": "Mga grupo ng komunidad", "runByFormalLine": "Pinapatakbo ng pampublikong ahensya, organisasyon o institusyon.", "runByGrassrootsLine": "Pinapatakbo ng mga residente o boluntaryo."}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "Mga pampublikong cooling space", "quickCoolingLine": "Bukas para sa lahat kapag mainit."}, "map": {"coolingRoomResidents": "May cooling room (para lang sa sariling residente)"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "Kailan tatawag sa 911", "helpNearby": "Mga lugar na makakatulong"}});
 })();

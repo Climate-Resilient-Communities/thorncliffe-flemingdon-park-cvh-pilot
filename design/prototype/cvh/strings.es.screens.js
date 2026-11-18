@@ -1578,4 +1578,6 @@
   m(t, {"directory": {"runByLegend": "Quién lo gestiona", "runByFormal": "Servicio establecido", "runByGrassroots": "Grupo comunitario", "runByFormalMany": "Servicios establecidos", "runByGrassrootsMany": "Grupos comunitarios", "runByFormalLine": "Gestionado por un organismo público, una agencia o una institución.", "runByGrassrootsLine": "Gestionado por residentes o voluntarios."}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "Espacios públicos para refrescarse", "quickCoolingLine": "Abiertos a todos cuando hace calor."}, "map": {"coolingRoomResidents": "Tiene una sala fresca (solo para sus residentes)"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "Cuándo llamar al 911", "helpNearby": "Lugares que pueden ayudar"}});
 })();

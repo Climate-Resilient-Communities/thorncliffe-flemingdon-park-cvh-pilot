@@ -728,7 +728,9 @@
     "timeLine": "Posted {posted} · Updated {updated}",
     "timeLineOne": "Posted {posted}",
     "basicMore": "Earlier updates: {n}",
-    "mayHaveEnded": "This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "This alert may have ended. Check again when you have signal",
+    "when911": "When to call 911",
+    "helpNearby": "Places that can help"
   },
   "R08": {
     "title": "Alerts that have ended",

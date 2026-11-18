@@ -1554,4 +1554,6 @@
   m(t, {"directory": {"runByLegend": "Ποιος το λειτουργεί", "runByFormal": "Καθιερωμένη υπηρεσία", "runByGrassroots": "Κοινοτική ομάδα", "runByFormalMany": "Καθιερωμένες υπηρεσίες", "runByGrassrootsMany": "Κοινοτικές ομάδες", "runByFormalLine": "Λειτουργεί από δημόσιο φορέα, οργανισμό ή ίδρυμα.", "runByGrassrootsLine": "Λειτουργεί από κατοίκους ή εθελοντές."}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "Δημόσιοι χώροι δροσισμού", "quickCoolingLine": "Ανοιχτοί σε όλους όταν κάνει ζέστη."}, "map": {"coolingRoomResidents": "Έχει αίθουσα δροσισμού (μόνο για τους ενοίκους του)"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "Πότε να καλέσετε το 911", "helpNearby": "Μέρη που μπορούν να βοηθήσουν"}});
 })();

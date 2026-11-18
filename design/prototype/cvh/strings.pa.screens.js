@@ -1578,4 +1578,6 @@
   m(t, {"directory": {"runByLegend": "ਇਸਨੂੰ ਕੌਣ ਚਲਾਉਂਦਾ ਹੈ", "runByFormal": "ਸਥਾਪਿਤ ਸੇਵਾ", "runByGrassroots": "ਭਾਈਚਾਰਕ ਸਮੂਹ", "runByFormalMany": "ਸਥਾਪਿਤ ਸੇਵਾਵਾਂ", "runByGrassrootsMany": "ਭਾਈਚਾਰਕ ਸਮੂਹ", "runByFormalLine": "ਕਿਸੇ ਸਰਕਾਰੀ ਅਦਾਰੇ, ਏਜੰਸੀ ਜਾਂ ਸੰਸਥਾ ਵੱਲੋਂ ਚਲਾਈ ਜਾਂਦੀ ਹੈ।", "runByGrassrootsLine": "ਵਸਨੀਕਾਂ ਜਾਂ ਵਲੰਟੀਅਰਾਂ ਵੱਲੋਂ ਚਲਾਇਆ ਜਾਂਦਾ ਹੈ।"}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "ਜਨਤਕ ਠੰਢੀਆਂ ਥਾਵਾਂ", "quickCoolingLine": "ਗਰਮੀ ਵਿੱਚ ਸਭ ਲਈ ਖੁੱਲ੍ਹੀਆਂ।"}, "map": {"coolingRoomResidents": "ਠੰਢਾ ਕਮਰਾ ਹੈ (ਸਿਰਫ਼ ਆਪਣੇ ਵਸਨੀਕਾਂ ਲਈ)"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "911 ਕਦੋਂ ਕਾਲ ਕਰਨਾ ਹੈ", "helpNearby": "ਥਾਵਾਂ ਜੋ ਮਦਦ ਕਰ ਸਕਦੀਆਂ ਹਨ"}});
 })();

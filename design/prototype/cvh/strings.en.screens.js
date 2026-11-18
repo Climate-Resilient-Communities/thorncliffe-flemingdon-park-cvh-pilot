@@ -3063,4 +3063,6 @@ m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: '
   m(en, { directory: { runByLegend: 'Who runs it', runByFormal: 'Established service', runByGrassroots: 'Community group', runByFormalMany: 'Established services', runByGrassrootsMany: 'Community groups', runByFormalLine: 'Run by a public body, an agency or an institution.', runByGrassrootsLine: 'Run by residents or volunteers.' } });
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. */
   m(en, { directory: { quickCooling: 'Public cooling spaces', quickCoolingLine: 'Open to everyone when it is hot.' }, map: { coolingRoomResidents: 'Has a cooling room (for its own residents)' } });
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. */
+  m(en, { R07: { when911: 'When to call 911', helpNearby: 'Places that can help' } });
 })();

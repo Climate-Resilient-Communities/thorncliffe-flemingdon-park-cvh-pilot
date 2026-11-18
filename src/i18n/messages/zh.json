@@ -728,7 +728,9 @@
     "timeLine": "{posted}发布 · {updated}更新",
     "timeLineOne": "{posted}发布",
     "basicMore": "较早的更新：{n}",
-    "mayHaveEnded": "这条警报可能已经结束。有信号时请再查看"
+    "mayHaveEnded": "这条警报可能已经结束。有信号时请再查看",
+    "when911": "何时拨打 911",
+    "helpNearby": "可以提供帮助的地方"
   },
   "R08": {
     "title": "已结束的警报",

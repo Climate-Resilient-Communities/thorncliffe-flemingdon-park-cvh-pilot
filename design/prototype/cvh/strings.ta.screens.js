@@ -1578,4 +1578,6 @@
   m(t, {"directory": {"runByLegend": "யார் நடத்துகிறார்கள்", "runByFormal": "நிறுவப்பட்ட சேவை", "runByGrassroots": "சமூகக் குழு", "runByFormalMany": "நிறுவப்பட்ட சேவைகள்", "runByGrassrootsMany": "சமூகக் குழுக்கள்", "runByFormalLine": "அரசு அமைப்பு, நிறுவனம் அல்லது அமைப்பால் நடத்தப்படுகிறது.", "runByGrassrootsLine": "குடியிருப்பாளர்கள் அல்லது தன்னார்வலர்களால் நடத்தப்படுகிறது."}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "பொது குளிர்ச்சி இடங்கள்", "quickCoolingLine": "வெப்பமாக இருக்கும்போது அனைவருக்கும் திறந்திருக்கும்."}, "map": {"coolingRoomResidents": "குளிர்ச்சி அறை உள்ளது (அதன் குடியிருப்பாளர்களுக்கு மட்டும்)"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "911-ஐ எப்போது அழைக்க வேண்டும்", "helpNearby": "உதவக்கூடிய இடங்கள்"}});
 })();

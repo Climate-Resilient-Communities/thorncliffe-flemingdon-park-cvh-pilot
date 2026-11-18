@@ -1578,4 +1578,6 @@
   m(t, {"directory": {"runByLegend": "由谁运营", "runByFormal": "正式机构服务", "runByGrassroots": "社区团体", "runByFormalMany": "正式机构服务", "runByGrassrootsMany": "社区团体", "runByFormalLine": "由政府部门、机构或单位运营。", "runByGrassrootsLine": "由居民或志愿者运营。"}});
   /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"quickCooling": "公共纳凉点", "quickCoolingLine": "天热时向所有人开放。"}, "map": {"coolingRoomResidents": "有纳凉室（仅供本楼居民使用）"}});
+  /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R07": {"when911": "何时拨打 911", "helpNearby": "可以提供帮助的地方"}});
 })();

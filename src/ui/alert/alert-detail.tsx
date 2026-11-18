@@ -4,7 +4,9 @@ import { EarlierUpdates } from "../basic";
 import { Not911 } from "../emergency";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { ContentText } from "../text/content-text";
 import { ResidentText } from "../text/resident-text";
+import { CoolingLink } from "./cooling-link";
 import type { AlertView, Translate } from "./alert-view";
 import { DisruptionTypes, EntryText, OriginMark, ThreadEntryText } from "./alert-parts";
 import { ValidLine } from "./valid-line";
@@ -18,7 +20,10 @@ import "./alert-icons.css";
  * The words are shown in the resident's language with no machine-translation label and no "Read it in English"; English standing in for a
  * translation that failed is shown silently, marked lang="en" (product-owner decision 2026-10-09, pilot). The 911 block is the one catalog component (AD-16), here once, in its full form.
  */
-export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCode; t: Translate }) {
+/** A guide's reviewed "when to call 911" line, in the page's language or English (`unavailable` marks the English standing in). */
+export type When911 = { id: string; text: string; unavailable: boolean };
+
+export function AlertDetail({ view, lang, t, when911 = [] }: { view: AlertView; lang: LaunchCode; t: Translate; when911?: readonly When911[] }) {
   const x01 = (key: "text" | "call" | "short") => t(`x01.${key}`);
   return (
     <Screen surface="resident" testId="alert-detail">
@@ -58,7 +63,24 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
           </Stack>
         </article>
 
-        <Not911 variant="block" t={x01} />
+        {/* Resident testing, session 2 (#17): the alert, then when to call 911 (each matching guide's reviewed line, such as the signs of heat
+            stroke), then what to do and the places that can help. */}
+        <section className="alert-section" aria-labelledby="alert-when911-title" data-testid="alert-when911">
+          <Stack gap="related">
+            <ResidentText as="h2" testId="alert-when911-title">
+              {t("R07.when911")}
+            </ResidentText>
+            <Not911 variant="block" t={x01} />
+            {when911.map((line) => (
+              <div className="alert-when911" key={line.id} data-testid={`alert-when911-${line.id}`}>
+                <span className="shell-ico shell-ico--phone shell-ico--sm" aria-hidden="true" />
+                <ContentText as="p" unavailable={line.unavailable}>
+                  {line.text}
+                </ContentText>
+              </div>
+            ))}
+          </Stack>
+        </section>
 
         {view.guides.length > 0 && (
           <section className="alert-actions" aria-label={t("R07.whatToDo")} data-testid="alert-actions">
@@ -73,6 +95,16 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
                 <span className="shell-ico shell-ico--chevron shell-ico--mirror" aria-hidden="true" />
               </Link>
             ))}
+          </section>
+        )}
+
+        {/* The places that can help (session 2, #17): for heat, the public cooling spaces on the map. */}
+        {view.closed === null && view.guides.some((guide) => guide.id === "heat") && (
+          <section className="alert-actions" aria-labelledby="alert-help-title" data-testid="alert-help">
+            <ResidentText as="h2" testId="alert-help-title">
+              {t("R07.helpNearby")}
+            </ResidentText>
+            <CoolingLink lang={lang} label={t("directory.quickCooling")} />
           </section>
         )}
 

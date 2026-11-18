@@ -728,7 +728,9 @@
     "timeLine": "Ipinost {posted} · Na-update {updated}",
     "timeLineOne": "Ipinost {posted}",
     "basicMore": "Mga naunang update: {n}",
-    "mayHaveEnded": "Maaaring tapos na ang alertong ito. Tingnan ulit kapag may signal ka na"
+    "mayHaveEnded": "Maaaring tapos na ang alertong ito. Tingnan ulit kapag may signal ka na",
+    "when911": "Kailan tatawag sa 911",
+    "helpNearby": "Mga lugar na makakatulong"
   },
   "R08": {
     "title": "Mga alertong natapos na",

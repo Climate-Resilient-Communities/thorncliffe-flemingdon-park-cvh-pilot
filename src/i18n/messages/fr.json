@@ -728,7 +728,9 @@
     "timeLine": "Publié {posted} · Mis à jour {updated}",
     "timeLineOne": "Publié {posted}",
     "basicMore": "Mises à jour précédentes : {n}",
-    "mayHaveEnded": "Cette alerte est peut-être terminée. Vérifiez de nouveau quand vous aurez du réseau"
+    "mayHaveEnded": "Cette alerte est peut-être terminée. Vérifiez de nouveau quand vous aurez du réseau",
+    "when911": "Quand appeler le 911",
+    "helpNearby": "Des lieux qui peuvent aider"
   },
   "R08": {
     "title": "Alertes terminées",

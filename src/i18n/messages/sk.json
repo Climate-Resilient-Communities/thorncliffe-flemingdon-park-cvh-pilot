@@ -728,7 +728,9 @@
     "timeLine": "Zverejnené {posted} · Aktualizované {updated}",
     "timeLineOne": "Zverejnené {posted}",
     "basicMore": "Staršie aktualizácie: {n}",
-    "mayHaveEnded": "Toto upozornenie už možno skončilo. Skontrolujte to znova, keď budete mať signál"
+    "mayHaveEnded": "Toto upozornenie už možno skončilo. Skontrolujte to znova, keď budete mať signál",
+    "when911": "Kedy volať 911",
+    "helpNearby": "Miesta, ktoré môžu pomôcť"
   },
   "R08": {
     "title": "Skončené upozornenia",
