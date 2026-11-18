@@ -253,7 +253,10 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
     focus(key) {
       const marker = byKey.get(key);
       if (!marker) return false;
-      clusters.zoomToShowLayer(marker, () => callbacks.onSelect(key));
+      // The preview opens at once: for a place that shares its point with others (45 Overlea Blvd holds more than a dozen), the group is
+      // spread at the closest zoom and the plugin's callback may never come, so the map is zoomed to the place and the preview does not wait.
+      clusters.zoomToShowLayer(marker, () => undefined);
+      callbacks.onSelect(key);
       return true;
     },
     showWholeArea() {
