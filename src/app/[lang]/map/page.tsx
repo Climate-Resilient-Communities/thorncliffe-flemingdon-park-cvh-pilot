@@ -12,7 +12,7 @@ import { pageMapTiles } from "./tiles";
 // downloads the directory's release file and the building list and draws them itself (AD-11, AD-3).
 
 /** The catalog parts the map's client components read: the map screens, its own wording, the filters (R10, R27), the building facts' names, the kinds of place of the legend (subcats) and the directory's few it shares. */
-const MAP_NAMESPACES = ["R10", "R14", "R15", "R16", "R27", "building", "map", "directory", "subcats", "shell"] as const;
+const MAP_NAMESPACES = ["R10", "R14", "R15", "R16", "R27", "building", "map", "directory", "subcats", "shell", "utilities"] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/map">): Promise<Metadata> {
   const { lang } = await params;

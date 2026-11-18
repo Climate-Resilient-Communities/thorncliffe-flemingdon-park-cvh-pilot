@@ -12,7 +12,7 @@ import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
 import { RUN_BY } from "@/contracts/directory";
 import { RunByMark } from "../directory/run-by";
-import { COOLING_SPACES, QuickCooling } from "../directory/quick-cooling";
+import { COOLING_SPACES, QuickCooling, QuickToggle } from "../directory/quick-cooling";
 import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
 import { isFallbackText, ListingBlock } from "../directory/listing-text";
@@ -373,6 +373,13 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         <Link href={`/${lang}/places/add`} prefetch={false} className="map-btn map-btn--secondary tap" data-testid="map-add-place">
           <ResidentText>{t("R14.add")}</ResidentText>
         </Link>
+        {/* "Open as a space now" (the partner space, 2026-11-07; session 2, #8: it read as a category, and as "utilities.space" before its words
+            were loaded here): the places partners have open or full as a space right now, each pin saying which. */}
+        {listing && (
+          <QuickToggle on={spacesOnly} onChange={setSpacesOnly} testId="map-filter-space" icon="space">
+            {t("utilities.space")}
+          </QuickToggle>
+        )}
         {/* One tap to the public cooling spaces (session 2, #9), when the release has them. */}
         {listing && allKinds.some((kind) => kind.id === COOLING_SPACES) && (
           <QuickCooling
@@ -438,15 +445,9 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                       </Stack>
                     </fieldset>
                   )}
-                  {/* "Open as a space now" (the partner space, 2026-11-07; the prototype's R-14 filter): the places partners have open or full as a
-                      space right now, each pin saying which. */}
-                  <FilterChoice id="space" checked={spacesOnly} onChange={setSpacesOnly}>
-                    <ResidentText>{t("utilities.space")}</ResidentText>
-                  </FilterChoice>
-                  {/* "Helps in an emergency": the directory's filter, here too (R-14's "What do you need?"). */}
-                  <FilterChoice id="emergency" checked={filters.emergency} onChange={(on) => toggleFilter({ kind: "emergency" }, on)}>
-                    <ResidentText>{t("directory.emergency")}</ResidentText>
-                  </FilterChoice>
+                  {/* Resident testing, session 2 (#8): "Open as a space now" left this list (it is the toggle above the map) and "Helps in an
+                      emergency" is not offered on the map: neither reads as a kind of place. An "emergency" filter kept from the directory still
+                      applies here and shows in the filter bar, where it can be removed. */}
                   {/* Who runs it (session 2, #4 and #11): the directory's filter, here too, each choice with the mark its pins carry. */}
                   <fieldset className="map-fieldset">
                     <ResidentText as="legend" className="map-legend" testId="map-legend-run-by">
