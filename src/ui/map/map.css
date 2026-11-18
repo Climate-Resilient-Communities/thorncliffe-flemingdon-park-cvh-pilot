@@ -104,6 +104,14 @@
     text-decoration: underline;
   }
 
+  /* Back from a place the map was opened on (session 2, #7): the mark and the word a little apart. */
+  .map-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    inline-size: fit-content;
+  }
+
   .map-segment__btn:focus-visible,
   .map-btn:focus-visible,
   .map-close:focus-visible,

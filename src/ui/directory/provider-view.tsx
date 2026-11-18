@@ -18,6 +18,10 @@ import "./directory.css";
 
 export type CategoryNames = ReadonlyMap<string, ListingText>;
 
+/** The map opened on one provider's place, its preview open (session 2, #7). Only a provider's id is in the address, never a filter. */
+export const mapHref = (lang: string, providerId: string): string => `/${lang}/map?place=${encodeURIComponent(providerId)}`;
+
+
 const NBSP = "\u00a0";
 
 /** A postal code ("M4H 1K2") with a non-breaking space inside, so a line never ends between its two halves. */
@@ -169,6 +173,13 @@ export function ProviderView({
           <p className="dir-card__address">
             <Unknown>{t("status.unknown")}</Unknown>
           </p>
+        )}
+        {/* Resident testing, session 2 (#7): from a result or the list straight to the place on the map, its preview open. */}
+        {variant === "card" && provider.locations.length > 0 && (
+          <Link className="dir-onmap tap" href={mapHref(lang, provider.id)} prefetch={false} data-testid="provider-on-map">
+            <span className="dir-onmap__ico" aria-hidden="true" />
+            <ResidentText>{t("R12.onMap")}</ResidentText>
+          </Link>
         )}
         <ul className="dir-tags" aria-label={t("directory.topic")}>
           {names.map((name, at) => (

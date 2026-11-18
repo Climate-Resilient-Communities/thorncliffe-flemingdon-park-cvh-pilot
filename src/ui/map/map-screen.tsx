@@ -125,6 +125,13 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const view = basic ? "list" : chosenView;
   const bounds = basic ? NEIGHBOURHOODS_VIEW : areaInView;
   const selected = basic ? null : pinSelected;
+  // "See on the map" (session 2, #7): the provider the map was opened on (`?place=M052`), read once after load (the page is prerendered).
+  const [placeTarget, setPlaceTarget] = useState<string | null>(null);
+  const focused = useRef(false);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("place");
+    if (id && /^[A-Z][0-9]{3,6}$/.test(id)) setPlaceTarget(id);
+  }, []);
   const [missingTiles, setMissingTiles] = useState(0);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
   // The filters this visit: the ones applied here or in the directory, one state (kept in the tab, never sent).
@@ -174,9 +181,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   // museums and every apartment building); the buildings come back only when a building fact is asked for too.
   const placeFilterCount = keys.length + (spacesOnly ? 1 : 0);
   const pins = useMemo<MapPin[]>(() => {
-    const places = withSpaces(providerPins(listing ? filterProviders(listing.providers, filters) : []), openSpaces.spaces, openSpaces.at);
+    // The place the map was opened on is always drawn, whatever the filters kept from the directory would hide.
+    const kept = listing ? filterProviders(listing.providers, filters) : [];
+    const target = placeTarget && listing && !kept.some((p) => p.id === placeTarget) ? listing.providers.filter((p) => p.id === placeTarget) : [];
+    const places = withSpaces(providerPins([...kept, ...target]), openSpaces.spaces, openSpaces.at);
     return [...(spacesOnly ? places.filter((pin) => pin.space) : places), ...(placeFilterCount > 0 && factCount === 0 ? [] : buildingPins(buildings, facts))];
-  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount, placeFilterCount]);
+  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount, placeFilterCount, placeTarget]);
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
   const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
   const providersLeft = inView.providers.length - providersShown.length;
@@ -253,7 +263,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   useEffect(() => {
     if (mapStatus === "ready") handle.current?.setPins(pins);
-  }, [pins, mapStatus]);
+    // Once the place the map was opened on is drawn, zoom to it and open its preview (once: moving away afterwards is the resident's choice).
+    if (mapStatus === "ready" && placeTarget && !focused.current) {
+      const pin = pins.find((p) => p.kind === "provider" && p.id === placeTarget);
+      if (pin) focused.current = handle.current?.focus(pin.key) ?? false;
+    }
+  }, [pins, mapStatus, placeTarget]);
 
   // A map that was hidden behind the list measures itself again when it is back on screen.
   useEffect(() => {
@@ -325,6 +340,23 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
           <ResidentText as="p" className="map-hint" testId="map-directory-unavailable">
             {t("directory.couldNotLoad")}
           </ResidentText>
+        )}
+        {/* Opened on one place from a result or the list (session 2, #7): back to where the resident came from (the directory when the page
+            was opened on its own). */}
+        {placeTarget && (
+          <button
+            type="button"
+            className="map-btn map-btn--quiet map-back tap"
+            onClick={() => {
+              const fromHere = document.referrer !== "" && new URL(document.referrer).origin === window.location.origin;
+              if (fromHere && window.history.length > 1) window.history.back();
+              else window.location.assign(`/${lang}/directory`);
+            }}
+            data-testid="map-back"
+          >
+            <span aria-hidden="true">{"\u2039"}</span>
+            <ResidentText>{t("shell.back")}</ResidentText>
+          </button>
         )}
         <div className="map-segment hide-basic" role="group" aria-label={plain(t("R14.title"))}>
           <button type="button" className="map-segment__btn tap" aria-pressed={view === "map"} onClick={() => setView("map")} data-testid="map-view-map">

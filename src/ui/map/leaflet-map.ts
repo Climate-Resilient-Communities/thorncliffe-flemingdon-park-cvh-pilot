@@ -40,6 +40,11 @@ export type MapHandle = {
   /** Measures the map again after it was hidden. */
   refresh(): void;
   bounds(): Bounds;
+  /**
+   * "See on the map" (session 2, #7): zooms in until the pin `key` is drawn on its own, then selects it (its preview opens). False when no
+   * such pin is drawn. Only a provider's own place is shown this way: the place is public, never a resident's home (AD-3).
+   */
+  focus(key: string): boolean;
   destroy(): void;
 };
 
@@ -232,15 +237,24 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
   markZoom();
   callbacks.onView(boundsOf(map));
 
+  const byKey = new Map<string, Marker>();
   return {
     setPins(pins) {
       clusters.clearLayers();
+      byKey.clear();
       const markers: Marker[] = pins.map((pin) => {
         const marker = L.marker([pin.lat, pin.lng], { icon: pinIcon(L, pin, words), keyboard: true, riseOnHover: true });
         marker.on("click", () => callbacks.onSelect(pin.key));
+        byKey.set(pin.key, marker);
         return marker;
       });
       clusters.addLayers(markers);
+    },
+    focus(key) {
+      const marker = byKey.get(key);
+      if (!marker) return false;
+      clusters.zoomToShowLayer(marker, () => callbacks.onSelect(key));
+      return true;
     },
     showWholeArea() {
       map.fitBounds(HOME, { animate: false });

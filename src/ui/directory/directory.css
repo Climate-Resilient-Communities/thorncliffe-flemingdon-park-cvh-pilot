@@ -549,4 +549,29 @@
     font-size: var(--type-caption-size);
     font-weight: 400;
   }
+
+  /* "See on the map" on a card (resident testing, session 2, #7): a map pin and the words, to the place on the map with its preview open. */
+  .dir-onmap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    inline-size: fit-content;
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .dir-onmap__ico {
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    background-color: currentcolor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .dir-onmap:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
 }

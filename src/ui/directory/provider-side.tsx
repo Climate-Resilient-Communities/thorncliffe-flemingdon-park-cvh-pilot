@@ -9,7 +9,7 @@ import { inBounds, markerOf, NEIGHBOURHOODS_VIEW } from "../map/places";
 import { isEnglishFallback, ResidentText } from "../text/resident-text";
 import { Isolated } from "../text/isolated";
 import { phoneEntries } from "./contact";
-import { addressLines } from "./provider-view";
+import { addressLines, mapHref } from "./provider-view";
 
 /**
  * Directions to a place in a new tab, from where the resident is (the service decides that, not the CVH). Opened only by the
@@ -59,7 +59,7 @@ export function ProviderSide({ provider, lang, tiles }: { provider: ListingProvi
         )}
         {onMap && (
           <li>
-            <Link className="dir-link tap" href={`/${lang}/map`} prefetch={false} data-testid="provider-side-map">
+            <Link className="dir-link tap" href={mapHref(lang, provider.id)} prefetch={false} data-testid="provider-side-map">
               <ResidentText>{t("R12.onMap")}</ResidentText>
             </Link>
           </li>
