@@ -1569,4 +1569,6 @@
   m(t, {"directory": {"quickCooling": "مکان‌های خنک عمومی", "quickCoolingLine": "در هوای گرم برای همه باز است."}, "map": {"coolingRoomResidents": "اتاق خنک دارد (فقط برای ساکنان خودش)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "چه وقت به 911 زنگ بزنید", "helpNearby": "جاهایی که می‌توانند کمک کنند"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "کمک اضطراری و سرپناه", "Faith-Based Organizations": "عبادتگاه‌ها", "Legal & Government Services": "کمک حقوقی و اسناد هویتی", "Schools & Child Services": "مکاتب و مراقبت از کودکان", "Health & Wellness": "مراقبت صحی", "Public Spaces": "جاهایی برای رفتن", "Community Resilience": "آب، تشناب و جاهای خنک", "Non-Profits": "سازمان‌های اجتماعی"}});
 })();

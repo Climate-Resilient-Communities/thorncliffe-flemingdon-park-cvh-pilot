@@ -6735,5 +6735,15 @@
       "not_found": "توري او شمېرې وګورئ، بیا هڅه وکړئ.",
       "submissions_unavailable": "دا ونه لېږل شو. خپل سګنال وګورئ او بیا هڅه وکړئ."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "بیړنۍ مرسته او سرپناه",
+    "Faith-Based Organizations": "د عبادت ځایونه",
+    "Legal & Government Services": "حقوقي مرسته او پېژند اسناد",
+    "Schools & Child Services": "ښوونځي او د ماشومانو پاملرنه",
+    "Health & Wellness": "روغتیايي پاملرنه",
+    "Public Spaces": "د تګ ځایونه",
+    "Community Resilience": "اوبه، تشنابونه او سړې ځایونه",
+    "Non-Profits": "ټولنیز سازمانونه"
   }
 }

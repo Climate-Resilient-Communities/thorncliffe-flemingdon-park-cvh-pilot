@@ -6735,5 +6735,15 @@
       "not_found": "எழுத்துகளையும் எண்களையும் சரிபார்த்து மீண்டும் முயலுங்கள்.",
       "submissions_unavailable": "இது அனுப்பப்படவில்லை. உங்கள் சிக்னலைச் சரிபார்த்து மீண்டும் முயலுங்கள்."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "அவசர உதவி மற்றும் தங்குமிடம்",
+    "Faith-Based Organizations": "வழிபாட்டுத் தலங்கள்",
+    "Legal & Government Services": "சட்ட உதவி மற்றும் அடையாள ஆவணங்கள்",
+    "Schools & Child Services": "பள்ளிகள் மற்றும் குழந்தை பராமரிப்பு",
+    "Health & Wellness": "சுகாதாரப் பராமரிப்பு",
+    "Public Spaces": "செல்லக்கூடிய இடங்கள்",
+    "Community Resilience": "தண்ணீர், கழிப்பறைகள் மற்றும் குளிர்ச்சியான இடங்கள்",
+    "Non-Profits": "சமூக அமைப்புகள்"
   }
 }

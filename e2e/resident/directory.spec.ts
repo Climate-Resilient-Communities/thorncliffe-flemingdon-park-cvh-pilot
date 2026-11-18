@@ -182,7 +182,7 @@ test("What kind of place narrows the list, its choices narrow to the chosen topi
   await openFilters(page);
   await page.getByTestId("filter-subcategory-legal services").check();
   expect(await listed(page)).toEqual(["P103"]);
-  await expect(page.getByTestId("chip-subcategory:legal services")).toContainText("Legal Services");
+  await expect(page.getByTestId("chip-subcategory:legal services")).toContainText("Legal services");
 
   // A topic narrows the kinds offered to its providers'; the kind already chosen stays, so it can be taken back.
   await page.getByTestId("filter-category-community").check();
@@ -265,7 +265,7 @@ test("a provider page lists every number, link and address of the provider, and 
   // The postal code is one piece: its space is a non-breaking space.
   expect(await page.locator(".dir-card__address").textContent()).toBe("10 Gateway Blvd, North York, M3C\u00a01H9");
   // The quiet tags: the provider's kind of place, then its neighbourhood.
-  await expect(page.locator(".dir-tag--quiet")).toHaveText(["Health Clinics", "Flemingdon Park"]);
+  await expect(page.locator(".dir-tag--quiet")).toHaveText(["Health clinics", "Flemingdon Park"]);
   await expect(page.getByTestId("provider-emergency")).toHaveText("Not known");
 
   await page.getByTestId("back-to-directory").click();
@@ -609,10 +609,10 @@ test.describe("in Urdu", () => {
 
     // The kinds of place carry the Urdu names too, while the filter still reads the English they stand for.
     await page.getByTestId("filter-category-food").uncheck();
-    await expect(page.getByTestId("filter-subcategory-cooling spaces")).toContainText("ٹھنڈک کی جگہیں");
+    await expect(page.getByTestId("filter-subcategory-cooling spaces")).toContainText("ٹھنڈی جگہیں");
     await page.getByTestId("filter-subcategory-cooling spaces").check();
     expect(await listed(page)).toEqual(["P104"]);
-    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("ٹھنڈک کی جگہیں");
+    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("ٹھنڈی جگہیں");
   });
 });
 

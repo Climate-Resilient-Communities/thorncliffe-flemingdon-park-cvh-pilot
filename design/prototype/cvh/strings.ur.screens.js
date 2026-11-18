@@ -1556,4 +1556,6 @@
   m(t, {"directory": {"quickCooling": "عوامی ٹھنڈی جگہیں", "quickCoolingLine": "گرمی میں سب کے لیے کھلی۔"}, "map": {"coolingRoomResidents": "ٹھنڈا کمرہ ہے (صرف اپنے رہائشیوں کے لیے)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "911 کب کال کریں", "helpNearby": "وہ جگہیں جو مدد کر سکتی ہیں"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "ہنگامی مدد اور پناہ گاہ", "Faith-Based Organizations": "عبادت گاہیں", "Legal & Government Services": "قانونی مدد اور شناختی دستاویزات", "Schools & Child Services": "اسکول اور بچوں کی دیکھ بھال", "Health & Wellness": "صحت کی دیکھ بھال", "Public Spaces": "جانے کی جگہیں", "Community Resilience": "پانی، بیت الخلا اور ٹھنڈی جگہیں", "Non-Profits": "کمیونٹی تنظیمیں"}});
 })();

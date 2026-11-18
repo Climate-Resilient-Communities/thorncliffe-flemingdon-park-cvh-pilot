@@ -6735,5 +6735,15 @@
       "not_found": "Suriin ang mga titik at numero, saka subukan ulit.",
       "submissions_unavailable": "Hindi ito naipadala. Suriin ang iyong signal at subukan ulit."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Tulong pang-emergency at tirahan",
+    "Faith-Based Organizations": "Mga lugar ng pagsamba",
+    "Legal & Government Services": "Tulong legal at mga ID",
+    "Schools & Child Services": "Mga paaralan at pag-aalaga ng bata",
+    "Health & Wellness": "Pangangalagang pangkalusugan",
+    "Public Spaces": "Mga lugar na mapupuntahan",
+    "Community Resilience": "Tubig, banyo at malamig na lugar",
+    "Non-Profits": "Mga organisasyon ng komunidad"
   }
 }

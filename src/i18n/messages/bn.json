@@ -6735,5 +6735,15 @@
       "not_found": "অক্ষর ও সংখ্যাগুলো দেখে আবার চেষ্টা করুন।",
       "submissions_unavailable": "এটি পাঠানো হয়নি। আপনার সিগন্যাল দেখে আবার চেষ্টা করুন।"
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "জরুরি সাহায্য ও আশ্রয়",
+    "Faith-Based Organizations": "উপাসনার স্থান",
+    "Legal & Government Services": "আইনি সাহায্য ও পরিচয়পত্র",
+    "Schools & Child Services": "স্কুল ও শিশুর যত্ন",
+    "Health & Wellness": "স্বাস্থ্যসেবা",
+    "Public Spaces": "যাওয়ার জায়গা",
+    "Community Resilience": "পানি, শৌচাগার ও ঠান্ডা জায়গা",
+    "Non-Profits": "কমিউনিটি সংগঠন"
   }
 }

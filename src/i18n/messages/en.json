@@ -6735,5 +6735,15 @@
       "not_found": "Check the letters and numbers, then try again.",
       "submissions_unavailable": "This was not sent. Check your signal and try again."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Emergency help and shelter",
+    "Faith-Based Organizations": "Places of worship",
+    "Legal & Government Services": "Legal help and ID documents",
+    "Schools & Child Services": "Schools and child care",
+    "Health & Wellness": "Health care",
+    "Public Spaces": "Places to go",
+    "Community Resilience": "Water, washrooms and cool places",
+    "Non-Profits": "Community organizations"
   }
 }

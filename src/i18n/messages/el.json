@@ -6735,5 +6735,15 @@
       "not_found": "Ελέγξτε τα γράμματα και τους αριθμούς και δοκιμάστε ξανά.",
       "submissions_unavailable": "Δεν στάλθηκε. Ελέγξτε το σήμα σας και δοκιμάστε ξανά."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Βοήθεια έκτακτης ανάγκης και στέγη",
+    "Faith-Based Organizations": "Χώροι λατρείας",
+    "Legal & Government Services": "Νομική βοήθεια και έγγραφα ταυτότητας",
+    "Schools & Child Services": "Σχολεία και φροντίδα παιδιών",
+    "Health & Wellness": "Υγειονομική περίθαλψη",
+    "Public Spaces": "Μέρη για να πάτε",
+    "Community Resilience": "Νερό, τουαλέτες και δροσερά μέρη",
+    "Non-Profits": "Κοινοτικοί οργανισμοί"
   }
 }

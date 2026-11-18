@@ -12,10 +12,11 @@ import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
 import { RUN_BY } from "@/contracts/directory";
 import { RunByMark } from "../directory/run-by";
+import { byPlainName, KindName, usePlainName } from "../directory/kind-name";
 import { COOLING_SPACES, QuickCooling, QuickToggle } from "../directory/quick-cooling";
 import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
-import { isFallbackText, ListingBlock } from "../directory/listing-text";
+import { isFallbackText } from "../directory/listing-text";
 import { useDirectory } from "../directory/use-directory";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
@@ -123,6 +124,7 @@ function FilterChoice({ id, checked, onChange, children }: { id: string; checked
  */
 export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }) {
   const t = useTranslations();
+  const plainName = usePlainName();
   const locale = languageOf(lang).bcp47;
   const directory = useDirectory(lang);
   const buildings = useBuildingPins();
@@ -211,7 +213,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   const kindOf = (pin: MapPin): string => {
     if (pin.kind === "building") return plain(t("map.building"));
-    const kind = pin.label ? pin.label.body : plain(t("map.service"));
+    const kind = pin.label ? (plainName("subcats", pin.label) ?? pin.label.body) : plain(t("map.service"));
     // Who runs it is in the pin's name too (session 2, #11), so the outline and badge are never the only sign.
     return pin.runBy === "grassroots" ? `${kind}, ${plain(t("directory.runByGrassroots"))}` : pin.runBy === "formal" ? `${kind}, ${plain(t("directory.runByFormal"))}` : kind;
   };
@@ -226,7 +228,13 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     return { text: plain(words), lang: isEnglishFallback(words) ? "en" : undefined };
   };
   const current: PinWords = {
-    word: (pin) => spaceWord(pin) ?? (pin.kind === "provider" && pin.label ? { text: pin.label.body, lang: isFallbackText(pin.label) ? "en" : undefined } : null),
+    word: (pin) => {
+      const space = spaceWord(pin);
+      if (space || pin.kind !== "provider" || !pin.label) return space;
+      // The plain name of its kind (session 2, #10), else the catalogue's words.
+      const plainWord = plainName("subcats", pin.label);
+      return plainWord !== null ? { text: plain(plainWord), lang: isEnglishFallback(plainWord) ? "en" : undefined } : { text: pin.label.body, lang: isFallbackText(pin.label) ? "en" : undefined };
+    },
     name: (pin) => plain(t("map.pinName", { name: nameOf(pin), kind: kindOf(pin) })),
     cluster: (n) => plain(t("R14.here", { n })),
     clusterLabel: (n) => plain(n === 1 ? t("R14.place") : t("R14.places", { n })),
@@ -433,7 +441,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                           checked={isActive(filters, { kind: "category", id: category.id })}
                           onChange={(on) => toggleFilter({ kind: "category", id: category.id }, on)}
                         >
-                          <ListingBlock text={category.name} as="span" />
+                          <KindName group="catPlain" text={category.name} />
                         </FilterChoice>
                       ))}
                     </Stack>
@@ -444,14 +452,14 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                         {t("R14.subLabel")}
                       </ResidentText>
                       <Stack gap="label">
-                        {kinds.map((kind) => (
+                        {byPlainName(kinds, plainName, locale).map((kind) => (
                           <FilterChoice
                             key={kind.id}
                             id={`subcategory-${kind.id}`}
                             checked={isActive(filters, { kind: "subcategory", id: kind.id })}
                             onChange={(on) => toggleFilter({ kind: "subcategory", id: kind.id }, on)}
                           >
-                            <ListingBlock text={kind.name} as="span" />
+                            <KindName group="subcats" text={kind.name} />
                           </FilterChoice>
                         ))}
                       </Stack>
@@ -575,7 +583,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <div className="map-preview__head">
               <PinMark pin={chosen} />
               <span className="map-preview__kind" data-testid="map-preview-kind">
-                {chosen.kind === "provider" && chosen.label ? <ListingBlock text={chosen.label} as="span" /> : <ResidentText>{chosen.kind === "building" ? t("map.building") : t("map.service")}</ResidentText>}
+                {chosen.kind === "provider" && chosen.label ? <KindName group="subcats" text={chosen.label} /> : <ResidentText>{chosen.kind === "building" ? t("map.building") : t("map.service")}</ResidentText>}
               </span>
               <button type="button" className="map-close tap" onClick={() => setSelected(null)} aria-label={plain(t("R16.close"))} data-testid="map-preview-close">
                 <span className="map-ico map-ico--close" aria-hidden="true" />
@@ -654,7 +662,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                             <Link href={pinHref(pin, lang)} prefetch={false} className="map-entry__link">
                               {pin.name}
                             </Link>
-                            <span className="map-hint">{pin.label ? <ListingBlock text={pin.label} as="span" /> : <ResidentText>{t("map.service")}</ResidentText>}</span>
+                            <span className="map-hint">{pin.label ? <KindName group="subcats" text={pin.label} /> : <ResidentText>{t("map.service")}</ResidentText>}</span>
                           </span>
                         </li>
                       ))}

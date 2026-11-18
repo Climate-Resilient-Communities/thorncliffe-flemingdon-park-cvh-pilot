@@ -1569,4 +1569,6 @@
   m(t, {"directory": {"quickCooling": "সর্বজনীন ঠান্ডা জায়গা", "quickCoolingLine": "গরমে সবার জন্য খোলা।"}, "map": {"coolingRoomResidents": "ঠান্ডা ঘর আছে (শুধু নিজের বাসিন্দাদের জন্য)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "কখন 911-এ কল করবেন", "helpNearby": "যেসব জায়গা সাহায্য করতে পারে"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "জরুরি সাহায্য ও আশ্রয়", "Faith-Based Organizations": "উপাসনার স্থান", "Legal & Government Services": "আইনি সাহায্য ও পরিচয়পত্র", "Schools & Child Services": "স্কুল ও শিশুর যত্ন", "Health & Wellness": "স্বাস্থ্যসেবা", "Public Spaces": "যাওয়ার জায়গা", "Community Resilience": "পানি, শৌচাগার ও ঠান্ডা জায়গা", "Non-Profits": "কমিউনিটি সংগঠন"}});
 })();

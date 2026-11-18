@@ -1580,4 +1580,6 @@
   m(t, {"directory": {"quickCooling": "Verejné ochladzovacie miesta", "quickCoolingLine": "Otvorené pre všetkých, keď je horúco."}, "map": {"coolingRoomResidents": "Má chladiacu miestnosť (len pre vlastných obyvateľov)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "Kedy volať 911", "helpNearby": "Miesta, ktoré môžu pomôcť"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "Núdzová pomoc a prístrešie", "Faith-Based Organizations": "Miesta bohoslužieb", "Legal & Government Services": "Právna pomoc a doklady", "Schools & Child Services": "Školy a starostlivosť o deti", "Health & Wellness": "Zdravotná starostlivosť", "Public Spaces": "Miesta, kam ísť", "Community Resilience": "Voda, toalety a chladné miesta", "Non-Profits": "Komunitné organizácie"}});
 })();

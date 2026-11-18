@@ -6735,5 +6735,15 @@
       "not_found": "حروف اور نمبر دیکھیں، پھر دوبارہ کوشش کریں۔",
       "submissions_unavailable": "یہ نہیں بھیجا گیا۔ اپنا سگنل دیکھیں اور دوبارہ کوشش کریں۔"
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "ہنگامی مدد اور پناہ گاہ",
+    "Faith-Based Organizations": "عبادت گاہیں",
+    "Legal & Government Services": "قانونی مدد اور شناختی دستاویزات",
+    "Schools & Child Services": "اسکول اور بچوں کی دیکھ بھال",
+    "Health & Wellness": "صحت کی دیکھ بھال",
+    "Public Spaces": "جانے کی جگہیں",
+    "Community Resilience": "پانی، بیت الخلا اور ٹھنڈی جگہیں",
+    "Non-Profits": "کمیونٹی تنظیمیں"
   }
 }

@@ -1580,4 +1580,6 @@
   m(t, {"directory": {"quickCooling": "பொது குளிர்ச்சி இடங்கள்", "quickCoolingLine": "வெப்பமாக இருக்கும்போது அனைவருக்கும் திறந்திருக்கும்."}, "map": {"coolingRoomResidents": "குளிர்ச்சி அறை உள்ளது (அதன் குடியிருப்பாளர்களுக்கு மட்டும்)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "911-ஐ எப்போது அழைக்க வேண்டும்", "helpNearby": "உதவக்கூடிய இடங்கள்"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "அவசர உதவி மற்றும் தங்குமிடம்", "Faith-Based Organizations": "வழிபாட்டுத் தலங்கள்", "Legal & Government Services": "சட்ட உதவி மற்றும் அடையாள ஆவணங்கள்", "Schools & Child Services": "பள்ளிகள் மற்றும் குழந்தை பராமரிப்பு", "Health & Wellness": "சுகாதாரப் பராமரிப்பு", "Public Spaces": "செல்லக்கூடிய இடங்கள்", "Community Resilience": "தண்ணீர், கழிப்பறைகள் மற்றும் குளிர்ச்சியான இடங்கள்", "Non-Profits": "சமூக அமைப்புகள்"}});
 })();

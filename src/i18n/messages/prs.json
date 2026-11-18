@@ -6735,5 +6735,15 @@
       "not_found": "حروف و اعداد را بررسی کنید و دوباره امتحان کنید.",
       "submissions_unavailable": "این فرستاده نشد. آنتن خود را بررسی کنید و دوباره امتحان کنید."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "کمک اضطراری و سرپناه",
+    "Faith-Based Organizations": "عبادتگاه‌ها",
+    "Legal & Government Services": "کمک حقوقی و اسناد هویتی",
+    "Schools & Child Services": "مکاتب و مراقبت از کودکان",
+    "Health & Wellness": "مراقبت صحی",
+    "Public Spaces": "جاهایی برای رفتن",
+    "Community Resilience": "آب، تشناب و جاهای خنک",
+    "Non-Profits": "سازمان‌های اجتماعی"
   }
 }

@@ -6735,5 +6735,15 @@
       "not_found": "Vérifiez les lettres et les chiffres, puis réessayez.",
       "submissions_unavailable": "Ceci n'a pas été envoyé. Vérifiez votre signal et réessayez."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Aide d'urgence et hébergement",
+    "Faith-Based Organizations": "Lieux de culte",
+    "Legal & Government Services": "Aide juridique et pièces d'identité",
+    "Schools & Child Services": "Écoles et garde d'enfants",
+    "Health & Wellness": "Soins de santé",
+    "Public Spaces": "Endroits où aller",
+    "Community Resilience": "Eau, toilettes et lieux frais",
+    "Non-Profits": "Organismes communautaires"
   }
 }

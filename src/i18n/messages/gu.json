@@ -6735,5 +6735,15 @@
       "not_found": "અક્ષરો અને આંકડા તપાસો, પછી ફરી પ્રયાસ કરો.",
       "submissions_unavailable": "આ મોકલાયું નથી. તમારું સિગ્નલ તપાસો અને ફરી પ્રયાસ કરો."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "કટોકટી મદદ અને આશ્રય",
+    "Faith-Based Organizations": "પૂજા સ્થળો",
+    "Legal & Government Services": "કાયદાકીય મદદ અને ઓળખ દસ્તાવેજો",
+    "Schools & Child Services": "શાળાઓ અને બાળ સંભાળ",
+    "Health & Wellness": "આરોગ્ય સંભાળ",
+    "Public Spaces": "જવાની જગ્યાઓ",
+    "Community Resilience": "પાણી, શૌચાલય અને ઠંડી જગ્યાઓ",
+    "Non-Profits": "સમુદાય સંસ્થાઓ"
   }
 }

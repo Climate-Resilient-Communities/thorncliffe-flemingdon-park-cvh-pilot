@@ -6735,5 +6735,15 @@
       "not_found": "请检查字母和数字，然后再试一次。",
       "submissions_unavailable": "没有发送成功。请检查信号后再试。"
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "紧急帮助与庇护所",
+    "Faith-Based Organizations": "宗教场所",
+    "Legal & Government Services": "法律帮助与身份证件",
+    "Schools & Child Services": "学校与儿童照顾",
+    "Health & Wellness": "医疗保健",
+    "Public Spaces": "可以去的地方",
+    "Community Resilience": "饮水、洗手间与纳凉处",
+    "Non-Profits": "社区组织"
   }
 }

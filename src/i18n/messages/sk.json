@@ -6735,5 +6735,15 @@
       "not_found": "Skontrolujte písmená a čísla a skúste to znova.",
       "submissions_unavailable": "Neodoslalo sa to. Skontrolujte signál a skúste to znova."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Núdzová pomoc a prístrešie",
+    "Faith-Based Organizations": "Miesta bohoslužieb",
+    "Legal & Government Services": "Právna pomoc a doklady",
+    "Schools & Child Services": "Školy a starostlivosť o deti",
+    "Health & Wellness": "Zdravotná starostlivosť",
+    "Public Spaces": "Miesta, kam ísť",
+    "Community Resilience": "Voda, toalety a chladné miesta",
+    "Non-Profits": "Komunitné organizácie"
   }
 }
