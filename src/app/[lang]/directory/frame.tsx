@@ -8,7 +8,7 @@ import type { LaunchCode } from "@/i18n/languages";
 // for Find help's topics), "nothing found" (R11), a listing's facts (R12, status), How they can help (x14) and the 911 sentence (x01). No
 // machine-translation or "translation unavailable" wording (x04): every translation is shown without a label
 // (product-owner decision 2026-10-09, pilot).
-export const DIRECTORY_NAMESPACES = ["categories", "directory", "R10", "R11", "R12", "R14", "R27", "filters", "status", "x01", "x11", "x14"] as const;
+export const DIRECTORY_NAMESPACES = ["categories", "directory", "R10", "R11", "R12", "R14", "R27", "filters", "status", "x01", "x09", "x11", "x14", "time"] as const;
 
 /** Gives the directory's client components the catalog parts they read. */
 export async function DirectoryFrame({ lang, children }: { lang: LaunchCode; children: ReactNode }) {
