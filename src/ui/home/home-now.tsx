@@ -22,6 +22,7 @@ import { StatusMark, ThreadLinks, Unverified } from "./place-status";
 import { adviceFor, deviceProfile, tailorThreads } from "./tailoring";
 import { useClosedThreads } from "./use-closed";
 import { useFeed } from "./use-feed";
+import { openDisplaySettings } from "../shell/display-settings";
 import "../choices/choices.css";
 import "./home.css";
 
@@ -214,6 +215,18 @@ function HomeTop({ lang, x01 }: { lang: LaunchCode; x01: Parameters<typeof Not91
         </span>
         <span className="home-ico home-ico--chevron" aria-hidden="true" />
       </Link>
+      {/* Resident testing, session 2 (#13): residents could not find bigger text or the simpler view behind the header's Aa button.
+          This opens the same display settings, named in words, with the same small-and-large A. */}
+      <button type="button" className="home-dest home-dest--display tap" onClick={openDisplaySettings} data-testid="home-display-settings">
+        <span className="shell-display-glyph home-display-glyph" aria-hidden="true"><span>A</span><span>A</span></span>
+        <span className="home-dest__text">
+          <ResidentText as="span">{t("displayTitle")}</ResidentText>
+          <ResidentText as="span" className="home-dest__line">
+            {t("displayLine")}
+          </ResidentText>
+        </span>
+        <span className="home-ico home-ico--chevron" aria-hidden="true" />
+      </button>
     </div>
   );
 }

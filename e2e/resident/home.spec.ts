@@ -472,14 +472,14 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await expect(notice).toHaveAttribute("data-variant", "inline");
     await expect(notice.locator("p")).toHaveText(SHORT);
 
-    // The notice opens the screen, then the way to text alerts, before the heading.
+    // The notice opens the screen, then the way to text alerts and to bigger text or the simpler view (session 2, #13), before the heading.
     const top = await page.evaluate(() => {
       const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
       const first = document.querySelector('[data-testid="home-top"]')!;
       const heading = document.querySelector('[data-testid="home"] h1')!;
       return { children: [...first.children].map(describe), beforeHeading: !!(first.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING) };
     });
-    expect(top).toEqual({ children: ["not-911", "home-get-text-alerts"], beforeHeading: true });
+    expect(top).toEqual({ children: ["not-911", "home-get-text-alerts", "home-display-settings"], beforeHeading: true });
     await expect(page.getByTestId("home-get-text-alerts")).toHaveAttribute("href", "/en/text-alerts");
     await expect(page.getByTestId("home-get-text-alerts")).toBeVisible();
 

@@ -555,7 +555,9 @@
     "checking": "Checking for alerts",
     "feedFailed": "We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
     "feedFailedOld": "We could not check for new alerts. Showing what was last loaded {t}.",
-    "inBuildings": "Alerts for buildings here:"
+    "inBuildings": "Alerts for buildings here:",
+    "displayTitle": "Bigger text or a simpler view",
+    "displayLine": "Make the words larger, or show fewer details."
   },
   "R04": {
     "deviceLabel": "Text message on a basic phone",
@@ -726,7 +728,9 @@
     "timeLine": "Posted {posted} · Updated {updated}",
     "timeLineOne": "Posted {posted}",
     "basicMore": "Earlier updates: {n}",
-    "mayHaveEnded": "This alert may have ended. Check again when you have signal"
+    "mayHaveEnded": "This alert may have ended. Check again when you have signal",
+    "when911": "When to call 911",
+    "helpNearby": "Places that can help"
   },
   "R08": {
     "title": "Alerts that have ended",
@@ -6494,7 +6498,16 @@
     "couldNotLoadNumbers": "The numbers page lists the other numbers you may need.",
     "numbersLink": "See the essential numbers",
     "backToList": "All services and organisations",
-    "suggestApply": "Show only {place}"
+    "suggestApply": "Show only {place}",
+    "runByLegend": "Who runs it",
+    "runByFormal": "Established service",
+    "runByGrassroots": "Community group",
+    "runByFormalMany": "Established services",
+    "runByGrassrootsMany": "Community groups",
+    "runByFormalLine": "Run by a public body, an agency or an institution.",
+    "runByGrassrootsLine": "Run by residents or volunteers.",
+    "quickCooling": "Public cooling spaces",
+    "quickCoolingLine": "Open to everyone when it is hot."
   },
   "map": {
     "lead": "Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.",
@@ -6512,7 +6525,8 @@
     "buildings": "Apartment buildings",
     "buildingsCount": "{n} buildings",
     "buildingsCountOne": "1 building",
-    "filtered": "Showing only the places that match your filters."
+    "filtered": "Showing only the places that match your filters.",
+    "coolingRoomResidents": "Has a cooling room (for its own residents)"
   },
   "guides": {
     "reviewed": "Reviewed by the Hub, last updated {date}"

@@ -555,7 +555,9 @@
     "checking": "Tinitingnan kung may alerto",
     "feedFailed": "Hindi namin matingnan ang mga alerto ngayon. Ang lugar na may nakasulat na \"Hindi alam\" ay maaaring may alerto pa rin. Susubukan naming muli.",
     "feedFailedOld": "Hindi namin matingnan ang mga bagong alerto. Ipinapakita ang huling na-load {t}.",
-    "inBuildings": "Mga alerto para sa mga gusali rito:"
+    "inBuildings": "Mga alerto para sa mga gusali rito:",
+    "displayTitle": "Mas malaking teksto o mas simpleng view",
+    "displayLine": "Palakihin ang mga salita, o magpakita ng mas kaunting detalye."
   },
   "R04": {
     "deviceLabel": "Text message sa simpleng telepono",
@@ -726,7 +728,9 @@
     "timeLine": "Ipinost {posted} · Na-update {updated}",
     "timeLineOne": "Ipinost {posted}",
     "basicMore": "Mga naunang update: {n}",
-    "mayHaveEnded": "Maaaring tapos na ang alertong ito. Tingnan ulit kapag may signal ka na"
+    "mayHaveEnded": "Maaaring tapos na ang alertong ito. Tingnan ulit kapag may signal ka na",
+    "when911": "Kailan tatawag sa 911",
+    "helpNearby": "Mga lugar na makakatulong"
   },
   "R08": {
     "title": "Mga alertong natapos na",
@@ -6494,7 +6498,16 @@
     "couldNotLoadNumbers": "Nasa pahina ng mga numero ang iba pang numerong maaaring kailanganin mo.",
     "numbersLink": "Tingnan ang mahahalagang numero",
     "backToList": "Lahat ng serbisyo at organisasyon",
-    "suggestApply": "Ipakita lang ang {place}"
+    "suggestApply": "Ipakita lang ang {place}",
+    "runByLegend": "Sino ang nagpapatakbo",
+    "runByFormal": "Itinatag na serbisyo",
+    "runByGrassroots": "Grupo ng komunidad",
+    "runByFormalMany": "Mga itinatag na serbisyo",
+    "runByGrassrootsMany": "Mga grupo ng komunidad",
+    "runByFormalLine": "Pinapatakbo ng pampublikong ahensya, organisasyon o institusyon.",
+    "runByGrassrootsLine": "Pinapatakbo ng mga residente o boluntaryo.",
+    "quickCooling": "Mga pampublikong cooling space",
+    "quickCoolingLine": "Bukas para sa lahat kapag mainit."
   },
   "map": {
     "lead": "Mga serbisyo, organisasyon at gusali ng apartment sa Thorncliffe Park at Flemingdon Park. I-tap ang isang pin para makita kung ano ito.",
@@ -6512,7 +6525,8 @@
     "buildings": "Mga gusali ng apartment",
     "buildingsCount": "{n} gusali",
     "buildingsCountOne": "1 gusali",
-    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter mo."
+    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter mo.",
+    "coolingRoomResidents": "May cooling room (para lang sa sariling residente)"
   },
   "guides": {
     "reviewed": "Sinuri ng Hub, huling na-update {date}"

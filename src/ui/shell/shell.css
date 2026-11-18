@@ -63,6 +63,28 @@
     cursor: pointer;
   }
 
+  /* The display settings mark (resident testing, session 2, #13): a small A beside a large A, the common sign for text size, in the accent colour with
+     an accent outline, so it reads as a control and not as a letter. */
+  .shell-display-glyph {
+    display: inline-flex;
+    align-items: baseline;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .shell-display-glyph > span:first-child {
+    font-size: 0.75em;
+  }
+
+  .shell-display-glyph > span:last-child {
+    font-size: 1.4em;
+  }
+
+  .shell-display-button {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
   .shell-langbtn__name {
     overflow: hidden;
     white-space: nowrap;

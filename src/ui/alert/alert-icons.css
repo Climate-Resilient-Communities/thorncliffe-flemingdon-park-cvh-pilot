@@ -120,4 +120,22 @@
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='5' y='10.5' width='14' height='10.5' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 10.5V7a4 4 0 0 1 8 0v3.5'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='5' y='10.5' width='14' height='10.5' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8 10.5V7a4 4 0 0 1 8 0v3.5'/%3E%3C/svg%3E");
   }
+
+  /* When to call 911 on an alert (session 2, #17): the guide's reviewed line beside a phone mark, as on the guide page. */
+  .alert-when911 {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-label);
+    font-weight: 700;
+  }
+
+  /* The public cooling spaces, among the places that can help with a heat alert: the map's fan mark. */
+  .alert-cooling__ico {
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    background-color: currentcolor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='12' r='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 10c0-3 1-6 4-6.5 1.8 3-.5 5.5-2.5 7.2M13.7 13c2.6 1.5 4.6 3.9 3.4 6.7-3.4 0-4.3-3.3-4.8-5.9M10.3 13c-2.6 1.5-5.6 2.2-7.6 0 1.6-3 4.9-2.3 7.3-1.4'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='12' r='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 10c0-3 1-6 4-6.5 1.8 3-.5 5.5-2.5 7.2M13.7 13c2.6 1.5 4.6 3.9 3.4 6.7-3.4 0-4.3-3.3-4.8-5.9M10.3 13c-2.6 1.5-5.6 2.2-7.6 0 1.6-3 4.9-2.3 7.3-1.4'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
 }

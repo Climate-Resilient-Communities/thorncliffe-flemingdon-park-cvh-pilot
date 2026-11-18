@@ -71,6 +71,31 @@ describe("keywordTokens", () => {
     }
   });
 
+  it("adds the cooling concept for being too hot, no air conditioning or wanting to cool down, and the listings' cooling spaces (session 2, #6)", () => {
+    const concept = "concept:cooling";
+    for (const text of [
+      "it's too hot",
+      "It is so hot",
+      "I'm feeling hot",
+      "I feel very hot and dizzy",
+      "my apartment is too hot",
+      "it's hot inside my apartment",
+      "we have no AC",
+      "I don't have air conditioning",
+      "where can I cool down",
+      "a cool place to sit",
+      "heat wave",
+      "the extreme heat",
+      "free AC open now",
+      "Community Centres Public Washrooms Cooling Spaces City community recreation centre",
+    ]) {
+      expect(keywordTokens(text), text).toContain(concept);
+    }
+    for (const text of ["where can I get a hot meal", "no hot water in my unit", "a crisis hotline", "hot food for my kids", "where can I get food"]) {
+      expect(keywordTokens(text), text).not.toContain(concept);
+    }
+  });
+
   it("adds the seniors concept for the elderly, older people and grandparents, and the listings' seniors and long-term care (UAT 2026-11-09)", () => {
     const concept = "concept:seniors";
     for (const text of [
@@ -180,6 +205,7 @@ describe("keywordDocumentsOf (the release's English listing)", () => {
           name: "Flemingdon Food Bank",
           category_ids: ["c1"],
           neighbourhood_ids: [],
+          run_by: null,
           subcategories: [text("Food Collaboratives")],
           locations: [{ street: "10 Gateway Blvd", city: "Toronto", postal: null, lat: 0, lng: 0 }],
           contact: { phone: ["416-555-0100"], email: [], social: [], web: [] },

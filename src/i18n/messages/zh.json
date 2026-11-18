@@ -555,7 +555,9 @@
     "checking": "正在检查警报",
     "feedFailed": "我们暂时无法检查警报。显示“不详”的地点可能仍有警报。我们会再试一次。",
     "feedFailedOld": "我们无法检查新警报。显示的是{t}最后加载的内容。",
-    "inBuildings": "这里楼宇的警报："
+    "inBuildings": "这里楼宇的警报：",
+    "displayTitle": "放大文字或简化视图",
+    "displayLine": "把文字变大，或显示更少的细节。"
   },
   "R04": {
     "deviceLabel": "普通手机上的短信",
@@ -726,7 +728,9 @@
     "timeLine": "{posted}发布 · {updated}更新",
     "timeLineOne": "{posted}发布",
     "basicMore": "较早的更新：{n}",
-    "mayHaveEnded": "这条警报可能已经结束。有信号时请再查看"
+    "mayHaveEnded": "这条警报可能已经结束。有信号时请再查看",
+    "when911": "何时拨打 911",
+    "helpNearby": "可以提供帮助的地方"
   },
   "R08": {
     "title": "已结束的警报",
@@ -6494,7 +6498,16 @@
     "couldNotLoadNumbers": "号码页面列出了您可能需要的其他号码。",
     "numbersLink": "查看重要电话号码",
     "backToList": "所有服务和机构",
-    "suggestApply": "只显示{place}"
+    "suggestApply": "只显示{place}",
+    "runByLegend": "由谁运营",
+    "runByFormal": "正式机构服务",
+    "runByGrassroots": "社区团体",
+    "runByFormalMany": "正式机构服务",
+    "runByGrassrootsMany": "社区团体",
+    "runByFormalLine": "由政府部门、机构或单位运营。",
+    "runByGrassrootsLine": "由居民或志愿者运营。",
+    "quickCooling": "公共纳凉点",
+    "quickCoolingLine": "天热时向所有人开放。"
   },
   "map": {
     "lead": "Thorncliffe Park 和 Flemingdon Park 的服务、机构和公寓楼。点击标记，查看它是什么。",
@@ -6512,7 +6525,8 @@
     "buildings": "公寓楼",
     "buildingsCount": "{n} 栋楼",
     "buildingsCountOne": "1 栋楼",
-    "filtered": "只显示与您所选筛选条件相符的地点。"
+    "filtered": "只显示与您所选筛选条件相符的地点。",
+    "coolingRoomResidents": "有纳凉室（仅供本楼居民使用）"
   },
   "guides": {
     "reviewed": "已由中心审核，最后更新于{date}"

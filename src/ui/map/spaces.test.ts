@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isOpenSpacePin, withSpaces, type ProviderPin } from "./places";
 
 // The map's "Open as a space now" (the partner space, 2026-11-07): the provider pins with their status as a space, matched by place on the phone.
-const pin = (id: string): ProviderPin => ({ kind: "provider", key: `${id}:0`, id, name: id, street: `${id} St`, lat: 43.7, lng: -79.34, marker: "cooling", label: null });
+const pin = (id: string): ProviderPin => ({ kind: "provider", key: `${id}:0`, id, name: id, street: `${id} St`, lat: 43.7, lng: -79.34, marker: "cooling", label: null, runBy: null });
 const NOW = Date.parse("2026-11-07T18:00:00Z");
 const at = (minutesAgo: number) => new Date(NOW - minutesAgo * 60_000).toISOString();
 

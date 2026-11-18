@@ -555,7 +555,9 @@
     "checking": "Kontrolujú sa upozornenia",
     "feedFailed": "Upozornenia sa práve nepodarilo skontrolovať. Miesto s nápisom „Neznáme“ môže mať aj tak upozornenie. Skúsime to znova.",
     "feedFailedOld": "Nové upozornenia sa nepodarilo skontrolovať. Zobrazuje sa to, čo sa naposledy načítalo {t}.",
-    "inBuildings": "Upozornenia pre budovy tu:"
+    "inBuildings": "Upozornenia pre budovy tu:",
+    "displayTitle": "Väčšie písmo alebo jednoduchšie zobrazenie",
+    "displayLine": "Zväčšite písmo alebo zobrazte menej podrobností."
   },
   "R04": {
     "deviceLabel": "SMS na obyčajnom telefóne",
@@ -726,7 +728,9 @@
     "timeLine": "Zverejnené {posted} · Aktualizované {updated}",
     "timeLineOne": "Zverejnené {posted}",
     "basicMore": "Staršie aktualizácie: {n}",
-    "mayHaveEnded": "Toto upozornenie už možno skončilo. Skontrolujte to znova, keď budete mať signál"
+    "mayHaveEnded": "Toto upozornenie už možno skončilo. Skontrolujte to znova, keď budete mať signál",
+    "when911": "Kedy volať 911",
+    "helpNearby": "Miesta, ktoré môžu pomôcť"
   },
   "R08": {
     "title": "Skončené upozornenia",
@@ -6494,7 +6498,16 @@
     "couldNotLoadNumbers": "Na stránke s číslami sú ďalšie čísla, ktoré môžete potrebovať.",
     "numbersLink": "Zobraziť dôležité čísla",
     "backToList": "Všetky služby a organizácie",
-    "suggestApply": "Zobraziť len {place}"
+    "suggestApply": "Zobraziť len {place}",
+    "runByLegend": "Kto to prevádzkuje",
+    "runByFormal": "Zavedená služba",
+    "runByGrassroots": "Komunitná skupina",
+    "runByFormalMany": "Zavedené služby",
+    "runByGrassrootsMany": "Komunitné skupiny",
+    "runByFormalLine": "Prevádzkuje ju verejný orgán, agentúra alebo inštitúcia.",
+    "runByGrassrootsLine": "Prevádzkujú ju obyvatelia alebo dobrovoľníci.",
+    "quickCooling": "Verejné ochladzovacie miesta",
+    "quickCoolingLine": "Otvorené pre všetkých, keď je horúco."
   },
   "map": {
     "lead": "Služby, organizácie a bytové domy v Thorncliffe Parku a Flemingdon Parku. Ťuknite na špendlík a uvidíte, čo to je.",
@@ -6512,7 +6525,8 @@
     "buildings": "Bytové domy",
     "buildingsCount": "Počet domov: {n}",
     "buildingsCountOne": "1 dom",
-    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom."
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom.",
+    "coolingRoomResidents": "Má chladiacu miestnosť (len pre vlastných obyvateľov)"
   },
   "guides": {
     "reviewed": "Skontroloval Hub, naposledy aktualizované {date}"

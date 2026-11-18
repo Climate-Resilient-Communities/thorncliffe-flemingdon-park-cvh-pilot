@@ -143,3 +143,26 @@ describe("listProviders", () => {
     expect(new Set(listed.map((p) => p.id)).size).toBe(listed.length);
   });
 });
+
+describe("who runs it (resident testing, session 2, #4)", () => {
+  const p = (id: string, run_by: "formal" | "grassroots" | null) => ({ id, run_by }) as unknown as import("@/contracts/directory").ListingProvider;
+  const all = [
+    { ...p("M001", "formal"), category_ids: [], subcategories: [], neighbourhood_ids: [], emergency_role: null },
+    { ...p("M084", "grassroots"), category_ids: [], subcategories: [], neighbourhood_ids: [], emergency_role: null },
+    { ...p("M999", null), category_ids: [], subcategories: [], neighbourhood_ids: [], emergency_role: null },
+  ] as unknown as import("@/contracts/directory").ListingProvider[];
+
+  it("keeps only the providers run as chosen, and both kinds (not one the list does not name) when both are chosen", () => {
+    const grassroots = setFilter(NO_FILTERS, { kind: "runBy", id: "grassroots" }, true);
+    expect(filterProviders(all, grassroots).map((x) => x.id)).toEqual(["M084"]);
+    expect(filterProviders(all, setFilter(grassroots, { kind: "runBy", id: "formal" }, true)).map((x) => x.id)).toEqual(["M001", "M084"]);
+    expect(filterProviders(all, NO_FILTERS).map((x) => x.id)).toEqual(["M001", "M084", "M999"]);
+  });
+
+  it("is a filter like the others: on in the chips, and off again", () => {
+    const on = setFilter(NO_FILTERS, { kind: "runBy", id: "formal" }, true);
+    expect(isActive(on, { kind: "runBy", id: "formal" })).toBe(true);
+    expect(activeKeys(on)).toEqual([{ kind: "runBy", id: "formal" }]);
+    expect(setFilter(on, { kind: "runBy", id: "formal" }, false)).toEqual(NO_FILTERS);
+  });
+});

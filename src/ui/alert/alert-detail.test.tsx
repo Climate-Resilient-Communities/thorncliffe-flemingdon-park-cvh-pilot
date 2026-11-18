@@ -315,3 +315,35 @@ describe("what verified means (R-28)", () => {
     expect(explain({ entries: [entry()] }, "ur")).toContain('href="/ur/alerts/kbcdfghj"');
   });
 });
+
+describe("alert, then when to call 911, then what to do and the places that can help (resident testing, session 2, #17)", () => {
+  const renderWith = (types: string[], when911: { id: string; text: string; unavailable: boolean }[]) => {
+    const translate = translatorFor("en");
+    const view = alertView(thread({ types, entries: [englishEntry()] }), { lang: "en", serverNow: SERVER_NOW, t: translate });
+    return renderToStaticMarkup(<AlertDetail view={view} lang="en" t={translate} when911={when911} />);
+  };
+  const HEAT = "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.";
+
+  it("puts each guide's reviewed 911 line under 'When to call 911', right after the alert and before the guides", () => {
+    const html = renderWith(["heat"], [{ id: "heat", text: HEAT, unavailable: false }]);
+    expect(html).toContain('data-testid="alert-when911-heat"');
+    expect(html).toContain(HEAT);
+    const at = (id: string) => html.indexOf(`data-testid="${id}"`);
+    expect(at("alert-article")).toBeLessThan(at("alert-when911"));
+    expect(at("alert-when911")).toBeLessThan(at("alert-actions"));
+    expect(at("alert-actions")).toBeLessThan(at("alert-help"));
+  });
+
+  it("offers the public cooling spaces for a heat alert only, and keeps the 911 block when no guide line could be read", () => {
+    expect(renderWith(["heat"], [])).toContain('data-testid="alert-cooling"');
+    const elevator = renderWith(["elevator"], []);
+    expect(elevator).not.toContain('data-testid="alert-help"');
+    expect(elevator).toContain('data-testid="alert-when911"');
+    expect(elevator).toContain("911");
+  });
+
+  it("marks a 911 line that is English standing in for a translation", () => {
+    expect(renderWith(["heat"], [{ id: "heat", text: HEAT, unavailable: true }])).toMatch(/lang="en"[^>]*>Call 911 if someone is confused/);
+  });
+});
+

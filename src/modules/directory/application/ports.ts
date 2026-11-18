@@ -3,6 +3,7 @@
 // composition root; tests use the fakes beside them.
 import type { ZhHantConverter } from "../domain/directoryRelease";
 import type { ProviderNeighbourhoods } from "../domain/providerNeighbourhoods";
+import type { ProviderRunBy } from "../domain/providerRunBy";
 import type { EmbeddingConfig } from "../domain/searchData";
 
 /**
@@ -88,6 +89,11 @@ export interface PublishDeps {
   catalogue: () => Promise<CatalogueVersion>;
   /** The Hub's list of each provider's neighbourhoods (data/catalogue/provider-neighbourhoods.json, deployed with the app); read when a release is planned. Rejects when the file cannot be read or is not in shape. */
   neighbourhoods: () => Promise<ProviderNeighbourhoods>;
+  /**
+   * Who runs each provider (data/catalogue/provider-run-by.json, session 2): read when a release is planned. Absent: every provider's `run_by`
+   * is null. Rejects when the file cannot be read or is not in shape.
+   */
+  runBy?: () => Promise<ProviderRunBy>;
   /** OpenCC for zh-Hant; loaded when a release is planned, not when the module is imported. */
   zhHant: () => Promise<ZhHantConverter>;
   /** Told once when a publish gives up. A failure here never changes the outcome. */

@@ -10,6 +10,9 @@ import { languageOf } from "@/i18n/languages";
 import { basicAttributeSet, useBasic } from "../basic";
 import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
+import { RUN_BY } from "@/contracts/directory";
+import { RunByMark } from "../directory/run-by";
+import { COOLING_SPACES, QuickCooling, QuickToggle } from "../directory/quick-cooling";
 import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
 import { isFallbackText, ListingBlock } from "../directory/listing-text";
@@ -81,6 +84,13 @@ function PinMark({ pin }: { pin: MapPin }) {
 }
 
 /** The legend's rows: each kind of pin (places.ts) and the catalog's words for it. */
+/** The provider a "See on the map" link opened the map on (`?place=M052`, session 2, #7); null on the server and for any other address. */
+function placeInAddress(): string | null {
+  const id = new URLSearchParams(window.location.search).get("place");
+  return id && /^[A-Z][0-9]{3,6}$/.test(id) ? id : null;
+}
+const noSubscription = () => () => undefined;
+
 const LEGEND = [
   { marker: "cooling", key: "subcats.Cooling Spaces" },
   { marker: "water", key: "subcats.Water Fountains" },
@@ -123,6 +133,9 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const view = basic ? "list" : chosenView;
   const bounds = basic ? NEIGHBOURHOODS_VIEW : areaInView;
   const selected = basic ? null : pinSelected;
+  // "See on the map" (session 2, #7): the provider the map was opened on (`?place=M052`), read once after load (the page is prerendered).
+  const placeTarget = useSyncExternalStore(noSubscription, placeInAddress, () => null);
+  const focused = useRef(false);
   const [missingTiles, setMissingTiles] = useState(0);
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "failed">("loading");
   // The filters this visit: the ones applied here or in the directory, one state (kept in the tab, never sent).
@@ -172,9 +185,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   // museums and every apartment building); the buildings come back only when a building fact is asked for too.
   const placeFilterCount = keys.length + (spacesOnly ? 1 : 0);
   const pins = useMemo<MapPin[]>(() => {
-    const places = withSpaces(providerPins(listing ? filterProviders(listing.providers, filters) : []), openSpaces.spaces, openSpaces.at);
+    // The place the map was opened on is always drawn, whatever the filters kept from the directory would hide.
+    const kept = listing ? filterProviders(listing.providers, filters) : [];
+    const target = placeTarget && listing && !kept.some((p) => p.id === placeTarget) ? listing.providers.filter((p) => p.id === placeTarget) : [];
+    const places = withSpaces(providerPins([...kept, ...target]), openSpaces.spaces, openSpaces.at);
     return [...(spacesOnly ? places.filter((pin) => pin.space) : places), ...(placeFilterCount > 0 && factCount === 0 ? [] : buildingPins(buildings, facts))];
-  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount, placeFilterCount]);
+  }, [listing, filters, buildings, facts, openSpaces, spacesOnly, factCount, placeFilterCount, placeTarget]);
   const inView = useMemo(() => listInView(pins, bounds, locale), [pins, bounds, locale]);
   const providersShown = basic ? inView.providers.slice(0, pages * BASIC_PAGE) : inView.providers;
   const providersLeft = inView.providers.length - providersShown.length;
@@ -187,8 +203,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   }, [pages]);
   const chosen = pins.find((pin) => pin.key === selected) ?? null;
 
-  const kindOf = (pin: MapPin): string =>
-    pin.kind === "building" ? plain(t("map.building")) : pin.label ? pin.label.body : plain(t("map.service"));
+  const kindOf = (pin: MapPin): string => {
+    if (pin.kind === "building") return plain(t("map.building"));
+    const kind = pin.label ? pin.label.body : plain(t("map.service"));
+    // Who runs it is in the pin's name too (session 2, #11), so the outline and badge are never the only sign.
+    return pin.runBy === "grassroots" ? `${kind}, ${plain(t("directory.runByGrassroots"))}` : pin.runBy === "formal" ? `${kind}, ${plain(t("directory.runByFormal"))}` : kind;
+  };
   const nameOf = (pin: MapPin): string => (pin.kind === "building" ? pin.address : pin.name);
 
   // The words the map draws are read through a ref, so the map is made once and still speaks the page's language.
@@ -247,7 +267,12 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
 
   useEffect(() => {
     if (mapStatus === "ready") handle.current?.setPins(pins);
-  }, [pins, mapStatus]);
+    // Once the place the map was opened on is drawn, zoom to it and open its preview (once: moving away afterwards is the resident's choice).
+    if (mapStatus === "ready" && placeTarget && !focused.current) {
+      const pin = pins.find((p) => p.kind === "provider" && p.id === placeTarget);
+      if (pin) focused.current = handle.current?.focus(pin.key) ?? false;
+    }
+  }, [pins, mapStatus, placeTarget]);
 
   // A map that was hidden behind the list measures itself again when it is back on screen.
   useEffect(() => {
@@ -320,6 +345,26 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             {t("directory.couldNotLoad")}
           </ResidentText>
         )}
+        {/* Opened on one place from a result or the list (session 2, #7): back to where the resident came from (the directory when the page
+            was opened on its own). */}
+        {placeTarget && (
+          <Link
+            href={`/${lang}/directory`}
+            prefetch={false}
+            className="map-btn map-btn--quiet map-back tap"
+            onClick={(event) => {
+              const fromHere = document.referrer !== "" && new URL(document.referrer).origin === window.location.origin;
+              if (fromHere && window.history.length > 1) {
+                event.preventDefault();
+                window.history.back();
+              }
+            }}
+            data-testid="map-back"
+          >
+            <span aria-hidden="true">{"\u2039"}</span>
+            <ResidentText>{t("shell.back")}</ResidentText>
+          </Link>
+        )}
         <div className="map-segment hide-basic" role="group" aria-label={plain(t("R14.title"))}>
           <button type="button" className="map-segment__btn tap" aria-pressed={view === "map"} onClick={() => setView("map")} data-testid="map-view-map">
             <span className="map-ico map-ico--map" aria-hidden="true" />
@@ -334,6 +379,21 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         <Link href={`/${lang}/places/add`} prefetch={false} className="map-btn map-btn--secondary tap" data-testid="map-add-place">
           <ResidentText>{t("R14.add")}</ResidentText>
         </Link>
+        {/* "Open as a space now" (the partner space, 2026-11-07; session 2, #8: it read as a category, and as "utilities.space" before its words
+            were loaded here): the places partners have open or full as a space right now, each pin saying which. */}
+        {listing && (
+          <QuickToggle on={spacesOnly} onChange={setSpacesOnly} testId="map-filter-space" icon="space">
+            {t("utilities.space")}
+          </QuickToggle>
+        )}
+        {/* One tap to the public cooling spaces (session 2, #9), when the release has them. */}
+        {listing && allKinds.some((kind) => kind.id === COOLING_SPACES) && (
+          <QuickCooling
+            on={isActive(filters, { kind: "subcategory", id: COOLING_SPACES })}
+            onChange={(on) => toggleFilter({ kind: "subcategory", id: COOLING_SPACES }, on)}
+            testId="map-quick-cooling"
+          />
+        )}
         {/* The filters (R-27 as the pilot has it, here by topic and kind of place): the same state the directory narrows by,
             applied on the phone. On every width they sit behind the Filters button, so the map keeps the screen. */}
         {listing && (
@@ -391,15 +451,28 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                       </Stack>
                     </fieldset>
                   )}
-                  {/* "Open as a space now" (the partner space, 2026-11-07; the prototype's R-14 filter): the places partners have open or full as a
-                      space right now, each pin saying which. */}
-                  <FilterChoice id="space" checked={spacesOnly} onChange={setSpacesOnly}>
-                    <ResidentText>{t("utilities.space")}</ResidentText>
-                  </FilterChoice>
-                  {/* "Helps in an emergency": the directory's filter, here too (R-14's "What do you need?"). */}
-                  <FilterChoice id="emergency" checked={filters.emergency} onChange={(on) => toggleFilter({ kind: "emergency" }, on)}>
-                    <ResidentText>{t("directory.emergency")}</ResidentText>
-                  </FilterChoice>
+                  {/* Resident testing, session 2 (#8): "Open as a space now" left this list (it is the toggle above the map) and "Helps in an
+                      emergency" is not offered on the map: neither reads as a kind of place. An "emergency" filter kept from the directory still
+                      applies here and shows in the filter bar, where it can be removed. */}
+                  {/* Who runs it (session 2, #4 and #11): the directory's filter, here too, each choice with the mark its pins carry; only for a
+                      release that says who runs its providers. */}
+                  {listing?.providers.some((provider) => provider.run_by !== null) && (
+                  <fieldset className="map-fieldset">
+                    <ResidentText as="legend" className="map-legend" testId="map-legend-run-by">
+                      {t("directory.runByLegend")}
+                    </ResidentText>
+                    <Stack gap="label">
+                      {RUN_BY.map((id) => (
+                        <FilterChoice key={id} id={`run-by-${id}`} checked={isActive(filters, { kind: "runBy", id })} onChange={(on) => toggleFilter({ kind: "runBy", id }, on)}>
+                          <span className="run-by-option">
+                            <span className={`run-by__ico run-by__ico--${id}`} aria-hidden="true" />
+                            <ResidentText>{t(id === "formal" ? "directory.runByFormalMany" : "directory.runByGrassrootsMany")}</ResidentText>
+                          </span>
+                        </FilterChoice>
+                      ))}
+                    </Stack>
+                  </fieldset>
+                  )}
                   {/* The pilot buildings by two facts of the City register (the building page's words). A building's cooling room is for its own
                       residents: these find buildings, not places to go. */}
                   <fieldset className="map-fieldset">
@@ -408,7 +481,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                     </ResidentText>
                     <Stack gap="label">
                       <FilterChoice id="building-cooling-room" checked={facts.coolingRoom} onChange={(on) => setFacts((current) => ({ ...current, coolingRoom: on }))}>
-                        <ResidentText>{t("building.facts.coolingRoom")}</ResidentText>
+                        <ResidentText>{t("map.coolingRoomResidents")}</ResidentText>
                       </FilterChoice>
                       <FilterChoice id="building-air-conditioning" checked={facts.airConditioning} onChange={(on) => setFacts((current) => ({ ...current, airConditioning: on }))}>
                         <ResidentText>{t("building.facts.airConditioning")}</ResidentText>
@@ -505,6 +578,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
             <h2 id="map-preview-name" className="map-preview__name">
               {nameOf(chosen)}
             </h2>
+            {chosen.kind === "provider" && <RunByMark runBy={chosen.runBy} testId="map-preview-run-by" />}
             {chosen.kind === "provider" && chosen.space && (
               <p className="map-strong" data-testid="map-preview-space">
                 <ResidentText>{t(chosen.space.unconfirmed ? "x09.unconfirmed" : chosen.space.status === "full" ? "x09.full" : "x09.open")}</ResidentText>{" "}
@@ -650,6 +724,16 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
               <ResidentText>{t(row.key)}</ResidentText>
             </li>
           ))}
+          {/* Who runs it (session 2, #11): a community group's pin has a dashed outline and a two-people badge. */}
+          <li className="map-legend-box__row" data-testid="map-legend-grassroots">
+            <span className="map-pin map-pin--service map-pin--grassroots map-pin--inline" aria-hidden="true">
+              <span className="map-pin__mark">
+                <span className="map-ico map-ico--service" />
+              </span>
+              <span className="map-pin__group" />
+            </span>
+            <ResidentText>{`${t("directory.runByGrassroots")}: ${t("directory.runByGrassrootsLine")}`}</ResidentText>
+          </li>
           <li className="map-legend-box__row" data-testid="map-legend-cluster">
             <span className="map-legend-box__pill" aria-hidden="true">
               <ResidentText>{t("R14.places", { n: 3 })}</ResidentText>

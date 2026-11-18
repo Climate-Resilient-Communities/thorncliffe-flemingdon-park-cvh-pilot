@@ -70,6 +70,8 @@ declare module "leaflet" {
   }
   export interface MarkerClusterGroup extends Layer {
     addLayers(layers: Marker[]): this;
+    /** Zooms and spreads groups until the marker is drawn on its own, then calls back (leaflet.markercluster). */
+    zoomToShowLayer(layer: Marker, callback?: () => void): void;
     clearLayers(): this;
   }
   export interface Leaflet {

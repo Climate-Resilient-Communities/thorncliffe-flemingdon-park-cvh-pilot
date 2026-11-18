@@ -1,3 +1,4 @@
+import { RUN_BY, type RunBy } from "@/contracts/directory";
 import { NO_FILTERS, type FilterState } from "./filters";
 import { isNeighbourhoodId } from "./neighbourhood-names";
 import { isTopicId } from "./topics";
@@ -30,7 +31,7 @@ export function readFilters(storage: FilterStorage | null): FilterState {
   try {
     const raw = storage.getItem(FILTERS_KEY);
     if (!raw) return NO_FILTERS;
-    const value = JSON.parse(raw) as { v?: unknown; topics?: unknown; categories?: unknown; subcategories?: unknown; neighbourhoods?: unknown; emergency?: unknown } | null;
+    const value = JSON.parse(raw) as { v?: unknown; topics?: unknown; categories?: unknown; subcategories?: unknown; neighbourhoods?: unknown; runBy?: unknown; emergency?: unknown } | null;
     if (!value || value.v !== 1) return NO_FILTERS;
     return {
       // Filters kept before Find help's topics existed lack the field: none were on.
@@ -39,6 +40,8 @@ export function readFilters(storage: FilterStorage | null): FilterState {
       // Filters kept before subcategories existed lack the field: none were on.
       subcategories: [...new Set(strings(value.subcategories))],
       neighbourhoods: [...new Set(strings(value.neighbourhoods).filter(isNeighbourhoodId))],
+      // Filters kept before "Who runs it" existed lack the field: none was on.
+      runBy: [...new Set(strings(value.runBy).filter((id): id is RunBy => (RUN_BY as readonly string[]).includes(id)))],
       emergency: value.emergency === true,
     };
   } catch {
@@ -50,8 +53,8 @@ export function readFilters(storage: FilterStorage | null): FilterState {
 export function saveFilters(storage: FilterStorage | null, state: FilterState): void {
   if (!storage) return;
   try {
-    if (state.topics.length === 0 && state.categories.length === 0 && state.subcategories.length === 0 && state.neighbourhoods.length === 0 && !state.emergency) storage.removeItem(FILTERS_KEY);
-    else storage.setItem(FILTERS_KEY, JSON.stringify({ v: 1, topics: state.topics, categories: state.categories, subcategories: state.subcategories, neighbourhoods: state.neighbourhoods, emergency: state.emergency }));
+    if (state.topics.length === 0 && state.categories.length === 0 && state.subcategories.length === 0 && state.neighbourhoods.length === 0 && state.runBy.length === 0 && !state.emergency) storage.removeItem(FILTERS_KEY);
+    else storage.setItem(FILTERS_KEY, JSON.stringify({ v: 1, topics: state.topics, categories: state.categories, subcategories: state.subcategories, neighbourhoods: state.neighbourhoods, runBy: state.runBy, emergency: state.emergency }));
   } catch {
     // The filters just do not survive the next page.
   }

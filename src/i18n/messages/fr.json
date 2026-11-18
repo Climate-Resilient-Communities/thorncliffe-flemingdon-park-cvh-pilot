@@ -555,7 +555,9 @@
     "checking": "Vérification des alertes",
     "feedFailed": "Nous n'avons pas pu vérifier les alertes pour le moment. Un lieu marqué « Inconnu » peut tout de même avoir une alerte. Nous allons réessayer.",
     "feedFailedOld": "Nous n'avons pas pu vérifier s'il y a de nouvelles alertes. Affichage de ce qui a été chargé pour la dernière fois {t}.",
-    "inBuildings": "Alertes pour des immeubles d'ici :"
+    "inBuildings": "Alertes pour des immeubles d'ici :",
+    "displayTitle": "Texte plus grand ou affichage simplifié",
+    "displayLine": "Agrandissez le texte ou affichez moins de détails."
   },
   "R04": {
     "deviceLabel": "Texto sur un téléphone de base",
@@ -726,7 +728,9 @@
     "timeLine": "Publié {posted} · Mis à jour {updated}",
     "timeLineOne": "Publié {posted}",
     "basicMore": "Mises à jour précédentes : {n}",
-    "mayHaveEnded": "Cette alerte est peut-être terminée. Vérifiez de nouveau quand vous aurez du réseau"
+    "mayHaveEnded": "Cette alerte est peut-être terminée. Vérifiez de nouveau quand vous aurez du réseau",
+    "when911": "Quand appeler le 911",
+    "helpNearby": "Des lieux qui peuvent aider"
   },
   "R08": {
     "title": "Alertes terminées",
@@ -6494,7 +6498,16 @@
     "couldNotLoadNumbers": "La page des numéros donne les autres numéros dont vous pourriez avoir besoin.",
     "numbersLink": "Voir les numéros essentiels",
     "backToList": "Tous les services et organismes",
-    "suggestApply": "Afficher seulement {place}"
+    "suggestApply": "Afficher seulement {place}",
+    "runByLegend": "Qui s'en occupe",
+    "runByFormal": "Service établi",
+    "runByGrassroots": "Groupe communautaire",
+    "runByFormalMany": "Services établis",
+    "runByGrassrootsMany": "Groupes communautaires",
+    "runByFormalLine": "Géré par un organisme public, une agence ou une institution.",
+    "runByGrassrootsLine": "Géré par des résidents ou des bénévoles.",
+    "quickCooling": "Lieux de rafraîchissement publics",
+    "quickCoolingLine": "Ouverts à tous quand il fait chaud."
   },
   "map": {
     "lead": "Services, organismes et immeubles d'habitation à Thorncliffe Park et Flemingdon Park. Touchez une épingle pour voir de quoi il s'agit.",
@@ -6512,7 +6525,8 @@
     "buildings": "Immeubles d'habitation",
     "buildingsCount": "{n} immeubles",
     "buildingsCountOne": "1 immeuble",
-    "filtered": "Seuls les lieux qui correspondent à vos filtres sont affichés."
+    "filtered": "Seuls les lieux qui correspondent à vos filtres sont affichés.",
+    "coolingRoomResidents": "A une salle rafraîchie (pour ses propres résidents)"
   },
   "guides": {
     "reviewed": "Vérifié par le Hub, dernière mise à jour le {date}"
