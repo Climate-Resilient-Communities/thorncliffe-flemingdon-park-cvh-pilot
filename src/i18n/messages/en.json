@@ -6503,7 +6503,9 @@
     "runByFormalMany": "Established services",
     "runByGrassrootsMany": "Community groups",
     "runByFormalLine": "Run by a public body, an agency or an institution.",
-    "runByGrassrootsLine": "Run by residents or volunteers."
+    "runByGrassrootsLine": "Run by residents or volunteers.",
+    "quickCooling": "Public cooling spaces",
+    "quickCoolingLine": "Open to everyone when it is hot."
   },
   "map": {
     "lead": "Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.",
@@ -6521,7 +6523,8 @@
     "buildings": "Apartment buildings",
     "buildingsCount": "{n} buildings",
     "buildingsCountOne": "1 building",
-    "filtered": "Showing only the places that match your filters."
+    "filtered": "Showing only the places that match your filters.",
+    "coolingRoomResidents": "Has a cooling room (for its own residents)"
   },
   "guides": {
     "reviewed": "Reviewed by the Hub, last updated {date}"

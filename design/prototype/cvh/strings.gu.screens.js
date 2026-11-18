@@ -1576,4 +1576,6 @@
   m(t, {"R03": {"displayTitle": "મોટા અક્ષરો અથવા સરળ દેખાવ", "displayLine": "શબ્દો મોટા કરો, અથવા ઓછી વિગતો બતાવો."}});
   /* Resident testing, session 2 (2026-11-18, #4 and #11): who runs a provider, an established service or a community group, on the list, the provider page, the map and as a filter. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"runByLegend": "કોણ ચલાવે છે", "runByFormal": "સ્થાપિત સેવા", "runByGrassroots": "સમુદાય જૂથ", "runByFormalMany": "સ્થાપિત સેવાઓ", "runByGrassrootsMany": "સમુદાય જૂથો", "runByFormalLine": "સરકારી સંસ્થા, એજન્સી અથવા સંસ્થા દ્વારા ચલાવાય છે.", "runByGrassrootsLine": "રહેવાસીઓ અથવા સ્વયંસેવકો દ્વારા ચલાવાય છે."}});
+  /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"quickCooling": "જાહેર ઠંડક સ્થળો", "quickCoolingLine": "ગરમીમાં બધા માટે ખુલ્લા."}, "map": {"coolingRoomResidents": "ઠંડક રૂમ છે (ફક્ત તેના રહેવાસીઓ માટે)"}});
 })();

@@ -6503,7 +6503,9 @@
     "runByFormalMany": "Zavedené služby",
     "runByGrassrootsMany": "Komunitné skupiny",
     "runByFormalLine": "Prevádzkuje ju verejný orgán, agentúra alebo inštitúcia.",
-    "runByGrassrootsLine": "Prevádzkujú ju obyvatelia alebo dobrovoľníci."
+    "runByGrassrootsLine": "Prevádzkujú ju obyvatelia alebo dobrovoľníci.",
+    "quickCooling": "Verejné ochladzovacie miesta",
+    "quickCoolingLine": "Otvorené pre všetkých, keď je horúco."
   },
   "map": {
     "lead": "Služby, organizácie a bytové domy v Thorncliffe Parku a Flemingdon Parku. Ťuknite na špendlík a uvidíte, čo to je.",
@@ -6521,7 +6523,8 @@
     "buildings": "Bytové domy",
     "buildingsCount": "Počet domov: {n}",
     "buildingsCountOne": "1 dom",
-    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom."
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú vašim filtrom.",
+    "coolingRoomResidents": "Má chladiacu miestnosť (len pre vlastných obyvateľov)"
   },
   "guides": {
     "reviewed": "Skontroloval Hub, naposledy aktualizované {date}"

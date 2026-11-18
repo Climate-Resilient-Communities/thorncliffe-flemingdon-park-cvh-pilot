@@ -1576,4 +1576,6 @@
   m(t, {"R03": {"displayTitle": "Letra más grande o vista más sencilla", "displayLine": "Haga las letras más grandes o muestre menos detalles."}});
   /* Resident testing, session 2 (2026-11-18, #4 and #11): who runs a provider, an established service or a community group, on the list, the provider page, the map and as a filter. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"runByLegend": "Quién lo gestiona", "runByFormal": "Servicio establecido", "runByGrassroots": "Grupo comunitario", "runByFormalMany": "Servicios establecidos", "runByGrassrootsMany": "Grupos comunitarios", "runByFormalLine": "Gestionado por un organismo público, una agencia o una institución.", "runByGrassrootsLine": "Gestionado por residentes o voluntarios."}});
+  /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"quickCooling": "Espacios públicos para refrescarse", "quickCoolingLine": "Abiertos a todos cuando hace calor."}, "map": {"coolingRoomResidents": "Tiene una sala fresca (solo para sus residentes)"}});
 })();

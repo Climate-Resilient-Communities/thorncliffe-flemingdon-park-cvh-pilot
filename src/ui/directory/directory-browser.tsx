@@ -20,6 +20,7 @@ import { Inline911, ListingBlock } from "./listing-text";
 import { isNeighbourhoodId, NEIGHBOURHOODS, neighbourhoodName } from "./neighbourhood-names";
 import { NumbersLink } from "./numbers-link";
 import { ProviderView, type CategoryNames } from "./provider-view";
+import { COOLING_SPACES, QuickCooling } from "./quick-cooling";
 import { useDirectory } from "./use-directory";
 import "./directory.css";
 
@@ -233,6 +234,14 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
             <Stack gap="related">
               <section className="dir-filters" aria-label={t("R27.title")} data-testid="filters">
                 <Stack gap="related">
+                  {/* One tap to the public cooling spaces (session 2, #9), when the release has them. */}
+                  {subcategoryNames.has(COOLING_SPACES) && (
+                    <QuickCooling
+                      on={isActive(filters, { kind: "subcategory", id: COOLING_SPACES })}
+                      onChange={(on) => toggle({ kind: "subcategory", id: COOLING_SPACES }, on)}
+                      testId="dir-quick-cooling"
+                    />
+                  )}
                   <button
                     ref={toggleButton}
                     type="button"

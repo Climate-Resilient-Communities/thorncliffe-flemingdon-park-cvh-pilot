@@ -6503,7 +6503,9 @@
     "runByFormalMany": "正式机构服务",
     "runByGrassrootsMany": "社区团体",
     "runByFormalLine": "由政府部门、机构或单位运营。",
-    "runByGrassrootsLine": "由居民或志愿者运营。"
+    "runByGrassrootsLine": "由居民或志愿者运营。",
+    "quickCooling": "公共纳凉点",
+    "quickCoolingLine": "天热时向所有人开放。"
   },
   "map": {
     "lead": "Thorncliffe Park 和 Flemingdon Park 的服务、机构和公寓楼。点击标记，查看它是什么。",
@@ -6521,7 +6523,8 @@
     "buildings": "公寓楼",
     "buildingsCount": "{n} 栋楼",
     "buildingsCountOne": "1 栋楼",
-    "filtered": "只显示与您所选筛选条件相符的地点。"
+    "filtered": "只显示与您所选筛选条件相符的地点。",
+    "coolingRoomResidents": "有纳凉室（仅供本楼居民使用）"
   },
   "guides": {
     "reviewed": "已由中心审核，最后更新于{date}"

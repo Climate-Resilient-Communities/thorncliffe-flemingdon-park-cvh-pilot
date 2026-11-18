@@ -1552,4 +1552,6 @@
   m(t, {"R03": {"displayTitle": "بڑا متن یا آسان منظر", "displayLine": "الفاظ بڑے کریں، یا کم تفصیلات دکھائیں۔"}});
   /* Resident testing, session 2 (2026-11-18, #4 and #11): who runs a provider, an established service or a community group, on the list, the provider page, the map and as a filter. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"runByLegend": "اسے کون چلاتا ہے", "runByFormal": "باقاعدہ ادارہ", "runByGrassroots": "کمیونٹی گروپ", "runByFormalMany": "باقاعدہ ادارے", "runByGrassrootsMany": "کمیونٹی گروپس", "runByFormalLine": "کسی سرکاری ادارے، ایجنسی یا ادارے کے زیرِ انتظام۔", "runByGrassrootsLine": "رہائشیوں یا رضاکاروں کے زیرِ انتظام۔"}});
+  /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"quickCooling": "عوامی ٹھنڈی جگہیں", "quickCoolingLine": "گرمی میں سب کے لیے کھلی۔"}, "map": {"coolingRoomResidents": "ٹھنڈا کمرہ ہے (صرف اپنے رہائشیوں کے لیے)"}});
 })();

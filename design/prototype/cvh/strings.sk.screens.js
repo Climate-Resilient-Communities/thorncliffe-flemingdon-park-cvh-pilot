@@ -1576,4 +1576,6 @@
   m(t, {"R03": {"displayTitle": "Väčšie písmo alebo jednoduchšie zobrazenie", "displayLine": "Zväčšite písmo alebo zobrazte menej podrobností."}});
   /* Resident testing, session 2 (2026-11-18, #4 and #11): who runs a provider, an established service or a community group, on the list, the provider page, the map and as a filter. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"runByLegend": "Kto to prevádzkuje", "runByFormal": "Zavedená služba", "runByGrassroots": "Komunitná skupina", "runByFormalMany": "Zavedené služby", "runByGrassrootsMany": "Komunitné skupiny", "runByFormalLine": "Prevádzkuje ju verejný orgán, agentúra alebo inštitúcia.", "runByGrassrootsLine": "Prevádzkujú ju obyvatelia alebo dobrovoľníci."}});
+  /* Resident testing, session 2 (2026-11-18, #9): one tap to the public cooling spaces on the map and in the directory, and a building's cooling room named as being for its own residents. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"quickCooling": "Verejné ochladzovacie miesta", "quickCoolingLine": "Otvorené pre všetkých, keď je horúco."}, "map": {"coolingRoomResidents": "Má chladiacu miestnosť (len pre vlastných obyvateľov)"}});
 })();

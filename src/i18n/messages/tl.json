@@ -6503,7 +6503,9 @@
     "runByFormalMany": "Mga itinatag na serbisyo",
     "runByGrassrootsMany": "Mga grupo ng komunidad",
     "runByFormalLine": "Pinapatakbo ng pampublikong ahensya, organisasyon o institusyon.",
-    "runByGrassrootsLine": "Pinapatakbo ng mga residente o boluntaryo."
+    "runByGrassrootsLine": "Pinapatakbo ng mga residente o boluntaryo.",
+    "quickCooling": "Mga pampublikong cooling space",
+    "quickCoolingLine": "Bukas para sa lahat kapag mainit."
   },
   "map": {
     "lead": "Mga serbisyo, organisasyon at gusali ng apartment sa Thorncliffe Park at Flemingdon Park. I-tap ang isang pin para makita kung ano ito.",
@@ -6521,7 +6523,8 @@
     "buildings": "Mga gusali ng apartment",
     "buildingsCount": "{n} gusali",
     "buildingsCountOne": "1 gusali",
-    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter mo."
+    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter mo.",
+    "coolingRoomResidents": "May cooling room (para lang sa sariling residente)"
   },
   "guides": {
     "reviewed": "Sinuri ng Hub, huling na-update {date}"

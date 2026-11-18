@@ -12,6 +12,7 @@ import { loadBuildingList } from "../choices/building-list";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "../directory/filter-store";
 import { RUN_BY } from "@/contracts/directory";
 import { RunByMark } from "../directory/run-by";
+import { COOLING_SPACES, QuickCooling } from "../directory/quick-cooling";
 import { activeKeys, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "../directory/filters";
 import { formatMoment } from "../directory/format";
 import { isFallbackText, ListingBlock } from "../directory/listing-text";
@@ -372,6 +373,14 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
         <Link href={`/${lang}/places/add`} prefetch={false} className="map-btn map-btn--secondary tap" data-testid="map-add-place">
           <ResidentText>{t("R14.add")}</ResidentText>
         </Link>
+        {/* One tap to the public cooling spaces (session 2, #9), when the release has them. */}
+        {listing && allKinds.some((kind) => kind.id === COOLING_SPACES) && (
+          <QuickCooling
+            on={isActive(filters, { kind: "subcategory", id: COOLING_SPACES })}
+            onChange={(on) => toggleFilter({ kind: "subcategory", id: COOLING_SPACES }, on)}
+            testId="map-quick-cooling"
+          />
+        )}
         {/* The filters (R-27 as the pilot has it, here by topic and kind of place): the same state the directory narrows by,
             applied on the phone. On every width they sit behind the Filters button, so the map keeps the screen. */}
         {listing && (
@@ -462,7 +471,7 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
                     </ResidentText>
                     <Stack gap="label">
                       <FilterChoice id="building-cooling-room" checked={facts.coolingRoom} onChange={(on) => setFacts((current) => ({ ...current, coolingRoom: on }))}>
-                        <ResidentText>{t("building.facts.coolingRoom")}</ResidentText>
+                        <ResidentText>{t("map.coolingRoomResidents")}</ResidentText>
                       </FilterChoice>
                       <FilterChoice id="building-air-conditioning" checked={facts.airConditioning} onChange={(on) => setFacts((current) => ({ ...current, airConditioning: on }))}>
                         <ResidentText>{t("building.facts.airConditioning")}</ResidentText>

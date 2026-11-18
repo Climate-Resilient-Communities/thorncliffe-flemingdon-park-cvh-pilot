@@ -6503,7 +6503,9 @@
     "runByFormalMany": "Servicios establecidos",
     "runByGrassrootsMany": "Grupos comunitarios",
     "runByFormalLine": "Gestionado por un organismo público, una agencia o una institución.",
-    "runByGrassrootsLine": "Gestionado por residentes o voluntarios."
+    "runByGrassrootsLine": "Gestionado por residentes o voluntarios.",
+    "quickCooling": "Espacios públicos para refrescarse",
+    "quickCoolingLine": "Abiertos a todos cuando hace calor."
   },
   "map": {
     "lead": "Servicios, organizaciones y edificios de apartamentos en Thorncliffe Park y Flemingdon Park. Toque un marcador para ver qué es.",
@@ -6521,7 +6523,8 @@
     "buildings": "Edificios de apartamentos",
     "buildingsCount": "{n} edificios",
     "buildingsCountOne": "1 edificio",
-    "filtered": "Solo se muestran los lugares que coinciden con sus filtros."
+    "filtered": "Solo se muestran los lugares que coinciden con sus filtros.",
+    "coolingRoomResidents": "Tiene una sala fresca (solo para sus residentes)"
   },
   "guides": {
     "reviewed": "Revisado por el Hub, última actualización el {date}"

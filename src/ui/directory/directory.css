@@ -574,4 +574,54 @@
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
+
+  /* One tap to the public cooling spaces (session 2, #9): a large toggle with the fan mark, filled when on. */
+  .quick-cooling {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-tight);
+    inline-size: 100%;
+    padding-block: var(--inset-card-compact);
+    padding-inline: var(--inset-card-compact);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .quick-cooling[aria-pressed="true"] {
+    border-color: var(--surface-deep);
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  .quick-cooling__ico {
+    flex: none;
+    inline-size: calc(var(--size-icon) * 1.25);
+    block-size: calc(var(--size-icon) * 1.25);
+    background-color: currentcolor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='12' r='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 10c0-3 1-6 4-6.5 1.8 3-.5 5.5-2.5 7.2M13.7 13c2.6 1.5 4.6 3.9 3.4 6.7-3.4 0-4.3-3.3-4.8-5.9M10.3 13c-2.6 1.5-5.6 2.2-7.6 0 1.6-3 4.9-2.3 7.3-1.4'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='12' r='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 10c0-3 1-6 4-6.5 1.8 3-.5 5.5-2.5 7.2M13.7 13c2.6 1.5 4.6 3.9 3.4 6.7-3.4 0-4.3-3.3-4.8-5.9M10.3 13c-2.6 1.5-5.6 2.2-7.6 0 1.6-3 4.9-2.3 7.3-1.4'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .quick-cooling__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    min-inline-size: 0;
+  }
+
+  .quick-cooling__line {
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+  }
+
+  .quick-cooling:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
 }
