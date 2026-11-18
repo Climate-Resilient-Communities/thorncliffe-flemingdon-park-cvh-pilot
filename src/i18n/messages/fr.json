@@ -555,7 +555,9 @@
     "checking": "Vérification des alertes",
     "feedFailed": "Nous n'avons pas pu vérifier les alertes pour le moment. Un lieu marqué « Inconnu » peut tout de même avoir une alerte. Nous allons réessayer.",
     "feedFailedOld": "Nous n'avons pas pu vérifier s'il y a de nouvelles alertes. Affichage de ce qui a été chargé pour la dernière fois {t}.",
-    "inBuildings": "Alertes pour des immeubles d'ici :"
+    "inBuildings": "Alertes pour des immeubles d'ici :",
+    "displayTitle": "Texte plus grand ou affichage simplifié",
+    "displayLine": "Agrandissez le texte ou affichez moins de détails."
   },
   "R04": {
     "deviceLabel": "Texto sur un téléphone de base",

@@ -555,7 +555,9 @@
     "checking": "Buscando alertas",
     "feedFailed": "No pudimos comprobar las alertas en este momento. Un lugar que dice \"No se sabe\" puede tener una alerta igualmente. Volveremos a intentarlo.",
     "feedFailedOld": "No pudimos comprobar si hay alertas nuevas. Se muestra lo último que se cargó {t}.",
-    "inBuildings": "Alertas para edificios de aquí:"
+    "inBuildings": "Alertas para edificios de aquí:",
+    "displayTitle": "Letra más grande o vista más sencilla",
+    "displayLine": "Haga las letras más grandes o muestre menos detalles."
   },
   "R04": {
     "deviceLabel": "Mensaje de texto en un teléfono básico",

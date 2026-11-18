@@ -555,7 +555,9 @@
     "checking": "Tinitingnan kung may alerto",
     "feedFailed": "Hindi namin matingnan ang mga alerto ngayon. Ang lugar na may nakasulat na \"Hindi alam\" ay maaaring may alerto pa rin. Susubukan naming muli.",
     "feedFailedOld": "Hindi namin matingnan ang mga bagong alerto. Ipinapakita ang huling na-load {t}.",
-    "inBuildings": "Mga alerto para sa mga gusali rito:"
+    "inBuildings": "Mga alerto para sa mga gusali rito:",
+    "displayTitle": "Mas malaking teksto o mas simpleng view",
+    "displayLine": "Palakihin ang mga salita, o magpakita ng mas kaunting detalye."
   },
   "R04": {
     "deviceLabel": "Text message sa simpleng telepono",

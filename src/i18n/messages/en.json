@@ -555,7 +555,9 @@
     "checking": "Checking for alerts",
     "feedFailed": "We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
     "feedFailedOld": "We could not check for new alerts. Showing what was last loaded {t}.",
-    "inBuildings": "Alerts for buildings here:"
+    "inBuildings": "Alerts for buildings here:",
+    "displayTitle": "Bigger text or a simpler view",
+    "displayLine": "Make the words larger, or show fewer details."
   },
   "R04": {
     "deviceLabel": "Text message on a basic phone",

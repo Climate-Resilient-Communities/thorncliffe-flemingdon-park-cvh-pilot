@@ -337,4 +337,21 @@
     flex: none;
     min-block-size: 68px;
   }
+
+  /* Bigger text or a simpler view (resident testing, session 2, #13): a destination of the same weight, as a button that opens the display settings. */
+  .home-dest--display {
+    flex: none;
+    min-block-size: 68px;
+    inline-size: 100%;
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .home-display-glyph {
+    flex: none;
+    justify-content: center;
+    inline-size: calc(var(--size-icon) * 1.25);
+    color: var(--accent-text);
+  }
 }

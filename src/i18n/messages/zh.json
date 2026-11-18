@@ -555,7 +555,9 @@
     "checking": "正在检查警报",
     "feedFailed": "我们暂时无法检查警报。显示“不详”的地点可能仍有警报。我们会再试一次。",
     "feedFailedOld": "我们无法检查新警报。显示的是{t}最后加载的内容。",
-    "inBuildings": "这里楼宇的警报："
+    "inBuildings": "这里楼宇的警报：",
+    "displayTitle": "放大文字或简化视图",
+    "displayLine": "把文字变大，或显示更少的细节。"
   },
   "R04": {
     "deviceLabel": "普通手机上的短信",

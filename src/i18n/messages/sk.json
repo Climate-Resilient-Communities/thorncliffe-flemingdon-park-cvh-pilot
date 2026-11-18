@@ -555,7 +555,9 @@
     "checking": "Kontrolujú sa upozornenia",
     "feedFailed": "Upozornenia sa práve nepodarilo skontrolovať. Miesto s nápisom „Neznáme“ môže mať aj tak upozornenie. Skúsime to znova.",
     "feedFailedOld": "Nové upozornenia sa nepodarilo skontrolovať. Zobrazuje sa to, čo sa naposledy načítalo {t}.",
-    "inBuildings": "Upozornenia pre budovy tu:"
+    "inBuildings": "Upozornenia pre budovy tu:",
+    "displayTitle": "Väčšie písmo alebo jednoduchšie zobrazenie",
+    "displayLine": "Zväčšite písmo alebo zobrazte menej podrobností."
   },
   "R04": {
     "deviceLabel": "SMS na obyčajnom telefóne",
