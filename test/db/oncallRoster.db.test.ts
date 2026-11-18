@@ -141,7 +141,8 @@ describe("an Admin's 'Add number'", () => {
     expect(everything).not.toContain(DIGITS(NUMBERS[0]));
     expect(everything).not.toContain("IT lead");
     expect(await roster.list()).toEqual([{ id: (outcome as { id: string }).id, label: "IT lead", masked: "+1 ••• ••• 0123", createdAt: expect.any(Date), onDuty: false, staffId: null }]);
-    expect(JSON.stringify(await roster.list())).not.toContain("416");
+    // The area code is nowhere in what the list shows. The ids are left out of the check: a random UUID can hold "416" (CI, 2026-11-18).
+    expect(JSON.stringify((await roster.list()).map((entry) => ({ ...entry, id: "" })))).not.toContain("416");
   });
 
   it("writes the entry and its audit record together: an audit that cannot be written leaves the roster as it was", async () => {
