@@ -90,6 +90,8 @@ function placeInAddress(): string | null {
   return id && /^[A-Z][0-9]{3,6}$/.test(id) ? id : null;
 }
 const noSubscription = () => () => undefined;
+/** Whether the map was opened with "Open as a space now" on (`?spaces=open`, from a guide's "Help with this"). */
+const spacesOpenInAddress = (): boolean => new URLSearchParams(window.location.search).get("spaces") === "open";
 
 const LEGEND = [
   { marker: "cooling", key: "subcats.Cooling Spaces" },
@@ -145,7 +147,11 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
   const [facts, setFacts] = useState<BuildingFacts>(NO_BUILDING_FACTS);
   // "Open as a space now" (the partner space, 2026-11-07): the map's own choice, for this screen only. The spaces come from GET /api/spaces,
   // the same list for every visitor, matched here by place, so nothing about this choice leaves the phone (AD-3).
-  const [spacesOnly, setSpacesOnly] = useState(false);
+  // A guide's "Spaces open for cooling" link opens the map with it on (`?spaces=open`, session 2, #18): a choice, not a filter of the
+  // resident's, so it may be in the address. The resident's own tap wins after that.
+  const [spacesChoice, setSpacesOnly] = useState<boolean | null>(null);
+  const spacesInAddress = useSyncExternalStore(noSubscription, spacesOpenInAddress, () => false);
+  const spacesOnly = spacesChoice ?? spacesInAddress;
   const openSpaces = useOpenSpaces();
   const filtersButton = useRef<HTMLButtonElement>(null);
   // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the map opened, if it names one place.

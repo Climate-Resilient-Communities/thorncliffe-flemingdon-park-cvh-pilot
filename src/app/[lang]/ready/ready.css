@@ -321,4 +321,34 @@
     align-items: flex-start;
     gap: var(--gap-label);
   }
+
+  /* The stage on screen (session 2, #14): its tab filled, as the prototype's segment. */
+  .guide-jump__link[aria-current="true"] {
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  /* Basic mode shows a stage's first three steps, then "Show all n steps" (the prototype's cap); the button is for basic mode only. */
+  .guide-cap__more {
+    display: none;
+  }
+
+  :root[data-basic="true"] .guide-cap[data-all="false"] .guide-steps > li:nth-child(n + 4) {
+    display: none;
+  }
+
+  :root[data-basic="true"] .guide-cap[data-all="false"] .guide-cap__more {
+    display: inline-flex;
+  }
+
+  .guide-next {
+    inline-size: fit-content;
+  }
+
+  /* "Help with this" (session 2, #18): the services and the spaces for this hazard, after the stages. */
+  .guide-help {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+  }
 }

@@ -24,10 +24,13 @@ export function GuideHashFocus({ openedDuring }: { openedDuring: string }) {
         return null;
       }
       if (!(GUIDE_PARTS as readonly string[]).includes(id)) return null;
-      const heading = document.getElementById(headingId(id));
-      if (!heading) return null;
-      heading.scrollIntoView({ block: "start" });
-      heading.focus({ preventScroll: true });
+      // The stage's panel is shown by the same hash change (guide-stages.tsx): focus once it has been drawn.
+      requestAnimationFrame(() => {
+        const heading = document.getElementById(headingId(id));
+        if (!heading) return;
+        heading.scrollIntoView({ block: "start" });
+        heading.focus({ preventScroll: true });
+      });
       return id;
     };
     // Once, when the page opens: setting the state in the first run is the point (the note shows only for the opening link).
