@@ -1582,4 +1582,6 @@
   m(t, {"R07": {"when911": "何时拨打 911", "helpNearby": "可以提供帮助的地方"}});
   /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"catPlain": {"Support & Emergency Services": "紧急帮助与庇护所", "Faith-Based Organizations": "宗教场所", "Legal & Government Services": "法律帮助与身份证件", "Schools & Child Services": "学校与儿童照顾", "Health & Wellness": "医疗保健", "Public Spaces": "可以去的地方", "Community Resilience": "饮水、洗手间与纳凉处", "Non-Profits": "社区组织"}});
+  /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"error": {"human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"}}, "places": {"errors": {"human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"}}, "staff": {"textSignup": {"errors": {"human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"}}}});
 })();

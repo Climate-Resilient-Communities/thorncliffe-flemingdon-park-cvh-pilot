@@ -139,6 +139,8 @@ const ASSISTED_REFUSAL_REASON = {
   rate_limited: "throttled",
   signup_unavailable: "not_available",
   signups_paused: "not_available",
+  // Never from staff: the human check is on the public route only.
+  human_check_failed: "validation",
 } as const satisfies Record<SignupErrorCode, string>;
 
 /** The confirmation text in a language: the catalog string, normalised and counted as every outbound text is (AD-21). */

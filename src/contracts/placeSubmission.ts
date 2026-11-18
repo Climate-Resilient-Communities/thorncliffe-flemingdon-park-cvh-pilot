@@ -9,6 +9,7 @@
 // (no home building, no groups, no number); a correction says only what changed. The reference code is the only way back to a suggestion, and
 // a code reads only the suggestion's own words and the Hub's pre-written reason. Pure and browser-safe: the form checks with the same rules.
 import { z } from "zod";
+import { HumanTokenSchema } from "./humanCheck";
 import { LangCodeSchema } from "./lang";
 import { RsnSchema } from "./places";
 import { inToronto } from "./torontoBounds";
@@ -123,6 +124,8 @@ const common = {
   /** The language of the page it was sent from: the Hub reads the words in it, and the decline reason is shown in it. */
   lang: LangCodeSchema,
   nickname: HoneypotSchema,
+  /** Session 2 (#12): the human check's token, sent only while the check is on (src/platform/humanCheck.ts). */
+  human_token: HumanTokenSchema,
 };
 
 /** R-19: a place that is missing. Type, name, what happens there and where are needed; the rest is optional. */
@@ -182,13 +185,14 @@ export const PlaceSubmissionReceivedSchema = z.strictObject({
 });
 export type PlaceSubmissionReceived = z.infer<typeof PlaceSubmissionReceivedSchema>;
 
-export const PLACE_SUBMISSION_ERROR_CODES = ["invalid_request", "rate_limited", "not_found", "submissions_unavailable"] as const;
+export const PLACE_SUBMISSION_ERROR_CODES = ["invalid_request", "rate_limited", "not_found", "submissions_unavailable", "human_check_failed"] as const;
 export type PlaceSubmissionErrorCode = (typeof PLACE_SUBMISSION_ERROR_CODES)[number];
 export const PLACE_SUBMISSION_ERROR_STATUS: Record<PlaceSubmissionErrorCode, 400 | 404 | 429 | 503> = {
   invalid_request: 400,
   rate_limited: 429,
   not_found: 404,
   submissions_unavailable: 503,
+  human_check_failed: 400,
 };
 
 /** The failure body: the code, and the catalog key of the words the form shows for it. */
@@ -197,10 +201,14 @@ export function placeSubmissionErrorBody(code: PlaceSubmissionErrorCode) {
 }
 
 /** Checks a body; the first problem is reported as `invalid_request` (the form checks the same rules before sending, field by field). */
-export function checkPlaceSubmission(raw: unknown): { ok: true; value: PlaceSubmissionRequest; honeypot: boolean } | { ok: false; code: "invalid_request" } {
+export function checkPlaceSubmission(
+  raw: unknown,
+): { ok: true; value: PlaceSubmissionRequest; honeypot: boolean; humanToken?: string } | { ok: false; code: "invalid_request" } {
   const parsed = PlaceSubmissionRequestSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, code: "invalid_request" };
-  return { ok: true, value: parsed.data, honeypot: (parsed.data.nickname ?? "").trim() !== "" };
+  // The human check's token is the route's to check; it is taken off so that nothing stores it.
+  const { human_token: humanToken, ...value } = parsed.data;
+  return { ok: true, value: value as PlaceSubmissionRequest, honeypot: (value.nickname ?? "").trim() !== "", ...(humanToken ? { humanToken } : {}) };
 }
 
 /**

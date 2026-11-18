@@ -5,6 +5,7 @@
 // steps share one draft, kept while the resident moves between them and lost when they leave (nothing is written to the phone but a declined
 // suggestion's draft handed back from R-23, read once). Nothing of the resident's saved choices is sent: their home building is read on the
 // phone only to order R-17's places nearest first and to start R-20's map there (AD-3).
+import { HumanCheck, useHumanCheck } from "../human-check/human-check";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -19,7 +20,7 @@ import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import type { MiniMapTiles } from "../map/mini-map";
 import { ResidentText } from "../text/resident-text";
-import { AREA_CENTRE, CATEGORY_NOT_SURE, EMPTY_DRAFT, addBody, missingFields, nearestProviders, sendSuggestion, takeResubmit, type AddDraft, type MissingField } from "./form-model";
+import { AREA_CENTRE, CATEGORY_NOT_SURE, EMPTY_DRAFT, addBody, missingFields, nearestProviders, sendSuggestion, takeResubmit, withHumanToken, type AddDraft, type MissingField } from "./form-model";
 import { LocateStep } from "./locate";
 import { Back, Honeypot, RulesCard, SentPanel, StepHeading, type RulesTexts } from "./parts";
 import "../choices/choices.css";
@@ -49,7 +50,19 @@ function useHome(buildings: { rsn: string; lat?: number; lng?: number }[] | null
 /** The label each missing answer is listed by in R-19's "Add these, then send" box: the field's own question. */
 const MISSING_LABEL: Record<MissingField, string> = { type: "R19.type", name: "R19.name", what: "R19.what", where: "R19.location" };
 
-export function AddPlaceFlow({ lang, tiles, rules }: { lang: LaunchCode; tiles: MiniMapTiles | null; rules: Record<string, RulesTexts> }) {
+export function AddPlaceFlow({
+  lang,
+  tiles,
+  rules,
+  humanCheckSiteKey = null,
+}: {
+  lang: LaunchCode;
+  tiles: MiniMapTiles | null;
+  rules: Record<string, RulesTexts>;
+  /** Session 2 (#12): the human check's site key while it is on, else null. */
+  humanCheckSiteKey?: string | null;
+}) {
+  const human = useHumanCheck();
   const t = useTranslations();
   const [step, setStep] = useState<Step>("choose");
   const [draft, setDraft] = useState<AddDraft>(EMPTY_DRAFT);
@@ -92,9 +105,12 @@ export function AddPlaceFlow({ lang, tiles, rules }: { lang: LaunchCode; tiles: 
     setTried(true);
     if (missing.length > 0 || sending) return;
     setSending(true);
-    const outcome = await sendSuggestion(addBody(draft, lang));
+    const outcome = await sendSuggestion(withHumanToken(addBody(draft, lang), human.token));
     setSending(false);
-    if (outcome.kind === "refused") return setRefused(outcome.code);
+    if (outcome.kind === "refused") {
+      if (humanCheckSiteKey) human.reset();
+      return setRefused(outcome.code);
+    }
     setRef(outcome.ref);
     setStep("sent");
   };
@@ -356,6 +372,7 @@ export function AddPlaceFlow({ lang, tiles, rules }: { lang: LaunchCode; tiles: 
             <Answers draft={draft} update={update} />
 
             <Honeypot value={draft.nickname} onChange={(nickname) => update({ nickname })} />
+            <HumanCheck siteKey={humanCheckSiteKey} round={human.round} onToken={human.setToken} />
 
             {tried && missing.length > 0 && (
               <div className="signup-errorbox" role="alert" data-testid="places-missing">

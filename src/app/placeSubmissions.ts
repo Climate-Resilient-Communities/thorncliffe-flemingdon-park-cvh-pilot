@@ -6,6 +6,7 @@ import "server-only";
 import { readSubmissionStatus, submitPlace, unstoredRef } from "@/modules/directory";
 import { createRateLimiter, type RateLimiter, type RateLimitRule } from "@/modules/subscriptions";
 import { getDb } from "@/platform/db";
+import { checkHuman, readHumanCheckConfig } from "@/platform/humanCheck";
 import type { PlaceSubmissionRouteDeps } from "./api/places/submissions/handler";
 import { clientAddress } from "./clientAddress";
 import { rateLimitKey } from "./signup";
@@ -35,4 +36,5 @@ export const placeSubmissionRouteDeps: PlaceSubmissionRouteDeps = {
   limiter: placeSubmissionLimiter,
   client: clientAddress,
   rules: { submit: PLACE_SUBMISSION_RATE_LIMIT, status: PLACE_STATUS_RATE_LIMIT },
+  humanCheck: (token) => checkHuman(readHumanCheckConfig(), token),
 };

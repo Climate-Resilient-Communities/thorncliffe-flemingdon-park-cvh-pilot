@@ -3067,4 +3067,6 @@ m(en, { x07: { label: 'Simpler view', turnOn: 'Turn on simpler view', turnOff: '
   m(en, { R07: { when911: 'When to call 911', helpNearby: 'Places that can help' } });
   /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. */
   m(en, { catPlain: { 'Support & Emergency Services': 'Emergency help and shelter', 'Faith-Based Organizations': 'Places of worship', 'Legal & Government Services': 'Legal help and ID documents', 'Schools & Child Services': 'Schools and child care', 'Health & Wellness': 'Health care', 'Public Spaces': 'Places to go', 'Community Resilience': 'Water, washrooms and cool places', 'Non-Profits': 'Community organizations' } });
+  /* Session 2 (#2, #12): the human check refused the token (only while the check is on). */
+  m(en, { signup: { error: { human_check_failed: 'We could not check that a person is sending this. Wait a few seconds, then send again.' } }, places: { errors: { human_check_failed: 'We could not check that a person is sending this. Wait a few seconds, then send again.' } }, staff: { textSignup: { errors: { human_check_failed: 'We could not check that a person is sending this. Wait a few seconds, then send again.' } } } });
 })();

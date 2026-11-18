@@ -89,6 +89,23 @@ const CONCEPTS: readonly Concept[] = [
     ),
   },
   {
+    // Help paying the rent (resident testing, session 2, #3: "need help with rent" found little, in several languages): the residents'
+    // rent they cannot pay, are behind on or need help with, against the listings' rent bank and housing assistance. Not a home for
+    // rent ("apartments for rent"): that is a search for housing, which the words alone still find.
+    token: "concept:rent-help",
+    phrases: new RegExp(
+      [
+        "\\brent\\s+(?:banks?|arrears|supplements?|subsid(?:y|ies)|assistance|help|support|money|payments?|relief)\\b",
+        "\\b(?:pay(?:s|ing)?|paid|afford|cover|owe|owing|behind\\s+(?:on|with)|late\\s+(?:on|with)|help(?:\\s+me)?\\s+(?:with|for|to\\s+pay|paying))\\s+(?:(?:my|the|our|this\\s+month(?:'s)?|last\\s+month(?:'s)?)\\s+)?rent\\b",
+        "\\brent\\s+(?:is\\s+|was\\s+)?(?:due|late|overdue|too\\s+(?:high|much|expensive))\\b",
+        "\\brental\\s+(?:assistance|help|support|arrears)\\b",
+        "\\b(?:rent|housing)\\s+arrears\\b",
+        "\\bhousing\\s+(?:assistance|help|support)\\b",
+      ].join("|"),
+      "g",
+    ),
+  },
+  {
     // Mental health and a mental health crisis (UAT 2026-11-04: "my son has a mental breakdown" found nothing): the residents'
     // breakdown, depression, anxiety or someone to talk to against the listings' mental health and counselling services. Not
     // occupational therapy. The 911 block for a crisis is the crisis phrases' (crisisPhrases.ts), not this.

@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "हम जाँच नहीं सके कि इसे कोई व्यक्ति भेज रहा है। कुछ सेकंड रुकें, फिर दोबारा भेजें।"
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "टेक्स्ट के लिए साइन अप अभी उपलब्ध नहीं है। बाद में फिर कोशिश करें।",
       "network": "हम CVH तक नहीं पहुँच सके। अपना कनेक्शन देखें और फिर कोशिश करें।",
       "checkin_consent_missing": "हालचाल पूछने का अनुरोध करने के लिए, सहमति वाले बॉक्स पर टिक करें।",
-      "signups_paused": "पायलट खत्म होने तक साइन अप बंद हैं।"
+      "signups_paused": "पायलट खत्म होने तक साइन अप बंद हैं।",
+      "human_check_failed": "हम जाँच नहीं सके कि इसे कोई व्यक्ति भेज रहा है। कुछ सेकंड रुकें, फिर दोबारा भेजें।"
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,8 @@
       "invalid_request": "फ़ॉर्म का कुछ हिस्सा पढ़ा नहीं जा सका। इसे जाँचें और फिर से भेजें।",
       "rate_limited": "इस कनेक्शन से बहुत ज़्यादा सुझाव आए हैं। एक घंटे बाद फिर कोशिश करें।",
       "not_found": "अक्षर और अंक जाँचें, फिर दोबारा कोशिश करें।",
-      "submissions_unavailable": "यह नहीं भेजा गया। अपना सिग्नल जाँचें और फिर कोशिश करें।"
+      "submissions_unavailable": "यह नहीं भेजा गया। अपना सिग्नल जाँचें और फिर कोशिश करें।",
+      "human_check_failed": "हम जाँच नहीं सके कि इसे कोई व्यक्ति भेज रहा है। कुछ सेकंड रुकें, फिर दोबारा भेजें।"
     }
   },
   "catPlain": {

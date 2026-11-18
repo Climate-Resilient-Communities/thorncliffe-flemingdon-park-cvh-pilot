@@ -11,7 +11,10 @@
 //   viewed tiles. The hosts come from the same MAP_TILE_* settings the map pages are built with, so a change of provider changes both.
 // - fetches to this origin only otherwise: the browser never talks to Supabase, Cohere or Twilio (the server does), and no analytics
 //   script is loaded.
+// - session 2 (#2, #12): while the human check is on (both TURNSTILE_ keys set, src/platform/humanCheck.ts), Cloudflare's challenge origin
+//   for its script, its frame and its fetches, and nothing else of Cloudflare's. Off, the policy is as before.
 // - no page may be framed (frame-ancestors 'none', and X-Frame-Options DENY for older browsers).
+import { TURNSTILE_ORIGIN } from "../../contracts/humanCheck";
 import type { MapTileConfig } from "./mapTiles";
 
 export interface SecurityHeader {
@@ -38,19 +41,20 @@ export function tileOrigins(tiles: Pick<MapTileConfig, "urlTemplate" | "subdomai
 }
 
 /** The Content-Security-Policy. `development` adds what `next dev` needs (eval for its fast refresh); a production build never has it. */
-export function contentSecurityPolicy(options: { tileOrigins: readonly string[]; development?: boolean }): string {
+export function contentSecurityPolicy(options: { tileOrigins: readonly string[]; development?: boolean; humanCheck?: boolean }): string {
   const tiles = options.tileOrigins.join(" ");
+  const human = options.humanCheck ? ` ${TURNSTILE_ORIGIN}` : "";
   const directives: [string, string][] = [
     ["default-src", "'self'"],
-    ["script-src", `'self' 'unsafe-inline'${options.development ? " 'unsafe-eval'" : ""}`],
+    ["script-src", `'self' 'unsafe-inline'${options.development ? " 'unsafe-eval'" : ""}${human}`],
     ["style-src", "'self' 'unsafe-inline'"],
     ["img-src", `'self' data: blob: ${tiles}`.trim()],
     ["font-src", "'self'"],
-    ["connect-src", `'self' ${tiles}`.trim()],
+    ["connect-src", ["'self'", ...options.tileOrigins, ...(options.humanCheck ? [TURNSTILE_ORIGIN] : [])].join(" ")],
     ["worker-src", "'self'"],
     ["manifest-src", "'self'"],
     ["media-src", "'self'"],
-    ["frame-src", "'none'"],
+    ["frame-src", options.humanCheck ? TURNSTILE_ORIGIN : "'none'"],
     ["object-src", "'none'"],
     ["base-uri", "'self'"],
     ["form-action", "'self'"],
@@ -64,7 +68,7 @@ export function contentSecurityPolicy(options: { tileOrigins: readonly string[];
  * address holds a token, override it with no-referrer (next.config.ts lists them after this rule, and the last rule wins). The map
  * does not ask for the phone's location, so no feature is allowed beyond what the pages use (none of these).
  */
-export function securityHeaders(options: { tileOrigins: readonly string[]; development?: boolean }): SecurityHeader[] {
+export function securityHeaders(options: { tileOrigins: readonly string[]; development?: boolean; humanCheck?: boolean }): SecurityHeader[] {
   return [
     { key: "Content-Security-Policy", value: contentSecurityPolicy(options) },
     { key: "X-Frame-Options", value: "DENY" },

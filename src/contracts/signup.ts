@@ -2,6 +2,7 @@
 // and the failure body. This POST is the one resident request that carries places and groups (AD-3's exception, with the edit-link POSTs of
 // S07.06); it sets no cookie and is never cached. Pure and browser-safe: the form checks a number with the same rule as the server.
 import { z } from "zod";
+import { HumanTokenSchema } from "./humanCheck";
 import { isCanadianAreaCode } from "./canadianAreaCodes";
 import { CHECKIN_CONSENT_VERSION, CheckinRequestSchema, checkinRequestInput, isSavedPlace, type CheckinRequestInput } from "./checkin";
 import { toAsciiDigits } from "./digits";
@@ -72,6 +73,8 @@ export const SignupRequestSchema = z.strictObject({
   age_confirmed: z.boolean(),
   /** S08.05: an optional check-in request on one of the places above (E08 "Request during sign-up"); kept until YES if its floor is covered. */
   checkin: CheckinRequestSchema.optional(),
+  /** Session 2 (#2): the human check's token, sent only while the check is on (src/platform/humanCheck.ts). */
+  human_token: HumanTokenSchema,
 });
 export type SignupRequestBody = z.infer<typeof SignupRequestSchema>;
 
@@ -101,6 +104,8 @@ export const SIGNUP_ERROR_CODES = [
   "signup_unavailable",
   /** S09.07: sign-ups are paused from the start of the end-of-pilot campaign until an Admin reopens them for the MVP. */
   "signups_paused",
+  /** Session 2 (#2): the human check is on and the token is missing or Cloudflare says it is not valid. Nothing is stored. */
+  "human_check_failed",
 ] as const;
 export type SignupErrorCode = (typeof SIGNUP_ERROR_CODES)[number];
 
@@ -116,6 +121,7 @@ export const SIGNUP_ERROR_STATUS: Record<SignupErrorCode, 400 | 409 | 429 | 503>
   rate_limited: 429,
   signup_unavailable: 503,
   signups_paused: 409,
+  human_check_failed: 400,
 };
 
 /** The body of a refused sign-up: `{error: {code, message_key}}` (AD-20); the page shows the catalog string of `message_key` in its language. */
@@ -139,7 +145,8 @@ export const SignupAcceptedSchema = z.strictObject({
 export type SignupAccepted = z.infer<typeof SignupAcceptedSchema>;
 export const SIGNUP_ACCEPTED: SignupAccepted = { v: SIGNUP_CONTRACT_VERSION, status: "accepted" };
 
-export type SignupCheck = { ok: true; value: SignupRequest } | { ok: false; code: SignupErrorCode };
+/** `humanToken`: the human check's token as sent, kept apart from the request so that the route checks it and nothing stores it. */
+export type SignupCheck = { ok: true; value: SignupRequest; humanToken?: string } | { ok: false; code: SignupErrorCode };
 
 /**
  * The checks the contract makes, in the order the form shows them: a readable request, then the number, the neighbourhood, the terms and the
@@ -171,7 +178,7 @@ export function checkSignupRequest(raw: unknown): SignupCheck {
     if (request.consentVersion !== CHECKIN_CONSENT_VERSION) return { ok: false, code: "invalid_request" };
     checkin = { ...request, consentVersion: request.consentVersion };
   }
-  return { ok: true, value: { phone, lang: body.lang, neighbourhood: body.neighbourhood, places, groups, consentVersion: body.consent_version, ...(checkin ? { checkin } : {}) } };
+  return { ok: true, value: { phone, lang: body.lang, neighbourhood: body.neighbourhood, places, groups, consentVersion: body.consent_version, ...(checkin ? { checkin } : {}) }, ...(body.human_token ? { humanToken: body.human_token } : {}) };
 }
 
 /**

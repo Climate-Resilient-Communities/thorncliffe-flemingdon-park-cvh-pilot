@@ -3,6 +3,7 @@
 //
 //  1. the body is read (at most SIGNUP_MAX_BODY_CHARS) and checked by the contract: 400 `{error: {code, message_key}}` with the first
 //     reason (a number that is not Canadian, no neighbourhood, the terms or the age statement not agreed), and nothing is stored;
+//  1b. session 2 (#2): while the human check is on, a token that is missing or not valid is refused (400 `human_check_failed`), nothing stored;
 //  2. the use case (subscriptions' createSignup) checks the terms version (409 `terms_changed`; 503 `signup_unavailable` while no terms may
 //     be signed up to) and the places (400), counts the client (429 `rate_limited` with a Retry-After, nothing stored), then writes;
 //  3. every accepted sign-up answers HTTP 202 with the same bytes, `{"v":1,"status":"accepted"}`, and the same headers, whether the number
@@ -11,6 +12,7 @@
 // Nothing here logs, echoes or stores the number; a failure is logged with a safe classification only.
 import { SIGNUP_ACCEPTED, SIGNUP_ERROR_STATUS, SIGNUP_MAX_BODY_CHARS, checkSignupRequest, signupErrorBody, type SignupErrorCode } from "@/contracts/signup";
 import type { Signup } from "@/modules/subscriptions";
+import type { HumanCheckOutcome } from "@/platform/humanCheck";
 import { classifyError } from "@/platform/safeError";
 
 export interface SignupRouteDeps {
@@ -19,6 +21,11 @@ export interface SignupRouteDeps {
   client: (headers: Headers) => string;
   /** Runs after an accepted answer (the app starts the dispatcher, after the response). */
   afterAccepted?: () => void;
+  /**
+   * Session 2 (#2): the human check of the form's token (src/platform/humanCheck.ts). Absent or "off" while the check is off. "failed"
+   * refuses with `human_check_failed` before anything is counted or stored; "unavailable" (Cloudflare cannot be reached) lets it through.
+   */
+  humanCheck?: (token: string | undefined) => Promise<HumanCheckOutcome>;
 }
 
 const HEADERS = { "Cache-Control": "no-store", "Content-Type": "application/json" } as const;
@@ -41,6 +48,9 @@ export async function signupResponse(deps: SignupRouteDeps, request: Request): P
   }
   const checked = checkSignupRequest(raw);
   if (!checked.ok) return refused(checked.code);
+  const human = deps.humanCheck ? await deps.humanCheck(checked.humanToken) : "off";
+  if (human === "failed") return refused("human_check_failed");
+  if (human === "unavailable") console.warn("signup.human_check_unavailable");
 
   let outcome;
   try {

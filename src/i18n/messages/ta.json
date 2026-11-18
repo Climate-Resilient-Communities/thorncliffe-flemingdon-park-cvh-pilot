@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "இதை ஒரு நபர் அனுப்புகிறார் என்பதை எங்களால் சரிபார்க்க முடியவில்லை. சில வினாடிகள் காத்திருந்து, மீண்டும் அனுப்பவும்."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "குறுஞ்செய்திப் பதிவு இப்போது கிடைக்கவில்லை. பின்னர் மீண்டும் முயலுங்கள்.",
       "network": "CVH-ஐ அடைய முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்.",
       "checkin_consent_missing": "நலம் விசாரிப்பைக் கேட்க, ஒப்புதல் பெட்டியில் குறியிடுங்கள்.",
-      "signups_paused": "சோதனை முடியும்வரை பதிவு நிறுத்தப்பட்டுள்ளது."
+      "signups_paused": "சோதனை முடியும்வரை பதிவு நிறுத்தப்பட்டுள்ளது.",
+      "human_check_failed": "இதை ஒரு நபர் அனுப்புகிறார் என்பதை எங்களால் சரிபார்க்க முடியவில்லை. சில வினாடிகள் காத்திருந்து, மீண்டும் அனுப்பவும்."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,8 @@
       "invalid_request": "படிவத்தில் ஒரு பகுதியைப் படிக்க முடியவில்லை. சரிபார்த்து மீண்டும் அனுப்புங்கள்.",
       "rate_limited": "இந்த இணைப்பிலிருந்து மிக அதிகமான பரிந்துரைகள் வந்துள்ளன. ஒரு மணி நேரம் கழித்து மீண்டும் முயலுங்கள்.",
       "not_found": "எழுத்துகளையும் எண்களையும் சரிபார்த்து மீண்டும் முயலுங்கள்.",
-      "submissions_unavailable": "இது அனுப்பப்படவில்லை. உங்கள் சிக்னலைச் சரிபார்த்து மீண்டும் முயலுங்கள்."
+      "submissions_unavailable": "இது அனுப்பப்படவில்லை. உங்கள் சிக்னலைச் சரிபார்த்து மீண்டும் முயலுங்கள்.",
+      "human_check_failed": "இதை ஒரு நபர் அனுப்புகிறார் என்பதை எங்களால் சரிபார்க்க முடியவில்லை. சில வினாடிகள் காத்திருந்து, மீண்டும் அனுப்பவும்."
     }
   },
   "catPlain": {

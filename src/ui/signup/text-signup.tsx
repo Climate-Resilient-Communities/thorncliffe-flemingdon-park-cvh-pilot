@@ -24,6 +24,7 @@ import { sortBuildings } from "../choices/building-list";
 import { ChoiceButton, ChoiceOption } from "../choices/parts";
 import type { StepLanguage } from "../choices/language-step";
 import { useBuildingList, useChoices, type BuildingListState } from "../choices/use-choices";
+import { HumanCheck, useHumanCheck } from "../human-check/human-check";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { withIsolated } from "../text/isolated";
@@ -51,6 +52,8 @@ export interface TextSignupProps {
   hub: string;
   /** Test seam: where the form is sent. */
   endpoint?: string;
+  /** Session 2 (#2): the human check's site key while the check is on; null (no widget, no token) while it is off. */
+  humanCheckSiteKey?: string | null;
 }
 
 type Field = "phone" | "nbhd" | "texts" | "terms" | "age";
@@ -86,7 +89,8 @@ function placesOf(draft: Draft, list: BuildingList): SignupRequestBody["places"]
  * resident only when every saved building is in one neighbourhood. Nothing is stored on the phone: not the number, not that a sign-up was
  * sent. The POST is the one resident request that carries places and groups; it sets no cookie.
  */
-export function TextSignup({ lang, languages, neighbourhoods, consentVersion, termsDraft, textNumber, hub, endpoint = "/api/signup" }: TextSignupProps) {
+export function TextSignup({ lang, languages, neighbourhoods, consentVersion, termsDraft, textNumber, hub, endpoint = "/api/signup", humanCheckSiteKey = null }: TextSignupProps) {
+  const human = useHumanCheck();
   const t = useTranslations("signup");
   const r05 = useTranslations("R05");
   const r34 = useTranslations("R34");
@@ -223,7 +227,7 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
       }
     }
     const places = loaded.status === "ready" ? placesOf(draft, loaded.list) : draft.buildings.map((rsn) => ({ rsn, floors: [] }));
-    const request: SignupRequestBody = { ...body, places, ...(checkinBody ? { checkin: checkinBody } : {}) };
+    const request: SignupRequestBody = { ...body, places, ...(checkinBody ? { checkin: checkinBody } : {}), ...(human.token ? { human_token: human.token } : {}) };
     try {
       const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(request), credentials: "omit", cache: "no-store" });
       if (response.status === 202) {
@@ -238,6 +242,8 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
     } catch {
       setServerError("network");
     }
+    // The human check's token is used up by any answer: the next send needs a new one.
+    if (humanCheckSiteKey) human.reset();
     setStatus("form");
     requestAnimationFrame(() => errorRef.current?.focus());
   };
@@ -570,6 +576,7 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
             </ResidentText>
           </Stack>
 
+          <HumanCheck siteKey={humanCheckSiteKey} round={human.round} onToken={human.setToken} />
           <button type="submit" className="choice-btn choice-btn--primary tap signup-send" disabled={status === "sending"} data-testid="signup-send">
             <ResidentText>{status === "sending" ? t("sending") : r05("send")}</ResidentText>
           </button>

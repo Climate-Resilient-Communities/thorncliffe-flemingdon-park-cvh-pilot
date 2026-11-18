@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "No pudimos comprobar que una persona envía esto. Espere unos segundos y vuelva a enviarlo."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "La inscripción por mensaje de texto no está disponible ahora. Inténtelo más tarde.",
       "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo.",
       "checkin_consent_missing": "Para pedir un chequeo de bienestar, marque la casilla para aceptar.",
-      "signups_paused": "Las inscripciones están en pausa mientras termina el proyecto piloto."
+      "signups_paused": "Las inscripciones están en pausa mientras termina el proyecto piloto.",
+      "human_check_failed": "No pudimos comprobar que una persona envía esto. Espere unos segundos y vuelva a enviarlo."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,8 @@
       "invalid_request": "No se pudo leer parte del formulario. Revíselo y envíelo de nuevo.",
       "rate_limited": "Demasiadas sugerencias desde esta conexión. Inténtelo de nuevo en una hora.",
       "not_found": "Revise las letras y los números, y vuelva a intentarlo.",
-      "submissions_unavailable": "Esto no se envió. Revise su señal e inténtelo de nuevo."
+      "submissions_unavailable": "Esto no se envió. Revise su señal e inténtelo de nuevo.",
+      "human_check_failed": "No pudimos comprobar que una persona envía esto. Espere unos segundos y vuelva a enviarlo."
     }
   },
   "catPlain": {

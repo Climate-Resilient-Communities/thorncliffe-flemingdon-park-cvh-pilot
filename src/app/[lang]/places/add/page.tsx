@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { humanCheckSiteKey } from "@/platform/humanCheck";
 import { FALLBACK_MARKER } from "@/ui";
 import { isLaunchCode } from "@/i18n/languages";
 import { AddPlaceFlow } from "@/ui/places";
@@ -22,7 +23,7 @@ export default async function AddPlacePage({ params }: PageProps<"/[lang]/places
   setRequestLocale(lang);
   return (
     <PlacesFrame lang={lang}>
-      <AddPlaceFlow lang={lang} tiles={pageMapTiles()} rules={await rulesInEveryLanguage()} />
+      <AddPlaceFlow lang={lang} tiles={pageMapTiles()} rules={await rulesInEveryLanguage()} humanCheckSiteKey={humanCheckSiteKey()} />
     </PlacesFrame>
   );
 }

@@ -3,13 +3,19 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { SHARED_CACHE_GUIDES } from "./src/app/guideCache";
 import { LAUNCH_CODES } from "./src/i18n/languages";
 import { readMapTileConfig } from "./src/platform/config/mapTiles";
+import { readHumanCheckConfig } from "./src/platform/humanCheck";
 import { NO_INDEX, securityHeaders, tileOrigins } from "./src/platform/config/securityHeaders";
 
 const noStore = [{ key: "Cache-Control", value: "no-store" }];
 // S07.06: the one-time web link's page and API carry a token in their address or body: never stored, and the page sends no referrer.
 const subscriptionHeaders = [...noStore, { key: "Referrer-Policy", value: "no-referrer" }];
 // SIT F3: every response's security headers, with the map tile hosts of the same MAP_TILE_* settings the map pages are built with.
-const everyResponse = securityHeaders({ tileOrigins: tileOrigins(readMapTileConfig()), development: process.env.NODE_ENV === "development" });
+// Session 2 (#2, #12): Cloudflare's challenge origin only while the human check is on (both TURNSTILE_ keys set).
+const everyResponse = securityHeaders({
+  tileOrigins: tileOrigins(readMapTileConfig()),
+  development: process.env.NODE_ENV === "development",
+  humanCheck: readHumanCheckConfig() !== null,
+});
 
 const nextConfig: NextConfig = {
   // SIT F3: no `X-Powered-By: Next.js`.

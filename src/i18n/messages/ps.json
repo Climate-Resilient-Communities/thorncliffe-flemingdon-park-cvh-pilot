@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "د لنډ پیغام لپاره ثبتول اوس شتون نه لري. وروسته بیا هڅه وکړئ.",
       "network": "موږ CVH ته ونه رسېدو. خپل اتصال وګورئ او بیا هڅه وکړئ.",
       "checkin_consent_missing": "د احوال پوښتنې لپاره، د موافقې خانه نښه کړئ.",
-      "signups_paused": "د پیلوټ تر پایه نوم لیکنه بنده ده."
+      "signups_paused": "د پیلوټ تر پایه نوم لیکنه بنده ده.",
+      "human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,8 @@
       "invalid_request": "د فورمې یوه برخه ونه لوستل شوه. وې ګورئ او بیا یې ولېږئ.",
       "rate_limited": "له دې اتصال څخه ډېر زیات وړاندیزونه راغلي دي. یو ساعت وروسته بیا هڅه وکړئ.",
       "not_found": "توري او شمېرې وګورئ، بیا هڅه وکړئ.",
-      "submissions_unavailable": "دا ونه لېږل شو. خپل سګنال وګورئ او بیا هڅه وکړئ."
+      "submissions_unavailable": "دا ونه لېږل شو. خپل سګنال وګورئ او بیا هڅه وکړئ.",
+      "human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."
     }
   },
   "catPlain": {

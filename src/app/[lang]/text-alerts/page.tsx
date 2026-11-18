@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { humanCheckSiteKey } from "@/platform/humanCheck";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -58,6 +59,7 @@ export default async function TextAlertsPage({ params }: PageProps<"/[lang]/text
         termsDraft={termsDraft}
         textNumber={getEnv().twilio?.fromNumber ?? null}
         hub={displayPhone(HUB_PHONE_E164)}
+        humanCheckSiteKey={humanCheckSiteKey()}
       />
     </NextIntlClientProvider>
   );

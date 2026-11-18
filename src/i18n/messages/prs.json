@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "ما نتوانستیم بررسی کنیم که یک انسان این را می‌فرستد. چند ثانیه صبر کنید، بعد دوباره بفرستید."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "ثبت نام برای پیام کوتاه فعلاً در دسترس نیست. بعداً باز کوشش کنید.",
       "network": "ما به CVH رسیده نتوانستیم. اتصال خود را ببینید و باز کوشش کنید.",
       "checkin_consent_missing": "برای درخواست احوال‌پرسی، خانه موافقت را علامت بزنید.",
-      "signups_paused": "ثبت‌نام تا پایان پیلوت متوقف است."
+      "signups_paused": "ثبت‌نام تا پایان پیلوت متوقف است.",
+      "human_check_failed": "ما نتوانستیم بررسی کنیم که یک انسان این را می‌فرستد. چند ثانیه صبر کنید، بعد دوباره بفرستید."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,8 @@
       "invalid_request": "بخشی از فورم خوانده نشد. آن را بررسی کنید و دوباره بفرستید.",
       "rate_limited": "از این اتصال پیشنهادهای زیادی آمده است. یک ساعت بعد دوباره امتحان کنید.",
       "not_found": "حروف و اعداد را بررسی کنید و دوباره امتحان کنید.",
-      "submissions_unavailable": "این فرستاده نشد. آنتن خود را بررسی کنید و دوباره امتحان کنید."
+      "submissions_unavailable": "این فرستاده نشد. آنتن خود را بررسی کنید و دوباره امتحان کنید.",
+      "human_check_failed": "ما نتوانستیم بررسی کنیم که یک انسان این را می‌فرستد. چند ثانیه صبر کنید، بعد دوباره بفرستید."
     }
   },
   "catPlain": {

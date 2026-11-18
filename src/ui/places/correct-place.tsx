@@ -3,6 +3,7 @@
 // R-22 "Correct this place" (PRD §6.3, D9/E4): the listed place, read from the same downloaded release as its own page, one row per thing the
 // resident may change (its name, where it is, its phone and website, and three of R-19's questions), each with Change; a changed row says
 // what it was and can be undone. Only the changed rows are sent (R22.onlyThis); then the sent state with the reference code.
+import { HumanCheck, useHumanCheck } from "../human-check/human-check";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
@@ -17,7 +18,7 @@ import { addressLines } from "../directory/provider-view";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { ResidentText } from "../text/resident-text";
-import { correctionBody, sendSuggestion, type CorrectionDraft } from "./form-model";
+import { correctionBody, sendSuggestion, withHumanToken, type CorrectionDraft } from "./form-model";
 import { Back, Honeypot, RulesCard, SentPanel, StepHeading, type RulesTexts } from "./parts";
 import "../choices/choices.css";
 import "../signup/signup.css";
@@ -56,7 +57,8 @@ function rowsOf(provider: ListingProvider, t: ReturnType<typeof useTranslations>
   ];
 }
 
-export function CorrectPlace({ lang, id, rules }: { lang: LaunchCode; id: string; rules: RulesTexts }) {
+export function CorrectPlace({ lang, id, rules, humanCheckSiteKey = null }: { lang: LaunchCode; id: string; rules: RulesTexts; humanCheckSiteKey?: string | null }) {
+  const human = useHumanCheck();
   const t = useTranslations();
   const directory = useDirectory(lang);
   const provider = directory.status === "ready" ? (directory.listing.providers.find((p) => p.id === id) ?? null) : null;
@@ -115,9 +117,12 @@ export function CorrectPlace({ lang, id, rules }: { lang: LaunchCode; id: string
     setTried(true);
     if (count === 0 || sending) return;
     setSending(true);
-    const outcome = await sendSuggestion(correctionBody({ id: provider.id, name: provider.name }, changes, lang, nickname));
+    const outcome = await sendSuggestion(withHumanToken(correctionBody({ id: provider.id, name: provider.name }, changes, lang, nickname), human.token));
     setSending(false);
-    if (outcome.kind === "refused") return setRefused(outcome.code);
+    if (outcome.kind === "refused") {
+      if (humanCheckSiteKey) human.reset();
+      return setRefused(outcome.code);
+    }
     setRef(outcome.ref);
   };
 
@@ -283,6 +288,7 @@ export function CorrectPlace({ lang, id, rules }: { lang: LaunchCode; id: string
           </button>
           {showRules && <RulesCard texts={rules} />}
           <Honeypot value={nickname} onChange={setNickname} />
+          <HumanCheck siteKey={humanCheckSiteKey} round={human.round} onToken={human.setToken} />
           {tried && count === 0 && (
             <p className="signup-error" role="alert" data-testid="places-nothing-yet">
               <ResidentText>{t("R22.nothingYet")}</ResidentText>

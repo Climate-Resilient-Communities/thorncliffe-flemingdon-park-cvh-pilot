@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "ہم یہ جانچ نہیں سکے کہ اسے کوئی انسان بھیج رہا ہے۔ چند سیکنڈ انتظار کریں، پھر دوبارہ بھیجیں۔"
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "ٹیکسٹ کے لیے سائن اپ ابھی دستیاب نہیں۔ بعد میں دوبارہ کوشش کریں۔",
       "network": "ہم CVH تک نہیں پہنچ سکے۔ اپنا کنکشن دیکھیں اور پھر کوشش کریں۔",
       "checkin_consent_missing": "خیریت معلوم کرنے کے لیے، متفق ہونے کا خانہ نشان زد کریں۔",
-      "signups_paused": "پائلٹ کے اختتام تک سائن اپ بند ہیں۔"
+      "signups_paused": "پائلٹ کے اختتام تک سائن اپ بند ہیں۔",
+      "human_check_failed": "ہم یہ جانچ نہیں سکے کہ اسے کوئی انسان بھیج رہا ہے۔ چند سیکنڈ انتظار کریں، پھر دوبارہ بھیجیں۔"
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,8 @@
       "invalid_request": "فارم کا کچھ حصہ پڑھا نہیں جا سکا۔ اسے دیکھیں اور دوبارہ بھیجیں۔",
       "rate_limited": "اس کنکشن سے بہت زیادہ تجاویز آئی ہیں۔ ایک گھنٹے بعد دوبارہ کوشش کریں۔",
       "not_found": "حروف اور نمبر دیکھیں، پھر دوبارہ کوشش کریں۔",
-      "submissions_unavailable": "یہ نہیں بھیجا گیا۔ اپنا سگنل دیکھیں اور دوبارہ کوشش کریں۔"
+      "submissions_unavailable": "یہ نہیں بھیجا گیا۔ اپنا سگنل دیکھیں اور دوبارہ کوشش کریں۔",
+      "human_check_failed": "ہم یہ جانچ نہیں سکے کہ اسے کوئی انسان بھیج رہا ہے۔ چند سیکنڈ انتظار کریں، پھر دوبارہ بھیجیں۔"
     }
   },
   "catPlain": {
