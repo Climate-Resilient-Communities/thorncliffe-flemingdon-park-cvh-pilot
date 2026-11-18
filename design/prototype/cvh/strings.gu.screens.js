@@ -1580,4 +1580,8 @@
   m(t, {"directory": {"quickCooling": "જાહેર ઠંડક સ્થળો", "quickCoolingLine": "ગરમીમાં બધા માટે ખુલ્લા."}, "map": {"coolingRoomResidents": "ઠંડક રૂમ છે (ફક્ત તેના રહેવાસીઓ માટે)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "911 ક્યારે કૉલ કરવો", "helpNearby": "મદદ કરી શકે તેવી જગ્યાઓ"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "કટોકટી મદદ અને આશ્રય", "Faith-Based Organizations": "પૂજા સ્થળો", "Legal & Government Services": "કાયદાકીય મદદ અને ઓળખ દસ્તાવેજો", "Schools & Child Services": "શાળાઓ અને બાળ સંભાળ", "Health & Wellness": "આરોગ્ય સંભાળ", "Public Spaces": "જવાની જગ્યાઓ", "Community Resilience": "પાણી, શૌચાલય અને ઠંડી જગ્યાઓ", "Non-Profits": "સમુદાય સંસ્થાઓ"}});
+  /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"error": {"human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."}}, "places": {"errors": {"human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."}}}});
 })();

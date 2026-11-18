@@ -14,6 +14,7 @@ import { formatDayText } from "./format";
 import { HowTheyHelp, ListingBlock } from "./listing-text";
 import { neighbourhoodName } from "./neighbourhood-names";
 import { RunByMark } from "./run-by";
+import { KindName } from "./kind-name";
 import "./directory.css";
 
 export type CategoryNames = ReadonlyMap<string, ListingText>;
@@ -184,13 +185,13 @@ export function ProviderView({
         <ul className="dir-tags" aria-label={t("directory.topic")}>
           {names.map((name, at) => (
             <li key={`${provider.category_ids[at]}`} className="dir-tag">
-              <ListingBlock text={name} as="span" contentLang={contentLang} />
+              <KindName group="catPlain" text={name} contentLang={contentLang} />
             </li>
           ))}
           {variant === "page" &&
             subcategoryChips(names, provider.subcategories).map((sub) => (
               <li key={sub.body} className="dir-tag dir-tag--quiet">
-                <ListingBlock text={sub} as="span" contentLang={contentLang} />
+                <KindName group="subcats" text={sub} contentLang={contentLang} />
               </li>
             ))}
           {variant === "page" &&

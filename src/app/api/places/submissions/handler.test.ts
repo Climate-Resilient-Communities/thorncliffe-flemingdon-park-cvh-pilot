@@ -129,3 +129,34 @@ describe("GET /api/places/submissions/{ref}", () => {
     expect((await statusResponse(fake({ allowed: false }).deps, get("SEED-2A2A"), "SEED-2A2A")).status).toBe(429);
   });
 });
+
+describe("POST /api/places/submissions with the human check (session 2, #12)", () => {
+  it("refuses a suggestion whose token fails, and stores nothing", async () => {
+    const f = fake();
+    const response = await submitResponse({ ...f.deps, humanCheck: async () => "failed" }, post({ ...BODY, human_token: "bad" }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: { code: "human_check_failed", message_key: "places.errors.human_check_failed" } });
+    expect(f.stored).toEqual([]);
+  });
+
+  it("stores a suggestion whose token passes, without the token", async () => {
+    const f = fake();
+    let seen: string | undefined;
+    const response = await submitResponse(
+      {
+        ...f.deps,
+        humanCheck: async (token) => {
+          seen = token;
+          return "passed";
+        },
+      },
+      post({ ...BODY, human_token: "good" }),
+    );
+
+    expect(response.status).toBe(202);
+    expect(seen).toBe("good");
+    expect(f.stored).toHaveLength(1);
+    expect(f.stored[0]).not.toHaveProperty("human_token");
+  });
+});

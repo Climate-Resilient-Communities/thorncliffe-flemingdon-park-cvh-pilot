@@ -106,11 +106,11 @@ test("reads only the published release files, and filtering makes no request at 
   const before = all.length;
   await openFilters(page);
   await page.getByTestId("filter-category-food").check();
-  await page.getByTestId("filter-emergency").check();
+  await page.getByTestId("filter-neighbourhood-TP").check();
   await page.getByTestId("filter-neighbourhood-FP").check();
   await page.getByTestId("filter-category-food").uncheck();
   await page.getByTestId("filters-apply").click();
-  await page.getByTestId("remove-emergency").click();
+  await page.getByTestId("remove-neighbourhood:TP").click();
   await page.getByTestId("clear-all").click();
   await expect(page.getByTestId("filter-bar")).toHaveCount(0);
   await page.waitForLoadState("networkidle");
@@ -140,18 +140,17 @@ test("filters narrow the list, the applied-filter bar shows each with a remove c
   await openFilters(page);
   await page.getByTestId("filter-neighbourhood-TP").check();
   expect((await listed(page)).sort()).toEqual(["P101", "P104"]);
-  await page.getByTestId("filter-emergency").check();
   await page.getByTestId("filter-category-community").check();
   expect(await listed(page)).toEqual(["P104"]);
 
   const bar = page.getByTestId("filter-bar");
-  await expect(bar.locator("li")).toHaveText(["Public spaces×", "Thorncliffe Park×", "Helps in an emergency×"]);
+  await expect(bar.locator("li")).toHaveText(["Public spaces×", "Thorncliffe Park×"]);
   await expect(page.getByTestId("hidden-count")).toHaveText("4 places are hidden by these filters");
   await expect(page.getByTestId("directory-count")).toHaveText("1 service");
 
   // One filter off with its own remove control.
   await page.getByRole("button", { name: "Remove filter: Public spaces" }).click();
-  await expect(bar.locator("li")).toHaveText(["Thorncliffe Park×", "Helps in an emergency×"]);
+  await expect(bar.locator("li")).toHaveText(["Thorncliffe Park×"]);
   expect((await listed(page)).sort()).toEqual(["P101", "P104"]);
   await expect(page.getByTestId("filter-category-community")).not.toBeChecked();
 
@@ -183,7 +182,7 @@ test("What kind of place narrows the list, its choices narrow to the chosen topi
   await openFilters(page);
   await page.getByTestId("filter-subcategory-legal services").check();
   expect(await listed(page)).toEqual(["P103"]);
-  await expect(page.getByTestId("chip-subcategory:legal services")).toContainText("Legal Services");
+  await expect(page.getByTestId("chip-subcategory:legal services")).toContainText("Legal services");
 
   // A topic narrows the kinds offered to its providers'; the kind already chosen stays, so it can be taken back.
   await page.getByTestId("filter-category-community").check();
@@ -266,7 +265,7 @@ test("a provider page lists every number, link and address of the provider, and 
   // The postal code is one piece: its space is a non-breaking space.
   expect(await page.locator(".dir-card__address").textContent()).toBe("10 Gateway Blvd, North York, M3C\u00a01H9");
   // The quiet tags: the provider's kind of place, then its neighbourhood.
-  await expect(page.locator(".dir-tag--quiet")).toHaveText(["Health Clinics", "Flemingdon Park"]);
+  await expect(page.locator(".dir-tag--quiet")).toHaveText(["Health clinics", "Flemingdon Park"]);
   await expect(page.getByTestId("provider-emergency")).toHaveText("Not known");
 
   await page.getByTestId("back-to-directory").click();
@@ -303,7 +302,7 @@ test("the filters survive opening a provider and going back, are kept in the tab
   await openFilters(page);
   await page.getByTestId("filter-category-food").check();
   await page.getByTestId("filter-category-health").check();
-  await page.getByTestId("filter-emergency").check();
+  await page.getByTestId("filter-neighbourhood-TP").check();
   await page.getByTestId("filters-apply").click();
   expect(await listed(page)).toEqual(["P101"]);
 
@@ -314,7 +313,7 @@ test("the filters survive opening a provider and going back, are kept in the tab
   await expect(page).toHaveURL(/\/en\/directory$/);
   await waitForList(page);
   expect(await listed(page)).toEqual(["P101"]);
-  await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Food×", "Health and wellness×", "Helps in an emergency×"]);
+  await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Food×", "Health and wellness×", "Thorncliffe Park×"]);
   await expect(page.getByTestId("filters-toggle")).toHaveText("Filters (3)");
 
   // And by the browser's Back button.
@@ -326,7 +325,7 @@ test("the filters survive opening a provider and going back, are kept in the tab
 
   // Kept for the tab only: in sessionStorage, not in localStorage, not in the address.
   expect(page.url()).not.toContain("?");
-  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, topics: [], categories: ["food", "health"], subcategories: [], neighbourhoods: [], runBy: [], emergency: true });
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, topics: [], categories: ["food", "health"], subcategories: [], neighbourhoods: ["TP"], runBy: [], emergency: false });
   expect(await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes("filters")))).toEqual([]);
 
   // Another tab of the same phone starts with no filters.
@@ -398,22 +397,22 @@ test.describe("the filter panel and the applied filters, by keyboard and screen 
     await openFilters(page);
     await page.getByTestId("filter-category-community").check();
     await page.getByTestId("filter-neighbourhood-TP").check();
-    await page.getByTestId("filter-emergency").check();
+    await page.getByTestId("filter-neighbourhood-FP").check();
     await page.getByTestId("filters-apply").click();
-    await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Public spaces×", "Thorncliffe Park×", "Helps in an emergency×"]);
+    await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Public spaces×", "Thorncliffe Park×", "Flemingdon Park×"]);
 
     await page.getByTestId("remove-category:community").click();
     await expect(page.getByTestId("remove-neighbourhood:TP")).toBeFocused();
 
     await page.getByTestId("remove-neighbourhood:TP").click();
-    await expect(page.getByTestId("remove-emergency")).toBeFocused();
+    await expect(page.getByTestId("remove-neighbourhood:FP")).toBeFocused();
 
     // Put one back so that the one removed is the last of two: Clear all takes the focus.
     await page.getByTestId("filters-toggle").click();
-    await page.getByTestId("filter-neighbourhood-FP").check();
+    await page.getByTestId("filter-neighbourhood-TP").check();
     await page.getByTestId("filters-apply").click();
-    await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Flemingdon Park×", "Helps in an emergency×"]);
-    await page.getByTestId("remove-emergency").click();
+    await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Flemingdon Park×", "Thorncliffe Park×"]);
+    await page.getByTestId("remove-neighbourhood:TP").click();
     await expect(page.getByTestId("clear-all")).toBeFocused();
 
     // The last one: the bar goes, and focus goes to the Filters button, not to the top of the page.
@@ -427,7 +426,7 @@ test.describe("the filter panel and the applied filters, by keyboard and screen 
     await openResident(page, "/en/directory", 390);
     await waitForList(page);
     await openFilters(page);
-    await page.getByTestId("filter-emergency").check();
+    await page.getByTestId("filter-neighbourhood-TP").check();
     await page.getByTestId("filters-apply").click();
     await page.getByTestId("clear-all").click();
     await expect(page.getByTestId("filters-toggle")).toBeFocused();
@@ -610,10 +609,10 @@ test.describe("in Urdu", () => {
 
     // The kinds of place carry the Urdu names too, while the filter still reads the English they stand for.
     await page.getByTestId("filter-category-food").uncheck();
-    await expect(page.getByTestId("filter-subcategory-cooling spaces")).toContainText("ٹھنڈک کی جگہیں");
+    await expect(page.getByTestId("filter-subcategory-cooling spaces")).toContainText("ٹھنڈی جگہیں");
     await page.getByTestId("filter-subcategory-cooling spaces").check();
     expect(await listed(page)).toEqual(["P104"]);
-    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("ٹھنڈک کی جگہیں");
+    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("ٹھنڈی جگہیں");
   });
 });
 
@@ -802,7 +801,6 @@ test.describe("baselines", () => {
 
         await openFilters(page);
         await page.getByTestId("filter-neighbourhood-TP").check();
-        await page.getByTestId("filter-emergency").check();
         await shot(page, width, name("filtered"));
 
         await page.getByTestId("filter-category-health").check();

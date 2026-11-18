@@ -49,6 +49,20 @@ describe("contentSecurityPolicy", () => {
   });
 });
 
+describe("contentSecurityPolicy with the human check (session 2, #2 and #12)", () => {
+  it("adds Cloudflare's challenge origin for its script, frame and fetches only while the check is on, and nothing else", () => {
+    const on = directives(contentSecurityPolicy({ tileOrigins: [], humanCheck: true }));
+    expect(on.get("script-src")).toEqual(["'self'", "'unsafe-inline'", "https://challenges.cloudflare.com"]);
+    expect(on.get("frame-src")).toEqual(["https://challenges.cloudflare.com"]);
+    expect(on.get("connect-src")).toEqual(["'self'", "https://challenges.cloudflare.com"]);
+    expect(on.get("frame-ancestors")).toEqual(["'none'"]);
+    expect(on.get("img-src")).toEqual(["'self'", "data:", "blob:"]);
+    const off = directives(contentSecurityPolicy({ tileOrigins: [], humanCheck: false }));
+    expect(off.get("frame-src")).toEqual(["'none'"]);
+    expect(off.get("script-src")).toEqual(["'self'", "'unsafe-inline'"]);
+  });
+});
+
 describe("next.config.ts headers", () => {
   const headersFor = async (path: string) => {
     const rules = await nextConfig.headers!();

@@ -122,3 +122,33 @@ describe("POST /api/signup", () => {
     log.mockRestore();
   });
 });
+
+describe("POST /api/signup with the human check (session 2, #2)", () => {
+  it("refuses a sign-up whose token fails, before the use case counts or stores anything", async () => {
+    const fake = deps({ kind: "accepted" });
+    const humanCheck = vi.fn(async () => "failed" as const);
+    const response = await signupResponse({ ...fake.deps, humanCheck }, post({ ...BODY, human_token: "bad" }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: { code: "human_check_failed", message_key: "signup.error.human_check_failed" } });
+    expect(humanCheck).toHaveBeenCalledWith("bad");
+    expect(fake.calls).toEqual([]);
+  });
+
+  it("accepts a sign-up whose token passes, or when Cloudflare cannot be reached, and never gives the token to the use case", async () => {
+    for (const outcome of ["passed", "unavailable", "off"] as const) {
+      const fake = deps({ kind: "accepted" });
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const response = await signupResponse({ ...fake.deps, humanCheck: async () => outcome }, post({ ...BODY, human_token: "token" }));
+      expect(response.status, outcome).toBe(202);
+      expect(fake.calls).toHaveLength(1);
+      expect(warn.mock.calls.flat().join(" ")).toBe(outcome === "unavailable" ? "signup.human_check_unavailable" : "");
+      warn.mockRestore();
+    }
+  });
+
+  it("refuses a token too long to be one as an unreadable request", async () => {
+    const response = await signupResponse(deps({ kind: "accepted" }).deps, post({ ...BODY, human_token: "x".repeat(4097) }));
+    expect((await response.json()).error.code).toBe("invalid_request");
+  });
+});

@@ -57,6 +57,10 @@ import { parsePilotMachineTranslations } from "./pilotTranslations";
  *                                                        (jobs_not_configured) until it is set, and nothing runs unauthenticated.
  *                                                        Set in production only (the pg_cron target and its secret in the project's
  *                                                        Vault point at production, AD-15). Never a NEXT_PUBLIC_ variable
+ * TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY
+ *                      server   optional                 the human check on text sign-up and place suggestions (session 2, #2 and #12),
+ *                                                        read by src/platform/humanCheck.ts, not by this schema: off unless both are set.
+ *                                                        The secret is never a NEXT_PUBLIC_ variable; the site key reaches the forms as a prop
  * SMS_SEGMENTS_PER_SECOND
  *                      server   optional                 the shared send pace (E06 "Send pace"): at most this many SMS segments a
  *                                                        second reach the provider in any one second, across every dispatcher run.

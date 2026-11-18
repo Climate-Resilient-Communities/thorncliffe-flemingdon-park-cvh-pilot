@@ -14,6 +14,9 @@ import { loadResidentContent } from "../source";
 import { GROUPS } from "@/contracts/groups";
 import { GuideForYou } from "./guide-for-you";
 import { GuideHashFocus } from "./guide-hash-focus";
+import { GuideHelp } from "./guide-help";
+import { GUIDE_SPACES } from "./resources";
+import { StagePanel, StageTab, StepsCap } from "./guide-stages";
 import { GUIDE_PARTS, headingId } from "./sections";
 import "../ready.css";
 
@@ -154,9 +157,9 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
             <ul className="guide-jump">
               {GUIDE_PARTS.map((section) => (
                 <li key={section}>
-                  <a href={`#${section}`} className="guide-jump__link tap" data-testid={`guide-jump-${section}`}>
+                  <StageTab part={section}>
                     <ResidentText>{t(`stages.${section}`)}</ResidentText>
-                  </a>
+                  </StageTab>
                 </li>
               ))}
             </ul>
@@ -164,22 +167,50 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
         </nav>
 
         <div className="guide-body" data-testid="guide-body">
-        {GUIDE_PARTS.map((section) => (
-          <section key={section} id={section} className="guide-section" aria-labelledby={headingId(section)} data-testid={`guide-${section}`}>
-            <Stack gap="related">
-              <h2 id={headingId(section)} tabIndex={-1} className="guide-heading" data-testid={`guide-heading-${section}`}>
-                <ResidentText>{t(`stages.${section}`)}</ResidentText>
-              </h2>
-              <ol className="guide-steps">
-                {view.sections[section].map((line, index) => (
-                  <ContentText key={index} as="li" unavailable={line.unavailable}>
-                    {line.text}
-                  </ContentText>
-                ))}
-              </ol>
-            </Stack>
-          </section>
-        ))}
+        {/* One stage at a time (session 2, #14): the tabs above choose it, "Next" goes on, and basic mode shows three steps first. */}
+        {GUIDE_PARTS.map((section, at) => {
+          const next = GUIDE_PARTS[at + 1];
+          return (
+            <StagePanel key={section} part={section}>
+              <section id={section} className="guide-section" aria-labelledby={headingId(section)} data-testid={`guide-${section}`}>
+                <Stack gap="related">
+                  <h2 id={headingId(section)} tabIndex={-1} className="guide-heading" data-testid={`guide-heading-${section}`}>
+                    <ResidentText>{t(`stages.${section}`)}</ResidentText>
+                  </h2>
+                  <StepsCap total={view.sections[section].length} label={t("R25.allSteps", { n: view.sections[section].length })}>
+                    <ol className="guide-steps">
+                      {view.sections[section].map((line, index) => (
+                        <ContentText key={index} as="li" unavailable={line.unavailable}>
+                          {line.text}
+                        </ContentText>
+                      ))}
+                    </ol>
+                  </StepsCap>
+                  {next ? (
+                    <a href={`#${next}`} className="ready-btn ready-btn--primary tap guide-next" data-testid={`guide-next-${section}`}>
+                      <ResidentText>{t("R25.next", { stage: t(`stages.${next}`) })}</ResidentText>
+                      <span className="shell-ico shell-ico--chevron shell-ico--mirror shell-ico--sm" aria-hidden="true" />
+                    </a>
+                  ) : (
+                    <ResidentText as="p" testId="guide-end">
+                      {t("R25.endLine")}
+                    </ResidentText>
+                  )}
+                </Stack>
+              </section>
+            </StagePanel>
+          );
+        })}
+
+        <GuideHelp
+          lang={lang}
+          guide={view.id}
+          labels={{
+            title: t("R25.helpTitle"),
+            services: t("R25.services"),
+            spaces: GUIDE_SPACES[view.id] ? t("R25.spaces", { purpose: t(`R25.purposeWords.${GUIDE_SPACES[view.id]}`) }) : null,
+          }}
+        />
 
         <ResidentText as="p" className="ready-updated" testId="guide-reviewed">
           {withDate(t, "guides.reviewed", dayOf(view.lastUpdated), language.bcp47)}

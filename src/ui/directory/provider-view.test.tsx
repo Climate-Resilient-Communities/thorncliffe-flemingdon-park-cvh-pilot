@@ -163,7 +163,8 @@ describe("ProviderView", () => {
 
     const chips = (text: string) => html.split(`>${text}</`).length - 1;
     expect(chips(topic.body) + chips(topic.body.toUpperCase())).toBe(1);
-    expect(chips("Multi-Service Agencies")).toBe(1);
+    // Shown by its plain name (session 2, #10), once.
+    expect(chips("Multi-service agencies")).toBe(1);
     expect(subcategoryChips([topic], [topic, other, shout, other])).toEqual([other]);
   });
 

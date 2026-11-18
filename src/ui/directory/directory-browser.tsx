@@ -16,11 +16,12 @@ import { CallHub } from "./call-hub";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "./filter-store";
 import { activeKeys, filterKeyId, filterProviders, isActive, listingSubcategories, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "./filters";
 import { formatMoment } from "./format";
-import { Inline911, ListingBlock } from "./listing-text";
+import { Inline911 } from "./listing-text";
 import { isNeighbourhoodId, NEIGHBOURHOODS, neighbourhoodName } from "./neighbourhood-names";
 import { NumbersLink } from "./numbers-link";
 import { ProviderView, type CategoryNames } from "./provider-view";
 import { COOLING_SPACES, QuickCooling } from "./quick-cooling";
+import { byPlainName, KindName, usePlainName } from "./kind-name";
 import { useDirectory } from "./use-directory";
 import "./directory.css";
 
@@ -91,6 +92,7 @@ function RunByFilter({ filters, toggle }: { filters: FilterState; toggle: (key: 
 
 export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   const t = useTranslations();
+  const plainName = usePlainName();
   const directory = useDirectory(lang);
   const [applied, setApplied] = useState<FilterState>(() => readFilters(tabStorage()));
   // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the page opened, if it names one place.
@@ -160,11 +162,11 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
         return <ResidentText>{t(`categories.${key.id}`)}</ResidentText>;
       case "category": {
         const name = categories.get(key.id);
-        return name ? <ListingBlock text={name} as="span" /> : key.id;
+        return name ? <KindName group="catPlain" text={name} /> : key.id;
       }
       case "subcategory": {
         const name = subcategoryNames.get(key.id);
-        return name ? <ListingBlock text={name} as="span" /> : key.id;
+        return name ? <KindName group="subcats" text={name} /> : key.id;
       }
       case "neighbourhood":
         return <Isolated>{neighbourhoodName(key.id)}</Isolated>;
@@ -180,9 +182,9 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
       case "topic":
         return t(`categories.${key.id}`);
       case "category":
-        return categories.get(key.id)?.body ?? key.id;
+        return (categories.get(key.id) ? plainName("catPlain", categories.get(key.id)!) ?? categories.get(key.id)!.body : key.id);
       case "subcategory":
-        return subcategoryNames.get(key.id)?.body ?? key.id;
+        return (subcategoryNames.get(key.id) ? plainName("subcats", subcategoryNames.get(key.id)!) ?? subcategoryNames.get(key.id)!.body : key.id);
       case "neighbourhood":
         return neighbourhoodName(key.id);
       case "runBy":
@@ -287,7 +289,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                               checked={isActive(filters, { kind: "category", id: category.id })}
                               onChange={(on) => toggle({ kind: "category", id: category.id }, on)}
                             >
-                              <ListingBlock text={category.name} as="span" />
+                              <KindName group="catPlain" text={category.name} />
                             </FilterOption>
                           ))}
                         </Stack>
@@ -298,14 +300,14 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                             {t("R14.subLabel")}
                           </ResidentText>
                           <Stack gap="label">
-                            {kinds.map((kind) => (
+                            {byPlainName(kinds, plainName, languageOf(lang).bcp47).map((kind) => (
                               <FilterOption
                                 key={kind.id}
                                 id={`subcategory-${kind.id}`}
                                 checked={isActive(filters, { kind: "subcategory", id: kind.id })}
                                 onChange={(on) => toggle({ kind: "subcategory", id: kind.id }, on)}
                               >
-                                <ListingBlock text={kind.name} as="span" />
+                                <KindName group="subcats" text={kind.name} />
                               </FilterOption>
                             ))}
                           </Stack>
@@ -325,9 +327,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                       </fieldset>
                       {/* Only for a release that says who runs its providers (one published before provider-run-by.json has none). */}
                       {listing?.providers.some((provider) => provider.run_by !== null) && <RunByFilter filters={filters} toggle={toggle} />}
-                      <FilterOption id="emergency" checked={filters.emergency} onChange={(on) => toggle({ kind: "emergency" }, on)}>
-                        <ResidentText>{t("directory.emergency")}</ResidentText>
-                      </FilterOption>
+                      {/* "Helps in an emergency" is no longer offered as a filter (resident testing, session 2, #8: it read as a category). Each
+                          card still says when a place helps in an emergency, and a filter kept from before shows in the bar until removed. */}
                       <div className="dir-actions">
                         <button type="button" className="dir-btn dir-btn--primary tap" onClick={closePanel} data-testid="filters-apply">
                           <ResidentText>{applyLabel}</ResidentText>

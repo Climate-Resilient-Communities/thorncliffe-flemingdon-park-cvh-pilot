@@ -1569,4 +1569,8 @@
   m(t, {"directory": {"quickCooling": "عامه سړې ځایونه", "quickCoolingLine": "په ګرمۍ کې د ټولو لپاره خلاص."}, "map": {"coolingRoomResidents": "سړه کوټه لري (یوازې د خپلو اوسېدونکو لپاره)"}});
   /* Resident testing, session 2 (2026-11-18, #17): on an alert, when to call 911 (the guide's reviewed line), then the guide, then places that can help. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R07": {"when911": "کله 911 ته زنګ ووهئ", "helpNearby": "هغه ځایونه چې مرسته کولی شي"}});
+  /* Resident testing, session 2 (2026-11-18, #10): plain, problem-oriented names for the catalogue's eight categories, shown to residents; the catalogue's own names (which search reads) are unchanged. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"catPlain": {"Support & Emergency Services": "بیړنۍ مرسته او سرپناه", "Faith-Based Organizations": "د عبادت ځایونه", "Legal & Government Services": "حقوقي مرسته او پېژند اسناد", "Schools & Child Services": "ښوونځي او د ماشومانو پاملرنه", "Health & Wellness": "روغتیايي پاملرنه", "Public Spaces": "د تګ ځایونه", "Community Resilience": "اوبه، تشنابونه او سړې ځایونه", "Non-Profits": "ټولنیز سازمانونه"}});
+  /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"signup": {"error": {"human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."}}, "places": {"errors": {"human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."}}}});
 })();

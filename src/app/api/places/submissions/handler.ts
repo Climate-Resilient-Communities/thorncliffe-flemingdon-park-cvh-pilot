@@ -4,6 +4,7 @@
 // POST:
 //  1. the body is read (at most PLACE_SUBMISSION_MAX_BODY_CHARS) and checked by the contract: 400 `invalid_request`, nothing stored;
 //  2. the client is counted (5 an hour, a keyed hash of its address, AD-22): 429 `rate_limited` with a Retry-After, nothing stored;
+//  2b. session 2 (#12): while the human check is on, a token that is missing or not valid is refused (400 `human_check_failed`);
 //  3. a body whose honeypot is filled in is answered 202 like any other, with a code that is stored nowhere: the script learns nothing;
 //  4. otherwise the suggestion is stored and answered 202 `{v, status: "received", ref}`.
 // GET: the code is read in its one written form (404 for anything that cannot be a code), the client counted (30 an hour), and the stored
@@ -22,6 +23,7 @@ import {
   type PlaceSubmissionStatus,
 } from "@/contracts/placeSubmission";
 import type { RateLimiter, RateLimitRule } from "@/modules/subscriptions";
+import type { HumanCheckOutcome } from "@/platform/humanCheck";
 import { classifyError } from "@/platform/safeError";
 
 export interface PlaceSubmissionRouteDeps {
@@ -33,6 +35,8 @@ export interface PlaceSubmissionRouteDeps {
   /** The client's address, from the platform's headers; hashed by the limiter and never stored. */
   client: (headers: Headers) => string;
   rules: { submit: RateLimitRule; status: RateLimitRule };
+  /** Session 2 (#12): the human check of the form's token, as on sign-up. Absent or "off" while the check is off. */
+  humanCheck?: (token: string | undefined) => Promise<HumanCheckOutcome>;
 }
 
 const HEADERS = { "Cache-Control": "no-store", "Content-Type": "application/json" } as const;
@@ -66,6 +70,9 @@ export async function submitResponse(deps: PlaceSubmissionRouteDeps, request: Re
   if (!checked.ok) return refused(checked.code);
   const stop = await limited(deps, deps.rules.submit, request, "place_submission");
   if (stop) return stop;
+  const human = deps.humanCheck ? await deps.humanCheck(checked.humanToken) : "off";
+  if (human === "failed") return refused("human_check_failed");
+  if (human === "unavailable") console.warn("place_submission.human_check_unavailable");
 
   let ref: string;
   try {

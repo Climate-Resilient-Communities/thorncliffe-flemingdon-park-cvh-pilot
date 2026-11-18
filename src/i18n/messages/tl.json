@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "Hindi namin masuri na isang tao ang nagpapadala nito. Maghintay ng ilang segundo, saka ipadala muli."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "Hindi magagamit ngayon ang pag-sign up para sa text. Subukan ulit mamaya.",
       "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit.",
       "checkin_consent_missing": "Para humiling ng pangungumusta, lagyan ng tsek ang kahon para pumayag.",
-      "signups_paused": "Nakahinto ang pag-sign up habang nagtatapos ang pilot."
+      "signups_paused": "Nakahinto ang pag-sign up habang nagtatapos ang pilot.",
+      "human_check_failed": "Hindi namin masuri na isang tao ang nagpapadala nito. Maghintay ng ilang segundo, saka ipadala muli."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "May bahagi ng form na hindi mabasa. Suriin ito at ipadala ulit.",
       "rate_limited": "Masyadong maraming mungkahi mula sa koneksyong ito. Subukan ulit pagkalipas ng isang oras.",
       "not_found": "Suriin ang mga titik at numero, saka subukan ulit.",
-      "submissions_unavailable": "Hindi ito naipadala. Suriin ang iyong signal at subukan ulit."
+      "submissions_unavailable": "Hindi ito naipadala. Suriin ang iyong signal at subukan ulit.",
+      "human_check_failed": "Hindi namin masuri na isang tao ang nagpapadala nito. Maghintay ng ilang segundo, saka ipadala muli."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Tulong pang-emergency at tirahan",
+    "Faith-Based Organizations": "Mga lugar ng pagsamba",
+    "Legal & Government Services": "Tulong legal at mga ID",
+    "Schools & Child Services": "Mga paaralan at pag-aalaga ng bata",
+    "Health & Wellness": "Pangangalagang pangkalusugan",
+    "Public Spaces": "Mga lugar na mapupuntahan",
+    "Community Resilience": "Tubig, banyo at malamig na lugar",
+    "Non-Profits": "Mga organisasyon ng komunidad"
   }
 }

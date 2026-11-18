@@ -109,6 +109,9 @@ export type SendOutcome = { kind: "sent"; ref: string } | { kind: "refused"; cod
 
 const isErrorCode = (value: unknown): value is PlaceSubmissionErrorCode => typeof value === "string" && (PLACE_SUBMISSION_ERROR_CODES as readonly string[]).includes(value);
 
+/** Session 2 (#12): the body with the human check's token, when there is one (the check is on and the widget gave one). */
+export const withHumanToken = (body: PlaceSubmissionRequestBody, token: string | null): PlaceSubmissionRequestBody => (token ? { ...body, human_token: token } : body);
+
 /** Sends a suggestion. A failure without the server's answer (no signal) reads as `submissions_unavailable`: "check your signal". */
 export async function sendSuggestion(body: PlaceSubmissionRequestBody, fetcher: typeof fetch = fetch): Promise<SendOutcome> {
   try {

@@ -1,5 +1,6 @@
 import { clientAddress } from "@/app/clientAddress";
 import { signupService, startSending } from "../../signup";
+import { checkHuman, readHumanCheckConfig } from "@/platform/humanCheck";
 import { signupResponse } from "./handler";
 
 // A sign-up carries a phone number and places (AD-3's exception): answered per request, never cached, no cookie.
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export function POST(request: Request) {
-  return signupResponse({ signup: signupService, client: clientAddress, afterAccepted: startSending }, request);
+  const humanCheck = (token: string | undefined) => checkHuman(readHumanCheckConfig(), token);
+  return signupResponse({ signup: signupService, client: clientAddress, afterAccepted: startSending, humanCheck }, request);
 }
 
 export function GET() {

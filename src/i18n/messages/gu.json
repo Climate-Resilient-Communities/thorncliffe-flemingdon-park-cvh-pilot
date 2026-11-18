@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "ટેક્સ્ટ માટે સાઇન અપ હમણાં ઉપલબ્ધ નથી. પછીથી ફરી પ્રયત્ન કરો.",
       "network": "અમે CVH સુધી પહોંચી શક્યા નહીં. તમારું કનેક્શન તપાસો અને ફરી પ્રયત્ન કરો.",
       "checkin_consent_missing": "ખબર પૂછવાની વિનંતી માટે, સંમતિનું ખાનું ટિક કરો.",
-      "signups_paused": "પાયલટ પૂરો થાય ત્યાં સુધી સાઇન અપ બંધ છે."
+      "signups_paused": "પાયલટ પૂરો થાય ત્યાં સુધી સાઇન અપ બંધ છે.",
+      "human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "ફોર્મનો કોઈ ભાગ વાંચી શકાયો નથી. તેને તપાસીને ફરી મોકલો.",
       "rate_limited": "આ કનેક્શનથી ઘણાં બધાં સૂચનો આવ્યાં છે. એક કલાક પછી ફરી પ્રયાસ કરો.",
       "not_found": "અક્ષરો અને આંકડા તપાસો, પછી ફરી પ્રયાસ કરો.",
-      "submissions_unavailable": "આ મોકલાયું નથી. તમારું સિગ્નલ તપાસો અને ફરી પ્રયાસ કરો."
+      "submissions_unavailable": "આ મોકલાયું નથી. તમારું સિગ્નલ તપાસો અને ફરી પ્રયાસ કરો.",
+      "human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "કટોકટી મદદ અને આશ્રય",
+    "Faith-Based Organizations": "પૂજા સ્થળો",
+    "Legal & Government Services": "કાયદાકીય મદદ અને ઓળખ દસ્તાવેજો",
+    "Schools & Child Services": "શાળાઓ અને બાળ સંભાળ",
+    "Health & Wellness": "આરોગ્ય સંભાળ",
+    "Public Spaces": "જવાની જગ્યાઓ",
+    "Community Resilience": "પાણી, શૌચાલય અને ઠંડી જગ્યાઓ",
+    "Non-Profits": "સમુદાય સંસ્થાઓ"
   }
 }

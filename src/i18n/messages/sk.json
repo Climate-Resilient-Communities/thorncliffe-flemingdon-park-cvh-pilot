@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "Prihlásenie na SMS teraz nie je k dispozícii. Skúste to znova neskôr.",
       "network": "Nepodarilo sa spojiť s CVH. Skontrolujte pripojenie a skúste to znova.",
       "checkin_consent_missing": "Ak chcete požiadať o kontrolu, zaškrtnite súhlas.",
-      "signups_paused": "Prihlasovanie je do konca pilotu pozastavené."
+      "signups_paused": "Prihlasovanie je do konca pilotu pozastavené.",
+      "human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "Časť formulára sa nedala prečítať. Skontrolujte ho a pošlite znova.",
       "rate_limited": "Z tohto pripojenia prišlo priveľa návrhov. Skúste to znova o hodinu.",
       "not_found": "Skontrolujte písmená a čísla a skúste to znova.",
-      "submissions_unavailable": "Neodoslalo sa to. Skontrolujte signál a skúste to znova."
+      "submissions_unavailable": "Neodoslalo sa to. Skontrolujte signál a skúste to znova.",
+      "human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Núdzová pomoc a prístrešie",
+    "Faith-Based Organizations": "Miesta bohoslužieb",
+    "Legal & Government Services": "Právna pomoc a doklady",
+    "Schools & Child Services": "Školy a starostlivosť o deti",
+    "Health & Wellness": "Zdravotná starostlivosť",
+    "Public Spaces": "Miesta, kam ísť",
+    "Community Resilience": "Voda, toalety a chladné miesta",
+    "Non-Profits": "Komunitné organizácie"
   }
 }

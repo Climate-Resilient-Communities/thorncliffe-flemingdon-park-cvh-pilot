@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "এটি একজন মানুষ পাঠাচ্ছেন কিনা আমরা যাচাই করতে পারিনি। কয়েক সেকেন্ড অপেক্ষা করুন, তারপর আবার পাঠান।"
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "টেক্সটের জন্য সাইন আপ এখন পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।",
       "network": "আমরা CVH-এর সাথে যোগাযোগ করতে পারিনি। আপনার সংযোগ দেখে আবার চেষ্টা করুন।",
       "checkin_consent_missing": "খোঁজখবর নেওয়ার অনুরোধ করতে, সম্মতির বাক্সে টিক দিন।",
-      "signups_paused": "পাইলট শেষ না হওয়া পর্যন্ত সাইন আপ বন্ধ।"
+      "signups_paused": "পাইলট শেষ না হওয়া পর্যন্ত সাইন আপ বন্ধ।",
+      "human_check_failed": "এটি একজন মানুষ পাঠাচ্ছেন কিনা আমরা যাচাই করতে পারিনি। কয়েক সেকেন্ড অপেক্ষা করুন, তারপর আবার পাঠান।"
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "ফর্মের কিছু অংশ পড়া যায়নি। দেখে নিয়ে আবার পাঠান।",
       "rate_limited": "এই সংযোগ থেকে অনেক বেশি প্রস্তাব এসেছে। এক ঘণ্টা পরে আবার চেষ্টা করুন।",
       "not_found": "অক্ষর ও সংখ্যাগুলো দেখে আবার চেষ্টা করুন।",
-      "submissions_unavailable": "এটি পাঠানো হয়নি। আপনার সিগন্যাল দেখে আবার চেষ্টা করুন।"
+      "submissions_unavailable": "এটি পাঠানো হয়নি। আপনার সিগন্যাল দেখে আবার চেষ্টা করুন।",
+      "human_check_failed": "এটি একজন মানুষ পাঠাচ্ছেন কিনা আমরা যাচাই করতে পারিনি। কয়েক সেকেন্ড অপেক্ষা করুন, তারপর আবার পাঠান।"
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "জরুরি সাহায্য ও আশ্রয়",
+    "Faith-Based Organizations": "উপাসনার স্থান",
+    "Legal & Government Services": "আইনি সাহায্য ও পরিচয়পত্র",
+    "Schools & Child Services": "স্কুল ও শিশুর যত্ন",
+    "Health & Wellness": "স্বাস্থ্যসেবা",
+    "Public Spaces": "যাওয়ার জায়গা",
+    "Community Resilience": "পানি, শৌচাগার ও ঠান্ডা জায়গা",
+    "Non-Profits": "কমিউনিটি সংগঠন"
   }
 }

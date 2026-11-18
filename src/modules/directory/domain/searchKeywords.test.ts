@@ -55,6 +55,26 @@ describe("keywordTokens", () => {
     }
   });
 
+  it("adds the rent-help concept for rent the resident cannot pay or needs help with, and the listings' rent bank (session 2, #3)", () => {
+    const concept = "concept:rent-help";
+    for (const text of [
+      "need help with rent",
+      "I need help paying rent",
+      "I can't pay my rent this month",
+      "cant pay rent this month is there any help",
+      "I am behind on rent",
+      "my rent is due and I have no money",
+      "rent bank",
+      "rental assistance",
+      "housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance)",
+    ]) {
+      expect(keywordTokens(text), text).toContain(concept);
+    }
+    for (const text of ["apartments for rent", "rent a hall for a party", "parent council", "the current rate", "where can I get food"]) {
+      expect(keywordTokens(text), text).not.toContain(concept);
+    }
+  });
+
   it("adds the mental-health concept for a breakdown, depression or someone to talk to, and the listings' counselling, not occupational therapy (UAT 2026-11-04)", () => {
     const concept = "concept:mental-health";
     for (const text of [

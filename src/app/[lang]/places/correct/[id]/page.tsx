@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { humanCheckSiteKey } from "@/platform/humanCheck";
 import { ListingProviderSchema } from "@/contracts/directory";
 import { FALLBACK_MARKER } from "@/ui";
 import { isLaunchCode } from "@/i18n/languages";
@@ -26,7 +27,7 @@ export default async function CorrectPlacePage({ params }: PageProps<"/[lang]/pl
   setRequestLocale(lang);
   return (
     <PlacesFrame lang={lang}>
-      <CorrectPlace lang={lang} id={id} rules={await rulesIn(lang)} />
+      <CorrectPlace lang={lang} id={id} rules={await rulesIn(lang)} humanCheckSiteKey={humanCheckSiteKey()} />
     </PlacesFrame>
   );
 }

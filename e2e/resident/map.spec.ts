@@ -49,9 +49,9 @@ test.describe("the map (R-14)", () => {
 
   test("published providers and the buildings appear as clustered pins; cooling spaces, water fountains and washrooms have their own marker and words", async ({ page }) => {
     await openMap(page);
-    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling .map-pin__word")).toHaveText("Cooling Spaces");
-    await expect(page.locator(".leaflet-marker-icon.map-pin--water .map-pin__word")).toHaveText("Water Fountains");
-    await expect(page.locator(".leaflet-marker-icon.map-pin--washroom .map-pin__word")).toHaveText("Public Washrooms");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling .map-pin__word")).toHaveText("Cooling spaces");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--water .map-pin__word")).toHaveText("Drinking water");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--washroom .map-pin__word")).toHaveText("Public washrooms");
     await expect(page.locator(".leaflet-marker-icon.map-pin--building")).toHaveCount(MAP_BUILDINGS.length);
     // Two providers at one spot are one cluster, which says how many places are there.
     const cluster = page.locator(".map-cluster");
@@ -98,7 +98,7 @@ test.describe("the map (R-14)", () => {
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByTestId("map-credit")).toHaveText(CREDIT);
     await expect(page.getByTestId("map-credit")).toHaveAttribute("lang", "en");
-    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling .map-pin__word")).toHaveText("ٹھنڈک کی جگہیں");
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling .map-pin__word")).toHaveText("ٹھنڈی جگہیں");
     await expectBaseline(page, "map-ur-390.png");
   });
 
@@ -108,7 +108,7 @@ test.describe("the map (R-14)", () => {
     const card = page.getByTestId("map-preview");
     await expect(card).toBeVisible();
     await expect(card.getByRole("heading", { name: "Overlea Cooling Centre" })).toBeVisible();
-    await expect(page.getByTestId("map-preview-kind")).toHaveText("Cooling Spaces");
+    await expect(page.getByTestId("map-preview-kind")).toHaveText("Cooling spaces");
     await expect(card).toBeFocused();
     await page.getByTestId("map-preview-open").click();
     await expect(page).toHaveURL(/\/en\/directory\/M101$/);
@@ -206,7 +206,7 @@ test.describe("the map (R-14)", () => {
     // The directory opens narrowed by the same filter, shown among its applied filters.
     await page.goto("/en/directory");
     await expect(page.getByTestId("directory-list")).toBeVisible();
-    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("Cooling Spaces");
+    await expect(page.getByTestId("chip-subcategory:cooling spaces")).toContainText("Cooling spaces");
     await expect(page.locator("[data-testid=directory-list] > li")).toHaveCount(1);
 
     // Clear all in the directory: the map is whole again.

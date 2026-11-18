@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "Δεν μπορέσαμε να ελέγξουμε ότι αυτό το στέλνει άνθρωπος. Περιμένετε λίγα δευτερόλεπτα και στείλτε ξανά."
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "Η εγγραφή για μηνύματα δεν είναι διαθέσιμη αυτή τη στιγμή. Δοκιμάστε ξανά αργότερα.",
       "network": "Δεν μπορέσαμε να συνδεθούμε με το CVH. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
       "checkin_consent_missing": "Για να ζητήσετε να δουν αν είστε καλά, τσεκάρετε το κουτί συμφωνίας.",
-      "signups_paused": "Οι εγγραφές έχουν ανασταλεί έως τη λήξη του πιλοτικού."
+      "signups_paused": "Οι εγγραφές έχουν ανασταλεί έως τη λήξη του πιλοτικού.",
+      "human_check_failed": "Δεν μπορέσαμε να ελέγξουμε ότι αυτό το στέλνει άνθρωπος. Περιμένετε λίγα δευτερόλεπτα και στείλτε ξανά."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "Κάτι στη φόρμα δεν διαβάστηκε. Ελέγξτε την και στείλτε την ξανά.",
       "rate_limited": "Πάρα πολλές προτάσεις από αυτή τη σύνδεση. Δοκιμάστε ξανά σε μία ώρα.",
       "not_found": "Ελέγξτε τα γράμματα και τους αριθμούς και δοκιμάστε ξανά.",
-      "submissions_unavailable": "Δεν στάλθηκε. Ελέγξτε το σήμα σας και δοκιμάστε ξανά."
+      "submissions_unavailable": "Δεν στάλθηκε. Ελέγξτε το σήμα σας και δοκιμάστε ξανά.",
+      "human_check_failed": "Δεν μπορέσαμε να ελέγξουμε ότι αυτό το στέλνει άνθρωπος. Περιμένετε λίγα δευτερόλεπτα και στείλτε ξανά."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Βοήθεια έκτακτης ανάγκης και στέγη",
+    "Faith-Based Organizations": "Χώροι λατρείας",
+    "Legal & Government Services": "Νομική βοήθεια και έγγραφα ταυτότητας",
+    "Schools & Child Services": "Σχολεία και φροντίδα παιδιών",
+    "Health & Wellness": "Υγειονομική περίθαλψη",
+    "Public Spaces": "Μέρη για να πάτε",
+    "Community Resilience": "Νερό, τουαλέτες και δροσερά μέρη",
+    "Non-Profits": "Κοινοτικοί οργανισμοί"
   }
 }

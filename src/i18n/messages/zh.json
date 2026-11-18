@@ -5832,7 +5832,8 @@
         "signup_unavailable": "[EN] Text sign-up is not available just now. Try again later.",
         "failed": "[EN] The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "[EN] Nothing was sent.",
-        "signups_paused": "[EN] Sign-ups are paused while the pilot ends."
+        "signups_paused": "[EN] Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"
       },
       "title": "[EN] Sign up a resident for texts",
       "lead": "[EN] For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "短信登记暂时无法使用。请稍后再试。",
       "network": "无法连接到 CVH。请检查网络连接后再试。",
       "checkin_consent_missing": "如需申请探望，请勾选同意框。",
-      "signups_paused": "试点结束期间，登记已暂停。"
+      "signups_paused": "试点结束期间，登记已暂停。",
+      "human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "表格中有内容无法读取。请检查后重新发送。",
       "rate_limited": "这个网络连接发送的建议太多了。请一小时后再试。",
       "not_found": "请检查字母和数字，然后再试一次。",
-      "submissions_unavailable": "没有发送成功。请检查信号后再试。"
+      "submissions_unavailable": "没有发送成功。请检查信号后再试。",
+      "human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "紧急帮助与庇护所",
+    "Faith-Based Organizations": "宗教场所",
+    "Legal & Government Services": "法律帮助与身份证件",
+    "Schools & Child Services": "学校与儿童照顾",
+    "Health & Wellness": "医疗保健",
+    "Public Spaces": "可以去的地方",
+    "Community Resilience": "饮水、洗手间与纳凉处",
+    "Non-Profits": "社区组织"
   }
 }

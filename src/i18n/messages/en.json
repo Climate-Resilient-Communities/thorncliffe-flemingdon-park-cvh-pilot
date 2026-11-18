@@ -5832,7 +5832,8 @@
         "signup_unavailable": "Text sign-up is not available just now. Try again later.",
         "failed": "The sign-up was not started. Try again. If it fails again, tell IT.",
         "nothingChanged": "Nothing was sent.",
-        "signups_paused": "Sign-ups are paused while the pilot ends."
+        "signups_paused": "Sign-ups are paused while the pilot ends.",
+        "human_check_failed": "We could not check that a person is sending this. Wait a few seconds, then send again."
       },
       "title": "Sign up a resident for texts",
       "lead": "For a resident without the app, at an event or the Hub desk. You start the sign-up. The resident gets one text and replies YES from their own phone to start getting alerts.",
@@ -6583,7 +6584,8 @@
       "signup_unavailable": "Text sign-up is not available just now. Try again later.",
       "network": "We could not reach the CVH. Check your connection and try again.",
       "checkin_consent_missing": "To ask for a check-in, tick the box to agree.",
-      "signups_paused": "Sign-ups are paused while the pilot ends."
+      "signups_paused": "Sign-ups are paused while the pilot ends.",
+      "human_check_failed": "We could not check that a person is sending this. Wait a few seconds, then send again."
     }
   },
   "smsTexts": {
@@ -6733,7 +6735,18 @@
       "invalid_request": "Something in the form could not be read. Check it and send again.",
       "rate_limited": "Too many suggestions from this connection. Try again in an hour.",
       "not_found": "Check the letters and numbers, then try again.",
-      "submissions_unavailable": "This was not sent. Check your signal and try again."
+      "submissions_unavailable": "This was not sent. Check your signal and try again.",
+      "human_check_failed": "We could not check that a person is sending this. Wait a few seconds, then send again."
     }
+  },
+  "catPlain": {
+    "Support & Emergency Services": "Emergency help and shelter",
+    "Faith-Based Organizations": "Places of worship",
+    "Legal & Government Services": "Legal help and ID documents",
+    "Schools & Child Services": "Schools and child care",
+    "Health & Wellness": "Health care",
+    "Public Spaces": "Places to go",
+    "Community Resilience": "Water, washrooms and cool places",
+    "Non-Profits": "Community organizations"
   }
 }
