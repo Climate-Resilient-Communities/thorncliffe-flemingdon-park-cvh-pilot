@@ -66,11 +66,14 @@ describe("keywordTokens", () => {
       "my rent is due and I have no money",
       "rent bank",
       "rental assistance",
+      "I need help to pay house rent",
+      "I can't pay the house rent this month",
+      "the apartment rent is overdue",
       "housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance)",
     ]) {
       expect(keywordTokens(text), text).toContain(concept);
     }
-    for (const text of ["apartments for rent", "rent a hall for a party", "parent council", "the current rate", "where can I get food"]) {
+    for (const text of ["apartments for rent", "rent a hall for a party", "a house for rent", "help with the bus fare", "parent council", "the current rate", "where can I get food"]) {
       expect(keywordTokens(text), text).not.toContain(concept);
     }
   });
