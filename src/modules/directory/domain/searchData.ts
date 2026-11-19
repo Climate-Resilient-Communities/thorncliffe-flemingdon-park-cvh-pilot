@@ -72,7 +72,7 @@ export function scrubContactDetails(text: string): string {
 }
 
 /** The English text of one provider that search matches a question against. */
-export function searchTextOf(provider: SnapshotProvider, categoryNames: readonly string[]): string {
+export function searchTextOf(provider: SnapshotProvider, categoryNames: readonly string[], helpsWith?: readonly string[] | null): string {
   const lines = [provider.name];
   if (categoryNames.length > 0) lines.push(`Categories: ${categoryNames.join(", ")}`);
   const subcategories = provider.subcategories.map((s) => s.name).filter(present);
@@ -81,7 +81,14 @@ export function searchTextOf(provider: SnapshotProvider, categoryNames: readonly
   if (present(services) && scrubContactDetails(services) !== "") lines.push(`Services: ${scrubContactDetails(services)}`);
   const role = provider.texts.emergency_role?.en;
   if (present(role) && scrubContactDetails(role) !== "") lines.push(`Emergency role: ${scrubContactDetails(role)}`);
+  pushHelpsWith(lines, helpsWith);
   return lines.join("\n");
+}
+
+/** Session 2, #3: what the provider helps with, in a resident's words, as the last line; none when the list does not name it. */
+function pushHelpsWith(lines: string[], helpsWith: readonly string[] | null | undefined): void {
+  const said = (helpsWith ?? []).map((line) => scrubContactDetails(line)).filter((line) => line !== "");
+  if (said.length > 0) lines.push(`Helps with: ${said.join("; ")}`);
 }
 
 /** The part of a release's English listing that a provider's search text is made from (DirectoryListingV1, structurally). */
@@ -94,6 +101,8 @@ export interface ListingForSearchText {
     subcategories: readonly { body: string }[];
     services: { body: string };
     emergency_role: { body: string } | null;
+    /** Session 2, #3; absent or null in a release written before it. */
+    helps_with?: readonly string[] | null;
   }[];
 }
 
@@ -120,13 +129,19 @@ export function searchTextsOfListing(listing: ListingForSearchText): Map<string,
     if (present(services) && scrubContactDetails(services) !== "") lines.push(`Services: ${scrubContactDetails(services)}`);
     const role = provider.emergency_role?.body;
     if (present(role) && scrubContactDetails(role) !== "") lines.push(`Emergency role: ${scrubContactDetails(role)}`);
+    pushHelpsWith(lines, provider.helps_with);
     texts.set(provider.id, lines.join("\n"));
   }
   return texts;
 }
 
 /** The search items of a snapshot, one per provider, in provider id order (the order of the vectors file). */
-export function searchItems(providers: readonly SnapshotProvider[], categories: readonly SnapshotCategory[], hash: Hasher): SearchItem[] {
+export function searchItems(
+  providers: readonly SnapshotProvider[],
+  categories: readonly SnapshotCategory[],
+  hash: Hasher,
+  helpsWith?: Readonly<Record<string, readonly string[]>>,
+): SearchItem[] {
   const order = new Map(categories.map((c) => [c.id, c] as const));
   return [...providers]
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -137,7 +152,7 @@ export function searchItems(providers: readonly SnapshotProvider[], categories: 
         .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
         .map((c) => c.labels.en)
         .filter(present);
-      const text = searchTextOf(provider, names);
+      const text = searchTextOf(provider, names, helpsWith?.[provider.id]);
       return { id: provider.id, text, textHash: hash(text) };
     });
 }

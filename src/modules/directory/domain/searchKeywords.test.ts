@@ -229,6 +229,7 @@ describe("keywordDocumentsOf (the release's English listing)", () => {
           category_ids: ["c1"],
           neighbourhood_ids: [],
           run_by: null,
+          helps_with: null,
           subcategories: [text("Food Collaboratives")],
           locations: [{ street: "10 Gateway Blvd", city: "Toronto", postal: null, lat: 0, lng: 0 }],
           contact: { phone: ["416-555-0100"], email: [], social: [], web: [] },
@@ -240,5 +241,8 @@ describe("keywordDocumentsOf (the release's English listing)", () => {
     };
 
     expect(keywordDocumentsOf(listing)).toEqual([{ id: "M008", text: "Flemingdon Food Bank Non-Profits Food Collaboratives Free groceries." }]);
+    // Session 2, #3: what the provider helps with, in a resident's words, is read too.
+    const withLines = { ...listing, providers: [{ ...listing.providers[0]!, helps_with: ["can't afford groceries"] }] };
+    expect(keywordDocumentsOf(withLines)).toEqual([{ id: "M008", text: "Flemingdon Food Bank Non-Profits Food Collaboratives Free groceries. can't afford groceries" }]);
   });
 });

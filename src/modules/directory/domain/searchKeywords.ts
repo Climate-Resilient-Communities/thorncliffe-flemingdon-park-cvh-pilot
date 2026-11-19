@@ -243,7 +243,15 @@ export function buildKeywordIndex(docs: readonly KeywordDocument[]): KeywordInde
 /** The part of a release's English listing that the keyword match reads (DirectoryListingV1, structurally). */
 export interface ListingForKeywords {
   categories: readonly { id: string; name: { body: string } }[];
-  providers: readonly { id: string; name: string; category_ids: readonly string[]; subcategories: readonly { body: string }[]; services: { body: string } }[];
+  providers: readonly {
+    id: string;
+    name: string;
+    category_ids: readonly string[];
+    subcategories: readonly { body: string }[];
+    services: { body: string };
+    /** Session 2, #3: what it helps with, in a resident's words; absent or null in an older release. */
+    helps_with?: readonly string[] | null;
+  }[];
 }
 
 /**
@@ -255,7 +263,7 @@ export function keywordDocumentsOf(listing: ListingForKeywords): KeywordDocument
   const categoryNames = new Map(listing.categories.map((c) => [c.id, c.name.body]));
   return listing.providers.map((p) => ({
     id: p.id,
-    text: [p.name, ...p.category_ids.map((id) => categoryNames.get(id) ?? ""), ...p.subcategories.map((s) => s.body), p.services.body].join(" "),
+    text: [p.name, ...p.category_ids.map((id) => categoryNames.get(id) ?? ""), ...p.subcategories.map((s) => s.body), p.services.body, ...(p.helps_with ?? [])].join(" "),
   }));
 }
 

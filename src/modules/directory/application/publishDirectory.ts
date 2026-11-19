@@ -149,6 +149,11 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
         throw new PublishStepError("catalogue_unreadable", false);
       })
     : null;
+  const problems = deps.problems
+    ? await deps.problems().catch(() => {
+        throw new PublishStepError("catalogue_unreadable", false);
+      })
+    : null;
   const zhHant = await deps.zhHant();
   return db.transaction(async (tx): Promise<ClaimResult> => {
     await tx.execute(sql`select pg_advisory_xact_lock(${PUBLISH_LOCK_KEY})`);
@@ -206,6 +211,7 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
         categories,
         neighbourhoods: neighbourhoods.byProvider,
         ...(runBy ? { runBy: runBy.byProvider } : {}),
+        ...(problems ? { helpsWith: problems.byProvider } : {}),
         hash: sha256Hex,
         zhHant,
         pilotMachineTranslations: deps.pilotMachineTranslations === true,
@@ -222,7 +228,7 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
       staged[file.lang] = file.body;
     }
     // The search text of the same snapshot, staged beside the listings: the vectors can only describe these providers.
-    if (deps.search) staged.search = planSearch(deps.search, providers, categories);
+    if (deps.search) staged.search = planSearch(deps.search, providers, categories, problems?.byProvider);
     await tx.insert(directoryRelease).values({
       number: next,
       status: "building",

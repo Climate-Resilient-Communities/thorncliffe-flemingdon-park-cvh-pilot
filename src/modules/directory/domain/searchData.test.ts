@@ -318,4 +318,29 @@ describe("the search texts rebuilt from a release's English listing (the reranke
     expect(texts.get("M001")).toContain("Categories: Legal, Support & Emergency Services");
     expect(texts.get("M001")).not.toContain("416");
   });
+
+  it("adds what a provider helps with as its last line, the same from the snapshot as from the release's listing (session 2, #3)", () => {
+    const providers = [provider("M001", { categoryIds: ["c-health"] }), provider("M002", { categoryIds: ["c-health"] })];
+    const helpsWith = { M001: ["can't pay my rent this month", "call 416-555-0100 for rent help"] };
+    const listing = {
+      categories: categories.map((c) => ({ id: c.id, sort_order: c.sortOrder, name: { body: c.labels.en! } })),
+      providers: providers.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category_ids: p.categoryIds,
+        subcategories: p.subcategories.map((s) => ({ body: s.name })),
+        services: { body: p.texts.services!.en! },
+        emergency_role: p.texts.emergency_role?.en ? { body: p.texts.emergency_role.en } : null,
+        helps_with: p.id === "M001" ? helpsWith.M001 : null,
+      })),
+    };
+    const texts = searchTextsOfListing(listing);
+    const items = searchItems(providers, categories, sha256Hex, helpsWith);
+
+    for (const item of items) expect(texts.get(item.id)).toBe(item.text);
+    expect(texts.get("M001")!.split("\n").at(-1)).toMatch(/^Helps with: can't pay my rent this month; call .*for rent help$/);
+    expect(texts.get("M001")).not.toContain("416");
+    expect(texts.get("M002")).not.toContain("Helps with");
+    expect(items.find((i) => i.id === "M002")!.text).toBe(searchItems(providers, categories, sha256Hex).find((i) => i.id === "M002")!.text);
+  });
 });

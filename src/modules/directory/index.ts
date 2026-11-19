@@ -1,4 +1,4 @@
-export { readContentCatalogue, readProviderCatalogue, readProviderNeighbourhoods, readProviderRunBy } from "./adapters/catalogueFiles";
+export { readContentCatalogue, readProviderCatalogue, readProviderNeighbourhoods, readProviderProblems, readProviderRunBy } from "./adapters/catalogueFiles";
 export { parseProviderNeighbourhoods, type ProviderNeighbourhoods } from "./domain/providerNeighbourhoods";
 export {
   checkGuidesLaunch,

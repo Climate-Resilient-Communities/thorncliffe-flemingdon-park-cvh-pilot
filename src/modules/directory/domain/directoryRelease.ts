@@ -96,6 +96,8 @@ export interface ReleaseInput {
   neighbourhoods: Readonly<Record<string, readonly NeighbourhoodId[]>>;
   /** provider id -> who runs it (data/catalogue/provider-run-by.json, session 2). Absent, or a provider it does not name: `run_by` is null. */
   runBy?: Readonly<Record<string, RunBy>>;
+  /** provider id -> what it helps with (data/catalogue/provider-problems.json, session 2, #3). Absent, or a provider it does not name: null. */
+  helpsWith?: Readonly<Record<string, readonly string[]>>;
   hash: Hasher;
   zhHant: ZhHantConverter;
   /**
@@ -407,6 +409,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       category_ids: p.categoryIds,
       neighbourhood_ids: [...neighbourhoods],
       run_by: input.runBy?.[p.id] ?? null,
+      helps_with: input.helpsWith?.[p.id]?.length ? [...input.helpsWith[p.id]!] : null,
       subcategories: p.subcategories.map((s) =>
         listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: s.translations ?? null, ...pilot }, `subcategory:${s.name}`, s.name, "name", input, tally),
       ),

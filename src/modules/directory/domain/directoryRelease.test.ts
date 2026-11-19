@@ -114,6 +114,17 @@ describe("planRelease: the files of a release", () => {
     expect(files.en.providers.map((p) => p.run_by)).toEqual([null, null, null]);
   });
 
+  it("gives each provider what it helps with, in English in every language's file, and null where the list is absent or silent (session 2, #3)", () => {
+    const providers = [provider("M001"), provider("M002")];
+    const neighbourhoods = { M001: [], M002: [] } as const;
+    const result = planRelease({ number: 7, catalogueHash: HASH, providers, categories: CATEGORIES, neighbourhoods, helpsWith: { M001: ["need free food"], M002: [] }, hash: sha256Hex, zhHant });
+    for (const file of result.files) {
+      const written = JSON.parse(file.body) as { providers: Record<string, unknown>[] };
+      expect(written.providers.map((p) => [p.id, p.helps_with]), file.lang).toEqual([["M001", ["need free food"]], ["M002", null]]);
+    }
+    expect(plan(providers, CATEGORIES, 7, neighbourhoods).files.en.providers.map((p) => p.helps_with)).toEqual([null, null]);
+  });
+
   it("gives each provider the neighbourhoods of the Hub's list in every language's file, whatever its address is", () => {
     // M001 is at an M4H address and M002 at an M3C one, but the list decides: the address is never read for it.
     const providers = [provider("M001"), provider("M002", { locations: [{ street: "5 Gateway Blvd", city: "North York", postal: "M3C 1H9", lat: 43.71, lng: -79.33 }] }), provider("M003"), provider("M004")];
