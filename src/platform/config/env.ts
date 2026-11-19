@@ -113,9 +113,10 @@ import { parsePilotMachineTranslations } from "./pilotTranslations";
  * SEARCH_THRESHOLD     server   optional                 the score (0 to 1) below which a question has no clear match on the
  *                                                        ranking's hybrid route (English questions and those the translated
  *                                                        leg answered; the score is the similarity plus the keyword boost),
- *                                                        recorded on each release. PROVISIONAL default 0.27 (interim tuning,
- *                                                        2026-10-07, on a mostly machine-drafted test set; S03.08 confirms
- *                                                        it); changing it means publishing a new release, which copies the
+ *                                                        recorded on each release. PROVISIONAL default 0.3 (0.27 from the
+ *                                                        interim tuning of 2026-10-07; 0.3 since the providers' "helps with"
+ *                                                        lines raised every score, search test set runs 3 and 4 of 2026-11-19;
+ *                                                        S03.08 confirms it); changing it means publishing a new release, which copies the
  *                                                        existing vectors
  * SEARCH_KEYWORD_WEIGHT
  *                      server   optional                 the most (0 to 1) the keyword match (BM25 over the providers'
@@ -474,7 +475,7 @@ const LEG_BUDGET_MS = 2200;
 
 export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   embedModel: "embed-v4.0",
-  threshold: 0.27,
+  threshold: 0.3,
   emergencyThreshold: 0.25,
   emergencyTopThreshold: 0.14,
   keywordWeight: 0.15,
