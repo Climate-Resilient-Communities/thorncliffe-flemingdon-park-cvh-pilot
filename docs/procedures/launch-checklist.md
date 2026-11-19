@@ -38,15 +38,15 @@ Check with `select jobname, schedule, active from cron.job order by jobname;`.
 
 | Item | Done | By |
 | --- | --- | --- |
-| Advanced Opt-Out on | | |
-| Inbound webhook `PUBLIC_BASE_URL/api/twilio/inbound` (POST) | | |
-| **YES is not an opt-in (START) keyword**, tested on the verified number (a YES must reach the CVH and confirm a sign-up) | | |
-| Smart Encoding off | | |
-| Toll-free verification approved (until then every text fails with 30032) | | |
-| **No status callback URL** on the Messaging Service itself (the app sets the callback on each message) | | |
-| Geo permissions: **Canada only** | | |
-| SMS pumping protection **on** | | |
-| Sender pool: the verified toll-free number (`TWILIO_FROM_NUMBER`) only | | |
+| Advanced Opt-Out on | 2026-11-18 (it added YES as an opt-in keyword by default; removed: opt-in is START and UNSTOP only) | product owner |
+| Inbound webhook `PUBLIC_BASE_URL/api/twilio/inbound` (POST) | 2026-11-18 (was "Defer to sender's webhook") | product owner |
+| **YES is not an opt-in (START) keyword**, tested on the verified number (a YES must reach the CVH and confirm a sign-up) | 2026-11-18: a test sign-up's YES reached the CVH and was answered "You are signed up", delivered | product owner |
+| Smart Encoding off | 2026-11-18 (was on) | product owner |
+| Toll-free verification approved (until then every text fails with 30032) | Approved, last updated 2026-10-22 | product owner |
+| **No status callback URL** on the Messaging Service itself (the app sets the callback on each message) | 2026-11-18 (empty) | product owner |
+| Geo permissions: **Canada only** (Twilio ties the US to Canada, both +1: Canada with the US is accepted) | 2026-11-18: Canada and the US | product owner |
+| SMS pumping protection **on** (account-level Messaging setting) | 2026-11-18 (was off) | product owner |
+| Sender pool: the verified toll-free number (`TWILIO_FROM_NUMBER`) only | 2026-11-18. It was **empty** until then, so every text failed in Twilio with 21704 (the cause of resident testing's missing confirmation texts, session 2, #1) | product owner |
 | After the two lines above, `/api/jobs/messaging-config` run once (or `cvh-messaging-config` scheduled) and it reads both settings as set: the field names it reads are an unverified assumption ([config](../config.md)) | | |
 
 ## 4. The outside uptime monitor ([config: "The outside check"](../config.md))

@@ -4,7 +4,19 @@ Date: 2026-11-18. Source: the "Resident App Feedback" tab of "Functional Prototy
 
 ## #1 "Not receiving confirmation text after signing up for text alert"
 
-Diagnosed by reading the code and the Twilio notes only. **No text was sent.**
+**Confirmed cause and fix (2026-11-18, evening):** the Twilio Messaging Service "Resident Notifications", which every text goes through, had **no phone number in its sender pool**.
+- Twilio refused all four test texts (3 on 2026-11-10, 1 on 2026-11-16) about 0.17 seconds after they were created, with error **21704** ("The Messaging Service contains no phone numbers"). The "From" field was empty and none reached a carrier.
+- The toll-free verification itself was approved (2026-10-22), so 30032 was not the cause.
+- **Fix:** the approved toll-free number was added as the service's only sender. In the same change, done by the procedure (texts paused, then resumed):
+  - incoming messages were set to the app's webhook (they were "Defer to sender's webhook", so a YES would not have reached the app);
+  - Smart Encoding was turned off;
+  - Advanced Opt-Out was turned on, with YES removed from its default opt-in keywords;
+  - SMS pumping protection was turned on.
+- **Checked:** a test sign-up's YES reached the app, and the "You are signed up" reply was delivered within seconds.
+- **Geo permissions:** these stay at Canada and the US, because Twilio cannot allow one without the other (both are +1). The daily settings check now accepts that, and the procedure says so.
+- **Still to do:** the every-minute sending job (`cvh-dispatch`) is not scheduled yet; it waits for launch day (launch checklist). Until it is, a text that is not sent straight after a sign-up waits, and the Hub's "texts waiting" warning shows.
+
+The diagnosis below was made before that, by reading the code and the Twilio notes only. **No text was sent.** Cause 2 (shared phones) still holds as a design point.
 
 The app shows "Check your phone" for every accepted sign-up, by design: the answer is the same whether the number is new, already waiting for YES, or already subscribed, so that the page cannot be used to find out whether a number is signed up (AD-22). So "Check your phone" with no text does not mean a text was sent. There are four ways it can happen. The first two are the likely ones in a testing session:
 

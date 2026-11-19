@@ -228,8 +228,14 @@ describe("the Messaging Service's abuse protections (S07.09)", () => {
     await expect(failed.service.readBoth(SERVICE_SID)).resolves.toEqual({ encoding: { kind: "unreadable", reason: "http_404" }, settings: { kind: "unreadable", reason: "http_404" } });
   });
 
+  it("counts Canada with the United States as right: Twilio cannot allow Canada without the US, both being +1 (production console, 2026-11-18)", async () => {
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: ["CA", "US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: true, pumpingProtection: true });
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: ["us", " CA"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toMatchObject({ geoCanadaOnly: true });
+  });
+
   it("does not call geo permissions Canada-only when another country is allowed or none is listed, nor pumping protection on when it is off", async () => {
-    await expect(reader({ sms_pumping_protection: true, geo_permissions: ["CA", "US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: true });
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: ["CA", "US", "MX"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: true });
+    await expect(reader({ sms_pumping_protection: true, geo_permissions: ["CA", "GB"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toMatchObject({ geoCanadaOnly: false });
     await expect(reader({ sms_pumping_protection: false, geo_permissions: ["US"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "read", geoCanadaOnly: false, pumpingProtection: false });
     await expect(reader({ sms_pumping_protection: true, geo_permissions: [] }).service.readAbuseSettings(SERVICE_SID)).resolves.toMatchObject({ geoCanadaOnly: false });
   });

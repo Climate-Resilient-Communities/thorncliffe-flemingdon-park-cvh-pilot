@@ -190,6 +190,8 @@ export function twilioMessagingServiceReader(config: TwilioServiceConfig): Messa
    * may text). Anything that is not plainly one of those shapes is "could not tell", never "right"; the daily check treats "could not tell"
    * as a failing check (it alerts on-call), so a wrong guess about the API is loud, not a silent pass.
    */
+  const NORTH_AMERICAN_PLAN = new Set(["CA", "US"]);
+
   function parseAbuseSettings(service: Service): AbuseSettingsReading {
     if (service.kind === "unreadable") return service;
     const pumping = service.fields.sms_pumping_protection;
@@ -197,7 +199,10 @@ export function twilioMessagingServiceReader(config: TwilioServiceConfig): Messa
     if (typeof pumping !== "boolean") return { kind: "unreadable", reason: "pumping_setting_missing" };
     if (!Array.isArray(countries) || countries.some((code) => typeof code !== "string")) return { kind: "unreadable", reason: "geo_setting_missing" };
     const codes = new Set((countries as string[]).map((code) => code.trim().toUpperCase()));
-    return { kind: "read", geoCanadaOnly: codes.size === 1 && codes.has("CA"), pumpingProtection: pumping };
+    // Twilio's geo permissions tie Canada to the United States (both are +1): Canada cannot be allowed without the US (found in the production
+    // console, 2026-11-18). So Canada, alone or with the US, is "right"; any other country is not. The app itself never texts a US number: every
+    // number it stores must have a Canadian area code (src/contracts/canadianAreaCodes.ts).
+    return { kind: "read", geoCanadaOnly: codes.has("CA") && [...codes].every((code) => NORTH_AMERICAN_PLAN.has(code)), pumpingProtection: pumping };
   }
 
   return {

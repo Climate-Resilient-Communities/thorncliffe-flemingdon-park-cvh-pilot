@@ -8,7 +8,7 @@ Every text goes through one Twilio Messaging Service on the verified toll-free n
 ## Settings that must hold
 
 - **Smart Encoding: off** (it would change characters after approval).
-- **Geo permissions: Canada only**; **SMS pumping protection: on**.
+- **Geo permissions: Canada only.** Twilio ties the United States to Canada (both are +1): turning the US off turns Canada off too, so Canada with the US is the closest setting and the daily check accepts it. Nothing else may be allowed. The app never texts a US number: every stored number must have a Canadian area code. **SMS pumping protection: on** (an account-level Messaging setting, not on the service).
 - **Sender pool**: the verified toll-free number only.
 - **Advanced Opt-Out: on** (STOP, START and HELP are Twilio's); **YES is not an opt-in (START) keyword**.
 - **Integration, "Send a webhook"**: `PUBLIC_BASE_URL/api/twilio/inbound`, HTTP POST, exactly as written.

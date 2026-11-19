@@ -41,7 +41,7 @@ export type SmartEncodingReading = { kind: "read"; smartEncoding: boolean } | { 
 
 /**
  * The Messaging Service's two protections against abuse (S07.09, AD-22): `geoCanadaOnly` is true when the countries the service may text are
- * Canada and nothing else, `pumpingProtection` true when SMS pumping protection is on.
+ * Canada and nothing else, or Canada with the United States (Twilio cannot allow one without the other: both are +1), `pumpingProtection` true when SMS pumping protection is on.
  */
 export type AbuseSettingsReading = { kind: "read"; geoCanadaOnly: boolean; pumpingProtection: boolean } | { kind: "unreadable"; reason: string };
 
