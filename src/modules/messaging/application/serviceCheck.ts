@@ -4,7 +4,7 @@
 // procedures record. It reads the one setting and, when it is on, records `messaging.smart_encoding_on` in ops_event (the
 // health job turns it into the on-call alert, S06.07). It changes nothing in Twilio, and it never reads a number or a body.
 //
-// From S07.09 the same daily check also reads the service's two protections against abuse: geo permissions must allow Canada only and SMS
+// From S07.09 the same daily check also reads the service's two protections against abuse: geo permissions must allow Canada only (or Canada with the US, which Twilio ties to it) and SMS
 // pumping protection must be on. When either is not, it records `messaging.service_settings_wrong` (which of the two, as flags), which the health
 // job turns into the on-call alert (condition `messaging_settings`); when both are right it records `messaging.service_settings_ok`, the end of an
 // earlier finding. A setting it cannot read is a `messaging.service_check_failed` warning (with `check` saying which read) and also counts as `messaging.service_settings_wrong` with `unreadable: true`: never taken for "right", never quieter than wrong.

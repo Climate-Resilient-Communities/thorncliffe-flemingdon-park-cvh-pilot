@@ -335,7 +335,8 @@ cannot read is recorded as `messaging.service_check_failed` (warning), never tak
 (`curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config`).
 
 **Messaging Service: Canada-only geo permissions and SMS pumping protection (S07.09, AD-22).** The same daily check reads two more settings: the countries
-the service may text must be Canada and nothing else, and SMS pumping protection must be on. When either is not, it records
+the service may text must be Canada and nothing else (or Canada with the United States: Twilio cannot allow one without the other, both being +1; found in the
+production console on 2026-11-18), and SMS pumping protection must be on. When either is not, it records
 `messaging.service_settings_wrong` (severity error; the detail says which, as two flags) and the health job's `messaging_settings` condition texts the on-call
 Admins once and shows on the Hub until a later check finds both right (`messaging.service_settings_ok`). A setting it cannot read is never taken for right and
 never quieter than wrong: it records a `messaging.service_check_failed` warning (the code, and `check: abuse_settings`) and also
