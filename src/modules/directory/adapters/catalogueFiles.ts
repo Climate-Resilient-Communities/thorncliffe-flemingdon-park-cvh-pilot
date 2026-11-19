@@ -4,6 +4,7 @@ import path from "node:path";
 import type { LangCode } from "@/contracts/lang";
 import { TRANSLATED_LANGS, type ContentInput, type GuideSource, type NumbersFile, type TranslationFile } from "../domain/guideContent";
 import { parseProviderNeighbourhoods, type ProviderNeighbourhoods } from "../domain/providerNeighbourhoods";
+import { parseProviderProblems, type ProviderProblems } from "../domain/providerProblems";
 import { parseProviderRunBy, type ProviderRunBy } from "../domain/providerRunBy";
 import { PROVIDER_LANGS, type ProviderCatalogueInput, type ProviderTranslationFile } from "../domain/providerCatalogue";
 
@@ -37,6 +38,11 @@ export function readProviderNeighbourhoods(catalogueDir: string): ProviderNeighb
 /** provider-run-by.json of a catalogue folder (session 2, #4 and #11), checked for its shape. Throws when it cannot be read or is not in shape. */
 export function readProviderRunBy(catalogueDir: string): ProviderRunBy {
   return parseProviderRunBy(readJson<unknown>(path.join(catalogueDir, "provider-run-by.json")));
+}
+
+/** provider-problems.json of a catalogue folder (session 2, #3), checked for its shape. Throws when it cannot be read or is not in shape. */
+export function readProviderProblems(catalogueDir: string): ProviderProblems {
+  return parseProviderProblems(readJson<unknown>(path.join(catalogueDir, "provider-problems.json")));
 }
 
 /** guides.json, numbers.json and translations/content/<lang>.json of a catalogue folder. A language without a file has no translations. */

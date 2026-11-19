@@ -93,6 +93,12 @@ export const ListingProviderSchema = z.strictObject({
    * files written before this field existed (read with null).
    */
   run_by: RunBySchema.nullable().default(null),
+  /**
+   * What it helps with, in a resident's words (provider-problems.json, session 2, #3), in English in every language's listing: search reads
+   * it (the embedded text and the keyword match), the pages do not show it. Null when the list does not name the provider, and for release
+   * files written before this field existed.
+   */
+  helps_with: z.array(z.string().min(1).max(120)).max(20).nullable().default(null),
   subcategories: z.array(ListingTextSchema),
   locations: z.array(
     z.strictObject({

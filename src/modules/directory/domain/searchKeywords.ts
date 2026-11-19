@@ -91,13 +91,14 @@ const CONCEPTS: readonly Concept[] = [
   {
     // Help paying the rent (resident testing, session 2, #3: "need help with rent" found little, in several languages): the residents'
     // rent they cannot pay, are behind on or need help with, against the listings' rent bank and housing assistance. Not a home for
-    // rent ("apartments for rent"): that is a search for housing, which the words alone still find.
+    // rent ("apartments for rent"): that is a search for housing, which the words alone still find. "House rent" is how a translation
+    // often puts it (Bengali বাড়ি ভাড়া, Hindi makaan kiraya), so a word for the home may stand before "rent".
     token: "concept:rent-help",
     phrases: new RegExp(
       [
         "\\brent\\s+(?:banks?|arrears|supplements?|subsid(?:y|ies)|assistance|help|support|money|payments?|relief)\\b",
-        "\\b(?:pay(?:s|ing)?|paid|afford|cover|owe|owing|behind\\s+(?:on|with)|late\\s+(?:on|with)|help(?:\\s+me)?\\s+(?:with|for|to\\s+pay|paying))\\s+(?:(?:my|the|our|this\\s+month(?:'s)?|last\\s+month(?:'s)?)\\s+)?rent\\b",
-        "\\brent\\s+(?:is\\s+|was\\s+)?(?:due|late|overdue|too\\s+(?:high|much|expensive))\\b",
+        "\\b(?:pay(?:s|ing)?|paid|afford|cover|owe|owing|behind\\s+(?:on|with)|late\\s+(?:on|with)|help(?:\\s+me)?\\s+(?:with|for|to\\s+pay|paying))\\s+(?:(?:my|the|our|this\\s+month(?:'s)?|last\\s+month(?:'s)?)\\s+)?(?:(?:house|home|apartment|flat|room|monthly)\\s+)?rent\\b",
+        "\\b(?:(?:house|home|apartment|flat|room)\\s+)?rent\\s+(?:is\\s+|was\\s+)?(?:due|late|overdue|unpaid|too\\s+(?:high|much|expensive))\\b",
         "\\brental\\s+(?:assistance|help|support|arrears)\\b",
         "\\b(?:rent|housing)\\s+arrears\\b",
         "\\bhousing\\s+(?:assistance|help|support)\\b",
@@ -242,7 +243,15 @@ export function buildKeywordIndex(docs: readonly KeywordDocument[]): KeywordInde
 /** The part of a release's English listing that the keyword match reads (DirectoryListingV1, structurally). */
 export interface ListingForKeywords {
   categories: readonly { id: string; name: { body: string } }[];
-  providers: readonly { id: string; name: string; category_ids: readonly string[]; subcategories: readonly { body: string }[]; services: { body: string } }[];
+  providers: readonly {
+    id: string;
+    name: string;
+    category_ids: readonly string[];
+    subcategories: readonly { body: string }[];
+    services: { body: string };
+    /** Session 2, #3: what it helps with, in a resident's words; absent or null in an older release. */
+    helps_with?: readonly string[] | null;
+  }[];
 }
 
 /**
@@ -254,7 +263,7 @@ export function keywordDocumentsOf(listing: ListingForKeywords): KeywordDocument
   const categoryNames = new Map(listing.categories.map((c) => [c.id, c.name.body]));
   return listing.providers.map((p) => ({
     id: p.id,
-    text: [p.name, ...p.category_ids.map((id) => categoryNames.get(id) ?? ""), ...p.subcategories.map((s) => s.body), p.services.body].join(" "),
+    text: [p.name, ...p.category_ids.map((id) => categoryNames.get(id) ?? ""), ...p.subcategories.map((s) => s.body), p.services.body, ...(p.helps_with ?? [])].join(" "),
   }));
 }
 

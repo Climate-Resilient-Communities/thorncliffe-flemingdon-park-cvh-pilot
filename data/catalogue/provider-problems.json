@@ -1,0 +1,978 @@
+{
+  "reviewed": false,
+  "note": "What each provider helps with, in a resident's words (resident testing, session 2, #3: residents search by their problem, listings describe services). Drafted on 2026-11-19 by AI (Claude Haiku agents) from each provider's own catalogue text only, then checked by Claude: lines that pointed searches at a place for an emergency were removed (911 stays the crisis phrases' job). Search reads these lines (keywords and the embedded text); residents never see them. reviewed is false until the Hub has read every line; the notes say where a listing was too thin to be sure.",
+  "notes": {
+    "M001": "The listing says 54 and 55 Divisions plan to merge into a new station, so confirm the current location before visiting.",
+    "M002": "Same shared text as the other Toronto Fire stations; no station-specific services are listed.",
+    "M003": "Same shared text as the other Toronto Fire stations; no station-specific services are listed.",
+    "M004": "Same shared text as the other Toronto Fire stations; no station-specific services are listed.",
+    "M005": "Same shared text as the other Toronto Fire stations; no station-specific services are listed.",
+    "M006": "Same shared text as the other Toronto Fire stations; no station-specific services are listed.",
+    "M008": "Listed hours conflict between sources, so call ahead to confirm before visiting.",
+    "M010": "Listing describes Dixon Hall housing and food programs in general; Heyworth House is one of their sites.",
+    "M019": "National administrative body whose listing covers church resources, not local community services, so phrases are limited to faith resources.",
+    "M020": "The listing does not say whether the gym, library or food drop-off area are open to the public, so the gym, library and food phrases need checking.",
+    "M024": "Listing is thin: it gives no age range or hours for this academy.",
+    "M025": "The listing names no ESL, special education or French immersion programs, so none are included.",
+    "M026": "The homepage lists no special programs, and ESL or other supports are not mentioned, so none are included.",
+    "M029": "The listing is brief and gives no grade range, programs or hours.",
+    "M030": "The homepage lists no programs, ESL or special education, so none are included.",
+    "M031": "Listing text is identical to M034 and names two sites, so it is not clear which site this entry covers.",
+    "M034": "Listing text is identical to M031, so the phrases overlap.",
+    "M036": "Listing text is identical to M037 and gives both sites under one entry, so the phrases overlap.",
+    "M037": "Listing text is identical to M036, so the phrases overlap.",
+    "M041": "Listing does not state ages, fees or hours.",
+    "M043": "Eligibility is checked in person, so phrases do not promise free care for everyone.",
+    "M045": "Listing says it is not an emergency or walk-in service, so no emergency phrases are written.",
+    "M046": "Listing does not state costs or eligibility rules.",
+    "M048": "Listing mostly describes the parent hospital network; this centre's own services are dialysis and kidney clinic care, not emergency care.",
+    "M055": "Listing says a planned fire hall could remove two of the four tennis courts; status is uncertain.",
+    "M059": "Summer-only outdoor pool; the listing does not mention a cooling or emergency role.",
+    "M061": "The listing says this branch closed in December 2025 for a refresh and was expected to reopen in 2026, so the status should be checked before a visit.",
+    "M063": "The listing is thin and only mentions a bottle filling station.",
+    "M064": "Only the bottle filling station is confirmed, because the full amenity list was not available.",
+    "M070": "The listing is thin and gives only a general description, so the services offered are unclear.",
+    "M073": "Listing has only a location and category tags, so the services offered are unclear.",
+    "M078": "Listing gives only a location and a category tag, so its activities are unclear.",
+    "M080": "Only certain newcomers with set English levels qualify, so residents should check the listing.",
+    "M082": "Listing only says it is a grassroots group based at the hub; no services are described.",
+    "M084": "The name suggests parenting programs, but the listing describes a community group only.",
+    "M085": "The listing names East York as the service area, so check it covers Thorncliffe Park before showing it.",
+    "M086": "Homepage returned not found; services come from third-party sources and may be out of date.",
+    "M088": "The listing gives no details beyond being a grassroots group at the hub; the ball hockey wording comes from the name only.",
+    "M089": "Listing describes awareness work only, not counselling or treatment.",
+    "M091": "Listing only says it is a grassroots group at the Community Hub; no activities are described.",
+    "M095": "Listing only says it is a grassroots group at the Community Hub; no activities are described.",
+    "M096": "Listing only says it is a grassroots group; the leadership focus comes from the name.",
+    "M097": "Listing only says it is a grassroots group; the women's focus comes from the name.",
+    "M098": "Listing only says it is a grassroots group; the name suggests support services, so confirm before relying on it.",
+    "M099": "This is a consulting firm for organizations; the listing does not say it serves individual residents or these neighbourhoods."
+  },
+  "providers": {
+    "M001": [
+      "want to report a crime that is not urgent",
+      "need to report something to the police",
+      "need help after being a victim of a crime",
+      "want to meet local police in my area",
+      "need a police report for something that happened",
+      "want to talk to police about safety in my neighbourhood",
+      "need police help that is not an emergency"
+    ],
+    "M002": [
+      "there is a fire at my home",
+      "someone is trapped and needs rescue",
+      "need firefighters right away",
+      "someone needs urgent medical help at home",
+      "need fire help any time, day or night",
+      "have a question for the fire station that is not urgent"
+    ],
+    "M003": [
+      "there is a fire at my home",
+      "someone is trapped and needs rescue",
+      "need firefighters right away",
+      "someone needs urgent medical help at home",
+      "need fire help any time, day or night",
+      "have a question for the fire station that is not urgent"
+    ],
+    "M004": [
+      "there is a fire at my home",
+      "someone is trapped and needs rescue",
+      "need firefighters right away",
+      "someone needs urgent medical help at home",
+      "need fire help any time, day or night",
+      "have a question for the fire station that is not urgent"
+    ],
+    "M005": [
+      "there is a fire at my home",
+      "someone is trapped and needs rescue",
+      "need firefighters right away",
+      "someone needs urgent medical help at home",
+      "need fire help any time, day or night",
+      "have a question for the fire station that is not urgent"
+    ],
+    "M006": [
+      "there is a fire at my home",
+      "someone is trapped and needs rescue",
+      "need firefighters right away",
+      "someone needs urgent medical help at home",
+      "need fire help any time, day or night",
+      "have a question for the fire station that is not urgent"
+    ],
+    "M007": [
+      "need free food for my family",
+      "need emergency food for my family",
+      "can't pay my rent this month",
+      "need help from a rent bank",
+      "can't pay my energy bill",
+      "need help finding a place to live",
+      "new to Canada and need settling help",
+      "need help filling out immigration forms",
+      "want to learn English",
+      "need help finding a job",
+      "need counselling after violence at home",
+      "want an after-school program for my daughter"
+    ],
+    "M008": [
+      "need free food for my family",
+      "looking for a community food bank",
+      "can't afford groceries this week",
+      "need food for my family",
+      "need emergency food for my family",
+      "want free food and other resources for my family"
+    ],
+    "M009": [
+      "my teen is struggling at school",
+      "my teen is having trouble at home",
+      "young person with nowhere to stay",
+      "need a shelter for my youth",
+      "need job training for my young person",
+      "need help with child welfare for my family",
+      "young person in trouble with the law",
+      "need day treatment for my youth"
+    ],
+    "M010": [
+      "facing eviction from my home",
+      "need help finding a place to live",
+      "homeless and need a place to stay",
+      "need a shelter bed for the night",
+      "need help with my monthly budget",
+      "need help managing my income",
+      "need help staying in my home",
+      "need free community meals",
+      "want to learn food skills and cooking",
+      "need a 24-hour place to rest",
+      "need harm reduction support in my shelter"
+    ],
+    "M011": [
+      "looking for a Catholic parish near me",
+      "want to go to Mass on Sunday",
+      "want my child to go to summer camp",
+      "looking for a summer camp for my kids",
+      "want to find summer camps for teens",
+      "need help with church sacraments for my family",
+      "looking for parish events for my family",
+      "want to join my church community"
+    ],
+    "M012": [
+      "looking for a mosque near me",
+      "want to go to Friday prayers",
+      "want to pray with my community",
+      "want my child to learn the Quran",
+      "looking for evening Quran classes",
+      "want my child to memorize the Quran",
+      "looking for a Sunday school for my kids",
+      "want to study Islam in depth",
+      "looking for youth programs for my teen",
+      "need an Islamic marriage ceremony",
+      "want to join community events at a mosque"
+    ],
+    "M013": [
+      "looking for a Greek Orthodox church",
+      "want to attend Sunday church services",
+      "want to go to church on feast days",
+      "want my kids to join Sunday school",
+      "need to register my child for Sunday school",
+      "looking for a church with plenty of parking",
+      "want to join church programs"
+    ],
+    "M014": [
+      "looking for a Macedonian Orthodox church",
+      "want to go to Macedonian church services",
+      "want to attend church on religious holidays",
+      "want to keep Macedonian culture alive",
+      "looking for Macedonian cultural groups",
+      "want to learn about Macedonian heritage"
+    ],
+    "M015": [
+      "looking for a church that welcomes everyone",
+      "want to attend Sunday worship with my family",
+      "looking for a Mormon church near me",
+      "want Sunday classes for my toddler",
+      "looking for kids' classes at church"
+    ],
+    "M016": [
+      "looking for a Catholic church in Don Mills",
+      "want to go to Mass every day",
+      "want to get my baby baptized",
+      "need to plan a church wedding",
+      "need a priest for a funeral",
+      "want to go to confession",
+      "need the sacrament of anointing for a sick family member",
+      "want to volunteer at my parish",
+      "looking for a youth group for my teen",
+      "looking for young adult activities at church",
+      "want to join parish community events"
+    ],
+    "M017": [
+      "looking for a Pentecostal church nearby",
+      "want Sunday worship for my family",
+      "want to put my kids in Sunday school",
+      "looking for a chapel to pray in"
+    ],
+    "M018": [
+      "looking for a mosque in Flemingdon Park",
+      "want to pray five times a day at a mosque",
+      "want to go to Friday prayers",
+      "looking for Islamic classes for my children",
+      "want to learn about Islam as an adult",
+      "looking for religious guidance and advice",
+      "curious about Islam and want to visit a mosque",
+      "not Muslim but want to visit a mosque"
+    ],
+    "M019": [
+      "want to learn about the Orthodox faith",
+      "looking for Greek Orthodox prayer books",
+      "want Orthodox religious education resources",
+      "looking for Orthodox icons",
+      "want Greek Orthodox church news",
+      "looking for Greek Orthodox worship booklets",
+      "want to learn Orthodox teachings"
+    ],
+    "M020": [
+      "want a place to pray in my community",
+      "want to pray at a Jamatkhana near me",
+      "looking for daily prayers for Ismaili Muslims",
+      "want to meet other Ismaili families",
+      "looking for Ismaili community events",
+      "want a place to drop off food",
+      "looking for a library to use",
+      "looking for a gym in Thorncliffe Park"
+    ],
+    "M021": [
+      "want to go to church on Sunday",
+      "looking for a church near me",
+      "want to worship online from home",
+      "looking for a multicultural church community",
+      "new to Canada and want a faith family",
+      "want to join a small church",
+      "want to talk to a pastor",
+      "want to book a meeting with a pastor"
+    ],
+    "M022": [
+      "my landlord is trying to evict me",
+      "my landlord locked me out of my home",
+      "need help knowing my tenant rights",
+      "I got fired and need help",
+      "need help getting my severance pay",
+      "need help with my EI claim",
+      "need help with my PR application",
+      "need help getting a work permit",
+      "want help applying for citizenship",
+      "need help applying for ODSP or CPP",
+      "need help with an affidavit",
+      "can't afford a lawyer and have low income"
+    ],
+    "M023": [
+      "need a driver's licence",
+      "want to get my car registered",
+      "need new licence plates",
+      "need an Ontario health card",
+      "need a birth certificate",
+      "need a government office open on Saturday",
+      "need a government office open in the evening"
+    ],
+    "M024": [
+      "looking for a school for my young child",
+      "looking for early learning for my child",
+      "want a daily routine for my little one",
+      "want my child in a structured school day",
+      "need to tell the school my child is absent"
+    ],
+    "M025": [
+      "looking for a public elementary school",
+      "looking for a school for my child",
+      "need a school for kids from JK to grade 6",
+      "want my child in a multicultural school",
+      "want an inclusive school for my kids",
+      "want a school with high expectations for my child",
+      "looking for a school in Flemingdon Park"
+    ],
+    "M026": [
+      "looking for a public elementary school",
+      "need a school for kids from kindergarten to grade 6",
+      "looking for a school for my child",
+      "want my child in a school with many newcomers",
+      "new to Canada and need a school for my kids",
+      "want my child with classmates from many countries",
+      "looking for a school where many languages are spoken"
+    ],
+    "M027": [
+      "looking for a high school for my teen",
+      "need a high school for grades 9 to 12",
+      "want my teen in an advanced math and science program",
+      "want my teen to take AP-level courses",
+      "my teen wants to study math and science",
+      "need ESL help for my high schooler",
+      "want my teen in a school with sports teams",
+      "want my teen to join clubs at school",
+      "my teen is interested in gardening",
+      "my teen is interested in financial securities courses"
+    ],
+    "M028": [
+      "looking for a Catholic school for my child",
+      "need a school for JK to grade 8",
+      "my child needs ESL help",
+      "my child needs extra help with reading",
+      "need someone to watch my kids after school",
+      "need before and after school care",
+      "looking for free programs for my toddler",
+      "want parenting programs for my family",
+      "need help settling in Canada as a newcomer",
+      "want the school to call me if my child is absent",
+      "looking for a school with sports teams"
+    ],
+    "M029": [
+      "looking for a public elementary school",
+      "want my child in an eco-friendly school",
+      "want my child to join an eco club",
+      "want my child to learn about the environment",
+      "want to be part of my child's school community",
+      "looking for a school in Thorncliffe Park",
+      "want a school that works with families"
+    ],
+    "M030": [
+      "looking for a middle school for my child",
+      "need a school for grades 6 to 8",
+      "want my child in a safe, supportive school",
+      "want my child to learn respect and responsibility",
+      "want my child to feel safe at school",
+      "looking for a school for kids in Thorncliffe Park"
+    ],
+    "M031": [
+      "need free programs for my young child",
+      "need a free place to play with my toddler",
+      "want my baby to learn and play",
+      "looking for parent and child programs",
+      "want to learn about child development",
+      "looking for online programs for parents",
+      "want outdoor play time for my little one",
+      "need help with early learning for my kids"
+    ],
+    "M032": [
+      "need daycare for my child under 5",
+      "looking for a licensed daycare for my toddler",
+      "need a daycare where staff speak my language",
+      "need help paying for child care",
+      "need halal meals for my child",
+      "need vegetarian meals at daycare",
+      "my child has a peanut allergy"
+    ],
+    "M033": [
+      "need a free drop-in place for my baby",
+      "want my toddler to play with other kids",
+      "want to meet other parents in my area",
+      "need info on programs for my kids",
+      "looking for free play time for preschoolers",
+      "want a play group without signing up"
+    ],
+    "M034": [
+      "need free programs for my young child",
+      "want my toddler to learn and play",
+      "looking for online programs for my child",
+      "want to bond more with my baby",
+      "looking for outdoor play for little kids",
+      "need help with my child's early learning"
+    ],
+    "M035": [
+      "need free play time for my toddler",
+      "want a drop-in place for my child to learn",
+      "looking for free programs for kids under 6",
+      "want a play group with no sign-up",
+      "my child and I want to play together",
+      "looking for a free program for my baby or preschooler"
+    ],
+    "M036": [
+      "need daycare for my baby",
+      "looking for daycare for my toddler",
+      "need after-school care for my kids",
+      "need before-school care in Overlea",
+      "want a play-based preschool for my child",
+      "my child has food allergies",
+      "need meals that fit our cultural or religious diet",
+      "need nutritious meals for my child at daycare"
+    ],
+    "M037": [
+      "need daycare for my baby",
+      "looking for daycare for my toddler",
+      "need after-school care for my kids",
+      "need before-school care in Grenoble",
+      "want a play-based preschool for my child",
+      "my child has food allergies",
+      "need meals that fit our religious diet",
+      "need nutritious meals for my child at daycare"
+    ],
+    "M038": [
+      "my child is behind on talking",
+      "my child has a language delay",
+      "need help with my child's development",
+      "my child has special needs",
+      "need a case worker for my child",
+      "need help getting my child ready for school",
+      "need someone to support me as a parent",
+      "want gym play time for my kids"
+    ],
+    "M039": [
+      "need daycare for my infant",
+      "need before and after school care",
+      "need homework help for my child",
+      "need childcare on school PD days",
+      "need care over March break",
+      "looking for a summer camp for my kids",
+      "want my kid to learn swimming in summer",
+      "need lower daycare fees"
+    ],
+    "M040": [
+      "need daycare for my toddler",
+      "need a daycare that speaks Spanish",
+      "need childcare in Gujarati",
+      "need a Ukrainian-speaking daycare",
+      "need help paying for daycare",
+      "looking for halal meals for my child",
+      "need vegetarian meals at daycare",
+      "need care for my school-age child"
+    ],
+    "M041": [
+      "need child care for my kids",
+      "looking for a safe place for my child",
+      "want child care that welcomes all families",
+      "looking for a multicultural daycare",
+      "need a caring place for my child",
+      "looking for child care inside a school"
+    ],
+    "M042": [
+      "need daycare for my baby",
+      "looking for child care for my kids",
+      "need after-school care for my child",
+      "want a daycare where staff speak my language",
+      "looking for daycare that speaks Urdu or Punjabi",
+      "want my child to learn through play",
+      "need help paying child care fees",
+      "want meals included for my child at daycare",
+      "need child care for kids up to age 12",
+      "looking for school-age child care"
+    ],
+    "M043": [
+      "can't afford a dentist",
+      "need free dental care for my kids",
+      "need free dentures",
+      "senior with low income needs dental care",
+      "my tooth hurts and I need urgent dental care",
+      "need a tooth filled at low cost",
+      "need a tooth pulled and can't pay for it",
+      "need dental care but can't get to a clinic"
+    ],
+    "M044": [
+      "I'm pregnant and need a midwife",
+      "want a midwife for my baby's birth",
+      "need free care during pregnancy",
+      "want help after my baby is born",
+      "want to give birth at home",
+      "need a midwife who speaks Arabic or Farsi",
+      "want a class to prepare for my newborn",
+      "need to reach a midwife urgently during labour"
+    ],
+    "M045": [
+      "need a family doctor",
+      "don't have a health card but need a doctor",
+      "need free doctor visits",
+      "feeling stressed and want to talk to a counsellor",
+      "have diabetes and need help managing it",
+      "need help eating well with a health condition",
+      "need foot care as a senior",
+      "need a sexual health clinic",
+      "pregnant and want prenatal care",
+      "want to exercise and get healthier"
+    ],
+    "M046": [
+      "need a nurse to come to my home",
+      "need help with housekeeping and meals at home",
+      "need someone to help me around the house",
+      "need help remembering my medication",
+      "need physiotherapy",
+      "need speech therapy",
+      "need an occupational therapist",
+      "want company while I stay at home",
+      "need a personal support worker",
+      "need a dietitian"
+    ],
+    "M047": [
+      "need a family doctor in Thorncliffe Park",
+      "don't have a health card and need a doctor",
+      "need an interpreter at my doctor visit",
+      "want a kids' doctor based at school",
+      "need foot care as a senior",
+      "need help eating well",
+      "feeling down and need someone to talk to",
+      "need help finding income support",
+      "need help finding housing",
+      "need help finding a job",
+      "need help settling in as a newcomer"
+    ],
+    "M048": [
+      "need dialysis in my neighbourhood",
+      "have kidney disease and need help",
+      "want to learn to do dialysis at home",
+      "need a kidney doctor",
+      "need help eating right for my kidneys",
+      "want help slowing my kidney problems",
+      "need help with my kidney medicines",
+      "need a social worker for kidney care",
+      "want different kinds of dialysis at home"
+    ],
+    "M049": [
+      "can't pay my rent this month",
+      "need help with my rent",
+      "can't pay my hydro bill",
+      "need help finding an apartment",
+      "need help applying for subsidized housing",
+      "need help filling immigration forms",
+      "new to Canada and need settlement help",
+      "want English classes",
+      "looking for after-school activities for my daughter",
+      "senior needs personal care at home",
+      "need a job",
+      "I'm being abused and need someone to talk to"
+    ],
+    "M050": [
+      "I'm a teen and need someone to talk to",
+      "young person struggling with stress",
+      "worried about my drinking or drug use",
+      "young person needs a family doctor",
+      "looking for a job as a youth",
+      "want to learn a trade",
+      "need a food bank for a young person",
+      "young adult needs a place to live",
+      "want to volunteer and be a leader",
+      "need a cool place during a heat wave",
+      "want to talk to a peer who gets it"
+    ],
+    "M051": [
+      "new to Canada and need settlement help",
+      "need help learning English",
+      "need an interpreter for my appointment",
+      "need translation help",
+      "looking for help finding a job after moving here",
+      "want to learn computer skills",
+      "want to meet other newcomer women",
+      "looking for a sewing class",
+      "looking for a youth drop-in for my teenager",
+      "want to get gentle exercise"
+    ],
+    "M052": [
+      "need a cool place during a heat warning",
+      "need a cool indoor space during extreme heat",
+      "looking for an indoor court to play sports",
+      "looking for a daycare near me",
+      "want a room to hold a meeting",
+      "looking for mental health workshops",
+      "want to join a recreation program"
+    ],
+    "M053": [
+      "want my kid to learn to swim",
+      "looking for a place to go swimming",
+      "need a gym to work out",
+      "want to sign up for a registered recreation class",
+      "need a cool place during extreme heat",
+      "looking for a library close by",
+      "want a place to exercise"
+    ],
+    "M054": [
+      "need an indoor play place for my kids",
+      "looking for a playground for my children",
+      "want my kids to cool off at a splash pad",
+      "looking for free early childhood programs",
+      "want a drop-in program for my toddler and me",
+      "want to grow vegetables in a community garden",
+      "looking for a baseball or basketball game to join",
+      "need a cool place during a heat warning",
+      "looking for a picnic spot for my family"
+    ],
+    "M055": [
+      "want to learn to ice skate",
+      "looking for hockey programs",
+      "need a cool place during extreme heat",
+      "want to play tennis outdoors",
+      "looking for a public tennis court"
+    ],
+    "M056": [
+      "need health and social services in one place",
+      "looking for social services close to home",
+      "want to find programs run by local partners",
+      "need a space to hold a community meeting",
+      "need a cool place during extreme heat",
+      "looking for health services close to home"
+    ],
+    "M057": [
+      "need a grocery store nearby",
+      "need a bank close to home",
+      "need to fill a prescription nearby",
+      "need a lab test done nearby",
+      "looking for a hair salon",
+      "want to join a gym",
+      "need help with a legal problem",
+      "need a community health service",
+      "need a cool place during extreme heat",
+      "want a place to eat out"
+    ],
+    "M058": [
+      "looking for a park to go for a walk",
+      "want a place to go jogging",
+      "want to play disc golf for free",
+      "want to try archery",
+      "want to go cross-country skiing",
+      "need a place to ride my bike",
+      "looking for a picnic spot",
+      "want a park with fire pits",
+      "looking for a basketball court outdoors",
+      "need a washroom in the park"
+    ],
+    "M059": [
+      "want to go swimming outside in summer",
+      "looking for lane swimming",
+      "need a wheelchair accessible pool",
+      "need a pool with accessible change rooms",
+      "need a Wheel-Trans drop-off spot near a pool",
+      "want to cool off in the water this summer"
+    ],
+    "M060": [
+      "need free Wi-Fi",
+      "need a computer with Microsoft Office",
+      "need to print or scan a document",
+      "want to borrow books for my kids",
+      "want my child to get help with reading",
+      "looking for a youth drop-in space",
+      "new to Canada and need local information",
+      "need help with my finances",
+      "need a quiet place to study",
+      "need a room to book for a meeting",
+      "need a cool place during extreme heat"
+    ],
+    "M061": [
+      "want to borrow books from a library",
+      "need a computer to use nearby",
+      "need help with my taxes",
+      "need help applying for benefits",
+      "need help making a budget",
+      "my kid needs help learning to read",
+      "want programs for my kids",
+      "need somewhere cool during a heat warning",
+      "looking for a quiet place to read or study"
+    ],
+    "M062": [
+      "need somewhere to get drinking water outside",
+      "where can I get water on a hot day",
+      "want a park with a playground for my kids",
+      "looking for a splash pad to cool off",
+      "want a place to grow vegetables",
+      "looking for a place for a family picnic",
+      "want to try Canadian food from a tandoor oven"
+    ],
+    "M063": [
+      "need free drinking water refills",
+      "need to fill up my water bottle",
+      "need water at the park on a hot day"
+    ],
+    "M064": [
+      "need to fill up my water bottle",
+      "need drinking water at a park",
+      "need water on a hot day"
+    ],
+    "M065": [
+      "need drinking water at the park",
+      "want to fill up my water bottle",
+      "looking for a place to play tennis",
+      "want a field or ball diamond for my team",
+      "need a playground for my kids",
+      "want a place to grow vegetables",
+      "need a public washroom while at the park",
+      "looking for an outdoor pool to swim in"
+    ],
+    "M066": [
+      "need drinking water at the park",
+      "looking for an outdoor basketball court",
+      "want a place to play cricket",
+      "want a place to play ball hockey",
+      "want a playground for my kids",
+      "looking for a running track to jog on",
+      "looking for a splash pad to cool off",
+      "want a place to grow vegetables",
+      "need a picnic shelter for my family"
+    ],
+    "M067": [
+      "want to try disc golf",
+      "looking for a place to try archery",
+      "want a trail to walk or jog on",
+      "looking for a bike path",
+      "need drinking water outside in warmer months",
+      "want a shelter for a family picnic"
+    ],
+    "M068": [
+      "want to see art exhibitions",
+      "looking for art or music workshops",
+      "looking for a concert or music event",
+      "want a school field trip for my class",
+      "teacher looking for classroom resources",
+      "want to take an online course",
+      "want free online podcasts or artist talks",
+      "want virtual tours of art exhibits"
+    ],
+    "M069": [
+      "want to learn Japanese as an adult",
+      "looking for a Japanese language class",
+      "want to learn calligraphy or painting",
+      "want to learn taiko drumming",
+      "looking for a martial arts class like judo or karate",
+      "want to join a dance or hula club",
+      "looking for a seniors' club",
+      "want to watch a Japanese film festival",
+      "looking for Japanese cultural events and festivals"
+    ],
+    "M070": [
+      "looking for a local community group",
+      "want to get involved in my neighbourhood",
+      "looking for community help in Thorncliffe Park"
+    ],
+    "M071": [
+      "need free food for my family",
+      "can't afford groceries this week",
+      "need fresh produce for my family",
+      "looking for eggs and dairy products",
+      "need emergency food support",
+      "running low on food at home",
+      "need food help twice a month",
+      "looking for food for my kids"
+    ],
+    "M072": [
+      "my bike is broken and needs repair",
+      "need free bike repairs",
+      "want to fix my own bike",
+      "need a bike but can't afford one",
+      "want to learn bike repair skills",
+      "want to learn how to ride a bike",
+      "looking for group bike rides",
+      "want to join a cycling group"
+    ],
+    "M073": [
+      "new to Canada and need local support",
+      "looking for a community group nearby",
+      "need help getting enough food",
+      "want to meet people in my neighbourhood"
+    ],
+    "M074": [
+      "want free fresh vegetables from a garden",
+      "looking for free fresh fruit",
+      "want to learn how to grow vegetables",
+      "want to learn about composting",
+      "want my kids to learn about nature",
+      "looking for youth volunteer opportunities",
+      "want to help bees and butterflies",
+      "want a woodworking or art workshop"
+    ],
+    "M075": [
+      "want healthy local food from my neighbourhood",
+      "looking for a summer farmers market",
+      "want to learn how to grow food",
+      "want to shop for fresh local produce",
+      "want to grow food in my community",
+      "want to start a small farm business",
+      "want to run my own small farm business"
+    ],
+    "M076": [
+      "never learned to ride a bike as a woman",
+      "want to learn to ride a bike",
+      "want cycling classes for women",
+      "looking for women's group bike rides",
+      "want to meet other women who cycle",
+      "need a bike but can't afford one",
+      "want a donated bike for myself",
+      "want to speak up for cycling in my city"
+    ],
+    "M077": [
+      "want to lower my home energy use",
+      "want to reduce waste at home",
+      "want to live more sustainably",
+      "want to lower my carbon footprint",
+      "looking for climate education in my area",
+      "my senior parent feels isolated",
+      "want a group for seniors to join",
+      "want to help my neighbourhood go green"
+    ],
+    "M078": [
+      "want to help protect the planet locally",
+      "looking for a local green group",
+      "want to get involved in my neighbourhood"
+    ],
+    "M079": [
+      "want to meet other women in my neighbourhood",
+      "looking for a women's group nearby",
+      "want things to do at R.V. Burgess Park",
+      "want a park with a splash pad and cafe",
+      "want to learn about other cultures",
+      "want to help build community in Thorncliffe Park",
+      "want to join a community garden"
+    ],
+    "M080": [
+      "new to Canada and want a skilled trade job",
+      "want training to become an HVAC technician",
+      "want to train for a truck driving job",
+      "want to learn forklift operation",
+      "want a career in IT or data science",
+      "want to work in construction",
+      "need construction traffic control training",
+      "want a career change into the trades"
+    ],
+    "M081": [
+      "looking for a new job",
+      "need help with my job search",
+      "want to find a career that fits me",
+      "want one-on-one help with my career",
+      "want to find out what training I need",
+      "looking for job fairs and hiring events",
+      "want to go to job information sessions",
+      "need tips to keep my job",
+      "my company wants to hire new staff",
+      "need help posting a job opening",
+      "need help getting new staff started"
+    ],
+    "M082": [
+      "looking for a local community group",
+      "want to get involved in my community"
+    ],
+    "M083": [
+      "feeling lonely and isolated",
+      "want to feel less alone",
+      "want to meet families from other backgrounds",
+      "looking for cultural celebrations to join",
+      "looking for family gatherings in my area",
+      "want to get involved as a volunteer",
+      "want to help my child's school",
+      "want to support my child's education"
+    ],
+    "M084": [
+      "want to connect with other parents",
+      "want to meet families in my neighbourhood",
+      "want to help build a stronger neighbourhood",
+      "want to take a leadership role in my community",
+      "need help finding community organizations"
+    ],
+    "M085": [
+      "my child has autism",
+      "looking for autism support for my child",
+      "need a weekend break from caring for my child",
+      "want a parent support group for autism",
+      "need homework help after school for my child",
+      "looking for an inclusive summer camp for my kid",
+      "want a March break camp for my child",
+      "my teenager with autism needs activities",
+      "want to learn more about autism"
+    ],
+    "M086": [
+      "want to get involved in my community",
+      "want residents to have a say in local decisions",
+      "want to connect with local schools and agencies",
+      "want to connect with local leaders",
+      "want to help prevent youth violence"
+    ],
+    "M087": [
+      "looking for something fun to do this summer",
+      "want a summer event for the whole neighbourhood",
+      "looking for music and dance to enjoy",
+      "want arts and crafts for my kids",
+      "looking for local bazaar tables and food",
+      "my teen wants to volunteer and be a leader",
+      "want to meet my neighbours at an event",
+      "looking for games for my family to play"
+    ],
+    "M088": [
+      "looking for ball hockey in my area",
+      "want to join a local community group"
+    ],
+    "M089": [
+      "want to learn about mental health",
+      "want to talk about mental health openly",
+      "I am a newcomer looking for community support",
+      "want mental health talks for South Asian families",
+      "want to connect with other South Asian newcomers",
+      "want to reduce the stigma around mental health"
+    ],
+    "M090": [
+      "want my child to memorize the Quran",
+      "looking for Quran memorization classes",
+      "want full-time Quran school for my child",
+      "want part-time Quran classes",
+      "want my child to start Quran learning",
+      "want a review class to keep my Quran memory",
+      "want to learn Classical Arabic",
+      "looking for Quran classes for sisters"
+    ],
+    "M091": [
+      "want to meet neighbours in my community",
+      "looking for a local community group",
+      "want to get involved in my neighbourhood"
+    ],
+    "M092": [
+      "need free bedding for my new home",
+      "need furniture for my new apartment",
+      "moving from a shelter into my own home",
+      "need winter clothes for my family",
+      "need shoes for my family",
+      "need pots, pans and dishes",
+      "just moved to Canada and need help",
+      "new to Canada, don't know how things work here",
+      "want parenting help as a newcomer",
+      "need help finding community resources",
+      "I'm a refugee or asylum seeker needing supplies"
+    ],
+    "M093": [
+      "need an urgent repair at night",
+      "need building maintenance on the weekend",
+      "who do I call for repairs after hours",
+      "need the property manager's contact",
+      "who do I contact about my building",
+      "need building security contact for urgent issues",
+      "want to join my building's tenants association"
+    ],
+    "M094": [
+      "want better parks in my neighbourhood",
+      "want public spaces everyone can enjoy",
+      "need accessible outdoor spaces",
+      "want to help make Thorncliffe Park nicer",
+      "want to join neighbours on local projects",
+      "want to volunteer for my neighbourhood",
+      "want a more inclusive neighbourhood"
+    ],
+    "M095": [
+      "want to get involved in Flemingdon Park",
+      "looking for a neighbourhood group in Flemingdon Park",
+      "want to meet neighbours in Flemingdon Park"
+    ],
+    "M096": [
+      "want to become a leader in my community",
+      "looking for leadership groups for women",
+      "want to meet other women in my community",
+      "want to get involved as a woman leader"
+    ],
+    "M097": [
+      "looking for a women's network near me",
+      "want to meet other women in my community",
+      "want to get involved in my neighbourhood as a woman"
+    ],
+    "M098": [
+      "looking for local community support",
+      "want to connect with my neighbours",
+      "need help finding local support services"
+    ],
+    "M099": [
+      "my small business needs branding help",
+      "need help with a business plan",
+      "want to grow sales for my business",
+      "need research on what my customers want",
+      "want training workshops for my team",
+      "need help with a neighbourhood design project",
+      "want to learn about AI for my work",
+      "need help managing a project",
+      "need advice on running my organization",
+      "need help with media for my organization"
+    ]
+  }
+}

@@ -100,11 +100,11 @@ async function within<T>(work: Promise<T>, ms: number): Promise<T> {
  * The search plan of a release, as the text the claim stages with the listing files. Throws a PublishStepError when the
  * settings cannot apply to this snapshot (an emergency category the catalogue does not have).
  */
-export function planSearch(build: SearchBuild, providers: SnapshotProvider[], categories: SnapshotCategory[]): string {
+export function planSearch(build: SearchBuild, providers: SnapshotProvider[], categories: SnapshotCategory[], helpsWith?: Readonly<Record<string, readonly string[]>>): string {
   if (unknownEmergencyCategories(build.emergencyCategories, categories).length > 0) {
     throw new PublishStepError("search_config_invalid", false, ["emergency_category_unknown"]);
   }
-  const items = searchItems(providers, categories, sha256Hex);
+  const items = searchItems(providers, categories, sha256Hex, helpsWith);
   return JSON.stringify(searchPlan({ embedConfig: build.embedder.config, threshold: build.threshold, emergencyCategories: build.emergencyCategories, items }));
 }
 
