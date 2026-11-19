@@ -632,7 +632,7 @@ describe("Cohere and the search settings (S03.02)", () => {
     // The threshold was 0.3 until the interim tuning of 2026-10-07 (data/search-test-set/reports/2026-10-07-interim-tuning.md).
     expect(parseEnv(local).search).toEqual({
       embedModel: "embed-v4.0",
-      threshold: 0.27,
+      threshold: 0.3,
       emergencyThreshold: 0.25,
       emergencyTopThreshold: 0.14,
       keywordWeight: 0.15,
@@ -855,7 +855,7 @@ describe("Cohere and the search settings (S03.02)", () => {
   });
 
   it("reads the emergency-only threshold (owner decision 41): 0 to 1, and no greater than SEARCH_THRESHOLD", () => {
-    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.27 " }).search.emergencyThreshold).toBe(0.27); // equal to the default threshold (0.27 since the interim tuning)
+    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.3 " }).search.emergencyThreshold).toBe(0.3); // equal to the default threshold (0.3 since 2026-11-19)
     expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: "0" }).search.emergencyThreshold).toBe(0);
     expect(parseEnv({ ...production, SEARCH_THRESHOLD: "0.5", SEARCH_EMERGENCY_THRESHOLD: "0.4" }).search.emergencyThreshold).toBe(0.4);
     // A lower SEARCH_THRESHOLD alone leaves the default 0.25 above it.
@@ -871,7 +871,7 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["SEARCH_EMERGENCY_THRESHOLD", "1.5", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_THRESHOLD", "low", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_THRESHOLD", "-0.1", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
-    ["SEARCH_EMERGENCY_THRESHOLD", "0.28", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "0.31", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
     ["SEARCH_EMERGENCY_TOP_THRESHOLD", "1.5", /SEARCH_EMERGENCY_TOP_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_KEYWORD_WEIGHT", "-0.1", /SEARCH_KEYWORD_WEIGHT: must be a number from 0 to 1/],
     ["SEARCH_DIRECT_FLOOR", "high", /SEARCH_DIRECT_FLOOR: must be a number from 0 to 1/],

@@ -1,6 +1,6 @@
 {
   "reviewed": false,
-  "note": "What each provider helps with, in a resident's words (resident testing, session 2, #3: residents search by their problem, listings describe services). Drafted on 2026-11-19 by AI (Claude Haiku agents) from each provider's own catalogue text only, then checked by Claude: lines that pointed searches at a place for an emergency were removed (911 stays the crisis phrases' job). Search reads these lines (keywords and the embedded text); residents never see them. reviewed is false until the Hub has read every line; the notes say where a listing was too thin to be sure.",
+  "note": "What each provider helps with, in a resident's words (resident testing, session 2, #3: residents search by their problem, listings describe services). Drafted on 2026-11-19 by AI (Claude Haiku agents) from each provider's own catalogue text only, then checked by Claude: lines that pointed searches at a place for an emergency were removed (911 stays the crisis phrases' job). Search reads these lines (keywords and the embedded text); residents never see them. reviewed is false until the Hub has read every line; the notes say where a listing was too thin to be sure. The providers in the emergency category (Support & Emergency Services) have no lines: the 911 block is decided by how close a question is to them, and everyday lines made ordinary questions (food, a landlord) bring the 911 block first (search test set run 4, 2026-11-19: false 911 2.3% -> 6.4%). Their own listings are their search text, as before.",
   "notes": {
     "M001": "The listing says 54 and 55 Divisions plan to merge into a new station, so confirm the current location before visiting.",
     "M002": "Same shared text as the other Toronto Fire stations; no station-specific services are listed.",
@@ -49,55 +49,12 @@
     "M099": "This is a consulting firm for organizations; the listing does not say it serves individual residents or these neighbourhoods."
   },
   "providers": {
-    "M001": [
-      "want to report a crime that is not urgent",
-      "need to report something to the police",
-      "need help after being a victim of a crime",
-      "want to meet local police in my area",
-      "need a police report for something that happened",
-      "want to talk to police about safety in my neighbourhood",
-      "need police help that is not an emergency"
-    ],
-    "M002": [
-      "there is a fire at my home",
-      "someone is trapped and needs rescue",
-      "need firefighters right away",
-      "someone needs urgent medical help at home",
-      "need fire help any time, day or night",
-      "have a question for the fire station that is not urgent"
-    ],
-    "M003": [
-      "there is a fire at my home",
-      "someone is trapped and needs rescue",
-      "need firefighters right away",
-      "someone needs urgent medical help at home",
-      "need fire help any time, day or night",
-      "have a question for the fire station that is not urgent"
-    ],
-    "M004": [
-      "there is a fire at my home",
-      "someone is trapped and needs rescue",
-      "need firefighters right away",
-      "someone needs urgent medical help at home",
-      "need fire help any time, day or night",
-      "have a question for the fire station that is not urgent"
-    ],
-    "M005": [
-      "there is a fire at my home",
-      "someone is trapped and needs rescue",
-      "need firefighters right away",
-      "someone needs urgent medical help at home",
-      "need fire help any time, day or night",
-      "have a question for the fire station that is not urgent"
-    ],
-    "M006": [
-      "there is a fire at my home",
-      "someone is trapped and needs rescue",
-      "need firefighters right away",
-      "someone needs urgent medical help at home",
-      "need fire help any time, day or night",
-      "have a question for the fire station that is not urgent"
-    ],
+    "M001": [],
+    "M002": [],
+    "M003": [],
+    "M004": [],
+    "M005": [],
+    "M006": [],
     "M007": [
       "need free food for my family",
       "need emergency food for my family",
@@ -120,29 +77,8 @@
       "need emergency food for my family",
       "want free food and other resources for my family"
     ],
-    "M009": [
-      "my teen is struggling at school",
-      "my teen is having trouble at home",
-      "young person with nowhere to stay",
-      "need a shelter for my youth",
-      "need job training for my young person",
-      "need help with child welfare for my family",
-      "young person in trouble with the law",
-      "need day treatment for my youth"
-    ],
-    "M010": [
-      "facing eviction from my home",
-      "need help finding a place to live",
-      "homeless and need a place to stay",
-      "need a shelter bed for the night",
-      "need help with my monthly budget",
-      "need help managing my income",
-      "need help staying in my home",
-      "need free community meals",
-      "want to learn food skills and cooking",
-      "need a 24-hour place to rest",
-      "need harm reduction support in my shelter"
-    ],
+    "M009": [],
+    "M010": [],
     "M011": [
       "looking for a Catholic parish near me",
       "want to go to Mass on Sunday",
