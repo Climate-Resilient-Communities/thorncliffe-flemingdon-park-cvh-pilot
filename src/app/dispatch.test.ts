@@ -313,7 +313,7 @@ describe("the daily Messaging Service check", () => {
   it("records messaging.service_settings_wrong, with which protection failed, when geo permissions allow more than Canada or pumping protection is off (S07.09)", async () => {
     const recorded: MessagingOpsEvent[] = [];
     const ops = { record: async (_executor: DbExecutor, event: MessagingOpsEvent) => void recorded.push(event) };
-    stubService(false, { geo_permissions: ["CA", "US"] });
+    stubService(false, { geo_permissions: ["CA", "US", "MX"] });
     await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ encoding: { status: "smart_encoding_off" }, settings: { settings: "wrong", geoNotCanadaOnly: true, pumpingProtectionOff: false } });
     expect(recorded.at(-1)).toEqual({ kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: false } });
 
