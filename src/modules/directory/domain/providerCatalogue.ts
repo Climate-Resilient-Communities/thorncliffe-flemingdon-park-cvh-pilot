@@ -104,21 +104,27 @@ export const providerEntrySchema = z.looseObject(
     name: text(),
     categories: z.array(text(), { error: "must be a list" }).min(1, { error: "has no category" }),
     subcategories: z.array(text(), { error: "must be a list" }),
-    address: z.looseObject(
-      {
-        street: text(),
-        city: text(),
-        postal: z.string({ error: "must be text or null" }).nullish(),
-      },
-      { error: "is missing" },
-    ),
-    location: z.looseObject(
-      {
-        lat: coordinate(TORONTO_BOUNDS.minLat, TORONTO_BOUNDS.maxLat),
-        lng: coordinate(TORONTO_BOUNDS.minLng, TORONTO_BOUNDS.maxLng),
-      },
-      { error: "(the coordinates) is missing" },
-    ),
+    // Session 2, #3: a citywide service with no place to walk in (the Toronto Rent Bank, the Landlord and Tenant Board) has both
+    // `address` and `location` null; the rule below asks for both or neither, and a phone number or web address to reach it by.
+    address: z
+      .looseObject(
+        {
+          street: text(),
+          city: text(),
+          postal: z.string({ error: "must be text or null" }).nullish(),
+        },
+        { error: "is missing" },
+      )
+      .nullable(),
+    location: z
+      .looseObject(
+        {
+          lat: coordinate(TORONTO_BOUNDS.minLat, TORONTO_BOUNDS.maxLat),
+          lng: coordinate(TORONTO_BOUNDS.minLng, TORONTO_BOUNDS.maxLng),
+        },
+        { error: "(the coordinates) is missing" },
+      )
+      .nullable(),
     contact: z.looseObject(
       {
         phone: stringList().default([]),
@@ -170,7 +176,8 @@ export interface PlannedProvider {
   /** Ids of the provider's categories, in the file's order; the provider is stored once. */
   categoryIds: string[];
   subcategories: PlannedSubcategory[];
-  location: { street: string; city: string; postal: string | null; lat: number; lng: number };
+  /** Null for a citywide service (session 2, #3): no place to walk in, reached by phone or online, not on the map. */
+  location: { street: string; city: string; postal: string | null; lat: number; lng: number } | null;
   contact: { phone: string[]; email: string[]; social: string[]; web: string[] };
   /** text key (`services`, `emergency_role`) -> language -> text. */
   texts: Record<string, Record<string, string>>;
@@ -389,6 +396,14 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
       if (!Object.hasOwn(subcategoryLabels, subcategory)) problems.push(`subcategory "${subcategory}" is not in labels.subcategories`);
     }
     if (new Set(categoryNames).size !== categoryNames.length) problems.push("categories: lists a category twice");
+    // Session 2, #3: a place has both an address and coordinates; a citywide service neither, and a phone number or web address.
+    if (parsed.success) {
+      const { address, location, contact } = parsed.data;
+      if ((address === null) !== (location === null)) problems.push("address and location: give both, or neither for a citywide service");
+      if (address === null && location === null && contact.phone.length === 0 && contact.web.length === 0) {
+        problems.push("contact: a citywide service (no address) needs a phone number or a web address");
+      }
+    }
     for (const problem of problems) failures.push(`${label}: ${problem}`);
     if (problems.length === 0 && parsed.success) valid.push(parsed.data);
   });
@@ -455,13 +470,16 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
       name: entry.name.trim(),
       categoryIds: entry.categories.map((name) => categoryLabels[name].id),
       subcategories: entry.subcategories.map(subcategory),
-      location: {
-        street: entry.address.street.trim(),
-        city: entry.address.city.trim(),
-        postal: present(entry.address.postal) ? entry.address.postal.trim() : null,
-        lat: entry.location.lat,
-        lng: entry.location.lng,
-      },
+      location:
+        entry.address && entry.location
+          ? {
+              street: entry.address.street.trim(),
+              city: entry.address.city.trim(),
+              postal: present(entry.address.postal) ? entry.address.postal.trim() : null,
+              lat: entry.location.lat,
+              lng: entry.location.lng,
+            }
+          : null,
       contact: { phone: entry.contact.phone, email: entry.contact.email, social: entry.contact.social, web: entry.contact.web },
       texts,
       translations: provenance,

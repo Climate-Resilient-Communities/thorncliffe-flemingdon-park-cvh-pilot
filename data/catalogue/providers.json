@@ -21,52 +21,52 @@
   "note": "English is the source. Other languages are machine translations (Cohere), not yet reviewed by native readers. A null translation means not yet available in that language.",
   "translationModels": {
    "ur": {
-    "north-small-translate-09-2026": 71
+    "north-small-translate-09-2026": 73
    },
    "ps": {
-    "north-small-translate-09-2026": 140
+    "north-small-translate-09-2026": 142
    },
    "tl": {
-    "north-small-translate-09-2026": 123
+    "north-small-translate-09-2026": 125
    },
    "prs": {
     "command-a-translate-08-2025": 5,
-    "north-small-translate-09-2026": 73
+    "north-small-translate-09-2026": 75
    },
    "gu": {
-    "north-small-translate-09-2026": 64,
+    "north-small-translate-09-2026": 66,
     "tiny-aya-fire": 3
    },
    "ta": {
-    "north-small-translate-09-2026": 98,
+    "north-small-translate-09-2026": 100,
     "tiny-aya-fire": 1
    },
    "el": {
-    "command-a-translate-08-2025": 82,
+    "command-a-translate-08-2025": 84,
     "north-small-translate-09-2026": 2
    },
    "sk": {
-    "north-small-translate-09-2026": 79
+    "north-small-translate-09-2026": 81
    },
    "bn": {
-    "north-small-translate-09-2026": 71
+    "north-small-translate-09-2026": 73
    },
    "hi": {
-    "command-a-translate-08-2025": 45,
+    "command-a-translate-08-2025": 47,
     "north-small-translate-09-2026": 4
    },
    "pa": {
-    "north-small-translate-09-2026": 67,
+    "north-small-translate-09-2026": 69,
     "tiny-aya-fire": 8
    },
    "zh": {
-    "command-a-translate-08-2025": 68
+    "command-a-translate-08-2025": 70
    },
    "es": {
-    "command-a-translate-08-2025": 91
+    "command-a-translate-08-2025": 93
    },
    "fr": {
-    "command-a-translate-08-2025": 101,
+    "command-a-translate-08-2025": 103,
     "north-small-translate-09-2026": 1
    }
   },
@@ -6612,6 +6612,77 @@
    },
    "emergencyRole": null,
    "sourceNotes": [],
+   "lastConfirmed": null
+  },
+  {
+   "id": "M100",
+   "name": "Toronto Rent Bank",
+   "categories": [
+    "Legal & Government Services"
+   ],
+   "subcategories": [
+    "Housing & Tenant Supports"
+   ],
+   "address": null,
+   "location": null,
+   "contact": {
+    "phone": [],
+    "email": [
+     "nipost@nipost.org"
+    ],
+    "social": [],
+    "web": [
+     "https://www.toronto.ca/community-people/housing-shelter/financial-support-for-housing/financial-support-for-renters/toronto-rent-bank/",
+     "https://nipost.org/toronto-rent-bank/"
+    ]
+   },
+   "services": {
+    "id": "6ece8c737561",
+    "en": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one."
+   },
+   "emergencyRole": null,
+   "sourceNotes": [
+    "Added 2026-11-21 (resident testing, session 2, #3: 'need help with rent' found little). Researched by AI from the official pages listed here only; not yet confirmed by the Hub.",
+    "https://www.toronto.ca/community-people/housing-shelter/financial-support-for-housing/financial-support-for-renters/toronto-rent-bank/",
+    "https://nipost.org/toronto-rent-bank/",
+    "No phone line labelled as the Rent Bank's own was confirmed, so none is listed."
+   ],
+   "lastConfirmed": null
+  },
+  {
+   "id": "M101",
+   "name": "Landlord and Tenant Board (Tribunals Ontario)",
+   "categories": [
+    "Legal & Government Services"
+   ],
+   "subcategories": [
+    "Housing & Tenant Supports"
+   ],
+   "address": null,
+   "location": null,
+   "contact": {
+    "phone": [
+     "1-888-332-3234",
+     "416-645-8080"
+    ],
+    "email": [
+     "LTB@ontario.ca"
+    ],
+    "social": [],
+    "web": [
+     "https://tribunalsontario.ca/ltb/"
+    ]
+   },
+   "services": {
+    "id": "e742f07b56c9",
+    "en": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line."
+   },
+   "emergencyRole": null,
+   "sourceNotes": [
+    "Added 2026-11-21 (resident testing, session 2, #3: 'need help with rent' found little). Researched by AI from the official pages listed here only; not yet confirmed by the Hub.",
+    "https://tribunalsontario.ca/ltb/contact/",
+    "https://tribunalsontario.ca/ltb/"
+   ],
    "lastConfirmed": null
   }
  ]

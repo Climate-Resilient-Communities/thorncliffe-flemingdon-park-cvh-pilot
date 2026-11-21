@@ -129,15 +129,21 @@ describe("ProviderView", () => {
     expect(render("en", "P102")).toContain(`10 Gateway Blvd, North York, M3C${NBSP}1H9`);
   });
 
-  it("says Not known where the address would be when a provider has no address, and shows no address line", () => {
-    const none = render("en", "P103", "card", { locations: [] });
+  it("says Not known where the address would be when a place has a blank address, and shows no address line", () => {
     const blank = render("en", "P103", "card", { locations: [{ street: " ", city: "", postal: null, lat: 43.7, lng: -79.3 }] });
 
-    for (const html of [none, blank]) {
-      expect(html).toMatch(/<p class="dir-card__address"><span class="dir-unknown" data-testid="not-known">[\s\S]*?Not known<\/span><\/p>/);
-      expect(html.match(/data-testid="not-known"/g)).toHaveLength(3);
-    }
+    expect(blank).toMatch(/<p class="dir-card__address"><span class="dir-unknown" data-testid="not-known">[\s\S]*?Not known<\/span><\/p>/);
+    expect(blank.match(/data-testid="not-known"/g)).toHaveLength(3);
     expect(render("en", "P103")).not.toMatch(/dir-card__address"><span class="dir-unknown"/);
+  });
+
+  it("says a provider with no place at all is a citywide service, by phone or online, with no See on the map (session 2, #3)", () => {
+    const citywide = render("en", "P103", "card", { locations: [] });
+
+    expect(citywide).toContain('data-testid="provider-citywide"');
+    expect(citywide).toContain("Citywide service: by phone or online");
+    expect(citywide).not.toContain('data-testid="provider-on-map"');
+    expect(citywide.match(/data-testid="not-known"/g)).toHaveLength(2);
   });
 
   it("gives each provider's name its own id", () => {

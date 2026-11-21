@@ -2,7 +2,7 @@
  "failed": {},
  "language": "gu",
  "models": {
-  "north-small-translate-09-2026": 51,
+  "north-small-translate-09-2026": 53,
   "tiny-aya-fire": 3
  },
  "texts": {
@@ -1135,6 +1135,16 @@
    "model": "tiny-aya-fire",
    "source": "Childminding & EarlyON",
    "text": "બાળકોની સંભાળ અને EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "Toronto Rent Bank તે કિરાયાનું ભરવામાં વિલંબ કરેલા અથવા કિરાયાની ડિપોઝિટ ચૂકવવામાં મદદની જરૂર ધરાવતા ટોરોન્ટોના ભાડે રહેતા લોકોને ગ્રાન્ટ (સહાય રકમ) આપે છે। આ યોજના માટે ટોરોન્ટો શહેર ભંડોળ આપે છે અને Neighbourhood Information Post (NIP) તેનું સંચાલન કરે છે। બાકી કિરાયા માટે આપવામાં આવતા ગ્રાન્ટની રકમ $5,000 સુધીની હોઈ શકે છે। આ સહાય મેળવવા માટે, તમારે ટોરોન્ટોમાં રહેવું અથવા ત્યાં જતા હોવું, બજાર દરે કિરાયો ચૂકવવો, ઘરની કુલ આવકના 85% થી વધુ રકમ કિરાયા પર ખર્ચવી નહીં અને ઓન્ટારિયો વર્ક્સ (Ontario Works) અથવા ODSPનો લાભ ન મેળવતા હોવો જરૂરી છે। ઓનલાઈન અરજી કરો અથવા સ્થાનિક એક્સેસ સેન્ટરથી મદદ માંગો: થોર્નક્લિફ પાર્કમાં, The Neighbourhood Organization (TNO) એક એવું સેન્ટર છે।"
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "લેન્ડલોર્ડ એન્ડ ટેનન્ટ બોર્ડ (LTB) ટ્રિબ્યુનલ્સ ઓન્ટારિયોનો ભાગ છે. તે મકાનમાલિકો અને કિરાયતદારો વચ્ચેના વિવાદો, જેમાં ખાલી કરાવવાના (બહાર કાઢવાના) અને ભાડાના કેસોનો સમાવેશ થાય છે, તેનો નિરાકરણ કરે છે. અરજીના પ્રકારને આધારે, તમે ટ્રિબ્યુનલ્સ ઓન્ટારિયો પોર્ટલ દ્વારા ઓનલાઈન, ઈમેલ અથવા ડાક દ્વારા અરજી દાખલ કરી શકો છો. તેનું કોઈ સીધું મુલાકાત લેવાનું (walk-in) કચેરી કેન્દ્ર નથી. સોમવારથી શુક્રવાર સવારે 8:30 થી સાંજે 5:00 વાગ્યા સુધી ફોન કરો, અથવા સબજેક્ટ લાઇનમાં તમારો ફાઇલ નંબર લખીને LTB@ontario.ca પર ઈમેલ કરો."
   }
  },
  "updated": "2026-10-09T04:07:12+00:00"

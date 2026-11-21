@@ -2,7 +2,7 @@
  "failed": {},
  "language": "es",
  "models": {
-  "command-a-translate-08-2025": 81
+  "command-a-translate-08-2025": 83
  },
  "texts": {
   "06c76a46e432": {
@@ -999,6 +999,16 @@
    "model": "command-a-translate-08-2025",
    "source": "Childminding & EarlyON",
    "text": "Cuidado de niños y EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "El Banco de Alquileres de Toronto ofrece subvenciones a los inquilinos de Toronto que están atrasados en el pago del alquiler o necesitan ayuda para pagar un depósito de alquiler. El Ayuntamiento de Toronto lo financia y el Neighbourhood Information Post (NIP) lo gestiona. Las subvenciones para el alquiler impagado pueden llegar hasta 5.000 dólares. Para poder optar a ellas, debes vivir en Toronto o estar trasladándote a la ciudad, pagar un alquiler de mercado, gastar no más del 85% de tus ingresos familiares en el alquiler y no recibir Ontario Works ni ODSP. Puedes solicitarlo en línea o pedir ayuda en un centro de acceso local: en Thorncliffe Park, una de estas organizaciones es The Neighbourhood Organization (TNO)."
+  },
+  "e742f07b56c9": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "La Junta de Arrendadores y Arrendatarios (LTB) forma parte de Tribunals Ontario. Resuelve disputas entre propietarios y arrendatarios, incluidos casos de desalojo y de alquiler. Puede presentar solicitudes en línea a través del Portal de Tribunals Ontario, por correo electrónico o por correo postal, según el tipo de solicitud. No tiene oficina para atención presencial. Llame de lunes a viernes, de 8:30 a.m. a 5:00 p.m., o envíe un correo electrónico a LTB@ontario.ca con su número de expediente en el asunto."
   }
  },
  "updated": "2026-10-09T04:00:01+00:00"

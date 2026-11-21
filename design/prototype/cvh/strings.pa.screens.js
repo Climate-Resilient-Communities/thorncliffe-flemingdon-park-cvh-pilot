@@ -1584,4 +1584,6 @@
   m(t, {"catPlain": {"Support & Emergency Services": "ਐਮਰਜੈਂਸੀ ਮਦਦ ਅਤੇ ਆਸਰਾ", "Faith-Based Organizations": "ਪੂਜਾ ਸਥਾਨ", "Legal & Government Services": "ਕਾਨੂੰਨੀ ਮਦਦ ਅਤੇ ਪਛਾਣ ਦਸਤਾਵੇਜ਼", "Schools & Child Services": "ਸਕੂਲ ਅਤੇ ਬੱਚਿਆਂ ਦੀ ਦੇਖਭਾਲ", "Health & Wellness": "ਸਿਹਤ ਸੰਭਾਲ", "Public Spaces": "ਜਾਣ ਦੀਆਂ ਥਾਵਾਂ", "Community Resilience": "ਪਾਣੀ, ਪਖਾਨੇ ਅਤੇ ਠੰਢੀਆਂ ਥਾਵਾਂ", "Non-Profits": "ਭਾਈਚਾਰਕ ਸੰਸਥਾਵਾਂ"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "ਅਸੀਂ ਜਾਂਚ ਨਹੀਂ ਸਕੇ ਕਿ ਇਹ ਕੋਈ ਵਿਅਕਤੀ ਭੇਜ ਰਿਹਾ ਹੈ। ਕੁਝ ਸਕਿੰਟ ਉਡੀਕ ਕਰੋ, ਫਿਰ ਦੁਬਾਰਾ ਭੇਜੋ।"}}, "places": {"errors": {"human_check_failed": "ਅਸੀਂ ਜਾਂਚ ਨਹੀਂ ਸਕੇ ਕਿ ਇਹ ਕੋਈ ਵਿਅਕਤੀ ਭੇਜ ਰਿਹਾ ਹੈ। ਕੁਝ ਸਕਿੰਟ ਉਡੀਕ ਕਰੋ, ਫਿਰ ਦੁਬਾਰਾ ਭੇਜੋ।"}}, "staff": {"textSignup": {"errors": {"human_check_failed": "ਅਸੀਂ ਜਾਂਚ ਨਹੀਂ ਸਕੇ ਕਿ ਇਹ ਕੋਈ ਵਿਅਕਤੀ ਭੇਜ ਰਿਹਾ ਹੈ। ਕੁਝ ਸਕਿੰਟ ਉਡੀਕ ਕਰੋ, ਫਿਰ ਦੁਬਾਰਾ ਭੇਜੋ।"}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "ਪੂਰੇ ਸ਼ਹਿਰ ਲਈ ਸੇਵਾ: ਫ਼ੋਨ 'ਤੇ ਜਾਂ ਔਨਲਾਈਨ"}});
 })();

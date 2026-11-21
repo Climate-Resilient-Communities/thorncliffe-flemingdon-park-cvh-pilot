@@ -1584,4 +1584,6 @@
   m(t, {"catPlain": {"Support & Emergency Services": "Núdzová pomoc a prístrešie", "Faith-Based Organizations": "Miesta bohoslužieb", "Legal & Government Services": "Právna pomoc a doklady", "Schools & Child Services": "Školy a starostlivosť o deti", "Health & Wellness": "Zdravotná starostlivosť", "Public Spaces": "Miesta, kam ísť", "Community Resilience": "Voda, toalety a chladné miesta", "Non-Profits": "Komunitné organizácie"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."}}, "places": {"errors": {"human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "Služba pre celé mesto: telefonicky alebo online"}});
 })();

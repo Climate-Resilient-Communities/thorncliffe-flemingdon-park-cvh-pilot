@@ -85,6 +85,25 @@ test("a detail the file does not give reads Not known, never a blank", async ({ 
   expect(look).toEqual({ font: "italic", ring: "dashed" });
 });
 
+test("a citywide service with no place says so instead of an address, and has no See on the map (session 2, #3)", async ({ page }) => {
+  const server = newServer(7);
+  server.citywide = ["P104"];
+  await stubDirectory(page, server);
+  await openResident(page, "/en/directory", 390);
+  await waitForList(page);
+
+  const citywide = page.getByTestId("provider-P104");
+  await expect(citywide.getByTestId("provider-citywide")).toHaveText("Citywide service: by phone or online");
+  await expect(citywide.getByTestId("provider-on-map")).toHaveCount(0);
+  await expect(citywide.getByTestId("not-known")).toHaveCount(0);
+  // A provider with a place is unchanged.
+  await expect(page.getByTestId("provider-P101").getByTestId("provider-citywide")).toHaveCount(0);
+  await expect(page.getByTestId("provider-P101").getByTestId("provider-on-map")).toBeVisible();
+
+  await citywide.getByTestId("provider-link").click();
+  await expect(page.getByTestId("provider-P104").getByTestId("provider-citywide")).toHaveText("Citywide service: by phone or online");
+});
+
 test("reads only the published release files, and filtering makes no request at all", async ({ page }) => {
   const server = await setUp(page);
   const others: string[] = [];

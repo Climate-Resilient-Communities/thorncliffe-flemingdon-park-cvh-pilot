@@ -143,14 +143,15 @@ const SAMPLES: Sample[] = [
 ];
 
 /** The listing file of one language, in the shape of DirectoryListingV1. */
-export function buildListing(lang: Lang, release: number, change: { drop?: string[]; hash?: string } = {}) {
+export function buildListing(lang: Lang, release: number, change: { drop?: string[]; hash?: string; citywide?: string[] } = {}) {
   const providers = SAMPLES.filter((s) => !(change.drop ?? []).includes(s.id)).map((s) => ({
     id: s.id,
     name: s.name,
     category_ids: s.categories,
     subcategories: s.subcats.map(([en, ur]) => text(lang, en, ur)),
     neighbourhood_ids: s.neighbourhoods,
-    locations: [{ street: s.street, city: s.city, postal: s.postal, lat: 43.705, lng: -79.34 }],
+    // A citywide service (session 2, #3: the Toronto Rent Bank, the Landlord and Tenant Board) has no place: no location at all.
+    locations: (change.citywide ?? []).includes(s.id) ? [] : [{ street: s.street, city: s.city, postal: s.postal, lat: 43.705, lng: -79.34 }],
     contact: { phone: s.phone, email: s.email, social: s.social, web: s.web },
     services: text(lang, s.services[0], s.services[1]),
     emergency_role: s.emergency ? text(lang, s.emergency[0], s.emergency[1]) : null,
@@ -191,6 +192,8 @@ export type DirectoryServer = {
   file?: "ok" | "fail" | "truncated" | "invalid";
   /** Providers left out of the listing files. */
   drop?: string[];
+  /** Providers the listing files give no location: citywide services, by phone or online. */
+  citywide?: string[];
   /** The catalogue hash the manifest and the listing files carry (the default is CATALOGUE_HASH). */
   hash?: string;
   /** Every request made to the release routes: "GET /path". */
@@ -220,7 +223,7 @@ export async function stubDirectory(page: Page, server: DirectoryServer) {
     server.requests.push(`GET ${url.pathname}`);
     const [, , , release, file] = url.pathname.split("/");
     const lang = file.replace(".json", "") as Lang;
-    const listing = buildListing(lang, Number(release), { drop: server.drop, hash: server.hash });
+    const listing = buildListing(lang, Number(release), { drop: server.drop, hash: server.hash, citywide: server.citywide });
     switch (server.file ?? "ok") {
       case "fail":
         return route.fulfill({ status: 503, json: { v: 1, error: { code: "unavailable", message_key: "directory.unavailable" } } });

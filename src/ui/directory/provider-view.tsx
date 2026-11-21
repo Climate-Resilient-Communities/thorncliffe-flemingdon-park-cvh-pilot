@@ -170,6 +170,11 @@ export function ProviderView({
               <Isolated>{line}</Isolated>
             </p>
           ))
+        ) : provider.locations.length === 0 ? (
+          // Session 2, #3: a provider with no place (the Toronto Rent Bank, the Landlord and Tenant Board) serves the whole city.
+          <p className="dir-card__address" data-testid="provider-citywide">
+            <ResidentText>{t("directory.citywide")}</ResidentText>
+          </p>
         ) : (
           <p className="dir-card__address">
             <Unknown>{t("status.unknown")}</Unknown>

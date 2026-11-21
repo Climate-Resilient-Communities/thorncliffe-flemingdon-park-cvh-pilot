@@ -2,7 +2,7 @@
  "failed": {},
  "language": "bn",
  "models": {
-  "north-small-translate-09-2026": 60
+  "north-small-translate-09-2026": 62
  },
  "texts": {
   "06c76a46e432": {
@@ -1140,6 +1140,16 @@
    "model": "north-small-translate-09-2026",
    "source": "Childminding & EarlyON",
    "text": "শিশু যত্ন ও আর্লি-অন (EarlyON)"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "টরন্টো রেন্ট ব্যাংক সেইসব ভাড়াটিয়েদের অনুদান প্রদান করে যারা ভাড়া বকেয়া রাখিয়েছেন অথবা ভাড়ার জামানত পরিশোধে সহায়তার প্রয়োজনীয়তা অনুভব করছেন। এর অর্থায়ন টরন্টো সিটি প্রদান করে এবং নেবারহুড ইনফরমেশন পোস্ট (NIP) এটি পরিচালনা করে। বকেয়া ভাড়ার জন্য অনুদানের পরিমাণ ৫,০০০ ডলার পর্যন্ত হতে পারে। এই সুবিধা পাওয়ার জন্য আপনাকে টরন্টোতে বসবাস করতে হবে অথবা সেখানে স্থানান্তরিত হতে হবে, বাজারের নির্ধারিত ভাড়া প্রদান করতে হবে, পারিবারিক আয়ের ৮৫%-এর বেশি ভাড়ায় ব্যয় করা চলবে না এবং আপনাকে অন্টারিও ওয়ার্কস (Ontario Works) বা ওডিএসপি (ODSP) সুবিধা গ্রহীতা হওয়া চলবে না। অনলাইনে আবেদন করুন, অথবা স্থানীয় অ্যাক্সেস সেন্টারের সাহায্য নিন; যেমন থর্নক্লিফ পার্কে 'দ্য নেবারহুড অর্গানাইজেশন' (TNO) একটি অ্যাক্সেস সেন্টার।"
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "ল্যান্ডলর্ড অ্যান্ড টেন্যান্ট বোর্ড (LTB) ট্রাইব্যুনালস অন্টারিও-র একটি অংশ। এটি বাড়িওয়ালা এবং ভাড়াটেদের মধ্যকার বিরোধ, যার মধ্যে উচ্ছেদ এবং ভাড়া সংক্রান্ত মামলা অন্তর্ভুক্ত, নিষ্পত্তি করে। আবেদনের ধরন অনুযায়ী, আপনি ট্রাইব্যুনালস অন্টারিও পোর্টালের মাধ্যমে অনলাইনে, ইমেলের মাধ্যমে অথবা ডাকযোগে আবেদন জমা দিতে পারেন। এর কোনো সরাসরি সাক্ষাতের অফিস নেই। সোমবার থেকে শুক্রবার সকাল ৮:৩০টা থেকে বিকেল ৫:০০টার মধ্যে ফোন করুন, অথবা আপনার ফাইল নম্বরটি বিষয়বস্তুতে (subject line) উল্লেখ করে LTB@ontario.ca-তে ইমেল করুন।"
   }
  },
  "updated": "2026-10-09T04:07:12+00:00"

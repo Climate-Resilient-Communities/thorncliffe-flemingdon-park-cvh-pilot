@@ -1584,4 +1584,6 @@
   m(t, {"catPlain": {"Support & Emergency Services": "Aide d'urgence et hébergement", "Faith-Based Organizations": "Lieux de culte", "Legal & Government Services": "Aide juridique et pièces d'identité", "Schools & Child Services": "Écoles et garde d'enfants", "Health & Wellness": "Soins de santé", "Public Spaces": "Endroits où aller", "Community Resilience": "Eau, toilettes et lieux frais", "Non-Profits": "Organismes communautaires"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "Nous n'avons pas pu vérifier qu'une personne envoie ceci. Attendez quelques secondes, puis envoyez de nouveau."}}, "places": {"errors": {"human_check_failed": "Nous n'avons pas pu vérifier qu'une personne envoie ceci. Attendez quelques secondes, puis envoyez de nouveau."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "Nous n'avons pas pu vérifier qu'une personne envoie ceci. Attendez quelques secondes, puis envoyez de nouveau."}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "Service pour toute la ville : par téléphone ou en ligne"}});
 })();

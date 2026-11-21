@@ -2,7 +2,7 @@
  "failed": {},
  "language": "zh",
  "models": {
-  "command-a-translate-08-2025": 61
+  "command-a-translate-08-2025": 63
  },
  "texts": {
   "06c76a46e432": {
@@ -1099,6 +1099,16 @@
    "model": "command-a-translate-08-2025",
    "source": "Childminding & EarlyON",
    "text": "儿童看护和 EarlyON 服务"
+  },
+  "6ece8c737561": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "多伦多租金银行为拖欠租金或需要帮助支付租金押金的多伦多租户提供补助金。该项目由多伦多市出资，由社区信息站（NIP）运营。未付租金的补助金最高可达 5,000 美元。要符合资格，您必须居住在多伦多或即将搬迁至多伦多，支付市场租金，将不超过 85% 的家庭收入用于租金，并且不领取安大略省福利金或 ODSP。您可以网上申请，或向当地接入中心寻求帮助：在 Thorncliffe Park，社区组织（TNO）就是其中之一。"
+  },
+  "e742f07b56c9": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "房东与租客委员会（LTB）是安大略省法庭的一部分。它负责解决房东与租客之间的纠纷，包括驱逐和租金案件。您可以通过安大略省法庭门户网站在线提交申请，也可以根据申请类型通过电子邮件或邮寄方式提交申请。该机构没有现场办公处。请在周一至周五上午 8:30 至下午 5:00 之间致电，或发送电子邮件至 LTB@ontario.ca，并在主题行中注明您的文件编号。"
   }
  },
  "updated": "2026-10-09T04:00:29+00:00"

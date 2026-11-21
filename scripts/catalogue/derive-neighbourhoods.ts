@@ -100,6 +100,11 @@ export async function main(argv: string[], _env: NodeJS.ProcessEnv, root: string
   }
   const located: LocatedProvider[] = [];
   for (const provider of catalogue.providers ?? []) {
+    // Session 2, #3: a citywide service (no address, no location) is in no neighbourhood of the list: the rule's "none".
+    if (typeof provider.id === "string" && provider.location === null && provider.address === null) {
+      located.push({ id: provider.id, postal: null, lat: 0 });
+      continue;
+    }
     if (typeof provider.id !== "string" || typeof provider.location?.lat !== "number") {
       console.error(`A provider has no id or no latitude: ${JSON.stringify(provider.id)}`);
       return 1;

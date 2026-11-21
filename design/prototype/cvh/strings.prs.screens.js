@@ -1573,4 +1573,6 @@
   m(t, {"catPlain": {"Support & Emergency Services": "کمک اضطراری و سرپناه", "Faith-Based Organizations": "عبادتگاه‌ها", "Legal & Government Services": "کمک حقوقی و اسناد هویتی", "Schools & Child Services": "مکاتب و مراقبت از کودکان", "Health & Wellness": "مراقبت صحی", "Public Spaces": "جاهایی برای رفتن", "Community Resilience": "آب، تشناب و جاهای خنک", "Non-Profits": "سازمان‌های اجتماعی"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "ما نتوانستیم بررسی کنیم که یک انسان این را می‌فرستد. چند ثانیه صبر کنید، بعد دوباره بفرستید."}}, "places": {"errors": {"human_check_failed": "ما نتوانستیم بررسی کنیم که یک انسان این را می‌فرستد. چند ثانیه صبر کنید، بعد دوباره بفرستید."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "ما نتوانستیم بررسی کنیم که یک انسان این را می‌فرستد. چند ثانیه صبر کنید، بعد دوباره بفرستید."}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "خدمت برای تمام شهر: از راه تلفن یا آنلاین"}});
 })();

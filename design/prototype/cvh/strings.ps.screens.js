@@ -1573,4 +1573,6 @@
   m(t, {"catPlain": {"Support & Emergency Services": "بیړنۍ مرسته او سرپناه", "Faith-Based Organizations": "د عبادت ځایونه", "Legal & Government Services": "حقوقي مرسته او پېژند اسناد", "Schools & Child Services": "ښوونځي او د ماشومانو پاملرنه", "Health & Wellness": "روغتیايي پاملرنه", "Public Spaces": "د تګ ځایونه", "Community Resilience": "اوبه، تشنابونه او سړې ځایونه", "Non-Profits": "ټولنیز سازمانونه"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."}}, "places": {"errors": {"human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "موږ ونه شو کولی وګورو چې دا یو انسان لیږي. څو ثانیې انتظار وکړئ، بیا یې بیا ولیږئ."}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "د ټول ښار خدمت: د تلیفون له لارې یا آنلاین"}});
 })();

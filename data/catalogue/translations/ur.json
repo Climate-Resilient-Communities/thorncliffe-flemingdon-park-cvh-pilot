@@ -2,7 +2,7 @@
  "failed": {},
  "language": "ur",
  "models": {
-  "north-small-translate-09-2026": 71
+  "north-small-translate-09-2026": 73
  },
  "texts": {
   "06c76a46e432": {
@@ -1103,6 +1103,16 @@
    "model": "north-small-translate-09-2026",
    "source": "Childminding & EarlyON",
    "text": "بچوں کی دیکھ بھال اور EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "ٹورنٹو رینٹ بینک ان کرایہ داروں کو گرانٹ فراہم کرتا ہے جو ٹورنٹو میں رہتے ہیں اور کرایہ ادا کرنے میں پیچھے رہ گئے ہیں یا کرایے کے ڈپازٹ کی ادائیگی کے لیے مدد کے محتاج ہیں۔ اس کے اخراجات ٹورنٹو سٹی برداشت کرتی ہے اور اسے نیبرہوڈ انفارمیشن پوسٹ (NIP) چلاتی ہے۔ بقایا کرایے کے لیے گرانٹ کی رقم 5,000 ڈالر تک ہو سکتی ہے۔ اہل ہونے کے لیے، آپ کا ٹورنٹو میں رہنا یا وہاں منتقل ہونا ضروری ہے، آپ کو مارکیٹ ریٹ کے مطابق کرایہ ادا کرنا چاہیے، اپنی گھریلو آمدنی کا 85 فیصد سے زیادہ کرایے پر خرچ نہیں کرنا چاہیے، اور آپ کو 'اونٹاریو ورکس' (Ontario Works) یا 'او ڈی ایس پی' (ODSP) کی امداد حاصل نہیں ہونی چاہیے۔ آن لائن درخواست دیں، یا مقامی ایکسیس سینٹر سے مدد لیں: تھورن کلف پارک میں 'دی نیبرہوڈ آرگنائزیشن' (TNO) ایسا ہی ایک مرکز ہے۔"
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "لینڈ لارڈ اینڈ ٹیننٹ بورڈ (LTB) 'ٹربیونلز اونٹاریو' (Tribunals Ontario) کا حصہ ہے۔ یہ مالکانِ مکان اور کرایہ داروں کے درمیان تنازعات، بشمول بے دخلی اور کرایے کے مقدمات کا فیصلہ کرتا ہے۔ آپ درخواست کی قسم کے مطابق 'ٹربیونلز اونٹاریو پورٹل' کے ذریعے آن لائن، ای میل کے ذریعے یا ڈاک کے ذریعے درخواست دائر کر سکتے ہیں۔ اس کا کوئی ایسا دفتر نہیں ہے جہاں آپ براہِ راست جا کر اپنا کام کروا سکیں۔ پیر سے جمعہ، صبح 8:30 بجے سے شام 5:00 بجے تک کال کریں، یا ای میل LTB@ontario.ca پر اپنی فائل نمبر 'سبجیکٹ لائن' میں درج کرتے ہوئے پیغام بھیجیں۔"
   }
  },
  "updated": "2026-10-09T04:07:56+00:00"

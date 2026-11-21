@@ -909,6 +909,23 @@
       "need help managing a project",
       "need advice on running my organization",
       "need help with media for my organization"
+    ],
+    "M100": [
+      "can't pay my rent this month",
+      "behind on rent",
+      "I owe back rent and my landlord wants it",
+      "my landlord gave me a notice because I'm behind on rent",
+      "I need help paying a rent deposit to move",
+      "I'm worried about losing my home over unpaid rent"
+    ],
+    "M101": [
+      "my landlord wants to evict me",
+      "my landlord says I owe rent and wants me out",
+      "I want a hearing about my eviction",
+      "my landlord is not doing repairs",
+      "I think my rent was raised too much",
+      "I have a dispute with my landlord about my lease",
+      "I need to file a case against my landlord"
     ]
   }
 }
