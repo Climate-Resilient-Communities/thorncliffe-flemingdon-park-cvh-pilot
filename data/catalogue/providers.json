@@ -6626,9 +6626,11 @@
    "address": null,
    "location": null,
    "contact": {
-    "phone": [],
+    "phone": [
+   "416-397-7368"
+  ],
     "email": [
-     "nipost@nipost.org"
+     "torontorentbank@nipost.org"
     ],
     "social": [],
     "web": [
@@ -6645,7 +6647,7 @@
     "Added 2026-11-21 (resident testing, session 2, #3: 'need help with rent' found little). Researched by AI from the official pages listed here only; not yet confirmed by the Hub.",
     "https://www.toronto.ca/community-people/housing-shelter/financial-support-for-housing/financial-support-for-renters/toronto-rent-bank/",
     "https://nipost.org/toronto-rent-bank/",
-    "No phone line labelled as the Rent Bank's own was confirmed, so none is listed."
+    "Phone 416-397-7368 (Monday to Friday, 9 a.m. to 4:30 p.m.) and the email torontorentbank@nipost.org checked against the official sources by the Hub on 2026-11-21."
    ],
    "lastConfirmed": null
   },
