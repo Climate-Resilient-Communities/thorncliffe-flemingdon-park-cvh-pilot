@@ -2,7 +2,7 @@
  "failed": {},
  "language": "zh-Hant",
  "models": {
-  "opencc": 111
+  "opencc": 112
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -1657,17 +1657,17 @@
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "32e4daafd68ed251ec3dfef20b704db79483cee696a5d35af16e2bb5e7e0a7a0",
+    "fromTextHash": "f5de9202637f4a1ab2e4efce68b8e5daed06579a2c045826d33b5fb8dab568f9",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "有四家公司幫助我們運營這項服務。它們代我們處理資訊。",
-   "translatedOn": "2026-10-09"
+   "text": "有五家公司幫助我們運營這項服務。他們為我們處理資訊。",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "conversion": {
@@ -1737,6 +1737,22 @@
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
+    "fromTextHash": "8d3c30320bdd37359488eb971e35f0956f3f4d5113f71fba19c6bbe7e4688d96",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "Cloudflare 會檢查是否由人而非計算機程式傳送登錄檔單或“新增地點”表單。為此，它會檢視您的網際網路地址以及您的裝置和瀏覽器。它不會獲取您的電話號碼或您在表單中填寫的內容。它可能會在加拿大境外執行此操作。我們不會保留它所看到的內容。",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
     "fromTextHash": "c8696026b5ba1ca7d79cd98a7e92b924ac6ecbfd72658fe8799f51f20327034b",
     "openccVersion": "1.4.2"
    },
@@ -1749,21 +1765,21 @@
    "text": "Twilio 會儲存每條簡訊的副本，以及您的電話號碼，其中也包括您的回覆。試點結束後，中心會從 Twilio 刪除這些副本。",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
+  "terms.who.7": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "641a7e4ab0f79e2a0b4a84f1c80adeb30c148b4932e2a0e079fa269008a87f70",
+    "fromTextHash": "5f8bc039abfda0299e3b39656919501cf27be2280b62ff52a573723f7e8683d4",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "我們絕不會出售您的電話號碼，也絕不會為了營銷把您的電話號碼或您同意接收簡訊的記錄分享給任何人。上面這四家公司只會用它來運營這項服務。",
-   "translatedOn": "2026-10-09"
+   "text": "我們絕不會出售您的電話號碼，也絕不會與任何人分享您的電話號碼或您同意接收簡訊的協議，用於營銷目的。上述五家公司僅使用它來執行此服務。",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "conversion": {
@@ -1782,5 +1798,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:00:28+00:00"
+ "updated": "2026-11-21T23:23:37+00:00"
 }
