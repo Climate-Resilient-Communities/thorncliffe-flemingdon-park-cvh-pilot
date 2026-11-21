@@ -1,4 +1,4 @@
-import { SearchErrorSchema } from "@/contracts/search";
+import { ClosestV1Schema, SearchErrorSchema, type ClosestV1 } from "@/contracts/search";
 import { SearchV1Schema, type SearchV1 } from "@/contracts/searchTestSet";
 import { FALLBACK_HEADER, type Fetcher } from "../directory/load-directory";
 
@@ -68,5 +68,35 @@ export async function askSearch(request: AskRequest, deps: { fetcher?: Fetcher; 
     return answer.success ? { kind: "answer", answer: answer.data } : { kind: "failed" };
   } catch {
     return { kind: "offline" };
+  }
+}
+
+export const CLOSEST_URL = "/api/search/closest";
+/** The server answers within 8 s. */
+export const CLOSEST_TIMEOUT_MS = 10_000;
+
+/**
+ * Session 2, #3: asks for the closest matches of a question search answered with "no clear match" (and no 911 block). Resolves
+ * with the answer, or null for anything else (no signal, busy, a failure, an answer this screen does not understand): the
+ * screen then shows only "no clear match", as before.
+ */
+export async function askClosest(request: AskRequest, deps: { fetcher?: Fetcher; signal?: AbortSignal; timeoutMs?: number } = {}): Promise<ClosestV1 | null> {
+  const fetcher = deps.fetcher ?? fetch;
+  try {
+    const timeout = AbortSignal.timeout(deps.timeoutMs ?? CLOSEST_TIMEOUT_MS);
+    const signal = deps.signal ? AbortSignal.any([deps.signal, timeout]) : timeout;
+    const response = await fetcher(CLOSEST_URL, {
+      method: "POST",
+      credentials: "omit",
+      cache: "no-store",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ q: request.q, lang: request.lang, ...(request.v === undefined ? {} : { v: request.v }) }),
+      signal,
+    });
+    if (!response.ok || response.headers.get(FALLBACK_HEADER) !== null) return null;
+    const answer = ClosestV1Schema.safeParse(await response.json());
+    return answer.success ? answer.data : null;
+  } catch {
+    return null;
   }
 }

@@ -831,7 +831,10 @@
     "callConfirm": "在正式的 CVH 中，这里会拨打 {phone}。",
     "directionsConfirm": "在正式的 CVH 中，这里会打开前往 45 Overlea Boulevard 的路线。",
     "directions": "路线",
-    "hoursFull": "周一至周四上午9点至晚上8点，周五上午9点至下午5点，周六上午10点至下午2点"
+    "hoursFull": "周一至周四上午9点至晚上8点，周五上午9点至下午5点，周六上午10点至下午2点",
+    "closestTitle": "最接近的结果",
+    "closestHint": "我们没有找到完全符合的结果。以下地方也许能帮上忙：请确认它们提供您需要的服务。",
+    "closestLooking": "正在查找最接近的结果…"
   },
   "R12": {
     "status": "目前",

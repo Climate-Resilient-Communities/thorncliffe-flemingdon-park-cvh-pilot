@@ -831,7 +831,10 @@
     "callConfirm": "In the real CVH, this would call {phone}.",
     "directionsConfirm": "In the real CVH, this would open directions to 45 Overlea Boulevard.",
     "directions": "Directions",
-    "hoursFull": "Monday to Thursday 9 am to 8 pm, Friday 9 am to 5 pm, Saturday 10 am to 2 pm"
+    "hoursFull": "Monday to Thursday 9 am to 8 pm, Friday 9 am to 5 pm, Saturday 10 am to 2 pm",
+    "closestTitle": "Closest matches",
+    "closestHint": "We could not find an exact match. These places might help: check that they do what you need.",
+    "closestLooking": "Looking for the closest matches…"
   },
   "R12": {
     "status": "Right now",
