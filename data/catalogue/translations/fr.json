@@ -2,7 +2,7 @@
  "failed": {},
  "language": "fr",
  "models": {
-  "command-a-translate-08-2025": 93,
+  "command-a-translate-08-2025": 95,
   "north-small-translate-09-2026": 1
  },
  "texts": {
@@ -947,6 +947,16 @@
    "model": "command-a-translate-08-2025",
    "source": "Childminding & EarlyON",
    "text": "Garde d’enfants et EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "La Banque de location de Toronto offre des subventions aux locataires de Toronto qui ont des arriérés de loyer ou qui ont besoin d'aide pour payer un dépôt de garantie pour le loyer. La ville de Toronto finance ce programme et le Neighbourhood Information Post (NIP) en assure la gestion. Les subventions pour les loyers impayés peuvent atteindre 5 000 $. Pour être admissible, vous devez vivre à Toronto ou y déménager, payer un loyer au prix du marché, dépenser au maximum 85 % du revenu de votre ménage pour le loyer et ne pas recevoir de prestations d'Ontario Works ou de l'ODSP. Postulez en ligne ou demandez de l'aide à un centre d'accès local : à Thorncliffe Park, The Neighbourhood Organization (TNO) en est un."
+  },
+  "e742f07b56c9": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "Le Conseil de la location immobilière (LTB) fait partie de Tribunaux Ontario. Il règle les différends entre propriétaires et locataires, notamment les cas d’expulsion et de loyer. Vous pouvez déposer des demandes en ligne par l’intermédiaire du portail de Tribunaux Ontario, par courriel ou par courrier, selon le type de demande. Il n’y a pas de bureau où l’on peut se présenter en personne. Appelez du lundi au vendredi, de 8 h 30 à 17 h, ou envoyez un courriel à LTB@ontario.ca en indiquant votre numéro de dossier dans l’objet du message."
   }
  },
  "updated": "2026-10-09T03:59:35+00:00"

@@ -37,10 +37,10 @@ describe("provider-problems.json (resident testing, session 2, #3)", () => {
     }
   });
 
-  it("lets a resident's own words reach the right listing: rent help finds The Neighbourhood Organization's rent bank", () => {
+  it("lets a resident's own words reach the right listing: rent help finds the Toronto Rent Bank and The Neighbourhood Organization, its access centre", () => {
     const index = buildKeywordIndex(providers.map((p) => ({ id: p.id, text: [p.name, p.services.en, ...(byProvider[p.id] ?? [])].join(" ") })));
     const boosts = [...keywordBoosts(index, "I can't pay my rent this month", 0.15).entries()].sort((a, b) => b[1] - a[1]);
-    expect(boosts.slice(0, 2).map(([id]) => id).sort()).toEqual(["M007", "M049"]);
+    expect(boosts.slice(0, 3).map(([id]) => id)).toEqual(expect.arrayContaining(["M100", "M049"]));
   });
 
   it("refuses a file that is not in shape, naming what is wrong", () => {

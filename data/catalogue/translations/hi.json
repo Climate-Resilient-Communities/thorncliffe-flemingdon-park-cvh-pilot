@@ -2,7 +2,7 @@
  "failed": {},
  "language": "hi",
  "models": {
-  "command-a-translate-08-2025": 44,
+  "command-a-translate-08-2025": 46,
   "north-small-translate-09-2026": 4
  },
  "texts": {
@@ -1165,6 +1165,16 @@
    "model": "command-a-translate-08-2025",
    "source": "Childminding & EarlyON",
    "text": "बच्चों की देखभाल और अर्लीऑन"
+  },
+  "6ece8c737561": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "टोरंटो रेंट बैंक उन टोरंटो के किरायेदारों को अनुदान देता है जो किराये के भुगतान में पिछड़ गए हैं या किराया जमा करने में मदद की आवश्यकता रखते हैं। टोरंटो शहर इसका भुगतान करता है और नेबरहुड इनफॉर्मेशन पोस्ट (एनआईपी) इसे चलाता है। बकाया किराये के लिए अनुदान 5,000 डॉलर तक होता है। योग्य होने के लिए, आपको टोरंटो में रहना होगा या वहाँ जाना होगा, बाजार दर का किराया चुकाना होगा, अपनी घरेलू आय का 85% से अधिक किराये पर खर्च नहीं करना होगा, और आपको ओंटारियो वर्क्स या ओडीएसपी प्राप्त नहीं होना चाहिए। ऑनलाइन आवेदन करें, या स्थानीय एक्सेस केंद्र से मदद मांगें: थॉर्नक्लिफ पार्क में, द नेबरहुड ऑर्गनाइजेशन (टीएनओ) एक ऐसा केंद्र है।"
+  },
+  "e742f07b56c9": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "भूमिस्वामी और किरायेदार बोर्ड (एलटीबी) ट्रिब्यूनल्स ओंटारियो का हिस्सा है। यह भूमिस्वामियों और किरायेदारों के बीच विवादों का निपटारा करता है, जिसमें निष्कासन और किराये से जुड़े मामले शामिल हैं। आप आवेदन के प्रकार के आधार पर ऑनलाइन ट्रिब्यूनल्स ओंटारियो पोर्टल के माध्यम से, ईमेल द्वारा या डाक से आवेदन दाखिल कर सकते हैं। इसका कोई वॉक-इन ऑफिस नहीं है। सोमवार से शुक्रवार तक सुबह 8:30 बजे से शाम 5:00 बजे तक कॉल करें या LTB@ontario.ca पर ईमेल करें, विषय पंक्ति में अपना फ़ाइल नंबर लिखें।"
   }
  },
  "updated": "2026-10-09T04:07:12+00:00"

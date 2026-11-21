@@ -2,7 +2,7 @@
  "failed": {},
  "language": "pa",
  "models": {
-  "north-small-translate-09-2026": 56,
+  "north-small-translate-09-2026": 58,
   "tiny-aya-fire": 7
  },
  "texts": {
@@ -1090,6 +1090,16 @@
    "model": "north-small-translate-09-2026",
    "source": "Childminding & EarlyON",
    "text": "ਬੱਚਿਆਂ ਦੀ ਦੇਖਭਾਲ ਅਤੇ EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "ਟੋਰਾਂਟੋ ਰੈਂਟ ਬੈਂਕ ਉਨ੍ਹਾਂ ਟੋਰਾਂਟੋ ਦੇ ਕਿਰਾਏਦਾਰਾਂ ਨੂੰ ਗ੍ਰਾਂਟ ਦਿੰਦਾ ਹੈ ਜੋ ਕਿਰਾਏ ਦੇ ਬਕਾਏ ਚੁਕਾਉਣ ਵਿੱਚ ਅਸਮਰੱਥ ਹਨ ਜਾਂ ਜਿਨ੍ਹਾਂ ਨੂੰ ਕਿਰਾਏ ਦੀ ਸਿਕਿਓਰਿਟੀ ਡਿਪਾਜ਼ਿਟ ਜਮ੍ਹਾਂ ਕਰਵਾਉਣ ਲਈ ਮਦਦ ਦੀ ਲੋੜ ਹੈ। ਇਸ ਦਾ ਖਰਚਾ ਟੋਰਾਂਟੋ ਸ਼ਹਿਰ ਉਠਾਉਂਦਾ ਹੈ ਅਤੇ ਇਸ ਦਾ ਸੰਚਾਲਨ 'ਨੇਬਰਹੁੱਡ ਇਨਫਰਮੇਸ਼ਨ ਪੋਸਟ' (NIP) ਕਰਦਾ ਹੈ। ਬਕਾਇਆ ਕਿਰਾਏ ਲਈ ਗ੍ਰਾਂਟ $5,000 ਤੱਕ ਹੋ ਸਕਦੀ ਹੈ। ਇਸ ਲਈ ਯੋਗਤਾ ਪ੍ਰਾਪਤ ਕਰਨ ਵਾਸਤੇ, ਤੁਹਾਨੂੰ ਟੋਰਾਂਟੋ ਵਿੱਚ ਰਹਿਣਾ ਚਾਹੀਦਾ ਹੈ ਜਾਂ ਉੱਥੇ ਜਾ ਕੇ ਵਸਣਾ ਚਾਹੀਦਾ ਹੈ, ਬਾਜ਼ਾਰ ਦਰ ਅਨੁਸਾਰ ਕਿਰਾਇਆ ਦੇਣਾ ਚਾਹੀਦਾ ਹੈ, ਆਪਣੀ ਪਰਿਵਾਰਕ ਆਮਦਨ ਦਾ 85% ਤੋਂ ਵੱਧ ਕਿਰਾਏ 'ਤੇ ਖਰਚ ਨਹੀਂ ਕਰਨਾ ਚਾਹੀਦਾ, ਅਤੇ ਤੁਹਾਨੂੰ 'ਓਨਟਾਰੀਓ ਵਰਕਸ' (Ontario Works) ਜਾਂ 'ODSP' ਤੋਂ ਸਹਾਇਤਾ ਪ੍ਰਾਪਤ ਨਹੀਂ ਹੋਣੀ ਚਾਹੀਦੀ। ਆਨਲਾਈਨ ਅਰਜ਼ੀ ਦਿਓ, ਜਾਂ ਸਥਾਨਕ ਐਕਸੈਸ ਸੈਂਟਰ ਤੋਂ ਮਦਦ ਮੰਗੋ; ਥੋਰਨਕਲਿਫ ਪਾਰਕ ਵਿੱਚ 'ਦਿ ਨੇਬਰਹੁੱਡ ਆਰਗੇਨਾਈਜ਼ੇਸ਼ਨ' (TNO) ਅਜਿਹਾ ਹੀ ਇੱਕ ਸੈਂਟਰ ਹੈ।"
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "ਲੈਂਡਲਾਰਡ ਐਂਡ ਟੈਨੈਂਟ ਬੋਰਡ (LTB) ਟ੍ਰਿਬਿਊਨਲਜ਼ ਓਨਟਾਰੀਓ (Tribunals Ontario) ਦਾ ਹਿੱਸਾ ਹੈ। ਇਹ ਮਕਾਨ ਮਾਲਕਾਂ ਅਤੇ ਕਿਰਾਏਦਾਰਾਂ ਵਿਚਕਾਰ ਵਿਵਾਦਾਂ, ਜਿਨ੍ਹਾਂ ਵਿੱਚ ਬੇਦਖਲੀ ਅਤੇ ਕਿਰਾਏ ਦੇ ਮਾਮਲੇ ਸ਼ਾਮਲ ਹਨ, ਦਾ ਨਿਪਟਾਰਾ ਕਰਦਾ ਹੈ। ਤੁਸੀਂ ਅਰਜ਼ੀ ਦੀ ਕਿਸਮ ਦੇ ਆਧਾਰ 'ਤੇ, ਟ੍ਰਿਬਿਊਨਲਜ਼ ਓਨਟਾਰੀਓ ਪੋਰਟਲ ਰਾਹੀਂ ਆਨਲਾਈਨ, ਈਮੇਲ ਰਾਹੀਂ ਜਾਂ ਡਾਕ ਰਾਹੀਂ ਅਰਜ਼ੀ ਦਾਇਰ ਕਰ ਸਕਦੇ ਹੋ। ਇਸ ਦਾ ਕੋਈ ਸਿੱਧਾ ਦਫ਼ਤਰ (ਵਾਕ-ਇਨ ਦਫ਼ਤਰ) ਨਹੀਂ ਹੈ। ਸੋਮਵਾਰ ਤੋਂ ਸ਼ੁੱਕਰਵਾਰ, ਸਵੇਰੇ 8:30 ਵਜੇ ਤੋਂ ਸ਼ਾਮ 5:00 ਵਜੇ ਤੱਕ ਫੋਨ ਕਰੋ, ਜਾਂ ਵਿਸ਼ਾ-ਲਾਈਨ (subject line) ਵਿੱਚ ਆਪਣਾ ਫਾਈਲ ਨੰਬਰ ਲਿਖ ਕੇ LTB@ontario.ca 'ਤੇ ਈਮੇਲ ਕਰੋ।"
   }
  },
  "updated": "2026-10-09T04:07:12+00:00"

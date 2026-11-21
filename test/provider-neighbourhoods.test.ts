@@ -20,9 +20,10 @@ const tempDir = () => {
   return dir;
 };
 
-const catalogueProviders = (): { id: string; address: { postal: string | null }; location: { lat: number } }[] =>
+const catalogueProviders = (): { id: string; address: { postal: string | null } | null; location: { lat: number } | null }[] =>
   JSON.parse(readFileSync(path.join(CATALOGUE, "providers.json"), "utf8")).providers;
-const located = (): LocatedProvider[] => catalogueProviders().map((p) => ({ id: p.id, postal: p.address.postal, lat: p.location.lat }));
+// A citywide service (session 2, #3) has no address or location: the script reads it as no postal code (in no neighbourhood).
+const located = (): LocatedProvider[] => catalogueProviders().map((p) => ({ id: p.id, postal: p.address?.postal ?? null, lat: p.location?.lat ?? 0 }));
 
 describe("the derivation", () => {
   it.each([
@@ -76,7 +77,7 @@ describe("data/catalogue/provider-neighbourhoods.json", () => {
 
   it("puts Don Mills / Wynford (M3C north of 43.722) in neither neighbourhood and the rest of M3C and M4H in Flemingdon Park and Thorncliffe Park", () => {
     const { byProvider } = parseProviderNeighbourhoods(JSON.parse(raw));
-    const byArea = (area: string, side: (lat: number) => boolean) => catalogueProviders().filter((p) => (p.address.postal ?? "").replace(/\s/g, "").toUpperCase().startsWith(area) && side(p.location.lat));
+    const byArea = (area: string, side: (lat: number) => boolean) => catalogueProviders().filter((p) => (p.address?.postal ?? "").replace(/\s/g, "").toUpperCase().startsWith(area) && p.location !== null && side(p.location.lat));
 
     expect(byArea("M3C", (lat) => lat >= 43.722).length).toBeGreaterThan(0);
     for (const p of byArea("M3C", (lat) => lat >= 43.722)) expect(byProvider[p.id], p.id).toEqual([]);

@@ -1560,6 +1560,8 @@
   m(t, {"catPlain": {"Support & Emergency Services": "Βοήθεια έκτακτης ανάγκης και στέγη", "Faith-Based Organizations": "Χώροι λατρείας", "Legal & Government Services": "Νομική βοήθεια και έγγραφα ταυτότητας", "Schools & Child Services": "Σχολεία και φροντίδα παιδιών", "Health & Wellness": "Υγειονομική περίθαλψη", "Public Spaces": "Μέρη για να πάτε", "Community Resilience": "Νερό, τουαλέτες και δροσερά μέρη", "Non-Profits": "Κοινοτικοί οργανισμοί"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "Δεν μπορέσαμε να ελέγξουμε ότι αυτό το στέλνει άνθρωπος. Περιμένετε λίγα δευτερόλεπτα και στείλτε ξανά."}}, "places": {"errors": {"human_check_failed": "Δεν μπορέσαμε να ελέγξουμε ότι αυτό το στέλνει άνθρωπος. Περιμένετε λίγα δευτερόλεπτα και στείλτε ξανά."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "Δεν μπορέσαμε να ελέγξουμε ότι αυτό το στέλνει άνθρωπος. Περιμένετε λίγα δευτερόλεπτα και στείλτε ξανά."}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "Υπηρεσία για όλη την πόλη: τηλεφωνικά ή διαδικτυακά"}});
   /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R11": {"closestTitle": "Οι πιο κοντινές αντιστοιχίες", "closestHint": "Δεν βρήκαμε ακριβή αντιστοιχία. Αυτά τα μέρη ίσως βοηθήσουν: ελέγξτε ότι κάνουν αυτό που χρειάζεστε.", "closestLooking": "Αναζήτηση των πιο κοντινών αντιστοιχιών…"}});
 })();

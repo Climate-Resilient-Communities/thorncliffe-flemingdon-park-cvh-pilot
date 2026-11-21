@@ -1560,6 +1560,8 @@
   m(t, {"catPlain": {"Support & Emergency Services": "ہنگامی مدد اور پناہ گاہ", "Faith-Based Organizations": "عبادت گاہیں", "Legal & Government Services": "قانونی مدد اور شناختی دستاویزات", "Schools & Child Services": "اسکول اور بچوں کی دیکھ بھال", "Health & Wellness": "صحت کی دیکھ بھال", "Public Spaces": "جانے کی جگہیں", "Community Resilience": "پانی، بیت الخلا اور ٹھنڈی جگہیں", "Non-Profits": "کمیونٹی تنظیمیں"}});
   /* Session 2 (#2, #12): the human check refused the token (only while the check is on). AI-generated (Claude), not yet checked by native readers. */
   m(t, {"signup": {"error": {"human_check_failed": "ہم یہ جانچ نہیں سکے کہ اسے کوئی انسان بھیج رہا ہے۔ چند سیکنڈ انتظار کریں، پھر دوبارہ بھیجیں۔"}}, "places": {"errors": {"human_check_failed": "ہم یہ جانچ نہیں سکے کہ اسے کوئی انسان بھیج رہا ہے۔ چند سیکنڈ انتظار کریں، پھر دوبارہ بھیجیں۔"}}, "staff": {"textSignup": {"errors": {"human_check_failed": "ہم یہ جانچ نہیں سکے کہ اسے کوئی انسان بھیج رہا ہے۔ چند سیکنڈ انتظار کریں، پھر دوبارہ بھیجیں۔"}}}});
+  /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"directory": {"citywide": "پورے شہر کے لیے خدمت: فون پر یا آن لائن"}});
   /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"R11": {"closestTitle": "سب سے قریبی نتائج", "closestHint": "ہمیں بالکل درست نتیجہ نہیں ملا۔ یہ جگہیں مدد کر سکتی ہیں: دیکھ لیں کہ وہ وہی کرتی ہیں جو آپ کو چاہیے۔", "closestLooking": "سب سے قریبی نتائج تلاش کیے جا رہے ہیں…"}});
 })();

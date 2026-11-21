@@ -2,7 +2,7 @@
  "failed": {},
  "language": "tl",
  "models": {
-  "north-small-translate-09-2026": 113
+  "north-small-translate-09-2026": 115
  },
  "texts": {
   "06c76a46e432": {
@@ -839,6 +839,16 @@
    "model": "north-small-translate-09-2026",
    "source": "Childminding & EarlyON",
    "text": "Pag-aalaga sa Bata & EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "Ang Toronto Rent Bank ay nagbibigay ng tulong pinansyal (grant) sa mga nangungupahan sa Toronto na nahuhuli sa pagbabayad ng upa o nangangailangan ng tulong para sa bayad sa deposito ng upa. Ang Lungsod ng Toronto ang nagpopondo nito at ang Neighbourhood Information Post (NIP) ang nagpapatakbo nito. Ang tulong pinansyal para sa hindi pa nababayarang upa ay maaaring umabot ng hanggang $5,000. Upang maging kwalipikado, dapat kayong naninirahan sa Toronto o lilipat doon, nagbabayad ng upa ayon sa presyo sa merkado, hindi gumagastos ng higit sa 85% ng kita ng sambahayan para sa upa, at hindi tumatanggap ng tulong mula sa Ontario Works o ODSP. Mag-apply online, o humingi ng tulong sa isang lokal na access centre: sa Thorncliffe Park, ang The Neighbourhood Organization (TNO) ay isa sa mga sentrong ito."
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "Ang Landlord and Tenant Board (LTB) ay bahagi ng Tribunals Ontario. Nilulutas nito ang mga alitan sa pagitan ng mga may-ari ng paupahan at mga nangungupahan, kabilang ang mga kaso ng pagpapaalis sa paupahan (eviction) at mga usapin sa upa. Maaari kayong magsumite ng aplikasyon online sa pamamagitan ng Tribunals Ontario Portal, sa email, o sa koreo, depende sa uri ng aplikasyon. Wala itong opisina na maaaring puntahan nang personal. Tumawag mula Lunes hanggang Biyernes, 8:30 n.u. hanggang 5:00 n.h., o mag-email sa LTB@ontario.ca at isama ang inyong file number sa subject line."
   }
  },
  "updated": "2026-10-09T04:00:44+00:00"

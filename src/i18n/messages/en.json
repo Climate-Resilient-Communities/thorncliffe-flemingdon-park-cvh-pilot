@@ -6511,7 +6511,8 @@
     "runByFormalLine": "Run by a public body, an agency or an institution.",
     "runByGrassrootsLine": "Run by residents or volunteers.",
     "quickCooling": "Public cooling spaces",
-    "quickCoolingLine": "Open to everyone when it is hot."
+    "quickCoolingLine": "Open to everyone when it is hot.",
+    "citywide": "Citywide service: by phone or online"
   },
   "map": {
     "lead": "Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.",

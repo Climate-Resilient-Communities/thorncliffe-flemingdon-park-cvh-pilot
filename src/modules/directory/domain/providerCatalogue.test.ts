@@ -93,7 +93,7 @@ describe("planProviderCatalogue: a valid catalogue", () => {
   it("treats a missing postal code as null and keeps research notes for staff", () => {
     const result = plan({ catalogue: catalogue([provider("M001", { address: { street: "1 Main St", city: "East York", postal: null }, sourceNotes: ["page would not load"] })]), translations: {} });
 
-    expect(result.providers[0].location.postal).toBeNull();
+    expect(result.providers[0]!.location!.postal).toBeNull();
     expect(result.providers[0].sourceNotes).toEqual(["page would not load"]);
   });
 });

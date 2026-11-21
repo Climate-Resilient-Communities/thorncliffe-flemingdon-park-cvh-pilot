@@ -2,7 +2,7 @@
  "failed": {},
  "language": "sk",
  "models": {
-  "north-small-translate-09-2026": 71
+  "north-small-translate-09-2026": 73
  },
  "texts": {
   "06c76a46e432": {
@@ -1049,6 +1049,16 @@
    "note": "Slovak word",
    "source": "Childminding & EarlyON",
    "text": "Opatrovanie detí a EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "Toronto Rent Bank poskytuje nenávratné finančné príspevky nájomcom v Toronte, ktorí majú nedoplatky na nájme alebo potrebujú pomoc pri úhrade kaučiónu za nájom. Program financuje mesto Toronto a prevádzkuje ho organizácia Neighbourhood Information Post (NIP). Príspevky na úhradu nezaplateného nájmu môžu dosiahnuť až 5 000 USD. Na získanie príspevku musíte bývať v Toronte alebo sa tam sťahovať, platiť trhové nájemné, vynakladať na nájom maximálne 85 % príjmov vašej domácnosti a nesmiete poberať dávky v rámci programu Ontario Works ani program ODSP. Žiadosť môžete podať online alebo požiadať o pomoc miestne kontaktné centrum; jedným z nich je v štvrti Thorncliffe Park organizácia The Neighbourhood Organization (TNO)."
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "Rada pre nájomcov a nájomníkov (LTB) je súčasťou orgánu Tribunals Ontario. Rozhoduje spory medzi nájomcami nehnuteľností a nájomníkmi, vrátane prípadov týkajúcich sa vystťahovania a nájomného. Žiadosti môžete podať online prostredníctvom portálu Tribunals Ontario, e-mailom alebo poštou, v závislosti od typu žiadosti. Nemá žiadnu kanceláriu s osobným vybavením. Volajte od pondelka do piatka v čase od 8:30 do 17:00 alebo pošlite e-mail na adresu LTB@ontario.ca; do predmetu správy uveďte číslo vášho spisu."
   }
  },
  "updated": "2026-10-09T04:01:01+00:00"

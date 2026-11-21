@@ -34,11 +34,11 @@ afterAll(() => {
 });
 
 describe("npm run seed:providers -- --dry-run", { timeout: SPAWN_TIMEOUT }, () => {
-  it("reports the real catalogue: 99 providers in 8 categories, no translation loaded yet, exit 0", () => {
+  it("reports the real catalogue: 101 providers in 8 categories, no translation loaded yet, exit 0", () => {
     const { code, out } = run(["--dry-run"]);
 
     expect(code).toBe(0);
-    expect(out).toContain("Providers: 99 in 8 categories");
+    expect(out).toContain("Providers: 101 in 8 categories");
     expect(out).toContain("Non-Profits: 35");
     // The food banks (M007, M008) are not emergency services: only police, fire and shelters are.
     expect(out).toContain("Support & Emergency Services: 8");

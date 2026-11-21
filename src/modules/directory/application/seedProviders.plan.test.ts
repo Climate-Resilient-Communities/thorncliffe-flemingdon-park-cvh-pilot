@@ -15,9 +15,9 @@ describe("the real data/catalogue files (S02.04)", () => {
   const input = readProviderCatalogue(path.join(ROOT, "data", "catalogue"));
   const real = plan(input);
 
-  it("has no failing entry: 99 providers, 8 categories", () => {
+  it("has no failing entry: 101 providers (2 of them citywide, session 2), 8 categories", () => {
     expect(real.failures).toEqual([]);
-    expect(real.providers).toHaveLength(99);
+    expect(real.providers).toHaveLength(101);
     expect(real.categories.map((c) => c.name)).toEqual([
       "Support & Emergency Services",
       "Faith-Based Organizations",
@@ -32,16 +32,18 @@ describe("the real data/catalogue files (S02.04)", () => {
 
   it("stores a provider that is in several categories once, linked to each", () => {
     const ids = real.providers.map((p) => p.id);
-    expect(new Set(ids).size).toBe(99);
+    expect(new Set(ids).size).toBe(101);
     expect(real.providers.filter((p) => p.categoryIds.length > 1).length).toBe(20);
     expect(real.providers.reduce((sum, p) => sum + p.categoryIds.length, 0)).toBe(real.report.perCategory.reduce((sum, c) => sum + c.providers, 0));
   });
 
-  it("gives every provider an id the audit trail accepts as a subject, and coordinates in Toronto", () => {
+  it("gives every provider an id the audit trail accepts as a subject, and coordinates in Toronto, but the two citywide services", () => {
     for (const p of real.providers) {
       expect(PROVIDER_ID.test(p.id), p.id).toBe(true);
-      expect(inToronto(p.location.lat, p.location.lng), p.id).toBe(true);
+      if (p.location) expect(inToronto(p.location.lat, p.location.lng), p.id).toBe(true);
     }
+    // Session 2, #3: the Toronto Rent Bank and the Landlord and Tenant Board have no place to walk in.
+    expect(real.providers.filter((p) => p.location === null).map((p) => p.id)).toEqual(["M100", "M101"]);
   });
 
   it("loads no reviewed translation yet: the catalogue's translations are machine output with no review recorded", () => {
@@ -57,7 +59,7 @@ describe("the real data/catalogue files (S02.04)", () => {
       // Every description is either loaded unreviewed or withheld because a fact changed; nothing else.
       const changed = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "facts_changed")?.count ?? 0;
       const critical = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "safety_critical")?.count ?? 0;
-      expect(count + changed + critical, lang).toBe(99);
+      expect(count + changed + critical, lang).toBe(101);
       expect(critical, lang).toBe(40);
       expect(count, lang).toBeGreaterThan(35);
     }
@@ -119,7 +121,7 @@ describe("a catalogue where a language file is missing (S02.04)", () => {
     const real = plan(readProviderCatalogue(path.join(ROOT, "data", "catalogue")));
 
     expect(missing.failures).toEqual([]);
-    expect(missing.providers).toHaveLength(99);
+    expect(missing.providers).toHaveLength(101);
     expect(missing.report.translations.unavailable.filter((u) => u.lang === "ur").every((u) => u.reason === "not_translated")).toBe(true);
     expect(missing.report.translations.unavailable.some((u) => u.lang === "ur")).toBe(true);
     // Nothing else changes: the other languages report as they did.

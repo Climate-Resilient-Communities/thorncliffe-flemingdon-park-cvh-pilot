@@ -228,14 +228,15 @@ describe("provider catalogue (S02.04)", () => {
       const second = await seed(files);
       const afterSecond = await everything();
 
-      expect(first.changed).toEqual({ providers: 99, locations: 99, categories: 8, categoryLinks: 121 });
+      // 101 providers, 99 places: the Toronto Rent Bank and the Landlord and Tenant Board are citywide, with no location (session 2, #3).
+      expect(first.changed).toEqual({ providers: 101, locations: 99, categories: 8, categoryLinks: 123 });
       expect(first.removed).toEqual({ flagged: 0, unpublished: 0 });
       expect(second.changed).toEqual({ providers: 0, locations: 0, categories: 0, categoryLinks: 0 });
       expect(afterSecond).toEqual(afterFirst);
-      expect(afterFirst.providers).toHaveLength(99);
+      expect(afterFirst.providers).toHaveLength(101);
       expect(afterFirst.locations).toHaveLength(99);
       expect(afterFirst.categories).toHaveLength(8);
-      expect(afterFirst.links).toHaveLength(121);
+      expect(afterFirst.links).toHaveLength(123);
       // Nothing is published and nothing is confirmed until an Admin does it, whatever the file says.
       expect(afterFirst.providers.every((p) => p.published === false && p.last_confirmed === null && p.in_catalogue === true)).toBe(true);
     });
@@ -279,15 +280,15 @@ describe("provider catalogue (S02.04)", () => {
         meta: {
           seed: "provider_catalogue",
           counts: {
-            providers_loaded: 99,
-            providers_changed: 99,
+            providers_loaded: 101,
+            providers_changed: 101,
             providers_not_in_catalogue: 0,
             providers_unpublished: 0,
             locations_changed: 99,
             categories_loaded: 8,
             categories_changed: 8,
             categories_retired: 0,
-            category_links_added: 121,
+            category_links_added: 123,
             category_links_removed: 0,
             translations_loaded: report.translations.loaded,
             translations_machine: machine,
@@ -301,7 +302,7 @@ describe("provider catalogue (S02.04)", () => {
           failures: 0,
         },
       });
-      expect(runs[1].meta).toMatchObject({ counts: { providers_loaded: 99, providers_changed: 0, locations_changed: 0, categories_changed: 0, category_links_added: 0, category_links_removed: 0 } });
+      expect(runs[1].meta).toMatchObject({ counts: { providers_loaded: 101, providers_changed: 0, locations_changed: 0, categories_changed: 0, category_links_added: 0, category_links_removed: 0 } });
     });
 
     it("loads nothing when the file fails its schema, lists every failing entry and audits the refusal", async () => {

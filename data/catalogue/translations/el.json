@@ -2,7 +2,7 @@
  "failed": {},
  "language": "el",
  "models": {
-  "command-a-translate-08-2025": 66,
+  "command-a-translate-08-2025": 68,
   "north-small-translate-09-2026": 1
  },
  "texts": {
@@ -1070,6 +1070,16 @@
    "model": "command-a-translate-08-2025",
    "source": "Childminding & EarlyON",
    "text": "Φροντίδα παιδιών και EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "Η Τράπεζα Ενοικίων του Τορόντο παρέχει επιχορηγήσεις σε ενοικιαστές του Τορόντο που έχουν καθυστερήσει την πληρωμή ενοικίου ή χρειάζονται βοήθεια για την πληρωμή εγγύησης ενοικίου. Το κόστος καλύπτεται από την πόλη του Τορόντο και τη διαχείριση αναλαμβάνει το Neighbourhood Information Post (NIP). Οι επιχορηγήσεις για απλήρωτα ενοίκια φτάνουν έως τα 5.000 δολάρια. Για να είστε επιλέξιμοι, πρέπει να διαμένετε ή να μετακομίζετε στο Τορόντο, να πληρώνετε ενοίκιο σύμφωνα με τις τιμές της αγοράς, να μην ξοδεύετε πάνω από το 85% του εισοδήματος του νοικοκυριού σας για ενοίκιο και να μην λαμβάνετε επιδόματα από το Ontario Works ή το ODSP. Υποβάλετε αίτηση ηλεκτρονικά ή ζητήστε βοήθεια από ένα τοπικό κέντρο πρόσβασης: στο Thorncliffe Park, ένα από αυτά είναι η The Neighbourhood Organization (TNO)."
+  },
+  "e742f07b56c9": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "Το Συμβούλιο Ιδιοκτητών και Ενοικιαστών (LTB) αποτελεί μέρος των Δικαστηρίων του Οντάριο. Επίλυει διαφορές μεταξύ ιδιοκτητών και ενοικιαστών, συμπεριλαμβανομένων υποθέσεων έξωσης και ενοικίου. Μπορείτε να υποβάλετε αιτήσεις ηλεκτρονικά μέσω του Portal των Δικαστηρίων του Οντάριο, μέσω ηλεκτρονικού ταχυδρομείου ή ταχυδρομικά, ανάλογα με τον τύπο της αίτησης. Δεν διαθέτει γραφείο για προσωπική εξυπηρέτηση. Καλέστε Δευτέρα έως Παρασκευή, από τις 8:30 π.μ. έως τις 5:00 μ.μ. ή στείλτε email στο LTB@ontario.ca αναγράφοντας τον αριθμό του φακέλου σας στη γραμμή θέματος."
   }
  },
  "updated": "2026-10-09T04:02:35+00:00"

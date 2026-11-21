@@ -2,7 +2,7 @@
  "failed": {},
  "language": "ps",
  "models": {
-  "north-small-translate-09-2026": 140
+  "north-small-translate-09-2026": 142
  },
  "texts": {
   "06c76a46e432": {
@@ -966,6 +966,16 @@
    "model": "north-small-translate-09-2026",
    "source": "Childminding & EarlyON",
    "text": "د ماشومانو ساتنه او EarlyON"
+  },
+  "6ece8c737561": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Toronto Rent Bank gives grants to Toronto renters who are behind on rent or need help paying a rent deposit. The City of Toronto pays for it and Neighbourhood Information Post (NIP) runs it. Grants for unpaid rent go up to $5,000. To qualify, you must live in or be moving to Toronto, pay market rent, spend no more than 85% of your household income on rent, and not get Ontario Works or ODSP. Apply online, or ask a local access centre for help: in Thorncliffe Park, The Neighbourhood Organization (TNO) is one.",
+   "text": "د تورونټو کرایه بانک هغه کرایه پلانې والانو ته چې کرایه ورکړې نه دي کړې یا د کرایه د تضمیني مبلغ (deposit) د تادیه کولو لپاره مرستې ته اړتیا لري، مالي مرستې (grant) ورکوي. د تورونټ ښار حکومت د دې لپاره پیسې ورکوي او د همسایګانو معلوماتي مرکز (NIP) د دې پروګرام اداره کوي. د ناداړل شوي کرایې لپاره ورکړل شوي مالي مرستې تر ۵,۰۰۰ ډالرو پورې کیدی شي. د دې مرستې لپاره وړتیا لرونکي کیدل، تاسو باید په تورونټ کې ژوند وکړئ یا دلته راځئ، بازار نرخ سره کرایه ورکړئ، د خپل کورنۍ عواید ۸۵٪ څخه ډیره کرایې لپاره مصرف نه کړئ، او د انتاریو ورکس (Ontario Works) یا ODSP مرستې هم نه ترلاسه کړئ. آنلاین غوښتنه وکړئ، یا د مرستې لپاره د محلي لاسرسي مرکز څخه پوښتنه وکړئ: د تورنکلیف پارک په سیمه کې، د همسایګانو سازمان (TNO) یو له دغو مرکزونو څخه دی."
+  },
+  "e742f07b56c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Landlord and Tenant Board (LTB) is part of Tribunals Ontario. It settles disputes between landlords and tenants, including eviction and rent cases. You can file applications online through the Tribunals Ontario Portal, by email or by mail, depending on the type of application. It has no walk-in office. Call Monday to Friday, 8:30 a.m. to 5:00 p.m., or email LTB@ontario.ca with your file number in the subject line.",
+   "text": "د کور مالک او کرایه ورکوونکو بورډ (LTB) د Tribunals Ontario یوې برخې په توګه کار کوي. دا د کور مالکانو او کرایه ورکوونکو ترمنځ د اختلافاتو، په شمول د کور څخه بیرون کولو او کرایې د قضیو حل کول څخه ساتي. تاسو کولی شئ د غوښتنلیک په ډول پورې اړه لري، د Tribunals Ontario پورټل له لارې آنلاین، د بریښنالیک له لارې یا د پوست له لارې غوښتنلیک وړاندې کړئ. د دې ادارې مستقیم ځای (walk-in office) شتون نلري. د اړین معلوماتو لپاره د دوشنبې تر جمعې پورې، سهار له ۸:۳۰ څخه د ماښام ۵:۰۰ بجې پورې تلیفون وکړئ، یا په بریښنالیک LTB@ontario.ca خپل د پرونې شمیره د موضوع (subject line) په برخه کې ولیکئ."
   }
  },
  "updated": "2026-10-09T04:07:56+00:00"

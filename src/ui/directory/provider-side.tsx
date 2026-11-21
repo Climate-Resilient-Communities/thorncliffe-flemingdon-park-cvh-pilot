@@ -34,11 +34,15 @@ export function ProviderSide({ provider, lang, tiles }: { provider: ListingProvi
   return (
     <div className="provider-side" data-testid="provider-side">
       {tiles && place && onMap && <MiniMap tiles={tiles} lat={place.lat} lng={place.lng} marker={markerOf(provider).marker} />}
-      {address && (
+      {address ? (
         <p className="provider-side__address" data-testid="provider-side-address">
           <Isolated>{address}</Isolated>
         </p>
-      )}
+      ) : provider.locations.length === 0 ? (
+        <p className="provider-side__address" data-testid="provider-side-citywide">
+          <ResidentText>{t("directory.citywide")}</ResidentText>
+        </p>
+      ) : null}
       <ul className="provider-side__actions">
         {tel && (
           <li>

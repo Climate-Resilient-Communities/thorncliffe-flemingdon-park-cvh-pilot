@@ -177,6 +177,8 @@ export async function seedProviders(
         .returning({ id: provider.id });
       changed.providers += rows.length;
 
+      // Session 2, #3: a citywide service has no location; the delete below removes one it had.
+      if (p.location === null) continue;
       const location = await tx
         .insert(providerLocation)
         .values({ providerId: p.id, seq: 0, ...p.location })
@@ -195,9 +197,15 @@ export async function seedProviders(
         .returning({ id: providerLocation.providerId });
       changed.locations += location.length;
     }
+    const citywide = plan.providers.filter((p) => p.location === null).map((p) => p.id);
     const extraLocations = await tx
       .delete(providerLocation)
-      .where(and(inArray(providerLocation.providerId, providerIds), sql`${providerLocation.seq} <> 0`))
+      .where(
+        and(
+          inArray(providerLocation.providerId, providerIds),
+          or(sql`${providerLocation.seq} <> 0`, citywide.length > 0 ? inArray(providerLocation.providerId, citywide) : sql`false`),
+        ),
+      )
       .returning({ id: providerLocation.providerId });
     changed.locations += extraLocations.length;
 
