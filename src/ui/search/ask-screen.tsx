@@ -20,7 +20,7 @@ import { withIsolated } from "../text/isolated";
 import { isEnglishFallback, ResidentText } from "../text/resident-text";
 import { contentLangOf, resolveResults, type ResolvedResults } from "./resolve-results";
 import { createRetryGate } from "./retry-gate";
-import { askSearch } from "./search-client";
+import { askClosest, askSearch } from "./search-client";
 import "../directory/directory.css";
 import "./search.css";
 
@@ -49,6 +49,12 @@ type Outcome =
 type Phase = { kind: "idle" } | { kind: "searching" } | { kind: "done"; outcome: Outcome };
 
 /**
+ * Session 2, #3: after "no clear match" (and only without the 911 block), the closest matches a language model picked: being
+ * looked for, none found, or the listings to show under "Closest matches". Never shown as search results.
+ */
+type Closest = { kind: "idle" } | { kind: "looking" } | { kind: "none" } | { kind: "ready"; resolved: Extract<ResolvedResults, { kind: "results" }> };
+
+/**
  * R-09, R-10 and R-11 (S03.06, FR-D2-Q, UX-DR10, AR-27, NFR-N2): the resident types a question and sees up to five
  * listings. The page reads the manifest and the listing file of its language like the directory does (load-directory.ts);
  * the box shows only when the manifest says search is available (or the manifest cannot be read, so that a question asked
@@ -67,6 +73,7 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
   const [manifest, setManifest] = useState<DirectoryManifestV1 | null | undefined>(undefined);
   const [question, setQuestion] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
+  const [closest, setClosest] = useState<Closest>({ kind: "idle" });
   const inFlight = useRef<AbortController | null>(null);
   const retryGate = useRef(createRetryGate());
   // Where focus goes when an outcome is on screen (its heading), and when the box goes away (the topics' heading).
@@ -109,6 +116,23 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
   const searching = phase.kind === "searching";
   const asking = question.trim() !== "";
 
+  /** Asks for the closest matches and looks their ids up in the listing, as search results are; nothing on any failure. */
+  const findClosest = useCallback(
+    async (q: string, queryLang: string, signal: AbortSignal) => {
+      setClosest({ kind: "looking" });
+      const answer = await askClosest({ q, lang, v: heldRelease }, { signal });
+      if (signal.aborted) return;
+      if (!answer || answer.results.length === 0) return setClosest({ kind: "none" });
+      const resolved = await resolveResults(
+        { v: 1, release_v: answer.release_v, query_lang: queryLang as typeof lang, status: "ok", emergency_first: false, results: answer.results.map((r) => ({ provider_id: r.provider_id, score: 0 })) },
+        { lang, heldRelease, storage: phoneStorage() },
+      ).catch(() => null);
+      if (signal.aborted) return;
+      setClosest(resolved?.kind === "results" && resolved.providers.length > 0 ? { kind: "ready", resolved } : { kind: "none" });
+    },
+    [lang, heldRelease],
+  );
+
   const ask = useCallback(
     async (event?: FormEvent) => {
       event?.preventDefault();
@@ -123,6 +147,7 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
       const controller = new AbortController();
       inFlight.current = controller;
       setPhase({ kind: "searching" });
+      setClosest({ kind: "idle" });
       let settled = false;
       const done = (outcome: Outcome) => {
         settled = true;
@@ -151,7 +176,12 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
               setPhase({ kind: "idle" });
               return;
             }
-            if (answer.status === "no_clear_match" || answer.results.length === 0) return done({ kind: "none", emergency: answer.emergency_first });
+            if (answer.status === "no_clear_match" || answer.results.length === 0) {
+              done({ kind: "none", emergency: answer.emergency_first });
+              // Session 2, #3: the closest matches, asked for only when there is no 911 block; the screen already says "no clear match".
+              if (!answer.emergency_first) void findClosest(q, answer.query_lang, controller.signal);
+              return;
+            }
             const resolved = await resolveResults(answer, {
               lang,
               heldRelease,
@@ -174,7 +204,7 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
         if (!settled && !controller.signal.aborted) setPhase({ kind: "done", outcome: { kind: "busy" } });
       }
     },
-    [question, phase.kind, lang, heldRelease],
+    [question, phase.kind, lang, heldRelease, findClosest],
   );
 
   // Submitting, then reading the outcome: focus moves to its heading (the button that had it is still there, only inert).
@@ -364,6 +394,37 @@ export function AskScreen({ lang }: { lang: LaunchCode }) {
               ))}
             </ul>
           </Stack>
+        )}
+
+        {outcome?.kind === "none" && closest.kind === "looking" && (
+          <ResidentText as="p" className="choice-hint" testId="ask-closest-looking">
+            {t("R11.closestLooking")}
+          </ResidentText>
+        )}
+        {outcome?.kind === "none" && closest.kind === "ready" && (
+          <section className="ask-closest" aria-label={t("R11.closestTitle")} data-testid="ask-closest">
+            <Stack gap="related">
+              <ResidentText as="h2" testId="ask-closest-title">
+                {t("R11.closestTitle")}
+              </ResidentText>
+              <ResidentText as="p" className="choice-hint" testId="ask-closest-hint">
+                {t("R11.closestHint")}
+              </ResidentText>
+              <ul className="dir-list" data-testid="ask-closest-results">
+                {closest.resolved.providers.map((provider) => (
+                  <li key={provider.id}>
+                    <ProviderView
+                      provider={provider}
+                      categories={new Map(closest.resolved.listing.categories.map((c) => [c.id, c.name]))}
+                      lang={lang}
+                      variant="card"
+                      contentLang={contentLangOf(closest.resolved.shownLang, lang)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </Stack>
+          </section>
         )}
 
         {withHub && (

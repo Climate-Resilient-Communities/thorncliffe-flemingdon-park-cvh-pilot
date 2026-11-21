@@ -52,3 +52,15 @@ export function parseSearchRequest(raw: unknown): SearchRequestResult {
   if (body.v !== undefined && !(typeof body.v === "number" && Number.isInteger(body.v) && body.v >= 0)) return { ok: false, code: "invalid_request" };
   return { ok: true, value: { q, lang: lang.data, ...(body.v === undefined ? {} : { v: body.v as number }) } };
 }
+
+/**
+ * POST /api/search/closest (session 2, #3): at most three providers of release `release_v` that a language model picked as the
+ * closest matches for a question search answered with "no clear match"; none when it found nothing or was not asked. The page
+ * shows them under "Closest matches", never as search results.
+ */
+export const ClosestV1Schema = z.object({
+  v: z.literal(1),
+  release_v: z.number().int().min(0),
+  results: z.array(z.object({ provider_id: z.string().min(1) })).max(3),
+});
+export type ClosestV1 = z.infer<typeof ClosestV1Schema>;

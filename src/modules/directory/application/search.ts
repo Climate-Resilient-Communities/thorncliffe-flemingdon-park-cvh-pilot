@@ -101,6 +101,7 @@ import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeError";
 import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
+import { closestCatalogueOf, closestIdsOf, closestPrompt } from "../domain/closestMatches";
 import { describesEmergency } from "../domain/crisisPhrases";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { buildKeywordIndex, keywordBoosts, keywordDocumentsOf, type KeywordIndex } from "../domain/searchKeywords";
@@ -124,7 +125,7 @@ import {
 } from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, searchTextsOfListing, type ReleaseSearchRecord } from "../domain/searchData";
 import { VectorsBinaryError, decodeVectorsBinary } from "../domain/vectorsBinary";
-import { QueryEmbedError, RerankError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache, type Reranker } from "./ports";
+import { ClosestError, QueryEmbedError, RerankError, type ClosestPicker, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache, type Reranker } from "./ports";
 import { DEFAULT_RERANK_MONTHLY_CALLS, RERANK_MIN_BUDGET_MS, RERANK_SPEND_KIND, RERANK_TIMEOUT_MS, createRerankQuota, type RerankOutcome, type RerankQuota } from "./rerank";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
@@ -203,7 +204,16 @@ export type SearchStageReason = "snapshot_failed" | "embed_failed" | "embed_inva
  * the month's rerank calls reached SEARCH_RERANK_MONTHLY_CALLS, or could not be counted; `rerank_skipped`: the rerank was not tried
  * (`error` `no_time`: too little of the leg's time was left; `limited`: backing off after a 429).
  */
-export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used" | "rerank_failed" | "rerank_quota" | "rerank_skipped";
+export type SearchLegFailureReason =
+  | "embed_failed"
+  | "translate_failed"
+  | "translate_quota"
+  | "translate_fallback_used"
+  | "rerank_failed"
+  | "rerank_quota"
+  | "rerank_skipped"
+  | "closest_failed"
+  | "closest_quota";
 
 /**
  * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
@@ -281,6 +291,8 @@ export interface SnapshotData {
   keywords?: KeywordIndex;
   /** Each provider's English search text (what its vector was made from), which the reranker reads; absent: no rerank. */
   searchTexts?: ReadonlyMap<string, string>;
+  /** Session 2, #3: a short line per provider that the "closest matches" model chooses from; absent: no closest matches. */
+  closestCatalogue?: string;
 }
 
 /** The request snapshot: the current release (null when there is none) and its search data (null when it has none, or no key is configured). */
@@ -338,6 +350,12 @@ export interface SearchDeps {
   rerankMonthlyCalls?: number;
   /** Test seam: counts the month's rerank calls of a model (default: spend_event rows of kind `rerank`, every purpose). */
   rerankCalls?: (model: string, now: Date) => Promise<number>;
+  /** Session 2, #3: the "closest matches" model (SEARCH_CLOSEST); absent or null: `closest` always answers none. */
+  closest?: ClosestPicker | null;
+  /** SEARCH_CLOSEST_MONTHLY_CALLS: the closest-matches calls a calendar month may use; default 900. */
+  closestMonthlyCalls?: number;
+  /** Test seam: counts the month's closest-matches calls of a model (default: spend_event rows of kind `closest`, every purpose). */
+  closestCalls?: (model: string, now: Date) => Promise<number>;
   /**
    * SEARCH_TRANSLATE_FIRST_MONTHLY_CALLS: a translate-first question (ta, pa, bn, el, zh…) is translated only while its model's translate calls
    * of the calendar month, every purpose (alert translation included), are below this; default 600. Past it the question takes
@@ -382,7 +400,28 @@ export interface SearchService {
   warm?(startedAt: number): void;
   /** Whether the current release holds the provider (the test-set runner reports expected providers a release lacks). Throws when the release has no search data. */
   has(providerId: string): Promise<boolean>;
+  /**
+   * Session 2, #3: the closest matches for a question search answered with no clear match (the page asks only then, and only
+   * without the 911 block). At most three of the current release's providers, or none: no model configured, a question that
+   * describes an emergency (never sent), the month's calls used up, a failure or a timeout all answer none. Never throws but
+   * SearchFailure `search_unavailable` when the current release cannot be read.
+   */
+  closest?(input: { q: string; lang: LangCode }): Promise<ClosestV1>;
 }
+
+/** The answer of `closest`: the release the ids are from, and the ids (at most CLOSEST_MAX), best first. */
+export interface ClosestV1 {
+  v: 1;
+  release_v: number;
+  results: { provider_id: string }[];
+}
+
+/** The kind a closest-matches call is counted under in spend_event. */
+export const CLOSEST_SPEND_KIND = "closest";
+/** SEARCH_CLOSEST_MONTHLY_CALLS by default: the calls a calendar month may use before closest matches are no longer asked for. */
+export const DEFAULT_CLOSEST_MONTHLY_CALLS = 900;
+/** The longest one closest-matches call may take (measured about 1 to 2 s with the 99-provider list). */
+export const CLOSEST_TIMEOUT_MS = 6000;
 
 /** A stage of the leg failed: carried to the failure note as a code. */
 class StageError extends Error {
@@ -614,6 +653,8 @@ async function loadReleaseData(storage: DirectoryStorage, release: CurrentReleas
     keywords: buildKeywordIndex(keywordDocumentsOf(listing)),
     // So does the reranker: the providers' search texts, as the release's vectors were made from them.
     searchTexts: searchTextsOfListing(listing),
+    // And the "closest matches" model (session 2, #3): a line per provider of the same listing.
+    closestCatalogue: closestCatalogueOf(listing),
   };
 }
 
@@ -728,6 +769,15 @@ export function createSearch(deps: SearchDeps): SearchService {
         limit: deps.rerankMonthlyCalls ?? DEFAULT_RERANK_MONTHLY_CALLS,
         clock,
         count: (now) => (deps.rerankCalls ? deps.rerankCalls(reranker.model, now) : monthlyModelCalls(deps.db(), RERANK_SPEND_KIND, reranker.model, now)),
+      })
+    : null;
+  // Session 2, #3: the closest-matches model's monthly gate (counted like the reranker's).
+  const closestPicker = deps.closest ?? null;
+  const closestQuota: RerankQuota | null = closestPicker
+    ? createRerankQuota({
+        limit: deps.closestMonthlyCalls ?? DEFAULT_CLOSEST_MONTHLY_CALLS,
+        clock,
+        count: (now) => (deps.closestCalls ? deps.closestCalls(closestPicker.model, now) : monthlyModelCalls(deps.db(), CLOSEST_SPEND_KIND, closestPicker.model, now)),
       })
     : null;
   // The translate-first languages' monthly gate, one per model (the same counting as the reranker's: the month's rows, every
@@ -1286,5 +1336,86 @@ export function createSearch(deps: SearchDeps): SearchService {
     return (await dataOf(current, current.search)).known.has(providerId);
   }
 
-  return { search, has, warm };
+  async function closest(input: { q: string; lang: LangCode }): Promise<ClosestV1> {
+    const data = await (async () => {
+      if (deps.snapshot) {
+        const snapshot = (await deps.snapshot()).data;
+        if (!snapshot) throw new Error("no search data");
+        return snapshot;
+      }
+      const current = await readCurrent(deps.db());
+      if (!current?.search) throw new Error("no search data");
+      return dataOf(current, current.search);
+    })().catch(() => {
+      throw new SearchFailure("search_unavailable");
+    });
+    const none: ClosestV1 = { v: 1, release_v: data.releaseV, results: [] };
+    const started = clock();
+    // The writes of this request (its spend row, a failure note) never hold up the answer.
+    const track = (work: () => Promise<unknown>) => {
+      const write = Promise.resolve().then(work).catch(() => undefined);
+      deps.defer?.(write);
+    };
+    const reportVendorFailure = (reason: "closest_failed" | "closest_quota", model: string, error?: string) => {
+      const now = clock();
+      const key = `${reason}:${model}`;
+      const until = reportedUntil.get(key);
+      if (until !== undefined && now < until) return;
+      reportedUntil.set(key, now + failureTtlMs);
+      if (!deps.onFailure) return;
+      const note: SearchFailureNote = { reason, releaseV: data.releaseV, ms: Math.round(clock() - started), answered: true, model, ...(error === undefined ? {} : { error }) };
+      track(() => deps.onFailure!(note));
+    };
+    const picker = deps.closest ?? null;
+    if (!picker || !closestQuota || !data.closestCatalogue) return none;
+    // A question that describes an emergency is never sent: its answer is the 911 block, which this never touches.
+    if ((deps.crisisPhrases ?? true) && describesEmergency([input.q])) return none;
+    closestQuota.refresh();
+    const allowance = await closestQuota.check(1000);
+    if (allowance !== "ok") {
+      if (allowance !== "limited") reportVendorFailure("closest_quota", picker.model, allowance === "unknown" ? "count_failed" : undefined);
+      return none;
+    }
+    const controller = new AbortController();
+    const count = (tokens: number | null) => {
+      closestQuota.used();
+      const event: SpendEventInput = {
+        kind: CLOSEST_SPEND_KIND,
+        purpose: spendPurpose,
+        model: picker.model,
+        releaseV: data.releaseV,
+        calls: 1,
+        tokens: tokens ?? 0,
+        tokensEstimated: tokens === null,
+        ms: Math.round(clock() - started),
+      };
+      track(async () => {
+        await writer.spend(event);
+        deps.onSpendWritten?.(event);
+      });
+    };
+    const call = picker.pick({ prompt: closestPrompt(input.q, data.closestCatalogue), signal: controller.signal });
+    call.catch(() => undefined);
+    try {
+      const raced = await raceTimeout(call, CLOSEST_TIMEOUT_MS, () => controller.abort());
+      if (raced === "timeout") {
+        count(null);
+        reportVendorFailure("closest_failed", picker.model, TIMED_OUT);
+        return none;
+      }
+      count(raced.tokens);
+      return { ...none, results: closestIdsOf(raced.text, data.known).map((id) => ({ provider_id: id })) };
+    } catch (error) {
+      if (controller.signal.aborted) {
+        count(null);
+        reportVendorFailure("closest_failed", picker.model, TIMED_OUT);
+        return none;
+      }
+      if (error instanceof ClosestError && error.vendor === "limited") closestQuota.limited();
+      reportVendorFailure("closest_failed", picker.model, error instanceof ClosestError ? (error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`) : classifyError(error));
+      return none;
+    }
+  }
+
+  return { search, has, warm, closest };
 }

@@ -221,6 +221,28 @@ export interface Reranker {
 }
 
 /** Why a rerank failed: a code, and for `rerank_failed` how the vendor's call failed (as QueryEmbedVendorFailure, from the status alone). */
+/**
+ * The "closest matches" model (session 2, #3): given the prompt of domain/closestMatches.ts (the question and a line per provider),
+ * answers with text that names at most three provider ids. Its errors leave as ClosestError holding a code, never the vendor's
+ * message (it may echo the question, AD-3).
+ */
+export interface ClosestPicker {
+  /** The vendor's model id (counted in spend_event under it). */
+  readonly model: string;
+  pick(input: { prompt: string; signal: AbortSignal }): Promise<{ text: string; tokens: number | null }>;
+}
+
+export class ClosestError extends Error {
+  override name = "ClosestError";
+  readonly code: "closest_failed" | "aborted";
+  readonly vendor?: QueryEmbedVendorFailure;
+  constructor(code: "closest_failed" | "aborted", vendor?: QueryEmbedVendorFailure) {
+    super(code === "aborted" ? "The closest-matches call was cancelled" : "The closest-matches call failed");
+    this.code = code;
+    if (vendor !== undefined) this.vendor = vendor;
+  }
+}
+
 export class RerankError extends Error {
   override name = "RerankError";
   readonly code: "rerank_failed" | "aborted";

@@ -47,6 +47,8 @@ export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
  * (`error` `no_time`: too little of the leg's time was left after the embedding; `limited`: backing off for 5 minutes after a 429), so the
  * question was ranked by similarity. `embed_quota_near`: the month's embedding calls of the search model (every purpose) have reached 80%
  * of SEARCH_EMBED_MONTHLY_CALLS, a warning before the vendor's 429s would make every search answer `search_unavailable` (`ms` is 0).
+ * Session 2, #3: `closest_failed`: the "closest matches" call failed or timed out (the page shows only "no clear match"; `error` says
+ * how); `closest_quota`: the month's closest-matches calls reached SEARCH_CLOSEST_MONTHLY_CALLS (or could not be counted).
  */
 export const SEARCH_LEG_FAILURE_REASONS = [
   "embed_failed",
@@ -58,6 +60,8 @@ export const SEARCH_LEG_FAILURE_REASONS = [
   "rerank_quota",
   "rerank_skipped",
   "embed_quota_near",
+  "closest_failed",
+  "closest_quota",
 ] as const;
 
 /** The launch bar's measures (S03.08's `bar.json`): a language's hit rate, the no-match accuracy and the emergency accuracy (S03.09). */
