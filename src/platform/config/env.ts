@@ -207,6 +207,12 @@ import { parsePilotMachineTranslations } from "./pilotTranslations";
  *                      server   optional                 the rerank calls a calendar month (America/Toronto) may use, counted
  *                                                        from spend_event (kind rerank); at it the reranker is no longer called
  *                                                        that month. Default 900: Cohere allows about 1,000 a month per model
+ * SEARCH_CLOSEST       server   optional                 session 2, #3: the Cohere chat model that picks the "closest matches"
+ *                                                        for a question search answered with no clear match (and no 911 block),
+ *                                                        or `off`. Default command-a-03-2025. Needs the Cohere key
+ * SEARCH_CLOSEST_MONTHLY_CALLS
+ *                      server   optional                 its calls a calendar month (America/Toronto), counted from spend_event
+ *                                                        (kind closest); at it closest matches are no longer asked for. Default 900
  * SEARCH_EMBED_MONTHLY_CALLS
  *                      server   optional                 the embedding calls of the search model (SEARCH_EMBED_MODEL) a calendar
  *                                                        month (America/Toronto) is budgeted, every purpose (searches, publishes,
@@ -350,6 +356,8 @@ const rawSchema = z.object({
   SEARCH_RERANK_MIN: optionalText,
   SEARCH_CRISIS_PHRASES: optionalText,
   SEARCH_RERANK_MONTHLY_CALLS: optionalText,
+  SEARCH_CLOSEST: optionalText,
+  SEARCH_CLOSEST_MONTHLY_CALLS: optionalText,
   SEARCH_EMBED_MONTHLY_CALLS: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
@@ -392,6 +400,10 @@ export interface SearchSettings {
   rerankMin: number;
   /** The rerank calls a calendar month may use before the reranker is no longer called. */
   rerankMonthlyCalls: number;
+  /** Session 2, #3: the "closest matches" model (a Cohere chat model id), or null when SEARCH_CLOSEST is `off`. */
+  closest: string | null;
+  /** The closest-matches calls a calendar month may use before closest matches are no longer asked for. */
+  closestMonthlyCalls: number;
   /** The search embedding model's calls a calendar month is budgeted (every purpose): ops is warned at 80%; null: no warning. */
   embedMonthlyCalls: number | null;
   /** Whether a question that describes an emergency in words turns `emergency_first` on (SEARCH_CRISIS_PHRASES). */
@@ -491,6 +503,8 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   rerank: true,
   rerankMin: 0.05,
   rerankMonthlyCalls: 900,
+  closest: "command-a-03-2025",
+  closestMonthlyCalls: 900,
   embedMonthlyCalls: 1000,
   crisisPhrases: true,
 };
@@ -941,6 +955,18 @@ function parseTranslateMonthlyCalls(value: string | undefined, problems: string[
   return limits;
 }
 
+/** SEARCH_CLOSEST: a model id (letters, digits, dots, dashes), or `off`; unset is the default model. */
+function parseClosestModel(value: string | undefined, fallback: string | null, problems: string[]): string | null {
+  const text = value?.trim();
+  if (!text) return fallback;
+  if (text.toLowerCase() === "off") return null;
+  if (!EMBED_MODEL_ID.test(text)) {
+    problems.push("SEARCH_CLOSEST: must be a model id (letters, digits, dots and dashes) or off");
+    return fallback;
+  }
+  return text;
+}
+
 /** An `on`/`off` search switch (any case), such as SEARCH_RERANK; unset is its default. */
 function parseSwitch(name: string, value: string | undefined, fallback: boolean, problems: string[]): boolean {
   if (value === undefined) return fallback;
@@ -1013,6 +1039,8 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     rerank: parseSwitch("SEARCH_RERANK", raw.SEARCH_RERANK, defaults.rerank, problems),
     rerankMin: unitNumber("SEARCH_RERANK_MIN", raw.SEARCH_RERANK_MIN, defaults.rerankMin, "0.05", problems),
     rerankMonthlyCalls: positiveInteger("SEARCH_RERANK_MONTHLY_CALLS", raw.SEARCH_RERANK_MONTHLY_CALLS, defaults.rerankMonthlyCalls, problems),
+    closest: parseClosestModel(raw.SEARCH_CLOSEST, defaults.closest, problems),
+    closestMonthlyCalls: positiveInteger("SEARCH_CLOSEST_MONTHLY_CALLS", raw.SEARCH_CLOSEST_MONTHLY_CALLS, defaults.closestMonthlyCalls, problems),
     embedMonthlyCalls: raw.SEARCH_EMBED_MONTHLY_CALLS?.trim().toLowerCase() === "off" ? null : positiveIntegerOr("SEARCH_EMBED_MONTHLY_CALLS", raw.SEARCH_EMBED_MONTHLY_CALLS, defaults.embedMonthlyCalls, problems),
     crisisPhrases: parseSwitch("SEARCH_CRISIS_PHRASES", raw.SEARCH_CRISIS_PHRASES, defaults.crisisPhrases, problems),
   };

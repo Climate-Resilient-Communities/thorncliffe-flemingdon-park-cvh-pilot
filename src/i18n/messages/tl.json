@@ -831,7 +831,10 @@
     "callConfirm": "Sa totoong CVH, tatawag ito sa {phone}.",
     "directionsConfirm": "Sa totoong CVH, bubuksan nito ang direksyon papunta sa 45 Overlea Boulevard.",
     "directions": "Direksyon",
-    "hoursFull": "Lunes hanggang Huwebes 9 am hanggang 8 pm, Biyernes 9 am hanggang 5 pm, Sabado 10 am hanggang 2 pm"
+    "hoursFull": "Lunes hanggang Huwebes 9 am hanggang 8 pm, Biyernes 9 am hanggang 5 pm, Sabado 10 am hanggang 2 pm",
+    "closestTitle": "Pinakamalapit na tugma",
+    "closestHint": "Hindi kami nakahanap ng eksaktong tugma. Maaaring makatulong ang mga lugar na ito: tingnan kung ginagawa nila ang kailangan mo.",
+    "closestLooking": "Hinahanap ang pinakamalapit na tugma…"
   },
   "R12": {
     "status": "Sa ngayon",

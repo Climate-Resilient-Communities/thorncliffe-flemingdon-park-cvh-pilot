@@ -1586,4 +1586,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."}}, "places": {"errors": {"human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "આ કોઈ વ્યક્તિ મોકલી રહી છે તે અમે તપાસી શક્યા નથી. થોડી સેકન્ડ રાહ જુઓ, પછી ફરીથી મોકલો."}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "આખા શહેર માટેની સેવા: ફોન પર અથવા ઓનલાઇન"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "સૌથી નજીકના પરિણામો", "closestHint": "અમને ચોક્કસ મેળ મળ્યો નથી. આ સ્થળો મદદ કરી શકે છે: તપાસો કે તેઓ તમને જે જોઈએ છે તે કરે છે.", "closestLooking": "સૌથી નજીકના પરિણામો શોધી રહ્યા છીએ…"}});
 })();

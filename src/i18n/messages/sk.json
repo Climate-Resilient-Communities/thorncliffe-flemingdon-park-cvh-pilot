@@ -831,7 +831,10 @@
     "callConfirm": "V skutočnom CVH by sa tu volalo na {phone}.",
     "directionsConfirm": "V skutočnom CVH by sa tu otvorila cesta na 45 Overlea Boulevard.",
     "directions": "Cesta",
-    "hoursFull": "pondelok až štvrtok 9.00 až 20.00, piatok 9.00 až 17.00, sobota 10.00 až 14.00"
+    "hoursFull": "pondelok až štvrtok 9.00 až 20.00, piatok 9.00 až 17.00, sobota 10.00 až 14.00",
+    "closestTitle": "Najbližšie výsledky",
+    "closestHint": "Nenašli sme presnú zhodu. Tieto miesta by mohli pomôcť: overte si, či robia to, čo potrebujete.",
+    "closestLooking": "Hľadáme najbližšie výsledky…"
   },
   "R12": {
     "status": "Práve teraz",

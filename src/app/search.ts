@@ -15,7 +15,7 @@
 // model nears its monthly budget (SEARCH_EMBED_MONTHLY_CALLS).
 import "server-only";
 import { after } from "next/server";
-import { cohereQueryEmbedder, cohereReranker, createSearch, type SearchService } from "@/modules/directory";
+import { cohereClosest, cohereQueryEmbedder, cohereReranker, createSearch, type SearchService } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
 import type { SpendEventInput } from "@/modules/spend";
 import { createRateLimiter, rateLimitKeyFromSecret, type RateLimiter } from "@/modules/subscriptions";
@@ -105,6 +105,16 @@ function directReranker() {
   return env.cohereApiKey && rerank ? { reranker: cohereReranker({ apiKey: env.cohereApiKey }), rerankMin, rerankMonthlyCalls } : {};
 }
 
+/**
+ * Session 2, #3: the "closest matches" model (Cohere Command A by default), where a key is configured and SEARCH_CLOSEST is not
+ * `off`, with its monthly limit; nothing otherwise (`closest` then always answers none).
+ */
+function closestMatches() {
+  const env = getEnv();
+  const { closest, closestMonthlyCalls } = env.search;
+  return env.cohereApiKey && closest ? { closest: cohereClosest({ apiKey: env.cohereApiKey, model: closest }), closestMonthlyCalls } : {};
+}
+
 /** The ranking's settings that are read at search time (the threshold is the release's own). */
 function rankingSettings() {
   const { emergencyThreshold, emergencyTopThreshold, keywordWeight, directFloor, directGap, crisisPhrases } = getEnv().search;
@@ -126,6 +136,7 @@ export function searchService(): SearchService {
     onSpendWritten: spendWatches(),
     ...rankingSettings(),
     ...directReranker(),
+    ...closestMatches(),
     onFailure: (note) => recordSearchNote(getDb(), note),
   });
   return service;

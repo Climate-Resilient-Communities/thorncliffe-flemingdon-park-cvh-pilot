@@ -1586,4 +1586,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "இதை ஒரு நபர் அனுப்புகிறார் என்பதை எங்களால் சரிபார்க்க முடியவில்லை. சில வினாடிகள் காத்திருந்து, மீண்டும் அனுப்பவும்."}}, "places": {"errors": {"human_check_failed": "இதை ஒரு நபர் அனுப்புகிறார் என்பதை எங்களால் சரிபார்க்க முடியவில்லை. சில வினாடிகள் காத்திருந்து, மீண்டும் அனுப்பவும்."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "இதை ஒரு நபர் அனுப்புகிறார் என்பதை எங்களால் சரிபார்க்க முடியவில்லை. சில வினாடிகள் காத்திருந்து, மீண்டும் அனுப்பவும்."}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "நகரம் முழுவதற்குமான சேவை: தொலைபேசி அல்லது இணையம் வழியாக"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "மிக நெருக்கமான முடிவுகள்", "closestHint": "சரியான பொருத்தம் கிடைக்கவில்லை. இந்த இடங்கள் உதவக்கூடும்: உங்களுக்குத் தேவையானதை அவை செய்கின்றனவா என்று சரிபார்க்கவும்.", "closestLooking": "மிக நெருக்கமான முடிவுகளைத் தேடுகிறோம்…"}});
 })();

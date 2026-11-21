@@ -1575,4 +1575,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "Hindi namin masuri na isang tao ang nagpapadala nito. Maghintay ng ilang segundo, saka ipadala muli."}}, "places": {"errors": {"human_check_failed": "Hindi namin masuri na isang tao ang nagpapadala nito. Maghintay ng ilang segundo, saka ipadala muli."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "Hindi namin masuri na isang tao ang nagpapadala nito. Maghintay ng ilang segundo, saka ipadala muli."}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "Serbisyo para sa buong lungsod: sa telepono o online"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "Pinakamalapit na tugma", "closestHint": "Hindi kami nakahanap ng eksaktong tugma. Maaaring makatulong ang mga lugar na ito: tingnan kung ginagawa nila ang kailangan mo.", "closestLooking": "Hinahanap ang pinakamalapit na tugma…"}});
 })();

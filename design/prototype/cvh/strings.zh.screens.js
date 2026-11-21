@@ -1586,4 +1586,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"}}, "places": {"errors": {"human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"}}, "staff": {"textSignup": {"errors": {"human_check_failed": "我们无法确认是真人在发送。请等几秒钟，然后再发送一次。"}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "全市服务：电话或网上办理"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "最接近的结果", "closestHint": "我们没有找到完全符合的结果。以下地方也许能帮上忙：请确认它们提供您需要的服务。", "closestLooking": "正在查找最接近的结果…"}});
 })();

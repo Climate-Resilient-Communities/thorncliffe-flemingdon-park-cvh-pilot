@@ -128,6 +128,7 @@ export { recordUsage, usageDay } from "./application/usageCount";
 export { QueryEmbedError, RerankError, type QueryEmbedder, type ReleaseFileCache, type Reranker } from "./application/ports";
 export { cohereQueryEmbedder, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
 export { RERANK_MODEL, cohereReranker, type CohereRerankClient, type CohereRerankerOptions } from "./adapters/cohereReranker";
+export { CLOSEST_MODEL, cohereClosest, type CohereClosestClient, type CohereClosestOptions } from "./adapters/cohereClosest";
 export {
   DEFAULT_RERANK_MONTHLY_CALLS,
   RERANK_MIN_BUDGET_MS,

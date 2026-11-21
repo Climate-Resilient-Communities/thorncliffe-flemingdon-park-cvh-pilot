@@ -1575,4 +1575,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "এটি একজন মানুষ পাঠাচ্ছেন কিনা আমরা যাচাই করতে পারিনি। কয়েক সেকেন্ড অপেক্ষা করুন, তারপর আবার পাঠান।"}}, "places": {"errors": {"human_check_failed": "এটি একজন মানুষ পাঠাচ্ছেন কিনা আমরা যাচাই করতে পারিনি। কয়েক সেকেন্ড অপেক্ষা করুন, তারপর আবার পাঠান।"}}, "staff": {"textSignup": {"errors": {"human_check_failed": "এটি একজন মানুষ পাঠাচ্ছেন কিনা আমরা যাচাই করতে পারিনি। কয়েক সেকেন্ড অপেক্ষা করুন, তারপর আবার পাঠান।"}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "সারা শহরের সেবা: ফোনে বা অনলাইনে"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "সবচেয়ে কাছাকাছি মিল", "closestHint": "আমরা হুবহু মিল খুঁজে পাইনি। এই জায়গাগুলো সাহায্য করতে পারে: আপনার যা দরকার তা তারা করে কিনা দেখে নিন।", "closestLooking": "সবচেয়ে কাছাকাছি মিল খোঁজা হচ্ছে…"}});
 })();

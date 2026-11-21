@@ -671,6 +671,8 @@ describe("Cohere and the search settings (S03.02)", () => {
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
+      closest: "command-a-03-2025",
+      closestMonthlyCalls: 900,
       embedMonthlyCalls: 1000,
       crisisPhrases: true,
     });
@@ -686,6 +688,10 @@ describe("Cohere and the search settings (S03.02)", () => {
 
   it("reads the direct route's reranker settings: SEARCH_RERANK on or off, SEARCH_RERANK_MIN from 0 to 1, SEARCH_RERANK_MONTHLY_CALLS a whole number", () => {
     expect(parseEnv({ ...production, SEARCH_RERANK: " OFF ", SEARCH_RERANK_MIN: "0.08", SEARCH_RERANK_MONTHLY_CALLS: "500" }).search).toMatchObject({ rerank: false, rerankMin: 0.08, rerankMonthlyCalls: 500 });
+    // Session 2, #3: the closest-matches model, its switch and its monthly calls.
+    expect(parseEnv({ ...production, SEARCH_CLOSEST: " off ", SEARCH_CLOSEST_MONTHLY_CALLS: "300" }).search).toMatchObject({ closest: null, closestMonthlyCalls: 300 });
+    expect(parseEnv({ ...production, SEARCH_CLOSEST: "command-r-08-2024" }).search.closest).toBe("command-r-08-2024");
+    expect(() => parseEnv({ ...production, SEARCH_CLOSEST: "bad model!" })).toThrow(/SEARCH_CLOSEST: must be a model id/);
     expect(parseEnv({ ...production, SEARCH_RERANK: "on" }).search.rerank).toBe(true);
     expect(() => parseEnv({ ...production, SEARCH_RERANK: "yes" })).toThrow(/SEARCH_RERANK: must be `on` or `off`/);
     expect(() => parseEnv({ ...production, SEARCH_RERANK_MIN: "5" })).toThrow(/SEARCH_RERANK_MIN: must be a number from 0 to 1/);
@@ -740,6 +746,8 @@ describe("Cohere and the search settings (S03.02)", () => {
       rerank: true,
       rerankMin: 0.05,
       rerankMonthlyCalls: 900,
+      closest: "command-a-03-2025",
+      closestMonthlyCalls: 900,
       embedMonthlyCalls: 1000,
       crisisPhrases: true,
     });

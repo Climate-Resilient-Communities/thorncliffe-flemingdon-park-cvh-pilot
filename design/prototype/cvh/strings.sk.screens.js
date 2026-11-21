@@ -1586,4 +1586,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."}}, "places": {"errors": {"human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "Nepodarilo sa nám overiť, že toto posiela človek. Počkajte niekoľko sekúnd a pošlite to znova."}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "Služba pre celé mesto: telefonicky alebo online"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "Najbližšie výsledky", "closestHint": "Nenašli sme presnú zhodu. Tieto miesta by mohli pomôcť: overte si, či robia to, čo potrebujete.", "closestLooking": "Hľadáme najbližšie výsledky…"}});
 })();

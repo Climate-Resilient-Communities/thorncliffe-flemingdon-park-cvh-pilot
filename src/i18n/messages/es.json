@@ -831,7 +831,10 @@
     "callConfirm": "En el CVH real, esto llamaría al {phone}.",
     "directionsConfirm": "En el CVH real, esto abriría las indicaciones para llegar a 45 Overlea Boulevard.",
     "directions": "Cómo llegar",
-    "hoursFull": "De lunes a jueves de 9 a. m. a 8 p. m., viernes de 9 a. m. a 5 p. m., sábado de 10 a. m. a 2 p. m."
+    "hoursFull": "De lunes a jueves de 9 a. m. a 8 p. m., viernes de 9 a. m. a 5 p. m., sábado de 10 a. m. a 2 p. m.",
+    "closestTitle": "Lo más parecido",
+    "closestHint": "No encontramos una coincidencia exacta. Estos lugares podrían ayudar: compruebe que ofrecen lo que necesita.",
+    "closestLooking": "Buscando lo más parecido…"
   },
   "R12": {
     "status": "Ahora mismo",

@@ -1586,4 +1586,6 @@
   m(t, {"signup": {"error": {"human_check_failed": "No pudimos comprobar que una persona envía esto. Espere unos segundos y vuelva a enviarlo."}}, "places": {"errors": {"human_check_failed": "No pudimos comprobar que una persona envía esto. Espere unos segundos y vuelva a enviarlo."}}, "staff": {"textSignup": {"errors": {"human_check_failed": "No pudimos comprobar que una persona envía esto. Espere unos segundos y vuelva a enviarlo."}}}});
   /* Session 2 (#3): a provider with no place to walk in, reached by phone or online. AI-generated (Claude), not yet checked by native readers. */
   m(t, {"directory": {"citywide": "Servicio para toda la ciudad: por teléfono o en línea"}});
+  /* Session 2 (#3): the closest matches a language model picks after no clear match. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {"R11": {"closestTitle": "Lo más parecido", "closestHint": "No encontramos una coincidencia exacta. Estos lugares podrían ayudar: compruebe que ofrecen lo que necesita.", "closestLooking": "Buscando lo más parecido…"}});
 })();

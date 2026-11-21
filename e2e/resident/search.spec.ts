@@ -35,13 +35,31 @@ async function stubSearch(page: Page, reply: { current: Reply }): Promise<Asked[
   return asked;
 }
 
-async function setUp(page: Page, options: { search?: "available" | "unavailable"; release?: number } = {}): Promise<{ server: DirectoryServer; reply: { current: Reply }; asked: Asked[] }> {
+/** Session 2, #3: answers POST /api/search/closest with `closest.current` (by default none); every request is recorded. */
+async function stubClosest(page: Page, closest: { current: Reply }): Promise<Asked[]> {
+  const asked: Asked[] = [];
+  await page.context().route("**/api/search/closest", async (route: Route) => {
+    const request = route.request();
+    asked.push({ method: request.method(), url: request.url(), body: request.postData() ?? "", headers: await request.allHeaders() });
+    const r = closest.current;
+    if (r.delayMs) await new Promise((resolve) => setTimeout(resolve, r.delayMs));
+    return route.fulfill({ status: r.status ?? 200, json: r.json, headers: { "Cache-Control": "no-store" } });
+  });
+  return asked;
+}
+
+async function setUp(
+  page: Page,
+  options: { search?: "available" | "unavailable"; release?: number } = {},
+): Promise<{ server: DirectoryServer; reply: { current: Reply }; asked: Asked[]; closest: { current: Reply }; askedClosest: Asked[] }> {
   const server = newServer(options.release ?? 7);
   server.search = options.search ?? "available";
   await stubDirectory(page, server);
   const reply = { current: { json: answer() } as Reply };
   const asked = await stubSearch(page, reply);
-  return { server, reply, asked };
+  const closest = { current: { json: { v: 1, release_v: options.release ?? 7, results: [] } } as Reply };
+  const askedClosest = await stubClosest(page, closest);
+  return { server, reply, asked, closest, askedClosest };
 }
 
 async function ask(page: Page, question: string) {
@@ -259,8 +277,47 @@ test("no_clear_match shows the prototype's R-11: the topics, the Hub's number an
   await expect(page.getByTestId("ask-topic-food")).toBeVisible();
   await expect(page.getByTestId("ask-911-link")).toBeVisible();
   await expect(page.getByTestId("ask-results")).toHaveCount(0);
+  // Session 2, #3: the closest matches were asked for and there were none: nothing more is shown.
+  await expect(page.getByTestId("ask-closest-looking")).toHaveCount(0);
+  await expect(page.getByTestId("ask-closest")).toHaveCount(0);
   await shot(page, 390, "search-no-match-en-390.png");
   await shot(page, 1280, "search-no-match-en-1280.png");
+});
+
+test("session 2, #3: after no clear match, the closest matches a model picked show under their own heading, never as results", async ({ page }) => {
+  const { reply, closest, askedClosest } = await setUp(page);
+  reply.current = { json: answer({ status: "no_clear_match" }) };
+  closest.current = { json: { v: 1, release_v: 7, results: [{ provider_id: "P104" }, { provider_id: "P999" }] }, delayMs: 300 };
+  await openResident(page, "/en/search", 390);
+  await ready(page);
+  await ask(page, "no puedo pagar el alquiler");
+
+  await expect(page.getByTestId("ask-none-title")).toHaveText("We could not find that yet");
+  await expect(page.getByTestId("ask-closest-looking")).toHaveText("Looking for the closest matches…");
+  await expect(page.getByTestId("ask-closest-title")).toHaveText("Closest matches");
+  await expect(page.getByTestId("ask-closest-hint")).toContainText("check that they do what you need");
+  // Only the listing the release has: an id it does not know is never shown.
+  await expect(page.getByTestId("ask-closest-results").locator(":scope > li")).toHaveCount(1);
+  await expect(page.getByTestId("ask-closest-results").getByTestId("provider-P104")).toBeVisible();
+  await expect(page.getByTestId("ask-results")).toHaveCount(0);
+  await expect(page.getByTestId("ask-help").getByTestId("hub-call")).toBeVisible();
+  expect(askedClosest).toHaveLength(1);
+  expect(JSON.parse(askedClosest[0]!.body)).toEqual({ q: "no puedo pagar el alquiler", lang: "en", v: 7 });
+  expect(askedClosest[0]!.headers.cookie).toBeUndefined();
+  await expectNoSeriousViolation(page, "closest matches");
+});
+
+test("session 2, #3: with the 911 block first, no closest matches are asked for", async ({ page }) => {
+  const { reply, askedClosest } = await setUp(page);
+  reply.current = { json: answer({ status: "no_clear_match", emergency: true }) };
+  await openResident(page, "/en/search", 390);
+  await ready(page);
+  await ask(page, "the power is out and it is very hot");
+
+  await expect(page.getByTestId("ask-emergency-first")).toHaveCount(1);
+  await page.waitForTimeout(500);
+  expect(askedClosest).toHaveLength(0);
+  await expect(page.getByTestId("ask-closest")).toHaveCount(0);
 });
 
 test("rate limiting (429 with Retry-After) and a failing server (503) show 'Search is busy', with the topics and the Hub's number", async ({ page }) => {
