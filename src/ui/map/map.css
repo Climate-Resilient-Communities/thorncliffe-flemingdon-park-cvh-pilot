@@ -492,6 +492,21 @@
     border-color: var(--tpch-orange);
   }
 
+  /*
+   * The pin whose preview is open (Helena Yu's QA, 2026-11-22: "it's hard to see the selected asset as the icon looks the same"): larger, filled in
+   * the Hub's yellow (no other pin uses it) with a dark outline and a blue ring, so it stands apart from a neighbour with the same icon. Never the only sign: the preview
+   * below the map names the place.
+   */
+  .map-pin--selected .map-pin__mark {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-style: solid;
+    border-color: var(--ink);
+    background-color: var(--tpch-yellow);
+    color: var(--ink);
+    box-shadow: 0 0 0 3px var(--surface-raised), 0 0 0 6px var(--tpch-blue);
+  }
+
   .map-pin__group {
     position: absolute;
     inset-block-start: 0;

@@ -36,6 +36,8 @@ export type PinWords = {
 
 export type MapHandle = {
   setPins(pins: readonly MapPin[]): void;
+  /** Marks the pin whose preview is open (null: none), so it stands out from the others. */
+  setSelected(key: string | null): void;
   showWholeArea(): void;
   /** Measures the map again after it was hidden. */
   refresh(): void;
@@ -68,7 +70,7 @@ const HOME: [[number, number], [number, number]] = [
 
 const escape = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
+function pinIcon(L: Leaflet, pin: MapPin, words: PinWords, selected = false): DivIcon {
   const word = words.word(pin);
   const wordHtml = word
     ? // The label is placed in the map's left-to-right frame; only its words take their own direction.
@@ -78,7 +80,8 @@ function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
   const grassroots = pin.kind === "provider" && pin.runBy === "grassroots";
   return L.divIcon({
     // A place open as a space now (the partner space, 2026-11-07) takes the prototype's filled "space" look on top of its own shape.
-    className: `map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""}${grassroots ? " map-pin--grassroots" : ""}`,
+    // The pin whose preview is open (Helena Yu's QA, 2026-11-22: the selected place looked like every other one) has its own colour and size.
+    className: `map-pin map-pin--${pin.marker}${isOpenSpacePin(pin) ? " map-pin--space" : ""}${grassroots ? " map-pin--grassroots" : ""}${selected ? " map-pin--selected" : ""}`,
     // Leaflet's own stylesheet (not in a layer) makes the icon element a block, so the layout is on an inner body.
     html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${grassroots ? '<span class="map-pin__group" aria-hidden="true"></span>' : ""}${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span></span>`,
     iconSize: [44, 44],
@@ -238,17 +241,35 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
   callbacks.onView(boundsOf(map));
 
   const byKey = new Map<string, Marker>();
+  const pinOf = new Map<string, MapPin>();
+  let selectedKey: string | null = null;
   return {
     setPins(pins) {
       clusters.clearLayers();
       byKey.clear();
+      pinOf.clear();
       const markers: Marker[] = pins.map((pin) => {
-        const marker = L.marker([pin.lat, pin.lng], { icon: pinIcon(L, pin, words), keyboard: true, riseOnHover: true });
+        const marker = L.marker([pin.lat, pin.lng], { icon: pinIcon(L, pin, words, pin.key === selectedKey), keyboard: true, riseOnHover: true });
+        pinOf.set(pin.key, pin);
         marker.on("click", () => callbacks.onSelect(pin.key));
         byKey.set(pin.key, marker);
         return marker;
       });
       clusters.addLayers(markers);
+    },
+    setSelected(key) {
+      if (key === selectedKey) return;
+      const before = selectedKey;
+      selectedKey = key;
+      for (const changed of [before, key]) {
+        if (changed === null) continue;
+        const marker = byKey.get(changed);
+        const pin = pinOf.get(changed);
+        if (marker && pin) {
+          marker.setIcon(pinIcon(L, pin, words, changed === key));
+          marker.setZIndexOffset(changed === key ? 1000 : 0);
+        }
+      }
     },
     focus(key) {
       const marker = byKey.get(key);

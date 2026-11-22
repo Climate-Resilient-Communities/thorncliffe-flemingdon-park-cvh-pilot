@@ -288,6 +288,11 @@ export function MapScreen({ lang, tiles }: { lang: LaunchCode; tiles: MapTiles }
     }
   }, [pins, mapStatus, placeTarget]);
 
+  // The pin whose preview is open is drawn apart from the others (QA, 2026-11-22).
+  useEffect(() => {
+    if (mapStatus === "ready") handle.current?.setSelected(chosen?.key ?? null);
+  }, [chosen, pins, mapStatus]);
+
   // A map that was hidden behind the list measures itself again when it is back on screen.
   useEffect(() => {
     if (view !== "map" || mapStatus !== "ready") return;

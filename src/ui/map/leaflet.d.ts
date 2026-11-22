@@ -47,6 +47,8 @@ declare module "leaflet" {
   }
   export interface Marker extends Layer {
     getElement(): HTMLElement | undefined;
+    setIcon(icon: DivIcon): this;
+    setZIndexOffset(offset: number): this;
   }
   export interface TileLayer extends Layer {
     getTileUrl(coords: Coords): string;

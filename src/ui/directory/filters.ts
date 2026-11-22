@@ -113,10 +113,17 @@ export function filterProviders(providers: readonly ListingProvider[], state: Fi
   });
 }
 
-/** Each provider once (the first with an id wins), by name in the order of the language, then by id. */
+/** Established services first, then community groups, then a provider the run-by list does not name (the Hub's decision, 2026-11-22). */
+const RUN_BY_RANK: Record<string, number> = { formal: 0, grassroots: 1 };
+const runByRank = (provider: ListingProvider) => RUN_BY_RANK[provider.run_by ?? ""] ?? 2;
+
+/**
+ * Each provider once (the first with an id wins): established services first, then community groups (Helena Yu's QA, 2026-11-22: "the
+ * grassroots groups showed up first in the food category"), each by name in the order of the language, then by id.
+ */
 export function listProviders(providers: readonly ListingProvider[], locale: string): ListingProvider[] {
   const seen = new Set<string>();
   const once = providers.filter((provider) => (seen.has(provider.id) ? false : (seen.add(provider.id), true)));
   const collator = new Intl.Collator(locale, { numeric: true, sensitivity: "base" });
-  return once.sort((a, b) => collator.compare(a.name, b.name) || collator.compare(a.id, b.id));
+  return once.sort((a, b) => runByRank(a) - runByRank(b) || collator.compare(a.name, b.name) || collator.compare(a.id, b.id));
 }
