@@ -3,23 +3,16 @@
   "guide.flood.summary": {
    "attempts": [
     "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: اونچی عمارتوں میں، پائپ پھٹنے یا شدید بارش کی وجہ سے پارکنگ اور تہہ خانوں میں پانی بھر سکتا ہے، اور پانی یا بجلی کی فراہمی بھی بند ہو سکتی ہے۔ ایسا ہونے سے پہلے، اہم کاغذات کو پانی سے محفوظ بیگ میں رکھ کر کسی اونچی جگہ پر محفوظ کریں، اور تین دن کے لیے بوتلوں میں بند پانی جمع رکھیں۔ اس بات کا علم رکھیں کہ اپنے سپرنٹنڈنٹ سے کیسے رابطہ کرنا ہے۔",
-    "tiny-aya-fire: rejected (no Urdu-only letters (may be Persian)) | output: في مبنى مرتفع، يمكن أن يؤدي انفجار أنبوب أو هطول أمطار غزيرة إلى فيضان مستويات مواقف السيارات والقبو، وقد يؤدي إلى إيقاف إمدادات المياه أو الكهرباء. قبل حدوث ذلك، احفظ الأوراق المهمة في كيس مقاوم للماء في مكان مرتفع، واحفظ 3 أيام من المياه المعلبة. تعرف على كيفية الوصول إلى مديرك."
+    "tiny-aya-fire: rejected (no Urdu-only letters (may be Persian)) | output: في مبنى مرتفع، يمكن أن يؤدي انفجار أنبوب أو هطول أمطار غزيرة إلى فيضان مستويات مواقف السيارات والبهو، وقد يؤدي ذلك إلى إيقاف إمدادات المياه أو الكهرباء. قبل حدوث ذلك، ضع الأوراق المهمة في كيس مقاوم للماء في مكان مرتفع، واحتفظ بمياه معبأة لمدة 3 أيام. تعرف على كيفية الوصول إلى مديرك."
    ],
    "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent."
-  },
-  "guide.power.summary": {
-   "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: بجلی کی بندش سے لفٹیں، بجلی کے بلب، فریج اور طبی آلات کام کرنا بند ہو سکتے ہیں۔ ایسی صورتحال سے پہلے، ایک ٹارچ، ریڈیو اور چارج شدہ پاور بینک اپنے پاس رکھیں، اور ان طبی آلات کے لیے بھی انتظام کریں جنہیں بجلی کی ضرورت ہوتی ہے۔ تین دن کا پانی اور ایسی خوراک جمع کر کے رکھیں جسے پکانے کی ضرورت نہ ہو۔",
-    "tiny-aya-fire: rejected (no Urdu-only letters (may be Persian)) | output: يمكن أن توقف انقطاع التيار الكهربائي المصاعد، والإضاءة، والثلاجات، والمعدات الطبية. قبل حدوث ذلك، احتفظ بمصباح يدوي، و라디오، وبنك طاقة مشحون، وخطط لأي معدات طبية تحتاج إلى الطاقة. احتفظ بـ 3 أيام من الماء والطعام الذي لا يحتاج إلى طهي."
-   ],
-   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking."
   }
  },
  "language": "ur",
  "models": {
   "claude-opus-5.5": 111,
   "north-small-translate-09-2026": 27,
-  "tiny-aya-fire": 3
+  "tiny-aya-fire": 4
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -793,7 +786,16 @@
    "text": "اگر ایسا کرنا محفوظ ہو تو اکیلے رہنے والے پڑوسیوں کی خیریت معلوم کریں۔",
    "translatedOn": "2026-10-09"
   },
-  "guide.power.summary": null,
+  "guide.power.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "تاریکی کے دوران لिफ्टیں، روشنی، فریج اور طبی آلات بند ہو سکتے ہیں۔ اس سے پہلے کہ ایسا ہو، ایک ٹارچ، ریڈیو اور چارج شدہ پاور بینک رکھیں، اور کسی بھی طبی آلات کی منصوبہ بندی کریں جنہیں بجلی کی ضرورت ہو۔ 3 دن کا پانی اور کھانا رکھیں جو پکانے کی ضرورت نہ ہو۔",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -1435,5 +1437,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:24:40+00:00"
+ "updated": "2026-11-22T00:39:29+00:00"
 }

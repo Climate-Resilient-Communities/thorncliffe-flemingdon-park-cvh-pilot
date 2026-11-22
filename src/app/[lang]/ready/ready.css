@@ -235,7 +235,7 @@
     content: "";
     inline-size: 10px;
     block-size: 10px;
-    margin-block-start: 0.55em;
+    margin-block-start: var(--gap-label);
     margin-inline: auto;
     border: 0;
     background-color: var(--ink);

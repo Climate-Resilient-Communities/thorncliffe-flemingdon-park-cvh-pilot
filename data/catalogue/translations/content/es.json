@@ -2,7 +2,9 @@
  "failed": {},
  "language": "es",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 111,
+  "command-a-translate-08-2025": 31,
+  "north-small-translate-09-2026": 1
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -85,6 +87,16 @@
    "text": "Si necesita ir a una cita, pida ayuda con el transporte.",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "Cuando los ascensores se detienen, las personas que viven en pisos altos pueden quedar atrapadas en casa durante días. Antes de que esto ocurra, mantenga en casa provisiones de comida, agua y medicinas para 3 días, e informe a su representante de piso o a un vecino si no puede utilizar las escaleras.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -94,6 +106,36 @@
    "status": "machine",
    "text": "Avería del ascensor",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "Dolor en el pecho, palpitaciones o mucha falta de aire al subir las escaleras. Deténgase y descanse. Consulte la sección \"Cuándo llamar al 911\" al principio de esta guía.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "Caídas en las escaleras: camine despacio, sujétese a la barandilla y no transporte cargas pesadas.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "Vecinos que no pueden salir de casa y que pueden quedarse sin comida o sin medicinas.",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -195,6 +237,16 @@
    "text": "Una vez afuera, no vuelva a entrar hasta que los bomberos digan que es seguro.",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "En caso de incendio en un edificio alto, la opción más segura puede ser salir o quedarse en su apartamento. Depende de dónde esté el incendio. Antes de que ocurra un incendio, aprenda el plan de seguridad contra incendios de su edificio y conozca ambas escaleras de salida, y mantenga una bolsa de emergencia cerca de la puerta.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -204,6 +256,36 @@
    "status": "machine",
    "text": "Incendio y evacuación",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "Hay humo en el pasillo o en la escalera. No pases a través del humo. Regresa, cierra la puerta y usa las otras escaleras, o quédate en tu apartamento.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "Una puerta o un pomo de puerta calientes. No la abras.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "Después del humo: tos, dificultad para respirar o dolor de cabeza. Hazte una revisión médica, aunque al principio te sientas bien.",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -315,6 +397,16 @@
    "text": "Si cortan el agua en su edificio, use agua embotellada para beber y cocinar.",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "En un edificio alto, una tubería rota o una lluvia fuerte pueden inundar los niveles de estacionamiento y los sótanos, y pueden cortar el suministro de agua o de electricidad. Antes de que esto ocurra, guarda los documentos importantes en una bolsa impermeable en un lugar alto y ten agua embotellada para 3 días. Aprende cómo contactar a tu superintendente.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -324,6 +416,46 @@
    "status": "machine",
    "text": "Inundación o avería de plomería",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "Agua cerca de enchufes, paneles o cables eléctricos. Manténgase alejado.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "Agua en movimiento. No camine ni conduzca por ella. 15 cm (6 pulgadas) de agua en movimiento pueden derribar a una persona.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "Agua sucia. El agua de las inundaciones puede transportar aguas residuales. Lávate las manos y no dejes que los niños jueguen en ella.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "Moho después de que el agua se ha ido: un olor a humedad, manchas en las paredes, tos o sibilancias.",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -435,6 +567,16 @@
    "text": "Pase a ver a los vecinos que viven solos.",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "El calor extremo puede enfermar a cualquier persona y es más peligroso para los adultos mayores, los bebés y las personas con problemas de salud. Antes del verano, busca lugares frescos cerca de ti y revisa tus medicamentos con un farmacéutico. Ten agua y provisiones para 3 días en casa por si no puedes salir.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -444,6 +586,86 @@
    "status": "machine",
    "text": "Calor extremo",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "Sudoración intensa o piel fría y húmeda.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "Mareos o sensación de desmayo, o dolor de cabeza.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "Sentirse mal del estómago (náuseas) o vomitar.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "Respiración rápida o latidos del corazón acelerados.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "Tener mucha sed y orinar menos, con orina de color amarillo oscuro.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "Calambres musculares.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "Estos son síntomas de agotamiento por calor. Si los notas, ve a un lugar fresco, bebe agua y descansa.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "Si alguien empeora o deja de sudar, consulte la sección \"Cuándo llamar al 911\" que se encuentra al principio de esta guía.",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -565,6 +787,16 @@
    "text": "Pase a ver a los vecinos que viven solos, si es seguro hacerlo.",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "Un corte de energía puede detener los ascensores, las luces, las neveras y el equipo médico. Antes de que esto ocurra, mantenga una linterna, una radio y una batería portátil cargada, y planifique el uso de cualquier equipo médico que necesite energía. Guarde agua y comida para 3 días que no necesiten cocción.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -574,6 +806,46 @@
    "status": "machine",
    "text": "Corte de luz",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "Monóxido de carbono. Nunca utilice una barbacoa, una cocina de campamento o un generador en interiores o en un balcón. El dolor de cabeza, los mareos, la sensación de malestar o la confusión pueden ser síntomas de monóxido de carbono. Salga inmediatamente al aire libre.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "Comida que se ha calentado. Si la comida del frigorífico ha estado caliente durante más de 4 horas, tire la carne, el pescado, la leche y las sobras. \"Si tienes dudas, tíralo\".",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "Tener frío en invierno o demasiado calor en verano cuando la calefacción o el aire acondicionado están apagados.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "Caídas en pasillos y escaleras oscuros.",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -685,6 +957,16 @@
    "text": "Vaya a un lugar con aire filtrado si entra humo en su casa.",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "El humo de los incendios forestales lejanos puede hacer que el aire sea insalubre durante días. Antes de la temporada, compre mascarillas (N95 o KN95) y elabore un plan para crear una \"habitación con aire limpio\" con un filtro de ventilador o un purificador de aire. Guarde alimentos y medicinas para 3 días para no tener que salir afuera.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -694,6 +976,46 @@
    "status": "machine",
    "text": "Humo de incendios forestales",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "Signos leves, que desaparecen cuando el aire está más limpio: ojos irritados, dolor de garganta, nariz que moquea, tos leve, dolor de cabeza.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "Síntomas graves. Busque ayuda médica si tiene dificultad para respirar, una tos fuerte, mareos o palpitaciones.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "Las personas con asma, enfermedades cardíacas o pulmonares, las mujeres embarazadas, los adultos mayores y los niños sienten el humo más pronto. Mantenga cerca los inhaladores de rescate.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "La lectura de la calidad del aire (AQHI) en la aplicación meteorológica. 7 o más es un riesgo alto.",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1438,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:00:12+00:00"
+ "updated": "2026-11-22T00:36:21+00:00"
 }

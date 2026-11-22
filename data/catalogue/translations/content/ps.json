@@ -2,7 +2,7 @@
  "failed": {
   "guide.power.summary": {
    "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: برق ماتېدلو له امله لفټونه، بریښنا، یخچالونه او طبی وسایل کار کولې ته دوام نه ورکوي. دمخه چې برق مات شي، یو چراغِ دستی، رادیو او چارج شوی پاوربینک یادت ولرئ، او د هغه طبی وسایلو لپاره چې بریښنا ته اړتیا لري، پلان وکړئ. درې ورځې لپاره اوبه او هغه خوراکي توکي چمتو کړئ چې پخلی ته اړتیا ونلري."
+    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: بریښنا ماتیدل کولی شي لفټونه، بریښناګرونه، یخچالونه او طبي وسايل بند کړي. د دې پیښې څخه دمخه، یو پوښلۍ چراغ، ریډیو او چارج شوی پاور بانک یادت ولرئ، او د هغه طبي وسایلو لپاره چې بریښنا ته اړتیا لري، پلان وکړئ. درې ورځې لپاره اوبه او هغه خوراکي توکي چمتو کړئ چې پخلی ته اړتیا ونلري."
    ],
    "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking."
   }
@@ -1435,5 +1435,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:24:40+00:00"
+ "updated": "2026-11-22T00:39:30+00:00"
 }

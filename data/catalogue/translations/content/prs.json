@@ -2,45 +2,38 @@
  "failed": {
   "guide.elevator.summary": {
    "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: وقتی آسانسورها از کار می‌افتند، کسانی که در طبقات بالا زندگی می‌کنند ممکن است برای چند روز در خانه گیر بیفتند. قبل از اینکه این اتفاق بیفتد، به اندازه سه روز غذا، آب و دارو در خانه نگه دارید و اگر نمی‌توانید از پله‌ها استفاده کنید، به نماینده طبقه خود یا یکی از همسایه‌ها اطلاع دهید.",
+    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: وقتی آسانسورها از کار می‌افتن، کسانیکه توی طبقات بالا زندگی می‌کنن ممکنه چند روز توی خونه گیر کنن. قبل از اینکه همچین اتفاقی بیفته، به اندازه سه روز غذا، آب و دارو توی خونه داشته باشین و اگه نمی‌تونین از پله‌ها استفاده کنین، به نماینده طبقه‌تون یا یه همسایه خبر بدین.",
     "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: وقتی آسانسورها از کار می‌افتند، کسانی که در طبقات بالا زندگی می‌کنند ممکن است برای چند روز در خانه گیر بیفتند. قبل از این که این اتفاق بیفتد، سه روز غذا، آب و دارو در خانه ذخیره کنید و اگر نمی‌توانید از پله‌ها استفاده کنید، به نماینده طبقه خود یا به یکی از همسایه‌ها اطلاع دهید."
    ],
    "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs."
   },
   "guide.flood.summary": {
    "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: توی ساختمون‌های بلند، ترکیدن لوله یا بارون شدید ممکنه باعث سیلابی شدن پارکینگ‌ها و زیرزمین‌ها بشه و آب یا برق رو قطع کنه. قبل از اینکه همچین اتفاقی بیفته، مدارک مهم رو توی یه کیسه ضدآب بذارید و اون رو در جای بلند نگه دارید و برای سه روز آب معدنی ذخیره کنید. بدونید که چطوری می‌تونید با مدیر ساختمون تماس بگیرید.",
-    "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: در یک ساختمان بلند، ترکیدگی لوله یا باران شدید میتواند باعث سیل در طبقات پارکینگ و زیرزمین شود و همچنین باعث قطع آب یا برق شود. قبل از اینکه این اتفاق بیفتد، مدارک مهم را در یک کیسه ضد آب در جای بلند نگهداری کنید و برای سه روز آب بطری شده ذخیره کنید. بدانید که چگونه میتوانید با سرپرست ساختمان تماس بگیرید."
+    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: توی ساختمون‌های بلند، ترکیدن لوله یا بارون شدید ممکنه باعث آبگرفتگی طبقات پارکینگ و زیرزمین بشه و آب یا برق قطع بشه. قبل از اینکه این اتفاق بیفته، مدارک مهم رو توی یه کیسه ضدآب بذارید و اون رو در جای بلند نگه دارید، و برای سه روز آب معدنی ذخیره کنید. بدونید که چطوری با مدیر ساختمون تماس بگیرید.",
+    "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: در یک ساختمان بلند، ترکیدگی لوله یا باران شدید میتواند باعث سیل در طبقات پارکینگ و زیرزمین شود و همچنین باعث قطع آب و برق شود. قبل از اینکه این اتفاق بیفتد، مدارک مهم خود را در یک کیسه ضد آب در جای بلند نگهداری کنید و برای سه روز آب بطری شده ذخیره کنید. بدانید که چگونه میتوانید با سرپرست ساختمان تماس بگیرید."
    ],
    "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent."
   },
   "guide.heat.summary": {
    "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: گرمای شدید می‌تونه هر کسی رو مریض کنه و برای سالمندان، نوزادان و کسانی که مشکلات صحی دارن، خطرناک‌تره. قبل از تابستان، جاهای خنک نزدیک خودتون رو پیدا کنین و داروهاتون رو با یه داروساز چک کنین. آب و مواد غذایی برای سه روز رو در خونه نگه دارین تا اگر نتونستین بیرون برین، مشکلی پیش نیاد.",
-    "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: گرمای شدید میتواند هر کسی را بیمار کند و برای بزرگسالان مسن، نوزادان و افرادی که دارای مشکلات صحی دارند، بسیار خطرناک است. قبل از تابستان، مکان های خنک نزدیک به خود را پیدا کنید و داروهای خود را با یک دارو ساز بررسی کنید. در صورتی که نتوانید بیرون بروید، آب و آذوقه سه روزه را در خانه تان نگهداری کنید."
+    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: گرمای شدید می‌تونه هر کسی رو مریض کنه و برای سالمندان، نوزادان و کسانی که بیماری دارن، خطرناک‌تره. قبل از تابستان، جاهای خنک نزدیک خونه‌تون رو پیدا کنین و داروهاتون رو با یه داروساز چک کنین. آب و مواد غذایی برای سه روز رو در خونه نگه دارین تا اگر نتونستین بیرون برین، مشکلی پیش نیاد.",
+    "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: گرمای شدید میتواند هر کسی را بیمار کند و برای بزرگسالان مسن، نوزادان و افرادی که از مشکلات صحی دچار هستند، خطرناک تر است. قبل از فرا رسیدن تابستان، مکان های خنک نزدیک به خود را پیدا کنید و داروهای تان را با یک دارو فروش بررسی کنید. در صورتی که نتوانید بیرون بروید، آب و آذوقه سه روزه را در خانه تان ذخیره کنید."
    ],
    "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out."
   },
   "guide.power.summary": {
    "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: قطع برق ممکنه آسانسور، چراغ‌ها، یخچال‌ها و تجهیزات پزشکی رو از کار بندازه. قبل از اینکه چنین اتفاقی بیفته، یه چراغ قوه، یه رادیو و یه پاوربانک شارژشده داشته باشید و برای تجهیزات پزشکی‌ای که به برق نیاز دارن برنامه‌ریزی کنید. به اندازه سه روز آب و غذایی که نیاز به پختن نداره ذخیره کنید.",
+    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: قطعی برق می‌تونه آسانسور، چراغ‌ها، یخچال‌ها و تجهیزات پزشکی رو از کار بندازه. قبل از اینکه چنین اتفاقی بیفته، یه چراغ قوه، یه رادیو و یه پاوربانک شارژشده داشته باشید و برای تجهیزات پزشکی‌ای که به برق نیاز دارن، برنامه‌ریزی کنید. به اندازه سه روز آب و غذایی که نیاز به پخت نداره، ذخیره کنید.",
     "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: قطعی برق میتواند آسانسورها، چراغ ها، یخچال ها و تجهیزات پزشکی را از کار بیندازد. قبل از این که این اتفاق بیفتد، یک چراغ قوه، یک رادیو و یک پاور بانک شارژ شده را نگه دارید و برای هرگونه تجهیزات پزشکی که به برق نیاز دارد، برنامه ریزی کنید. سه روز آب و غذا که نیاز به پخت ندارد را ذخیره کنید."
    ],
    "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking."
-  },
-  "guide.smoke.summary": {
-   "attempts": [
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 3) | output: دود آتش‌سوزی‌های جنگلی که از دور می‌آید، ممکنه چند روز هوا رو برای سلامتی خطرناک کنه. قبل از شروع فصل، ماسک (N95 یا KN95) بخرید و یه برنامه برای «اتاق هوای پاک» با فیلتر پنکه یا دستگاه تصفیه هوا بچینید. برای سه روز غذا و دارو نگه دارید تا مجبور نشید بیرون برید.",
-    "command-a-translate-08-2025: rejected (numbers missing from translation: 3) | output: دود ناشی از آتش سوزی های دوردست می تواند برای روزها هوای ناسالمی را ایجاد کند. قبل از فصل، ماسک (ان 95 یا کی ان 95) بخرید و یک طرح برای ایجاد \"اتاق هوای پاک\" با استفاده از فیلتر فن یا تصفیه کننده هوا تهیه کنید. سه روز غذا و دارو ذخیره کنید تا مجبور نشوید به بیرون بروید."
-   ],
-   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside."
   }
  },
  "language": "prs",
  "models": {
   "claude-opus-5.5": 111,
   "command-a-translate-08-2025": 1,
-  "north-small-translate-09-2026": 26
+  "north-small-translate-09-2026": 27
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -957,7 +950,16 @@
    "text": "اگر خانهٔ شما پر از دود شد، به جایی بروید که هوای آن فلتر می‌شود.",
    "translatedOn": "2026-10-09"
   },
-  "guide.smoke.summary": null,
+  "guide.smoke.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "دود آتش‌سوزی‌های جنگل در نقاط دوردست می‌تونه چند روز هوا رو برای سلامتی خطرناک کنه. قبل از شروع این فصل، ماسک (N95 یا KN95) بخرید و یه برنامه برای «اتاق هوای پاک» با استفاده از فن تصفیه‌کننده یا دستگاه تصفیه هوا داشته باشید. به اندازه 3 روز غذا و دارو ذخیره کنید تا مجبور نشید بیرون برید.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -1429,5 +1431,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:24:40+00:00"
+ "updated": "2026-11-22T00:39:32+00:00"
 }

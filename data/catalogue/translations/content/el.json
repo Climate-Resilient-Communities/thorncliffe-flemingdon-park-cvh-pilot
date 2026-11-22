@@ -1,24 +1,9 @@
 {
- "failed": {
-  "guide.heat.watch.7": {
-   "attempts": [
-    "command-a-translate-08-2025: gave up after repeated errors",
-    "north-small-translate-09-2026: rejected (numbers missing from translation: 911) | output: Αν η κατάσταση κάποιου χειροτερέψει ή αν σταματήσει να ιδρώνει, δείτε την ενότητα «Πότε να καλέσετε το 166» στην αρχή αυτού του οδηγού."
-   ],
-   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide."
-  },
-  "guide.smoke.summary": {
-   "attempts": [
-    "command-a-translate-08-2025: gave up after repeated errors",
-    "north-small-translate-09-2026: rejected (translator instructions leaked into the output) | output: Κανόνες:\n- Διατηρήστε τα ονόματα οργανισμών, τα ονόματα προγραμμάτων, τις διευθύνσεις, τους ταχυδρομικούς κώδικες, τους αριθμούς τηλεφώνου, τις διευθύνσεις ηλεκτρονικού ταχυδρομείου και τις ιστοσελίδες ακριβώς όπως είναι γραμμένα στα αγγλικά.\n- Διατηρήστε όλα τα ψηφία ως δυτικούς αριθμούς (0-9).\n- Χρησιμοποιήστε απλά, καθημερινά λόγια, όπως θα έλεγε ένας γείτονας.\n- Απαντήστε μόνο με τη μετάφραση,"
-   ],
-   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside."
-  }
- },
+ "failed": {},
  "language": "el",
  "models": {
   "claude-opus-5.5": 111,
-  "command-a-translate-08-2025": 28,
+  "command-a-translate-08-2025": 30,
   "north-small-translate-09-2026": 2
  },
  "texts": {
@@ -672,7 +657,16 @@
    "text": "Αυτά είναι συμπτώματα θερμικής εξάντλησης. Αν τα παρατηρήσετε, μεταφερθείτε σε ένα δροσερό μέρος, πιείτε νερό και ξεκουραστείτε.",
    "translatedOn": "2026-11-22"
   },
-  "guide.heat.watch.7": null,
+  "guide.heat.watch.7": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "Αν κάποιος χειροτερέψει ή σταματήσει να ιδρώνει, δείτε την ενότητα \"Πότε να καλέσετε το 911\" στην κορυφή αυτού του οδηγού.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -963,7 +957,16 @@
    "text": "Πηγαίνετε σε έναν χώρο με φιλτραρισμένο αέρα αν μπει καπνός στο σπίτι σας.",
    "translatedOn": "2026-10-09"
   },
-  "guide.smoke.summary": null,
+  "guide.smoke.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "Ο καπνός από τις πυρκαγιές που εκδηλώνονται μακριά μπορεί να κάνει τον αέρα ανθυγιεινό για μέρες. Πριν από την περίοδο των πυρκαγιών, αγοράστε μάσκες (N95 ή KN95) και δημιουργήστε ένα σχέδιο για ένα «δωμάτιο καθαρού αέρα» με φίλτρο ανεμιστήρα ή καθαριστή αέρα. Διατηρήστε τρόφιμα και φάρμακα για 3 ημέρες ώστε να μην χρειάζεται να βγείτε έξω.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -1435,5 +1438,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:24:40+00:00"
+ "updated": "2026-11-22T00:38:15+00:00"
 }
