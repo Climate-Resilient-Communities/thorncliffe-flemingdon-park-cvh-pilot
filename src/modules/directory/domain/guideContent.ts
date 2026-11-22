@@ -67,6 +67,10 @@ export interface GuideSource {
   readMins?: number | null;
   title?: string | null;
   when911?: string | null;
+  /** "In short" (session 2, #15): two or three sentences shown above the stages. Optional. */
+  summary?: string | null;
+  /** "Watch for" (session 2, #19): the hazards and body signs, shown at the top of During. Optional. */
+  watchFor?: (string | null)[] | null;
   before?: (string | null)[] | null;
   during?: (string | null)[] | null;
   after?: (string | null)[] | null;
@@ -106,16 +110,21 @@ export interface PlanOptions {
   pilotMachineTranslations?: boolean;
 }
 
-/** Text keys of a guide, relative to the guide: title, when911, before.0 ... after.n. */
+/** Text keys of a guide, relative to the guide: title, when911, summary, before.0 ... after.n, watch.0 ... watch.n. */
 export function guideTexts(guide: GuideSource): Record<string, string> {
   const texts: Record<string, string> = {};
   if (present(guide.title)) texts.title = guide.title;
   if (present(guide.when911)) texts.when911 = guide.when911;
+  if (present(guide.summary)) texts.summary = guide.summary;
   for (const section of GUIDE_SECTIONS) {
     (guide[section] ?? []).forEach((line, index) => {
       if (present(line)) texts[`${section}.${index}`] = line;
     });
   }
+  // The same order as scripts/content_catalogue.py guide_texts: the owner's review hash is taken over this order.
+  (guide.watchFor ?? []).forEach((line, index) => {
+    if (present(line)) texts[`watch.${index}`] = line;
+  });
   return texts;
 }
 

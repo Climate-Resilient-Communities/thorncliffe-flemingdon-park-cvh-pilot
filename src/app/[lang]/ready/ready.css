@@ -229,6 +229,39 @@
     line-height: 1;
   }
 
+  /* Session 2 (#16): the emergency kit's lists, and a guide's "Watch for", are things to have or notice, not steps in order: a
+     bullet in the number's place, the same size and column. */
+  .guide-steps--bullets > li::before {
+    content: "";
+    inline-size: 10px;
+    block-size: 10px;
+    margin-block-start: 0.55em;
+    margin-inline: auto;
+    border: 0;
+    background-color: var(--ink);
+  }
+
+  /* Session 2 (#15): "In short", above the stages. */
+  .guide-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    padding: var(--inset-card);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    font-size: var(--type-alert-size);
+  }
+
+  /* Session 2 (#19): "Watch for", at the top of During, apart from the steps. */
+  .guide-watch {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    padding: var(--inset-card);
+    border: 2px dashed var(--ink);
+    border-radius: var(--radius-card);
+  }
+
   /* 911, apart from the other numbers (the prototype's .cvh-e911). */
   .e911 {
     display: flex;

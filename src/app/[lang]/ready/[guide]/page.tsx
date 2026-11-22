@@ -144,6 +144,18 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
           </Link>
         </Stack>
 
+        {/* Session 2 (#15): "In short", what to do and what to prepare, above the stages. */}
+        {view.summary && (
+          <section className="guide-summary" aria-labelledby="guide-summary-title" data-testid="guide-summary">
+            <h2 id="guide-summary-title" className="ready-eyebrow">
+              <ResidentText>{t("R25.inShort")}</ResidentText>
+            </h2>
+            <ContentText as="p" unavailable={view.summary.unavailable}>
+              {view.summary.text}
+            </ContentText>
+          </section>
+        )}
+
         <GuideForYou lang={lang} lines={forYouLines} labels={{ forYou: t("R25.forYou"), tailoredLink: t("R25.tailoredLink") }} />
 
         {/* From the desktop breakpoint (desktop.css) "Jump to" is a column beside the guide that stays on screen while it scrolls. On a
@@ -177,6 +189,21 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
                   <h2 id={headingId(section)} tabIndex={-1} className="guide-heading" data-testid={`guide-heading-${section}`}>
                     <ResidentText>{t(`stages.${section}`)}</ResidentText>
                   </h2>
+                  {/* Session 2 (#19): the hazards and body signs to watch for, at the top of During, above its steps. */}
+                  {section === "during" && view.watchFor.length > 0 && (
+                    <div className="guide-watch" data-testid="guide-watch">
+                      <h3 className="ready-eyebrow">
+                        <ResidentText>{t("R25.watchFor")}</ResidentText>
+                      </h3>
+                      <ul className="guide-steps guide-steps--bullets">
+                        {view.watchFor.map((line, index) => (
+                          <ContentText key={index} as="li" unavailable={line.unavailable}>
+                            {line.text}
+                          </ContentText>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <StepsCap total={view.sections[section].length} label={t("R25.allSteps", { n: view.sections[section].length })}>
                     <ol className="guide-steps">
                       {view.sections[section].map((line, index) => (
@@ -186,6 +213,14 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
                       ))}
                     </ol>
                   </StepsCap>
+                  {/* Session 2 (#16): what to keep at home, one list shared by every guide. */}
+                  {section === "before" && (
+                    <Link href={`/${lang}/ready/kit`} prefetch={false} className="ready-link tap" data-testid="guide-kit">
+                      <span className="shell-ico shell-ico--check shell-ico--sm" aria-hidden="true" />
+                      <ResidentText>{t("R25.kitLink")}</ResidentText>
+                      <span className="shell-ico shell-ico--chevron shell-ico--mirror shell-ico--sm" aria-hidden="true" />
+                    </Link>
+                  )}
                   {next ? (
                     <a href={`#${next}`} className="ready-btn ready-btn--primary tap guide-next" data-testid={`guide-next-${section}`}>
                       <ResidentText>{t("R25.next", { stage: t(`stages.${next}`) })}</ResidentText>

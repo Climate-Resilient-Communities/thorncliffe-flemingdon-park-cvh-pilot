@@ -2,7 +2,9 @@
  "failed": {},
  "language": "ta",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 111,
+  "north-small-translate-09-2026": 26,
+  "tiny-aya-fire": 6
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -85,6 +87,16 @@
    "text": "ஒரு சந்திப்புக்கு (appointment) நீங்கள் செல்ல வேண்டியிருந்தால், போக்குவரத்துக்கு உதவி கேளுங்கள்.",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "மின்தூக்கிகள் செயலிழக்கும்போது, உயரமான மாடிகளில் வசிப்பவர்கள் பல நாட்களுக்கு வீட்டிலேயே சிக்கிக்கொள்ள நேரிடலாம். அப்படி நடப்பதற்கு முன்பே, வீட்டில் 3 நாட்களுக்குத் தேவையான உணவு, தண்ணீர் மற்றும் மருந்துகளைச் சேமித்து வைத்துக்கொள்ளுங்கள்; உங்களால் படிக்கட்டுகளைப் பயன்படுத்த முடியாவிட்டால், உங்கள் மாடிப் பிரதிநிதியிடமோ அல்லது பக்கத்து வீட்டுக்காரரிடமோ தெரிவிக்கவும்.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -94,6 +106,36 @@
    "status": "machine",
    "text": "மின்தூக்கிக் கோளாறு",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "மார்பு வலி, அதிவேக இதயத் துடிப்பு அல்லது படிக்கட்டுகளில் ஏறும்போது கடுமையான மூச்சுத் திணறல் இருந்தால், உடனே நின்று ஓய்வெடுங்கள். இந்த வழிகாட்டியின் தொடக்கத்தில் உள்ள \"எப்போது 911-க்கு அழைக்க வேண்டும்\" என்ற பகுதியைப் பார்க்கவும்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "படிகளில் விழுந்தால்: மெதுவாக செல்லுங்கள், ரெயிலை பிடித்துக்கொள்ளுங்கள், மற்றும் கனமான சுமைகளை சுமக்க வேண்டாம்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "வீடு விட்டு வெளியேற முடியாத அண்டை வீட்டார், உணவு அல்லது மருந்துக்கு தட்டுப்பாடு ஏற்படலாம்.",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -195,6 +237,16 @@
    "text": "வெளியே வந்த பிறகு, பாதுகாப்பானது என்று தீயணைப்புத் துறை சொல்லும் வரை வெளியிலேயே இருங்கள்.",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "உயரமான கட்டிடத்தில் தீ விபத்து ஏற்பட்டால், வெளியேறுவதே அல்லது உங்கள் வீட்டிலேயே இருப்பதே பாதுகாப்பான முடிவாக இருக்கலாம். தீ எங்கே பிடித்துள்ளது என்பதைப் பொறுத்தே இது அமையும். தீ விபத்து ஏற்படுவதற்கு முன்பே, உங்கள் கட்டிடத்தின் தீயணைப்பு பாதுகாப்புத் திட்டம் மற்றும் வெளியேறுவதற்கான இரண்டு படிக்கட்டுப் பாதைகளைத் தெரிந்துகொள்ளுங்கள்; மேலும் கதவுக்கு அருகில் அவசர காலப் பொருட்களைக் கொண்ட ஒரு பையை (go bag) தயாராக வைத்திருங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -204,6 +256,36 @@
    "status": "machine",
    "text": "தீயும் வெளியேற்றமும்",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "நடைபாதையிலோ அல்லது படிக்கட்டுப் பகுதியிலோ புகை இருந்தால், அங்கே செல்ல வேண்டாம். புகை இருக்கும் வழியில் போகாதீர்கள். பின்னோக்கிச் சென்று கதவை மூடிவிட்டு, மற்ற படிக்கட்டுகளைப் பயன்படுத்துங்கள் அல்லது உங்கள் வீட்டிலேயே இருங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "கதவோ அல்லது கதவுப் பிடி சூடாக இருந்தால், அதைத் திறக்காதீர்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "புகையினால்: இருமல், மூச்சுத் திணறல் அல்லது தலைவலி ஏற்படலாம். ஆரம்பத்தில் நீங்கள் நலமாக உணர்ந்தாலும், மருத்துவப் பரிசோதனை செய்து கொள்ளுங்கள்.",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -315,6 +397,16 @@
    "text": "உங்கள் கட்டடத்தில் தண்ணீர் நிறுத்தப்பட்டால், குடிக்கவும் சமைக்கவும் பாட்டில் தண்ணீரைப் பயன்படுத்துங்கள்.",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "உயர்ந்த கட்டிடத்தில், குழாய் வெடித்தல் அல்லது கனமழை பார்க்கிங் நிலைகள் மற்றும் கீழ்தளங்களை நிரப்பலாம், மேலும் நீர் அல்லது மின்சாரத்தை நிறுத்தலாம். இது நடக்காமல் இருக்க, முக்கியமான ஆவணங்களை நீர்ப்புகா பையில் உயரமாக வைத்து, 3 நாட்களுக்கான பாட்டிலில் அடைக்கப்பட்ட நீரை வைத்திருக்கவும். உங்கள் மேலாளரை எப்படிப் சென்றடைவது என்பதை அறியவும்.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -324,6 +416,46 @@
    "status": "machine",
    "text": "வெள்ளம் அல்லது குழாய்க் கோளாறு",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "மின்சார சுவிட்சுகள், பேனல்கள் அல்லது மின் கம்பிகளுக்கு அருகில் தண்ணீர் இருக்கலாம். அதிலிருந்து விலகி இருங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "ஓடும் தண்ணீர். அதன் வழியாக நடக்கவோ அல்லது வாகனம் ஓட்டவோ வேண்டாம். 15 செ.மீ (6 அங்குலம்) ஓடும் தண்ணீர் கூட ஒரு மனிதனை நிலைகுலையச் செய்யும்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "அழுக்கு நீர். வெள்ள நீரில் கழிவுநீர் கலந்திருக்கலாம். கைகளை நன்றாகக் கழுவுங்கள், குழந்தைகளை அந்த நீரில் விளையாட விடாதீர்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "தண்ணீர் வடிந்த பிறகும் பூஞ்சை பாதிப்பு: ஒருவித நாற்றம், சுவர்களில் கரும்புள்ளிகள், இருமல் அல்லது மூச்சுத்திணறல்.",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -435,6 +567,16 @@
    "text": "தனியாக வசிக்கும் அக்கம்பக்கத்தினரைச் சென்று நலம் விசாரியுங்கள்.",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "கடுமையான வெப்பம் எவரையும் நோய்வாய்ப்படுத்தலாம், மேலும் இது முதியவர்கள், குழந்தைகள் மற்றும் உடல்நலப் பிரச்சினைகள் உள்ளவர்களுக்கு மிகவும் ஆபத்தானது. கோடை காலத்திற்கு முன், உங்களுக்கு அருகில் உள்ள குளிர்ந்த இடங்களை கண்டுபிடித்து, ஒரு மருந்தாளரிடம் உங்கள் மருந்துகளை சரிபார்க்கவும். வெளியே செல்ல முடியாவிட்டால், வீட்டில் நீர் மற்றும் 3 நாட்களுக்கான சப்ளைகளை வைத்திருக்கவும்.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -444,6 +586,86 @@
    "status": "machine",
    "text": "கடும் வெப்பம்",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "அதிக வியர்வை, அல்லது குளிர்ச்சியாகவும் ஈரப்பதமாகவும் இருக்கும் தோல்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "தலைச்சுற்றல் அல்லது மயக்கம் வருவது போல உணர்தல், அல்லது தலைவலி.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "வயிற்றுக் குமட்டல் அல்லது வாந்தி எடுத்தல்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "வேகமான சுவாசம் அல்லது இதயம் வேகமாகத் துடித்தல்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "தண்ணீர் தாகம் அதிகமாக இருக்கும், சிறுநீர் குறைவாக வெளியேறும், சிறுநீர் அடர் மஞ்சள் நிறத்தில் இருக்கும்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "தசைப்பிடிப்பு.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "இவை வெப்பத்தால் ஏற்படும் உடல் சோர்வின் அறிகுறிகள். இவற்றை நீங்கள் கவனித்தால், குளிர்ச்சியான இடத்திற்குச் செல்லுங்கள், தண்ணீர் குடியுங்கள் மற்றும் ஓய்வெடுங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "நோயாளியின் நிலை மோசமடைந்தாலோ அல்லது வியர்வை வருவது நின்றாலோ, இந்த வழிகாட்டியின் தொடக்கத்தில் உள்ள \"எப்போது 911-க்கு அழைக்க வேண்டும்\" என்ற பகுதியைப் பார்க்கவும்.",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -565,6 +787,16 @@
    "text": "பாதுகாப்பாக இருந்தால், தனியாக வசிக்கும் அக்கம்பக்கத்தினரைச் சென்று நலம் விசாரியுங்கள்.",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "மின்தடை எலிவேட்டர்கள், விளக்குகள், குளிர்சாதனப் பெட்டிகள் மற்றும் மருத்துவ உபகரணங்களை நிறுத்திவிடும். ஒன்று நடக்குமுன், ஒரு விளக்கேற்றி, ஒரு ரேடியோ மற்றும் ஒரு சார்ஜ் செய்யப்பட்ட பேட்டரி பேங்க் வைத்திருங்கள், மேலும் மின்சாரம் தேவைப்படும் எந்த மருத்துவ உபகரணங்களையும் திட்டமிடுங்கள். சமைக்க தேவையில்லாத 3 நாட்கள் தண்ணீர் மற்றும் உணவை வைத்திருங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -574,6 +806,46 @@
    "status": "machine",
    "text": "மின்தடை",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "கார்பன் மோனாக்சைடு. பார்பிக்யூ, முகாம் அடுப்பு அல்லது ஜெனரேட்டரை வீட்டிற்குள் அல்லது பால்கனியில் ஒருபோதும் பயன்படுத்தாதீர்கள். தலைவலி, தலைச்சுற்றல், குமட்டல் அல்லது குழப்பமான மனநிலை ஆகியவை கார்பன் மோனாக்சைடு பாதிப்பின் அறிகுறிகளாக இருக்கலாம். உடனடியாக திறந்தவெளி காற்றோட்டமான இடத்திற்குச் செல்லுங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "சூடாகிவிட்ட உணவு. குளிர்சாதனப் பெட்டியில் உள்ள உணவு 4 மணி நேரத்திற்கும் மேலாக சூடாக இருந்தால், இறைச்சி, மீன், பால் மற்றும் மீதமுள்ள உணவுகளைக் குப்பையில் போட்டுவிடுங்கள். \"சந்தேகம் இருந்தால், அதைத் தூக்கி எறிந்துவிடுங்கள்.\"",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "விடுதியில் வெப்பமூட்டி அல்லது ஏர் கண்டிஷனர் அணைக்கப்பட்டிருக்கும்போது, குளிர்காலத்தில் குளிர்ச்சியாகவும், கோடைகாலத்தில் அதிக வெப்பமாகவும் இருக்கும்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "இருட்டான நடைபாதைகளிலும் படிக்கட்டுகளிலும் தவறி விழுதல்.",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -685,6 +957,16 @@
    "text": "உங்கள் வீட்டுக்குள் புகை வந்தால், வடிகட்டிய சுத்தமான காற்று உள்ள ஓர் இடத்துக்குச் செல்லுங்கள்.",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "தொலைதூரக் காட்டுத்தீயினால் ஏற்படும் புகையினால் பல நாட்களுக்கு காற்று மாசுபட்டு, ஆரோக்கியமற்றதாக மாறக்கூடும். இந்த காலத்திற்கு முன்னதாகவே, முகக்கவசங்களை (N95 அல்லது KN95) வாங்கி வைத்துக்கொள்ளுங்கள்; மேலும் மின்விசிறி வடிகட்டி (fan filter) அல்லது காற்று சுத்திகரிப்பானைப் பயன்படுத்தி, \"சுத்தமான காற்று அறை\" திட்டத்தை உருவாக்கிக் கொள்ளுங்கள். நீங்கள் வெளியே செல்ல வேண்டிய அவசியம் இல்லாதபடி, 3 நாட்களுக்குத் தேவையான உணவு மற்றும் மருந்துகளை முன்கூட்டியே சேமித்து வைத்துக்கொள்ளுங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -694,6 +976,46 @@
    "status": "machine",
    "text": "காட்டுத்தீப் புகை",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "காற்று தூய்மையாக இருக்கும்போது சரியாகிவிடும் லேசான அறிகுறிகள்: கண்களில் எரிச்சல், தொண்டை வலி, மூக்கு ஒழுகுதல், லேசான இருமல் மற்றும் தலைவலி.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "தீவிர அறிகுறிகள். மூச்சு விடுவதில் சிரமம், கடுமையான இருமல், தலைச்சுற்றல் அல்லது இதயம் வேகமாகத் துடித்தல் போன்றவை இருந்தால் மருத்துவ உதவியை நாடுங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "ஆஸ்துமா, இதய அல்லது நுரையீரல் நோய் உள்ளவர்கள், கர்ப்பிணிகள், முதியவர்கள் மற்றும் குழந்தைகள் புகையை விரைவாக உணர்வார்கள். அவசர கால இன்ஹேலர்களை (rescue inhalers) அருகிலேயே வைத்திருங்கள்.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "வானிலை செயலியில் காற்றின் தரக் குறியீடு (AQHI) காட்டப்படும். 7 அல்லது அதற்கு மேல் இருந்தால் அது அதிக ஆபத்தானது.",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1438,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:07:12+00:00"
+ "updated": "2026-11-22T00:12:01+00:00"
 }

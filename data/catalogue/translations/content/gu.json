@@ -2,7 +2,8 @@
  "failed": {},
  "language": "gu",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 111,
+  "tiny-aya-fire": 32
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -85,6 +86,16 @@
    "text": "જો તમારે કોઈ એપોઇન્ટમેન્ટ પર જવાનું હોય, તો આવવા-જવાની વ્યવસ્થા માટે મદદ માગો.",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "જ્યારે એલિવેટર બંધ થાય છે, ત્યારે ઉચ્ચ માળના લોકો દિવસો સુધી ઘરે ફસાઈ જઈ શકે છે. તે થાય તે પહેલાં, ઘરે 3 દિવસનું ખોરાક, પાણી અને દવાઓ રાખો, અને જો તમે સીડીઓનો ઉપયોગ કરી શકતા નથી તો તમારા ફ્લોર એમ્બેસેડર અથવા પડોશીને જણાવો.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -94,6 +105,36 @@
    "status": "machine",
    "text": "લિફ્ટ બંધ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "છાતીમાં દુખાવો, ઝડપથી ધબકતું હૃદય, અથવા સીડી પર શ્વાસની તકલીફ. થોભો અને આરામ કરો. આ માર્ગદર્શિકાની ટોચ પર \"જ્યારે 911 ને કૉલ કરવો\" જુઓ.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "સીડી પર પડવું: ધીમે ધીમે જાઓ, રેલને પકડો અને ભારે લોડ ન લઈને ચાલો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "પડોશીઓ કે જેઓ ઘર છોડી શકતા નથી અને તેમને ખોરાક અથવા દવાઓની ખોટ થઈ શકે છે.",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -195,6 +236,16 @@
    "text": "એકવાર બહાર નીકળી જાઓ, પછી ફાયર સર્વિસ સલામત છે એમ ન કહે ત્યાં સુધી બહાર જ રહો.",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "ઉંચી ઇમારતમાં આગમાં, સૌથી સુરક્ષિત પસંદગી એ છે કે બહાર નીકળી જવું, અથવા તમારી યુનિટમાં રહેવું. તે આગ ક્યાં છે તેના પર આધાર રાખે છે. આગ પહેલાં, તમારી ઇમારતની આગ સલામતી યોજના અને બંને બહાર નીકળવાની સીડીઓ શીખો, અને દરવાજાની નજીક \"ગો બેગ\" રાખો.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -204,6 +255,36 @@
    "status": "machine",
    "text": "આગ અને બિલ્ડિંગ ખાલી કરવું",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "સમુદ્રમાં અથવા સીડીમાં ધુમાડો. ધુમાડામાંથી પસાર ન થાઓ. પાછળ જાઓ, દરવાજો બંધ કરો અને અન્ય સીડીઓનો ઉપયોગ કરો, અથવા તમારી એકમમાં રહો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "ગરમ દરવાજો અથવા દરવાજાનો હેન્ડલ. તેને ખોલશો નહીં.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "ધુમાડા પછી: ખાંસી, શ્વાસ લેવામાં તકલીફ અથવા માથાનો દુખાવો. શરૂઆતમાં તમે ઠીક લાગતા હોવ તો પણ તપાસ કરાવો.",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -315,6 +396,16 @@
    "text": "જો તમારા બિલ્ડિંગમાં પાણી બંધ કરવામાં આવે, તો પીવા અને રસોઈ માટે બોટલનું પાણી વાપરો.",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "ઊંચા ઇમારતમાં, ફૂટેલી પાઇપ અથવા ભારે વરસાદથી પાર્કિંગ લેવલ અને બેઝમેન્ટમાં પાણી ભરાઈ શકે છે, અને પાણી અથવા વીજળી બંધ થઈ શકે છે. તે થાય તે પહેલાં, મહત્વપૂર્ણ કાગળોને વોટરપ્રૂફ બેગમાં ઊંચા રાખો, અને 3 દિવસનું બોટલબંધ પાણી રાખો. તમારો સુપરિન્ટેન્ડન્ટ કેવી રીતે પહોંચી શકાય તે જાણો.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -324,6 +415,46 @@
    "status": "machine",
    "text": "પૂર અથવા પ્લમ્બિંગ ખરાબ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "વીજળી આઉટલેટ્સ, પેનલ્સ અથવા કેબલ્સ નજીકનું પાણી. દૂર રહો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "ચલતી પાણી. તેમાં ચાલશો નહીં કે ગાડી ચલાવશો નહીં. 15 સેમી (6 ઇંચ) જેટલું ચલતું પાણી એક વ્યક્તિને ઉથલાવી શકે છે.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "ગંદા પાણી. પૂરનું પાણી ગટરનું પાણી લઈ શકે છે. તમારા હાથ ધોઈ લો, અને બાળકોને તેમાં રમવા ન દો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "પાણી ગયા પછી ફૂગ: ગંધાતી ગંધ, દિવાલ પર ડાઘ, ખાંસી અથવા શ્વાસ લેવામાં તકલીફ.",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -435,6 +566,16 @@
    "text": "એકલા રહેતા પડોશીઓની ખબર પૂછો.",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "ખૂબ જ ગરમી કોઈપણને બીમાર બનાવી શકે છે, અને તે વૃદ્ધ વયના લોકો, બાળકો અને આરોગ્ય સંબંધિત સમસ્યાઓ ધરાવતા લોકો માટે સૌથી વધુ ખતરનાક છે. ઉનાળો પહેલાં, તમારા નજીકના ઠંડા સ્થળો શોધો અને તમારા દવાઓને ફાર્માસિસ્ટ સાથે તપાસો. જો તમે બહાર જઈ શકતા નથી, તો ઘરે પાણી અને 3 દિવસના પુરવઠો રાખો.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -444,6 +585,86 @@
    "status": "machine",
    "text": "ભારે ગરમી",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "તેલિયું પરસેવું, અથવા ઠંડી અને ભીની ત્વચા.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "માછલાં અથવા ચક્કર, અથવા માથાનો દુખાવો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "પેટમાં ખરાબ લાગવું (ઉલ્ટી આવવી) અથવા ઉલટી થવી.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "ઝડપી શ્વાસ અથવા ઝડપી હૃદયગતિ.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "ખૂબ જ તરસ લાગી રહી છે અને ઓછું પીવું, અને ઘેરા પીળા મૂત્ર.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "પસલાંના સંકોચન (Muscle cramps) એ અચાનક અને અસ્વસ્થ કરનારા પસલાંના સંકોચનો છે. આ સંકોચનો પસલાંના સ્નાયુઓમાં થાય છે અને તે ખૂબ જ દુઃખદાયક હોઈ શકે છે. આ સંકોચનોના કારણો વિવિધ હોઈ શકે છે, જેમાં નીચેનાનો સમાવેશ થાય છે:\n\n- **ઇલેક્ટ્રોલાઇટ અસંતુલન**: સોડિયમ, પોટેશિયમ, મેગ્નેશિયમ અને કેલ્શિયમ જેવા ઇલેક્ટ્રોલાઇટ્સની ઉણપ અથવા વધુ પડતી માત્રા.\n- **પાણીની ઉણપ**: શરીરમાં પાણીની ઉણપ થવાથી ઇલેક્ટ્રોલાઇટ્સનું સંતુલન ખોરવાઈ શકે છે.\n- **વધુ પડતી કસરત**: પસલાંને વધુ પડતી કસરત કરવાથી અથવા અચાનક કસરત વધારવાથી.\n- **નિંદરાની ઉણપ**: પૂરતી નિદ્રા ન મળવાથી શરીરમાં ઇલેક્ટ્રોલાઇટ્સનું સંતુલન ખોરવાઈ શકે છે.\n- **દવાઓ**: કેટલાક દવાઓ, જેમ કે સ્ટેરોઇડ્સ, ડાયયુરેટિક્સ અને કેટલાક એન્ટિબાયોટિક્સ, પસલાંના સંકોચનોનું કારણ બની શકે છે.\n- **રોગો**: કેટલાક રોગો, જેમ કે ડાયાબિટીસ, કિડની રોગ અને હૃદય રોગ, પસલાંના સંકોચનોનું કારણ બની શકે છે.\n\n**સામાન્ય ઉપચાર**:\n- **પાણી પીવું**: પાણીની ઉણપ દૂર કરવા માટે પૂરતું પાણી પીવું.\n- **ઇલેક્ટ્રોલાઇટ્સ**: સોડિયમ, પોટેશિયમ, મેગ્નેશિયમ અને કેલ્શિયમ યુક્ત ખોરાક ખાવવો અથવા ઇલેક્ટ્રોલાઇટ્સની ગોળીઓ લેવી.\n- **વિશ્રામ**: પસલાંને વિશ્રામ આપવો અને કસરત ઘટાડવી.\n- **ગરમ પાણીથી સ્નાન**: ગરમ પાણીથી સ્નાન કરવાથી પસલાંના સંકોચનોને રાહત મળી શકે છે.\n- **દવાઓ**: ડૉક્ટરની સલાહ મુજબ દવાઓ લેવી.\n\nજો પસલાંના સંકોચનો વારંવાર થાય છે અથવા ખૂબ જ દુઃખદાયક હોય છે, તો ડૉક્ટરની સલાહ લેવી જરૂરી છે.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "ગરમીના થાકના આ ચિહ્નો છે. જો તમને તે દેખાય, તો ઠંડા સ્થળે જાઓ, પાણી પીઓ અને આરામ કરો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "જો કોઈ વ્યક્તિની સ્થિતિ વધુ ખરાબ થાય અથવા તે પરસેવો બંધ કરી દે, તો આ માર્ગદર્શિકાના ટોચ પર \"જ્યારે 911 ને કૉલ કરવો\" જુઓ.",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -565,6 +786,16 @@
    "text": "જો સલામત હોય, તો એકલા રહેતા પડોશીઓની ખબર પૂછો.",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "વીજળીનો વપરાશ બંધ થવાથી એલિવેટર, લાઇટ્સ, ફ્રિજ અને તબીબી સાધનો બંધ થઈ શકે છે. તે થાય તે પહેલાં, ટોર્ચ, રેડિયો અને ચાર્જ થયેલ પાવર બેંક રાખો, અને પાવરની જરૂર હોય તેવા કોઈપણ તબીબી સાધનોની યોજના બનાવો. 3 દિવસનું પાણી અને ખોરાક રાખો જેને રાંધવાની જરૂર નથી.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -574,6 +805,46 @@
    "status": "machine",
    "text": "વીજળી ગઈ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "કાર્બન મોનોક્સાઇડ. ક્યારેય બાર્બેક્યુ, કેમ્પ સ્ટોવ અથવા જનરેટરનો ઉપયોગ ઘરની અંદર અથવા બાલ્કની પર ન કરો. માથાનો દુખાવો, ચક્કર આવવા, બીમાર લાગવા અથવા મૂંઝવણ થવી એ કાર્બન મોનોક્સાઇડનો સંકેત હોઈ શકે છે. તરત જ તાજી હવામાં જાઓ.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "ઠંડકમાં રાખેલ ખોરાક જો 4 કલાકથી વધુ ગરમ થઈ ગયો હોય, તો માંસ, માછલી, દૂધ અને બાકી રહેલ ખોરાક ફેંકી દો. \"શંકા હોય તો, ફેંકી દો.\"",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "શિયાળામાં ઠંડી લાગવી અથવા ઉનાળામાં ખૂબ ગરમી લાગવી, જ્યારે ગરમીની અથવા એર કન્ડીશનીંગ બંધ હોય ત્યારે.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "અંધારાના હોલવેમાં અને સીડીઓ પર પડવું.",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -685,6 +956,16 @@
    "text": "જો તમારા ઘરમાં ધુમાડો ભરાય, તો ફિલ્ટર કરેલી હવાવાળી જગ્યાએ જાઓ.",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "દૂરના જંગલોમાંથી આવતા ધુમાડાથી હવા દિવસો સુધી અસ્વસ્થ બની શકે છે. સીઝન પહેલાં, માસ્ક (N95 અથવા KN95) ખરીદો અને ફેન ફિલ્ટર અથવા એર પ્યુરિફાયર સાથે \"સ્વચ્છ હવા રૂમ\"ની યોજના બનાવો. 3 દિવસનું ખોરાક અને દવા રાખો જેથી તમારે બહાર જવાની જરૂર ન પડે.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -694,6 +975,46 @@
    "status": "machine",
    "text": "જંગલની આગનો ધુમાડો",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "નબળી નિશાનીઓ, જે હવા સ્વચ્છ થાય ત્યારે દૂર થાય છે: આંખોમાં ખંજવાળ, ગળામાં ખંજવાળ, નાકમાં રસ, હળવી ખાંસી, માથાનો દુખાવો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "ગંભીર ચિહ્નો. જો તમને શ્વાસ લેવામાં તકલીફ, ખરાબ ખાંસી, ચક્કર આવવા અથવા હૃદય ઝડપથી ધબકારા જેવા લક્ષણો હોય તો તબીબી મદદ લો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "એસ્માજી, હૃદય અથવા ફેફસાંની બીમારી ધરાવતા લોકો, ગર્ભવતી લોકો, વૃદ્ધ વયના લોકો અને બાળકો ધૂમ્રપાનની ગંધ ઝડપથી અનુભવે છે. બચાવ ઇન્હેલર્સ નજીક રાખો.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "વાતાવરણ એપ્લિકેશનમાં હવાના ગુણવત્તાનું રીડિંગ (AQHI) 7 અથવા વધુ હોય તો તે ઊંચા જોખમનું છે.",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1437,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:07:12+00:00"
+ "updated": "2026-11-22T00:09:23+00:00"
 }
