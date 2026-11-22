@@ -13,13 +13,13 @@ const EMERGENCY_CATEGORY = "Support & Emergency Services";
 describe("provider-problems.json (resident testing, session 2, #3)", () => {
   const { reviewed, byProvider } = parseProviderProblems(read("provider-problems.json"));
 
-  it("names every provider of the catalogue, with lines for each one outside the emergency category, and says it is not yet reviewed by the Hub", () => {
+  it("names every provider of the catalogue, with lines for each one outside the emergency category, and is reviewed by the Hub (Helena Yu, 2026-11-21)", () => {
     expect(Object.keys(byProvider).sort()).toEqual(providers.map((p) => p.id).sort());
     for (const p of providers) {
       if (p.categories.includes(EMERGENCY_CATEGORY)) continue;
       expect(byProvider[p.id]!.length, p.id).toBeGreaterThan(0);
     }
-    expect(reviewed).toBe(false);
+    expect(reviewed).toBe(true);
   });
 
   it("gives the emergency category's providers no lines: the 911 block is decided by how close a question is to them (search test set run 4)", () => {

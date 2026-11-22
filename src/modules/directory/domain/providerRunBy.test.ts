@@ -22,9 +22,9 @@ describe("provider-run-by.json (resident testing, session 2, #4 and #11)", () =>
     for (const id of ["M001", "M002", "M023", "M043", "M052", "M060"]) expect(byProvider[id], id).toBe("formal");
   });
 
-  it("says it is not yet reviewed by the Hub, and why each ambiguous provider was labelled as it was", () => {
+  it("is reviewed by the Hub (Helena Yu, 2026-11-21), and says why each ambiguous provider was labelled as it was", () => {
     const raw = read("provider-run-by.json") as { reviewed: boolean; ambiguous: Record<string, string> };
-    expect(raw.reviewed).toBe(false);
+    expect(raw.reviewed).toBe(true);
     expect(Object.keys(raw.ambiguous).length).toBeGreaterThan(0);
   });
 
