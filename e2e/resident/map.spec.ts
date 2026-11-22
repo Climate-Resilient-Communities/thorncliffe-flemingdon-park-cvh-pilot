@@ -109,6 +109,9 @@ test.describe("the map (R-14)", () => {
     await expect(card).toBeVisible();
     await expect(card.getByRole("heading", { name: "Overlea Cooling Centre" })).toBeVisible();
     await expect(page.getByTestId("map-preview-kind")).toHaveText("Cooling spaces");
+    // The chosen pin stands apart from the others (QA, 2026-11-22), and only it.
+    await expect(page.locator(".leaflet-marker-icon.map-pin--cooling")).toHaveClass(/map-pin--selected/);
+    await expect(page.locator(".leaflet-marker-icon.map-pin--selected")).toHaveCount(1);
     await expect(card).toBeFocused();
     await page.getByTestId("map-preview-open").click();
     await expect(page).toHaveURL(/\/en\/directory\/M101$/);

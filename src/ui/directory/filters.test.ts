@@ -142,6 +142,12 @@ describe("listProviders", () => {
     expect(listed.map((p) => p.id)).toEqual(["P105", "P103", "P102", "P104", "P101"]);
     expect(new Set(listed.map((p) => p.id)).size).toBe(listed.length);
   });
+
+  it("puts established services first, then community groups, then one the list does not name, each by name (QA, 2026-11-22)", () => {
+    const named = (id: string, name: string, run_by: "formal" | "grassroots" | null) => ({ ...providers[0], id, name, run_by });
+    const listed = listProviders([named("G1", "Apple group", "grassroots"), named("F2", "Zebra service", "formal"), named("N1", "Aardvark", null), named("F1", "Bee service", "formal")], "en");
+    expect(listed.map((p) => p.id)).toEqual(["F1", "F2", "G1", "N1"]);
+  });
 });
 
 describe("who runs it (resident testing, session 2, #4)", () => {
