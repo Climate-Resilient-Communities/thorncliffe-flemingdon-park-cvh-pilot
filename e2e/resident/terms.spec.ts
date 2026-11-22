@@ -5,7 +5,7 @@ import terms from "../../data/catalogue/terms.json";
 import urduContent from "../../data/catalogue/translations/content/ur.json";
 
 const termsTitle = "terms.title";
-const urduTexts = urduContent.texts as Record<string, { text: string | null } | undefined>;
+const urduTexts = urduContent.texts as unknown as Record<string, { text: string | null } | null | undefined>;
 /** The committed Urdu translation of a terms text (data/catalogue/translations/content/ur.json). */
 function urdu(key: string): string {
   const text = urduTexts[key]?.text;

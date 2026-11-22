@@ -1162,7 +1162,9 @@
     "checkinLine": "L'ambassadeur de votre étage prend de vos nouvelles. Ce n'est pas un service d'urgence.",
     "numbersLine": "911, 211, 311, Toronto Hydro et le Hub",
     "headsUpLine": "Dans le CVH seulement, jamais par texto",
-    "none": "Les guides n'ont pas pu se charger en ce moment. Si quelqu'un est en danger, appelez le 911."
+    "none": "Les guides n'ont pas pu se charger en ce moment. Si quelqu'un est en danger, appelez le 911.",
+    "kit": "Trousse d'urgence",
+    "kitLine": "Quoi garder à la maison pour 3 jours"
   },
   "R25": {
     "stagesNav": "Aller à",
@@ -1188,7 +1190,10 @@
     },
     "endLine": "C'est la dernière partie de ce guide. Si vous avez besoin de plus d'aide :",
     "numbersLine": "911, 211, 311, Toronto Hydro et le Hub",
-    "openedDuring": "Ouvert à « Pendant » parce que cela se passe maintenant."
+    "openedDuring": "Ouvert à « Pendant » parce que cela se passe maintenant.",
+    "inShort": "En résumé",
+    "watchFor": "Faites attention à",
+    "kitLink": "Ce qu'il faut garder dans votre trousse d'urgence"
   },
   "R26": {
     "title": "De quels groupes faites-vous partie?",
@@ -6752,5 +6757,54 @@
     "Public Spaces": "Endroits où aller",
     "Community Resilience": "Eau, toilettes et lieux frais",
     "Non-Profits": "Organismes communautaires"
+  },
+  "kit": {
+    "title": "Trousse d'urgence",
+    "intro": "En cas d’urgence, il peut falloir jusqu’à 3 jours pour que l’aide parvienne à tout le monde. Conservez suffisamment de fournitures pour tous les membres de votre foyer pendant au moins 3 jours (72 heures). Gardez-les ensemble dans un sac ou un contenant facile à transporter, près de votre porte.",
+    "water": {
+      "title": "Eau et nourriture",
+      "items": [
+        "Eau : au moins 2 litres par personne par jour pour boire, et davantage pour cuisiner et se laver. La ville de Toronto suggère un total de 4 litres par personne par jour. Pour 3 jours, cela représente 12 litres par personne.",
+        "Des aliments qui ne se gâtent pas et qui n’ont pas besoin d’être cuits, comme des aliments en conserve, des barres énergétiques et des aliments séchés. Choisissez des aliments que votre famille mange et remplacez-les une fois par année.",
+        "Un ouvre-boîte manuel."
+      ]
+    },
+    "light": {
+      "title": "Lumière, électricité et nouvelles",
+      "items": [
+        "Une lampe de poche et des piles supplémentaires. N’utilisez pas de bougies.",
+        "Une radio à manivelle ou à piles.",
+        "Une banque d'alimentation chargée pour votre téléphone et un câble de recharge."
+      ]
+    },
+    "health": {
+      "title": "Santé",
+      "items": [
+        "Une trousse de premiers soins.",
+        "Au moins une semaine de vos médicaments, ainsi qu’une liste de ceux-ci avec les doses.",
+        "Lunettes, piles pour appareils auditifs et tout équipement que vous utilisez quotidiennement (par exemple une canne ou des piles pour un fauteuil roulant électrique).",
+        "Masques (N95 ou KN95) contre la fumée.",
+        "Désinfectant pour les mains, lingettes et papier de toilette."
+      ]
+    },
+    "papers": {
+      "title": "Papiers et argent",
+      "items": [
+        "Des copies de documents importants dans un sac imperméable : pièce d’identité, carte de santé, assurance et ordonnances.",
+        "Un peu d’argent en petites coupures, car les cartes et les guichets automatiques peuvent ne pas fonctionner en cas de panne d’électricité.",
+        "Une liste de numéros de téléphone sur papier : famille, votre médecin, le concierge de votre immeuble et quelqu'un qui vit à l'extérieur de la ville."
+      ]
+    },
+    "family": {
+      "title": "Pour votre famille",
+      "items": [
+        "Des articles pour bébés (lait maternisé, couches) et pour animaux de compagnie (nourriture, eau, laisse ou transporteur).",
+        "Des clés supplémentaires pour votre maison et votre voiture.",
+        "Des vêtements chauds et une couverture."
+      ]
+    },
+    "helpTitle": "Demander de l'aide",
+    "help": "Si vous ne pouvez pas obtenir ces articles, les banques alimentaires communautaires et les organismes de Thorncliffe Park et de Flemingdon Park peuvent vous aider.",
+    "helpLink": "Trouvez de l’aide près de chez vous"
   }
 }

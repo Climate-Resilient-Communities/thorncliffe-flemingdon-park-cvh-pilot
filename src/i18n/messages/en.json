@@ -1162,7 +1162,9 @@
     "checkinLine": "Your floor ambassador checks on you. Not an emergency service.",
     "numbersLine": "911, 211, 311, Toronto Hydro and the Hub",
     "headsUpLine": "In the CVH only, never by text message",
-    "none": "The guides could not be loaded right now. If someone is in danger, call 911."
+    "none": "The guides could not be loaded right now. If someone is in danger, call 911.",
+    "kit": "Emergency kit",
+    "kitLine": "What to keep at home for 3 days"
   },
   "R25": {
     "stagesNav": "Jump to",
@@ -1188,7 +1190,10 @@
     },
     "endLine": "That is the last part of this guide. If you need more help:",
     "numbersLine": "911, 211, 311, Toronto Hydro and the Hub",
-    "openedDuring": "Opened at \"During\" because this is happening now."
+    "openedDuring": "Opened at \"During\" because this is happening now.",
+    "inShort": "In short",
+    "watchFor": "Watch for",
+    "kitLink": "What to keep in your emergency kit"
   },
   "R26": {
     "title": "Which groups do you belong to?",
@@ -6752,5 +6757,54 @@
     "Public Spaces": "Places to go",
     "Community Resilience": "Water, washrooms and cool places",
     "Non-Profits": "Community organizations"
+  },
+  "kit": {
+    "title": "Emergency kit",
+    "intro": "In an emergency it can take help up to 3 days to reach everyone. Keep enough supplies for everyone in your home for at least 3 days (72 hours). Keep them together in a bag or bin that is easy to carry, near your door.",
+    "water": {
+      "title": "Water and food",
+      "items": [
+        "Water: at least 2 litres per person per day for drinking, and more for cooking and washing. The City of Toronto suggests 4 litres per person per day in total. For 3 days, that is 12 litres per person.",
+        "Food that does not go bad and needs no cooking, such as canned food, energy bars and dried food. Choose food your family eats, and replace it once a year.",
+        "A manual can opener."
+      ]
+    },
+    "light": {
+      "title": "Light, power and news",
+      "items": [
+        "A flashlight and extra batteries. Do not use candles.",
+        "A wind-up or battery radio.",
+        "A charged power bank for your phone, and a charging cable."
+      ]
+    },
+    "health": {
+      "title": "Health",
+      "items": [
+        "A first aid kit.",
+        "At least a week of your medicines, and a list of them with the doses.",
+        "Glasses, hearing aid batteries, and any equipment you use every day (for example a cane, or batteries for a power wheelchair).",
+        "Masks (N95 or KN95) for smoke.",
+        "Hand sanitizer, wipes, and toilet paper."
+      ]
+    },
+    "papers": {
+      "title": "Papers and money",
+      "items": [
+        "Copies of important papers in a waterproof bag: ID, health card, insurance and prescriptions.",
+        "Some cash in small bills, because cards and bank machines may not work when the power is out.",
+        "A list of phone numbers on paper: family, your doctor, your building's superintendent, and someone outside the city."
+      ]
+    },
+    "family": {
+      "title": "For your family",
+      "items": [
+        "Things for babies (formula, diapers), and for pets (food, water, a leash or carrier).",
+        "Extra keys for your home and car.",
+        "Warm clothes and a blanket."
+      ]
+    },
+    "helpTitle": "Ask for help",
+    "help": "If you cannot get these things, community food banks and agencies in Thorncliffe Park and Flemingdon Park can help.",
+    "helpLink": "Find help near you"
   }
 }

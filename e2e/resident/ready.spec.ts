@@ -432,3 +432,47 @@ for (const [name, path] of [
     }
   }
 }
+
+test.describe("In short, Watch for and the emergency kit (session 2, #15, #16 and #19)", () => {
+  test("a guide shows In short above the stages, Watch for at the top of During, and links to the kit from Before", async ({ page }) => {
+    await openResident(page, "/en/ready/heat", 390);
+    const summary = page.getByTestId("guide-summary");
+    await expect(summary.locator("h2")).toHaveText("In short");
+    await expect(summary).toContainText("Keep water and 3 days of supplies at home.");
+    // In short comes before the stages.
+    expect(await summary.evaluate((node) => Boolean(node.compareDocumentPosition(document.querySelector('[data-testid="guide-jump"]')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+
+    await page.getByTestId("guide-next-before").click();
+    const watch = page.getByTestId("guide-during").getByTestId("guide-watch");
+    await expect(watch.locator("h3")).toHaveText("Watch for");
+    await expect(watch.locator("li")).toHaveText(["Heavy sweating, or skin that is cold and clammy.", "Dizziness or a fainting feeling, or a headache."]);
+    // The watch lines are not numbered steps: the steps still start at 1 after them.
+    await expect(page.getByTestId("guide-during").locator("ol.guide-steps > li").first()).toBeVisible();
+
+    await page.goto("/en/ready/heat#before");
+    await page.getByTestId("guide-kit").click();
+    await page.waitForURL("**/en/ready/kit");
+    await expect(page.getByTestId("kit-title")).toHaveText("Emergency kit");
+  });
+
+  test("a guide without them shows neither, and still links to the kit", async ({ page }) => {
+    await openResident(page, POWER, 390);
+    await expect(page.getByTestId("guide-summary")).toHaveCount(0);
+    await expect(page.getByTestId("guide-watch")).toHaveCount(0);
+    await expect(page.getByTestId("guide-kit")).toHaveAttribute("href", "/en/ready/kit");
+  });
+
+  test("the kit page lists the five groups, asks for help with a way to the directory, and keeps the 911 line; Be ready links to it", async ({ page }) => {
+    await openResident(page, READY, 390);
+    await expect(page.getByTestId("ready-kit")).toHaveAttribute("href", "/en/ready/kit");
+    await openResident(page, "/en/ready/kit", 390);
+    for (const group of ["water", "light", "health", "papers", "family"]) await expect(page.getByTestId(`kit-${group}`).locator("li").first()).toBeVisible();
+    await expect(page.getByTestId("kit-water")).toContainText("4 litres per person per day");
+    await expect(page.getByTestId("kit-help-link")).toHaveAttribute("href", "/en/directory");
+    await expect(page.locator("[data-component=not-911]")).toHaveCount(1);
+    // Urdu: the kit's words are translated, the page reads right to left.
+    await openResident(page, "/ur/ready/kit", 390);
+    await expect(page.getByTestId("kit-title")).not.toHaveText("Emergency kit");
+    expect(await page.evaluate(() => document.documentElement.dir)).toBe("rtl");
+  });
+});

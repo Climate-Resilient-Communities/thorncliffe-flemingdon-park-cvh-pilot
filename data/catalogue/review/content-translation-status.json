@@ -1,0 +1,122 @@
+{
+ "ur": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 143,
+  "stale": 0,
+  "null": 1,
+  "problems": []
+ },
+ "ps": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 143,
+  "stale": 0,
+  "null": 1,
+  "problems": []
+ },
+ "tl": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "prs": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 140,
+  "stale": 0,
+  "null": 4,
+  "problems": []
+ },
+ "gu": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "ta": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "el": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "sk": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "bn": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "hi": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "pa": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "zh": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "es": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ },
+ "fr": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 143,
+  "stale": 0,
+  "null": 1,
+  "problems": []
+ },
+ "zh-Hant": {
+  "texts": 144,
+  "reviewed": 0,
+  "machine": 144,
+  "stale": 0,
+  "null": 0,
+  "problems": []
+ }
+}

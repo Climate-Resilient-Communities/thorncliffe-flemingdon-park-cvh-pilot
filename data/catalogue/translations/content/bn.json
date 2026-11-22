@@ -2,8 +2,9 @@
  "failed": {},
  "language": "bn",
  "models": {
-  "claude-opus-5.5": 109,
-  "north-small-translate-09-2026": 3
+  "claude-opus-5.5": 111,
+  "north-small-translate-09-2026": 27,
+  "tiny-aya-fire": 5
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -86,6 +87,16 @@
    "text": "কোনো অ্যাপয়েন্টমেন্টে যেতে হলে যাতায়াতের জন্য সাহায্য চান।",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "লিফট বন্ধ হয়ে গেলে, ওপরের তলার মানুষরা কয়েক দিন ধরে বাড়িতে আটকা পড়ে থাকতে পারেন। এমনটা হওয়ার আগেই বাড়িতে 3 দিনের খাবার, জল এবং ওষুধ মজুত রাখুন, আর আপনি যদি সিঁড়ি দিয়ে উঠানামা করতে না পারেন, তবে আপনার ফ্লোর অ্যাম্বাসেডর বা কোনো প্রতিবেশীকে তা জানিয়ে রাখুন।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -95,6 +106,36 @@
    "status": "machine",
    "text": "লিফট বিকল",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "বুকে ব্যথা, খুব দ্রুত হৃদস্পন্দন, অথবা সিঁড়ি দিয়ে ওঠার সময় মারাত্মক শ্বাসকষ্ট। তখন থেমে বিশ্রাম নিন। এই নির্দেশিকাটির শুরুতে \"কখন 911-এ ফোন করবেন\" অংশটি দেখুন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "সিঁড়িতে পড়ে যাওয়ার ঝুঁকি: ধীরে ধীরে চলুন, রেলিং ধরে থাকুন এবং ভারী জিনিস বহন করবেন না।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "যেসব প্রতিবেশী বাড়ি থেকে বের হতে পারছেন না এবং যাদের খাবার বা ওষুধ শেষ হয়ে যেতে পারে।",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -196,6 +237,16 @@
    "text": "একবার বের হয়ে গেলে, ফায়ার সার্ভিস নিরাপদ না বলা পর্যন্ত বাইরেই থাকুন।",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "উচ্চতাসম্পন্ন ভবনে আগুন লাগলে, সবচেয়ে নিরাপদ সিদ্ধান্ত হতে পারে ভবন ত্যাগ করা অথবা নিজের ফ্ল্যাটে অবস্থান করা। এটা নির্ভর করে আগুন কোথায় লেগেছে তার ওপর। আগুন লাগার আগেই আপনার ভবনের অগ্নি-নিরাপত্তা পরিকল্পনা এবং দুটি বহির্গমন সিঁড়ির কথা জেনে নিন, আর দরজার কাছে একটি 'জরুরি ব্যাগ' (go bag) গুছিয়ে রাখুন।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -205,6 +256,36 @@
    "status": "machine",
    "text": "আগুন ও বিল্ডিং খালি করা",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "করিডোর বা সিঁড়িঘরে ধোঁয়া থাকলে সেখানে যাবেন না। ধোঁয়ার মধ্য দিয়ে যাওয়ার চেষ্টা করবেন না। পেছনে ফিরে যান, দরজা বন্ধ করে দিন এবং অন্য সিঁড়ি ব্যবহার করুন, অথবা আপনার নিজস্ব ফ্ল্যাটের ভেতরেই থাকুন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "দরজা বা দরজার হাতল গরম হয়ে আছে। সেটা খুলবেন না।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "ধোঁয়ার সংস্পর্শে আসার পর: কাশি, শ্বাসকষ্ট বা মাথাব্যথা হতে পারে। শুরুতে সবকিছু ঠিক মনে হলেও ডাক্তার দেখিয়ে নিন।",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -316,6 +397,16 @@
    "text": "আপনার বিল্ডিংয়ে পানি বন্ধ থাকলে, খাওয়া ও রান্নার জন্য বোতলের পানি ব্যবহার করুন।",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "একটি উচ্চ-তলো ভবনে, একটি ফেটে যাওয়া পাইপ বা ভারী বৃষ্টি পার্কিং লেভেল এবং বেসমেন্টকে প্লাবিত করতে পারে এবং জল বা বিদ্যুৎ বন্ধ করতে পারে। এটি ঘটার আগে, গুরুত্বপূর্ণ কাগজপত্রগুলো একটি জলরোধী ব্যাগে উপরে রাখুন এবং 3 দিনের বোতলজাত জল রাখুন। আপনার সুপারিনটেনডেন্টের কাছে কীভাবে পৌঁছাবেন তা জানুন।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -325,6 +416,46 @@
    "status": "machine",
    "text": "বন্যা বা প্লাম্বিং বিকল",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "ইলেকট্রিক সকেট, প্যানেল বা তারের কাছে পানি থাকলে তার কাছ থেকে দূরে থাকুন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "বইয়ে যাওয়া জল। এর মধ্য দিয়ে হাঁটবেন না বা গাড়ি চালাবেন না। মাত্র 15 সেমি (6 ইঞ্চি) বইয়ে যাওয়া জল কাউকে ভাসিয়ে নিয়ে যেতে পারে।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "নোংরা পানি। বন্যার পানিতে নর্দমার ময়লা থাকতে পারে। হাত ধুয়ে নিন এবং বাচ্চাদের ওই পানিতে খেলতে দেবেন না।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "পানি চলে যাওয়ার পর ছত্রাকের সমস্যা: একটা স্যাঁতসেঁতে গন্ধ, দেয়ালে দাগ, কাশি বা শ্বাসকষ্ট।",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -436,6 +567,16 @@
    "text": "যে প্রতিবেশীরা একা থাকেন, তাঁদের খোঁজ নিন।",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "অত্যধিক গরম যে কাউকে অসুস্থ করে দিতে পারে, আর বয়স্ক ব্যক্তি, শিশু এবং যাদের শারীরিক সমস্যা আছে তাদের জন্য এটি সবচেয়ে বিপজ্জনক। গ্রীষ্মের আগে আপনার আশেপাশে ঠান্ডা জায়গাগুলো কোথায় আছে তা জেনে রাখুন এবং আপনার ওষুধগুলো কোনো ফার্মাসিস্টের মাধ্যমে পরীক্ষা করিয়ে নিন। বাইরে যাওয়া সম্ভব না হলে সেজন্য বাড়িতে পানি এবং 3 দিনের প্রয়োজনীয় জিনিসপত্র মজুত রাখুন।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -445,6 +586,86 @@
    "status": "machine",
    "text": "প্রচণ্ড গরম",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "অত্যধিক ঘাম হওয়া, অথবা ত্বক ঠান্ডা ও সিক্ত হয়ে যাওয়া।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "মাথা ঘোরা বা অজ্ঞান হয়ে যাওয়ার মতো অনুভূতি, অথবা মাথাব্যথা।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "বমি বমি ভাব হওয়া বা বমি হওয়া।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "দ্রুত শ্বাসপ্রশ্বাস বা দ্রুত হৃদস্পন্দন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "অত্যন্ত তৃষ্ণার্ত অনুভব করা এবং কম পরিমাণে মূত্র ত্যাগ করা, এবং মূত্রের রঙ গাঢ় হলুদ হওয়া।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "পেশীর খিঁচুনি।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "গরমের ক্লান্তির লক্ষণগুলি। যদি আপনি এগুলি লক্ষ্য করেন, একটি ঠান্ডা জায়গায় যান, পানি পান করুন এবং বিশ্রাম নিন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "যদি কেউ খারাপ হয়ে যায় বা ঘাম বন্ধ হয়ে যায়, এই গাইডের শীর্ষে \"কখন 911 কল করবেন\" দেখুন।",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -566,6 +787,16 @@
    "text": "নিরাপদ হলে, যে প্রতিবেশীরা একা থাকেন তাঁদের খোঁজ নিন।",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "বিদ্যুৎ বিভ্রাটের কারণে লিফট, আলো, ফ্রিজ এবং চিকিৎসা সরঞ্জাম বন্ধ হয়ে যেতে পারে। এমন পরিস্থিতি ঘটার আগেই টর্চলাইট, রেডিও এবং চার্জ করা পাওয়ার ব্যাংক কাছে রাখুন, আর যেসব চিকিৎসা সরঞ্জামের বিদ্যুৎ প্রয়োজন সেগুলোর বিকল্প ব্যবস্থা আগে থেকেই ঠিক করে রাখুন। 3 দিনের জন্য পানি এবং রান্না ছাড়াই খাওয়া যায় এমন খাবার মজুত রাখুন।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -575,6 +806,46 @@
    "status": "machine",
    "text": "বিদ্যুৎ চলে যাওয়া",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "কার্বন মনোক্সাইড। ঘরের ভেতরে বা বারান্দায় কখনোই বারবিকিউ, ক্যাম্প স্টোভ বা জেনারেটর ব্যবহার করবেন না। মাথাব্যথা, মাথা ঘোরা, বমি বমি ভাব বা বিভ্রান্তি কার্বন মনোক্সাইডের লক্ষণ হতে পারে। দ্রুত খোলা বাতাসে চলে যান।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "যে খাবার গরম হয়ে গেছে। ফ্রিজের খাবার যদি 4 ঘণ্টার বেশি সময় গরম থাকে, তবে মাংস, মাছ, দুধ এবং আগের বেঁচে যাওয়া খাবার ফেলে দিন। \"সন্দেহ হলে, ফেলে দিন।\"",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "শীতকালে ঠান্ডা লাগে, আর গরমকালে খুব গরম হয়ে যায়, যখন হিটিং বা এসি বন্ধ থাকে।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "অন্ধকার করিডোর আর সিঁড়িতে পড়ে যাওয়া।",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -686,6 +957,16 @@
    "text": "আপনার ঘরে ধোঁয়া ঢুকে পড়লে, ফিল্টার করা বাতাস আছে এমন কোনো জায়গায় যান।",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "দূরদূরান্তের দাবানলের ধোঁয়া কয়েক দিন ধরে বাতাসকে অস্বাস্থ্যকর করে তুলতে পারে। এই মরসুমের আগে মাস্ক (N95 বা KN95) কিনে রাখুন এবং ফ্যান ফিল্টার বা এয়ার পিউরিফায়ার দিয়ে একটি \"পরিষ্কার বাতাসের ঘর\"-এর পরিকল্পনা করে রাখুন। 3 দিনের খাবার ও ওষুধ মজুত রাখুন যাতে আপনাকে বাইরে যেতে না হয়।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -695,6 +976,46 @@
    "status": "machine",
    "text": "দাবানলের ধোঁয়া",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "হালকা লক্ষণ, যা বাতাস পরিষ্কার হলে চলে যায়: চোখ জ্বলা, গলা ব্যথা, নাক দিয়ে পানি পড়া, হালকা কাশি এবং মাথা ব্যথা।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "গুরুতর লক্ষণ। শ্বাসকষ্ট, তীব্র কাশি, মাথা ঘোরা বা হৃদস্পন্দন খুব দ্রুত হলে দ্রুত চিকিৎসকের সাহায্য নিন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "হাঁপানি, হৃদরোগ বা ফুসফুসের সমস্যা যাদের আছে, গর্ভবতী নারী, বয়স্ক ব্যক্তি এবং শিশুরা ধোঁয়ার প্রভাব দ্রুত অনুভব করেন। জরুরি ইনহেলার হাতের কাছে রাখুন।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "ওয়েদার অ্যাপে বাতাসের মানের রিডিং (AQHI) দেখা যায়। 7 বা তার বেশি হলে তা উচ্চ ঝুঁকির লক্ষণ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1127,5 +1448,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-21T23:23:29+00:00"
+ "updated": "2026-11-22T00:27:18+00:00"
 }

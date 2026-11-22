@@ -60,17 +60,21 @@ export interface GuideView {
   /** "Call 911 if ...": never missing (the seed refuses a guide without it). */
   when911: ShownText;
   sections: Record<GuideSectionId, ShownText[]>;
+  /** "In short" (session 2, #15): shown above the stages; null when the guide has none. */
+  summary: ShownText | null;
+  /** "Watch for" (session 2, #19): hazards and body signs, shown at the top of During; empty when the guide has none. */
+  watchFor: ShownText[];
   /** At least one text of the guide is English standing in for the language. */
   anyUnavailable: boolean;
   /** Every text of the guide is English standing in for the language. */
   allUnavailable: boolean;
 }
 
-/** The lines of a section, in order: `during.0`, `during.1`, ... */
-function linesOf(texts: ContentTexts, section: GuideSectionId, lang: string): ShownText[] {
+/** The lines of a section (or of "watch"), in order: `during.0`, `during.1`, ... */
+function linesOf(texts: ContentTexts, section: GuideSectionId | "watch", lang: string): ShownText[] {
   const lines: { index: number; shown: ShownText }[] = [];
   for (const key of Object.keys(texts)) {
-    const match = /^(before|during|after)\.([0-9]+)$/.exec(key);
+    const match = /^(before|during|after|watch)\.([0-9]+)$/.exec(key);
     if (!match || match[1] !== section) continue;
     const shown = shownText(texts, key, lang);
     if (shown) lines.push({ index: Number(match[2]), shown });
@@ -84,7 +88,9 @@ export function guideView(record: GuideRecord, lang: string): GuideView | null {
   const when911 = shownText(record.texts, "when911", lang);
   if (!title || !when911) return null;
   const sections = Object.fromEntries(GUIDE_SECTIONS.map((section) => [section, linesOf(record.texts, section, lang)])) as Record<GuideSectionId, ShownText[]>;
-  const all = [title, when911, ...GUIDE_SECTIONS.flatMap((section) => sections[section])];
+  const summary = shownText(record.texts, "summary", lang);
+  const watchFor = linesOf(record.texts, "watch", lang);
+  const all = [title, when911, ...(summary ? [summary] : []), ...GUIDE_SECTIONS.flatMap((section) => sections[section]), ...watchFor];
   return {
     id: record.id,
     readMins: record.readMins,
@@ -92,6 +98,8 @@ export function guideView(record: GuideRecord, lang: string): GuideView | null {
     title,
     when911,
     sections,
+    summary,
+    watchFor,
     anyUnavailable: all.some((text) => text.unavailable),
     allUnavailable: all.every((text) => text.unavailable),
   };

@@ -69,15 +69,19 @@ def write_json(path, data, sort_keys=True):
 
 
 def guide_texts(g):
-    """{key: English} of one guide, keys relative to the guide (title, when911, before.0 ...)."""
+    """{key: English} of one guide, keys relative to the guide (title, when911, summary, before.0 ... after.n, watch.0 ...)."""
     texts = {}
-    for field in ('title', 'when911'):
+    for field in ('title', 'when911', 'summary'):
         if g.get(field):
             texts[field] = g[field]
     for section in GUIDE_SECTIONS:
         for i, line in enumerate(g.get(section) or []):
             if line:
                 texts[f'{section}.{i}'] = line
+    # "Watch for" (session 2, #19) last: the same order as guideTexts in src/modules/directory/domain/guideContent.ts.
+    for i, line in enumerate(g.get('watchFor') or []):
+        if line:
+            texts[f'watch.{i}'] = line
     return texts
 
 

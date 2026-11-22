@@ -1162,7 +1162,9 @@
     "checkinLine": "Kukumustahin ka ng ambassador ng palapag mo. Hindi ito pang-emergency na serbisyo.",
     "numbersLine": "911, 211, 311, Toronto Hydro at ang Hub",
     "headsUpLine": "Sa CVH lang, hindi kailanman sa text message",
-    "none": "Hindi ma-load ang mga gabay ngayon. Kung may nasa panganib, tumawag sa 911."
+    "none": "Hindi ma-load ang mga gabay ngayon. Kung may nasa panganib, tumawag sa 911.",
+    "kit": "Kagamitan para sa emergency",
+    "kitLine": "Mga dapat itabi sa bahay para sa loob ng 3 araw:"
   },
   "R25": {
     "stagesNav": "Pumunta sa",
@@ -1188,7 +1190,10 @@
     },
     "endLine": "Iyan na ang huling bahagi ng gabay na ito. Kung kailangan mo pa ng tulong:",
     "numbersLine": "911, 211, 311, Toronto Hydro at ang Hub",
-    "openedDuring": "Binuksan sa \"Habang\" dahil nangyayari ito ngayon."
+    "openedDuring": "Binuksan sa \"Habang\" dahil nangyayari ito ngayon.",
+    "inShort": "Sa madaling salita",
+    "watchFor": "Mag-ingat sa",
+    "kitLink": "Mga dapat ilagay sa iyong emergency kit:"
   },
   "R26": {
     "title": "Saang mga grupo ka kabilang?",
@@ -6752,5 +6757,54 @@
     "Public Spaces": "Mga lugar na mapupuntahan",
     "Community Resilience": "Tubig, banyo at malamig na lugar",
     "Non-Profits": "Mga organisasyon ng komunidad"
+  },
+  "kit": {
+    "title": "Kagamitan para sa emergency",
+    "intro": "Sa oras ng emergency, maaaring tumagal nang hanggang 3 araw bago makarating ang tulong sa lahat. Magtabi ng sapat na suplay para sa lahat ng tao sa iyong bahay para sa hindi bababa sa 3 araw (72 oras). Ilagay ang mga ito nang magkakasama sa isang bag o lalagyan na madaling dalhin, malapit sa inyong pinto.",
+    "water": {
+      "title": "Tubig at pagkain",
+      "items": [
+        "Tubig: hindi bababa sa 2 litro bawat tao bawat araw para sa pag-inom, at mas marami pa para sa pagluluto at paghuhugas. Iminumungkahi ng City of Toronto ang kabuuang 4 na litro bawat tao bawat araw. Para sa loob ng 3 araw, iyon ay 12 litro bawat tao.",
+        "Pagkain na hindi nabubulok at hindi na kailangang lutuin, gaya ng de-latang pagkain, energy bar, at tuyong pagkain. Pumili ng pagkaing kinakain ng iyong pamilya, at palitan ito minsan sa isang taon.",
+        "Isang manu-manong bukador ng lata."
+      ]
+    },
+    "light": {
+      "title": "Kuryente, enerhiya at balita",
+      "items": [
+        "Isang flashlight at mga ekstrang baterya. Huwag gumamit ng kandila.",
+        "Isang radyong kailangang i-wind-up o gumagamit ng baterya.",
+        "Isang nakakarga na power bank para sa iyong telepono, at isang charging cable."
+      ]
+    },
+    "health": {
+      "title": "Kalusugan",
+      "items": [
+        "Isang first aid kit.",
+        "Kahit isang linggong suplay ng iyong mga gamot, at listahan ng mga ito kasama ang mga dosis.",
+        "Salamin, mga baterya para sa hearing aid, at anumang kagamitan na ginagamit ninyo araw-araw (halimbawa, baston, o mga baterya para sa motorized wheelchair).",
+        "Mga maskara (N95 o KN95) para sa usok.",
+        "Hand sanitizer, wipes, at papel sa banyo."
+      ]
+    },
+    "papers": {
+      "title": "Mga dokumento at pera",
+      "items": [
+        "Mga kopya ng mahahalagang dokumento sa isang waterproof na bag: ID, health card, insurance at mga reseta.",
+        "Konting cash na maliliit na papel na pera, dahil baka hindi gumana ang mga card at ATM kapag walang kuryente.",
+        "Listahan ng mga numero ng telepono sa papel: pamilya, ang iyong doktor, ang caretaker ng iyong gusali, at isang tao sa labas ng lungsod."
+      ]
+    },
+    "family": {
+      "title": "Para sa iyong pamilya",
+      "items": [
+        "Mga gamit para sa mga sanggol (gatas, lampin), at para sa mga alagang hayop (pagkain, tubig, tali o carrier).",
+        "Mga ekstrang susi para sa iyong bahay at kotse.",
+        "Makakapal na damit at kumot."
+      ]
+    },
+    "helpTitle": "Humingi ng tulong",
+    "help": "Kung hindi ninyo makuha ang mga bagay na ito, maaaring tumulong ang mga community food bank at mga ahensya sa Thorncliffe Park at Flemingdon Park.",
+    "helpLink": "Maghanap ng tulong malapit sa iyo"
   }
 }

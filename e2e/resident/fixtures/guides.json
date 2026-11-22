@@ -173,6 +173,15 @@
         },
         "after.1": {
           "en": "Tell a doctor or nurse if you still feel dizzy or unwell."
+        },
+        "summary": {
+          "en": "Extreme heat can make anyone sick. Before summer, find the cool places near you. Keep water and 3 days of supplies at home."
+        },
+        "watch.0": {
+          "en": "Heavy sweating, or skin that is cold and clammy."
+        },
+        "watch.1": {
+          "en": "Dizziness or a fainting feeling, or a headache."
         }
       }
     },

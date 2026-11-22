@@ -77,6 +77,17 @@ const withZh = (key: string, english: string, record: TranslationRecord | null):
   translations: { zh: { language: "zh", texts: { [key]: record } } },
 });
 
+describe("guideTexts (session 2, #15 and #19)", () => {
+  it("keys In short and Watch for in the order scripts/content_catalogue.py uses, so the owner's review hash is the same on both sides", () => {
+    const texts = guideTexts({ id: "power", title: "T", when911: "Call 911.", summary: "S", before: ["b"], during: ["d"], after: ["a"], watchFor: ["w0", "", "w2"] });
+    expect(Object.keys(texts)).toEqual(["title", "when911", "summary", "before.0", "during.0", "after.0", "watch.0", "watch.2"]);
+  });
+
+  it("is unchanged for a guide without them", () => {
+    expect(Object.keys(guideTexts({ id: "power", title: "T", when911: "Call 911.", before: ["b"], during: ["d"], after: ["a"] }))).toEqual(["title", "when911", "before.0", "during.0", "after.0"]);
+  });
+});
+
 describe("sourceHash", () => {
   it("is the SHA-256 of the UTF-8 English, as scripts/content_catalogue.py computes it", () => {
     expect(sourceHash("Power outage")).toBe("fe236fdaa58da311940b886915cf57c5c674bf82a7de9ea01b9cb5cb624f3a1b");

@@ -61,6 +61,23 @@ describe("guideView", () => {
     expect(none.when911.lang).toBe("en");
   });
 
+  it("shows In short and Watch for (session 2, #15 and #19) in order, counted in what is English standing in, and none for a guide without them", () => {
+    const texts = { ...POWER, summary: { en: "Keep a flashlight and water.", ur: "ٹارچ اور پانی رکھیں۔" }, "watch.1": { en: "Falls in the dark." }, "watch.0": { en: "Carbon monoxide." } };
+    const view = guideView(guide(texts), "en")!;
+    expect(view.summary?.text).toBe("Keep a flashlight and water.");
+    expect(view.watchFor.map((line) => line.text)).toEqual(["Carbon monoxide.", "Falls in the dark."]);
+    // Watch lines are not steps of any stage.
+    expect(view.sections.during.map((line) => line.text)).toEqual(["Use a flashlight, not candles."]);
+
+    const urdu = guideView(guide(texts), "ur")!;
+    expect(urdu.summary).toMatchObject({ lang: "ur", unavailable: false });
+    expect(urdu.watchFor[0]).toMatchObject({ lang: "en", unavailable: true });
+
+    const without = guideView(guide(POWER), "en")!;
+    expect(without.summary).toBeNull();
+    expect(without.watchFor).toEqual([]);
+  });
+
   it("is null when the row has no title or no 911 text", () => {
     const noTitle = { ...POWER };
     delete noTitle.title;

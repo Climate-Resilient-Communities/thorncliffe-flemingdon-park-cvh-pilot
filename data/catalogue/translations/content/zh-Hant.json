@@ -2,7 +2,7 @@
  "failed": {},
  "language": "zh-Hant",
  "models": {
-  "opencc": 112
+  "opencc": 143
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -133,6 +133,22 @@
    "text": "如果您有預約需要前往，請尋求交通方面的幫助。",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "5e4139223146adaa71fb0ee93b71fa8c6b46cf22102e0361ae8d7dbba5c09f12",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "當電梯停運時，住在高樓層的人可能會被困在家裡數天。在這種情況發生之前，請在家裡儲備3天的食物、水和藥品，如果你無法使用樓梯，請告訴你的樓層大使或鄰居。",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -148,6 +164,54 @@
    "status": "machine",
    "text": "電梯故障",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d0a731c5fb61833e0de36fd9d3376e6c086cc03601c1c80bdfa2eb99c4ff3c12",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "胸痛、心跳加速或在樓梯上嚴重氣短。停下來休息。請參閱本指南頂部的“何時撥打 911”部分。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "fcd66bb6e1bc7061b959a44297dfdd66dac43a267853c7aade3f0f25fa95e595",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "樓梯摔倒：走路要慢，要扶著欄杆，不要攜帶重物。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2a482b66a31772b4446362aa976d5e810ab8386e9833516aa4fa9c25ef66d0c1",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "無法離開家、可能面臨食物或藥品短缺的鄰居。",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "conversion": {
@@ -309,6 +373,22 @@
    "text": "出來以後，在消防部門說安全之前，不要再回去。",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "23a5b732def8d0e18538719a40d57d4248a5c13c6b782a972cb0b89b37fcd7c4",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "在高樓發生火災時，最安全的選擇可能是離開，或者待在你的房間裡。這取決於火災發生的位置。在火災發生之前，瞭解你所在建築的消防安全計劃和兩條出口樓梯，並在門附近準備一個“隨身包”。",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -324,6 +404,54 @@
    "status": "machine",
    "text": "火災和疏散",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "976f845bc019171ef7fa483818a91d4227e3795582b636e8aa983d572dc186ed",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "在走廊或樓梯間有煙霧。不要穿過煙霧。返回，關上門，使用其他樓梯，或留在您的單元內。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8043c91cc03ce963be86f2c0f02625b0116e4c322223379afabca39c8df0ee4b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "門或門把手很燙。不要開啟它。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "ba86cba06b62259b8121e532c9bba14d9b46716a2660a9332073516852ccb706",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "吸入煙霧後：咳嗽、呼吸困難或頭痛。即使你開始感覺良好，也需要去檢查一下。",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "conversion": {
@@ -501,6 +629,22 @@
    "text": "如果大樓停水，請用瓶裝水喝水和做飯。",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "fdd1e7a6ff421d9ed491f6c49f2f0efd9ed6c2d2b107335feaf4e4de613a0469",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "在高樓裡，管道破裂或暴雨可能會淹沒停車場和地下室，並導致停水或停電。在發生這種情況之前，請將重要檔案放在高處的防水袋中，並準備好3天的瓶裝水。知道如何聯絡你的物業管理員。",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -516,6 +660,70 @@
    "status": "machine",
    "text": "水災或水管故障",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2f3b74bdcfa70a83b68cb612112bbf11ba009ffe6dd1bbdf8bb95f2c93be3efd",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "電源插座、電源板或電線附近的水。請遠離。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "73f26e12793e6cba24efc564187fdefb86d3bd29fa98edaf9c5e798a37d71f3c",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "流動的水。不要在水中行走或開車。15釐米（6英寸）的流動水可以將人衝倒。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "532a7f519ea6e52af5dc54d768df2e6b434866bd0817e84bc67ba9a51e3c6a45",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "髒水。洪水可能攜帶汙水。請洗手，不要讓孩子在裡面玩耍。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "e71b43accab8124ce8a0a57c6f32b5b21d5df7c02aef8468dcc5663c13bc096d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "水乾後出現的黴菌：發黴的氣味、牆上的斑點、咳嗽或呼吸呼哧呼哧作響。",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "conversion": {
@@ -693,6 +901,22 @@
    "text": "去看看獨自居住的鄰居。",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "e14385a1094730798713cc39df3cd074b0e4cb12d7762c06e80e47a63efdece8",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "極端高溫會讓任何人患病，對老年人、嬰兒和有健康問題的人來說是最危險的。在夏季來臨之前，找到你附近的涼爽場所，並請藥劑師檢查你的藥物。在家裡儲備水和3天的物資，以防你無法外出。",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -708,6 +932,134 @@
    "status": "machine",
    "text": "極端高溫",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "4901d5af4593e01afee3b8ea1d8e89bd063f148bb2a24da6f2ed5a00a70ec649",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "大量出汗，或者皮膚冰冷且潮溼。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d34a2012e7100cc2afd2ae44b00935d79f73879e62decd5a2eea89d86d845c29",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "頭暈或昏厥感，或頭痛。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "e7182bacad0a8bca6cc517b56a8d4dd4ce3882bc2acbba7fd1dac3fb499522b6",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "感到胃部不適（噁心）或嘔吐。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "6f0586acc56c1609a5f5c1bae9f6897c4a0ce84617987fd48f769eb03568de0a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "呼吸或心跳加快。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8a050a94538475c929be3f1f2fe737bce809b71f9d6029ebc54d631806c792c4",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "非常口渴，小便次數減少，尿液顏色深黃。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "22ba44090d1de7297af6da8a71c758f79b76afc05e62efa893f6f1f9e92ef17a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "肌肉痙攣。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "3cde9962b4097942006364fb81f23f886c4b8098eb38f0126685a6e4598fb00a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "這些是中暑的症狀。如果你發現這些症狀，請轉移到涼爽的地方，喝水並休息。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "d9f29d745af3f15e70707053462fff75d3de3cb5d50e759d01c4e5a066d50e19",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "如果病人的情況惡化或停止出汗，請參閱本指南頂部的“何時撥打 911”部分。",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "conversion": {
@@ -901,6 +1253,22 @@
    "text": "在安全的情況下，去看看獨自居住的鄰居。",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "be9f57484190cc3289da64e0daa2de9996c6e62769b2d481bfee27235512a9e4",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "停電會導致電梯、燈光、冰箱和醫療裝置停止執行。在停電發生之前，請準備好手電筒、收音機和充滿電的充電寶，並提前規劃好需要電力的醫療裝置。準備好3天的飲用水和不需要烹飪的食物。",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -916,6 +1284,70 @@
    "status": "machine",
    "text": "停電",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "433553c453241fc5195605cf3a38931d6a8cb7fdda0006e9e3a9497ba45bc289",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "一氧化碳。 請勿在室內或陽臺上使用烤架、露營爐或發電機。 頭痛、頭暈、噁心或意識模糊可能是由於一氧化碳中毒。 請立即到通風處呼吸新鮮空氣。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "9ae7f4556de1daa173a21bcde7206e2b7a84c5814801f06369526b16f52b3fe9",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "食物已經變暖了。如果冰箱裡的食物變暖超過4小時，請丟棄肉類、魚類、牛奶和剩菜。 “如果不確定，就把它扔掉。”",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "061323e641a56d0c4e0bfc7f8ec1e01b4789f89ffa1c8e329be8b5c50f1c368f",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "在沒有暖氣或空調的情況下，冬天會感到寒冷，夏天會感到炎熱。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b7bf7dd2f8662ed540ce9491f9be7fa1b61c3b4b7edde19d654cfba5724c2502",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "在黑暗的走廊和樓梯上摔倒。",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "conversion": {
@@ -1093,6 +1525,22 @@
    "text": "如果家裡煙霧變多，請去有過濾空氣的地方。",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "b9d3b1a689d7b8c459a79f3db7e3399ad21f7bf8b3000bccb373e693600d4b0d",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "遠處野火產生的煙霧會使空氣在數天內變得不健康。在火災季節來臨之前，購買口罩（N95 或 KN95），並制定一個帶有風扇過濾器或空氣清淨機的“清潔空氣房間”計劃。儲備 3 天的食物和藥品，這樣就不必外出。",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -1108,6 +1556,70 @@
    "status": "machine",
    "text": "山火煙霧",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2f152fdcd78af0c1ee3f6a2a2f7404692bc38dd76d1bc63aced656fc1cf5c0eb",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "輕微症狀，當空氣變得更清潔時就會消失：眼睛疼痛、喉嚨痛、流鼻涕、輕微咳嗽、頭痛。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "2c896f44f75b12029108b9657d1205bee3235c880c981ed14122d2ad0091f36e",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "嚴重跡象。如果您出現呼吸困難、嚴重咳嗽、頭暈或心跳加速，請尋求醫療幫助。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "274ce5a73f27a18fa4fdf065c8a460021db430f2b4e80ccb27dc6565ce64cc1b",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "哮喘、心臟病或肺病患者、孕婦、老年人和兒童更容易感受到煙霧。請隨身攜帶急救吸入器。",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "e7fb47e326489845cb4d8ca9fa2001394f6a82528a916f7f5d22c0ac0e4ae6e3",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "天氣應用程式中的空氣質量讀數（AQHI）。7或以上屬於高風險。",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "conversion": {
@@ -1798,5 +2310,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-21T23:23:37+00:00"
+ "updated": "2026-11-22T00:38:00+00:00"
 }

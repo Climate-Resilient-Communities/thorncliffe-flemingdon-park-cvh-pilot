@@ -2,8 +2,9 @@
  "failed": {},
  "language": "tl",
  "models": {
-  "claude-opus-5.5": 109,
-  "north-small-translate-09-2026": 3
+  "claude-opus-5.5": 111,
+  "north-small-translate-09-2026": 24,
+  "tiny-aya-water": 8
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -86,6 +87,16 @@
    "text": "Kung kailangan ninyong pumunta sa isang appointment, humingi ng tulong sa transportasyon.",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "Kapag tumigil ang mga elevator, ang mga tao sa mataas na palapag ay maaaring masarhan sa bahay ng ilang araw. Bago mangyari ito, mag-ipon ng 3 araw na pagkain, tubig at gamot sa bahay, at sabihin sa iyong tagapagbalita ng palapag o kapitbahay kung hindi mo magagamit ang hagdan.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -95,6 +106,36 @@
    "status": "machine",
    "text": "Sirang elevator",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "Sakit sa dibdib, mabilis na tibok ng puso, o labis na kahirapan sa paghinga habang aakyat ng hagdanan. Huminto muna at magpahinga. Tingnan ang \"Kailan tatawag sa 911\" sa itaas ng gabay na ito.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "Pagkahulog sa hagdan: maglakad nang dahan-dahan, humawak sa rehas, at huwag magbitbit ng mabibigat na gamit.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "Mga kapitbahay na hindi makalabas ng bahay at maaaring maubusan ng pagkain o gamot.",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -196,6 +237,16 @@
    "text": "Kapag nakalabas na kayo, manatili sa labas hangga't hindi sinasabi ng mga bumbero na ligtas na.",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "Sa isang mataas na gusaling may sunog, ang pinakamaligtas na pagpipilian ay umalis o manatili sa iyong yunit. Depende ito sa lokasyon ng sunog. Bago ang sunog, alamin ang plano ng kaligtasan sa sunog ng iyong gusali at ang parehong hagdan ng paglabas, at panatilihing malapit sa pinto ang isang \"go bag.\"",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -205,6 +256,36 @@
    "status": "machine",
    "text": "Sunog at paglikas",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "Kung may usok sa pasilyo o hagdan, huwag dumaan doon. Bumalik, isara ang pinto, at gamitin ang ibang hagdan, o manatili na lang sa iyong unit.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "Mainit na pinto o hawakan ng pinto. Huwag itong buksan.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "Pagkatapos malanghap ang usok: pag-ubo, hirap sa paghinga, o sakit ng ulo. Magpatingin sa doktor, kahit pakiramdam mo ay maayos lang ang iyong kalagayan sa simula.",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -316,6 +397,16 @@
    "text": "Kung pinatay ang tubig sa inyong gusali, gumamit ng boteng tubig para sa pag-inom at pagluluto.",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "Sa isang mataas na gusali, ang isang pumutok na tubo o malakas na ulan ay maaaring magdulot ng pagbaha sa mga antas ng paradahan at mga bodega, at maaaring magpatigil ng tubig o kuryente. Bago ito mangyari, ilagay ang mga mahalagang dokumento sa isang watertight na bag sa itaas, at magdala ng 3 araw na tubig sa bote. Alamin kung paano maabot ang iyong superintendent.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -325,6 +416,46 @@
    "status": "machine",
    "text": "Baha o sira sa tubo",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "May tubig malapit sa mga saksakan, panel, o kable ng kuryente. Lumayo rito.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "Nagdaloy na tubig. Huwag maglakad o magmaneho rito. Ang 15 cm (6 pulgada) na dumadaloy na tubig ay kayang itumba ang isang tao.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "Maruming tubig. Maaaring may dumi o imburnal ang tubig-baha. Maghugas ng kamay at huwag hayaang maglaro rito ang mga bata.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "Amag pagkatapos mawala ng tubig: mabahong amoy, mga batik sa mga pader, pag-ubo o pagsipol ng paghinga.",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -436,6 +567,16 @@
    "text": "Kumustahin ang mga kapitbahay na mag-isang nakatira.",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "Ang matinding init ay maaaring magpawalang-sakit sa sinuman, at ito ay pinakamapanganib para sa mga matatanda, sanggol, at mga taong may mga kondisyon sa kalusugan. Bago ang tag-init, hanapin ang mga malamig na lugar malapit sa iyo at suriin ang iyong mga gamot sa isang parmasyutiko. Panatilihin ang tubig at mga suplay ng 3 araw sa bahay kung hindi ka makalabas.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -445,6 +586,86 @@
    "status": "machine",
    "text": "Matinding init",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "Labis na pagpapawis, o balat na malamig at malagkit.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "Pagkahilo o pakiramdam na mawawalan ng malay, o sakit ng ulo.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "Masama ang pakiramdam sa tiyan (pagduduwal) o pagsusuka.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "Mabilis na paghinga o mabilis na tibok ng puso.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "Nauuhaw nang sobra, konti lang ang ihi, at madilim ang kulay ng ihi.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "Pagkamalamig ng kalamnan.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "Ito ay mga palatandaan ng heat exhaustion. Kapag napansin mo ang mga ito, pumunta sa isang malamig na lugar, uminom ng tubig at magpahinga.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "Kung lumala ang kondisyon ng isang tao o hindi na siya pinawisan, tingnan ang \"Kailan tatawag sa 911\" sa itaas ng gabay na ito.",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -566,6 +787,16 @@
    "text": "Kumustahin ang mga kapitbahay na mag-isang nakatira, kung ligtas itong gawin.",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "Ang isang pagkawala ng kuryente ay maaaring huminto sa mga elevador, ilaw, ref, at medikal na kagamitan. Bago ito mangyari, panatilihin ang isang flashlight, isang radyo at isang naka-charge na power bank, at magplano para sa anumang medikal na kagamitan na nangangailangan ng kuryente. Panatilihin ang 3 araw na tubig at pagkain na hindi nangangailangan ng pagluluto.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -575,6 +806,46 @@
    "status": "machine",
    "text": "Pagkawala ng kuryente",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "Carbon monoxide. Huwag kailanman gumamit ng barbecue, kalan sa camping, o generator sa loob ng bahay o sa balkonahe. Ang pananakit ng ulo, pagkahilo, pagduduwal, o pagkalito ay maaaring senyales ng carbon monoxide. Lumabas agad para makahinga ng sariwang hangin.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "Pagkain na naging mainit. Kung ang pagkain sa ref ay naging mainit na ng higit sa 4 na oras, itapon ang karne, isda, gatas, at mga natira. \"Kapag may duda, itapon.\"",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "Paglamig sa taglamig, o sobrang init sa tag-init, kapag hindi tumatakbo ang pag-init o aircon.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "Nadudulas sa madidilim na pasilyo at hagdan.",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -686,6 +957,16 @@
    "text": "Pumunta sa lugar na may sinalang hangin (filtered air) kung mausok na sa loob ng inyong bahay.",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "tiny-aya-water",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "Ang usok mula sa malalayong mga sunog sa kagubatan ay maaaring gawing hindi malusog ang hangin sa loob ng ilang araw. Bago ang panahon, bumili ng mga mask (N95 o KN95) at gumawa ng plano para sa \"malinis na silid\" na may fan filter o air purifier. Maghanda ng 3 araw na pagkain at gamot upang hindi mo kailangang lumabas.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -695,6 +976,46 @@
    "status": "machine",
    "text": "Usok mula sa wildfire",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "Mga banayad na sintomas na nawawala kapag mas malinis na ang hangin: iritasyon sa mata, pangangati ng lalamunan, sipon, banayad na ubo, at sakit ng ulo.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "Mga seryosong palatandaan. Humingi ng tulong medikal kung nahihirapan kang huminga, may malalang ubo, nahihilo, o mabilis ang tibok ng puso.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "Mas mabilis maramdaman ng mga taong may hika, sakit sa puso o baga, mga buntis, mga nakatatanda, at mga bata ang usok. Ihanda ang mga rescue inhaler.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "Ang reading ng kalidad ng hangin (AQHI) sa weather app. 7 o higit pa ay mataas ang panganib.",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1127,5 +1448,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-21T23:21:49+00:00"
+ "updated": "2026-11-22T00:24:40+00:00"
 }

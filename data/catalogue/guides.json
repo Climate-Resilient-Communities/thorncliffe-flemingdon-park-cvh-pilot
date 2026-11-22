@@ -1,21 +1,28 @@
 {
  "meta": {
   "source": "design/prototype/cvh/data.js (guides) and design/prototype/cvh/strings.en.js (hazards, for the titles)",
-  "note": "English source of the six guides. Each guide needs a named owner (the Hub Coordinator responsible), a last-updated date and an English review by that owner (reviewer and date) before scripts/seed/guides.mjs will load it. Values starting with PLACEHOLDER are refused by the seed. Translations: data/catalogue/translations/content/<lang>.json."
+  "note": "English source of the six guides. Each guide needs a named owner (the Hub Coordinator responsible), a last-updated date and an English review by that owner (reviewer and date) before scripts/seed/guides.mjs will load it. Values starting with PLACEHOLDER are refused by the seed. Translations: data/catalogue/translations/content/<lang>.json. 2026-11-21 (resident testing, session 2, #15 and #19): each guide gained \"summary\" (In short) and \"watchFor\" (Watch for), from docs/planning/2026-11-18-guide-content-draft.md; the content was approved by Helena Yu (Sprout Climate Association) on 2026-11-21, and the owner's English review is recorded for that version. The draft's open question on the power guide (a full freezer keeps food cold about 48 hours, not 24) was not changed: the During step stays as reviewed."
  },
  "guides": [
   {
    "id": "power",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-10-02",
+   "lastUpdated": "2026-11-21",
    "englishReview": {
     "reviewer": "Luis Ticas",
-    "date": "2026-10-08",
-    "sourceHash": "698bd014b7e6d7c7f0c466637909cd24bdc35ce1fdc856cf7306b2ee6945429e"
+    "date": "2026-11-21",
+    "sourceHash": "18d0aefd7cae8e80bde4591535a40b4cce6be8b774d4d43aca9d306778b86688"
    },
    "readMins": 3,
    "title": "Power outage",
    "when911": "Call 911 if someone is in danger, there is a fire, or a person who uses powered medical equipment cannot breathe or is unwell.",
+   "summary": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "watchFor": [
+    "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+    "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+    "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+    "Falls in dark hallways and stairs."
+   ],
    "before": [
     "Keep a flashlight and spare batteries where you can find them in the dark.",
     "Charge a battery pack for your phone and keep it charged.",
@@ -37,15 +44,22 @@
   {
    "id": "flood",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-10-02",
+   "lastUpdated": "2026-11-21",
    "englishReview": {
     "reviewer": "Luis Ticas",
-    "date": "2026-10-08",
-    "sourceHash": "e2f3c057a9296062efdefd80421d38109c2d9e878bd3ee7ea535ced38652ee26"
+    "date": "2026-11-21",
+    "sourceHash": "6fd3400c77530a972620fd26e4fcbca26d57a446b124b7fb6b4ea603c97f55a9"
    },
    "readMins": 3,
    "title": "Flood or plumbing failure",
    "when911": "Call 911 if water is near electrical outlets or panels, if someone is trapped, or if water is rising fast.",
+   "summary": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "watchFor": [
+    "Water near electric outlets, panels or cords. Stay away.",
+    "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+    "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+    "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing."
+   ],
    "before": [
     "Keep valuables and papers off the floor, in a plastic bag or box.",
     "Know where the water shut-off valve is in your unit, if there is one.",
@@ -66,15 +80,21 @@
   {
    "id": "elevator",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-10-02",
+   "lastUpdated": "2026-11-21",
    "englishReview": {
     "reviewer": "Luis Ticas",
-    "date": "2026-10-08",
-    "sourceHash": "87de941929422e3d0aab640798b0db2025266591ac2de33db7aad03819027875"
+    "date": "2026-11-21",
+    "sourceHash": "6221a132ffc994ede42d1708158c50b59c86b9cae63022b88dcf5feb371f9db5"
    },
    "readMins": 2,
    "title": "Elevator failure",
    "when911": "Call 911 if someone is trapped in an elevator and unwell, or if someone cannot get out of the building in an emergency.",
+   "summary": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "watchFor": [
+    "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+    "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+    "Neighbours who cannot leave home and may run out of food or medicine."
+   ],
    "before": [
     "Keep a week of medicines and some food at home.",
     "Tell your floor ambassador if you cannot use the stairs.",
@@ -93,15 +113,26 @@
   {
    "id": "heat",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-10-02",
+   "lastUpdated": "2026-11-21",
    "englishReview": {
     "reviewer": "Luis Ticas",
-    "date": "2026-10-08",
-    "sourceHash": "bb464c4485b48de9951adbe9f751040a3802c059a656d1e3e6b293cb8c14aed1"
+    "date": "2026-11-21",
+    "sourceHash": "cb0ad335c10d445abc139ee597ad6425f0ef0cbaf6c2338d34377aed2003fd2d"
    },
    "readMins": 3,
    "title": "Extreme heat",
    "when911": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
+   "summary": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "watchFor": [
+    "Heavy sweating, or skin that is cold and clammy.",
+    "Dizziness or a fainting feeling, or a headache.",
+    "Feeling sick to your stomach (nausea) or throwing up.",
+    "Fast breathing or a fast heartbeat.",
+    "Being very thirsty, and peeing less, with dark yellow pee.",
+    "Muscle cramps.",
+    "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+    "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide."
+   ],
    "before": [
     "Find out which cool places are near you and when they are open.",
     "Get a fan, and curtains or blinds to block the sun.",
@@ -122,15 +153,22 @@
   {
    "id": "smoke",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-10-02",
+   "lastUpdated": "2026-11-21",
    "englishReview": {
     "reviewer": "Luis Ticas",
-    "date": "2026-10-08",
-    "sourceHash": "13462d6ac8a11778fcd7b11e7bcdce85830f1740c3f00b13ec7f27e7dc2158ee"
+    "date": "2026-11-21",
+    "sourceHash": "3f9865918c53cc4cf7e85135569ebafc657a4139b61c9cbbbd4dede3834d1038"
    },
    "readMins": 3,
    "title": "Wildfire smoke",
    "when911": "Call 911 if someone has chest pain, cannot breathe, or is very confused.",
+   "summary": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "watchFor": [
+    "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+    "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+    "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+    "The air quality reading (AQHI) in the weather app. 7 or more is high risk."
+   ],
    "before": [
     "Make a box-fan air filter, or find out where to get one.",
     "Keep a few well-fitting masks at home.",
@@ -151,15 +189,21 @@
   {
    "id": "fire",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-10-02",
+   "lastUpdated": "2026-11-21",
    "englishReview": {
     "reviewer": "Luis Ticas",
-    "date": "2026-10-08",
-    "sourceHash": "992a6177934af76894afbaecc80fcee6719bab186a06e08afef6ec689bbe3025"
+    "date": "2026-11-21",
+    "sourceHash": "6ff8e0b49ec117c1810cb789ba637addb67ffca5784daedaa01e385a208b9ac0"
    },
    "readMins": 2,
    "title": "Fire and evacuation",
    "when911": "Call 911 as soon as you see fire or smoke, or hear a fire alarm with signs of fire. Do not wait for anyone else to call.",
+   "summary": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "watchFor": [
+    "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+    "A hot door or door handle. Do not open it.",
+    "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first."
+   ],
    "before": [
     "Know where the two nearest stairwells are on your floor.",
     "Keep your keys, phone and medicines in one place by the door.",

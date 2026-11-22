@@ -95,6 +95,19 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
               </span>
               <span className="shell-ico shell-ico--chevron shell-ico--mirror ready-dest__chevron" aria-hidden="true" />
             </Link>
+            {/* Session 2 (#16): the emergency kit, shared by the six guides. */}
+            <Link href={`/${lang}/ready/kit`} prefetch={false} className="ready-dest tap" data-testid="ready-kit">
+              <span className="shell-ico shell-ico--ready ready-dest__icon" aria-hidden="true" />
+              <span className="ready-dest__body">
+                <ResidentText as="span" className="ready-dest__title">
+                  {t("R24.kit")}
+                </ResidentText>
+                <ResidentText as="span" className="ready-dest__line hide-basic">
+                  {t("R24.kitLine")}
+                </ResidentText>
+              </span>
+              <span className="shell-ico shell-ico--chevron shell-ico--mirror ready-dest__chevron" aria-hidden="true" />
+            </Link>
             {/* S08.05: R-33, what a check-in is and how to ask for one (the prototype's R-24 destination). */}
             <Link href={`/${lang}/ready/check-in`} prefetch={false} className="ready-dest tap" data-testid="ready-checkin">
               <span className="shell-ico shell-ico--person ready-dest__icon" aria-hidden="true" />

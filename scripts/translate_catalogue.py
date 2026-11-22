@@ -121,6 +121,12 @@ def check(lang, source, text):
     ratio = len(text) / max(len(source), 1)
     if len(source) >= 40 and ratio > 2.5 or ratio < (0.12 if lang == 'zh' else 0.3):
         problems.append(f'length {ratio:.1f}x the English (answered or cut short?)')
+    # A short text ("Muscle cramps.", "What to keep in your emergency kit") is the easiest to answer instead of translate: the model
+    # wrote a list or an explanation (2026-11-22, Gujarati, Urdu, Punjabi). Lines the English does not have, or far more words, refuse it.
+    if '\n' in text.strip() and '\n' not in source.strip():
+        problems.append('line breaks the English does not have (answered, not translated?)')
+    elif len(source) < 40 and len(text) > 3 * len(source) + 20:
+        problems.append(f'length {ratio:.1f}x a short English text (answered, not translated?)')
     # Names, addresses and hotline names are meant to stay in English, so words copied from
     # the English do not count against the translation.
     source_words = set(re.findall(r'[A-Za-z][\w\'-]*', source))
