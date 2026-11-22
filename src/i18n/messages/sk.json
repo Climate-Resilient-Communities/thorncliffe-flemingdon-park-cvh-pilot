@@ -1164,7 +1164,7 @@
     "headsUpLine": "Len v CVH, nikdy cez SMS",
     "none": "Návody sa teraz nepodarilo načítať. Ak je niekto v ohrození, volajte 911.",
     "kit": "Núdzová výbava",
-    "kitLine": "Čo mať doma na tri dni:\n\n- Vodu (aspoň 3 litre na osobu a deň).\n- Trvanlivé potraviny, ktoré sa dajú jesť aj za studena (konzervy, suchary, cereálie, ovocie a zelenina v plechovkách).\n- Lieky, ktoré pravidelne užívate, a základnú lekárničku (náplaste, dezinfekcia, lieky proti bolesti a horúčke).\n- Baterky a náhradné batérie, powerbanku a svietidlo.\n- Rádio s batériami, aby ste mali prehľad o situácii.\n- Dokumenty (občiansky preukaz, pas, poisťovacie zmluvy) a hotovosť.\n- Toaletný papier a hygienické potreby.\n- Otvárač na konzervy a nož.\n- Nabite mobilné telefóny a nabíjacie káble.\n- Dostatočné množstvo krmiva a vody pre domáce zvieratá."
+    "kitLine": "What to keep at home for 3 days"
   },
   "R25": {
     "stagesNav": "Prejsť na",
@@ -1193,7 +1193,7 @@
     "openedDuring": "Otvorené na časti „Počas“, pretože sa to deje práve teraz.",
     "inShort": "Stručne.",
     "watchFor": "Majte sa na pozore pred:",
-    "kitLink": "Čo mať v núdzovej výbave:\n\n- Nenechajte si ujsť naše najnovšie správy od UNICEF.\n- Viac informácií nájdete na stránke www.unicef.org.\n- Ak potrebujete pomoc, zavolajte na číslo +1-212-326-7000.\n- Napíšte nám na adresu communications@unicef.org.\n- Naša kancelária sa nachádza na ulici 3 United Nations Plaza, New York, NY 10017, USA."
+    "kitLink": "Čo mať v núdzovej výbave"
   },
   "R26": {
     "title": "Do ktorých skupín patríte?",
