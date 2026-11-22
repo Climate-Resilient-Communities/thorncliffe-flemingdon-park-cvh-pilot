@@ -241,6 +241,8 @@ describe("the Messaging Service's abuse protections (S07.09)", () => {
   });
 
   it("says it could not tell when a setting is missing or not the shape expected, the request fails or the service id is not one", async () => {
+    // Twilio's real Messaging Service resource (2026-11-22) has neither field: that is "not exposed", not a failure.
+    await expect(reader({ sid: SERVICE_SID, smart_encoding: false, usecase: "notifications" }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "not_exposed" });
     await expect(reader({ geo_permissions: ["CA"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "pumping_setting_missing" });
     await expect(reader({ sms_pumping_protection: "true", geo_permissions: ["CA"] }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "pumping_setting_missing" });
     await expect(reader({ sms_pumping_protection: true }).service.readAbuseSettings(SERVICE_SID)).resolves.toEqual({ kind: "unreadable", reason: "geo_setting_missing" });

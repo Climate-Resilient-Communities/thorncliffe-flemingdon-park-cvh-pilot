@@ -24,7 +24,7 @@ export type ServiceCheckResult =
   | { status: "unreadable"; reason: string };
 
 /** What the check found of the abuse protections. */
-export type SettingsCheckResult = { settings: "right" } | { settings: "wrong"; geoNotCanadaOnly: boolean; pumpingProtectionOff: boolean } | { settings: "unreadable"; reason: string };
+export type SettingsCheckResult = { settings: "right" } | { settings: "not_exposed" } | { settings: "wrong"; geoNotCanadaOnly: boolean; pumpingProtectionOff: boolean } | { settings: "unreadable"; reason: string };
 
 /** The two findings, nested so neither hides the other's reason. */
 export interface ServiceCheckFinding {
@@ -77,6 +77,16 @@ export function createMessagingServiceCheck(deps: MessagingServiceCheckDeps): Me
         log.error("messaging_service.settings_check_failed_not_recorded", { error: error instanceof Error ? error.name : "NonError" });
       });
       return { settings: "unreadable", reason: reading.reason };
+    }
+    if (reading.kind === "not_exposed") {
+      // Twilio's API does not carry the two protections: nothing to judge, so nothing to alert on. They are confirmed by hand in the Twilio
+      // console (launch checklist, section 3). Recorded so the Hub sees the check ran, and so an earlier "wrong" (from when this read as
+      // unreadable) ends.
+      await ops.record(db, { kind: "messaging.service_settings_not_exposed", detail: {} }).catch((error: unknown) => {
+        log.error("messaging_service.not_exposed_not_recorded", { error: error instanceof Error ? error.name : "NonError" });
+      });
+      log.info("messaging_service.settings_not_exposed", {});
+      return { settings: "not_exposed" };
     }
     if (!reading.geoCanadaOnly || !reading.pumpingProtection) {
       const geoNotCanadaOnly = !reading.geoCanadaOnly;

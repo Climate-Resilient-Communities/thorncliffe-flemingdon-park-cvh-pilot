@@ -861,6 +861,14 @@ describe("the Messaging Service's geo permissions and SMS pumping protection fou
     expect(await oncallTexts()).toHaveLength(2);
   });
 
+  it("ends when a later daily check finds that Twilio's API does not carry the protections (2026-11-22): not a finding, so it recovers", async () => {
+    await addOncall(1);
+    await found("wrong");
+    expect(await reportOf("messaging_settings")).toMatchObject({ holds: true, action: "alerted" });
+    await owner.unsafe(`insert into ops_event (kind, severity, detail) values ('messaging.service_settings_not_exposed', 'info', '{}')`);
+    expect(await reportOf("messaging_settings")).toMatchObject({ holds: false, action: "recovered" });
+  });
+
   it("is quiet when the check has only ever found both right, and the Hub's banner names it for an Admin while it holds", async () => {
     await found("ok");
     expect(await reportOf("messaging_settings")).toMatchObject({ holds: false, action: "quiet" });

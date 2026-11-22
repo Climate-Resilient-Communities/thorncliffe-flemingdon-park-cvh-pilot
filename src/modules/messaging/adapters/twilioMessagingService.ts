@@ -185,9 +185,9 @@ export function twilioMessagingServiceReader(config: TwilioServiceConfig): Messa
   }
 
   /**
-   * The two protections against abuse (S07.09). ASSUMED field names, to be confirmed against the production Twilio account at the launch
-   * rehearsal (IT; docs/config.md): `sms_pumping_protection` (boolean) and `geo_permissions` (the ISO codes of the countries the service
-   * may text). Anything that is not plainly one of those shapes is "could not tell", never "right"; the daily check treats "could not tell"
+   * The two protections against abuse (S07.09). The field names `sms_pumping_protection` (boolean) and `geo_permissions` (ISO codes) were
+   * assumed; Twilio's API has neither (2026-11-22), so a service without both reads as `not_exposed` and the settings are confirmed by hand.
+   * Should Twilio add them, they are judged here. Anything that is not plainly one of those shapes is "could not tell", never "right"; the daily check treats "could not tell"
    * as a failing check (it alerts on-call), so a wrong guess about the API is loud, not a silent pass.
    */
   const NORTH_AMERICAN_PLAN = new Set(["CA", "US"]);
@@ -196,6 +196,9 @@ export function twilioMessagingServiceReader(config: TwilioServiceConfig): Messa
     if (service.kind === "unreadable") return service;
     const pumping = service.fields.sms_pumping_protection;
     const countries = service.fields.geo_permissions;
+    // Twilio's Messaging Service resource has neither field (its documented properties, 2026-11-22: SMS pumping protection and geo permissions
+    // are console settings with no read API). Both absent is that case, not a failure; one present in a shape we do not expect still is.
+    if (pumping === undefined && countries === undefined) return { kind: "not_exposed" };
     if (typeof pumping !== "boolean") return { kind: "unreadable", reason: "pumping_setting_missing" };
     if (!Array.isArray(countries) || countries.some((code) => typeof code !== "string")) return { kind: "unreadable", reason: "geo_setting_missing" };
     const codes = new Set((countries as string[]).map((code) => code.trim().toUpperCase()));

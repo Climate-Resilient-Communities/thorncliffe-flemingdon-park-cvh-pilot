@@ -79,6 +79,14 @@ describe("the Messaging Service check", () => {
       expect(lines.at(-1)).toEqual({ level: "error", evt: "messaging_service.settings_wrong", fields: detail });
     });
 
+    it("records that Twilio's API does not carry the protections, alerting no one, when the service is read but has neither field (2026-11-22)", async () => {
+      const { service, events, lines } = check(OFF, { kind: "not_exposed" });
+      await expect(service.run()).resolves.toEqual({ encoding: { status: "smart_encoding_off" }, settings: { settings: "not_exposed" } });
+      expect(events.at(-1)).toEqual({ kind: "messaging.service_settings_not_exposed", detail: {} });
+      expect(events.some((event) => event.kind === "messaging.service_settings_wrong" || event.kind === "messaging.service_check_failed")).toBe(false);
+      expect(lines.at(-1)).toMatchObject({ level: "info", evt: "messaging_service.settings_not_exposed" });
+    });
+
     it("counts a protection it could not read as a failing check, never quieter than wrong: on-call is alerted, with the code and which read failed as a warning", async () => {
       const { service, events, lines } = check(OFF, { kind: "unreadable", reason: "pumping_setting_missing" });
       await expect(service.run()).resolves.toEqual({ encoding: { status: "smart_encoding_off" }, settings: { settings: "unreadable", reason: "pumping_setting_missing" } });

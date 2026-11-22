@@ -143,7 +143,7 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
         return { holds: true, count: 1, fresh: latest.id > (lastEventId ?? 0), eventId: latest.id };
       }
       case "messaging_settings": {
-        const latest = await healthStore.latestOfKinds(tx, ["messaging.service_settings_wrong", "messaging.service_settings_ok"]);
+        const latest = await healthStore.latestOfKinds(tx, ["messaging.service_settings_wrong", "messaging.service_settings_ok", "messaging.service_settings_not_exposed"]);
         if (latest === null || latest.kind !== "messaging.service_settings_wrong") return { holds: false, count: 0, eventId: null };
         return { holds: true, count: 1, fresh: latest.id > (lastEventId ?? 0), eventId: latest.id };
       }
