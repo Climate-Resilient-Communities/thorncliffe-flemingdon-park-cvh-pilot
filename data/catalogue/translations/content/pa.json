@@ -2,7 +2,9 @@
  "failed": {},
  "language": "pa",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 111,
+  "north-small-translate-09-2026": 31,
+  "tiny-aya-fire": 1
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -85,6 +87,16 @@
    "text": "ਜੇ ਤੁਹਾਨੂੰ ਕਿਸੇ ਅਪੌਇੰਟਮੈਂਟ ਤੇ ਜਾਣਾ ਹੈ, ਤਾਂ ਆਉਣ-ਜਾਣ ਲਈ ਮਦਦ ਮੰਗੋ।",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "ਜਦੋਂ ਲਿਫਟਾਂ ਬੰਦ ਹੋ ਜਾਂਦੀਆਂ ਹਨ, ਤਾਂ ਉੱਚੀਆਂ ਮੰਜ਼ਿਲਾਂ 'ਤੇ ਰਹਿਣ ਵਾਲੇ ਲੋਕ ਕਈ ਦਿਨਾਂ ਤੱਕ ਘਰ ਵਿੱਚ ਫਸੇ ਰਹਿ ਸਕਦੇ ਹਨ। ਅਜਿਹਾ ਹੋਣ ਤੋਂ ਪਹਿਲਾਂ, ਘਰ ਵਿੱਚ 3 ਦਿਨਾਂ ਦਾ ਰਾਸ਼ਨ, ਪਾਣੀ ਅਤੇ ਦਵਾਈਆਂ ਰੱਖੋ, ਅਤੇ ਜੇਕਰ ਤੁਸੀਂ ਸੀੜ੍ਹੀਆਂ ਚੜ੍ਹਨ ਦੇ ਯੋਗ ਨਹੀਂ ਹੋ, ਤਾਂ ਆਪਣੇ ਫਲੋਰ ਅੰਬੈਸਡਰ ਜਾਂ ਕਿਸੇ ਗੁਆਂਢੀ ਨੂੰ ਇਸ ਬਾਰੇ ਦੱਸੋ।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -94,6 +106,36 @@
    "status": "machine",
    "text": "ਲਿਫ਼ਟ ਖ਼ਰਾਬ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "ਛਾਤੀ ਵਿੱਚ ਦਰਦ, ਤੇਜ਼ ਧੜਕਣ, ਜਾਂ ਪੌੜੀਆਂ ਚੜ੍ਹਦੇ ਸਮੇਂ ਸਾਹ ਬਹੁਤ ਜ਼ਿਆਦਾ ਚੜ੍ਹਨਾ। ਰੁਕੋ ਅਤੇ ਆਰਾਮ ਕਰੋ। ਇਸ ਗਾਈਡ ਦੇ ਸਿਖਰ 'ਤੇ \"ਕਦੋਂ 911 'ਤੇ ਫੋਨ ਕਰਨਾ ਹੈ\" ਪੜ੍ਹੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "ਪੌੜੀਆਂ 'ਤੇ ਡਿੱਗਣ ਤੋਂ ਬਚਾਅ: ਹੌਲੀ ਚੱਲੋ, ਹੱਥ-ਰੇਲਿੰਗ ਫੜੋ, ਅਤੇ ਭਾਰੀ ਚੀਜ਼ਾਂ ਨਾ ਚੁੱਕੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "ਉਹ ਗੁਆਂਢੀ ਜੋ ਘਰੋਂ ਬਾਹਰ ਨਹੀਂ ਜਾ ਸਕਦੇ ਅਤੇ ਜਿਨ੍ਹਾਂ ਕੋਲ ਖਾਣਾ ਜਾਂ ਦਵਾਈ ਖਤਮ ਹੋ ਸਕਦੀ ਹੈ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -195,6 +237,16 @@
    "text": "ਇੱਕ ਵਾਰ ਬਾਹਰ ਨਿਕਲਣ ਤੋਂ ਬਾਅਦ, ਬਾਹਰ ਹੀ ਰਹੋ ਜਦੋਂ ਤੱਕ ਫਾਇਰ ਸਰਵਿਸ ਇਹ ਨਾ ਕਹੇ ਕਿ ਹੁਣ ਸੁਰੱਖਿਅਤ ਹੈ।",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "ਕਿਸੇ ਉੱਚੀ ਇਮਾਰਤ ਵਿੱਚ ਅੱਗ ਲੱਗਣ 'ਤੇ, ਸਭ ਤੋਂ ਸੁਰੱਖਿਅਤ ਫੈਸਲਾ ਘਰੋਂ ਬਾਹਰ ਨਿਕਲਣਾ ਜਾਂ ਆਪਣੇ ਫਲੈਟ ਵਿੱਚ ਹੀ ਰਹਿਣਾ ਹੋ ਸਕਦਾ ਹੈ। ਇਹ ਇਸ ਗੱਲ 'ਤੇ ਨਿਰਭਰ ਕਰਦਾ ਹੈ ਕਿ ਅੱਗ ਕਿੱਥੇ ਲੱਗੀ ਹੈ। ਅੱਗ ਲੱਗਣ ਤੋਂ ਪਹਿਲਾਂ, ਆਪਣੀ ਇਮਾਰਤ ਦੀ ਅੱਗ ਸੁਰੱਖਿਆ ਯੋਜਨਾ ਅਤੇ ਬਾਹਰ ਨਿਕਲਣ ਲਈ ਦੋਵਾਂ ਸੀੜ੍ਹੀਆਂ ਬਾਰੇ ਜਾਣਕਾਰੀ ਹਾਸਲ ਕਰੋ, ਅਤੇ ਦਰਵਾਜ਼ੇ ਦੇ ਨੇੜੇ ਇੱਕ 'ਐਮਰਜੈਂਸੀ ਬੈਗ' ਤਿਆਰ ਰੱਖੋ।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -204,6 +256,36 @@
    "status": "machine",
    "text": "ਅੱਗ ਅਤੇ ਬਿਲਡਿੰਗ ਖ਼ਾਲੀ ਕਰਨਾ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "ਜੇ ਹਾਲ ਜਾਂ ਪੌੜੀਆਂ ਵਾਲੀ ਜਗ੍ਹਾ 'ਤੇ ਧੂੰਆਂ ਹੋਵੇ ਤਾਂ ਉੱਥੋਂ ਨਾ ਲੰਘੋ। ਵਾਪਸ ਮੁੜ ਜਾਓ, ਦਰਵਾਜ਼ਾ ਬੰਦ ਕਰ ਦਿਓ ਅਤੇ ਦੂਜੀਆਂ ਪੌੜੀਆਂ ਵਰਤੋ, ਜਾਂ ਆਪਣੇ ਕਮਰੇ/ਯੂਨਿਟ ਵਿੱਚ ਹੀ ਰਹੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "ਕੋਈ ਦਰਵਾਜ਼ਾ ਜਾਂ ਦਰਵਾਜ਼ੇ ਦਾ ਹੈਂਡਲ ਗਰਮ ਹੈ। ਇਸਨੂੰ ਨਾ ਖੋਲ੍ਹੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "ਧੂੰਏਂ ਤੋਂ ਬਾਅਦ: ਖੰਘ, ਸਾਹ ਲੈਣ ਵਿੱਚ ਤਕਲੀਫ਼ ਜਾਂ ਸਿਰ ਦਰਦ ਹੋ ਸਕਦਾ ਹੈ। ਜਾਂਚ ਜ਼ਰੂਰ ਕਰਵਾਓ, ਭਾਵੇਂ ਸ਼ੁਰੂ ਵਿੱਚ ਤੁਹਾਨੂੰ ਕੋਈ ਸਮੱਸਿਆ ਮਹਿਸੂਸ ਨਾ ਹੋਵੇ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -315,6 +397,16 @@
    "text": "ਜੇ ਤੁਹਾਡੀ ਬਿਲਡਿੰਗ ਵਿੱਚ ਪਾਣੀ ਬੰਦ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ, ਤਾਂ ਪੀਣ ਅਤੇ ਖਾਣਾ ਬਣਾਉਣ ਲਈ ਬੋਤਲ ਵਾਲਾ ਪਾਣੀ ਵਰਤੋ।",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "ਕੋਈ ਉੱਚੀ ਇਮਾਰਤ (ਹਾਈ-ਰਾਈਜ਼) ਵਿੱਚ, ਪਾਈਪ ਫਟਣ ਜਾਂ ਭਾਰੀ ਮੀਂਹ ਕਾਰਨ ਪਾਰਕਿੰਗ ਅਤੇ ਬੇਸਮੈਂਟਾਂ ਵਿੱਚ ਪਾਣੀ ਭਰ ਸਕਦਾ ਹੈ, ਅਤੇ ਪਾਣੀ ਜਾਂ ਬਿਜਲੀ ਬੰਦ ਹੋ ਸਕਦੀ ਹੈ। ਅਜਿਹਾ ਹੋਣ ਤੋਂ ਪਹਿਲਾਂ, ਜ਼ਰੂਰੀ ਕਾਗਜ਼ਾਤ ਨੂੰ ਪਾਣੀ ਤੋਂ ਸੁਰੱਖਿਅਤ ਬੈਗ ਵਿੱਚ ਉੱਪਰ ਕਿਸੇ ਸੁਰੱਖਿਅਤ ਜਗ੍ਹਾ 'ਤੇ ਰੱਖੋ ਅਤੇ 3 ਦਿਨਾਂ ਲਈ ਬੋਤਲਬੰਦ ਪਾਣੀ ਜਮ੍ਹਾਂ ਕਰਕੇ ਰੱਖੋ। ਇਹ ਵੀ ਜਾਣੋ ਕਿ ਆਪਣੇ ਸੁਪਰਡੈਂਟ (ਦੇਖਭਾਲ ਕਰਨ ਵਾਲੇ) ਨਾਲ ਸੰਪਰਕ ਕਿਵੇਂ ਕਰਨਾ ਹੈ।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -324,6 +416,46 @@
    "status": "machine",
    "text": "ਹੜ੍ਹ ਜਾਂ ਪਲੰਬਿੰਗ ਖ਼ਰਾਬ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "ਇਲੈਕਟ੍ਰਿਕ ਸਾਕਟਾਂ, ਪੈਨਲਾਂ ਜਾਂ ਤਾਰਾਂ ਦੇ ਨੇੜੇ ਪਾਣੀ ਹੈ। ਦੂਰ ਰਹੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "ਵਹਿੰਦਾ ਪਾਣੀ। ਇਸ ਵਿੱਚ ਨਾ ਚੱਲੋ ਤੇ ਨਾ ਹੀ ਗੱਡੀ ਚਲਾਓ। 15 ਸੈਂਟੀਮੀਟਰ (6 ਇੰਚ) ਵਹਿੰਦਾ ਪਾਣੀ ਕਿਸੇ ਵਿਅਕਤੀ ਨੂੰ ਡੇਗ ਸਕਦਾ ਹੈ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "ਗੰਦਾ ਪਾਣੀ। ਹੜ੍ਹ ਦਾ ਪਾਣੀ ਗੰਦਗੀ ਲੈ ਕੇ ਆ ਸਕਦਾ ਹੈ। ਆਪਣੇ ਹੱਥ ਧੋਵੋ ਅਤੇ ਬੱਚਿਆਂ ਨੂੰ ਇਸ ਵਿੱਚ ਖੇਡਣ ਨਾ ਦਿਓ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "ਪਾਣੀ ਸੁੱਕਣ ਤੋਂ ਬਾਅਦ ਫ਼ਫ਼ੂੰਦੀ: ਇੱਕ ਪੁਰਾਣੀ ਤੇ ਸੜੀ ਹੋਈ ਬਦਬੂ, ਕੰਧਾਂ 'ਤੇ ਧੱਬੇ, ਖੰਘ ਜਾਂ ਸਾਹ ਲੈਣ ਵਿੱਚ ਤਕਲੀਫ਼।",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -435,6 +567,16 @@
    "text": "ਇਕੱਲੇ ਰਹਿੰਦੇ ਗੁਆਂਢੀਆਂ ਦਾ ਹਾਲ ਪੁੱਛੋ।",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "ਬਹੁਤ ਜ਼ਿਆਦਾ ਗਰਮੀ ਕਿਸੇ ਨੂੰ ਵੀ ਬੀਮਾਰ ਕਰ ਸਕਦੀ ਹੈ, ਅਤੇ ਇਹ ਬਜ਼ੁਰਗਾਂ, ਬੱਚਿਆਂ ਅਤੇ ਸਿਹਤ ਸਮੱਸਿਆਵਾਂ ਵਾਲੇ ਲੋਕਾਂ ਲਈ ਸਭ ਤੋਂ ਖ਼ਤਰਨਾਕ ਹੁੰਦੀ ਹੈ। ਗਰਮੀਆਂ ਸ਼ੁਰੂ ਹੋਣ ਤੋਂ ਪਹਿਲਾਂ, ਆਪਣੇ ਨੇੜੇ ਠੰਡੀਆਂ ਥਾਵਾਂ ਦਾ ਪਤਾ ਲਗਾਓ ਅਤੇ ਆਪਣੀਆਂ ਦਵਾਈਆਂ ਬਾਰੇ ਕਿਸੇ ਫਾਰਮਾਸਿਸਟ ਨਾਲ ਗੱਲ ਕਰੋ। ਜੇਕਰ ਤੁਸੀਂ ਬਾਹਰ ਨਹੀਂ ਜਾ ਸਕਦੇ, ਤਾਂ ਘਰ ਵਿੱਚ ਪਾਣੀ ਅਤੇ 3 ਦਿਨਾਂ ਦਾ ਰਾਸ਼ਨ ਰੱਖੋ।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -444,6 +586,86 @@
    "status": "machine",
    "text": "ਬਹੁਤ ਜ਼ਿਆਦਾ ਗਰਮੀ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "ਬਹੁਤ ਜ਼ਿਆਦਾ ਪਸੀਨਾ ਆਉਣਾ, ਜਾਂ ਚਮੜੀ ਦਾ ਠੰਡਾ ਅਤੇ ਚਿਪਚਿਪਾ ਹੋਣਾ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "ਸਿਰ ਘੁੰਮਣਾ ਜਾਂ ਬੇਹੋਸ਼ ਹੋਣ ਵਰਗਾ ਅਹਿਸਾਸ, ਜਾਂ ਸਿਰ ਦਰਦ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "ਉਲਟੀਆਂ ਆਉਣੀਆਂ ਜਾਂ ਮਤਲੀ ਮਹਿਸੂਸ ਹੋਣਾ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "ਤੇਜ਼ ਸਾਹ ਲੈਣਾ ਜਾਂ ਤੇਜ਼ ਧੜਕਣ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "ਬਹੁਤ ਜ਼ਿਆਦਾ ਪਿਆਸ ਲੱਗਣਾ, ਪੇਸ਼ਾਬ ਘੱਟ ਆਉਣਾ ਅਤੇ ਪੇਸ਼ਾਬ ਦਾ ਰੰਗ ਗੂੜ੍ਹਾ ਪੀਲਾ ਹੋਣਾ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "ਮਾਸਪੇਸ਼ੀਆਂ ਵਿੱਚ ਖਿੱਚ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "ਇਹ ਗਰਮੀ ਕਾਰਨ ਸਰੀਰ ਵਿੱਚ ਪਾਣੀ ਦੀ ਕਮੀ ਦੇ ਲੱਛਣ ਹਨ। ਜੇਕਰ ਤੁਸੀਂ ਇਹਨਾਂ ਨੂੰ ਦੇਖੋ, ਤਾਂ ਕਿਸੇ ਠੰਡੀ ਜਗ੍ਹਾ 'ਤੇ ਜਾਓ, ਪਾਣੀ ਪੀਓ ਅਤੇ ਆਰਾਮ ਕਰੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "ਜੇ ਕਿਸੇ ਦੀ ਹਾਲਤ ਵਿਗੜ ਜਾਵੇ ਜਾਂ ਪਸੀਨਾ ਆਉਣਾ ਬੰਦ ਹੋ ਜਾਵੇ, ਤਾਂ ਇਸ ਗਾਈਡ ਦੇ ਸਿਖਰ 'ਤੇ \"ਕਦੋਂ 911 'ਤੇ ਫੋਨ ਕਰਨਾ ਹੈ\" ਦੇਖੋ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -565,6 +787,16 @@
    "text": "ਜੇ ਅਜਿਹਾ ਕਰਨਾ ਸੁਰੱਖਿਅਤ ਹੋਵੇ, ਤਾਂ ਇਕੱਲੇ ਰਹਿੰਦੇ ਗੁਆਂਢੀਆਂ ਦਾ ਹਾਲ ਪੁੱਛੋ।",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "ਬਿਜਲੀ ਦੀ ਕਮੀ ਨਾਲ ਲਿਫਟਾਂ, ਰੌਸ਼ਨੀ, ਫਰਿੱਜ਼ ਅਤੇ ਮੈਡੀਕਲ ਉਪਕਰਣ ਬੰਦ ਹੋ ਸਕਦੇ ਹਨ। ਇਸ ਤੋਂ ਪਹਿਲਾਂ ਕਿ ਇਹ ਹੋਵੇ, ਇੱਕ ਟਾਰਚ, ਰੇਡੀਓ ਅਤੇ ਚਾਰਜ ਕੀਤਾ ਪਾਵਰ ਬੈਂਕ ਰੱਖੋ, ਅਤੇ ਪਾਵਰ ਦੀ ਲੋੜ ਵਾਲੇ ਕਿਸੇ ਵੀ ਮੈਡੀਕਲ ਉਪਕਰਣ ਦੀ ਯੋਜਨਾ ਬਣਾਓ। 3 ਦਿਨਾਂ ਦਾ ਪਾਣੀ ਅਤੇ ਖਾਣਾ ਰੱਖੋ ਜੋ ਪਕਾਉਣ ਦੀ ਲੋੜ ਨਹੀਂ ਹੈ।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -574,6 +806,46 @@
    "status": "machine",
    "text": "ਬਿਜਲੀ ਬੰਦ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "ਕਾਰਬਨ ਮੋਨੋਆਕਸਾਈਡ। ਕਦੇ ਵੀ ਬਾਰਬੀਕਿਊ, ਕੈਂਪ ਸਟੋਵ ਜਾਂ ਜਨਰੇਟਰ ਨੂੰ ਘਰ ਦੇ ਅੰਦਰ ਜਾਂ ਬਾਲਕੋਨੀ 'ਤੇ ਨਾ ਵਰਤੋ। ਸਿਰ ਦਰਦ, ਚੱਕਰ ਆਉਣਾ, ਮਤਲੀ ਜਾਂ ਉਲਝਣ ਮਹਿਸੂਸ ਹੋਣਾ ਕਾਰਬਨ ਮੋਨੋਆਕਸਾਈਡ ਦਾ ਸੰਕੇਤ ਹੋ ਸਕਦਾ ਹੈ। ਤੁਰੰਤ ਤਾਜ਼ੀ ਹਵਾ ਵਿੱਚ ਜਾਓ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "ਗਰਮ ਹੋ ਚੁੱਕਾ ਖਾਣਾ। ਜੇ ਫਰਿੱਜ ਵਿੱਚ ਰੱਖਿਆ ਖਾਣਾ 4 ਘੰਟਿਆਂ ਤੋਂ ਵੱਧ ਸਮੇਂ ਤੱਕ ਗਰਮ ਰਿਹਾ ਹੈ, ਤਾਂ ਮਾਸ, ਮੱਛੀ, ਦੁੱਧ ਅਤੇ ਬਚਿਆ ਹੋਇਆ ਖਾਣਾ ਸੁੱਟ ਦਿਓ। \"ਜੇ ਸ਼ੱਕ ਹੋਵੇ, ਤਾਂ ਉਸਨੂੰ ਸੁੱਟ ਦਿਓ।\"",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "ਸਰਦੀ ਵਿੱਚ ਠੰਡ ਲੱਗਦੀ ਹੈ ਜਾਂ ਗਰਮੀ ਵਿੱਚ ਬਹੁਤ ਗਰਮੀ ਹੁੰਦੀ ਹੈ, ਜਦੋਂ ਹੀਟਿੰਗ ਜਾਂ ਏਅਰ ਕੰਡੀਸ਼ਨਰ ਬੰਦ ਹੁੰਦਾ ਹੈ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "ਹਨੇਰੇ ਗਲਿਆਰਿਆਂ ਅਤੇ ਪੌੜੀਆਂ 'ਤੇ ਡਿੱਗਣਾ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -685,6 +957,16 @@
    "text": "ਜੇ ਤੁਹਾਡੇ ਘਰ ਵਿੱਚ ਧੂੰਆਂ ਭਰ ਜਾਵੇ, ਤਾਂ ਕਿਸੇ ਅਜਿਹੀ ਥਾਂ ਜਾਓ ਜਿੱਥੇ ਹਵਾ ਫਿਲਟਰ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "ਦੂਰ-ਦਰਾਡੇ ਜੰਗਲਾਂ ਵਿੱਚ ਲੱਗੀਆਂ ਅੱਗਾਂ ਦਾ ਧੂੰਆਂ ਕਈ ਦਿਨਾਂ ਤੱਕ ਹਵਾ ਨੂੰ ਖ਼ਰਾਬ ਕਰ ਸਕਦਾ ਹੈ। ਇਸ ਸੀਜ਼ਨ ਤੋਂ ਪਹਿਲਾਂ, ਮਾਸਕ (N95 ਜਾਂ KN95) ਖਰੀਦ ਲਓ ਅਤੇ ਫੈਨ ਫਿਲਟਰ ਜਾਂ ਏਅਰ ਪਿਊਰੀਫਾਇਰ ਨਾਲ \"ਸਾਫ਼ ਹਵਾ ਵਾਲੇ ਕਮਰੇ\" ਦੀ ਯੋਜਨਾ ਬਣਾਓ। 3 ਦਿਨਾਂ ਦਾ ਖਾਣਾ ਅਤੇ ਦਵਾਈਆਂ ਸੰਭਾਲ ਕੇ ਰੱਖੋ ਤਾਂ ਜੋ ਤੁਹਾਨੂੰ ਬਾਹਰ ਨਾ ਜਾਣਾ ਪਵੇ।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -694,6 +976,46 @@
    "status": "machine",
    "text": "ਜੰਗਲ ਦੀ ਅੱਗ ਦਾ ਧੂੰਆਂ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "ਹਲਕੇ ਲੱਛਣ, ਜੋ ਹਵਾ ਸਾਫ਼ ਹੋਣ 'ਤੇ ਠੀਕ ਹੋ ਜਾਂਦੇ ਹਨ: ਅੱਖਾਂ ਵਿੱਚ ਜਲਣ, ਗਲੇ ਵਿੱਚ ਖਰਾਸ਼, ਨੱਕ ਵਗਣਾ, ਹਲਕੀ ਖੰਘ ਅਤੇ ਸਿਰ ਦਰਦ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "ਗੰਭੀਰ ਲੱਛਣ। ਜੇ ਤੁਹਾਨੂੰ ਸਾਹ ਲੈਣ ਵਿੱਚ ਤਕਲੀਫ਼ ਹੋਵੇ, ਬਹੁਤ ਜ਼ਿਆਦਾ ਖੰਘ ਹੋਵੇ, ਚੱਕਰ ਆਉਣ ਜਾਂ ਦਿਲ ਤੇਜ਼ ਧੜਕਣ, ਤਾਂ ਡਾਕਟਰੀ ਮਦਦ ਲਓ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "ਦਮੇ, ਦਿਲ ਜਾਂ ਫੇਫੜਿਆਂ ਦੀ ਬਿਮਾਰੀ ਵਾਲੇ ਲੋਕ, ਗਰਭਵਤੀ ਔਰਤਾਂ, ਬਜ਼ੁਰਗ ਅਤੇ ਬੱਚੇ ਧੂੰਏਂ ਦਾ ਅਸਰ ਜਲਦੀ ਮਹਿਸੂਸ ਕਰਦੇ ਹਨ। ਆਪਣੇ ਕੋਲ ਰੈਸਕਿਊ ਇਨਹੇਲਰ ਰੱਖੋ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "ਮੌਸਮ ਵਾਲੀ ਐਪ ਵਿੱਚ ਹਵਾ ਦੀ ਗੁਣਵੱਤਾ ਦਾ ਪੱਧਰ (AQHI) ਦਿਖਾਇਆ ਜਾਂਦਾ ਹੈ। 7 ਜਾਂ ਉਸ ਤੋਂ ਵੱਧ ਹੋਣ ਦਾ ਮਤਲਬ ਹੈ ਉੱਚ ਖਤਰਾ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1438,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:07:12+00:00"
+ "updated": "2026-11-22T00:31:27+00:00"
 }

@@ -1162,7 +1162,9 @@
     "checkinLine": "El embajador de su piso pasa a ver cómo está. No es un servicio de emergencia.",
     "numbersLine": "911, 211, 311, Toronto Hydro y el Hub",
     "headsUpLine": "Solo en el CVH, nunca por mensaje de texto",
-    "none": "No se pudieron cargar las guías en este momento. Si alguien está en peligro, llame al 911."
+    "none": "No se pudieron cargar las guías en este momento. Si alguien está en peligro, llame al 911.",
+    "kit": "Kit de emergencia",
+    "kitLine": "Qué tener en casa para 3 días\n\n- Agua: 3 litros por persona al día.\n- Comida que no necesite refrigeración ni cocción, como latas de conserva, barras de granola y frutas secas.\n- Linterna y pilas extra.\n- Botiquín de primeros auxilios con vendas, gasas, desinfectante y medicamentos básicos.\n- Radio portátil para recibir noticias.\n- Cargador portátil para el móvil.\n- Documentos importantes, como el DNI y el pasaporte, en un lugar seguro y accesible.\n- Efectivo en billetes pequeños.\n- Ropa y mantas adicionales.\n- Artículos de higiene personal, como jabón, cepillo de dientes y papel higiénico.\n- Silbato para pedir ayuda en caso de emergencia."
   },
   "R25": {
     "stagesNav": "Ir a",
@@ -1188,7 +1190,10 @@
     },
     "endLine": "Esa es la última parte de esta guía. Si necesita más ayuda:",
     "numbersLine": "911, 211, 311, Toronto Hydro y el Hub",
-    "openedDuring": "Se abrió en \"Durante\" porque esto está pasando ahora."
+    "openedDuring": "Se abrió en \"Durante\" porque esto está pasando ahora.",
+    "inShort": "En resumen",
+    "watchFor": "Presta atención a",
+    "kitLink": "Qué guardar en tu kit de emergencia"
   },
   "R26": {
     "title": "¿A qué grupos pertenece?",
@@ -6752,5 +6757,54 @@
     "Public Spaces": "Lugares para ir",
     "Community Resilience": "Agua, baños y lugares frescos",
     "Non-Profits": "Organizaciones comunitarias"
+  },
+  "kit": {
+    "title": "Kit de emergencia",
+    "intro": "En una emergencia, puede tardar hasta 3 días que la ayuda llegue a todos. Mantenga suficientes provisiones para todos en su hogar durante al menos 3 días (72 horas). Guárdelas juntas en una bolsa o caja que sea fácil de transportar, cerca de su puerta.",
+    "water": {
+      "title": "Agua y comida",
+      "items": [
+        "Agua: al menos 2 litros por persona al día para beber, y más para cocinar y lavarse. La ciudad de Toronto sugiere un total de 4 litros por persona al día. Para 3 días, eso equivale a 12 litros por persona.",
+        "Comida que no se estropea y que no necesita cocinarse, como alimentos enlatados, barras energéticas y alimentos secos. Elige alimentos que tu familia coma y renuévalos una vez al año.",
+        "Un abrelatas manual."
+      ]
+    },
+    "light": {
+      "title": "Luz, electricidad y noticias",
+      "items": [
+        "Una linterna y baterías adicionales. No utilice velas.",
+        "Una radio de cuerda o de pilas.",
+        "Una batería externa cargada para tu teléfono y un cable de carga."
+      ]
+    },
+    "health": {
+      "title": "Salud",
+      "items": [
+        "Un botiquín de primeros auxilios.",
+        "Al menos una semana de tus medicamentos y una lista de ellos con las dosis.",
+        "Gafas, pilas para audífonos y cualquier equipo que uses todos los días (por ejemplo, un bastón o baterías para una silla de ruedas eléctrica).",
+        "Máscaras (N95 o KN95) para el humo.",
+        "Gel desinfectante para manos, toallitas y papel higiénico."
+      ]
+    },
+    "papers": {
+      "title": "Papeles y dinero",
+      "items": [
+        "Copias de documentos importantes en una bolsa impermeable: identificación, tarjeta sanitaria, seguro y recetas.",
+        "Un poco de dinero en billetes pequeños, porque las tarjetas y los cajeros automáticos pueden no funcionar cuando se corta la electricidad.",
+        "Una lista de números de teléfono en papel: familiares, tu médico, el superintendente de tu edificio y alguien que vive fuera de la ciudad."
+      ]
+    },
+    "family": {
+      "title": "Para tu familia",
+      "items": [
+        "Cosas para bebés (leche en polvo, pañales) y para mascotas (comida, agua, una correa o un transportín).",
+        "Llaves de repuesto para tu casa y tu coche.",
+        "Ropa abrigada y una manta."
+      ]
+    },
+    "helpTitle": "Pide ayuda",
+    "help": "Si no puedes conseguir estas cosas, los bancos de alimentos comunitarios y las agencias de Thorncliffe Park y Flemingdon Park pueden ayudarte.",
+    "helpLink": "Encuentra ayuda cerca de ti"
   }
 }

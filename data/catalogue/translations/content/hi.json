@@ -2,7 +2,8 @@
  "failed": {},
  "language": "hi",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 111,
+  "command-a-translate-08-2025": 32
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -85,6 +86,16 @@
    "text": "अगर आपको किसी अपॉइंटमेंट पर जाना है, तो आने-जाने (ट्रांसपोर्ट) में मदद माँगें।",
    "translatedOn": "2026-10-09"
   },
+  "guide.elevator.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "When elevators stop, people on high floors can be stuck at home for days. Before it happens, keep 3 days of food, water and medicine at home, and tell your floor ambassador or a neighbour if you cannot use the stairs.",
+   "sourceHash": "e86040dd6f46d280fa8679bc05260cedf3cc37478c8d150410f1f77c38e44c75",
+   "status": "machine",
+   "text": "जब लिफ्ट बंद हो जाती है, तो ऊंची मंजिलों पर रहने वाले लोग दिनों तक घर में फंसे रह सकते हैं। इससे पहले कि ऐसा हो, घर पर 3 दिनों का भोजन, पानी और दवा रखें और यदि आप सीढ़ियों का उपयोग नहीं कर सकते हैं तो अपने मंजिल प्रतिनिधि या किसी पड़ोसी को बताएं।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.elevator.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -94,6 +105,36 @@
    "status": "machine",
    "text": "लिफ़्ट खराब होना",
    "translatedOn": "2026-10-09"
+  },
+  "guide.elevator.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Chest pain, a racing heart, or bad shortness of breath on the stairs. Stop and rest. See \"When to call 911\" at the top of this guide.",
+   "sourceHash": "b7a158f7431ef0ee0098fb04d207e6f3d00018e6d39428bc422768939fa70e95",
+   "status": "machine",
+   "text": "सीढ़ियों पर सीने में दर्द, दिल की धड़कन तेज होना या सांस लेने में बहुत अधिक कठिनाई होना। रुकें और आराम करें। इस गाइड के शीर्ष पर दिए गए \"911 को कब कॉल करें\" को देखें।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls on stairs: go slowly, hold the rail, and do not carry heavy loads.",
+   "sourceHash": "46f46af14765469999803060102204667d150a1df0fdb286964cb07cd1a11766",
+   "status": "machine",
+   "text": "सीढ़ियों पर गिरना: धीरे-धीरे चलें, रेल को पकड़ें और भारी सामान न उठाएँ।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.elevator.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Neighbours who cannot leave home and may run out of food or medicine.",
+   "sourceHash": "d6f5aaad87e7362c826b13d76fc787898314878a37ff01927ea7c25b50b1b31b",
+   "status": "machine",
+   "text": "ऐसे पड़ोसी जो घर छोड़ नहीं सकते हैं और जिनके पास खाना या दवाई ख़त्म हो सकती है।",
+   "translatedOn": "2026-11-22"
   },
   "guide.elevator.when911": {
    "model": "claude-opus-5.5",
@@ -195,6 +236,16 @@
    "text": "एक बार बाहर निकलने के बाद तब तक बाहर ही रहें, जब तक फ़ायर सर्विस न कहे कि अंदर जाना सुरक्षित है।",
    "translatedOn": "2026-10-09"
   },
+  "guide.fire.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
+   "sourceHash": "80e963331d62374ad1929ededf84525465728ce488533cfde453722ed6aca57a",
+   "status": "machine",
+   "text": "हाई-राइज़ आग में, सबसे सुरक्षित विकल्प वहाँ से चले जाना हो सकता है या फिर अपने घर में ही रहना हो सकता है। यह इस बात पर निर्भर करता है कि आग कहाँ है। आग लगने से पहले, अपनी इमारत की अग्नि सुरक्षा योजना और दोनों निकासी सीढ़ियों के बारे में जानें और दरवाजे के पास एक \"गो बैग\" रखें।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.fire.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -204,6 +255,36 @@
    "status": "machine",
    "text": "आग और बिल्डिंग खाली करना",
    "translatedOn": "2026-10-09"
+  },
+  "guide.fire.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
+   "sourceHash": "899dcaa0cd9b10a457cd39588b0f04906380d56d3b116ec95219a1756e1d90c0",
+   "status": "machine",
+   "text": "हॉलवे या सीढ़ियों में धुआँ है। धुएँ से होकर न जाएँ। वापस जाएँ, दरवाजा बंद करें और दूसरी सीढ़ियों का इस्तेमाल करें या अपने यूनिट में ही रहें।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A hot door or door handle. Do not open it.",
+   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "status": "machine",
+   "text": "एक गर्म दरवाजा या दरवाजे का हैंडल। इसे खोलें नहीं।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.fire.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first.",
+   "sourceHash": "567e236073fa34cbe41e45a50e61969ff6fb0f7338765bab34c6009682d40739",
+   "status": "machine",
+   "text": "धुएँ के बाद: खाँसी, साँस लेने में तकलीफ या सिरदर्द। भले ही आपको पहले ठीक महसूस हो, फिर भी जाँच करवाएँ।",
+   "translatedOn": "2026-11-22"
   },
   "guide.fire.when911": {
    "model": "claude-opus-5.5",
@@ -315,6 +396,16 @@
    "text": "अगर आपकी बिल्डिंग में पानी बंद कर दिया गया है, तो पीने और खाना पकाने के लिए बोतल वाला पानी इस्तेमाल करें।",
    "translatedOn": "2026-10-09"
   },
+  "guide.flood.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "In a high-rise, a burst pipe or heavy rain can flood parking levels and basements, and can turn off water or power. Before it happens, keep important papers in a waterproof bag up high, and keep 3 days of bottled water. Know how to reach your superintendent.",
+   "sourceHash": "43c3d85dc92516c8b61ea6b1467f7f29bb406540d295a1707c474510b67d6b6c",
+   "status": "machine",
+   "text": "एक ऊंची इमारत में, फटी हुई पाइप या भारी बारिश से पार्किंग स्तर और तहखाने में बाढ़ आ सकती है और पानी या बिजली बंद हो सकती है। इससे पहले कि ऐसा हो, महत्वपूर्ण कागजात को एक वॉटरप्रूफ बैग में ऊपर रखें और 3 दिन के लिए बोतलबंद पानी रखें। अपने सुपरइंटेंडेंट तक कैसे पहुँचा जाए, यह जान लें।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.flood.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -324,6 +415,46 @@
    "status": "machine",
    "text": "बाढ़ या प्लंबिंग खराब होना",
    "translatedOn": "2026-10-09"
+  },
+  "guide.flood.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Water near electric outlets, panels or cords. Stay away.",
+   "sourceHash": "f0aa6580f42d73b532fa6bbf111b91e0bf87b9a24c97610df1a49851a5d57644",
+   "status": "machine",
+   "text": "बिजली के आउटलेट, पैनल या कॉर्ड के पास पानी। दूर रहें।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Moving water. Do not walk or drive through it. 15 cm (6 inches) of moving water can knock a person over.",
+   "sourceHash": "7604699a3e849249f2a9344b5f191d0034b9cdbf95e250b2cbdbafba5f69efbb",
+   "status": "machine",
+   "text": "चल रहा हुआ पानी। इसमें से पैदल या गाड़ी से न गुजरें। 15 सेंटीमीटर (6 इंच) का चल रहा हुआ पानी भी किसी व्यक्ति को गिरा सकता है।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dirty water. Flood water can carry sewage. Wash your hands, and do not let children play in it.",
+   "sourceHash": "713fc34370badceb193bbf453346302ff2a12f0702eb3468fd229a932461447d",
+   "status": "machine",
+   "text": "गंदा पानी। बाढ़ का पानी मल-जल को बहाकर ले जा सकता है। अपने हाथ धोएं और बच्चों को उसमें खेलने न दें।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.flood.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mould after the water is gone: a musty smell, spots on walls, coughing or wheezing.",
+   "sourceHash": "8e7a054170924eb7eb7de9e5171f2c39fa8a6001e79afab85aae44deeffe5758",
+   "status": "machine",
+   "text": "पानी चले जाने के बाद फफूंदी होना: घिसी हुई बदबू, दीवारों पर धब्बे, खांसी या सांस फूलना।",
+   "translatedOn": "2026-11-22"
   },
   "guide.flood.when911": {
    "model": "claude-opus-5.5",
@@ -435,6 +566,16 @@
    "text": "अकेले रहने वाले पड़ोसियों का हालचाल पूछें।",
    "translatedOn": "2026-10-09"
   },
+  "guide.heat.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
+   "sourceHash": "24e613739e723c58605063af9f4c76b63a81a1ad1f8652d797d5122a02aeb741",
+   "status": "machine",
+   "text": "अत्यधिक गर्मी किसी को भी बीमार बना सकती है और यह वृद्ध व्यक्तियों, शिशुओं और स्वास्थ्य संबंधी समस्याओं से जूझ रहे लोगों के लिए सबसे अधिक खतरनाक होती है। गर्मियों से पहले, अपने आसपास की ठंडी जगहों का पता लगाएं और अपनी दवाओं की जाँच किसी फार्मासिस्ट से करवा लें। यदि आप बाहर नहीं जा सकते हैं, तो घर में पानी और 3 दिन की आपूर्ति सामग्री रखें।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.heat.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -444,6 +585,86 @@
    "status": "machine",
    "text": "बहुत ज़्यादा गर्मी",
    "translatedOn": "2026-10-09"
+  },
+  "guide.heat.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Heavy sweating, or skin that is cold and clammy.",
+   "sourceHash": "6c0487d12b616b09074cbb1cc1530529103f2e2c329bb3ef95fcfef701966dc3",
+   "status": "machine",
+   "text": "भारी मात्रा में पसीना आना या त्वचा का ठंडा और चिपचिपा होना।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Dizziness or a fainting feeling, or a headache.",
+   "sourceHash": "1232df8b28d854b25729f7317c10d105caf4e2a2b349f14837c2148ad88a39b5",
+   "status": "machine",
+   "text": "चक्कर आना या बेहोश होने का एहसास, या सिरदर्द।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Feeling sick to your stomach (nausea) or throwing up.",
+   "sourceHash": "50a6016ad7073c841996c128ac09633df41986aeacd80290a25f179873e0b5f2",
+   "status": "machine",
+   "text": "उल्टी का एहसास होना (मिचली) या उल्टी करना।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Fast breathing or a fast heartbeat.",
+   "sourceHash": "12b04dfe080402f1fc6219a774c52d8853ccd3b5017e4710163216a1d0b97a5a",
+   "status": "machine",
+   "text": "तेज़ साँस लेना या तेज़ धड़कन।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.4": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Being very thirsty, and peeing less, with dark yellow pee.",
+   "sourceHash": "bd72112366a6a08edbc1c4c527aa71f3406585227f93bbb09f1d5cb3667aacad",
+   "status": "machine",
+   "text": "बहुत प्यास लगना, कम पेशाब होना और गहरे पीले रंग का पेशाब होना।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.5": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Muscle cramps.",
+   "sourceHash": "39efbc690abbf20ebb9b2a634c55581e9422b007f3c4fd1461eeb32688f8e335",
+   "status": "machine",
+   "text": "मांसपेशियों में ऐंठन।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.6": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "These are signs of heat exhaustion. If you notice them, move to a cool place, drink water and rest.",
+   "sourceHash": "ec75ca85d117f2751bd22bf4a150a0ae221e32a00891c70d4730885bfbc67672",
+   "status": "machine",
+   "text": "ये हीट एक्सॉस्टेशन के लक्षण हैं | यदि आप इन्हें देखें, तो ठंडी जगह पर जाएँ, पानी पियें और आराम करें |",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.heat.watch.7": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If someone gets worse or stops sweating, see \"When to call 911\" at the top of this guide.",
+   "sourceHash": "6cb16f82fb97581c1ceebac9bfa76f5216c08fb614c4b4a5fa467800a7c03a62",
+   "status": "machine",
+   "text": "यदि किसी की हालत और खराब हो जाती है या पसीना आना बंद हो जाता है, तो इस गाइड के शीर्ष पर दिए गए \"911 को कब कॉल करें\" को देखें।",
+   "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
    "model": "claude-opus-5.5",
@@ -565,6 +786,16 @@
    "text": "अगर ऐसा करना सुरक्षित हो, तो अकेले रहने वाले पड़ोसियों का हालचाल पूछें।",
    "translatedOn": "2026-10-09"
   },
+  "guide.power.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "A power outage can stop elevators, lights, fridges and medical equipment. Before one happens, keep a flashlight, a radio and a charged power bank, and plan for any medical equipment that needs power. Keep 3 days of water and food that needs no cooking.",
+   "sourceHash": "96e921cea5a04352810dc4ff17ce13ca2e48c871699703050888539616cc2c74",
+   "status": "machine",
+   "text": "बिजली की कमी से लिफ्ट, रोशनी, फ्रिज और मेडिकल उपकरण बंद हो सकते हैं. इससे पहले कि ऐसा हो, एक टॉर्च, एक रेडियो और एक चार्ज्ड पावर बैंक रखें और उन मेडिकल उपकरणों के लिए योजना बनाएं जिन्हें बिजली की आवश्यकता होती है. 3 दिन के लिए पानी और ऐसा खाना रखें जिसे पकाने की आवश्यकता न हो.",
+   "translatedOn": "2026-11-22"
+  },
   "guide.power.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -574,6 +805,46 @@
    "status": "machine",
    "text": "बिजली चली जाना",
    "translatedOn": "2026-10-09"
+  },
+  "guide.power.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Carbon monoxide. Never use a barbecue, camp stove or generator indoors or on a balcony. A headache, dizziness, feeling sick or confused can mean carbon monoxide. Get to fresh air at once.",
+   "sourceHash": "9d8a0b119997fac25149402ed3872775e3e01cbb9f12996e37c4102d31b3a94b",
+   "status": "machine",
+   "text": "कार्बन मोनोऑक्साइड। बारबेक्यू, कैंप स्टोव या जनरेटर का कभी भी घर के अंदर या बालकनी में उपयोग न करें। सिरदर्द, चक्कर आना, बीमार या भ्रमित महसूस करना कार्बन मोनोऑक्साइड का संकेत हो सकता है। तुरंत ताजी हवा में जाएं।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Food that has gone warm. If food in the fridge has been warm for over 4 hours, throw out meat, fish, milk and leftovers. \"When in doubt, throw it out.\"",
+   "sourceHash": "7a02a1c435864db78335f50b647d5de151433af3b83880d36da55e82ebb74723",
+   "status": "machine",
+   "text": "खाना जो गर्म हो गया है। अगर फ्रिज में रखा खाना 4 घंटे से ज़्यादा समय तक गर्म रहा है, तो मांस, मछली, दूध और बचे हुए खाने को फेंक दें। \"संदेह होने पर उसे फेंक दें।\"",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Getting cold in winter, or too hot in summer, when heating or air conditioning is off.",
+   "sourceHash": "5fc41542b3ad1f5e2eb241f21f7a04cab57d046dc81bb65192c8a2d7b4b56e26",
+   "status": "machine",
+   "text": "जब हीटिंग या एयर कंडीशनिंग बंद हो तो सर्दियों में ठंड लगना या गर्मियों में बहुत ज्यादा गर्मी लगना।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.power.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Falls in dark hallways and stairs.",
+   "sourceHash": "04ce460b52139979bc216e3c60a3f5c44899c18610a078578cf473343e7dde78",
+   "status": "machine",
+   "text": "अंधेरी गलियों और सीढ़ियों पर गिरने की घटनाएं।",
+   "translatedOn": "2026-11-22"
   },
   "guide.power.when911": {
    "model": "claude-opus-5.5",
@@ -685,6 +956,16 @@
    "text": "अगर आपके घर में धुआँ भर जाए, तो ऐसी जगह जाएँ जहाँ हवा फ़िल्टर की जाती हो।",
    "translatedOn": "2026-10-09"
   },
+  "guide.smoke.summary": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Smoke from far-away wildfires can make the air unhealthy for days. Before the season, buy masks (N95 or KN95) and make a \"clean air room\" plan with a fan filter or air purifier. Keep 3 days of food and medicine so you do not have to go outside.",
+   "sourceHash": "fb1a98d5be42d61ef1205f84bc4e63bb4c43ede607f8404c62546b83373c20de",
+   "status": "machine",
+   "text": "दूर की जंगल की आग से निकलने वाला धुआँ कई दिनों तक हवा को अस्वास्थ्यकर बना सकता है। मौसम से पहले, मास्क (एन95 या केएन95) खरीदें और पंखे के फिल्टर या एयर प्यूरीफायर के साथ एक \"स्वच्छ हवा वाले कमरे\" की योजना बनाएं। ताकि आपको बाहर न जाना पड़े, 3 दिन का भोजन और दवाई का भंडारण रखें।",
+   "translatedOn": "2026-11-22"
+  },
   "guide.smoke.title": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -694,6 +975,46 @@
    "status": "machine",
    "text": "जंगल की आग का धुआँ",
    "translatedOn": "2026-10-09"
+  },
+  "guide.smoke.watch.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Mild signs, which go away when the air is cleaner: sore eyes, a sore throat, a runny nose, a mild cough, a headache.",
+   "sourceHash": "b3cd67a6da29c991d67e1b49fd1bd0cac32840d38cb37c88bbf7c9f58a7044f6",
+   "status": "machine",
+   "text": "हल्के लक्षण, जो हवा के साफ होने पर चले जाते हैं: आँखों में जलन, गले में खराश, नाक बहना, हल्की खाँसी, सिरदर्द।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.1": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Serious signs. Get medical help if you have trouble breathing, a bad cough, dizziness, or a racing heart.",
+   "sourceHash": "841901a77657f9bb25fe45393d68736f9074a4e6bccf574c509c657657eab4c8",
+   "status": "machine",
+   "text": "गंभीर लक्षण। यदि आपको सांस लेने में तकलीफ हो, खांसी ज्यादा हो, चक्कर आ रहे हों या दिल की धड़कन तेज हो तो चिकित्सीय सहायता लें।",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "People with asthma, heart or lung disease, pregnant people, older adults and children feel smoke sooner. Keep rescue inhalers close.",
+   "sourceHash": "e9fb983639578fbaf15cd2b3f6ec0a3f77cc3809710e4e73e8701171be19c458",
+   "status": "machine",
+   "text": "ऐस्टमा, हृदय या फेफड़े की बीमारी से पीड़ित लोग, गर्भवती महिलाएं, बुजुर्ग और बच्चे धुएं का असर जल्दी महसूस करते हैं. रेस्क्यू इन्हेलर्स को अपने पास रखें.",
+   "translatedOn": "2026-11-22"
+  },
+  "guide.smoke.watch.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "The air quality reading (AQHI) in the weather app. 7 or more is high risk.",
+   "sourceHash": "f88e01bb3d666000558309cb94dcb8359ae0304d062cdb519722a262867b0039",
+   "status": "machine",
+   "text": "मौसम ऐप में वायु गुणवत्ता रीडिंग (AQHI)। 7 या इससे अधिक उच्च जोखिम है।",
+   "translatedOn": "2026-11-22"
   },
   "guide.smoke.when911": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1437,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:07:12+00:00"
+ "updated": "2026-11-22T00:29:03+00:00"
 }
