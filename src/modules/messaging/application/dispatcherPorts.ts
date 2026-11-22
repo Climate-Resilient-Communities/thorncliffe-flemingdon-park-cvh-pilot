@@ -43,7 +43,14 @@ export type SmartEncodingReading = { kind: "read"; smartEncoding: boolean } | { 
  * The Messaging Service's two protections against abuse (S07.09, AD-22): `geoCanadaOnly` is true when the countries the service may text are
  * Canada and nothing else, or Canada with the United States (Twilio cannot allow one without the other: both are +1), `pumpingProtection` true when SMS pumping protection is on.
  */
-export type AbuseSettingsReading = { kind: "read"; geoCanadaOnly: boolean; pumpingProtection: boolean } | { kind: "unreadable"; reason: string };
+/**
+ * `not_exposed`: the service was read, but Twilio's API does not carry either protection (the case in production: neither SMS pumping protection
+ * nor geo permissions is a field of the Messaging Service resource, 2026-11-22). They are then confirmed by hand in the Twilio console.
+ */
+export type AbuseSettingsReading =
+  | { kind: "read"; geoCanadaOnly: boolean; pumpingProtection: boolean }
+  | { kind: "not_exposed" }
+  | { kind: "unreadable"; reason: string };
 
 /** Port: reads the Messaging Service's settings that the daily check judges (the Twilio adapter; nothing about the service is changed). */
 export interface MessagingServiceReader {
@@ -186,6 +193,7 @@ export const MESSAGING_OPS_EVENT_KINDS = [
   "messaging.service_check_failed",
   "messaging.service_settings_wrong",
   "messaging.service_settings_ok",
+  "messaging.service_settings_not_exposed",
   // The status callbacks (S06.04).
   "delivery.unknown_resolved",
   "delivery.callback_ignored",
@@ -202,6 +210,7 @@ export type MessagingOpsEvent =
   | { kind: "messaging.service_check_failed"; detail: { reason: string; check?: "smart_encoding" | "abuse_settings" } }
   | { kind: "messaging.service_settings_wrong"; detail: { geo_not_canada_only: boolean; pumping_protection_off: boolean; unreadable?: boolean } }
   | { kind: "messaging.service_settings_ok"; detail: Record<string, never> }
+  | { kind: "messaging.service_settings_not_exposed"; detail: Record<string, never> }
   | { kind: "delivery.unknown_resolved"; deliveryId: string; detail: { status: CallbackTarget } }
   /** `deliveryId` when the callback named a delivery that exists. */
   | { kind: "delivery.callback_ignored"; deliveryId?: string; detail: { reason: CallbackIgnoredReason } }

@@ -224,6 +224,15 @@ export const OPS_EVENT_KINDS = {
     detail: z.strictObject({}),
   },
   /**
+   * The daily check read the Messaging Service, but Twilio's API carries neither protection (2026-11-22: no such fields on the resource), so
+   * they cannot be checked automatically and are confirmed by hand in the Twilio console (launch checklist). It ends an earlier "wrong" like
+   * `service_settings_ok`, and it alerts no one: it is not a finding.
+   */
+  "messaging.service_settings_not_exposed": {
+    severity: "info",
+    detail: z.strictObject({}),
+  },
+  /**
    * The health job found a condition and texted the on-call Admins (S06.07). `count` is how many things the condition counts (stuck texts, unknown
    * deliveries, failures; 1 for a setting), `notified` how many on-call numbers were queued a text (0 when the roster is empty: the Hub banner and this
    * event still record it), `first` whether the condition began with this run, `rate_limited` that a new episode began inside the 30-minute

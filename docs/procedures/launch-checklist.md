@@ -47,7 +47,8 @@ Check with `select jobname, schedule, active from cron.job order by jobname;`.
 | Geo permissions: **Canada only** (Twilio ties the US to Canada, both +1: Canada with the US is accepted) | 2026-11-18: Canada and the US | product owner |
 | SMS pumping protection **on** (account-level Messaging setting) | 2026-11-18 (was off) | product owner |
 | Sender pool: the verified toll-free number (`TWILIO_FROM_NUMBER`) only | 2026-11-18. It was **empty** until then, so every text failed in Twilio with 21704 (the cause of resident testing's missing confirmation texts, session 2, #1) | product owner |
-| After the two lines above, `/api/jobs/messaging-config` run once (or `cvh-messaging-config` scheduled) and it reads both settings as set: the field names it reads are an unverified assumption ([config](../config.md)) | | |
+| After the two lines above, `/api/jobs/messaging-config` run once (or `cvh-messaging-config` scheduled) and it reads both settings as set: the field names it reads are an unverified assumption ([config](../config.md)) | n/a (2026-11-22): Twilio's API has neither setting, so the daily check records them as not exposed and checks only Smart Encoding; the two are checked by hand (next line) | Claude |
+| Geo permissions (Canada and the US only) and SMS pumping protection (on) **checked by hand in the Twilio console**, Messaging, Settings: at launch, monthly, and after any change to the Messaging Service. Record the date here each time | 2026-11-18 (set and checked) | product owner |
 
 ## 4. The outside uptime monitor ([config: "The outside check"](../config.md))
 

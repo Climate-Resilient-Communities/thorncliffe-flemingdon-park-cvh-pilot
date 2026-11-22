@@ -188,6 +188,7 @@ describe("messaging's operational events in ops_event", () => {
     { kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: false, pumping_protection_off: false, unreadable: true } },
     { kind: "messaging.service_settings_wrong", detail: { geo_not_canada_only: true, pumping_protection_off: false } },
     { kind: "messaging.service_settings_ok", detail: {} },
+    { kind: "messaging.service_settings_not_exposed", detail: {} },
     // The status callbacks (S06.04).
     { kind: "delivery.unknown_resolved", deliveryId: DELIVERY, detail: { status: "delivered" } },
     { kind: "delivery.callback_ignored", detail: { reason: "no_ref" } },
@@ -211,6 +212,7 @@ describe("messaging's operational events in ops_event", () => {
       { kind: "messaging.service_settings_wrong", severity: "error", subjectType: null, subjectId: null, detail: { geo_not_canada_only: false, pumping_protection_off: false, unreadable: true } },
       { kind: "messaging.service_settings_wrong", severity: "error", subjectType: null, subjectId: null, detail: { geo_not_canada_only: true, pumping_protection_off: false } },
       { kind: "messaging.service_settings_ok", severity: "info", subjectType: null, subjectId: null, detail: {} },
+      { kind: "messaging.service_settings_not_exposed", severity: "info", subjectType: null, subjectId: null, detail: {} },
       { kind: "delivery.unknown_resolved", severity: "info", subjectType: "delivery", subjectId: DELIVERY, detail: { status: "delivered" } },
       { kind: "delivery.callback_ignored", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "no_ref" } },
       { kind: "delivery.callback_ignored", severity: "warning", subjectType: "delivery", subjectId: DELIVERY, detail: { reason: "not_in_flight" } },

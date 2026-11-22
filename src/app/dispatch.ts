@@ -64,6 +64,7 @@ export const opsRecorder: OpsRecorder = {
       case "messaging.service_check_failed":
       case "messaging.service_settings_wrong":
       case "messaging.service_settings_ok":
+      case "messaging.service_settings_not_exposed":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
       case "delivery.unknown_resolved":
       case "delivery.provider_id_mismatch":
