@@ -1358,14 +1358,14 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.0": {
-   "model": "claude-opus-5.5",
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "Τέσσερις εταιρείες μάς βοηθούν να λειτουργεί η υπηρεσία. Χειρίζονται πληροφορίες για λογαριασμό μας.",
-   "translatedOn": "2026-10-09"
+   "text": "Πέντε εταιρείες μας βοηθούν να λειτουργήσουμε την υπηρεσία. Διαχειρίζονται πληροφορίες για λογαριασμό μας.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "model": "claude-opus-5.5",
@@ -1408,6 +1408,16 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.5": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "Η Cloudflare ελέγχει αν το έντυπο εγγραφής ή το έντυπο «Προσθήκη τοποθεσίας» αποστέλλεται από ένα άτομο και όχι από ένα πρόγραμμα υπολογιστή. Για να το κάνει αυτό, ελέγχει τη διεύθυνση internet σας, καθώς και τη συσκευή και τον browser σας. Δεν λαμβάνει τον αριθμό του τηλεφώνου σας ή τα στοιχεία που γράφετε στο έντυπο. Μπορεί να το κάνει αυτό εκτός Καναδά. Δεν διατηρούμε τα στοιχεία που βλέπει.",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -1417,15 +1427,15 @@
    "text": "Η Twilio κρατά ένα αντίγραφο κάθε μηνύματος, μαζί με τον αριθμό τηλεφώνου σας. Αυτό ισχύει και για τις απαντήσεις σας. Το Hub διαγράφει αυτά τα αντίγραφα από την Twilio όταν τελειώσει το πιλοτικό πρόγραμμα.",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
-   "model": "claude-opus-5.5",
+  "terms.who.7": {
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "Δεν πουλάμε ποτέ τον αριθμό τηλεφώνου σας και δεν δίνουμε ποτέ σε κανέναν, για διαφημιστικούς σκοπούς, ούτε τον αριθμό σας ούτε τη συγκατάθεσή σας να λαμβάνετε μηνύματα. Οι τέσσερις παραπάνω εταιρείες τον χρησιμοποιούν μόνο για να λειτουργεί αυτή η υπηρεσία.",
-   "translatedOn": "2026-10-09"
+   "text": "Δεν πουλάμε ποτέ τον αριθμό του τηλεφώνου σας και δεν τον κοινοποιούμε ούτε κοινοποιούμε τη συγκατάθεσή σας για λήψη μηνυμάτων σε οποιονδήποτε για σκοπούς μάρκετινγκ. Οι πέντε παραπάνω εταιρείες τον χρησιμοποιούν μόνο για να παρέχουν αυτήν την υπηρεσία.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "model": "claude-opus-5.5",

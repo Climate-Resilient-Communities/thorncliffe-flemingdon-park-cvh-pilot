@@ -11,7 +11,7 @@ Everything that must be true in production before residents rely on the CVH for 
 | --- | --- | --- |
 | `JOB_SECRET` set (32+ random bytes, a Vercel Secret) | 2026-10-06 | Claude for the product owner |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID` set | 2026-10-08 (set by 2026-10-06, Production only; untested until toll-free verification passes) | Claude (SIT) |
-| `SMS_MODE=live` (SIT 2026-10-08: the variable is set, Production only; its value was not read, so confirm it is `live` and tick) | | |
+| `SMS_MODE=live` (SIT 2026-10-08: the variable is set, Production only; its value was not read, so confirm it is `live` and tick) | 2026-11-21 (confirmed `live`) | product owner |
 | `COHERE_API_KEY` set (Production only; live searches answer) | 2026-10-08 (set by 2026-10-02) | Claude (SIT) |
 | `COHERE_API_KEY` is the launch key, with a spend limit set on the key in Cohere (not visible from the app: check in Cohere's dashboard) | | |
 | Cohere asked whether its ~1,000 calls a month per model also applies to `embed-v4.0` on the key, and the answer recorded here. The search embedding has **no app-side monthly stop**: `SEARCH_EMBED_MONTHLY_CALLS` (default 1000) only warns ops at 80% (`search.leg_failed` `embed_quota_near`), and past a vendor cap every search answers "unavailable" ([config](../config.md#the-search-embeddings-monthly-budget)). Until Cohere answers, check the dashboard's usage per model (`embed-v4.0`, `rerank-v3.5`, both translate models) **once a month**, and in the first week after launch | | Product owner |
@@ -68,6 +68,8 @@ The only alarm that still works when Vercel, Supabase or Twilio is down: the Hub
 | --- | --- | --- |
 | Directory published (the current release on the Directory page) | 2026-10-08 (release 9, published 2026-10-07, complete and current, 99 providers, files served) | Claude (SIT); published by the product owner |
 | Terms published (until then production's sign-up page is a 404 and the endpoint answers 503) | 2026-10-08 (`2026-10-07.1`; `/en/terms` and `/en/text-alerts` answer 200). Sign-up is therefore open: keep the page unadvertised until section 3 is done | Claude (SIT) |
+| Human check on sign-up and Add a place (Cloudflare Turnstile, session 2 #2/#12): `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` set in Vercel Production, widget "CVH resident forms" (Managed) on `project-6qcs4.vercel.app`; the server refuses a form without a token, and a real "Add a place" passed end to end (test declined in Moderation); the terms name Cloudflare from version `2026-11-21.1` | 2026-11-21 | product owner, checked by Claude |
+| The provider search lines (`provider-problems.json`) and the Established service / Community group marks (`provider-run-by.json`) reviewed | 2026-11-21 (Helena Yu) | Hub |
 | Staff accounts made, Admins with an authenticator | | |
 | At least one number on the On-call numbers page (once texting is live, no alert but a drill can be approved without one) | | |
 | Drill roster set ([running a drill](run-a-drill.md)) | | |

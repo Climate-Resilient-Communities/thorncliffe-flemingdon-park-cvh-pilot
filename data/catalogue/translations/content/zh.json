@@ -1357,14 +1357,14 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.0": {
-   "model": "claude-opus-5.5",
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "有四家公司帮助我们运营这项服务。它们代我们处理信息。",
-   "translatedOn": "2026-10-09"
+   "text": "有五家公司帮助我们运营这项服务。他们为我们处理信息。",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "model": "claude-opus-5.5",
@@ -1407,6 +1407,16 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.5": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "Cloudflare 会检查是否由人而非计算机程序发送注册表单或“添加地点”表单。为此，它会查看您的互联网地址以及您的设备和浏览器。它不会获取您的电话号码或您在表单中填写的内容。它可能会在加拿大境外执行此操作。我们不会保留它所看到的内容。",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -1416,15 +1426,15 @@
    "text": "Twilio 会保存每条短信的副本，以及您的电话号码，其中也包括您的回复。试点结束后，中心会从 Twilio 删除这些副本。",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
-   "model": "claude-opus-5.5",
+  "terms.who.7": {
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "我们绝不会出售您的电话号码，也绝不会为了营销把您的电话号码或您同意接收短信的记录分享给任何人。上面这四家公司只会用它来运营这项服务。",
-   "translatedOn": "2026-10-09"
+   "text": "我们绝不会出售您的电话号码，也绝不会与任何人分享您的电话号码或您同意接收短信的协议，用于营销目的。上述五家公司仅使用它来运行此服务。",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "model": "claude-opus-5.5",

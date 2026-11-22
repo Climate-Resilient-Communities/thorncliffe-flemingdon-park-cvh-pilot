@@ -65,8 +65,8 @@ test("/en/terms states in plain words everything the terms must say, with versio
   await expect(page.locator("main bdi[lang='en'], main h1[lang], main h2[lang], main p.terms-line[lang]")).toHaveCount(0);
   await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
 
-  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-07.1");
-  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-07");
+  await expect(page.getByTestId("terms-version")).toHaveText("2026-11-21.1");
+  await expect(page.getByTestId("terms-updated")).toHaveText("2026-11-21");
   await expect(page.getByTestId("terms-owner")).toContainText("Helena Yu, Sprout Climate Association");
   await expect(page.getByTestId("terms-contact")).toContainText("helena.yu@sprout-climate.org");
   // No end-of-pilot purge has completed for this server: the page says nothing about deleted data (S09.08).
@@ -133,8 +133,8 @@ test("/ur/terms is in Urdu, right to left: every text is its translation, with n
   const text = await page.getByTestId("terms").innerText();
   for (const word of ["STOP", "Twilio", "Cohere", "Vercel", "Supabase", "16"]) expect(text, word).toContain(word);
   // The version, the date and the contact are shown and are left-to-right runs inside the right-to-left page.
-  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-07.1");
-  await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-07");
+  await expect(page.getByTestId("terms-version")).toHaveText("2026-11-21.1");
+  await expect(page.getByTestId("terms-updated")).toHaveText("2026-11-21");
   await expect(page.getByTestId("terms-contact")).toContainText("helena.yu@sprout-climate.org");
   for (const id of ["terms-version", "terms-updated", "terms-contact"]) await expect(page.getByTestId(id)).toHaveAttribute("dir", "ltr");
 });

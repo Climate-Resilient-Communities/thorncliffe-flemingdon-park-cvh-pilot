@@ -1357,14 +1357,14 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.0": {
-   "model": "claude-opus-5.5",
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "चार कंपनियाँ यह सेवा चलाने में हमारी मदद करती हैं। वे हमारे लिए जानकारी संभालती हैं।",
-   "translatedOn": "2026-10-09"
+   "text": "पाँच कंपनियाँ हमें सेवा चलाने में मदद करती हैं। वे हमारे लिए जानकारी का प्रबंधन करती हैं।",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "model": "claude-opus-5.5",
@@ -1407,6 +1407,16 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.5": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "क्लाउडफ्लेयर जाँच करता है कि कंप्यूटर प्रोग्राम नहीं, बल्कि कोई व्यक्ति ही साइन-अप फॉर्म या \"स्थान जोड़ें\" फॉर्म भेज रहा है। ऐसा करने के लिए यह आपके इंटरनेट पते और आपके डिवाइस और ब्राउज़र की जाँच करता है। यह आपका फ़ोन नंबर या फॉर्म में आपने जो लिखा है उसे प्राप्त नहीं करता है। यह ऐसा करना कनाडा के बाहर भी कर सकता है। हम उसके द्वारा देखी गई जानकारी को संग्रहित नहीं करते हैं।",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -1416,15 +1426,15 @@
    "text": "Twilio हर टेक्स्ट की एक कॉपी आपके फ़ोन नंबर के साथ रखता है। इसमें आपके जवाब भी शामिल हैं। पायलट खत्म होने के बाद हब ये कॉपियाँ Twilio से हटा देता है।",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
-   "model": "claude-opus-5.5",
+  "terms.who.7": {
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "हम आपका फ़ोन नंबर कभी नहीं बेचते, और न ही मार्केटिंग के लिए इसे या टेक्स्ट पाने की आपकी सहमति को किसी के साथ कभी साझा करते हैं। ऊपर बताई गई चार कंपनियाँ इसका इस्तेमाल सिर्फ़ यह सेवा चलाने के लिए करती हैं।",
-   "translatedOn": "2026-10-09"
+   "text": "हम आपका फोन नंबर कभी नहीं बेचते हैं और न ही हम इसे या आपके द्वारा टेक्स्ट प्राप्त करने के लिए दिए गए सहमति को किसी के साथ विपणन के लिए साझा करते हैं। उपरोक्त पाँच कंपनियाँ इसे केवल इस सेवा को चलाने के लिए ही उपयोग करती हैं।",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "model": "claude-opus-5.5",

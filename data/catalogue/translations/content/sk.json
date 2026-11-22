@@ -1358,14 +1358,14 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.0": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "Pri prevádzke služby nám pomáhajú štyri spoločnosti. Spracúvajú údaje v našom mene.",
-   "translatedOn": "2026-10-09"
+   "text": "Päť firiem nám pomáha prevádzkovať túto službu. Starajú sa o informácie za nás.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "model": "claude-opus-5.5",
@@ -1408,6 +1408,16 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.5": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "Cloudflare overuje, či formulár na registráciu alebo formulár „Pridať miesto\" odosiela skutočný človek, nie počítačový program. Na tento účel skontroluje vašu internetovú adresu, zariadenie a prehliadač. Nezíska vaše telefónne číslo ani údaje, ktoré do formulára napíšete. Tento proces sa môže vykonávať aj mimo Kanady. Údaje, ktoré sa pri tom zistia, si neuchovávame.",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -1417,15 +1427,15 @@
    "text": "Twilio uchováva kópiu každej SMS spolu s vaším telefónnym číslom. Patria sem aj vaše odpovede. Hub tieto kópie zo systému Twilio vymaže po skončení pilotného projektu.",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
-   "model": "claude-opus-5.5",
+  "terms.who.7": {
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "Vaše telefónne číslo nikdy nepredávame. Ani číslo, ani váš súhlas s prijímaním SMS nikdy s nikým nezdieľame na marketingové účely. Štyri uvedené spoločnosti ho používajú len na prevádzku tejto služby.",
-   "translatedOn": "2026-10-09"
+   "text": "Vaše telefónne číslo nikdy nepredávame a ani ho, ani váš súhlas s prijímaním SMS správ, neposkytujeme tretím stranám na marketingové účely. Vyššie uvedené päť spoločností ho využíva výlučne na zabezpečenie tejto služby.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "model": "claude-opus-5.5",
