@@ -2,7 +2,8 @@
  "failed": {},
  "language": "ps",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 109,
+  "north-small-translate-09-2026": 3
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -1036,14 +1037,14 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.0": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "څلور شرکتونه د دې خدمت په چلولو کې له موږ سره مرسته کوي. هغوی زموږ په استازیتوب معلومات اداره کوي.",
-   "translatedOn": "2026-10-09"
+   "text": "پنځه شرکتونه موږ سره د دې خدمت په چلولو کې مرسته کوي. دوی زموږ لپاره معلومات اداره کوي.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "model": "claude-opus-5.5",
@@ -1086,6 +1087,16 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.5": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "Cloudflare دا چک کوي چې یو انسان، نه کمپیوټر پروګرام، د نوم لیکنې فورمه یا \"یو ځای اضافه کړئ\" فورمه لیږي. د دې کار لپاره، دا ستاسو انټرنیټ پته، ستاسو وسیله او براؤزر وګوري. دا ستاسو د تلیفون شمیره یا هغه څه چې تاسو په فورمه کې لیکي، نه ترلاسه کوي. دا ممکن د کاناډا بهر هم دا کار وکړي. موږ هغه معلومات چې دا لیدلي، نه ساتو.",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -1095,15 +1106,15 @@
    "text": "Twilio د هر لنډ پیغام یوه کاپي له ستاسو د تلیفون شمېرې سره ساتي. ستاسو ځوابونه هم پکې شامل دي. د پیلوټ له پای ته رسېدو وروسته، مرکز دا کاپيانې له Twilio څخه حذف کوي.",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
-   "model": "claude-opus-5.5",
+  "terms.who.7": {
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "موږ هېڅکله ستاسو د تلیفون شمېره نه پلورو، او هېڅکله یې، یا د لنډو پیغامونو د ترلاسه کولو لپاره ستاسو موافقه، د بازارموندنې لپاره له چا سره نه شریکوو. پورته څلور شرکتونه یې یوازې د دې خدمت د چلولو لپاره کاروي.",
-   "translatedOn": "2026-10-09"
+   "text": "موږ هیڅکله ستاسو د تلیفون شمیره نه پلورئ او هیڅکله د هغې یا ستاسو د پیغامونو ترلاسه کولو د موافقې د معلوماتو د بازار موندنې لپاره له کوم څوک سره نه شریکوئ. پورته پنځو شرکتونو په دې کار دا شمیره یوازې د دې خدمت د چلولو لپاره کاروي.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1127,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:03:37+00:00"
+ "updated": "2026-11-21T23:21:48+00:00"
 }

@@ -2,7 +2,8 @@
  "failed": {},
  "language": "gu",
  "models": {
-  "claude-opus-5.5": 111
+  "claude-opus-5.5": 109,
+  "tiny-aya-fire": 3
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -1036,14 +1037,14 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.0": {
-   "model": "claude-opus-5.5",
+   "model": "tiny-aya-fire",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Four companies help us run the service. They handle information for us.",
-   "sourceHash": "0850c623caf4bd875ada0c9a028af8795378a5d624d5e84c82e46137894fac48",
+   "source": "Five companies help us run the service. They handle information for us.",
+   "sourceHash": "acfe5a461458f720c6445f7fd09f41a7c8be0bec1fc6d95eea11614e4ec1166f",
    "status": "machine",
-   "text": "ચાર કંપનીઓ આ સેવા ચલાવવામાં અમને મદદ કરે છે. તેઓ અમારા વતી માહિતી સંભાળે છે.",
-   "translatedOn": "2026-10-09"
+   "text": "પાંચ કંપનીઓ આપણને સેવા ચલાવવામાં મદદ કરે છે. તેઓ આપણા માટે માહિતી સંભાળે છે.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.1": {
    "model": "claude-opus-5.5",
@@ -1086,6 +1087,16 @@
    "translatedOn": "2026-10-09"
   },
   "terms.who.5": {
+   "model": "tiny-aya-fire",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Cloudflare checks that a person, not a computer program, is sending the sign-up form or the \"Add a place\" form. To do this, it looks at your internet address and at your device and browser. It does not get your phone number or what you write in the form. It may do this outside Canada. We do not keep what it sees.",
+   "sourceHash": "e5204dfdf3d9f5ccef2cf04d42e79cd7926462486260829d7e795ce330ea7931",
+   "status": "machine",
+   "text": "ક્લાઉડફ્લેર તપાસે છે કે કોઈ વ્યક્તિ, કમ્પ્યુટર પ્રોગ્રામ નહીં, સાઇન-અપ ફોર્મ અથવા \"એક સ્થાન ઉમેરો\" ફોર્મ મોકલી રહ્યો છે. આ કરવા માટે, તે તમારા ઇન્ટરનેટ સરનામાં અને તમારા ઉપકરણ અને બ્રાઉઝરને જુએ છે. તે તમારો ફોન નંબર અથવા તમે ફોર્મમાં શું લખો છો તે મેળવે નથી. તે આ બહાર પણ કરી શકે છે કે કેનેડા. અમે જે જુએ છીએ તે રાખતા નથી.",
+   "translatedOn": "2026-11-21"
+  },
+  "terms.who.6": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -1095,15 +1106,15 @@
    "text": "Twilio દરેક ટેક્સ્ટની એક નકલ તમારા ફોન નંબર સાથે રાખે છે. તેમાં તમારા જવાબો પણ આવી જાય છે. પાયલટ પૂરો થયા પછી હબ આ નકલો Twilio માંથી કાઢી નાખે છે.",
    "translatedOn": "2026-10-09"
   },
-  "terms.who.6": {
-   "model": "claude-opus-5.5",
+  "terms.who.7": {
+   "model": "tiny-aya-fire",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The four companies above use it only to run this service.",
-   "sourceHash": "b0357514b00c96dc97ef778a5c589fa1c95477e51f35a9e3db67dde47dfb74c4",
+   "source": "We never sell your phone number, and we never share it or your agreement to get texts with anyone for marketing. The five companies above use it only to run this service.",
+   "sourceHash": "44357d9374564410c8e58236737a668a6726fed1157e862c769702c81ba384c8",
    "status": "machine",
-   "text": "અમે ક્યારેય તમારો ફોન નંબર વેચતા નથી, અને માર્કેટિંગ માટે ક્યારેય તે નંબર કે ટેક્સ્ટ મેળવવા માટેની તમારી સંમતિ કોઈની સાથે શેર કરતા નથી. ઉપરની ચાર કંપનીઓ તેનો ઉપયોગ ફક્ત આ સેવા ચલાવવા માટે કરે છે.",
-   "translatedOn": "2026-10-09"
+   "text": "અમે તમારો ફોન નંબર ક્યારેય વેચતા નથી, અને અમે ક્યારેય તેનો શેર કરતા નથી અથવા માર્કેટિંગ માટે કોઈપણ વ્યક્તિ સાથે ટેક્સ્ટ મેળવવા માટે તમારી સંમતિ આપતા નથી. ઉપરની પાંચ કંપનીઓ ફક્ત આ સેવા ચલાવવા માટે તેનો ઉપયોગ કરે છે.",
+   "translatedOn": "2026-11-21"
   },
   "terms.who.heading": {
    "model": "claude-opus-5.5",
@@ -1116,5 +1127,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-10-09T04:07:12+00:00"
+ "updated": "2026-11-21T23:21:51+00:00"
 }

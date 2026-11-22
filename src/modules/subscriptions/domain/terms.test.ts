@@ -131,7 +131,7 @@ describe("publishing the terms", () => {
     expect(result.published).toBe(true);
     expect(result.owner).toBe("Helena Yu, Sprout Climate Association");
     expect(result.privacyContact).toBe("helena.yu@sprout-climate.org");
-    expect(formatTermsReport(result)[0]).toBe("Terms 2026-10-07.1 published");
+    expect(formatTermsReport(result)[0]).toBe("Terms 2026-11-21.1 published");
   });
 
   it("refuses a missing or placeholder owner, privacy contact and English review", () => {
