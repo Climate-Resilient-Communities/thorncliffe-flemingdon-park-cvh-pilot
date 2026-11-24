@@ -10,7 +10,8 @@ import "../ready.css";
 
 // The emergency kit (resident testing, session 2, #16: "Be Ready is missing what to have in the emergency kit"). One list shared by
 // the six guides: each guide's Before stage links here, and so does Be ready. Its words are the content Helena Yu approved on
-// 2026-11-21 (docs/planning/2026-11-18-guide-content-draft.md, "Emergency kit"), kept with the app's other translated words (the
+// 2026-11-21 (docs/planning/2026-11-18-guide-content-draft.md, "Emergency kit"), brought in line on 2026-11-23 with the TPCH Local
+// Preparedness Kit v1.1 she named as the source (candles, twice-a-year check, whistle, tools, household plan), kept with the app's other translated words (the
 // `kit` namespace), not in the database: it is the same for every guide and every visitor, so the page is prerendered for every
 // launch language like Ask for a check-in.
 

@@ -1,13 +1,13 @@
 {
  "meta": {
   "source": "design/prototype/cvh/data.js (guides) and design/prototype/cvh/strings.en.js (hazards, for the titles)",
-  "note": "English source of the six guides. Each guide needs a named owner (the Hub Coordinator responsible), a last-updated date and an English review by that owner (reviewer and date) before scripts/seed/guides.mjs will load it. Values starting with PLACEHOLDER are refused by the seed. Translations: data/catalogue/translations/content/<lang>.json. 2026-11-21 (resident testing, session 2, #15 and #19): each guide gained \"summary\" (In short) and \"watchFor\" (Watch for), from docs/planning/2026-11-18-guide-content-draft.md; the content was approved by Helena Yu (Sprout Climate Association) on 2026-11-21, and the owner's English review is recorded for that version. The draft's open question on the power guide (a full freezer keeps food cold about 48 hours, not 24) was not changed: the During step stays as reviewed."
+  "note": "English source of the six guides. Each guide needs a named owner (the Hub Coordinator responsible), a last-updated date and an English review by that owner (reviewer and date) before scripts/seed/guides.mjs will load it. Values starting with PLACEHOLDER are refused by the seed. Translations: data/catalogue/translations/content/<lang>.json. 2026-11-21 (resident testing, session 2, #15 and #19): each guide gained \"summary\" (In short) and \"watchFor\" (Watch for), from docs/planning/2026-11-18-guide-content-draft.md; the content was approved by Helena Yu (Sprout Climate Association) on 2026-11-21, and the owner's English review is recorded for that version. The draft's open question on the power guide (a full freezer keeps food cold about 48 hours, not 24) was not changed: the During step stays as reviewed. On 2026-11-23 the fire, power, heat and elevator guides were brought in line with the TPCH Local Preparedness Kit v1.1 (Helena Yu's QA, 23 November 2026), which is the source for this content."
  },
  "guides": [
   {
    "id": "power",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-11-21",
+   "lastUpdated": "2026-11-23",
    "englishReview": {
     "reviewer": "Luis Ticas",
     "date": "2026-11-21",
@@ -30,7 +30,7 @@
     "If you use medical equipment that needs power, ask your doctor or pharmacist about a backup plan."
    ],
    "during": [
-    "Use a flashlight, not candles.",
+    "Use a flashlight or battery light. If you use candles, put them in a sturdy holder and never leave them alone.",
     "Keep your fridge and freezer closed. Food stays cold for about 4 hours in the fridge and 24 hours in a full freezer.",
     "Unplug electronics so they are not damaged when the power comes back.",
     "Check on neighbours who live alone, if it is safe to do so."
@@ -80,7 +80,7 @@
   {
    "id": "elevator",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-11-21",
+   "lastUpdated": "2026-11-23",
    "englishReview": {
     "reviewer": "Luis Ticas",
     "date": "2026-11-21",
@@ -101,6 +101,7 @@
     "Keep the number for the building office or superintendent on paper."
    ],
    "during": [
+    "If you are trapped in an elevator, press the emergency button or use the elevator phone, and follow the instructions. Do not force the doors open.",
     "Use the stairs slowly and hold the handrail. Rest on the landings.",
     "Ask a neighbour or your floor ambassador to help carry groceries.",
     "If you need to get to an appointment, ask for help with transport."
@@ -113,7 +114,7 @@
   {
    "id": "heat",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-11-21",
+   "lastUpdated": "2026-11-23",
    "englishReview": {
     "reviewer": "Luis Ticas",
     "date": "2026-11-21",
@@ -121,7 +122,7 @@
    },
    "readMins": 3,
    "title": "Extreme heat",
-   "when911": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
+   "when911": "Call 911 if someone is confused, passes out, has stopped sweating or has a very high temperature (signs of heat stroke), or is getting much worse. For health advice that is not an emergency, call Health811 at 811.",
    "summary": "Extreme heat can make anyone sick, and it is most dangerous for older adults, babies and people with health conditions. Before summer, find the cool places near you and check your medicines with a pharmacist. Keep water and 3 days of supplies at home in case you cannot go out.",
    "watchFor": [
     "Heavy sweating, or skin that is cold and clammy.",
@@ -189,7 +190,7 @@
   {
    "id": "fire",
    "owner": "Luis Ticas",
-   "lastUpdated": "2026-11-21",
+   "lastUpdated": "2026-11-23",
    "englishReview": {
     "reviewer": "Luis Ticas",
     "date": "2026-11-21",
@@ -201,17 +202,21 @@
    "summary": "In a high-rise fire, the safest choice can be to leave, or to stay in your unit. It depends on where the fire is. Before a fire, learn your building's fire safety plan and both exit stairs, and keep a \"go bag\" near the door.",
    "watchFor": [
     "Smoke in a hallway or stairwell. Do not go through smoke. Go back, close the door, and use the other stairs, or stay in your unit.",
-    "A hot door or door handle. Do not open it.",
+    "A warm door or door handle. Do not open it. Use another exit.",
     "After smoke: coughing, trouble breathing or a headache. Get checked, even if you feel fine at first."
    ],
    "before": [
     "Know where the two nearest stairwells are on your floor.",
     "Keep your keys, phone and medicines in one place by the door.",
-    "Tell your floor ambassador if you will need help to leave the building."
+    "Tell your floor ambassador if you will need help to leave the building.",
+    "Check your smoke and carbon monoxide alarms every month."
    ],
    "during": [
-    "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
-    "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
+    "If the alarm sounds, feel your door and the handle. If they are warm, do not open the door. Use another exit if you can.",
+    "If smoke, heat or flames block your way out, stay in the room with the doors closed. Put a wet towel under the door and call 911.",
+    "Open a window and wave a brightly coloured cloth, or use a flashlight, so responders can see you. Follow what they tell you.",
+    "If smoke comes into your unit and you cannot leave, call 911, say where you are, and stay low, under the smoke.",
+    "Never use the elevator in a fire. If it is safe to leave, use the stairs and close doors behind you.",
     "Once you are out, stay out until the fire service says it is safe."
    ],
    "after": [

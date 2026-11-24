@@ -2,7 +2,7 @@
  "failed": {},
  "language": "zh-Hant",
  "models": {
-  "opencc": 143
+  "opencc": 152
  },
  "texts": {
   "guide.elevator.after.0": {
@@ -89,6 +89,22 @@
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
+    "fromTextHash": "a398cee6998c39090276a5850cdebcacdfa306d8977e0b9705acaa479314cd0a",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you are trapped in an elevator, press the emergency button or use the elevator phone, and follow the instructions. Do not force the doors open.",
+   "sourceHash": "2238cb1f27b1fd082707a2186507cdbbf8413b544eed51a52b32fcb44e7d1df9",
+   "status": "machine",
+   "text": "如果您被困在電梯裡，請按下緊急按鈕或使用電梯電話，並按照指示操作。不要強行開啟電梯門。",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.elevator.during.1": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
     "fromTextHash": "4a80852c7574025cb64653236525f610a1ff82a4aa2a8fed0bc026a380909cca",
     "openccVersion": "1.4.2"
    },
@@ -101,7 +117,7 @@
    "text": "慢慢走樓梯，扶好扶手。可以在樓梯平臺上休息。",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.1": {
+  "guide.elevator.during.2": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
@@ -117,7 +133,7 @@
    "text": "請鄰居或您的樓層聯絡員幫忙搬運買來的東西。",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.2": {
+  "guide.elevator.during.3": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
@@ -325,39 +341,103 @@
    "text": "如果您需要別人幫助才能離開大樓，請告訴您的樓層聯絡員。",
    "translatedOn": "2026-10-09"
   },
-  "guide.fire.during.0": {
+  "guide.fire.before.3": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "4fe6f60ac3c6981ac5a4a5815c461d2781a54593ba1084cca8fefb3818c82d71",
+    "fromTextHash": "88c1b236a0cf0f58b07d075f982c78c29e524e390001e604d9bdf551b0a0ba3a",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
-   "sourceHash": "9bd859c0a5595ad279b11d44f8747fe22337628a09ddf6e0a0848a49ce9f80ce",
+   "source": "Check your smoke and carbon monoxide alarms every month.",
+   "sourceHash": "e4b2c44eae2783d643fa7653adccc1fff1b1bd98c3264c9fc23ebe5db3e26716",
    "status": "machine",
-   "text": "如果警報響了，先摸一下您的門。如果門是熱的，請留在屋裡，並在門下塞上溼毛巾。",
-   "translatedOn": "2026-10-09"
+   "text": "每月檢查您的煙霧和一氧化碳警報器。",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.0": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "8633f00067b1cf9065a5c9d3c78634f613adfcd193b02172588e76d5510af6ac",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If the alarm sounds, feel your door and the handle. If they are warm, do not open the door. Use another exit if you can.",
+   "sourceHash": "8020f55bfc0dc6283ed1ce29ef74ac8425c75e80ba7d8e51d66559c7ce8c54cb",
+   "status": "machine",
+   "text": "如果警報響起，請觸控您的門和門把手。如果它們是熱的，請不要開啟門。如果可以的話，請使用其他出口。",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.during.1": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "95258bba74417e0ac1ea69daadc28969728b0d32c0e94452f0de92874a2585de",
+    "fromTextHash": "235edd529da4967b0d5a2a924f3ea199bd5268cec03c3c972d30a4773028b319",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
-   "sourceHash": "12f485bdf8ddc59c3100e23fa83af46b90fa3a26b66dfb87f0fc77161d7ed151",
+   "source": "If smoke, heat or flames block your way out, stay in the room with the doors closed. Put a wet towel under the door and call 911.",
+   "sourceHash": "f3524ac4cf13a2b57dc739de512f1c1306a38039aae051d631ce1940e71d8356",
    "status": "machine",
-   "text": "如果可以安全離開，請走樓梯，不要坐電梯，並隨手關門。",
-   "translatedOn": "2026-10-09"
+   "text": "如果煙霧、熱氣或火焰阻擋了你的逃生路線，請待在房間裡並關閉房門。在門下放一條溼毛巾，並撥打911。",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.during.2": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "ecb8498841725410c0add51fdc35593bab0310bbedab153a4fe430dc2574965c",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Open a window and wave a brightly coloured cloth, or use a flashlight, so responders can see you. Follow what they tell you.",
+   "sourceHash": "7aa681ce551b66f0aaf453266a416e41b05cf6fccb9c6a3c6349dad4e0e26170",
+   "status": "machine",
+   "text": "開啟窗戶，揮舞一條顏色鮮豔的布，或者使用手電筒，這樣救援人員就能看到你。按照他們的指示去做。",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.3": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "f82a1ee192e3659f830f091b4a804aded1a07b280121ebb1207fd1d3cea4e8f7",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If smoke comes into your unit and you cannot leave, call 911, say where you are, and stay low, under the smoke.",
+   "sourceHash": "b083afc68dba19264f4458d987504079b7ca4ffc709ca799a283f84873b0faf3",
+   "status": "machine",
+   "text": "如果煙霧進入您的單元，您無法離開，請撥打 911，說明您所在的位置，並保持低姿勢，待在煙霧下方。",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.4": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "fb591ba31d1a1b306fe92e949743bdfca3c7765ef272eed0e4096bda7096af49",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Never use the elevator in a fire. If it is safe to leave, use the stairs and close doors behind you.",
+   "sourceHash": "b20bf86dd466acba43cde3dfcc0b757551299b8159026b35b15af6ad671a716f",
+   "status": "machine",
+   "text": "發生火災時，請勿使用電梯。如果可以安全離開，請使用樓梯，並關上身後的門。",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.5": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
@@ -425,17 +505,17 @@
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "8043c91cc03ce963be86f2c0f02625b0116e4c322223379afabca39c8df0ee4b",
+    "fromTextHash": "f233b191e3ed17af40ace30c933513c0b9e5bdce4cba17105be54255fafb1490",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "A hot door or door handle. Do not open it.",
-   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "source": "A warm door or door handle. Do not open it. Use another exit.",
+   "sourceHash": "c56d3c222a03c383c8c102d2a16cb978d9e049b6b10b21261888f87d3e53d66e",
    "status": "machine",
-   "text": "門或門把手很燙。不要開啟它。",
-   "translatedOn": "2026-11-22"
+   "text": "溫暖的門或門把手。不要開啟它。使用其他出口。",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.watch.2": {
    "conversion": {
@@ -1065,17 +1145,17 @@
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "0c8843311c0a1d28c892c1581ea5577fbd944b4544cbba1833be4c2d922ef616",
+    "fromTextHash": "e154ac801fccd0afb6ec1c5ce243142a0b5aa0f040d65f6ebeeebb1f491dc60d",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
-   "sourceHash": "9891a4f88f7951d4f346a5cd66cdbca5f1927fcf87776961116f89142840dcff",
+   "source": "Call 911 if someone is confused, passes out, has stopped sweating or has a very high temperature (signs of heat stroke), or is getting much worse. For health advice that is not an emergency, call Health811 at 811.",
+   "sourceHash": "4d4127917f4b350f47241a6b9eba5b9240b2b6c98e59a87711cf85ed22594f52",
    "status": "machine",
-   "text": "如果有人神志不清、不再出汗、體溫很高或暈倒，請撥打 911。這些是中暑的徵兆。",
-   "translatedOn": "2026-10-09"
+   "text": "如果有人神志不清、昏倒、停止出汗或體溫極高（中暑跡象）或情況嚴重惡化，請撥打 911。如果需要非緊急健康建議，請撥打 811 聯絡 Health811。",
+   "translatedOn": "2026-11-24"
   },
   "guide.power.after.0": {
    "conversion": {
@@ -1193,17 +1273,17 @@
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
     "from": "zh",
-    "fromTextHash": "d2d306f36c577144282076c72e1cad411023debc268de41d5c0372b8b1cab439",
+    "fromTextHash": "f6935113ccccbeda27017756aaecc6f80fca29fe2a68da57a44b32cfe2f07b1d",
     "openccVersion": "1.4.2"
    },
    "model": "opencc",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Use a flashlight, not candles.",
-   "sourceHash": "640c7d234976fd4a596859de56bfced4b9783f905753a5ec99ff5c29d27b5cc1",
+   "source": "Use a flashlight or battery light. If you use candles, put them in a sturdy holder and never leave them alone.",
+   "sourceHash": "7b5b836061148e615f608117fe70034bb163624ee9341f2c7253663f8d65bd86",
    "status": "machine",
-   "text": "請用手電筒，不要用蠟燭。",
-   "translatedOn": "2026-10-09"
+   "text": "使用手電筒或電池燈。如果使用蠟燭，請將它們放在堅固的燭臺裡，並且不要讓它們無人看管。",
+   "translatedOn": "2026-11-24"
   },
   "guide.power.during.1": {
    "conversion": {
@@ -1701,6 +1781,22 @@
    "text": "如果有人的生命或安全正處於危險之中，請撥打 911：火災、醫療緊急情況，或正在發生的犯罪。",
    "translatedOn": "2026-10-09"
   },
+  "number.health811.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "7b86a98177543546174cd710920500ca59babaae177393baf37ebcd0d3a9e381",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Health811: free advice from a nurse, any time, for health questions that are not an emergency",
+   "sourceHash": "4e01042fc28d00bf70b3945a3a0bff303d1db368692a9b120cd98c8545c1e954",
+   "status": "machine",
+   "text": "Health811：隨時免費獲得護士的建議，解決非緊急健康問題。",
+   "translatedOn": "2026-11-24"
+  },
   "number.hub.label": {
    "conversion": {
     "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
@@ -1732,6 +1828,38 @@
    "status": "machine",
    "text": "向 Toronto Hydro 報告停電",
    "translatedOn": "2026-10-09"
+  },
+  "number.redcross.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "963617268a41842a8f93ce3a119a0dacf1ac342f0c33ca604188a7eb722af56f",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Canadian Red Cross: help after a fire or other disaster at home in Ontario",
+   "sourceHash": "0b32101e3345e27a55c3ed4a128ea3f1f95f32bc6732cd5158c94e4a14bd418e",
+   "status": "machine",
+   "text": "加拿大紅十字會：在安大略省發生火災或其他家庭災難後提供幫助",
+   "translatedOn": "2026-11-24"
+  },
+  "number.toronto-em.label": {
+   "conversion": {
+    "config": "opencc-js Converter({ from: \"cn\", to: \"twp\" }) (OpenCC s2twp)",
+    "from": "zh",
+    "fromTextHash": "c5b36a69938e3404101436e29d618db3617b4c3d9e8c0bf3859a5a1f8a1b5ad6",
+    "openccVersion": "1.4.2"
+   },
+   "model": "opencc",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Toronto Emergency Management: information about emergencies in the city",
+   "sourceHash": "e938977849cc88ac1be6dee49dfeda024345ef59da754b6a916848aaa557783c",
+   "status": "machine",
+   "text": "多倫多應急管理：關於本市緊急情況的資訊",
+   "translatedOn": "2026-11-24"
   },
   "terms.age.0": {
    "conversion": {
@@ -2310,5 +2438,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:38:00+00:00"
+ "updated": "2026-11-24T00:07:38+00:00"
 }

@@ -4,7 +4,7 @@
   "note": "English source of the essential numbers page. The list needs a named owner, a last-updated date and an English review by that owner; every number needs the date it was last checked as correct (lastChecked). Phone numbers are never translated. Values starting with PLACEHOLDER are refused by the seed."
  },
  "owner": "Luis Ticas",
- "lastUpdated": "2026-10-02",
+ "lastUpdated": "2026-11-23",
  "englishReview": {
   "reviewer": "Luis Ticas",
   "date": "2026-10-08",
@@ -39,6 +39,27 @@
    "emergency": false,
    "label": "Report a power outage to Toronto Hydro",
    "lastChecked": "2026-10-08"
+  },
+  {
+   "id": "health811",
+   "number": "811",
+   "emergency": false,
+   "label": "Health811: free advice from a nurse, any time, for health questions that are not an emergency",
+   "lastChecked": "2026-11-23"
+  },
+  {
+   "id": "toronto-em",
+   "number": "416-392-4554",
+   "emergency": false,
+   "label": "Toronto Emergency Management: information about emergencies in the city",
+   "lastChecked": "2026-11-23"
+  },
+  {
+   "id": "redcross",
+   "number": "1-800-850-5090",
+   "emergency": false,
+   "label": "Canadian Red Cross: help after a fire or other disaster at home in Ontario",
+   "lastChecked": "2026-11-23"
   },
   {
    "id": "hub",

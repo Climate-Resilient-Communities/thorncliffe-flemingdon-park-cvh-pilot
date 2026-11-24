@@ -10,8 +10,8 @@
  },
  "language": "ur",
  "models": {
-  "claude-opus-5.5": 111,
-  "north-small-translate-09-2026": 27,
+  "claude-opus-5.5": 105,
+  "north-small-translate-09-2026": 42,
   "tiny-aya-fire": 4
  },
  "texts": {
@@ -66,6 +66,16 @@
    "translatedOn": "2026-10-09"
   },
   "guide.elevator.during.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you are trapped in an elevator, press the emergency button or use the elevator phone, and follow the instructions. Do not force the doors open.",
+   "sourceHash": "2238cb1f27b1fd082707a2186507cdbbf8413b544eed51a52b32fcb44e7d1df9",
+   "status": "machine",
+   "text": "اگر آپ لفٹ میں پھنس جائیں تو ایمرجنسی بٹن دبائیں یا لفٹ کا فون استعمال کریں اور ہدایات پر عمل کریں۔ دروازے زبردستی کھولنے کی کوشش نہ کریں۔",
+   "translatedOn": "2026-11-23"
+  },
+  "guide.elevator.during.1": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -75,7 +85,7 @@
    "text": "سیڑھیوں پر آہستہ چلیں اور ریلنگ پکڑ کر رکھیں۔ سیڑھیوں کے درمیان رکنے کی جگہوں پر آرام کریں۔",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.1": {
+  "guide.elevator.during.2": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -85,7 +95,7 @@
    "text": "سودا سلف اٹھانے میں مدد کے لیے کسی پڑوسی یا اپنے فلور ایمبیسڈر سے کہیں۔",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.2": {
+  "guide.elevator.during.3": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -215,27 +225,67 @@
    "text": "اگر عمارت سے نکلنے کے لیے آپ کو مدد کی ضرورت ہوگی تو اپنے فلور ایمبیسڈر کو بتائیں۔",
    "translatedOn": "2026-10-09"
   },
-  "guide.fire.during.0": {
-   "model": "claude-opus-5.5",
+  "guide.fire.before.3": {
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
-   "sourceHash": "9bd859c0a5595ad279b11d44f8747fe22337628a09ddf6e0a0848a49ce9f80ce",
+   "source": "Check your smoke and carbon monoxide alarms every month.",
+   "sourceHash": "e4b2c44eae2783d643fa7653adccc1fff1b1bd98c3264c9fc23ebe5db3e26716",
    "status": "machine",
-   "text": "اگر الارم بجے تو اپنے دروازے کو ہاتھ لگا کر دیکھیں۔ اگر وہ گرم ہو تو اندر ہی رہیں اور دروازے کے نیچے گیلے تولیے رکھ دیں۔",
-   "translatedOn": "2026-10-09"
+   "text": "ہر مہینے اپنے دھوئیں اور کاربن مونو آکسائیڈ کے الارمز چیک کریں۔",
+   "translatedOn": "2026-11-23"
+  },
+  "guide.fire.during.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If the alarm sounds, feel your door and the handle. If they are warm, do not open the door. Use another exit if you can.",
+   "sourceHash": "8020f55bfc0dc6283ed1ce29ef74ac8425c75e80ba7d8e51d66559c7ce8c54cb",
+   "status": "machine",
+   "text": "اگر الارم بجے تو اپنے دروازے اور ہینڈل کو چھو کر دیکھیں۔ اگر وہ گرم ہوں تو دروازہ نہ کھولیں۔ اگر ممکن ہو تو کوئی دوسرا راستہ استعمال کریں۔",
+   "translatedOn": "2026-11-23"
   },
   "guide.fire.during.1": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
-   "sourceHash": "12f485bdf8ddc59c3100e23fa83af46b90fa3a26b66dfb87f0fc77161d7ed151",
+   "source": "If smoke, heat or flames block your way out, stay in the room with the doors closed. Put a wet towel under the door and call 911.",
+   "sourceHash": "f3524ac4cf13a2b57dc739de512f1c1306a38039aae051d631ce1940e71d8356",
    "status": "machine",
-   "text": "اگر باہر نکلنا محفوظ ہو تو لفٹ نہیں، سیڑھیاں استعمال کریں، اور اپنے پیچھے دروازے بند کرتے جائیں۔",
-   "translatedOn": "2026-10-09"
+   "text": "اگر دھواں، گرمی یا آگ آپ کے نکلنے کے راستے میں رکاوٹ بن جائیں، تو دروازے بند کر کے کمرے کے اندر ہی رہیں۔ دروازے کے نیچے ایک گیلا تولیہ رکھیں اور 911 پر کال کریں۔",
+   "translatedOn": "2026-11-23"
   },
   "guide.fire.during.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Open a window and wave a brightly coloured cloth, or use a flashlight, so responders can see you. Follow what they tell you.",
+   "sourceHash": "7aa681ce551b66f0aaf453266a416e41b05cf6fccb9c6a3c6349dad4e0e26170",
+   "status": "machine",
+   "text": "کوئی کھڑکی کھولیں اور کوئی رنگین کپڑا لہرا کر اشارہ کریں، یا ٹارچ استعمال کریں تاکہ ریسکیو ٹیم آپ کو دیکھ سکے۔ ان کی ہدایات پر عمل کریں۔",
+   "translatedOn": "2026-11-23"
+  },
+  "guide.fire.during.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If smoke comes into your unit and you cannot leave, call 911, say where you are, and stay low, under the smoke.",
+   "sourceHash": "b083afc68dba19264f4458d987504079b7ca4ffc709ca799a283f84873b0faf3",
+   "status": "machine",
+   "text": "اگر آپ کے گھر میں دھواں بھر جائے اور آپ باہر نہ نکل سکیں، تو 911 پر کال کریں، اپنا پتہ بتائیں، اور دھوئیں سے نیچے جھک کر رہیں۔",
+   "translatedOn": "2026-11-23"
+  },
+  "guide.fire.during.4": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Never use the elevator in a fire. If it is safe to leave, use the stairs and close doors behind you.",
+   "sourceHash": "b20bf86dd466acba43cde3dfcc0b757551299b8159026b35b15af6ad671a716f",
+   "status": "machine",
+   "text": "آگ لگنے کی صورت میں کبھی بھی لفٹ استعمال نہ کریں۔ اگر باہر نکلنا محفوظ ہو تو سیڑھیوں کا استعمال کریں اور اپنے پیچھے دروازے بند کر دیں۔",
+   "translatedOn": "2026-11-23"
+  },
+  "guide.fire.during.5": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -279,11 +329,11 @@
    "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "A hot door or door handle. Do not open it.",
-   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "source": "A warm door or door handle. Do not open it. Use another exit.",
+   "sourceHash": "c56d3c222a03c383c8c102d2a16cb978d9e049b6b10b21261888f87d3e53d66e",
    "status": "machine",
-   "text": "کوئی دروازہ یا دروازے کا ہینڈل گرم ہے۔ اسے نہ کھولیں۔",
-   "translatedOn": "2026-11-22"
+   "text": "کوئی دروازہ یا دروازے کا ہینڈل گرم ہو تو اسے ہرگز نہ کھولیں۔ کوئی دوسرا راستہ استعمال کریں۔",
+   "translatedOn": "2026-11-23"
   },
   "guide.fire.watch.2": {
    "model": "north-small-translate-09-2026",
@@ -667,14 +717,14 @@
    "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
-   "sourceHash": "9891a4f88f7951d4f346a5cd66cdbca5f1927fcf87776961116f89142840dcff",
+   "source": "Call 911 if someone is confused, passes out, has stopped sweating or has a very high temperature (signs of heat stroke), or is getting much worse. For health advice that is not an emergency, call Health811 at 811.",
+   "sourceHash": "4d4127917f4b350f47241a6b9eba5b9240b2b6c98e59a87711cf85ed22594f52",
    "status": "machine",
-   "text": "اگر کوئی الجھن کا شکار ہو، اسے پسینہ آنا بند ہو گیا ہو، اس کے جسم کا درجۂ حرارت بہت زیادہ ہو، یا وہ بے ہوش ہو جائے تو 911 پر کال کریں۔ یہ لُو لگنے (ہیٹ اسٹروک) کی علامات ہیں۔",
-   "translatedOn": "2026-10-09"
+   "text": "اگر کوئی شخص الجھن کا شکار ہو، بے ہوش ہو جائے، پسینہ آنا بند ہو جائے یا اس کا درجہ حرارت بہت زیادہ بڑھ جائے (جو ہیٹ اسٹروک کی علامات ہیں)، یا اس کی حالت بہت زیادہ بگڑ جائے تو 911 پر کال کریں۔ غیر ہنگامی طبی مشورے کے لیے Health811 پر 811 پر کال کریں۔",
+   "translatedOn": "2026-11-23"
   },
   "guide.power.after.0": {
    "model": "claude-opus-5.5",
@@ -747,14 +797,14 @@
    "translatedOn": "2026-10-09"
   },
   "guide.power.during.0": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Use a flashlight, not candles.",
-   "sourceHash": "640c7d234976fd4a596859de56bfced4b9783f905753a5ec99ff5c29d27b5cc1",
+   "source": "Use a flashlight or battery light. If you use candles, put them in a sturdy holder and never leave them alone.",
+   "sourceHash": "7b5b836061148e615f608117fe70034bb163624ee9341f2c7253663f8d65bd86",
    "status": "machine",
-   "text": "ٹارچ استعمال کریں، موم بتیاں نہیں۔",
-   "translatedOn": "2026-10-09"
+   "text": "ٹارچ یا بیٹری والی لائٹ استعمال کریں۔ اگر آپ موم بتیاں استعمال کریں تو انہیں کسی مضبوط سٹینڈر میں رکھیں اور انہیں کبھی اکیلا نہ چھوڑیں۔",
+   "translatedOn": "2026-11-23"
   },
   "guide.power.during.1": {
    "model": "claude-opus-5.5",
@@ -1066,6 +1116,16 @@
    "text": "اگر ابھی کسی کی جان یا حفاظت خطرے میں ہو تو 911 پر کال کریں: آگ، طبی ہنگامی حالت، یا ابھی ہونے والا جرم۔",
    "translatedOn": "2026-10-09"
   },
+  "number.health811.label": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Health811: free advice from a nurse, any time, for health questions that are not an emergency",
+   "sourceHash": "4e01042fc28d00bf70b3945a3a0bff303d1db368692a9b120cd98c8545c1e954",
+   "status": "machine",
+   "text": "Health811: کسی بھی وقت نرس سے مفت مشورہ حاصل کریں، ان صحت سے متعلق سوالات کے لیے جو ہنگامی نوعیت کے نہ ہوں۔",
+   "translatedOn": "2026-11-23"
+  },
   "number.hub.label": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -1085,6 +1145,26 @@
    "status": "machine",
    "text": "Toronto Hydro کو بجلی بند ہونے کی اطلاع دیں",
    "translatedOn": "2026-10-09"
+  },
+  "number.redcross.label": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Canadian Red Cross: help after a fire or other disaster at home in Ontario",
+   "sourceHash": "0b32101e3345e27a55c3ed4a128ea3f1f95f32bc6732cd5158c94e4a14bd418e",
+   "status": "machine",
+   "text": "کینیڈین ریڈ کراس: اونٹاریو میں گھر میں آگ یا کسی دوسری آفت کے بعد مدد۔",
+   "translatedOn": "2026-11-23"
+  },
+  "number.toronto-em.label": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Toronto Emergency Management: information about emergencies in the city",
+   "sourceHash": "e938977849cc88ac1be6dee49dfeda024345ef59da754b6a916848aaa557783c",
+   "status": "machine",
+   "text": "ٹورنٹو ایمرجنسی مینجمنٹ: شہر میں ہنگامی حالات کے بارے میں معلومات",
+   "translatedOn": "2026-11-23"
   },
   "terms.age.0": {
    "model": "claude-opus-5.5",
@@ -1447,5 +1527,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:39:29+00:00"
+ "updated": "2026-11-23T23:57:39+00:00"
 }

@@ -6765,14 +6765,14 @@
       "title": "Agua y comida",
       "items": [
         "Agua: al menos 2 litros por persona al día para beber, y más para cocinar y lavarse. La ciudad de Toronto sugiere un total de 4 litros por persona al día. Para 3 días, eso equivale a 12 litros por persona.",
-        "Comida que no se estropea y que no necesita cocinarse, como alimentos enlatados, barras energéticas y alimentos secos. Elige alimentos que tu familia coma y renuévalos una vez al año.",
+        "Alimentos que no se echan a perder y que no necesitan cocción, como alimentos enlatados, barras energéticas y alimentos secos. Elige alimentos que tu familia coma. Revisa tu equipo dos veces al año y reemplaza los alimentos y el agua que hayan caducado.",
         "Un abrelatas manual."
       ]
     },
     "light": {
       "title": "Luz, electricidad y noticias",
       "items": [
-        "Una linterna y baterías adicionales. No utilice velas.",
+        "Una linterna o lámpara de pilas, y pilas adicionales. Si usas velas, ponlas en un soporte resistente y nunca las dejes solas.",
         "Una radio de cuerda o de pilas.",
         "Una batería externa cargada para tu teléfono y un cable de carga."
       ]
@@ -6784,7 +6784,7 @@
         "Al menos una semana de tus medicamentos y una lista de ellos con las dosis.",
         "Gafas, pilas para audífonos y cualquier equipo que uses todos los días (por ejemplo, un bastón o baterías para una silla de ruedas eléctrica).",
         "Máscaras (N95 o KN95) para el humo.",
-        "Gel desinfectante para manos, toallitas y papel higiénico."
+        "Papel higiénico, desinfectante para manos, toallitas, bolsas de basura y cosas para lavar."
       ]
     },
     "papers": {
@@ -6792,15 +6792,17 @@
       "items": [
         "Copias de documentos importantes en una bolsa impermeable: identificación, tarjeta sanitaria, seguro y recetas.",
         "Un poco de dinero en billetes pequeños, porque las tarjetas y los cajeros automáticos pueden no funcionar cuando se corta la electricidad.",
-        "Una lista de números de teléfono en papel: familiares, tu médico, el superintendente de tu edificio y alguien que vive fuera de la ciudad."
+        "Un plan de emergencia para la casa y una lista de números de teléfono en papel: familiares, tu médico, el conserje de tu edificio y alguien que viva fuera de la ciudad."
       ]
     },
     "family": {
       "title": "Para tu familia",
       "items": [
-        "Cosas para bebés (leche en polvo, pañales) y para mascotas (comida, agua, una correa o un transportín).",
+        "Cosas para bebés y niños pequeños (fórmula o comida para bebés, biberones, pañales, toallitas, medicamentos, artículos de consuelo) y para mascotas (comida, agua, una correa o transportadora).",
         "Llaves de repuesto para tu casa y tu coche.",
-        "Ropa abrigada y una manta."
+        "Ropa abrigada y una manta.",
+        "Un silbato o una alarma personal para pedir ayuda.",
+        "Guantes de trabajo, cinta adhesiva y algunas herramientas sencillas."
       ]
     },
     "helpTitle": "Pide ayuda",
