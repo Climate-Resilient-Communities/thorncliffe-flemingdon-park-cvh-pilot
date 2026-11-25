@@ -1,9 +1,9 @@
 // `/api/jobs/reconcile-spend` (S06.08): the reconciliation of Twilio's actual prices with the estimates counted when texts were accepted.
-// pg_cron calls it daily with the environment's job secret, and the owner calls it by hand after a month ends. With no body it reconciles
-// what is due (the month before this one, and every month still pending); `{"month":"YYYY-MM"}` reconciles that month. Each run is
-// idempotent: a complete month is not listed again, and a pending month (a listing that failed or was cut short, a message with no price
-// yet) is tried again. Outside production there is no Twilio account and nothing is read (`not_live`). The answer is counts, cents and
-// codes, never a message, a number or a recipient.
+// pg_cron calls it daily with the environment's job secret, and the owner calls it by hand after a month ends. With no body, or `{}` (what
+// pg_net sends when the cron job gives none), it reconciles what is due (the month before this one, and every month still pending);
+// `{"month":"YYYY-MM"}` reconciles that month. Each run is idempotent: a complete month is not listed again, and a pending month (a listing
+// that failed or was cut short, a message with no price yet) is tried again. Outside production there is no Twilio account and nothing is
+// read (`not_live`). The answer is counts, cents and codes, never a message, a number or a recipient.
 import { runReconcileJob } from "@/app/reconcile";
 import { SenderNotConfigured } from "@/app/dispatch";
 import { getEnv } from "@/platform/config/env";
@@ -29,9 +29,13 @@ export async function POST(request: Request) {
     } catch {
       return Response.json({ error: { code: "body_invalid" } }, { status: 400, headers: NO_STORE });
     }
-    const month = typeof body === "object" && body !== null && !Array.isArray(body) ? (body as Record<string, unknown>).month : undefined;
-    if (typeof month !== "string" || !MONTH.test(month)) return Response.json({ error: { code: "month_invalid" } }, { status: 400, headers: NO_STORE });
-    months = [month];
+    const record = typeof body === "object" && body !== null && !Array.isArray(body) ? (body as Record<string, unknown>) : undefined;
+    // `{}` is no body: pg_net's http_post sends it when no body is given, so the daily pg_cron call arrives with it.
+    if (!(record !== undefined && Object.keys(record).length === 0)) {
+      const month = record?.month;
+      if (typeof month !== "string" || !MONTH.test(month)) return Response.json({ error: { code: "month_invalid" } }, { status: 400, headers: NO_STORE });
+      months = [month];
+    }
   }
 
   try {
