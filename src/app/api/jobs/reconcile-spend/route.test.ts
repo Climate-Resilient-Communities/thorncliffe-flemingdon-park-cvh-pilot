@@ -51,6 +51,9 @@ describe("POST /api/jobs/reconcile-spend (S06.08)", () => {
     // A blank body is no body.
     await post(`Bearer ${SECRET}`, "  ");
     expect(state.inputs[1]).toEqual({ months: undefined });
+    // pg_net's http_post sends `{}` when the cron job gives no body: that is no body too (the daily run answered 400 month_invalid before).
+    await post(`Bearer ${SECRET}`, "{}");
+    expect(state.inputs[2]).toEqual({ months: undefined });
   });
 
   it("reconciles the month it is asked for", async () => {
@@ -62,7 +65,7 @@ describe("POST /api/jobs/reconcile-spend (S06.08)", () => {
     const notJson = await post(`Bearer ${SECRET}`, "month=2026-10");
     expect(notJson.status).toBe(400);
     expect(await notJson.json()).toEqual({ error: { code: "body_invalid" } });
-    for (const body of [{ month: "2026-13" }, { month: "2026-1" }, { month: 202610 }, { months: ["2026-10"] }, {}, [], "2026-10", null]) {
+    for (const body of [{ month: "2026-13" }, { month: "2026-1" }, { month: 202610 }, { months: ["2026-10"] }, [], "2026-10", null]) {
       const response = await post(`Bearer ${SECRET}`, JSON.stringify(body));
       expect(response.status, JSON.stringify(body)).toBe(400);
       expect(await response.json()).toEqual({ error: { code: "month_invalid" } });
