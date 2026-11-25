@@ -6765,14 +6765,14 @@
       "title": "Eau et nourriture",
       "items": [
         "Eau : au moins 2 litres par personne par jour pour boire, et davantage pour cuisiner et se laver. La ville de Toronto suggère un total de 4 litres par personne par jour. Pour 3 jours, cela représente 12 litres par personne.",
-        "Des aliments qui ne se gâtent pas et qui n’ont pas besoin d’être cuits, comme des aliments en conserve, des barres énergétiques et des aliments séchés. Choisissez des aliments que votre famille mange et remplacez-les une fois par année.",
+        "Des aliments qui ne se gâtent pas et qui ne nécessitent pas de cuisson, comme les aliments en conserve, les barres énergétiques et les aliments séchés. Choisissez des aliments que votre famille mange. Vérifiez votre trousse deux fois par année et remplacez les aliments et l’eau qui sont périmés.",
         "Un ouvre-boîte manuel."
       ]
     },
     "light": {
       "title": "Lumière, électricité et nouvelles",
       "items": [
-        "Une lampe de poche et des piles supplémentaires. N’utilisez pas de bougies.",
+        "Une lampe de poche ou une lampe à piles, ainsi que des piles supplémentaires. Si vous utilisez des bougies, placez-les dans un support solide et ne les laissez jamais sans surveillance.",
         "Une radio à manivelle ou à piles.",
         "Une banque d'alimentation chargée pour votre téléphone et un câble de recharge."
       ]
@@ -6784,7 +6784,7 @@
         "Au moins une semaine de vos médicaments, ainsi qu’une liste de ceux-ci avec les doses.",
         "Lunettes, piles pour appareils auditifs et tout équipement que vous utilisez quotidiennement (par exemple une canne ou des piles pour un fauteuil roulant électrique).",
         "Masques (N95 ou KN95) contre la fumée.",
-        "Désinfectant pour les mains, lingettes et papier de toilette."
+        "Papier de toilette, désinfectant pour les mains, lingettes, sacs à ordures et produits pour le lavage."
       ]
     },
     "papers": {
@@ -6792,15 +6792,17 @@
       "items": [
         "Des copies de documents importants dans un sac imperméable : pièce d’identité, carte de santé, assurance et ordonnances.",
         "Un peu d’argent en petites coupures, car les cartes et les guichets automatiques peuvent ne pas fonctionner en cas de panne d’électricité.",
-        "Une liste de numéros de téléphone sur papier : famille, votre médecin, le concierge de votre immeuble et quelqu'un qui vit à l'extérieur de la ville."
+        "Un plan d’urgence familial et une liste de numéros de téléphone sur papier : famille, votre médecin, le concierge de votre immeuble et une personne qui vit à l’extérieur de la ville."
       ]
     },
     "family": {
       "title": "Pour votre famille",
       "items": [
-        "Des articles pour bébés (lait maternisé, couches) et pour animaux de compagnie (nourriture, eau, laisse ou transporteur).",
+        "Des articles pour les bébés et les jeunes enfants (lait maternisé ou aliments pour bébés, biberons, couches, lingettes, médicaments, articles de réconfort) et pour les animaux de compagnie (nourriture, eau, laisse ou transporteur).",
         "Des clés supplémentaires pour votre maison et votre voiture.",
-        "Des vêtements chauds et une couverture."
+        "Des vêtements chauds et une couverture.",
+        "Un sifflet ou une alarme personnelle, pour demander de l’aide.",
+        "Des gants de travail, du ruban adhésif et quelques outils simples."
       ]
     },
     "helpTitle": "Demander de l'aide",

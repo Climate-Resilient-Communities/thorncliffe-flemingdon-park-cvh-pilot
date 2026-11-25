@@ -2,8 +2,8 @@
  "failed": {},
  "language": "ta",
  "models": {
-  "claude-opus-5.5": 111,
-  "north-small-translate-09-2026": 26,
+  "claude-opus-5.5": 105,
+  "north-small-translate-09-2026": 41,
   "tiny-aya-fire": 6
  },
  "texts": {
@@ -58,6 +58,16 @@
    "translatedOn": "2026-10-09"
   },
   "guide.elevator.during.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you are trapped in an elevator, press the emergency button or use the elevator phone, and follow the instructions. Do not force the doors open.",
+   "sourceHash": "2238cb1f27b1fd082707a2186507cdbbf8413b544eed51a52b32fcb44e7d1df9",
+   "status": "machine",
+   "text": "நீங்க லிஃப்ட்ல மாட்டிக்கிட்டா, எமர்ஜென்சி பட்டனை அழுத்துங்க அல்லது லிஃப்ட் போனைப் பயன்படுத்துங்க, அப்புறம் அவர்கள் சொல்ற வழிமுறைகளைப் பின்பற்றுங்க. கதவுகளை பலவந்தமா திறக்க முயற்சி செய்யாதீங்க.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.elevator.during.1": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -67,7 +77,7 @@
    "text": "படிக்கட்டுகளில் மெதுவாகச் செல்லுங்கள், கைப்பிடியைப் பிடித்துக்கொள்ளுங்கள். படிக்கட்டுகளுக்கு இடையே உள்ள சமதளங்களில் ஓய்வெடுங்கள்.",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.1": {
+  "guide.elevator.during.2": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -77,7 +87,7 @@
    "text": "மளிகைப் பொருட்களைத் தூக்கிச் செல்ல அக்கம்பக்கத்தினரிடமோ உங்கள் தளத் தூதரிடமோ உதவி கேளுங்கள்.",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.2": {
+  "guide.elevator.during.3": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -207,27 +217,67 @@
    "text": "கட்டடத்தை விட்டு வெளியேற உங்களுக்கு உதவி தேவைப்படும் என்றால், உங்கள் தளத் தூதரிடம் சொல்லுங்கள்.",
    "translatedOn": "2026-10-09"
   },
-  "guide.fire.during.0": {
-   "model": "claude-opus-5.5",
+  "guide.fire.before.3": {
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
-   "sourceHash": "9bd859c0a5595ad279b11d44f8747fe22337628a09ddf6e0a0848a49ce9f80ce",
+   "source": "Check your smoke and carbon monoxide alarms every month.",
+   "sourceHash": "e4b2c44eae2783d643fa7653adccc1fff1b1bd98c3264c9fc23ebe5db3e26716",
    "status": "machine",
-   "text": "எச்சரிக்கை மணி ஒலித்தால், உங்கள் கதவைக் கையால் தொட்டுப் பாருங்கள். அது சூடாக இருந்தால், உள்ளேயே இருங்கள், கதவின் அடியில் ஈரமான துண்டுகளை வையுங்கள்.",
-   "translatedOn": "2026-10-09"
+   "text": "ஒவ்வொரு மாதமும் உங்கள் புகை மற்றும் கார்பன் மோனாக்சைடு எச்சரிக்கை கருவிகளைச் சரிபார்க்கவும்.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.0": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If the alarm sounds, feel your door and the handle. If they are warm, do not open the door. Use another exit if you can.",
+   "sourceHash": "8020f55bfc0dc6283ed1ce29ef74ac8425c75e80ba7d8e51d66559c7ce8c54cb",
+   "status": "machine",
+   "text": "அலாரம் ஒலித்தால், கதவையும் கைப்பிடியையும் தொட்டு பாருங்கள். அவை சூடாக இருந்தால், கதவைத் திறக்காதீர்கள். முடிந்தால் வேறு வழியைப் பயன்படுத்தி வெளியேறுங்கள்.",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.during.1": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
-   "sourceHash": "12f485bdf8ddc59c3100e23fa83af46b90fa3a26b66dfb87f0fc77161d7ed151",
+   "source": "If smoke, heat or flames block your way out, stay in the room with the doors closed. Put a wet towel under the door and call 911.",
+   "sourceHash": "f3524ac4cf13a2b57dc739de512f1c1306a38039aae051d631ce1940e71d8356",
    "status": "machine",
-   "text": "வெளியேறுவது பாதுகாப்பானது என்றால், மின்தூக்கியைப் பயன்படுத்தாமல் படிக்கட்டுகளைப் பயன்படுத்துங்கள்; செல்லும்போது கதவுகளை மூடிவிட்டுச் செல்லுங்கள்.",
-   "translatedOn": "2026-10-09"
+   "text": "புகை, வெப்பம் அல்லது தீயினால் வெளியேறும் வழி அடைக்கப்பட்டால், கதவுகளை மூடிவிட்டு அந்த அறையிலேயே இருங்கள். கதவின் கீழ் ஈரத் துண்டை வைத்து, 911-க்கு அழையுங்கள்.",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.during.2": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Open a window and wave a brightly coloured cloth, or use a flashlight, so responders can see you. Follow what they tell you.",
+   "sourceHash": "7aa681ce551b66f0aaf453266a416e41b05cf6fccb9c6a3c6349dad4e0e26170",
+   "status": "machine",
+   "text": "ஒரு ஜன்னலைத் திறந்து வண்ணமயமான துணியை ஆட்டுங்கள் அல்லது டார்ச் லைட்டைப் பயன்படுத்துங்கள், அப்போதுதான் மீட்புப் படையினர் உங்களைக் காண முடியும். அவர்கள் சொல்வதை அப்படியே செய்யுங்கள்.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.3": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If smoke comes into your unit and you cannot leave, call 911, say where you are, and stay low, under the smoke.",
+   "sourceHash": "b083afc68dba19264f4458d987504079b7ca4ffc709ca799a283f84873b0faf3",
+   "status": "machine",
+   "text": "உங்கள் வீட்டிற்குள் புகை நுழைந்து உங்களால் வெளியேற முடியாவிட்டால், 911-க்கு அழைத்து நீங்கள் இருக்கும் இடத்தைக் கூறுங்கள்; புகைக்கு மேலே செல்லாமல், கீழே குனிந்து இருங்கள்.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.4": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Never use the elevator in a fire. If it is safe to leave, use the stairs and close doors behind you.",
+   "sourceHash": "b20bf86dd466acba43cde3dfcc0b757551299b8159026b35b15af6ad671a716f",
+   "status": "machine",
+   "text": "தீ விபத்து ஏற்பட்டால் எக்காரணம் கொண்டும் மின் தூக்கியைப் பயன்படுத்தாதீர்கள். வெளியேறுவது பாதுகாப்பானது என்றால், படிக்கட்டுகளைப் பயன்படுத்துங்கள் மற்றும் உங்களுக்குப் பின்னால் கதவுகளை மூடிவிடுங்கள்.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.5": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -271,11 +321,11 @@
    "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "A hot door or door handle. Do not open it.",
-   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "source": "A warm door or door handle. Do not open it. Use another exit.",
+   "sourceHash": "c56d3c222a03c383c8c102d2a16cb978d9e049b6b10b21261888f87d3e53d66e",
    "status": "machine",
-   "text": "கதவோ அல்லது கதவுப் பிடி சூடாக இருந்தால், அதைத் திறக்காதீர்கள்.",
-   "translatedOn": "2026-11-22"
+   "text": "கதவோ அல்லது கதவு கைப்பிடியோ வெப்பமாக இருந்தால், அதைத் திறக்க வேண்டாம். வேறு வழியைப் பயன்படுத்தி வெளியேறுங்கள்.",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.watch.2": {
    "model": "north-small-translate-09-2026",
@@ -668,14 +718,14 @@
    "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
-   "sourceHash": "9891a4f88f7951d4f346a5cd66cdbca5f1927fcf87776961116f89142840dcff",
+   "source": "Call 911 if someone is confused, passes out, has stopped sweating or has a very high temperature (signs of heat stroke), or is getting much worse. For health advice that is not an emergency, call Health811 at 811.",
+   "sourceHash": "4d4127917f4b350f47241a6b9eba5b9240b2b6c98e59a87711cf85ed22594f52",
    "status": "machine",
-   "text": "ஒருவர் குழப்பமாக இருந்தால், வியர்ப்பது நின்றுவிட்டால், உடல் வெப்பநிலை மிக அதிகமாக இருந்தால், அல்லது மயங்கி விழுந்தால், 911-ஐ அழையுங்கள். இவை வெப்பத் தாக்கத்தின் (heat stroke) அறிகுறிகள்.",
-   "translatedOn": "2026-10-09"
+   "text": "யாருக்காவது மயக்கம் வந்தாலோ, சுயநினைவிழந்தாலோ, வியர்வை நின்றுவிட்டாலோ அல்லது உடல் வெப்பநிலை மிக அதிகமாக இருந்தாலோ (வெப்பத்தால் ஏற்படும் மயக்கத்தின் அறிகுறிகள்), அல்லது உடல்நிலை மோசமாகி வந்தாலோ உடனடியாக 911-க்கு அழையுங்கள். அவசரமில்லாத மருத்துவ ஆலோசனைகளுக்கு, Health811 என்ற எண்ணிற்கு 811-ல் அழையுங்கள்.",
+   "translatedOn": "2026-11-24"
   },
   "guide.power.after.0": {
    "model": "claude-opus-5.5",
@@ -748,14 +798,14 @@
    "translatedOn": "2026-10-09"
   },
   "guide.power.during.0": {
-   "model": "claude-opus-5.5",
+   "model": "north-small-translate-09-2026",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Use a flashlight, not candles.",
-   "sourceHash": "640c7d234976fd4a596859de56bfced4b9783f905753a5ec99ff5c29d27b5cc1",
+   "source": "Use a flashlight or battery light. If you use candles, put them in a sturdy holder and never leave them alone.",
+   "sourceHash": "7b5b836061148e615f608117fe70034bb163624ee9341f2c7253663f8d65bd86",
    "status": "machine",
-   "text": "மெழுகுவர்த்தி வேண்டாம்; டார்ச் விளக்கைப் பயன்படுத்துங்கள்.",
-   "translatedOn": "2026-10-09"
+   "text": "மின்விளக்கு அல்லது பேட்டரி விளக்கைப் பயன்படுத்துங்கள். மெழுகுவர்த்திகளைப் பயன்படுத்தினால், அவற்றை உறுதியான தாங்கியில் வைத்து, ஒருபோதும் கவனிக்க ஆள் இல்லாமல் விட்டுவிடாதீர்கள்.",
+   "translatedOn": "2026-11-24"
   },
   "guide.power.during.1": {
    "model": "claude-opus-5.5",
@@ -1067,6 +1117,16 @@
    "text": "இப்போது ஒருவரின் உயிருக்கோ பாதுகாப்புக்கோ ஆபத்து இருந்தால் 911-ஐ அழையுங்கள்: தீ, மருத்துவ அவசரநிலை, அல்லது இப்போது நடக்கும் குற்றம்.",
    "translatedOn": "2026-10-09"
   },
+  "number.health811.label": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Health811: free advice from a nurse, any time, for health questions that are not an emergency",
+   "sourceHash": "4e01042fc28d00bf70b3945a3a0bff303d1db368692a9b120cd98c8545c1e954",
+   "status": "machine",
+   "text": "Health811: அவசர நிலை அல்லாத உடல்நலக் கேள்விகளுக்கு, எந்த நேரத்திலும் செவிலியரிடமிருந்து இலவச ஆலோசனையைப் பெறலாம்.",
+   "translatedOn": "2026-11-24"
+  },
   "number.hub.label": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -1086,6 +1146,26 @@
    "status": "machine",
    "text": "மின்தடையை Toronto Hydro-விடம் தெரிவியுங்கள்",
    "translatedOn": "2026-10-09"
+  },
+  "number.redcross.label": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Canadian Red Cross: help after a fire or other disaster at home in Ontario",
+   "sourceHash": "0b32101e3345e27a55c3ed4a128ea3f1f95f32bc6732cd5158c94e4a14bd418e",
+   "status": "machine",
+   "text": "கனடிய ரெட் கிராஸ்: ஒன்டாரியோவில் வீட்டில் தீ விபத்து அல்லது பிற பேரிடர்கள் ஏற்பட்ட பிறகு உதவி.",
+   "translatedOn": "2026-11-24"
+  },
+  "number.toronto-em.label": {
+   "model": "north-small-translate-09-2026",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Toronto Emergency Management: information about emergencies in the city",
+   "sourceHash": "e938977849cc88ac1be6dee49dfeda024345ef59da754b6a916848aaa557783c",
+   "status": "machine",
+   "text": "டொராண்டோ அவசர கால மேலாண்மை: நகரத்தில் ஏற்படும் அவசரநிலைகள் பற்றிய தகவல்கள்",
+   "translatedOn": "2026-11-24"
   },
   "terms.age.0": {
    "model": "claude-opus-5.5",
@@ -1448,5 +1528,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:24:40+00:00"
+ "updated": "2026-11-24T00:02:34+00:00"
 }

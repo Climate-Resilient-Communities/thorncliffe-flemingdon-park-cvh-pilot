@@ -468,6 +468,10 @@ test.describe("In short, Watch for and the emergency kit (session 2, #15, #16 an
     await openResident(page, "/en/ready/kit", 390);
     for (const group of ["water", "light", "health", "papers", "family"]) await expect(page.getByTestId(`kit-${group}`).locator("li").first()).toBeVisible();
     await expect(page.getByTestId("kit-water")).toContainText("4 litres per person per day");
+    // Helena's QA, 23 November 2026: the kit follows the TPCH Local Preparedness Kit v1.1.
+    await expect(page.getByTestId("kit-water")).toContainText("twice a year");
+    await expect(page.getByTestId("kit-light")).toContainText("sturdy holder");
+    await expect(page.getByTestId("kit-family")).toContainText("whistle");
     await expect(page.getByTestId("kit-help-link")).toHaveAttribute("href", "/en/directory");
     await expect(page.locator("[data-component=not-911]")).toHaveCount(1);
     // Urdu: the kit's words are translated, the page reads right to left.

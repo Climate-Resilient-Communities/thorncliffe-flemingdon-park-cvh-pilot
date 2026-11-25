@@ -2,8 +2,8 @@
  "failed": {},
  "language": "el",
  "models": {
-  "claude-opus-5.5": 111,
-  "command-a-translate-08-2025": 30,
+  "claude-opus-5.5": 105,
+  "command-a-translate-08-2025": 45,
   "north-small-translate-09-2026": 2
  },
  "texts": {
@@ -58,6 +58,16 @@
    "translatedOn": "2026-10-09"
   },
   "guide.elevator.during.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If you are trapped in an elevator, press the emergency button or use the elevator phone, and follow the instructions. Do not force the doors open.",
+   "sourceHash": "2238cb1f27b1fd082707a2186507cdbbf8413b544eed51a52b32fcb44e7d1df9",
+   "status": "machine",
+   "text": "Αν είστε παγιδευμένοι σε ανελκυστήρα, πατήστε το κουμπί έκτακτης ανάγκης ή χρησιμοποιήστε το τηλέφωνο του ανελκυστήρα και ακολουθήστε τις οδηγίες. Μην προσπαθήσετε να ανοίξετε τις πόρτες με τη βία.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.elevator.during.1": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -67,7 +77,7 @@
    "text": "Χρησιμοποιήστε τις σκάλες αργά και κρατιέστε από την κουπαστή. Ξεκουραστείτε στα πλατύσκαλα.",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.1": {
+  "guide.elevator.during.2": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -77,7 +87,7 @@
    "text": "Ζητήστε από έναν γείτονα ή από τον πρεσβευτή του ορόφου σας να σας βοηθήσει να κουβαλήσετε τα ψώνια.",
    "translatedOn": "2026-10-09"
   },
-  "guide.elevator.during.2": {
+  "guide.elevator.during.3": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -207,27 +217,67 @@
    "text": "Ενημερώστε τον πρεσβευτή του ορόφου σας αν θα χρειαστείτε βοήθεια για να βγείτε από το κτίριο.",
    "translatedOn": "2026-10-09"
   },
-  "guide.fire.during.0": {
-   "model": "claude-opus-5.5",
+  "guide.fire.before.3": {
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
-   "sourceHash": "9bd859c0a5595ad279b11d44f8747fe22337628a09ddf6e0a0848a49ce9f80ce",
+   "source": "Check your smoke and carbon monoxide alarms every month.",
+   "sourceHash": "e4b2c44eae2783d643fa7653adccc1fff1b1bd98c3264c9fc23ebe5db3e26716",
    "status": "machine",
-   "text": "Αν χτυπήσει ο συναγερμός, ακουμπήστε την πόρτα σας με το χέρι. Αν είναι ζεστή, μείνετε μέσα και βάλτε βρεγμένες πετσέτες κάτω από την πόρτα.",
-   "translatedOn": "2026-10-09"
+   "text": "Ελέγξτε τους ανιχνευτές καπνού και μονοξειδίου του άνθρακα κάθε μήνα.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.0": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If the alarm sounds, feel your door and the handle. If they are warm, do not open the door. Use another exit if you can.",
+   "sourceHash": "8020f55bfc0dc6283ed1ce29ef74ac8425c75e80ba7d8e51d66559c7ce8c54cb",
+   "status": "machine",
+   "text": "Αν ηχήσει ο συναγερμός, αγγίξτε την πόρτα και το χερούλι της. Αν είναι ζεστά, μην ανοίξετε την πόρτα. Χρησιμοποιήστε μια άλλη έξοδο αν μπορείτε.",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.during.1": {
-   "model": "claude-opus-5.5",
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
-   "sourceHash": "12f485bdf8ddc59c3100e23fa83af46b90fa3a26b66dfb87f0fc77161d7ed151",
+   "source": "If smoke, heat or flames block your way out, stay in the room with the doors closed. Put a wet towel under the door and call 911.",
+   "sourceHash": "f3524ac4cf13a2b57dc739de512f1c1306a38039aae051d631ce1940e71d8356",
    "status": "machine",
-   "text": "Αν μπορείτε να φύγετε με ασφάλεια, χρησιμοποιήστε τις σκάλες, όχι τον ανελκυστήρα, και κλείνετε τις πόρτες πίσω σας.",
-   "translatedOn": "2026-10-09"
+   "text": "Αν καπνός, ζέστη ή φλόγες εμποδίζουν την έξοδό σας, μείνετε στο δωμάτιο με τις πόρτες κλειστές. Τοποθετήστε μια υγρή πετσέτα κάτω από την πόρτα και καλέστε το 911.",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.during.2": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Open a window and wave a brightly coloured cloth, or use a flashlight, so responders can see you. Follow what they tell you.",
+   "sourceHash": "7aa681ce551b66f0aaf453266a416e41b05cf6fccb9c6a3c6349dad4e0e26170",
+   "status": "machine",
+   "text": "Άνοιξε ένα παράθυρο και κούνα ένα πανί με έντονα χρώματα ή χρησιμοποίησε έναν φακό, ώστε να μπορούν να σε δουν οι διασώστες. Ακολούθησε τις οδηγίες που θα σου δώσουν.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.3": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "If smoke comes into your unit and you cannot leave, call 911, say where you are, and stay low, under the smoke.",
+   "sourceHash": "b083afc68dba19264f4458d987504079b7ca4ffc709ca799a283f84873b0faf3",
+   "status": "machine",
+   "text": "Αν καπνός μπει στο διαμέρισμά σας και δεν μπορείτε να φύγετε, καλέστε το 911, πείτε πού βρίσκεστε και μείνετε χαμηλά, κάτω από τον καπνό.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.4": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Never use the elevator in a fire. If it is safe to leave, use the stairs and close doors behind you.",
+   "sourceHash": "b20bf86dd466acba43cde3dfcc0b757551299b8159026b35b15af6ad671a716f",
+   "status": "machine",
+   "text": "Ποτέ μην χρησιμοποιείτε τον ανελκυστήρα σε περίπτωση πυρκαγιάς. Εάν είναι ασφαλές να φύγετε, χρησιμοποιήστε τις σκάλες και κλείστε τις πόρτες πίσω σας.",
+   "translatedOn": "2026-11-24"
+  },
+  "guide.fire.during.5": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
    "reviewer": null,
@@ -271,11 +321,11 @@
    "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "A hot door or door handle. Do not open it.",
-   "sourceHash": "f60c6545286b2b0b203d68bdbe6f91018e749ed90cac9a22a06a525bb0b6c000",
+   "source": "A warm door or door handle. Do not open it. Use another exit.",
+   "sourceHash": "c56d3c222a03c383c8c102d2a16cb978d9e049b6b10b21261888f87d3e53d66e",
    "status": "machine",
-   "text": "Μια καυτή πόρτα ή λαβή πόρτας. Μην την ανοίξετε.",
-   "translatedOn": "2026-11-22"
+   "text": "Μια ζεστή πόρτα ή λαβή πόρτας. Μην την ανοίξετε. Χρησιμοποιήστε άλλη έξοδο.",
+   "translatedOn": "2026-11-24"
   },
   "guide.fire.watch.2": {
    "model": "command-a-translate-08-2025",
@@ -668,14 +718,14 @@
    "translatedOn": "2026-11-22"
   },
   "guide.heat.when911": {
-   "model": "claude-opus-5.5",
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
-   "sourceHash": "9891a4f88f7951d4f346a5cd66cdbca5f1927fcf87776961116f89142840dcff",
+   "source": "Call 911 if someone is confused, passes out, has stopped sweating or has a very high temperature (signs of heat stroke), or is getting much worse. For health advice that is not an emergency, call Health811 at 811.",
+   "sourceHash": "4d4127917f4b350f47241a6b9eba5b9240b2b6c98e59a87711cf85ed22594f52",
    "status": "machine",
-   "text": "Καλέστε το 911 αν κάποιος είναι μπερδεμένος, έχει σταματήσει να ιδρώνει, έχει πολύ υψηλή θερμοκρασία ή λιποθυμήσει. Αυτά είναι σημάδια θερμοπληξίας.",
-   "translatedOn": "2026-10-09"
+   "text": "Αν κάποιος είναι μπερδεμένος, χάνει τις αισθήσεις του, έχει σταματήσει να ιδρώνει ή έχει πολύ υψηλή θερμοκρασία (συμπτώματα θερμοπληξίας) ή αν η κατάστασή του χειροτερεύει πολύ, καλέστε το 911. Για συμβουλές υγείας που δεν αποτελούν επείγουσα περίπτωση, καλέστε το Health811 στο 811.",
+   "translatedOn": "2026-11-24"
   },
   "guide.power.after.0": {
    "model": "claude-opus-5.5",
@@ -748,14 +798,14 @@
    "translatedOn": "2026-10-09"
   },
   "guide.power.during.0": {
-   "model": "claude-opus-5.5",
+   "model": "command-a-translate-08-2025",
    "reviewedOn": null,
    "reviewer": null,
-   "source": "Use a flashlight, not candles.",
-   "sourceHash": "640c7d234976fd4a596859de56bfced4b9783f905753a5ec99ff5c29d27b5cc1",
+   "source": "Use a flashlight or battery light. If you use candles, put them in a sturdy holder and never leave them alone.",
+   "sourceHash": "7b5b836061148e615f608117fe70034bb163624ee9341f2c7253663f8d65bd86",
    "status": "machine",
-   "text": "Χρησιμοποιήστε φακό, όχι κεριά.",
-   "translatedOn": "2026-10-09"
+   "text": "Χρησιμοποιήστε έναν φακό ή μια μπαταρία φωτός. Αν χρησιμοποιείτε κεριά, τοποθετήστε τα σε ένα γερό στήριγμα και μην τα αφήνετε ποτέ μόνα τους.",
+   "translatedOn": "2026-11-24"
   },
   "guide.power.during.1": {
    "model": "claude-opus-5.5",
@@ -1067,6 +1117,16 @@
    "text": "Καλέστε το 911 αν η ζωή ή η ασφάλεια κάποιου κινδυνεύει αυτή τη στιγμή: φωτιά, επείγον ιατρικό περιστατικό ή έγκλημα που γίνεται τώρα.",
    "translatedOn": "2026-10-09"
   },
+  "number.health811.label": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Health811: free advice from a nurse, any time, for health questions that are not an emergency",
+   "sourceHash": "4e01042fc28d00bf70b3945a3a0bff303d1db368692a9b120cd98c8545c1e954",
+   "status": "machine",
+   "text": "Health811: δωρεές συμβουλές από νοσοκόμα, οποιαδήποτε στιγμή, για ερωτήματα υγείας που δεν αποτελούν επείγουσα περίπτωση",
+   "translatedOn": "2026-11-24"
+  },
   "number.hub.label": {
    "model": "claude-opus-5.5",
    "reviewedOn": null,
@@ -1086,6 +1146,26 @@
    "status": "machine",
    "text": "Αναφέρετε διακοπή ρεύματος στην Toronto Hydro",
    "translatedOn": "2026-10-09"
+  },
+  "number.redcross.label": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Canadian Red Cross: help after a fire or other disaster at home in Ontario",
+   "sourceHash": "0b32101e3345e27a55c3ed4a128ea3f1f95f32bc6732cd5158c94e4a14bd418e",
+   "status": "machine",
+   "text": "Καναδικός Ερυθρός Σταυρός: βοήθεια μετά από πυρκαγιά ή άλλη καταστροφή στο σπίτι στην Οντάριο",
+   "translatedOn": "2026-11-24"
+  },
+  "number.toronto-em.label": {
+   "model": "command-a-translate-08-2025",
+   "reviewedOn": null,
+   "reviewer": null,
+   "source": "Toronto Emergency Management: information about emergencies in the city",
+   "sourceHash": "e938977849cc88ac1be6dee49dfeda024345ef59da754b6a916848aaa557783c",
+   "status": "machine",
+   "text": "Υπηρεσία Διαχείρισης Εκτάκτων Καταστάσεων Τορόντο: πληροφορίες σχετικά με τις έκτακτες καταστάσεις στην πόλη",
+   "translatedOn": "2026-11-24"
   },
   "terms.age.0": {
    "model": "claude-opus-5.5",
@@ -1448,5 +1528,5 @@
    "translatedOn": "2026-10-09"
   }
  },
- "updated": "2026-11-22T00:38:15+00:00"
+ "updated": "2026-11-24T00:02:37+00:00"
 }

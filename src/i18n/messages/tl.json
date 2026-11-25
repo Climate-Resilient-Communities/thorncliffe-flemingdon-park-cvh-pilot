@@ -6765,14 +6765,14 @@
       "title": "Tubig at pagkain",
       "items": [
         "Tubig: hindi bababa sa 2 litro bawat tao bawat araw para sa pag-inom, at mas marami pa para sa pagluluto at paghuhugas. Iminumungkahi ng City of Toronto ang kabuuang 4 na litro bawat tao bawat araw. Para sa loob ng 3 araw, iyon ay 12 litro bawat tao.",
-        "Pagkain na hindi nabubulok at hindi na kailangang lutuin, gaya ng de-latang pagkain, energy bar, at tuyong pagkain. Pumili ng pagkaing kinakain ng iyong pamilya, at palitan ito minsan sa isang taon.",
+        "Pagkain na hindi nabubulok at hindi na kailangang lutuin, gaya ng de-latang pagkain, energy bar, at tuyong pagkain. Pumili ng pagkaing kinakain ng iyong pamilya. Suriin ang iyong emergency kit dalawang beses sa isang taon at palitan ang mga pagkain at tubig na lumampas na sa expiration date.",
         "Isang manu-manong bukador ng lata."
       ]
     },
     "light": {
       "title": "Kuryente, enerhiya at balita",
       "items": [
-        "Isang flashlight at mga ekstrang baterya. Huwag gumamit ng kandila.",
+        "Isang flashlight o bateryang ilaw, at mga ekstrang baterya. Kung gagamit ng mga kandila, ilagay ang mga ito sa matibay na lalagyan at huwag kailanman iwanang walang bantay.",
         "Isang radyong kailangang i-wind-up o gumagamit ng baterya.",
         "Isang nakakarga na power bank para sa iyong telepono, at isang charging cable."
       ]
@@ -6784,7 +6784,7 @@
         "Kahit isang linggong suplay ng iyong mga gamot, at listahan ng mga ito kasama ang mga dosis.",
         "Salamin, mga baterya para sa hearing aid, at anumang kagamitan na ginagamit ninyo araw-araw (halimbawa, baston, o mga baterya para sa motorized wheelchair).",
         "Mga maskara (N95 o KN95) para sa usok.",
-        "Hand sanitizer, wipes, at papel sa banyo."
+        "Papel de liha, alcohol, wipes, mga plastik para sa basura, at mga gamit sa paglalaba."
       ]
     },
     "papers": {
@@ -6792,15 +6792,17 @@
       "items": [
         "Mga kopya ng mahahalagang dokumento sa isang waterproof na bag: ID, health card, insurance at mga reseta.",
         "Konting cash na maliliit na papel na pera, dahil baka hindi gumana ang mga card at ATM kapag walang kuryente.",
-        "Listahan ng mga numero ng telepono sa papel: pamilya, ang iyong doktor, ang caretaker ng iyong gusali, at isang tao sa labas ng lungsod."
+        "Isang plano para sa emergency sa bahay, at listahan ng mga numero ng telepono sa papel: pamilya, iyong doktor, ang building administrator, at isang kakilala sa labas ng lungsod."
       ]
     },
     "family": {
       "title": "Para sa iyong pamilya",
       "items": [
-        "Mga gamit para sa mga sanggol (gatas, lampin), at para sa mga alagang hayop (pagkain, tubig, tali o carrier).",
+        "Mga gamit para sa mga sanggol at maliliit na bata (gatas o pagkain para sa sanggol, bote, lampin, baby wipes, gamot, mga bagay na nakakapagpakalma), at para sa mga alagang hayop (pagkain, tubig, tali o carrier).",
         "Mga ekstrang susi para sa iyong bahay at kotse.",
-        "Makakapal na damit at kumot."
+        "Makakapal na damit at kumot.",
+        "Isang plawt o personal alarm para humingi ng tulong.",
+        "Mga guwantes sa pagtatrabaho, duct tape at ilang simpleng kagamitan."
       ]
     },
     "helpTitle": "Humingi ng tulong",

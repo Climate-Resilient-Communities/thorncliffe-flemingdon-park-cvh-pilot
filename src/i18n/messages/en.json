@@ -6765,14 +6765,14 @@
       "title": "Water and food",
       "items": [
         "Water: at least 2 litres per person per day for drinking, and more for cooking and washing. The City of Toronto suggests 4 litres per person per day in total. For 3 days, that is 12 litres per person.",
-        "Food that does not go bad and needs no cooking, such as canned food, energy bars and dried food. Choose food your family eats, and replace it once a year.",
+        "Food that does not go bad and needs no cooking, such as canned food, energy bars and dried food. Choose food your family eats. Check your kit twice a year and replace food and water that has expired.",
         "A manual can opener."
       ]
     },
     "light": {
       "title": "Light, power and news",
       "items": [
-        "A flashlight and extra batteries. Do not use candles.",
+        "A flashlight or battery light, and extra batteries. If you use candles, put them in a sturdy holder and never leave them alone.",
         "A wind-up or battery radio.",
         "A charged power bank for your phone, and a charging cable."
       ]
@@ -6784,7 +6784,7 @@
         "At least a week of your medicines, and a list of them with the doses.",
         "Glasses, hearing aid batteries, and any equipment you use every day (for example a cane, or batteries for a power wheelchair).",
         "Masks (N95 or KN95) for smoke.",
-        "Hand sanitizer, wipes, and toilet paper."
+        "Toilet paper, hand sanitizer, wipes, garbage bags, and things for washing."
       ]
     },
     "papers": {
@@ -6792,15 +6792,17 @@
       "items": [
         "Copies of important papers in a waterproof bag: ID, health card, insurance and prescriptions.",
         "Some cash in small bills, because cards and bank machines may not work when the power is out.",
-        "A list of phone numbers on paper: family, your doctor, your building's superintendent, and someone outside the city."
+        "A household emergency plan, and a list of phone numbers on paper: family, your doctor, your building's superintendent, and someone outside the city."
       ]
     },
     "family": {
       "title": "For your family",
       "items": [
-        "Things for babies (formula, diapers), and for pets (food, water, a leash or carrier).",
+        "Things for babies and young children (formula or baby food, bottles, diapers, wipes, medicines, comfort items), and for pets (food, water, a leash or carrier).",
         "Extra keys for your home and car.",
-        "Warm clothes and a blanket."
+        "Warm clothes and a blanket.",
+        "A whistle or personal alarm, to call for help.",
+        "Work gloves, duct tape and a few simple tools."
       ]
     },
     "helpTitle": "Ask for help",

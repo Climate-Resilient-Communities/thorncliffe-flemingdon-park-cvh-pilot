@@ -6765,14 +6765,14 @@
       "title": "Voda a jedlo",
       "items": [
         "Voda: aspoň 2 litre na osobu a deň na pitie a ďalšie množstvo na varenie a umývanie. Mesto Toronto odporúča celkovo 4 litre na osobu a deň. Na 3 dni to predstavuje 12 litrov na osobu.",
-        "Jedlo, ktoré sa nezkazí a nemusí sa variť, ako sú konzervy, energetické tyčinky a sušené potraviny. Vyberte jedlo, ktoré vaša rodina bežne konzumuje, a raz ročne ho vymenite.",
+        "Jedlo, ktoré sa nezkazí a nemusí sa variť, ako sú konzervy, energetické tyčinky a sušené potraviny. Vyberte jedlo, ktoré vaša rodina bežne konzumuje. Dvakrát ročne si svoju zásobu skontrolujte a doplňte jedlo a vodu, ktorých trvanlivosť uplynula.",
         "Ručný otvárač konzerv."
       ]
     },
     "light": {
       "title": "Elektrina, energia a správy",
       "items": [
-        "Baterka a extra batérie. Nepoužívajte svietniky.",
+        "Baterková lampa a náhradné batérie. Ak používate sviečky, položte ich na stabilný stojan a nikdy ich nenechávajte bez dozoru.",
         "Rádio so šmykom alebo na batériu.",
         "Nabitá záložná batéria pre váš telefón a nabíjací kábel."
       ]
@@ -6784,7 +6784,7 @@
         "Aspoň týždeň vašich liekov a zoznam týchto liekov s dávkovaním.",
         "Okuliare, batérie do slúchadiel a akékoľvek pomôcky, ktoré používate každý deň (napríklad paličku alebo batérie do elektrického vozíka).",
         "Masky (N95 alebo KN95) proti dymu.",
-        "Dezinfekcia na ruky, vlhčené utierky a toaletný papier."
+        "Toaletný papier, dezinfekcia na ruky, vlhčené utierky, odpadkové vrecká a veci na umývanie."
       ]
     },
     "papers": {
@@ -6792,15 +6792,17 @@
       "items": [
         "Kópie dôležitých dokumentov vo vodotesnej taške: preukaz totožnosti, preukaz zdravotného poistenia, poistná zmluva a lekárske recepty.",
         "Trochu hotovosti v malých bankovkách, pretože platobné karty a bankomaty nemusia fungovať pri výpadku elektriny.",
-        "Zoznam telefónnych čísel na papieri: rodina, váš lekár, domovník vo vašom dome a niekto mimo mesta."
+        "Plán pre núdzové situácie v domácnosti a papierový zoznam telefónnych čísel: rodina, váš lekár, domovník vášho domu a niekto, kto býva mimo mesta."
       ]
     },
     "family": {
       "title": "Pre vašu rodinu",
       "items": [
-        "Veci pre bábätká (umelé mlieko, plienky) a pre domáce zvieratá (krmivo, voda, vodítko alebo prepravka).",
+        "Veci pre bábätká a malé deti (umelé mlieko alebo detská výživa, fľaštičky, plienky, vlhčené utierky, lieky, obľúbené predmety) a pre domáce zvieratá (krmivo, voda, vodítko alebo prepravka).",
         "Náhradné kľúče od domu a auta.",
-        "Teplé oblečenie a deka."
+        "Teplé oblečenie a deka.",
+        "Píšťalka alebo osobný alarm na privolanie pomoci.",
+        "Pracovné rukavice, stříbrná páska a niekoľko jednoduchých nástrojov."
       ]
     },
     "helpTitle": "Požiadajte o pomoc",

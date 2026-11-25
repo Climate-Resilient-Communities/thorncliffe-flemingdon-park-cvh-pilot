@@ -394,7 +394,9 @@ describe("guide and essential_number seed", () => {
     expect(result.report.numbers.loaded).toBe(true);
     const loaded = await rows();
     expect(loaded.guides).toHaveLength(6);
-    expect(loaded.numbers).toHaveLength(5);
+    // 911, 211, 311, Toronto Hydro, the Hub, and since 2026-11-25 (TPCH Local Preparedness Kit v1.1) Health811, Toronto Emergency
+    // Management and the Canadian Red Cross.
+    expect(loaded.numbers).toHaveLength(8);
     // a complete run is audited as ok, never as refused
     expect((await auditEvents()).slice(before.length)).toMatchObject([{ action: "seed.run", outcome: "ok" }]);
   });
